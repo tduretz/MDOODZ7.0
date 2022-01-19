@@ -1,0 +1,179 @@
+/**** RESTART ****/
+istep = 00100
+irestart = 0
+
+/**** OUTPUT FILE ****/
+input_file = none
+
+/**** OUTPUT FILES ****/
+writer          = 1
+writer_step     = 10
+writer_markers  = 0
+writer_debug    = 0
+writer_energies = 0
+
+/**** SCALES ****/
+eta = 1e23
+L   = 1e6
+V   = 1e-9
+T   = 100
+
+/**** SPACE-TIME ****/
+Nx      = 250
+Nz      = 126
+Nt      = 100
+xmin    = -9.959000e5
+zmin    =  5969400
+xmax    =  9.959000e5
+zmax    =  6.400000e6
+dt      = 1e11
+dt_constant = 0
+Courant = 0.45
+penalty = 1e3
+DefectCorrectionForm = 1
+diag_scaling = 1
+abs_tol_div = 1e-9
+rel_tol_div = 1e-9
+pc_type     = 0
+num_deriv   = 0
+safe_mode   = 0
+
+/**** SWITCHES ****/
+ismechanical    = 1
+RK              = 4
+isperiodic_x    = 0
+ispureshear_ALE = 0  /turns on inflow check
+iselastic       = 1
+isthermal       = 1
+shear_heat      = 1    
+adiab_heat      = 0
+thermal_eq      = 1
+shear_heat      = 1
+line_search     = 1
+free_surf       = 1
+free_surf_stab  = 1
+eqn_state       = 0
+subgrid_diff    = 2
+fstrain         = 0
+HomoFields      = 0
+delete_breakpoints = 0
+GNUplot_residuals = 0
+no_markers      = 0
+eta_avg         = 1
+advection       = 1
+polar           = 1
+StressRotation  = 2
+
+/**** SETUP DEPENDANT ****/
+EpsBG           = 1e-15
+user0           =-35e3   / Moho depth [m]
+user1           =-150e3  / LAB depth [m]
+user2           =-200e3  / depth of compression [m] 
+user3           = 1400   / Mantle temperature [C]
+user4           = 0      / 0:Bottom outflow / 1:Lateral outflow 
+user5           = 10e3   / radius perturbation [m]
+   
+/**** GRAVITY ****/
+gx = 0.0000
+gz =-9.81
+
+/**** MAT PROPERTIES ****/
+Nb_phases = 3
+
+/**** PHASE 0 ****/
+ID   = 0
+rho  = 2800.00 / Crust
+mu   = 3e10
+Cv   = 1050
+k    = 2.5
+Qr   = 1e-6
+C    = 5e7
+phi  = 30
+eta_vp = 1e21
+Slim = 500e9
+alp  = 10.0e-6
+bet  = 1e-11
+drho = 0
+cstv = 0             / constant visc law
+pwlv = 10            / disloc. creep
+linv = 0             / diff. creep
+gbsv = 0             / grain boundary sliding
+expv = 0             / peierls creep
+gsel = 0             / grain size evo.
+eta0 = 1e23
+npwl = 1
+Qpwl = 0
+
+/**** PHASE 1 ****/
+ID   = 1
+rho  = 3300.00 / Mantle lithosphere
+mu   = 3e10
+Cv   = 1050
+k    = 2.5
+Qr   = 0
+C    = 5e7
+phi  = 30
+eta_vp = 1e21
+Slim = 500e9
+alp  = 10.0e-6
+bet  = 1e-11
+drho = 0
+cstv = 0             / constant visc law
+pwlv = 40            / disloc. creep
+linv = 0             / diff. creep
+gbsv = 0             / grain boundary sliding
+expv = 0             / peierls creep
+gsel = 0             / grain size evo.
+eta0 = 1e22
+npwl = 1
+Qpwl = 0
+
+/**** PHASE 2 ****/
+ID   = 2
+rho  = 3300.00 / Astehenosphere
+mu   = 3e10
+Cv   = 1050
+k    = 2.5
+Qr   = 0
+C    = 5e7
+phi  = 30
+eta_vp = 1e21
+Slim = 500e9
+alp  = 10.0e-6
+bet  = 1e-11
+drho = 0
+cstv = 0             / constant visc law
+pwlv = 40            / disloc. creep
+linv = 0             / diff. creep
+gbsv = 0             / grain boundary sliding
+expv = 0             / peierls creep
+gsel = 0             / grain size evo.
+eta0 = 5e21
+npwl = 1
+Qpwl = 0
+
+/**** DEFMAPS ****/
+nT    =    51      / Temperature resolutin []
+nE    =    51      / Strain rate resolution []
+nd    =    2        / Grain size resolution []
+Tmin  =    240      / Temperature minimum [°C]
+Tmax  =    2000     / Temperature maximum [°C]
+Emin  =    -50      / Strain rate minimum log_10 [1/s]
+Emax  =    5        / Strain rate maximum log_10 [1/s]
+dmin  =    -7       / Grain size minimum log_10 [m]
+dmax  =    -2       / Grain size maximum log_10 [m]
+Pn    =  1e9        / Pressure [Pa]
+
+/**** PARTICLES ****/
+Nx_part  = 4
+Nz_part  = 4
+min_part_cell = 16
+
+/**** NON-LINEAR ITERATIONS ****/
+Newton  = 0 
+nit_max = 3
+rel_tol_KSP = 1e-4
+tol_u   = 1e-10
+tol_p   = 1e-10
+mineta  = 1e17
+maxeta  = 1e25

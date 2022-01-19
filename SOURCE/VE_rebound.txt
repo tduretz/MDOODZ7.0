@@ -1,0 +1,123 @@
+/**** RESTART ****/
+istep = 000010
+irestart = 0
+
+/**** OUTPUT FILES ****/
+writer = 1
+writer_step = 10
+writer_markers = 0
+writer_debug = 0
+
+/**** SCALES ****/
+eta = 1e24
+L   = 1e3
+V   = 1e-8
+T   = 400
+ 
+/**** SPACE-TIME ****/
+Nx   = 51
+Nz   = 51
+Nt   = 10
+xmin = -00.000000e3
+zmin = -00.0000000e3
+xmax =  1000.000000e3
+zmax =  1000.0000000e3 
+dt   = 5.0e+9
+Courant = 0.25
+penalty = 1e1
+eta_avg = 0
+rel_tol_div = 1e-10
+abs_tol_div = 1e-10
+
+/**** SWITCHES ****/
+ismechanical    = 1
+dt_constant     = 0
+RK              = 4
+isperiodic_x    = 0
+ispureshear_ALE = 0
+isinertial      = 0
+iselastic       = 1
+isthermal       = 0
+line_search     = 1
+free_surf       = 0
+free_surf_stab  = 0
+eqn_state       = 0
+thermal_eq      = 0
+shear_heat      = 0
+adiab_heat      = 0
+StressRotation  = 0
+subgrid_diff    = 0
+StressUpdate    = 1
+IncrementalUpdateGrid = 0
+Reseed = 0
+
+/**** SETUP DEPENDANT ****/
+EpsBG           =-5e-140
+user0           = 400   / temperature [°C]
+user1           = 3e3   / inclusion radius [m]
+user2           = 0
+user3           = 0
+
+/**** GRAVITY ****/
+gx = 0.0000
+gz = -10.00
+
+/**** PHASE PROPERTIES ****/
+Nb_phases = 2
+
+ID   = 0
+rho  = 1 / matrix
+mu   = 1e20
+Cv   = 1050
+k    = 2.5
+Qr   = 0
+C    = 1e90
+phi  = 30
+Slim = 500e9
+alp  = 10.0e-6
+bet  = 1e-11
+drho = 0
+cstv = 0             / constant visc law
+pwlv = 1             / disloc. creep
+linv = 0             / diff. creep
+gbsv = 0             / grain boundary sliding
+expv = 0             / peierls creep
+gsel = 0             / grain size evo.
+eta0 = 1e21
+npwl = 1
+Qpwl = 0
+
+
+ID   = 1
+rho  = 4000.00 / matrix
+mu   = 1e10
+Cv   = 1050
+k    = 2.5
+Qr   = 0
+C    = 1e90
+phi  = 30
+Slim = 500e9
+alp  = 10.0e-6
+bet  = 1e-11
+drho = 0
+cstv = 1             / constant visc law
+pwlv = 1             / disloc. creep
+linv = 0             / diff. creep
+gbsv = 0             / grain boundary sliding
+expv = 0             / peierls creep
+gsel = 0             / grain size evo.
+eta0 = 1e27
+npwl = 1
+Qpwl = 0
+
+/**** PARTICLES ****/
+Nx_part  = 4
+Nz_part  = 4
+min_part_cell = 16
+
+/**** PICARD ITERATIONS ****/
+nit_max = 1
+tol_u   = 5e-6
+tol_p   = 5e-6
+mineta  = 1e19
+maxeta  = 1e27

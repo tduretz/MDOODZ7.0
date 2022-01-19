@@ -1,0 +1,185 @@
+/**** RESTART ****/
+istep =00030
+irestart = 0
+
+/**** OUTPUT FILES ****/
+writer          = 1
+writer_step     = 1
+writer_markers  = 0
+writer_debug    = 0
+writer_energies = 0
+
+/**** SCALES ****/
+eta = 1e15
+L   = 500.0e-6
+V   = 1.0e-9
+T   = 800
+
+/**** SPACE-TIME ****/
+Nx      = 51
+Nz      = 51
+Nt      = 30
+xmin    = -250.0e-6
+zmin    = -250.0e-6
+xmax    = +250.0e-6
+zmax    = +250.0e-6
+
+
+shear_style       = 1
+compressible      = 0
+
+advection         = 1
+dt                = 1e6
+dt_constant       = 1
+Courant           = 0.2
+penalty           = 1e2
+lsolver           = 2
+diag_scaling      = 0
+abs_tol_div       = 1e-5
+rel_tol_div       = 1e-5
+GNUplot_residuals = 0
+pc_type           = 0
+eta_avg           = 1
+num_deriv         = 0
+StressRotation    = 1
+safe_mode         = 1
+nstagmax          = 5
+
+/**** SWITCHES ****/
+ismechanical    = 1
+RK              = 4
+isperiodic_x    = 0
+ispureshear_ALE = 0
+isinertial      = 0
+iselastic       = 1
+isthermal       = 1
+line_search     = 1
+free_surf       = 0
+free_surf_stab  = 0
+eqn_state       = 0
+thermal_eq      = 0
+subgrid_diff    = 2
+shear_heat      = 1
+adiab_heat      = 0
+fstrain         = 1
+ProgReac        = 0
+def_maps        = 0
+
+/**** SETUP DEPENDANT ****/
+EpsBG           = -1.0e-8
+PrBG            = 2.0e9
+user0           = 550.0     / temperature [°C]
+user1           = 0
+user2           = 0
+user3           = 0
+
+/**** GRAVITY ****/
+gx = 0.0000
+gz = 0.0000
+
+/**** MAT PROPERTIES ****/
+Nb_phases = 3
+
+/**** PHASE 0 ****/
+ID   = 0
+rho  = 2750.00 / matrix Anorthite wet 
+mu   = 1.0e10
+Cv   = 1050.0
+k    = 2.3
+Qr   = 0.0
+C    = 50.0e6
+phi  = 30.0
+eta_vp = 5.0e+14
+n_vp   = 1.0
+Slim = 500e9
+alp  = 10.0e-6
+bet  = 1.0e-11
+drho = 0
+cstv = 0             / constant visc law
+pwlv = 21            / disloc. creep
+linv = 0             / diff. creep
+gbsv = 0             / grain boundary sliding
+expv = 0             / peierls creep
+gsel = 0             / grain size evo.
+eta0 = 0
+npwl = 0
+Qpwl = 0
+gsref = 1e-7
+
+/**** PHASE 1 ****/
+ID   = 1
+rho  = 2750.00 / matrix Anorthite Wet
+mu   = 1.0e10
+Cv   = 1050.0
+k    = 2.3
+Qr   = 0.0
+C    = 50.0e6
+phi  = 30.0
+eta_vp = 5.0e+14
+n_vp   = 1.0
+Slim = 500e9
+alp  = 10.0e-6
+bet  = 1.0e-11
+drho = 0
+cstv = 0             / constant visc law
+pwlv = 21            / disloc. creep
+linv = 0             / diff. creep
+gbsv = 0             / grain boundary sliding
+expv = 0             / peierls creep
+gsel = 0             / grain size evo.
+eta0 = 0
+npwl = 0
+Qpwl = 0
+gsref = 1e-7
+
+/**** PHASE 2 ****/
+ID   = 2
+rho  = 2750.00 /reaction => Diffusion creep
+mu   = 3.5e10
+Cv   = 1050.0
+k    = 2.3
+Qr   = 0.0
+C    = 50.0e6
+phi  = 30.0
+eta_vp = 5.0e+12
+n_vp   = 1.0
+Slim = 500.0e9
+alp  = 10.0e-6
+bet  = 1.0e-11
+drho = 0
+cstv = 0
+pwlv = 21
+linv = 0
+gbsv = 0
+expv = 0
+gsel = 0
+eta0 = 0
+npwl = 0
+Qpwl = 0
+gsref = 1e-7
+
+/**** DEFMAPS ****/
+nT    =    51       / Temperature resolutin []
+nE    =    51       / Strain rate resolution []
+nd    =    7        / Grain size resolution []
+Tmin  =    700      / Temperature minimum [°C]
+Tmax  =    1000     / Temperature maximum [°C]
+Emin  =    -7       / Strain rate minimum log_10 [1/s]
+Emax  =    -4       / Strain rate maximum log_10 [1/s]
+dmin  =    -9      / Grain size minimum log_10 [m]
+dmax  =    -3       / Grain size maximum log_10 [m]
+Pn    =  1.5e9      / Pressure [Pa]
+
+/**** PARTICLES ****/
+Nx_part  = 4
+Nz_part  = 4
+min_part_cell = 16
+
+/**** NON-LINEAR ITERATIONS ****/
+Newton  = 1
+nit_max = 20
+rel_tol_KSP = 5e-4
+tol_u   = 1e-10
+tol_p   = 1e-10
+mineta  = 1e10
+maxeta  = 1e30

@@ -1,0 +1,188 @@
+**** RESTART ****/
+istep =00030
+irestart = 0
+
+/**** OUTPUT FILES ****/
+writer = 1
+writer_step = 10
+writer_markers = 0
+writer_debug   = 0
+
+/**** INPUT FILE FOR PARTICLES ****/
+input_file = setup_r201x201_F40_P20_B20.bin
+
+/**** SCALES ****/
+eta = 1e0
+L   = 1e0
+V   = 1e0
+T   = 1
+ 
+/**** SPACE-TIME ****/
+Nx   = 110
+Nz   = 100
+Nt   = 30
+xmin = -0.5000000
+zmin = -0.5000000
+xmax =  0.5000000
+zmax =  0.5000000 
+dt   = 1.2623e1
+dt_min  = 1e-6  
+Courant = 0.3
+lsolver      = 0
+penalty      = 1e2
+diag_scaling = 1
+itp_stencil  = 9
+
+/**** SWITCHES ****/
+ismechanical    = 1
+dt_constant     = 0
+RK              = 4
+isperiodic_x    = 1
+ispureshear_ALE = 0
+isinertial      = 0
+iselastic       = 0
+isthermal       = 0
+line_search     = 0
+free_surf       = 0
+free_surf_stab  = 0
+eqn_state       = 0
+thermal_eq      = 0
+subgrid_diff    = 0
+shear_heat      = 0
+adiab_heat      = 0
+isPl_soft       = 0
+surf_processes  = 0
+ 
+/**** SETUP DEPENDANT ****/
+shear_style     = 1
+EpsBG           = 1e1 /Background strain rate
+PrBG            = 0
+surf_diff       = 0
+user0           = 0
+user1           = 0
+user2           = 0 
+user3           = 0
+user4           = 0
+user5           = 0
+user6           = 0
+
+/**** GRAVITY ****/
+gx = 0.0000
+gz = 0.0000
+
+/**** PHASE PROPERTIES ****/
+Nb_phases = 4
+
+ID   = 0
+rho  = 2800.00 /inclusions 
+mu   = 1e10
+Cv   = 1050
+k    = 2.3
+Qr   = 0
+C    = 2e7
+phi  = 30
+Slim = 500e9
+alp  = 10.0e-6
+bet  = 1e-11
+drho = 0
+cstv = 1
+pwlv = 0
+linv = 0
+gbsv = 0
+expv = 0
+gsel = 0
+eta0 = 1e-6
+npwl = 1
+Qpwl = 0
+
+ID   = 1
+rho  = 2800.00 /inclusions 
+mu   = 1e10
+Cv   = 1050
+k    = 2.3
+Qr   = 0
+C    = 2e7
+phi  = 30
+Slim = 500e9
+alp  = 10.0e-6
+bet  = 1e-11
+drho = 0
+cstv = 1
+pwlv = 0
+linv = 0
+gbsv = 0
+expv = 0
+gsel = 0
+eta0 = 1e-6
+npwl = 1
+Qpwl = 0
+
+ID   = 2
+rho  = 3300.00 /matrix 
+mu   = 1e10
+Cv   = 1050
+k    = 3.0
+Qr   = 0
+C    = 2e7
+phi  = 30
+Slim = 500e9
+alp  = 10.0e-6
+bet  = 1e-11
+drho = 0
+cstv = 1
+pwlv = 0
+linv = 0
+gbsv = 0
+expv = 0
+gsel = 0
+eta0 = 1e0
+npwl = 1
+Qpwl = 0
+
+ID   = 3
+rho  = 3300.00 /matrix 
+mu   = 1e10
+Cv   = 1050
+k    = 3.0
+Qr   = 0
+C    = 2e7
+phi  = 30
+Slim = 500e9
+alp  = 10.0e-6
+bet  = 1e-11
+drho = 0
+cstv = 0
+pwlv = 1
+linv = 0
+gbsv = 0
+expv = 0
+gsel = 0
+eta0 = 1e0
+npwl = 1
+Qpwl = 0
+
+/**** DEFMAPS ****/
+def_maps = 0
+nT    =    200      / Temperature resolution []
+nE    =    200      / Strain rate resolution []
+nd    =    6        / Grain size resolution []
+Tmin  =    127      / Temperature minimum [°C]
+Tmax  =    1827     / Temperature maximum [°C]
+Emin  =    -50      / Strain rate minimum log_10 [1/s]
+Emax  =    5        / Strain rate maximum log_10 [1/s]
+dmin  =    -7       / Grain size minimum log_10 [m]
+dmax  =    -2       / Grain size maximum log_10 [m]
+Pn    =  1e9        / Pressure [Pa]
+
+/**** PARTICLES ****/
+Nx_part  = 4
+Nz_part  = 4
+min_part_cell = 16
+
+/**** PICARD ITERATIONS ****/
+Newton  = 0
+nit_max = 1
+tol_u   = 5e-8
+tol_p   = 5e-8
+mineta  = 1e-6
+maxeta  = 1e0

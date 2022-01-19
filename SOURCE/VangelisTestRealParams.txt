@@ -1,0 +1,132 @@
+/**** RESTART ****/
+istep = 00005
+irestart = 0
+
+/**** OUTPUT FILES ****/
+writer          = 1
+writer_step     = 1
+writer_markers  = 0
+writer_debug    = 0
+writer_energies = 1
+
+/**** INPUT FILE FOR PARTICLES ****/
+input_file = setup_r501x501_fsp40.bin
+
+/**** SCALES ****/
+eta = 1e20
+L   = 1e4
+V   = 1e-12
+T   = 1
+
+/**** SPACE-TIME ****/
+Nx      = 101
+Nz      = 101
+Nt      = 10
+xmin    = -0.500000e4
+zmin    = -0.500000e4
+xmax    =  0.500000e4
+zmax    =  0.500000e4
+dt      = 1e11
+Courant = 0.3
+
+/**** SWITCHES ****/
+ismechanical    = 1
+dt_constant     = 1
+RK              = 4
+isperiodic_x    = 0
+ispureshear_ALE = 1
+isinertial      = 0
+iselastic       = 1
+isthermal       = 0
+line_search     = 1
+free_surf       = 0
+free_surf_stab  = 0
+eqn_state       = 1
+thermal_eq      = 0
+subgrid_diff    = 0
+shear_heat      = 0
+adiab_heat      = 0
+fstrain         = 0
+advection       = 0
+penalty         = 1e2
+lsolver         =  2
+rel_tol_div     = 1e-11
+abs_tol_div     = 1e-11
+diag_scaling    = 0
+GNUplot_residuals = 1
+num_deriv       = 0
+compressible    = 1
+
+/**** SETUP DEPENDANT ****/
+EpsBG           = 1e-15
+user0           = 0 / 0:inclusion, 1:layer
+user1           = 0.13333333e4   / inclusion radius [m]
+user2           = 0
+user3           = 0
+
+/**** GRAVITY ****/
+gx = 0.0000
+gz = 0.000
+
+/**** MAT PROPERTIES ****/
+Nb_phases = 2
+
+/**** PHASE 1 ****/
+ID   = 0             / matrix
+rho  = 2800
+mu   = 1e10
+bet  = 1e-10
+cstv = 0             / constant visc law
+pwlv = 1             / disloc. creep
+linv = 0             / diff. creep
+gbsv = 0             / grain boundary sliding
+expv = 0             / peierls creep
+gsel = 0             / grain size evo.
+eta0 = 1e10
+npwl = 3
+Qpwl = 0
+P0   = 1
+density_model = 3
+
+/**** PHASE 2 ****/
+ID   = 1             / layer
+rho  = 2800
+mu   = 1e10
+bet  = 1e-10
+cstv = 0             / constant visc law
+pwlv = 1             / disloc. creep
+linv = 0             / diff. creep
+gbsv = 0             / grain boundary sliding
+expv = 0             / peierls creep
+gsel = 0             / grain size evo.
+eta0 = 1e21
+npwl = 1
+Qpwl = 0
+P0   = 1
+density_model = 3
+
+/**** DEFMAPS ****/
+nT    =    51      / Temperature resolutin []
+nE    =    51      / Strain rate resolution []
+nd    =    2        / Grain size resolution []
+Tmin  =    240      / Temperature minimum [°C]
+Tmax  =    2000     / Temperature maximum [°C]
+Emin  =    -50      / Strain rate minimum log_10 [1/s]
+Emax  =    5        / Strain rate maximum log_10 [1/s]
+dmin  =    -7       / Grain size minimum log_10 [m]
+dmax  =    -2       / Grain size maximum log_10 [m]
+Pn    =  1e9        / Pressure [Pa]
+
+/**** PARTICLES ****/
+Nx_part  = 4
+Nz_part  = 4
+min_part_cell = 16
+
+/**** PICARD ITERATIONS ****/
+Newton  = 1 
+nit_max = 20
+tol_u   = 5e-10
+tol_p   = 5e-10
+mineta  = 1e18
+maxeta  = 1e25
+

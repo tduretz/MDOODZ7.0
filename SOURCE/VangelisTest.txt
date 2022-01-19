@@ -1,0 +1,126 @@
+/**** RESTART ****/
+istep = 00025
+irestart = 0
+
+/**** OUTPUT FILES ****/
+writer          = 1
+writer_step     = 1
+writer_markers  = 0
+writer_debug    = 0
+writer_energies = 1
+
+/**** INPUT FILE FOR PARTICLES ****/
+input_file = setup_r501x501_fsp40.bin
+
+/**** MULTIGRID SWITCH ****/
+MMG = 0
+
+/**** SCALES ****/
+eta = 1
+L   = 1
+V   = 1
+T   = 1
+
+/**** SPACE-TIME ****/
+Nx      = 101
+Nz      = 101
+Nt      = 25
+xmin    = -0.500000e0
+zmin    = -0.500000e0
+xmax    =  0.500000e0
+zmax    =  0.500000e0
+dt      = 1e4
+Courant = 0.3
+penalty = 1e2
+lsolver =  2
+rel_tol_div = 1e-10
+abs_tol_div = 1e-13
+diag_scaling = 1
+
+/**** SWITCHES ****/
+ismechanical    = 1
+dt_constant     = 1
+RK              = 4
+isperiodic_x    = 0
+ispureshear_ALE = 1
+isinertial      = 0
+iselastic       = 0
+isthermal       = 0
+line_search     = 0
+free_surf       = 0
+free_surf_stab  = 0
+eqn_state       = 0
+thermal_eq      = 0
+subgrid_diff    = 0
+shear_heat      = 0
+adiab_heat      = 0
+fstrain         = 0
+compressible    = 1
+advection       = 0
+
+/**** SETUP DEPENDANT ****/
+EpsBG           = 1
+user0           = 1 / 0:inclusion, 1:layer
+user1           = 0.13333333   / inclusion radius [m]
+user2           = 0
+user3           = 0
+
+/**** GRAVITY ****/
+gx = 0.0000
+gz = 0.000
+
+/**** MAT PROPERTIES ****/
+Nb_phases = 2
+
+/**** PHASE 1 ****/
+ID   = 0             / matrix
+bet  = 1e5
+cstv = 1             / constant visc law
+pwlv = 0             / disloc. creep
+linv = 0             / diff. creep
+gbsv = 0             / grain boundary sliding
+expv = 0             / peierls creep
+gsel = 0             / grain size evo.
+eta0 = 1e-1
+npwl = 1
+Qpwl = 0
+
+
+/**** PHASE 2 ****/
+ID   = 1             / layer
+bet  = 1e5
+cstv = 1             / constant visc law
+pwlv = 0             / disloc. creep
+linv = 0             / diff. creep
+gbsv = 0             / grain boundary sliding
+expv = 0             / peierls creep
+gsel = 0             / grain size evo.
+eta0 = 1e0
+npwl = 1
+Qpwl = 0
+
+/**** DEFMAPS ****/
+nT    =    51      / Temperature resolutin []
+nE    =    51      / Strain rate resolution []
+nd    =    2        / Grain size resolution []
+Tmin  =    240      / Temperature minimum [°C]
+Tmax  =    2000     / Temperature maximum [°C]
+Emin  =    -50      / Strain rate minimum log_10 [1/s]
+Emax  =    5        / Strain rate maximum log_10 [1/s]
+dmin  =    -7       / Grain size minimum log_10 [m]
+dmax  =    -2       / Grain size maximum log_10 [m]
+Pn    =  1e9        / Pressure [Pa]
+
+/**** PARTICLES ****/
+Nx_part  = 4
+Nz_part  = 4
+min_part_cell = 16
+
+/**** PICARD ITERATIONS ****/
+Newton  = 0 
+nit_max = 0
+tol_u   = 5e-10
+tol_p   = 5e-10
+mineta  = 1e-2
+maxeta  = 1e2
+

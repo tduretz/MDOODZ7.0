@@ -1,0 +1,138 @@
+**** RESTART ****/
+istep = 00400
+irestart = 1
+
+/**** OUTPUT FILES ****/
+writer = 1
+writer_step = 20
+writer_markers = 0
+writer_debug   = 0
+
+/**** INPUT FILE FOR PARTICLES ****/
+input_file = setup_r501x501_fsp40.bin
+
+/**** SCALES ****/
+eta = 1e18
+L   = 5e3
+V   = 1e-9
+T   = 400
+ 
+/**** SPACE-TIME ****/
+Nx      = 401
+Nz      = 41
+Nt      = 800
+xmin    = -280.000000e3
+zmin    =  0.000000e3
+xmax    =  0.000000e3
+zmax    =  15.000000e3 
+dt      = 1.2623e+11
+Courant = 0.3
+
+/**** SWITCHES ****/
+compressible    = 1
+ismechanical    = 1
+dt_constant     = 0
+RK              = 4
+isperiodic_x    = 0
+ispureshear_ALE = 2
+iselastic       = 1
+isthermal       = 0
+line_search     = 1
+free_surf       = 1
+free_surf_stab  = 1
+eqn_state       = 1
+thermal_eq      = 0
+subgrid_diff    = 2
+shear_heat      = 0
+adiab_heat      = 0
+isPl_soft       = 1
+penalty         = 1e5
+pc_type         = 1
+eta_avg         = 0
+diag_scaling    = 1
+num_deriv       = 0
+abs_tol_div     = 1e-10
+rel_tol_div     = 1e-10
+
+/**** SETUP DEPENDANT ****/
+EpsBG = 1e-15
+user0 = 2.5e3
+
+/**** GRAVITY ****/
+gx = 0.0000
+gz = -9.81000
+
+/**** PHASE PROPERTIES ****/
+Nb_phases = 2
+
+ID   = 0
+rho  = 2500.00 / frictional sediments
+mu   = 2e10
+Cv   = 1050
+k    = 2.5
+Qr   = 1e-20
+C    = 5e7
+phi  = 30
+psi  = 5
+eta_vp = 1e21
+n_vp   = 1.0
+Slim = 500e6
+alp  = 0.0
+bet  = 3e-11
+drho = 0
+cstv = 1
+pwlv = 0
+linv = 0
+gbsv = 0
+expv = 0
+gsel = 0
+eta0 = 1e23
+npwl = 1.0
+Qpwl = 0
+coh_soft = 1
+Ce       = 5e6
+phi_soft = 1
+phie     = 10
+plss = 0.0
+plse = 0.5
+
+ID   = 1
+rho  = 2500.00 / viscous sediments
+mu   = 2e10
+Cv   = 1050
+k    = 2.5
+Qr   = 1e-20
+C    = 1e20
+phi  = 30
+Slim = 500e6
+alp  = 0.0
+bet  = 3e-11
+drho = 0
+cstv = 1
+pwlv = 0
+linv = 0
+gbsv = 0
+expv = 0
+gsel = 0
+eta0 = 1e20
+npwl = 1.0
+Qpwl = 0
+
+/**** PARTICLES ****/
+Nx_part  = 4
+Nz_part  = 4
+min_part_cell = 16
+
+/**** NON-LINEAR ITERATIONS ****/
+Newton        = 1
+nit_max       = 20
+Picard2Newton = 1
+nit_Pic_max   = 10
+Pic2NewtCond  = 1e-1
+rel_tol_KSP   = 5e-4
+abs_tol_u     = 1e-9
+abs_tol_p     = 1e-9
+rel_tol_u     = 1e-8
+rel_tol_p     = 1e-8
+mineta        = 1e15
+maxeta        = 1e28

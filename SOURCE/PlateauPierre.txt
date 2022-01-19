@@ -1,0 +1,275 @@
+/**** RESTART ****/
+istep = 000100
+irestart = 0
+
+/**** OUTPUT FILES ****/
+writer = 1
+writer_step = 10
+writer_markers = 0
+writer_debug   = 0 
+
+/**** INPUT FILE FOR PARTICLES ****/
+input_file = setup_r501x501_fsp40.bin
+
+/**** SCALES ****/
+eta = 1e+20
+L   = 30e4
+V   = 1.5e-8
+T   = 1e+02
+ 
+/**** SPACE-TIME ****/
+Nx      = 350
+Nz      = 250
+Nt      = 100
+xmin    = -750.000000e3
+zmin    = -1000.000000e3
+xmax    =  750.000000e3
+zmax    = 10.000000e3 
+dt      = 1.2623e+10
+dt_constant = 0
+dt_max  = 3.1558e+12
+Courant = 0.45
+abs_tol_div = 1e-28
+eta_avg = 2
+
+abs_tol_div     = 1e-9
+rel_tol_div     = 1e-9
+penalty         = 4e4
+
+initial_part          = 0
+IncrementalUpdateGrid = 0
+
+/**** SWITCHES ****/
+ismechanical    = 1
+dt_constant     = 0
+RK              = 4
+isperiodic_x    = 0
+ispureshear_ALE = 1
+isinertial      = 0
+iselastic       = 1
+isthermal       = 1
+line_search     = 0
+free_surf       = 1
+free_surf_stab  = 1
+eqn_state       = 1
+thermal_eq      = 1
+subgrid_diff    = 1
+shear_heat      = 0
+adiab_heat      = 0
+compressible    = 0
+cpc             = 1
+
+
+/**** SETUP DEPENDANT ****/
+EpsBG           = 1e-20 /Background strain rate
+user0           = 149e3 /LAB depth 
+user1           = 15e3 / LC thickness
+user2           = -15e3 /diff crustal thickness
+user3           = 1350 / mantle T
+user4           = 50e3 /length Moho step
+user5           = 1e-3  / grainsize background
+
+user6 = -300e3 / z west [m]
+user7 =  18    / dip angle [o]
+user8 = 1.0e-9 / velocity [m/s]
+
+force_act_vol_ast = 1
+act_vol_dif_ast   = 4e-6
+
+/**** GRAVITY ****/
+gx = 0.0000
+gz = -9.81
+
+/**** PHASE PROPERTIES ****/
+Nb_phases = 7
+
+ID   = 3
+density_model = 1
+gs_ref = 2e-3
+rho  = 2800.00 / lower crust
+mu   = 2.5e10
+Cv   = 1050
+k    = 2.1
+Qr   = 0.2e-6
+C    = 5e6
+phi  = 30
+Slim = 500e9
+alp  = 10.0e-6
+bet  = 1e-11
+drho = 0
+cstv = 0
+pwlv = 12
+linv = 0
+gbsv = 0
+expv = 0
+gsel = 0
+eta0 = 5.3367e+07
+npwl = 3.3
+Qpwl = 186.5e3
+
+ID   = 5
+density_model = 1
+gs_ref = 2e-3
+rho  = 2506.00 / upper crust (right)
+mu   = 2.5e10
+Cv   = 1050
+k    = 2.5
+Qr   = 1.4e-6
+C    = 5e6
+phi  = 30
+Slim = 500e9
+alp  = 10.0e-6
+bet  = 1e-11
+drho = 0
+cstv = 0
+pwlv = 13
+linv = 0
+gbsv = 0
+expv = 0
+gsel = 0
+eta0 = 5.3367e+07
+npwl = 3.3
+Qpwl = 186.5e3
+
+ID   = 0
+rho  = 2800.00 / upper crust India
+mu   = 2.5e10
+Cv   = 1050
+k    = 2.5
+Qr   = 1.4e-6
+C    = 5e6
+phi  = 30
+Slim = 500e9
+alp  = 10.0e-6
+bet  = 1e-11
+drho = 0
+cstv = 0
+pwlv = 13
+linv = 0
+gbsv = 0
+expv = 0
+gsel = 0
+eta0 = 5.3367e+07
+npwl = 3.3
+Qpwl = 186.5e3
+
+ID   = 4
+density_model = 1
+gs_ref = 2e-3
+rho  = 3230.00 / lithospheric mantle (right)
+mu   = 2.5e10
+Cv   = 1050
+k    = 3.0
+Qr   = 0e-10
+C    = 5e6
+phi  = 30
+Slim = 500e9
+alp  = 10.0e-6
+bet  = 1e-11
+drho = 0
+cstv = 1
+pwlv = 00
+linv = 00
+gbsv = 0
+expv = 0
+gsel = 0
+eta0 = 1e23
+npwl = 1.0
+Qpwl = 0.0
+
+ID   = 6
+density_model = 1
+gs_ref = 2e-3
+rho  = 2506 / lower crust (right)
+mu   = 2.5e10
+Cv   = 1050
+k    = 2.1
+Qr   = 0.2e-6
+C    = 5e6
+phi  = 30
+Slim = 500e9
+alp  = 10.0e-6
+bet  = 1e-11
+drho = 0
+cstv = 0
+pwlv = 12
+linv = 0
+gbsv = 0
+expv = 0
+gsel = 0
+eta0 = 5.3367e+07
+npwl = 3.3
+Qpwl = 186.5e3
+
+ID   = 1
+density_model = 1
+gs_ref = 2e-3
+rho  = 3300.00 / lithospheric mantle (left)
+mu   = 2.5e10
+Cv   = 1050
+k    = 3.0
+Qr   = 0e-10
+C    = 5e6
+phi  = 30
+Slim = 500e9
+alp  = 10.0e-6
+bet  = 1e-11
+drho = 0
+cstv = 0
+pwlv = 0
+linv = 40
+gbsv = 0
+expv = 00
+gsel = 0
+eta0 = 5.5317e+04
+npwl = 3.5
+Qpwl = 532e3
+
+ID   = 2
+density_model = 1
+gs_ref = 2e-3
+rho  = 3300.00 / asthenosphere (adiabatic)
+mu   = 2.5e10
+Cv   = 1050
+k    = 3.0
+Qr   = 0e-10
+C    = 5e6
+phi  = 30
+Slim = 500e9
+alp  = 10.0e-6
+bet  = 1e-11
+drho = 0
+cstv = 0
+pwlv = 0
+linv = 40
+gbsv = 0
+expv = 0
+gsel = 0
+eta0 = 1.4962e+05
+npwl = 4
+Qpwl = 471e3
+
+/**** DEFMAPS ****/
+nT    =    200      / Temperature resolutin []
+nE    =    200      / Strain rate resolution []
+nd    =    6        / Grain size resolution []
+Tmin  =    127      / Temperature minimum [°C]
+Tmax  =    1827     / Temperature maximum [°C]
+Emin  =    -50      / Strain rate minimum log_10 [1/s]
+Emax  =    5        / Strain rate maximum log_10 [1/s]
+dmin  =    -7       / Grain size minimum log_10 [m]
+dmax  =    -2       / Grain size maximum log_10 [m]
+Pn    =  1e9        / Pressure [Pa]
+
+/**** PARTICLES ****/
+Nx_part  = 4
+Nz_part  = 4
+min_part_cell = 16
+
+/**** PICARD ITERATIONS ****/
+Newton  = 0
+nit_max = 3
+tol_u   = 5e-8
+tol_p   = 5e-8
+mineta  = 1e19
+maxeta  = 1e25

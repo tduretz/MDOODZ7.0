@@ -1,0 +1,218 @@
+**** RESTART ****/
+istep = 000100
+irestart = 1
+
+/**** OUTPUT FILES ****/
+writer = 1
+writer_step = 10
+writer_debug = 0
+writer_markers = 0
+
+/**** INPUT FILE FOR PARTICLES ****/
+input_file = setup_r501x501_fsp40.bin
+
+/**** MULTIGRID SWITCH ****/ 
+MMG = 0
+
+/**** SCALES ****/
+eta = 1e24
+L   = 1e3
+V   = 1e-10
+T   = 400
+ 
+/**** SPACE-TIME ****/
+Nx      = 400 //1718
+Nz      = 250
+Nt      = 100
+xmin    = -3000.000000e3
+zmin    =  5000.0000000e3
+xmax    =  3000.000000e3
+zmax    =  6400e3 
+dt          = 2.5e+11
+Courant     = 0.40
+penalty     = 1e2
+eta_avg     = 1
+cpc         = 1
+surf_remesh = 0
+abs_tol_div     = 1e-9
+rel_tol_div     = 1e-9
+
+/**** SWITCHES ****/
+ismechanical    = 1
+dt_constant     = 0
+RK              = 4
+isperiodic_x    = 0
+ispureshear_ALE = 0
+isinertial      = 0
+iselastic       = 0
+isthermal       = 0
+line_search     = 0
+free_surf       = 0
+free_surf_stab  = 1
+eqn_state       = 0
+thermal_eq      = 0
+subgrid_diff    = 0
+shear_heat      = 0
+adiab_heat      = 0
+polar           = 1
+
+
+/**** SETUP DEPENDANT ****/
+EpsBG           = 0 /Background strain rate
+user0           = 0 /Activate open BC EAST side
+user1           = 1 /Activate upper plate
+user2           = 1 /Activate slab dip 
+user3           = 1e5 /longueur du biseau l2 [m]
+
+/**** GRAVITY ****/
+gx = 0.0000
+gz = -9.8100
+
+/**** PHASE PROPERTIES ****/
+Nb_phases = 6
+
+ID   = 0
+rho  = 3325.00
+mu   = 1e10
+Cv   = 1050
+k    = 2.3
+Qr   = 1.5e-6
+C    = 1e70
+phi  = 30
+Slim = 500e90
+alp  = 10.0e-6
+bet  = 1e-11
+drho = 0
+cstv = 0
+pwlv = 1
+linv = 0
+gbsv = 0
+expv = 0
+gsel = 0
+eta0 = 3e22
+npwl = 1.0
+Qpwl = 0
+
+ID   = 1
+rho  = 3300.00
+mu   = 1e10
+Cv   = 1050
+k    = 2.3
+Qr   = 1.5e-6
+C    = 1e70
+phi  = 30
+Slim = 500e9
+alp  = 10.0e-6
+bet  = 1e-11
+drho = 0
+cstv = 1
+pwlv = 0
+linv = 0
+gbsv = 0
+expv = 0
+gsel = 0
+eta0 = 1e20
+npwl = 1.0
+Qpwl = 0.0
+
+
+ID   = 2
+rho  = 3325.00
+mu   = 1e10
+Cv   = 1050
+k    = 2.3
+Qr   = 1.5e-6
+C    = 1e70
+phi  = 30
+Slim = 500e9
+alp  = 10.0e-6
+bet  = 1e-11
+drho = 0
+cstv = 0
+pwlv = 1
+linv = 0
+gbsv = 0
+expv = 0
+gsel = 0
+eta0 = 3e22
+npwl = 1
+Qpwl = 0
+
+ID   = 3
+rho  =  3325.00
+mu   = 1e10
+Cv   = 1050
+k    = 2.3
+Qr   = 1.5e-6
+C    = 1e70
+phi  = 30
+Slim = 10e60
+alp  = 10.0e-6
+bet  = 1e-11
+drho = 0
+cstv = 0
+pwlv = 1
+linv = 0
+gbsv = 0
+expv = 0
+gsel = 0
+eta0 = 1e20
+npwl = 1.0
+Qpwl = 0
+
+ID   = 4
+rho  = 3310.00
+mu   = 1e10
+Cv   = 1050
+k    = 2.3
+Qr   = 1.5e-6
+C    = 1e70
+phi  = 30
+Slim = 500e9
+alp  = 10.0e-6
+bet  = 1e-11
+drho = 0
+cstv = 1
+pwlv = 0
+linv = 0
+gbsv = 0
+expv = 0
+gsel = 0
+eta0 = 2e20
+npwl = 1.0
+Qpwl = 0
+
+ID   = 5
+rho  = 1.00
+mu   = 1e10
+Cv   = 1050
+k    = 2.3
+Qr   = 1.5e-6
+C    = 1e70
+phi  = 30
+Slim = 500e9
+alp  = 10.0e-6
+bet  = 1e-11
+drho = 0
+cstv = 1
+pwlv = 0
+linv = 0
+gbsv = 0
+expv = 0
+gsel = 0
+eta0 = 1e19
+npwl = 1.0
+Qpwl = 0
+
+
+/**** PARTICLES ****/
+Nx_part  = 4
+Nz_part  = 4
+min_part_cell = 16
+
+/**** PICARD ITERATIONS ****/
+nit_max = 3
+tol_u   = 1e-6
+tol_p   = 1e-6
+
+

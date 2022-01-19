@@ -1,0 +1,152 @@
+/**** RESTART ****/
+istep = 000001
+irestart = 0
+
+/**** OUTPUT FILES ****/
+writer = 1
+writer_step = 1
+writer_markers = 0
+writer_debug = 0
+
+/**** INPUT FILE FOR PARTICLES ****/
+input_file = setup_r501x501_fsp40.bin
+
+/**** SCALES ****/
+eta = 1e20
+L   = 1e2
+V   = 1e-10
+T   = 1
+ 
+/**** SPACE-TIME ****/
+Nx   = 201
+Nz   = 201
+Nt   = 1
+xmin = -150.0000000e0
+xmax =  150.0000000e0
+zmin = -150.0000000e0
+zmax =  150.0000000e0 
+dt      = 1e0
+Courant = 0.49
+
+/**** Solver ****/
+penalty     = 1e3
+abs_tol_div = 1e-8
+rel_tol_div = 1e-8
+
+/**** SWITCHES ****/
+ismechanical    = 1
+dt_constant     = 1
+RK              = 4
+advection       = 0
+isperiodic_x    = 0
+ispureshear_ALE = 0
+isinertial      = 0
+iselastic       = 0
+isthermal       = 0
+line_search     = 1
+free_surf       = 0
+free_surf_stab  = 0
+eqn_state       = 0
+thermal_eq      = 0
+subgrid_diff    = 0
+shear_heat      = 0
+adiab_heat      = 0
+
+/**** SMOOTH COUNTOUR ****/
+diffuse_X        = 0
+diffusion_length = 1e0
+
+/**** SETUP DEPENDANT ****/
+EpsBG           = 5e-12  / Background strain rate (positive in compression)
+user0           = 0      / Dirichlet (0) or Neumann (1) for normal components 
+user1           = 35.0   / semi major axis of ellipse [m]
+user2           = 4.375  / semi minor axis of ellipse [m]
+user3           = 75.0	 / rotation (clockwise) of ellipse [deg]. Assuming initially horizontal orientation of ellipse.
+user4           = 520    / T (Celsius)
+
+/**** GRAVITY ****/
+gx = 0.0000
+gz = -0.0000
+
+/**** PHASE PROPERTIES ****/
+Nb_phases = 2
+
+ID   = 0             / Matrix
+gsref = 1e-3         / reference grain size 
+rho  = 3300 
+mu   = 1
+Cv   = 1050
+k    = 2.5
+Qr   = 0
+C    = 1e70
+phi  = 30
+Slim = 500e9
+alp  = 10.0e-6
+bet  = 1e-11
+cstv = 0             / constant visc law
+pwlv = 19            / disloc. creep
+linv = 25            / diff. creep
+gbsv = 0             / grain boundary sliding
+expv = 25            / peierls creep
+gsel = 0             / grain size evo.
+eta0 = 1e21
+npwl = 1.0
+Qpwl = 0
+phase_mix = 1
+Reac      = 1
+
+
+ID   = 1              / Inclusion
+gsref = 1e-3          / reference grain size
+rho  = 2700.00 
+mu   = 1
+Cv   = 1050
+k    = 2.5
+Qr   = 0
+C    = 1e7
+phi  = 30
+Slim = 500e9
+alp  = 10.0e-6
+bet  = 1e-11
+cstv  = 0             / constant visc law
+pwlv  = 24            / disloc. creep
+linv  = 0             / diff. creep
+gbsv  = 0             / grain boundary sliding
+expv  = 0             / peierls creep
+gsel  = 0             / grain size evo.
+eta0  = 1e19
+npwl  = 1.0
+Qpwl  = 0
+
+/**** DEFMAPS ****/
+def_maps = 0
+nT    =    400      / Temperature resolutin []
+nE    =    400      / Strain rate resolution []
+nd    =    1        / Grain size resolution []
+Tmin  =    227      / Temperature minimum [°C]
+Tmax  =    1227     / Temperature maximum [°C]
+Emin  =    -30      / Strain rate minimum log_10 [1/s]
+Emax  =    -1        / Strain rate maximum log_10 [1/s]
+dmin  =    -3       / Grain size minimum log_10 [m]
+dmax  =    -2       / Grain size maximum log_10 [m]
+Pn    =  1e9        / Pressure [Pa]
+
+/**** PARTICLES ****/
+Nx_part  = 4
+Nz_part  = 4
+min_part_cell = 16
+
+/**** PICARD ITERATIONS ****/
+Newton  = 1
+nit_max = 10
+pc_type = 1
+Picard2Newton = 1
+Pic2NewtCond  = 7.5e-1
+rel_tol_KSP = 5e-3
+abs_tol_u   = 1e-9
+abs_tol_p   = 1e-9
+abs_rel_u   = 1e-9
+abs_rel_p   = 1e-9
+mineta  = 1e0
+maxeta  = 1e30
+GNUplot_residuals = 1

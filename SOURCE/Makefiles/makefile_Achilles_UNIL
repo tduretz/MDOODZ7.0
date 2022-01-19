@@ -1,0 +1,65 @@
+# MDOODZ 6.0 makefile
+LINK_HDF5_LIB = /soft/HDF5/hdf5-1.8.14-gcc482/lib/
+LINK_HDF5_INC = /soft/HDF5/hdf5-1.8.14-gcc482/include/
+LINK_SUSP_LIB = /home/tduretz/soft/SuiteSparse-4.4.5_Intel/build/lib/
+LINK_SUSP_INC = /home/tduretz/soft/SuiteSparse-4.4.5_Intel/build/include/
+
+# Compiler
+CC = gcc
+#CC=/opt/local/bin/gcc-mp-7
+
+#---------------------------------------------------#
+# C flags
+CFLAGS = -D _UMFPACK_ -I . -I ${LINK_HDF5_INC} -I ${LINK_SUSP_INC}
+
+ifeq ($(OPT),yes)	
+	CFLAGS += -O3 -ftree-vectorize -funroll-loops
+else
+	CFLAGS += -g -Wall  -O0 -fno-inline -fno-omit-frame-pointer
+endif
+
+ifeq ($(OMP),yes)
+	CFLAGS += -fopenmp -D _OMP_
+else
+	CFLAGS += -Wno-unknown-pragmas 
+endif
+
+ifeq ($(VG),yes)
+	CFLAGS += -D _VG_ -Wno-format-zero-length
+endif
+
+ifeq ($(NEW_INPUT),yes)
+	CFLAGS += -D _NEW_INPUT_
+endif
+
+CFLAGS += -Wno-unused-variable  -Wno-comment -std=gnu99
+#---------------------------------------------------#
+# Libraries
+LIBS = -lz -L ${LINK_HDF5_LIB} -lhdf5 
+
+# Related to SuiteSparse
+LIBS += -llapack -lcxsparse -lumfpack -lamd -lcholmod -lcolamd -lbtf -lsuitesparseconfig -lblas
+
+# Link to openmp
+ifeq ($(OMP),yes)
+    LIBS += -lgomp
+endif
+
+#---------------------------------------------------#
+# Rules
+all: Doodzi_$(MODEL)
+
+FILES = RheologyParticles.o FD_Jacobian.o ChemicalRoutines.o ParticleReseeding.o Main_DOODZ.o Solvers.c Routines_BEN.o StokesRoutines.o StokesAssemblyCoupled.o StokesAssemblyDecoupled.o AdvectionRoutines.o RheologyDensity.o HDF5Output.o SparseTools.o ThermalRoutines.o ThermalSolver.o ParticleRoutines.o free_surf.o FlowLaws.o MemoryAllocFree.o InputOutput.o MiscFunctions.o GridRoutines.o
+
+ifeq ($(NEW_INPUT),yes)
+        FILES += BC.o
+        Doodzi_$(MODEL): ${FILES}
+	$(CC) ${FILES} -o MDoodz6.0 ${LIBS}
+else
+	FILES += ./$(MODEL_PATH)/set_$(MODEL).o
+        Doodzi_$(MODEL): ${FILES}
+	$(CC) ${FILES} -o Doodzi_$(MODEL) ${LIBS}
+endif
+
+clean:
+	rm -rf *o ./$(MODEL_PATH)/*.o Doodzi_$(MODEL) MDoodz6.0

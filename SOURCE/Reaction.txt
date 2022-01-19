@@ -1,0 +1,303 @@
+/**** RESTART ****/
+istep = 00100
+irestart = 0
+
+/**** OUTPUT FILES ****/
+writer          = 1
+writer_step     = 10
+writer_markers  = 0
+writer_debug    = 0
+writer_energies = 0
+
+/**** SCALES ****/
+eta = 1e15
+L   = 2.0
+V   = 1.0e-10
+T   = 700
+
+/**** SPACE-TIME ****/
+Nx      = 101
+Nz      = 101
+Nt      = 100
+xmin    =-1.0
+zmin    =-1.0
+xmax    = 1.0
+zmax    = 1.0
+advection         = 1
+dt                = 1e11
+dt_constant       = 0
+Courant           = 0.2
+penalty           = 1e2
+lsolver           = 2
+diag_scaling      = 0
+abs_tol_div       = 1e-10
+rel_tol_div       = 1e-10
+GNUplot_residuals = 0
+pc_type           = 1
+eta_avg           = 1
+num_deriv         = 0
+StressRotation    = 1
+safe_mode         = 1
+safe_dt_div       = 2.0
+nstagmax          = 5
+IncrementalUpdateGrid = 1
+StressUpdate    = 0
+
+/**** SWITCHES ****/
+compressible    = 1
+iselastic       = 1
+ProgReac        = 1           / !!!!
+NoReturn        = 1 
+VolChangeReac   = 0
+ismechanical    = 1
+RK              = 4
+isperiodic_x    = 1
+ispureshear_ALE = 0
+isthermal       = 0
+line_search     = 1
+free_surf       = 0
+free_surf_stab  = 0
+eqn_state       = 1
+thermal_eq      = 0
+subgrid_diff    = 2
+shear_heat      = 0
+adiab_heat      = 0
+fstrain         = 0
+
+/**** SETUP DEPENDANT ****/
+shear_style     = 1
+EpsBG           = 2.0e-14
+PrBG            = 1.6e9
+user0           = 680.0     / temperature [°C]
+user1           = 0
+user2           = 0
+user3           = 0
+
+/**** GRAVITY ****/
+gx = 0.0000
+gz = 0.0000
+
+/**** MAT PROPERTIES ****/
+Nb_phases = 7
+
+/**** PHASE 0 ****/
+ID   = 0
+rho  = 2800.00 / matrix Granulite
+mu   = 3.0e10
+Cv   = 1050.0
+k    = 2.3
+Qr   = 0.0
+C    = 1.0e70
+phi  = 10.0
+eta_vp = 5.0e19
+n_vp   = 1.0
+Slim = 500e9
+alp  = 10.0e-6
+bet  = 2.5000e-11    / (K=4e10)
+drho = 0
+cstv = 0             / constant visc law
+pwlv = 30            / disloc. creep
+linv = 0             / diff. creep
+gbsv = 0             / grain boundary sliding
+expv = 0             / peierls creep
+gsel = 0             / grain size evo.
+eta0 = 0
+npwl = 0
+Qpwl = 0
+reac_soft  = 1
+reac_phase = 5
+Pr         = 1.8e9
+dPr        = 1e8
+tr         = 3.1558e8
+
+/**** PHASE 1 ****/
+ID   = 1
+rho  = 2800.00 / Dry CPX inclusion
+mu   = 3.0e10
+Cv   = 1050.0
+k    = 2.3
+Qr   = 0.0
+C    = 5.0e70
+phi  = 0.0
+eta_vp = 5.0e19
+n_vp   = 1.0
+Slim = 500e9
+alp  = 10.0e-6
+bet  = 2.5000e-11    / (K=4e10)
+drho = 0
+cstv = 0             / constant visc law
+pwlv = 31            / disloc. creep
+linv = 0             / diff. creep
+gbsv = 0             / grain boundary sliding
+expv = 0             / peierls creep
+gsel = 0             / grain size evo.
+eta0 = 0
+npwl = 0
+Qpwl = 0
+reac_soft  = 0
+
+/**** PHASE 2 ****/
+ID   = 2
+rho  = 2800.00 / Dry CPX inclusion
+mu   = 3.0e10
+Cv   = 1050.0
+k    = 2.3
+Qr   = 0.0
+C    = 5.0e70
+phi  = 0.0
+eta_vp = 5.0e19
+n_vp   = 1.0
+Slim = 500e9
+alp  = 10.0e-6
+bet  = 2.5000e-11    / (K=4e10)
+drho = 0
+cstv = 0             / constant visc law
+pwlv = 31            / disloc. creep
+linv = 0             / diff. creep
+gbsv = 0             / grain boundary sliding
+expv = 0             / peierls creep
+gsel = 0             / grain size evo.
+eta0 = 0
+npwl = 0
+Qpwl = 0
+reac_soft  = 0
+
+/**** PHASE 3 ****/
+ID   = 3
+rho  = 2800.00 / matrix Granulite
+mu   = 3.0e10
+Cv   = 1050.0
+k    = 2.3
+Qr   = 0.0
+C    = 1.0e70
+phi  = 10.0
+eta_vp = 5.0e19
+n_vp   = 1.0
+Slim = 500e9
+alp  = 10.0e-6
+bet  = 2.5000e-11    / (K=4e10)
+drho = 0
+cstv = 0             / constant visc law
+pwlv = 30            / disloc. creep
+linv = 0             / diff. creep
+gbsv = 0             / grain boundary sliding
+expv = 0             / peierls creep
+gsel = 0             / grain size evo.
+eta0 = 0
+npwl = 0
+Qpwl = 0
+reac_soft  = 1
+reac_phase = 5
+Pr         = 1.8e9
+dPr        = 1e8
+tr         = 3.1558e8
+
+/**** PHASE 4 ****/
+ID   = 4
+rho  = 2600.00 /SALT no used right now
+mu   = 3.0e10
+Cv   = 1050.0
+k    = 2.3
+Qr   = 0.0
+C    = 50.0e60
+phi  = 30.0
+eta_vp = 3.5355e13
+n_vp   = 2.0
+Slim = 500.0e9
+alp  = 10.0e-6
+bet  = 5.0e-11
+drho = 0
+cstv = 0 
+pwlv = 30
+linv = 0
+gbsv = 0
+expv = 0
+gsel = 0
+eta0 = 1.0e18
+npwl = 0
+Qpwl = 0
+reac_soft  = 0
+
+/**** PHASE 5 ****/
+ID   = 5
+rho  = 3000.00 / Omphacite
+mu   = 3.0e10
+Cv   = 1050.0
+k    = 2.3
+Qr   = 0.0
+C    = 1.0e70
+phi  = 10.0
+eta_vp = 5.0e19
+n_vp   = 1.0
+Slim = 500e9
+alp  = 10.0e-6
+bet  = 2.5000e-11    / (K=4e10)
+drho = 0
+cstv = 0             / constant visc law
+pwlv = 21            / disloc. creep
+linv = 0             / diff. creep
+gbsv = 0             / grain boundary sliding
+expv = 0             / peierls creep
+gsel = 0             / grain size evo.
+eta0 = 0
+npwl = 0
+Qpwl = 0
+reac_soft  = 0
+
+/**** PHASE 6 ****/
+ID   = 6
+rho  = 3000.00 / Omphacite
+mu   = 3.0e10
+Cv   = 1050.0
+k    = 2.3
+Qr   = 0.0
+C    = 1.0e70
+phi  = 10.0
+eta_vp = 5.0e19
+n_vp   = 1.0
+Slim = 500e9
+alp  = 10.0e-6
+bet  = 2.5000e-11    / (K=4e10)
+drho = 0
+cstv = 0             / constant visc law
+pwlv = 21            / disloc. creep
+linv = 0             / diff. creep
+gbsv = 0             / grain boundary sliding
+expv = 0             / peierls creep
+gsel = 0             / grain size evo.
+eta0 = 0
+npwl = 0
+Qpwl = 0
+reac_soft  = 0
+
+/**** DEFMAPS ****/
+nT    =    51      / Temperature resolutin []
+nE    =    51      / Strain rate resolution []
+nd    =    2        / Grain size resolution []
+Tmin  =    240      / Temperature minimum [°C]
+Tmax  =    2000     / Temperature maximum [°C]
+Emin  =    -50      / Strain rate minimum log_10 [1/s]
+Emax  =    5        / Strain rate maximum log_10 [1/s]
+dmin  =    -7       / Grain size minimum log_10 [m]
+dmax  =    -2       / Grain size maximum log_10 [m]
+Pn    =  1e9        / Pressure [Pa]
+
+/**** PARTICLES ****/
+Nx_part  = 4
+Nz_part  = 4
+min_part_cell = 16
+
+/**** NON-LINEAR ITERATIONS ****/
+Newton        = 1
+let_res_grow  = 0
+line_search_min = 0.0 
+Picard2Newton = 1
+Pic2NewtCond  = 2e-1
+nit_max       = 30
+rel_tol_KSP   = 5e-4
+abs_tol_u     = 1e-6
+abs_tol_p     = 1e-6
+rel_tol_u     = 1e-9
+rel_tol_p     = 1e-9
+mineta        = 1e10
+maxeta        = 1e30

@@ -1,0 +1,511 @@
+/**** RESTART ****/
+
+istep = 00000200
+irestart = 0
+
+/**** OUTPUT FILES ****/
+
+writer = 1
+writer_step = 10
+writer_markers = 0
+writer_debug   = 0 
+
+/**** INPUT FILE FOR PARTICLES ****/
+
+input_file = setup_r501x501_fsp40.bin
+
+/**** SCALES ****/ Scaling parameters for
+
+eta = 1.0e+20      /viscosity
+L   = 100.0e3       /length
+V   = 1.0e-9     /velocity
+T   = 500.0      /temperature
+
+/**** SPACE-TIME ****/
+
+Nx      = 501  
+Nz      = 381 
+Nt      = 0
+xmin    = -800.0e3
+xmax    =  800.0e3
+zmin    = -660.0e3
+zmax    =   20.0e3 
+dt      = 1.2623e+11
+Courant = 0.45
+penalty = 1e2
+eta_avg = 0
+abs_tol_div = 1e-30
+
+/**** SWITCHES ****/
+
+ismechanical    = 1
+dt_constant     = 0
+RK              = 4
+isperiodic_x    = 0
+ispureshear_ALE = 0  /1: box stretched at constant strain rate; -1 box of constant size
+isinertial      = 0
+iselastic       = 1
+isthermal       = 1
+isPl_soft       = 0
+line_search     = 1
+free_surf       = 1
+free_surf_stab  = 5
+eqn_state       = 1
+thermal_eq      = 1
+subgrid_diff    = 2
+shear_heat      = 1
+adiab_heat      = 1
+surf_remesh     = 1
+surf_processes  = 0 /0 = none; 1 = diffusion only; 2 = fills instantaneously the basin up to the base level;  3 = diffusion + source term
+
+/**** SETUP DEPENDANT ****/
+
+EpsBG           = -1.0e-15  /Background strain rate [s-1] => extension rate = 1 cm/yr
+user0           = 0.0e3     /Radius of perturbation [m]
+user1           = 120.0e3   /Initial lithosphere thickness [m]
+user2           = 33.0e3    /Initial crust thickness [m]
+user3           = 11        /Number of Ellipses per level in the crust
+user4           = 6         /Number of Ellipses in the mantle
+user5           = 8.0e3
+user6           = 0
+user7           = 0
+surf_diff       = 5.0e-6 /topography diffusion coefficient
+surf_ised1      = 6 /sediment phase indices 
+surf_ised2      = 7
+surf_sedirate   = 1.584404391e-11 / sediementation rate [m/s]:3.1688e-12 <-> 0.01 cm/yr
+surf_baselev    = -5.0e3.0e3 / base level for sedimentation
+rec_T_P_x_z     = 1 / initial P and T field record
+polar           = 0
+
+/**** GRAVITY ****/
+
+gx = 0.0000
+gz = -9.81
+
+/**** PHASE PROPERTIES ****/
+
+Nb_phases = 14 
+
+/******************** PHASE 0 ********************
+ID   = 0       / Background Crust - EUROPE
+rho  = 2800.00 / Anorthite - Rybacki & Dresen (2004)
+eta  = 5e23
+mu   = 2e10
+Cv   = 1050
+k    = 2.25
+Qr   = 1.02e-6 / Kelemen
+C    = 1e7
+phi  = 30
+Slim = 500e9
+alp  = 3e-5
+bet  = 1e-11
+drho = 0
+cstv = 0
+pwlv = 10
+linv = 0
+gbsv = 0
+expv = 0
+gsel = 0
+gs_ref = 1e-3
+eta0 = 5e24
+npwl = 1
+Qpwl = 0
+
+density_model = 2 / 2 is for Phase transitions - default is 1 (EOS)
+phase_diagram = 7 / 1 is for Hawaiian pyrolite high resolution
+
+/******************** PHASE 1 ********************
+ID   = 1       / Quartzite Lenses - EUROPE
+rho  = 2800.00 /Wet Quartzite - Ranalli (1995)
+eta  = 5e21
+mu   = 2e10
+Cv   = 1050
+k    = 2.25
+Qr   = 1.02e-6 / Kelemen
+C    = 1e6
+phi  = 5
+Slim = 500e9
+alp  = 3e-5
+bet  = 1e-11
+drho = 0
+cstv = 0
+pwlv = 13
+linv = 0
+gbsv = 0
+expv = 0
+gsel = 0
+gs_ref = 1e-3
+eta0 = 5e24
+npwl = 1
+Qpwl = 0
+
+density_model = 2 / 2 is for Phase transitions - default is 1 (EOS)
+phase_diagram = 6 / 1 is for Hawaiian pyrolite high resolution
+
+/******************** PHASE 2 ********************
+ID   = 2       / Diabase Lenses - EUROPE
+rho  = 2800.00 / Maryland Diabase - Mackwell et al. (1998)
+eta  = 5e21
+mu   = 2e10
+Cv   = 1050
+k    = 2.25
+Qr   = 1.02e-6 / Kelemen
+C    = 1e7
+phi  = 30
+Slim = 500e9
+alp  = 3e-5
+bet  = 1e-11
+drho = 0
+cstv = 0
+pwlv = 11
+linv = 0
+gbsv = 0
+expv = 0
+gsel = 0
+gs_ref = 1e-3
+eta0 = 5e24
+npwl = 1
+Qpwl = 0
+
+density_model = 2 / 2 is for Phase transitions - default is 1 (EOS)
+phase_diagram = 5 / 1 is for Hawaiian pyrolite high resolution
+
+/******************** PHASE 3 ********************
+ID   = 3       / Strong Mantle Lithosphere - Standard
+rho  = 3350.00 / Olivine Dry Dislocation creep - Hirth & Kohlstedt (2003)
+eta  = 5e23
+mu   = 2e10
+Cv   = 1050
+k    = 2.75     / Hofmeister 1999 - Science
+Qr   = 2.1139e-8
+C    = 1e7
+phi  = 30
+Slim = 500e9
+alp  = 3e-5
+bet  = 1e-11
+drho = 0
+cstv = 0
+pwlv = 40
+linv = 40
+gbsv = 0
+expv = 40
+gsel = 0
+gs_ref = 1e-3
+eta0 = 5e24
+npwl = 1
+Qpwl = 0
+
+density_model = 2 / 2 is for Phase transitions - default is 1 (EOS)
+phase_diagram = 1 / 1 is for Hawaiian pyrolite high resolution
+
+/******************** PHASE 4 ********************
+ID   = 4       / Strong Mantle Asthenosphere - Standard
+rho  = 3350.00 / Olivine Dry Dislocation creep - Hirth & Kohlstedt (2003)
+eta  = 5e23
+mu   = 2e10
+Cv   = 1050
+k    = 2.75
+Qr   = 2.1139e-8
+C    = 1e7
+phi  = 30
+Slim = 500e9
+alp  = 3e-5
+bet  = 1e-11
+drho = 0
+cstv = 0
+pwlv = 40
+linv = 40
+gbsv = 0
+expv = 40
+gsel = 0
+gs_ref = 1e-3
+eta0 = 5e24
+npwl = 1
+Qpwl = 0
+
+density_model = 2 / 2 is for Phase transitions - default is 1 (EOS)
+phase_diagram = 1 / 1 is for Hawaiian pyrolite high resolution
+
+/******************** PHASE 5 ********************
+ID   = 5       / Weak lithospheric lenses - Standard
+rho  = 3350.00 / Olivine Wet Dislocation creep - Hirth & Kohlstedt (2003)
+eta  = 5e23
+mu   = 2e10
+Cv   = 1050
+k    = 2.75
+Qr   = 2.1139e-8
+C    = 1e7
+phi  = 30
+Slim = 500e9
+alp  = 3e-5
+bet  = 1e-11
+drho = 0
+cstv = 0
+pwlv = 41
+linv = 41
+gbsv = 0
+expv = 40
+gsel = 0
+gs_ref = 1e-3
+eta0 = 5e24
+npwl = 1
+Qpwl = 0
+
+density_model = 2 / 2 is for Phase transitions - default is 1 (EOS)
+phase_diagram = 4 / 1 is for Hawaiian pyrolite high resolution
+
+/******************** PHASE 6 ********************
+ID   = 6       / Sediments 1
+rho  = 2800.00 / Calcite - Schmid et al. (1977) 
+eta  = 5e21
+mu   = 2e10
+Cv   = 1050
+k    = 2.37     / Taken from Book: Applied Geothermics Eppelbaum|Kutasov Table 2.5
+Qr   = 0.56e-6    / Taken from Hasterok - Gard (2017) - Limestone (Sediments)
+C    = 1e7
+phi  = 30
+Slim = 500e9
+alp  = 3e-5
+bet  = 1e-11
+drho = 0
+cstv = 0
+pwlv = 18	
+linv = 0
+gbsv = 0
+expv = 0
+gsel = 0
+gs_ref = 1e-3
+eta0 = 5e24
+npwl = 1
+Qpwl = 0
+
+density_model = 2 / 2 is for Phase transitions - default is 1 (EOS)
+phase_diagram = 6 / 1 is for Hawaiian pyrolite high resolution
+
+
+/******************** PHASE 7 ********************
+ID   = 7       / Sediments 2
+rho  = 2800.00 / Mica - Kronenberg et al. (1990)
+eta  = 5e21
+mu   = 2e10
+Cv   = 1050
+k    = 2.55 / Taken from Book: Applied Geothermics Eppelbaum|Kutasov Table 2.5 
+Qr   = 2.9e-6  / Taken from Hasterok - Gard (2017) - Shale (Sediments)
+C    = 1e7
+phi  = 15
+Slim = 500e9
+alp  = 3e-5
+bet  = 1e-11
+drho = 0
+cstv = 0
+pwlv = 24
+linv = 0
+gbsv = 0
+expv = 0
+gsel = 0
+gs_ref = 1e-3
+eta0 = 5e24
+npwl = 1
+Qpwl = 0
+
+density_model = 2 / 2 is for Phase transitions - default is 1 (EOS)
+phase_diagram = 6 / 1 is for Hawaiian pyrolite high resolution
+
+/******************** PHASE 8 ********************
+ID   = 8       / Serpentinite
+rho  = 2585.00 / Antigorite Dislocation creep - Hilairet (2007) / Density taken from: Subduction factory 1 - Hacker, Abers, Peacock 2003
+eta  = 5e23
+mu   = 1.81e10 / taken from Hacker Abers Peacock 2003
+Cv   = 1050
+k    = 2.75
+Qr   = 2.1139e-8
+C    = 1e7
+phi  = 25
+Slim = 500e9
+alp  = 4.7e-5   / taken from: Subduction factory 1 - Hacker, Abers, Peacock 2003
+bet  = 1e-11
+drho = 0
+cstv = 0
+pwlv = 46
+linv = 0
+gbsv = 0
+expv = 0
+gsel = 0
+gs_ref = 1e-3
+eta0 = 5e24
+npwl = 1
+Qpwl = 0
+pref_pwl = 1.0
+
+density_model = 2 / 2 is for Phase transitions - default is 1 (EOS)
+phase_diagram = 8 / 1 is for Hawaiian pyrolite high resolution
+
+/******************** PHASE 9 ********************
+ID   = 9       / Background Crust - ADRIA
+rho  = 2800.00 / Anorthite - Rybacki & Dresen (2004)
+eta  = 5e23
+mu   = 2e10
+Cv   = 1050
+k    = 2.25
+Qr   = 1.02e-6 / Kelemen
+C    = 1e7
+phi  = 30
+Slim = 500e9
+alp  = 3e-5
+bet  = 1e-11
+drho = 0
+cstv = 0
+pwlv = 10
+linv = 0
+gbsv = 0
+expv = 0
+gsel = 0
+gs_ref = 1e-3
+eta0 = 5e24
+npwl = 1
+Qpwl = 0
+
+density_model = 2 / 2 is for Phase transitions - default is 1 (EOS)
+phase_diagram = 7 / 1 is for Hawaiian pyrolite high resolution
+
+/******************** PHASE 10 ********************
+ID   = 10      / Quartzite Lenses - ADRIA
+rho  = 2800.00 / Wet Quartzite - Ranalli (1995)
+eta  = 5e21
+mu   = 2e10
+Cv   = 1050
+k    = 2.25
+Qr   = 1.02e-6 / Kelemen
+C    = 1e6
+phi  = 5
+Slim = 500e9
+alp  = 3e-5
+bet  = 1e-11
+drho = 0
+cstv = 0
+pwlv = 13
+linv = 0
+gbsv = 0
+expv = 0
+gsel = 0
+gs_ref = 1e-3
+eta0 = 5e24
+npwl = 1
+Qpwl = 0
+
+density_model = 2 / 2 is for Phase transitions - default is 1 (EOS)
+phase_diagram = 6 / 1 is for Hawaiian pyrolite high resolution
+
+/******************** PHASE 11 ********************
+ID   = 11       / Diabase Lenses - ADRIA
+rho  = 2800.00 / Maryland Diabase - Mackwell et al. (1998)
+eta  = 5e21
+mu   = 2e10
+Cv   = 1050
+k    = 2.25
+Qr   = 1.02e-6 / Kelemen
+C    = 1e7
+phi  = 30
+Slim = 500e9
+alp  = 3e-5
+bet  = 1e-11
+drho = 0
+cstv = 0
+pwlv = 11
+linv = 0
+gbsv = 0
+expv = 0
+gsel = 0
+gs_ref = 1e-3
+eta0 = 5e24
+npwl = 1
+Qpwl = 0
+
+density_model = 2 / 2 is for Phase transitions - default is 1 (EOS)
+phase_diagram = 5 / 1 is for Hawaiian pyrolite high resolution
+
+/******************** PHASE 12 ********************
+ID   = 12       / Lower Crust - EUROPE
+rho  = 2900.00 / Anorthite - Rybacki & Dresen (2004)
+eta  = 5e23
+mu   = 2e10
+Cv   = 1050
+k    = 2.25
+Qr   = 0.26e-6
+C    = 1e7
+phi  = 30
+Slim = 500e9
+alp  = 3e-5
+bet  = 1e-11
+drho = 0
+cstv = 0
+pwlv = 19
+linv = 0
+gbsv = 0
+expv = 0
+gsel = 0
+gs_ref = 1e-3
+eta0 = 5e24
+npwl = 1
+Qpwl = 0
+
+density_model = 2 / 2 is for Phase transitions - default is 1 (EOS)
+phase_diagram = 3 / 1 is for Hawaiian pyrolite high resolution
+
+/******************** PHASE 13 ********************
+ID   = 13       / Lower Crust - ADRIA
+rho  = 2900.00 / Anorthite - Rybacki & Dresen (2004)
+eta  = 5e23
+mu   = 2e10
+Cv   = 1050
+k    = 2.25
+Qr   = 0.26e-6
+C    = 1e7
+phi  = 30
+Slim = 500e9
+alp  = 3e-5
+bet  = 1e-11
+drho = 0
+cstv = 0
+pwlv = 19
+linv = 0
+gbsv = 0
+expv = 0
+gsel = 0
+gs_ref = 1e-3
+eta0 = 5e24
+npwl = 1
+Qpwl = 0
+
+density_model = 2 / 2 is for Phase transitions - default is 1 (EOS)
+phase_diagram = 3 / 1 is for Hawaiian pyrolite high resolution
+
+/**** DEFMAPS ****/
+
+nT    =    200      / Temperature resolution []
+nE    =    200      / Strain rate resolution []
+nd    =    6        / Grain size resolution []
+Tmin  =    127.0      / Temperature minimum [°C]
+Tmax  =    1827.0     / Temperature maximum [°C]
+Emin  =    -50      / Strain rate minimum log_10 [1/s]
+Emax  =    5        / Strain rate maximum log_10 [1/s]
+dmin  =    -7       / Grain size minimum log_10 [m]
+dmax  =    -2       / Grain size maximum log_10 [m]
+Pn    =  1.0e9        / Pressure [Pa]
+
+/**** PARTICLES ****/
+
+Nx_part  = 4
+Nz_part  = 4
+min_part_cell = 16
+
+/**** PICARD ITERATIONS ****/
+
+Newton  = 0
+nit_max = 5 // for high resolution use from 10 to 20
+tol_u   = 5.0e-8
+tol_p   = 5.0e-8
+mineta  = 1.0e18
+maxeta  = 1.0e25
+
+

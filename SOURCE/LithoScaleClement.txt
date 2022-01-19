@@ -1,0 +1,264 @@
+/**** RESTART ****/
+istep = 00100
+irestart = 1
+
+/**** OUTPUT FILES ****/
+writer          = 1
+writer_step     = 10
+writer_markers  = 0
+writer_debug    = 0
+writer_energies = 0
+
+/**** SCALES ****/
+eta = 1e22
+L   = 1e4
+V   = 1e-9
+T   = 100
+
+/**** SPACE-TIME ****/
+Nx      = 251
+Nz      = 101
+Nt      = 100
+xmin    = -250.000000e3
+zmin    = -150.000000e3
+xmax    =  250.000000e3
+zmax    =  10.000000e3
+dt_constant = 0
+dt          = 2e11
+dt_max      = 1e20
+Courant     = 0.25
+
+/**** SWITCHES ****/
+ismechanical    = 1
+RK              = 4
+isperiodic_x    = 0
+ispureshear_ALE = -1
+iselastic       = 1
+isthermal       = 1
+line_search     = 1
+free_surf       = 1
+free_surf_stab  = 2
+eqn_state       = 1
+thermal_eq      = 1
+shear_heat      = 1
+adiab_heat      = 2
+fstrain         = 0
+delete_breakpoints = 1
+GNUplot_residuals = 0
+no_markers      = 0
+eta_avg         = 1
+advection       = 1
+noisy           = 1
+penalty        = 1e4
+lsolver        = 2
+diag_scaling   = 0
+abs_tol_div    = 1e-11
+rel_tol_div    = 1e-11
+pc_type        = 1
+num_deriv      = 0
+compressible   = 0
+StressRotation = 2
+subgrid_diff   = 2
+line_search_min = 0.1
+nexp_radial_basis = 2.0
+Plith_trick     = 0
+
+/**** erosion parameters ****/
+surf_processes = 5
+surf_diff      = 5.0e-6
+surf_Winc      = 4.0e3
+surf_Vinc      = 1.5844e-11
+
+/**** SETUP DEPENDANT ****/
+EpsBG           = 1e-18
+user0           = 1330     /mantle temperature [oC]
+user1           = 150e3    /lithospheric thickness [m]
+user2           = 3.17e-10 /plate velocity [m/s]
+user3           = 0.5      /amount of push from left side
+user4           = 1.75     /angle
+
+/**** GRAVITY ****/
+gx = 0.0000
+gz = -9.810
+
+/**** PHASE PROPERTIES ****/
+Nb_phases = 6
+
+ID   = 0
+density_model = 3
+rho  = 3260.00 /lithos
+mu   = 3e10    /module de cisaillement
+Cv   = 1050    /heat capacity
+k    = 3.0     /conductivity
+Qr   = 1e-10   /heat production
+C    = 5e7     /cohesion
+phi  = 30      /friction angle
+psi  = 5
+Slim = 500e9   / Stress limit
+alp  = 3.2e-5  /thermal expansion
+bet  = 5e-11   /incompressibility
+drho = 0
+cstv = 0       /cst viscosity
+pwlv = 40
+linv = 40
+gbsv = 0
+expv = 40
+gsel = 0
+eta0 = 1e22
+npwl = 1
+Qpwl = 0
+eta_vp = 1e22
+n_vp   = 1.0
+
+ID   = 1
+density_model = 3
+rho  = 3260.00 /weak zone
+mu   = 3e10
+Cv   = 1050
+k    = 3.0
+Qr   = 1e-10
+C    = 5e7
+phi  = 0
+psi  = 0
+Slim = 500e9
+alp  = 3.2e-5  /thermal expansion
+bet  = 5e-11   /incompressibility
+drho = 0
+cstv = 0
+pwlv = 40
+linv = 40
+gbsv = 0
+expv = 40
+gsel = 0
+eta0 = 1e22
+npwl = 2
+Qpwl = 0
+eta_vp = 1e22
+n_vp   = 1.0
+
+ID   = 2       / astheno
+density_model = 3
+rho  = 3250.00 
+mu   = 3e10
+Cv   = 1050
+k    = 3.0 
+Qr   = 1e-10
+C    = 5e7
+phi  = 30
+psi  = 5
+Slim = 500e9
+alp  = 3.2e-5  /thermal expansion
+bet  = 5e-11   /incompressibility
+drho = 0
+cstv = 0
+pwlv = 40
+linv = 40
+gbsv = 0
+expv = 40
+gsel = 0
+eta0 = 5e20
+npwl = 1
+Qpwl = 0
+eta_vp = 1e22
+n_vp   = 1.0
+
+ID   = 3       / c
+density_model = 3
+rho  = 2800.00
+mu   = 3e10
+Cv   = 1050
+k    = 2
+Qr   = 0.4e-6
+C    = 5e7
+phi  = 30.96
+psi  = 5
+Slim = 500e9
+alp  = 3.0e-5  /thermal expansion
+bet  = 1e-11   /incompressibility
+drho = 0
+cstv = 0
+pwlv = 10
+linv = 0
+gbsv = 0
+expv = 0
+gsel = 0
+eta_vp = 1e22
+n_vp   = 1.0
+
+ID   = 4       / c
+density_model = 3
+rho  = 2800.00 
+mu   = 3e10
+Cv   = 1050
+k    = 2
+Qr   = 0.4e-6
+C    = 5e7
+phi  = 30.96
+psi  = 5
+Slim = 500e9
+alp  = 3.0e-5  /thermal expansion
+bet  = 1e-11   /incompressibility
+drho = 0
+cstv = 0
+pwlv = 10
+linv = 0
+gbsv = 0
+expv = 0
+gsel = 0
+eta_vp = 1e22
+n_vp   = 1.0
+
+ID   = 5       / unused
+density_model = 3
+rho  = 2800.00 
+mu   = 3e10
+Cv   = 1050
+k    = 3.0 
+Qr   = 1e-6
+C    = 5e7
+phi  = 30
+psi  = 5
+Slim = 500e9
+alp  = 3.2e-5  /thermal expansion
+bet  = 5e-11   /incompressibility
+drho = 0
+cstv = 0
+pwlv = 11
+linv = 0
+gbsv = 0
+expv = 0
+gsel = 0
+eta_vp = 1e22
+n_vp   = 1.0
+
+/**** DEFMAPS ****/
+nT    =    51      / Temperature resolutin []
+nE    =    51      / Strain rate resolution []
+nd    =    2        / Grain size resolution []
+Tmin  =    240      / Temperature minimum [°C]
+Tmax  =    2000     / Temperature maximum [°C]
+Emin  =    -50      / Strain rate minimum log_10 [1/s]
+Emax  =    5        / Strain rate maximum log_10 [1/s]
+dmin  =    -7       / Grain size minimum log_10 [m]
+dmax  =    -2       / Grain size maximum log_10 [m]
+Pn    =  1e9        / Pressure [Pa]
+
+/**** PARTICLES ****/
+Nx_part  = 4
+Nz_part  = 4
+min_part_cell = 16
+
+/**** NON-LINEAR ITERATIONS ****/
+Newton        = 1
+let_res_grow  = 0
+line_search_min = 0.0
+Picard2Newton = 0
+Pic2NewtCond  = 2e-1
+nit_max       = 10
+rel_tol_KSP   = 5e-5
+abs_tol_u     = 1e-10
+abs_tol_p     = 1e-10
+rel_tol_u     = 1e-10
+rel_tol_p     = 1e-10
+mineta  = 1e17
+maxeta  = 1e25

@@ -1,0 +1,150 @@
+/**** RESTART ****/
+istep = 00005
+irestart = 0
+
+/**** OUTPUT FILES ****/
+writer          = 1
+writer_step     = 1
+writer_markers  = 0
+writer_debug    = 0
+writer_energies = 0
+
+/**** SCALES ****/
+eta = 10
+L   = 1
+V   = 1
+T   = 20
+
+/**** SPACE-TIME ****/
+Nx      = 101
+Nz      = 101
+Nt      = 5
+xmin    = -5.000000e-1
+zmin    = -5.000000e-1
+xmax    =  5.000000e-1
+zmax    =  5.000000e-1
+advection         = 0
+dt                = 0.5
+dt_constant       = 1
+Courant           = 0.3
+penalty           = 1e5
+lsolver           = 2
+diag_scaling      = 0
+abs_tol_div       = 1e-11
+rel_tol_div       = 1e-11
+GNUplot_residuals = 1
+shear_style       = 1
+pc_type           = 0
+eta_avg           = 1
+num_deriv         = 0
+
+/**** SWITCHES ****/
+compressible    = 1
+ismechanical    = 1
+RK              = 4
+isperiodic_x    = 0
+ispureshear_ALE = 0
+isinertial      = 0
+iselastic       = 1
+isthermal       = 0
+line_search     = 0
+free_surf       = 0
+free_surf_stab  = 0
+eqn_state       = 0
+thermal_eq      = 0
+subgrid_diff    = 1
+shear_heat      = 1
+adiab_heat      = 0
+fstrain         = 1
+
+/**** SETUP DEPENDANT ****/
+EpsBG           = 1
+user0           = 1     / temperature [°C]
+user1           = 0.05  / inclusion radius [m]
+user2           = 0
+user3           = 0
+
+/**** GRAVITY ****/
+gx = 0.0000
+gz = 0.0000
+
+/**** MAT PROPERTIES ****/
+Nb_phases = 2
+
+/**** PHASE 1 ****/
+ID   = 0
+rho  = 2700.00 / matrix
+mu   = 1
+Cv   = 1050
+k    = 2.5
+Qr   = 0
+C    = 2.35e0
+phi  = 30
+psi  = 10
+eta_vp = 1e-1
+n_vp   = 1.5
+Slim = 500e9
+alp  = 10.0e-6
+bet  = 1e0
+drho = 0
+cstv = 0            / constant visc law
+pwlv = 1            / disloc. creep
+linv = 0             / diff. creep
+gbsv = 0             / grain boundary sliding
+expv = 0             / peierls creep
+gsel = 0             / grain size evo.
+eta0 = 1
+npwl = 30
+Qpwl = 0
+
+/**** PHASE 2 ****/
+ID   = 1
+rho  = 2700.00 / inclusion
+mu   = 1
+Cv   = 1050
+k    = 2.5
+Qr   = 0
+C    = 1e90
+phi  = 30
+psi  = 0
+eta_vp = 1e-1
+n_vp   = 1.5
+Slim = 500e9
+alp  = 10.0e-6
+bet  = 1e0
+drho = 0
+cstv = 0             / constant visc law
+pwlv = 1             / disloc. creep
+linv = 0             / diff. creep
+gbsv = 0             / grain boundary sliding
+expv = 0             / peierls creep
+gsel = 0             / grain size evo.
+eta0 = 1e1
+npwl = 3
+Qpwl = 0
+
+/**** DEFMAPS ****/
+nT    =    51      / Temperature resolutin []
+nE    =    51      / Strain rate resolution []
+nd    =    2        / Grain size resolution []
+Tmin  =    240      / Temperature minimum [°C]
+Tmax  =    2000     / Temperature maximum [°C]
+Emin  =    -50      / Strain rate minimum log_10 [1/s]
+Emax  =    5        / Strain rate maximum log_10 [1/s]
+dmin  =    -7       / Grain size minimum log_10 [m]
+dmax  =    -2       / Grain size maximum log_10 [m]
+Pn    =  1e9        / Pressure [Pa]
+
+/**** PARTICLES ****/
+Nx_part  = 4
+Nz_part  = 4
+min_part_cell = 16
+
+/**** NON-LINEAR ITERATIONS ****/
+Newton  = 1
+nit_max = 10
+rel_tol_KSP = 5e-4
+tol_u   = 1e-12
+tol_p   = 1e-12
+mineta  = 1e-3
+maxeta  = 1e6

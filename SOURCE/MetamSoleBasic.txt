@@ -1,0 +1,215 @@
+**** RESTART ****/
+istep =00200
+irestart = 1
+
+/**** OUTPUT FILES ****/
+writer         = 1
+writer_step    = 10
+writer_markers = 0
+writer_debug   = 0
+
+/**** INPUT FILE FOR PARTICLES ****/
+input_file = setup_r201x201_F40_P20_B20.bin
+
+/**** SCALES ****/
+eta = 1e20
+L   = 1e4
+V   = 1e-9
+T   = 100
+ 
+/**** SPACE-TIME ****/
+Nx   = 201
+Nz   = 101
+Nt   = 200
+xmin    = -15e3
+xmax    =  15e3
+zmin    = -7.5e3
+zmax    =  7.5e3
+dt      = 1.2623e+11
+Courant = 0.1
+
+/**** SWITCHES ****/
+ismechanical    = 1
+dt_constant     = 0
+RK              = 4
+isperiodic_x    = 1
+ispureshear_ALE = 1
+isinertial      = 0
+iselastic       = 1
+isthermal       = 1
+line_search     = 1
+free_surf       = 0
+free_surf_stab  = 0
+eqn_state       = 1
+thermal_eq      = 0
+subgrid_diff    = 2
+shear_heat      = 1
+compressible    = 1
+adiab_heat      = 2
+isPl_soft       = 0
+surf_processes  = 0
+shear_style     = 0 /0:pure shear --- 1: simple shear
+num_deriv       = 0
+lsolver         = 0
+penalty         = 1e5
+diag_scaling    = 0
+abs_tol_div     = 1e-11
+rel_tol_div     = 1e-11
+noisy           = 1
+pc_type         = 1
+
+/**** ANISOTROPY ****/
+aniso          = 0
+ 
+/**** SETUP DEPENDANT ****/
+EpsBG           = 2e-14 /Background strain rate
+PrBG            = 5e8
+surf_diff       = 0
+user0           = 700
+user1           = 0.3e3 /radius
+user2           = 0 /0:circle 1:layer 
+user3           = 0
+user4           = 0
+user5           = 0
+user6           = 0
+
+/**** GRAVITY ****/
+gx = 0.0000
+gz = 0.0000
+
+/**** PHASE PROPERTIES ****/
+Nb_phases = 4
+
+ID   = 0
+rho  = 2800.00 /inclusion
+mu   = 3e10
+Cv   = 1050
+k    = 2.0
+Qr   = 0
+C    = 5e7
+phi  = 32
+eta_vp = 1e20
+n_vp = 1.0
+Slim = 500e9
+alp  = 10.0e-6
+bet  = 5e-11
+drho = 0
+cstv = 0
+pwlv = 10
+linv = 0
+gbsv = 0
+expv = 0
+gsel = 0
+eta0 = 1e0
+npwl = 1
+Qpwl = 0
+aniso        = 0
+aniso_angle  = 65
+aniso_factor = 1
+
+ID   = 1
+rho  = 2800.00 /inclusion
+mu   = 3e10
+Cv   = 1050
+k    = 2.0
+Qr   = 0
+C    = 5e7
+phi  = 32
+eta_vp = 1e20
+n_vp = 1.0
+Slim = 500e9
+alp  = 10.0e-6
+bet  = 5e-11
+drho = 0
+cstv = 0
+pwlv = 10
+linv = 0
+gbsv = 0
+expv = 0
+gsel = 0
+eta0 = 1e0
+npwl = 1
+Qpwl = 0
+aniso        = 0
+aniso_angle  = 65
+aniso_factor = 1
+
+ID   = 2
+rho  = 2800.00 /matrix
+mu   = 3e10
+Cv   = 1050
+k    = 2.0
+Qr   = 0
+C    = 5e7
+phi  = 32
+eta_vp = 1e20
+n_vp = 1.0
+Slim = 500e9
+alp  = 10.0e-6
+bet  = 5e-11
+drho = 0
+cstv = 0
+pwlv = 40
+linv = 40
+gbsv = 0
+expv = 40
+gsel = 0
+eta0 = 1e1
+npwl = 1
+Qpwl = 0
+aniso        = 0
+aniso_angle  = 65
+aniso_factor = 10
+
+ID   = 3
+rho  = 2800.00 /matrix
+mu   = 3e10
+Cv   = 1050
+k    = 2.0
+Qr   = 0
+C    = 5e7
+phi  = 32
+eta_vp = 1e20
+n_vp = 1.0
+Slim = 500e9
+alp  = 10.0e-6
+bet  = 5e-11
+drho = 0
+cstv = 0
+pwlv = 40
+linv = 40
+gbsv = 0
+expv = 40
+gsel = 0
+eta0 = 1e1
+npwl = 1
+Qpwl = 0
+aniso        = 0
+aniso_angle  = 65
+aniso_factor = 10
+
+/**** DEFMAPS ****/
+def_maps = 0
+nT    =    200      / Temperature resolutin []
+nE    =    200      / Strain rate resolution []
+nd    =    6        / Grain size resolution []
+Tmin  =    127      / Temperature minimum [°C]
+Tmax  =    1827     / Temperature maximum [°C]
+Emin  =    -50      / Strain rate minimum log_10 [1/s]
+Emax  =    5        / Strain rate maximum log_10 [1/s]
+dmin  =    -7       / Grain size minimum log_10 [m]
+dmax  =    -2       / Grain size maximum log_10 [m]
+Pn    =  1e9        / Pressure [Pa]
+
+/**** PARTICLES ****/
+Nx_part  = 4
+Nz_part  = 4
+min_part_cell = 16
+
+/**** PICARD ITERATIONS ****/
+Newton  = 1
+nit_max = 15
+tol_u   = 5e-10
+tol_p   = 5e-10
+mineta  = 1e-6
+maxeta  = 1e26
