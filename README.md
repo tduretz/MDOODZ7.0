@@ -9,6 +9,17 @@ This version of MDoodz is under construction, more testing will be progressively
 
 Check the [Documentation](https://github.com/tduretz/MDOODZ6.0/blob/master/Documentation/MDOODZ_docu.pdf)
 
+0. go to SOURCE/ folder
+1. copy one makefile from Makefile/ folder into SOURCE/
+2. edit the makefile for your specific computer
+
+## Simple shear (power-law viscous)
+
+Compile: make clean all MODEL=Shear_pwl OPT=yes OMP=yes
+
+Run: ./Doodzi_Shear_pwl Shear_pwl.txt
+
+## Lithosphere deformation
 Compile: make clean all MODEL=LithoScale OPT=yes OMP=yes
 
 Run: ./Doodzi_LithoScale LithoScale.txt
