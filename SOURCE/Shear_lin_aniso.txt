@@ -1,10 +1,10 @@
 /**** RESTART ****/
-istep = 01000
+istep = 00001
 irestart = 0
 
 /**** OUTPUT FILES ****/
 writer          = 1
-writer_step     = 5
+writer_step     = 1
 writer_markers  = 0
 writer_debug    = 0
 writer_energies = 0
@@ -18,42 +18,40 @@ T   = 20
 /**** SPACE-TIME ****/
 Nx      = 100
 Nz      = 100
-Nt      = 0001
+Nt      = 1
 xmin    = -5.000000e-1
 zmin    = -5.000000e-1
 xmax    =  5.000000e-1
 zmax    =  5.000000e-1
-advection       = 1
-
-noisy = 0
-dt_constant = 0
 dt      = 0.05
-dt_min      = 1e-6
-RK              = 4
+dt_constant = 0
 Courant = 0.3
 penalty = 1e2
 lsolver = -1
 DefectCorrectionForm = 1
 diag_scaling = 0
-abs_tol_div = 1e-8
-rel_tol_div = 1e-8
+abs_tol_div  = 1e-8
+rel_tol_div  = 1e-8
 
 /**** SWITCHES ****/
 ismechanical    = 1
+dt_constant     = 0
+RK              = 4
 isperiodic_x    = 0
 ispureshear_ALE = 0
 isinertial      = 0
-iselastic       = 1
+iselastic       = 0
 isthermal       = 0
-line_search     = 0
+line_search     = 1
 free_surf       = 0
 free_surf_stab  = 0
 eqn_state       = 0
 thermal_eq      = 0
-subgrid_diff    = 2
+subgrid_diff    = 1
 shear_heat      = 1
 adiab_heat      = 0
 fstrain         = 1
+advection       = 0
 GNUplot_residuals = 0
 
 /**** ANISOTROPY ****/
@@ -65,13 +63,13 @@ pc_type = 1
 EpsBG           = 1
 shear_style     = 1
 user0           = 1     / temperature [°C]
-user1           = 0.05  / inclusion radius [m]
+user1           = 0.12  / inclusion radius [m]
 user2           = 0
 user3           = 0
 
 /**** GRAVITY ****/
 gx = 0.0000
-gz = 0.000
+gz = 0.0000
 
 /**** MAT PROPERTIES ****/
 Nb_phases = 2
@@ -90,15 +88,15 @@ alp  = 10.0e-6
 bet  = 1e-11
 drho = 0
 cstv = 0             / constant visc law
-pwlv = 1            / disloc. creep
+pwlv = 1             / disloc. creep
 linv = 0             / diff. creep
 gbsv = 0             / grain boundary sliding
 expv = 0             / peierls creep
 gsel = 0             / grain size evo.
-eta0 = 1e1
+eta0 = 1e0
 npwl = 1.0
 Qpwl = 0
-aniso_angle  = 65
+aniso_angle  = 45
 aniso_factor = 10.0
 
 /**** PHASE 2 ****/
@@ -120,7 +118,7 @@ linv = 0             / diff. creep
 gbsv = 0             / grain boundary sliding
 expv = 0             / peierls creep
 gsel = 0             / grain size evo.
-eta0 = 1e0
+eta0 = 1e1
 npwl = 1
 Qpwl = 0
 aniso_angle  = 45
@@ -145,7 +143,7 @@ min_part_cell = 16
 
 /**** NON-LINEAR ITERATIONS ****/
 Newton        = 1 
-Picard2Newton = 0
+Picard2Newton = 1
 nit_max       = 20
 rel_tol_KSP   = 1e-4
 tol_u         = 1e-9
