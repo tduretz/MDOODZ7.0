@@ -60,7 +60,7 @@ int main( int nargs, char *args[] ) {
     SparseMat    StokesA, StokesB, StokesC, StokesD;
     SparseMat    JacobA,  JacobB,  JacobC,  JacobD;
     int          Nx, Nz, Ncx, Ncz;
-    int          Newton, *Newt_on, FirstNewton, UseJacobian;
+    int          IsNewtonStep, *TrackNewtonSteps, IsFirstNewtonStep, IsJacobianUsed;
     int cent=1, vert=0, prop=1, interp=0, vxnodes=-1, vznodes=-2;
     FILE        *GNUplotPipe;
     
@@ -120,12 +120,12 @@ int main( int nargs, char *args[] ) {
     rx_abs  = DoodzCalloc(Nmodel.nit_max+1, sizeof(double)); rx_rel = DoodzCalloc(Nmodel.nit_max+1, sizeof(double));
     rz_abs  = DoodzCalloc(Nmodel.nit_max+1, sizeof(double)); rz_rel = DoodzCalloc(Nmodel.nit_max+1, sizeof(double));
     rp_abs  = DoodzCalloc(Nmodel.nit_max+1, sizeof(double)); rp_rel = DoodzCalloc(Nmodel.nit_max+1, sizeof(double));
-    Newt_on = DoodzCalloc(Nmodel.nit_max+1, sizeof(int));
+    TrackNewtonSteps = DoodzCalloc(Nmodel.nit_max+1, sizeof(int));
     
     Nx = mesh.Nx; Nz = mesh.Nz; Ncx = Nx-1; Ncz = Nz-1;
     if ( model.aniso  == 1 ) model.Newton = 1;
-    if ( model.Newton == 1 ) Newton = 1;
-    if ( model.Newton == 0 ) Newton = 0;
+    if ( model.Newton == 1 ) IsNewtonStep = 1;
+    if ( model.Newton == 0 ) IsNewtonStep = 0;
     
     printf("*************************************\n");
     printf("******* Initialize particles ********\n");
@@ -717,16 +717,16 @@ int main( int nargs, char *args[] ) {
             //        if ( model.ispureshear_ale == 1 ) InitialiseSolutionFields( &mesh, &model );
             InitialiseSolutionFields( &mesh, &model );
             EvalNumberOfEquations( &mesh, &Stokes );
-            if ( Newton == 1 ) EvalNumberOfEquations( &mesh, &Jacob  );
+            if ( IsNewtonStep == 1 ) EvalNumberOfEquations( &mesh, &Jacob  );
             SAlloc( &Stokes,  Stokes.neq );
-            if ( Newton == 1 ) SAlloc(  &Jacob,   Jacob.neq );
+            if ( IsNewtonStep == 1 ) SAlloc(  &Jacob,   Jacob.neq );
             if ( model.decoupled_solve == 1 ) {
                 SAlloc( &StokesA, Stokes.neq_mom );
                 SAlloc( &StokesB, Stokes.neq_mom );
                 SAlloc( &StokesC, Stokes.neq_cont);
                 SAlloc( &StokesD, Stokes.neq_cont );
             }
-            if ( Newton == 1 ) {
+            if ( IsNewtonStep == 1 ) {
                 SAlloc( &JacobA, Stokes.neq_mom );
                 SAlloc( &JacobB, Stokes.neq_mom );
                 SAlloc( &JacobC, Stokes.neq_cont);
@@ -745,7 +745,7 @@ int main( int nargs, char *args[] ) {
             model.nit        = 0;
             Nmodel.stagnated = 0;
             nstag            = 0;
-            UseJacobian      = 0;
+            IsJacobianUsed    = 0;
             
             ArrayEqualArray( mesh.p_start,    mesh.p_in,      (mesh.Nx-1)*(mesh.Nz-1) );
             ArrayEqualArray( mesh.u_start,    mesh.u_in,      (mesh.Nx)  *(mesh.Nz+1) );
@@ -762,32 +762,33 @@ int main( int nargs, char *args[] ) {
             int Nmax_picard = Nmodel.nit_max;
             
             // If Picard 2 Newton is activated: force initial Newton step
-            if ( Newton == 1 && Nmodel.Picard2Newton == 1 ) {
+            if ( IsNewtonStep == 1 && Nmodel.Picard2Newton == 1 ) {
                 model.Newton = 0;
-                FirstNewton  = 1;
+                IsFirstNewtonStep  = 1;
             }
             
             while ( Nmodel.nit <= Nmax_picard && nstag<model.nstagmax) {
                 
                 if ( Nmodel.nit > 0 && Nmodel.Picard2Newton == 1 ) {
                     if ( rx_rel[Nmodel.nit-1] < Nmodel.Pic2NewtCond || rz_rel[Nmodel.nit-1] < Nmodel.Pic2NewtCond || rp_rel[Nmodel.nit-1] < Nmodel.Pic2NewtCond || Nmodel.nit>= Nmodel.nit_Pic_max) {
-                        if ( FirstNewton == 1 ) cholmod_free_factor ( &CholmodSolver.Lfact, &CholmodSolver.c);
-                        if ( FirstNewton == 1 ) CholmodSolver.Analyze = 1;
-                        if ( FirstNewton == 0 ) CholmodSolver.Analyze = 0;
-                        if ( FirstNewton == 1 ) FirstNewton = 0;
-                        model.Newton          = 1;
+                        if ( IsFirstNewtonStep == 0 ) CholmodSolver.Analyze = 0;
+                        if ( IsFirstNewtonStep == 1 ) {
+                            cholmod_free_factor ( &CholmodSolver.Lfact, &CholmodSolver.c);
+                            CholmodSolver.Analyze = 1;
+                            IsFirstNewtonStep    = 0;
+                        }
+                        model.Newton = 1;
                     }
                 }
 
-                // Determine wheter Jacobian matrix should be assembled
+                // Determine whether Jacobian matrix should be assembled
                 if ( model.Newton == 1 || model.aniso == 1 ) {
-                    UseJacobian = 1;
+                    IsJacobianUsed = 1;
                 }
                 
-                
                 printf("**********************************************\n");
-                if ( model.Newton == 0 ) { printf("*** Picard it. %02d of %02d (step = %05d) ***\n", Nmodel.nit, Nmodel.nit_max, model.step); Newt_on[Nmodel.nit] = 0;}
-                if ( model.Newton == 1 ) { printf("*** Newton it. %02d of %02d (step = %05d) ***\n", Nmodel.nit, Nmodel.nit_max, model.step); Newt_on[Nmodel.nit] = 1;}
+                if ( model.Newton == 0 ) { printf("*** Picard it. %02d of %02d (step = %05d) ***\n", Nmodel.nit, Nmodel.nit_max, model.step); TrackNewtonSteps[Nmodel.nit] = 0;}
+                if ( model.Newton == 1 ) { printf("*** Newton it. %02d of %02d (step = %05d) ***\n", Nmodel.nit, Nmodel.nit_max, model.step); TrackNewtonSteps[Nmodel.nit] = 1;}
                 printf("**********************************************\n");
                 
                 // Update non-linear rheology
@@ -827,7 +828,7 @@ int main( int nargs, char *args[] ) {
                 // Build discrete system of equations - Jacobian
                 ViscosityDerivatives( &mesh, &materials, &model, Nmodel, &scaling );
                 if ( model.Newton == 1 && Nmodel.nit > 0 ) RheologicalOperators( &mesh, &model, &scaling, 1 );
-                if ( UseJacobian == 1 )                  UseJacobianOperatorDecoupled( &mesh, model, 0, mesh.p_corr, mesh.p_in, mesh.u_in, mesh.v_in,  &Jacob,  &JacobA,  &JacobB,  &JacobC,   &JacobD, 1 );
+                if ( IsJacobianUsed == 1 )                  BuildJacobianOperatorDecoupled( &mesh, model, 0, mesh.p_corr, mesh.p_in, mesh.u_in, mesh.v_in,  &Jacob,  &JacobA,  &JacobB,  &JacobC,   &JacobD, 1 );
                 
                 //                MinMaxArrayTag( mesh.detadexx_n,      scaling.eta, (mesh.Nx-1)*(mesh.Nz-1),     "detadexx_n     ", mesh.BCg.type );
                 //                MinMaxArrayTag( mesh.detadezz_n,      scaling.eta, (mesh.Nx-1)*(mesh.Nz-1),     "detadezz_n     ", mesh.BCg.type );
@@ -874,27 +875,9 @@ int main( int nargs, char *args[] ) {
                 if ( model.write_debug == 1 ) WriteResiduals( mesh, model, Nmodel, scaling );
                 
                 // if pass --> clear matrix break
-//                printf("Nmodel.resx = %2.2e\n", Nmodel.resx);
-//                printf("Nmodel.resz = %2.2e\n", Nmodel.resz);
-//                printf("Nmodel.resp = %2.2e\n", Nmodel.resp);
-//                printf( "Tolerances: abs_tol_u = %2.2e - rel_tol_u = %2.2e --- abs_tol_p = %2.2e - rel_tol_p = %2.2e\n", Nmodel.abs_tol_u, Nmodel.rel_tol_u, Nmodel.abs_tol_p, Nmodel.rel_tol_p);
-
                 if ( (Nmodel.resx < Nmodel.abs_tol_u || Nmodel.resx/Nmodel.resx0 < Nmodel.rel_tol_u) && (Nmodel.resz < Nmodel.abs_tol_u || Nmodel.resz/Nmodel.resz0 < Nmodel.rel_tol_u) && (Nmodel.resp < Nmodel.abs_tol_p || Nmodel.resp/Nmodel.resp0 < Nmodel.rel_tol_p) ) {
-                    
                     printf( "Non-linear solver converged to abs_tol_u = %2.2e abs_tol_p = %2.2e rel_tol_u = %2.2e rel_tol_p = %2.2e\n", Nmodel.abs_tol_u, Nmodel.abs_tol_p, Nmodel.rel_tol_u, Nmodel.rel_tol_p );
-                    if ( model.decoupled_solve == 0 ) { FreeMat( &Stokes ); }
-                    if ( model.decoupled_solve == 1 ) {
-                        FreeMat( &StokesA );
-                        FreeMat( &StokesB );
-                        FreeMat( &StokesC );
-                        FreeMat( &StokesD );
-                    }
-                    if ( UseJacobian == 1 ) {
-                        FreeMat( &JacobA );
-                        FreeMat( &JacobB );
-                        FreeMat( &JacobC );
-                        FreeMat( &JacobD );
-                    }
+                    FreeSparseSystems( IsJacobianUsed, model.decoupled_solve, &Stokes, &StokesA, &StokesB, &StokesC, &StokesD, &JacobA, &JacobB, &JacobC, &JacobD );
                     break;
                 }
                 
@@ -903,50 +886,19 @@ int main( int nargs, char *args[] ) {
                 if ( model.decoupled_solve == 0 ) SolveStokesDefect( &Stokes, &CholmodSolver, &Nmodel, &mesh, &model, &particles, &topo_chain, &topo, materials, scaling );
                 if ( model.decoupled_solve == 1 ) {
                     
-                    if ( UseJacobian==0 ) SolveStokesDefectDecoupled( &StokesA, &StokesB, &StokesC, &StokesD, &Stokes, &CholmodSolver, &Nmodel, &mesh, &model, &particles, &topo_chain, &topo, materials, scaling, &StokesA, &StokesB, &StokesC );
-                    if ( UseJacobian==1 ) SolveStokesDefectDecoupled( &StokesA, &StokesB, &StokesC, &StokesD, &Stokes, &CholmodSolver, &Nmodel, &mesh, &model, &particles, &topo_chain, &topo, materials, scaling,  &JacobA,  &JacobB,  &JacobC );
+                    if ( IsJacobianUsed==0 ) SolveStokesDefectDecoupled( &StokesA, &StokesB, &StokesC, &StokesD, &Stokes, &CholmodSolver, &Nmodel, &mesh, &model, &particles, &topo_chain, &topo, materials, scaling, &StokesA, &StokesB, &StokesC );
+                    if ( IsJacobianUsed==1 ) SolveStokesDefectDecoupled( &StokesA, &StokesB, &StokesC, &StokesD, &Stokes, &CholmodSolver, &Nmodel, &mesh, &model, &particles, &topo_chain, &topo, materials, scaling,  &JacobA,  &JacobB,  &JacobC );
                     
                     if ( Nmodel.stagnated == 1 && model.safe_mode <= 0 ) {
                         printf( "Non-linear solver stagnated to res_u = %2.2e res_z = %2.2e\n", Nmodel.resx_f, Nmodel.resz_f );
                         printf( "You may want to try setting line_search_min > 0.0\n Good luck good man!\n");
-                        
-                        if (model.safe_mode==-1) exit(0);
-                        
-                        if ( model.decoupled_solve == 0 ) { FreeMat( &Stokes ); }
-                        if ( model.decoupled_solve == 1 ) {
-                            FreeMat( &StokesA );
-                            FreeMat( &StokesB );
-                            FreeMat( &StokesC );
-                            FreeMat( &StokesD );
-                        }
-                        if ( UseJacobian == 1 ) {
-                            FreeMat( &JacobA );
-                            FreeMat( &JacobB );
-                            FreeMat( &JacobC );
-                            FreeMat( &JacobD );
-                        }
+                        FreeSparseSystems( IsJacobianUsed, model.decoupled_solve, &Stokes, &StokesA, &StokesB, &StokesC, &StokesD, &JacobA, &JacobB, &JacobC, &JacobD );
                         break;
                         
                     }
                     
                 }
-                
-                //                if ( Nmodel.stagnated == 0 ) {
-                //
-                //                    if ( Nmodel.nit == 0  ) {
-                //                        printf("---- Direct solve residual ----\n");
-                //                        StrainRateComponents( &mesh, scaling, &model );
-                //                        RheologicalOperators( &mesh, &model, &scaling, 0 );
-                //                        NonNewtonianViscosityGrid (     &mesh, &materials, &model, Nmodel, &scaling );
-                //                        if ( model.decoupled_solve == 0 ) EvaluateStokesResidual( &Stokes, &Nmodel, &mesh, model, scaling, 0 );
-                //                        if ( model.decoupled_solve == 1 ) EvaluateStokesResidualDecoupled( &Stokes, &StokesA, &StokesB, &StokesC, &StokesD, &Nmodel, &mesh, model, scaling, 0 );
-                //                        printf("---- Direct solve residual ----\n");
-                //
-                //                        if ( model.write_debug == 1 ) WriteResiduals( mesh, model, Nmodel, scaling );
-                //
-                //                    }
-                //                }
-                
+
                 if ( Nmodel.stagnated == 1 && model.iselastic == 1 && model.safe_mode == 1 ) {
                     printf( "\e[1;31mWARNING : Non-linear solver stagnated (abs_tol_u = %2.2e abs_tol_p = %2.2e)\e[m\n", Nmodel.abs_tol_u, Nmodel.abs_tol_p );
                     printf( "\e[1;31mWARNING : Non-linear solver stagnated (rel_tol_u = %2.2e rel_tol_p = %2.2e)\e[m\n", Nmodel.rel_tol_u, Nmodel.rel_tol_p );
@@ -968,24 +920,11 @@ int main( int nargs, char *args[] ) {
                     if (nstag==model.nstagmax) {
                         printf( "CheckDoudzOut!!\n");
                         exit(0);
-                        //-----------------------
+                    //-----------------------
                     }
                 }
-                
-                if ( model.decoupled_solve == 0 ) { FreeMat( &Stokes ); }
-                if ( model.decoupled_solve == 1 ) {
-                    FreeMat( &StokesA );
-                    FreeMat( &StokesB );
-                    FreeMat( &StokesC );
-                    FreeMat( &StokesD );
-                }
-                if ( UseJacobian == 1 ) {
-                    FreeMat( &JacobA );
-                    FreeMat( &JacobB );
-                    FreeMat( &JacobC );
-                    FreeMat( &JacobD );
-                }
-                
+                FreeSparseSystems( IsJacobianUsed, model.decoupled_solve, &Stokes, &StokesA, &StokesB, &StokesC, &StokesD, &JacobA, &JacobB, &JacobC, &JacobD );
+
                 Nmodel.nit++; model.nit = Nmodel.nit;
             }
             
@@ -1012,8 +951,8 @@ int main( int nargs, char *args[] ) {
             if (Nmodel.nit< Nmodel.nit_max)  nit = Nmodel.nit;
             if (Nmodel.Picard2Newton == 1 )  printf("Picard 2 Newton is activated with condition: %2.2e\n", Nmodel.Pic2NewtCond);
             for (i=0; i<=nit; i++) {
-                if (Newt_on[i] == 0) printf("Pic. it. %02d: abs: |Fx| = %2.2e - |Fz| = %2.2e - |Fp| = %2.2e --- rel: |Fx| = %2.2e - |Fz| = %2.2e - |Fp| = %2.2e\n", i, rx_abs[i], rz_abs[i], rp_abs[i], rx_rel[i], rz_rel[i], rp_rel[i]);
-                if (Newt_on[i] == 1) printf("New. it. %02d: abs: |Fx| = %2.2e - |Fz| = %2.2e - |Fp| = %2.2e --- rel: |Fx| = %2.2e - |Fz| = %2.2e - |Fp| = %2.2e\n", i, rx_abs[i], rz_abs[i], rp_abs[i], rx_rel[i], rz_rel[i], rp_rel[i]);
+                if (TrackNewtonSteps[i] == 0) printf("Pic. it. %02d: abs: |Fx| = %2.2e - |Fz| = %2.2e - |Fp| = %2.2e --- rel: |Fx| = %2.2e - |Fz| = %2.2e - |Fp| = %2.2e\n", i, rx_abs[i], rz_abs[i], rp_abs[i], rx_rel[i], rz_rel[i], rp_rel[i]);
+                if (TrackNewtonSteps[i] == 1) printf("New. it. %02d: abs: |Fx| = %2.2e - |Fz| = %2.2e - |Fp| = %2.2e --- rel: |Fx| = %2.2e - |Fz| = %2.2e - |Fp| = %2.2e\n", i, rx_abs[i], rz_abs[i], rp_abs[i], rx_rel[i], rz_rel[i], rp_rel[i]);
                 if (i == Nmodel.nit_max && model.safe_mode == 1) {
                     printf("Exit: Max iteration reached: Nmodel.nit_max = %02d! Check what you wanna do now...\n",Nmodel.nit_max);
                     if ( (Nmodel.resx < Nmodel.abs_tol_u) && (Nmodel.resz < Nmodel.abs_tol_u) && (Nmodel.resp < Nmodel.abs_tol_p) ) {}
@@ -1311,14 +1250,14 @@ int main( int nargs, char *args[] ) {
         
         // Free solution arrays
         SFree( &Stokes );
-        if ( Newton == 1 ) SFree( &Jacob );
+        if ( IsNewtonStep == 1 ) SFree( &Jacob );
         if ( model.decoupled_solve == 1 ) {
             SFree( &StokesA );
             SFree( &StokesB );
             SFree( &StokesC );
             SFree( &StokesD );
         }
-        if ( Newton == 1 ) {
+        if ( IsNewtonStep == 1 ) {
             SFree( &JacobA );
             SFree( &JacobB );
             SFree( &JacobC );
@@ -1327,7 +1266,7 @@ int main( int nargs, char *args[] ) {
         DoodzFree( Stokes.eqn_u );
         DoodzFree( Stokes.eqn_v );
         DoodzFree( Stokes.eqn_p );
-        if ( Newton == 1 ) {
+        if ( IsNewtonStep == 1 ) {
             DoodzFree( Jacob.eqn_u );
             DoodzFree( Jacob.eqn_v );
             DoodzFree( Jacob.eqn_p );
@@ -1402,7 +1341,7 @@ int main( int nargs, char *args[] ) {
     DoodzFree( rx_rel );
     DoodzFree( rz_rel );
     DoodzFree( rp_rel );
-    DoodzFree( Newt_on );
+    DoodzFree( TrackNewtonSteps );
     
     // just for the quartz-coesite case
     for ( int k=0; k<model.Nb_phases; k++) {

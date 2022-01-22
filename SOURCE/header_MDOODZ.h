@@ -281,13 +281,7 @@ void* DoodzRealloc( void*, size_t );
 void  DoodzFree( void* );
 void  AllocMat( SparseMat*, int );
 void  FreeMat( SparseMat* );
-//void  gridAllocStar( grid*, params*OutputSparseMatrix  );
-//void  gridAllocStarStar( grid*, params*OutputSparseMatrix  );
-//void  gridFree( grid*, params*OutputSparseMatrix  );
-//void  MPartAllocStar( markers*, params* );
-//void  MPartReAllocStar( markers );
-//void  MPartFree( markers*, params* );
-//void  MDefineNumGSiteration( Mparams, grid* );
+void  FreeSparseSystems( int, int, SparseMat*, SparseMat*, SparseMat*, SparseMat*, SparseMat*, SparseMat*, SparseMat*, SparseMat*, SparseMat* );
 
 // General function prototypes
 void ArrayPlusArray( double*, double*, int );
