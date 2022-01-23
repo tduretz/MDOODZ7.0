@@ -60,7 +60,7 @@ int main( int nargs, char *args[] ) {
     SparseMat    StokesA, StokesB, StokesC, StokesD;
     SparseMat    JacobA,  JacobB,  JacobC,  JacobD;
     int          Nx, Nz, Ncx, Ncz;
-    int          IsNewtonStep, *LogNewtonSteps, IsFirstNewtonStep, IsJacobianUsed;
+    int          IsNewtonStep, *LogIsNewtonStep, IsFirstNewtonStep, IsJacobianUsed;
     int cent=1, vert=0, prop=1, interp=0, vxnodes=-1, vznodes=-2;
     FILE        *GNUplotPipe;
     
@@ -120,7 +120,7 @@ int main( int nargs, char *args[] ) {
     rx_abs  = DoodzCalloc(Nmodel.nit_max+1, sizeof(double)); rx_rel = DoodzCalloc(Nmodel.nit_max+1, sizeof(double));
     rz_abs  = DoodzCalloc(Nmodel.nit_max+1, sizeof(double)); rz_rel = DoodzCalloc(Nmodel.nit_max+1, sizeof(double));
     rp_abs  = DoodzCalloc(Nmodel.nit_max+1, sizeof(double)); rp_rel = DoodzCalloc(Nmodel.nit_max+1, sizeof(double));
-    LogNewtonSteps = DoodzCalloc(Nmodel.nit_max+1, sizeof(int));
+    LogIsNewtonStep = DoodzCalloc(Nmodel.nit_max+1, sizeof(int));
     
     Nx = mesh.Nx; Nz = mesh.Nz; Ncx = Nx-1; Ncz = Nz-1;
     if ( model.aniso  == 1 ) model.Newton = 1;
@@ -787,8 +787,8 @@ int main( int nargs, char *args[] ) {
                 }
                 
                 printf("**********************************************\n");
-                if ( model.Newton == 0 ) { printf("*** Picard it. %02d of %02d (step = %05d) ***\n", Nmodel.nit, Nmodel.nit_max, model.step); LogNewtonSteps[Nmodel.nit] = 0;}
-                if ( model.Newton == 1 ) { printf("*** Newton it. %02d of %02d (step = %05d) ***\n", Nmodel.nit, Nmodel.nit_max, model.step); LogNewtonSteps[Nmodel.nit] = 1;}
+                if ( model.Newton == 0 ) { printf("*** Picard it. %02d of %02d (step = %05d) ***\n", Nmodel.nit, Nmodel.nit_max, model.step); LogIsNewtonStep[Nmodel.nit] = 0;}
+                if ( model.Newton == 1 ) { printf("*** Newton it. %02d of %02d (step = %05d) ***\n", Nmodel.nit, Nmodel.nit_max, model.step); LogIsNewtonStep[Nmodel.nit] = 1;}
                 printf("**********************************************\n");
                 
                 // Update non-linear rheology
@@ -949,7 +949,7 @@ int main( int nargs, char *args[] ) {
             if (Nmodel.nit< Nmodel.nit_max)  nit = Nmodel.nit;
             if (Nmodel.Picard2Newton == 1 )  printf("Picard 2 Newton is activated with condition: %2.2e\n", Nmodel.Pic2NewtCond);
             for (i=0; i<=nit; i++) {
-                if (LogNewtonSteps[i] == 1) printf("New. it. %02d: abs: |Fx| = %2.2e - |Fz| = %2.2e - |Fp| = %2.2e --- rel: |Fx| = %2.2e - |Fz| = %2.2e - |Fp| = %2.2e\n", i, rx_abs[i], rz_abs[i], rp_abs[i], rx_rel[i], rz_rel[i], rp_rel[i]);
+                if (LogIsNewtonStep[i] == 1) printf("New. it. %02d: abs: |Fx| = %2.2e - |Fz| = %2.2e - |Fp| = %2.2e --- rel: |Fx| = %2.2e - |Fz| = %2.2e - |Fp| = %2.2e\n", i, rx_abs[i], rz_abs[i], rp_abs[i], rx_rel[i], rz_rel[i], rp_rel[i]);
                 else                        printf("Pic. it. %02d: abs: |Fx| = %2.2e - |Fz| = %2.2e - |Fp| = %2.2e --- rel: |Fx| = %2.2e - |Fz| = %2.2e - |Fp| = %2.2e\n", i, rx_abs[i], rz_abs[i], rp_abs[i], rx_rel[i], rz_rel[i], rp_rel[i]);
                 if (i == Nmodel.nit_max && model.safe_mode == 1) {
                     printf("Exit: Max iteration reached: Nmodel.nit_max = %02d! Check what you wanna do now...\n",Nmodel.nit_max);
@@ -1339,7 +1339,7 @@ int main( int nargs, char *args[] ) {
     DoodzFree( rx_rel );
     DoodzFree( rz_rel );
     DoodzFree( rp_rel );
-    DoodzFree( LogNewtonSteps );
+    DoodzFree( LogIsNewtonStep );
     
     // just for the quartz-coesite case
     for ( int k=0; k<model.Nb_phases; k++) {

@@ -963,11 +963,11 @@ void GridFree( grid* mesh, params* model ) {
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-void FreeSparseSystems( int IsJacobianUsed, int IsDecoupledSolve, SparseMat* Stokes, SparseMat* StokesA, SparseMat* StokesB, SparseMat* StokesC, SparseMat* StokesD, SparseMat* JacobA, SparseMat* JacobB, SparseMat* JacobC, SparseMat* JacobD ) {
+void FreeSparseSystems( int IsJacobianUsed, int IsDecoupledSolver, SparseMat* Stokes, SparseMat* StokesA, SparseMat* StokesB, SparseMat* StokesC, SparseMat* StokesD, SparseMat* JacobA, SparseMat* JacobB, SparseMat* JacobC, SparseMat* JacobD ) {
 
     // This free memory that was dynamically allocated for the currect sparse systems (Stokes and/or Jacobian)
 
-    if ( IsDecoupledSolve == 0 ) FreeMat( Stokes );
+    if ( IsDecoupledSolver == 0 ) FreeMat( Stokes );
     else {
         FreeMat( StokesA );
         FreeMat( StokesB );
