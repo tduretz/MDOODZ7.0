@@ -234,7 +234,7 @@ void AddFieldToGroup_generic( int compress, const char filename[], const char gr
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* topo_chain, params model, char *txtout, mat_prop materials, scale scaling ) {
+void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* topo_chain, params model, Nparams Nmodel, char *txtout, mat_prop materials, scale scaling ) {
 
     char *name;
     double A[8], E[5];
@@ -538,6 +538,7 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
     }
 
     if ( model.rec_T_P_x_z == 1 ) {
+
         // T0
         T0  = DoodzCalloc((model.Nx-1)*(model.Nz-1), sizeof(double));
         P2Mastah( &model, *particles, particles->T0,     mesh, T0,   mesh->BCp.type,  1, 0, interp, cent, model.itp_stencil);
@@ -547,7 +548,6 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
         CT0  = DoodzMalloc( sizeof(float)*(model.Nx-1)*(model.Nz-1));
         DoubleToFloat( T0, CT0, (model.Nx-1)*(model.Nz-1) );
         ScaleBack( CT0, scaling.T, (model.Nx-1)*(model.Nz-1) );
-
 
         // P0
         P0  = DoodzCalloc((model.Nx-1)*(model.Nz-1), sizeof(double));
@@ -568,7 +568,6 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
         CTmax  = DoodzMalloc( sizeof(float)*(model.Nx-1)*(model.Nz-1));
         DoubleToFloat( Tmax, CTmax, (model.Nx-1)*(model.Nz-1) );
         ScaleBack( CTmax, scaling.T, (model.Nx-1)*(model.Nz-1) );
-
 
         // Pmax
         Pmax  = DoodzCalloc((model.Nx-1)*(model.Nz-1),sizeof(double));
@@ -659,6 +658,7 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
     AddGroup_to_hdf5( name, "VizGrid" );
     AddGroup_to_hdf5( name, "Topo" );
     AddGroup_to_hdf5( name, "Flags" );
+    AddGroup_to_hdf5( name, "Iterations");
 
     // Model Parameters
     A[0] = (double)(model.time) * scaling.t;
@@ -770,13 +770,19 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
         AddFieldToGroup_generic( _TRUE_, name, "Centers" , "z0", 'f', (model.Nx-1)*(model.Nz-1), Cz0, 1 );
     }
 
+    // Add cell flags for debugging 
     AddFieldToGroup_generic( _TRUE_, name, "Centers" , "BCp" , 'c', (model.Nx-1)*(model.Nz-1), mesh->BCp.type, 1 );
-
     AddFieldToGroup_generic( _TRUE_, name, "Flags", "tag_s" , 'c', (model.Nx-0)*(model.Nz-0), mesh->BCg.type,  1 );
     AddFieldToGroup_generic( _TRUE_, name, "Flags", "tag_n" , 'c', (model.Nx-1)*(model.Nz-1), mesh->BCp.type,  1 );
     AddFieldToGroup_generic( _TRUE_, name, "Flags", "tag_u" , 'c', (model.Nx-0)*(model.Nz+1), mesh->BCu.type,  1 );
     AddFieldToGroup_generic( _TRUE_, name, "Flags", "tag_v" , 'c', (model.Nx+1)*(model.Nz-0), mesh->BCv.type,  1 );
 
+    // Add non-iteration log
+    AddFieldToGroup_generic( _TRUE_, name, "Iterations", "rx_abs"          , 'd', Nmodel.nit_max+1, Nmodel.rx_abs         ,  1 );
+    AddFieldToGroup_generic( _TRUE_, name, "Iterations", "rz_abs"          , 'd', Nmodel.nit_max+1, Nmodel.rz_abs         ,  1 );
+    AddFieldToGroup_generic( _TRUE_, name, "Iterations", "rp_abs"          , 'd', Nmodel.nit_max+1, Nmodel.rp_abs         ,  1 );
+    AddFieldToGroup_generic( _TRUE_, name, "Iterations", "LogIsNewtonStep" , 'i', Nmodel.nit_max+1, Nmodel.LogIsNewtonStep,  1 );
+    AddFieldToGroup_generic( _TRUE_, name, "Iterations", "NumberSteps"     , 'i',                1, Nmodel.nit            ,  1 );
 
 
     // Freedom
