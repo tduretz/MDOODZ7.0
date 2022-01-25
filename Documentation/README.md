@@ -6,7 +6,7 @@
 ### Step 1: LOCAL
 `git add *.c`
 
-`git checkout -b branch-name`  % Checkouts and create at the same time 
+`git checkout -b branch-name`  # Checkout and create at the same time 
 
 `git commit -m "This is a commit message"`
 
@@ -26,3 +26,11 @@ edit the title of the commit
 squash and merge
 
 delete branch 
+
+## Some useful commands
+### Delete branch
+`git branch -d branch-name`  # Deletes locally
+
+`git push origin --delete branch-name` # Deletes remotely
+
+
