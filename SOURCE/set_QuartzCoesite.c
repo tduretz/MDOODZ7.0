@@ -68,7 +68,7 @@ void SetParticles( markers *particles, scale scaling, params model, mat_prop *ma
     char *ph_hr;
     int nb_elems;
 
-    if (setup==1) {
+    if (setup==2) {
         // Read input file
         FILE *fid;
         nb_elems = 1921*1921;
@@ -99,7 +99,7 @@ void SetParticles( markers *particles, scale scaling, params model, mat_prop *ma
         particles->P[np]     = P_init;
         particles->noise[np] = ((double)rand() / (double)RAND_MAX) - 0.5;
         
-        if (setup==1) {
+        if (setup==2) {
             // ------------------------- //
             // Locate markers in the image files
             // Find index of minimum/west temperature node
@@ -115,7 +115,7 @@ void SetParticles( markers *particles, scale scaling, params model, mat_prop *ma
     //        printf("%d\n", (int)ph_hr[ix + iz*(nx_hr-1)]);
             particles->phase[np] = (int)ph_hr[ix + iz*(nx_hr-1)];
         }
-        if (setup==0) {
+        if (setup==1) {
             // DRAW INCLUSION
             X  = particles->x[np]-xc;
             Z  = particles->z[np]-zc;
@@ -177,316 +177,23 @@ void SetParticles( markers *particles, scale scaling, params model, mat_prop *ma
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-//// Set physical properties on the grid and boundary conditions
-//void SetBCs( grid *mesh, params *model, scale scaling, markers* particles, mat_prop *materials, surface* topo ) {
-//
-//    int   kk, k, l, c, c1;
-//    double *X, *Z, *XC, *ZC;
-//    int   NX, NZ, NCX, NCZ, NXVZ, NZVX;
-//    double dmin, VzBC, width = 1 / scaling.L, eta = 1e4 / scaling.eta ;
-//    double Lx, Lz, T1, T2, rate=model->EpsBG,  z_comp=-140e3/scaling.L;
-//    double Vx_r, Vx_l, Vz_b, Vz_t, Vx_tot, Vz_tot;
-//    double Lxinit = 1400e3/scaling.L, ShortSwitchV0 = 0.40;
-//    double Vfix = (50.0/(1000.0*365.25*24.0*3600.0))/(scaling.L/scaling.t); // [50.0 == 5 cm/yr]
-//
-//    if (model->step >= 1){
-//        materials->k[4] = materials->k[3];
-//        printf("Running with normal conductivity in the asthenosphere!\n");
-//    }
-//
-//
-//    // ---- T-Dependent marker types
-//    // -------------------- SPECIFIC TO YOANN's SETUP -------------------- //
-//
-//    NX  = mesh->Nx;
-//    NZ  = mesh->Nz;
-//    NCX = NX-1;
-//    NCZ = NZ-1;
-//    NXVZ = NX+1;
-//    NZVX = NZ+1;
-//
-//    X  = malloc (NX*sizeof(double));
-//    Z  = malloc (NZ*sizeof(double));
-//    XC = malloc (NCX*sizeof(double));
-//    ZC = malloc (NCZ*sizeof(double));
-//
-//    for (k=0; k<NX; k++) {
-//        X[k] = mesh->xg_coord[k];
-//    }
-//    for (k=0; k<NCX; k++) {
-//        XC[k] = mesh->xc_coord[k];
-//    }
-//    for (l=0; l<NZ; l++) {
-//        Z[l] = mesh->zg_coord[l];
-//    }
-//    for (l=0; l<NCZ; l++) {
-//        ZC[l] = mesh->zc_coord[l];
-//    }
-//
-//    /* --------------------------------------------------------------------------------------------------------*/
-//	/* Set the BCs for Vx on all grid levels                                                                   */
-//	/* Type  0: Dirichlet point that matches the physical boundary (Vx: left/right, Vz: bottom/top)            */
-//	/* Type 11: Dirichlet point that do not match the physical boundary (Vx: bottom/top, Vz: left/right)       */
-//	/* Type  2: Neumann point that do not match the physical boundary (Vx: bottom/top, Vz: left/right)         */
-//	/* Type 13: Neumann point that matches the physical boundary (Vx: bottom/top, Vz: left/right)              */
-//	/* Type -2: periodic in the x direction (matches the physical boundary)                                    */
-//    /* Type -1: not a BC point (tag for inner points)                                                          */
-//    /* Type 30: not calculated (part of the "air")                                                             */
-//	/* --------------------------------------------------------------------------------------------------------*/
-//
-//		NX  = mesh->Nx;
-//		NZ  = mesh->Nz;
-//		NCX = NX-1;
-//		NCZ = NZ-1;
-//		NXVZ = NX+1;
-//		NZVX = NZ+1;
-//
-//		for (l=0; l<mesh->Nz+1; l++) {
-//			for (k=0; k<mesh->Nx; k++) {
-//
-//				c = k + l*(mesh->Nx);
-//
-//                if ( mesh->BCu.type[c] != 30 ) {
-//
-//                    // Internal points:  -1
-//                    mesh->BCu.type[c] = -1;
-//                    mesh->BCu.val[c]  =  0;
-//
-//                    // Matching BC nodes WEST
-//                    if (k==0 ) {
-//                        mesh->BCu.type[c] = 0;
-//                        mesh->BCu.val[c]  = -mesh->xg_coord[k] * model->EpsBG;
-//                    }
-//
-//                    // Matching BC nodes EAST
-//                    if (k==mesh->Nx-1 ) {
-//                        mesh->BCu.type[c] = 0;
-//                        mesh->BCu.val[c]  = -mesh->xg_coord[k] * model->EpsBG;
-//                    }
-//
-//                    // Free slip SOUTH
-//                    if (l==0  ) {
-//                        mesh->BCu.type[c] = 13;
-//                        mesh->BCu.val[c]  =  0;
-//                    }
-//
-//                    // Free slip NORTH
-//                    if ( l==mesh->Nz ) {
-//                        mesh->BCu.type[c] = 13;
-//                        mesh->BCu.val[c]  =  0;
-//                    }
-//                }
-//
-//			}
-//		}
-//
-//
-//	/* --------------------------------------------------------------------------------------------------------*/
-//	/* Set the BCs for Vz on all grid levels                                                                   */
-//	/* Type  0: Dirichlet point that matches the physical boundary (Vx: left/right, Vz: bottom/top)            */
-//	/* Type 11: Dirichlet point that do not match the physical boundary (Vx: bottom/top, Vz: left/right)       */
-//	/* Type  2: Neumann point that do not match the physical boundary (Vx: bottom/top, Vz: left/right)         */
-//	/* Type 13: Neumann point that matches the physical boundary (Vx: bottom/top, Vz: left/right)              */
-//	/* Type -2: periodic in the x direction (does not match the physical boundary)                             */
-//	/* Type-10: useless point (set to zero)                                                                    */
-//    /* Type -1: not a BC point (tag for inner points)                                                          */
-//    /* Type 30: not calculated (part of the "air")                                                             */
-//	/* --------------------------------------------------------------------------------------------------------*/
-//
-//		NX  = mesh->Nx;
-//		NZ  = mesh->Nz;
-//		NCX = NX-1;
-//		NCZ = NZ-1;
-//		NXVZ = NX+1;
-//		NZVX = NZ+1;
-//
-//		for (l=0; l<mesh->Nz; l++) {
-//			for (k=0; k<mesh->Nx+1; k++) {
-//
-//				c  = k + l*(mesh->Nx+1);
-//
-//                if ( mesh->BCv.type[c] != 30 ) {
-//
-//                    // Internal points:  -1
-//                    mesh->BCv.type[c] = -1;
-//                    mesh->BCv.val[c]  =  0;
-//
-//                    // Matching BC nodes SOUTH
-//                    if (l==0 ) {
-//                        mesh->BCv.type[c] = 0;
-//                        mesh->BCv.val[c]  = mesh->zg_coord[l] * model->EpsBG;
-//                    }
-//
-//                    // Matching BC nodes NORTH
-//                    if (l==mesh->Nz-1 ) {
-//                        mesh->BCv.type[c] = 0;
-//                        mesh->BCv.val[c]  = mesh->zg_coord[l] * model->EpsBG;
-//                    }
-//
-//                    // Non-matching boundary WEST
-//                    if ( (k==0) ) {
-//                        mesh->BCv.type[c] =   13;
-//                        mesh->BCv.val[c]  =   0;
-//                    }
-//
-//                    // Non-matching boundary EAST
-//                    if ( (k==mesh->Nx) ) {
-//                        mesh->BCv.type[c] =   13;
-//                        mesh->BCv.val[c]  =   0;
-//                    }
-//                }
-//
-//			}
-//		}
-//
-//
-//    /* --------------------------------------------------------------------------------------------------------*/
-//    /* Set the BCs for P on all grid levels                                                                    */
-//    /* Type  0: Dirichlet within the grid                                                                      */
-//    /* Type -1: not a BC point (tag for inner points)                                                          */
-//    /* Type 30: not calculated (part of the "air")                                                             */
-//    /* Type 31: surface pressure (Dirichlet)                                                                   */
-//    /* --------------------------------------------------------------------------------------------------------*/
-//
-//
-//        NX  = mesh->Nx;
-//        NZ  = mesh->Nz;
-//        NCX = NX-1;
-//        NCZ = NZ-1;
-//        NXVZ = NX+1;
-//        NZVX = NZ+1;
-//
-//        for (l=0; l<NCZ; l++) {
-//            for (k=0; k<NCX; k++) {
-//
-//                c  = k + l*(NCX);
-//
-//                if (mesh->BCt.type[c] != 30) {
-//
-//                    // Internal points:  -1
-//                    mesh->BCp.type[c] = -1;
-//                    mesh->BCp.val[c]  =  0;
-//                }
-//            }
-//        }
-//
-//	/* -------------------------------------------------------------------------------------------------------*/
-//	/* Set the BCs for T on all grid levels                                                                   */
-//	/* Type  1: Dirichlet point that do not match the physical boundary (Vx: bottom/top, Vz: left/right)      */
-//	/* Type  0: Neumann point that matches the physical boundary (Vx: bottom/top, Vz: left/right)             */
-//    /* Type -2: periodic in the x direction (matches the physical boundary)                                   */
-//	/* Type -1: not a BC point (tag for inner points)                                                         */
-//    /* Type 30: not calculated (part of the "air")                                                            */
-//	/* -------------------------------------------------------------------------------------------------------*/
-//
-//    double Ttop = 273.15/scaling.T;
-//    double Tbot, Tleft, Tright;
-//
-//
-//		NX  = mesh->Nx;
-//		NZ  = mesh->Nz;
-//		NCX = NX-1;
-//		NCZ = NZ-1;
-//		NXVZ = NX+1;
-//		NZVX = NZ+1;
-//
-//		for (l=0; l<mesh->Nz-1; l++) {
-//			for (k=0; k<mesh->Nx-1; k++) {
-//
-//				c = k + l*(NCX);
-//
-//                if ( mesh->BCt.type[c] != 30 ) {
-//
-//                    // LEFT
-//                    if ( k==0 ) {
-//                        mesh->BCt.type[c] = 0;
-//                        mesh->BCt.val[c]  = mesh->T[c];
-//                    }
-//
-//                    // RIGHT
-//                    if ( k==NCX-1 ) {
-//                        mesh->BCt.type[c] = 0;
-//                        mesh->BCt.val[c]  = mesh->T[c];
-//                    }
-//
-//                    // BOT
-//                    if ( l==0 ) {
-//                        mesh->BCt.type[c] = 0;
-//                        mesh->BCt.val[c]  = mesh->T[c];
-//                    }
-//
-//                    // TOP
-//                    if ( l==NCZ-1 ) {
-//                        mesh->BCt.type[c] = 0;
-//                        mesh->BCt.val[c]  = mesh->T[c];
-//                    }
-//                    // FREE SURFACE
-//                    else {
-//                        if ((mesh->BCt.type[c] == -1 || mesh->BCt.type[c] == 1 || mesh->BCt.type[c] == 0) && mesh->BCt.type[c+NCX] == 30) {
-//                            mesh->BCt.type[c] = 1;
-//                            mesh->BCt.val[c]  = Ttop;
-//                        }
-//                    }
-//
-//
-//                }
-//
-//			}
-//		}
-//
-//
-//	free(X);
-//	free(Z);
-//	free(XC);
-//	free(ZC);
-//	printf("Velocity and pressure were initialised\n");
-//	printf("Boundary conditions were set up\n");
-//
-//}
-
 // Set physical properties on the grid and boundary conditions
 void SetBCs( grid *mesh, params *model, scale scaling, markers* particles, mat_prop *materials, surface* topo ) {
 
-    int   kk, k, l, c, c1;
-    double *X, *Z, *XC, *ZC;
-    int   NX, NZ, NCX, NCZ, NXVZ, NZVX;
-    double dmin, VzBC, width = 1 / scaling.L, eta = 1e4 / scaling.eta ;
-    double Lx, Lz, T1, T2, rate=model->EpsBG,  z_comp=-140e3/scaling.L;
-    double Vx_r, Vx_l, Vz_b, Vz_t, Vx_tot, Vz_tot;
-    double Lxinit = 1400e3/scaling.L, ShortSwitchV0 = 0.40;
-    double Vfix = (50.0/(1000.0*365.25*24.0*3600.0))/(scaling.L/scaling.t); // [50.0 == 5 cm/yr]
+    int    kk, k, l, c, c1;
+    int    NX, NZ, NCX, NCZ;
+    double Lx, Lz, a = model->user3, b = model->user4;
     
     // Define dimensions;
     Lx = (double) (model->xmax - model->xmin) ;
     Lz = (double) (model->zmax - model->zmin) ;
-    
-    // ---- T-Dependent marker types
-    // -------------------- SPECIFIC TO YOANN's SETUP -------------------- //
-    
-    NX  = mesh->Nx;
-    NZ  = mesh->Nz;
-    NCX = NX-1;
-    NCZ = NZ-1;
-    NXVZ = NX+1;
-    NZVX = NZ+1;
-    
-    X  = malloc (NX*sizeof(double));
-    Z  = malloc (NZ*sizeof(double));
-    XC = malloc (NCX*sizeof(double));
-    ZC = malloc (NCZ*sizeof(double));
-    
-    for (k=0; k<NX; k++) {
-        X[k] = mesh->xg_coord[k];
-    }
-    for (k=0; k<NCX; k++) {
-        XC[k] = mesh->xc_coord[k];
-    }
-    for (l=0; l<NZ; l++) {
-        Z[l] = mesh->zg_coord[l];
-    }
-    for (l=0; l<NCZ; l++) {
-        ZC[l] = mesh->zc_coord[l];
-    }
+        
+    // Sizes
+    NX  = mesh->Nx; NCX = NX-1;
+    NZ  = mesh->Nz; NCZ = NZ-1;
+
+    double Tfix = (pow(mesh->p_in[0]*scaling.S/1e9/b, 1/a) + zeroC)/scaling.T;
+    printf("Pressure: %2.2e , Temperature: %2.2e\n", mesh->p_in[0]*scaling.S,  pow(mesh->p_in[0]*scaling.S/1e9/b, 1/a));
     
     /* --------------------------------------------------------------------------------------------------------*/
     /* Set the BCs for Vx on all grid levels                                                                   */
@@ -498,41 +205,35 @@ void SetBCs( grid *mesh, params *model, scale scaling, markers* particles, mat_p
     /* Type -1: not a BC point (tag for inner points)                                                          */
     /* Type 30: not calculated (part of the "air")                                                             */
     /* --------------------------------------------------------------------------------------------------------*/
-    
-        NX  = mesh->Nx;
-        NZ  = mesh->Nz;
-        NCX = NX-1;
-        NCZ = NZ-1;
-        NXVZ = NX+1;
-        NZVX = NZ+1;
         
-        for (l=0; l<mesh->Nz+1; l++) {
-            for (k=0; k<mesh->Nx; k++) {
+    for (l=0; l<mesh->Nz+1; l++) {
+        for (k=0; k<mesh->Nx; k++) {
+            
+            c = k + l*(mesh->Nx);
+            
+            if ( mesh->BCu.type[c] != 30 ) {
                 
-                c = k + l*(mesh->Nx);
+                // Internal points:  -1
+                mesh->BCu.type[c] = -1;
+                mesh->BCu.val[c]  =  0;
                 
-                if ( mesh->BCu.type[c] != 30 ) {
-                    
-                    // Internal points:  -1
-                    mesh->BCu.type[c] = -1;
-                    mesh->BCu.val[c]  =  0;
-                    
-                    if (model->shear_style== 0 ) {
-                    
+                // ------------------- PURE SHEAR ------------------- // 
+                if (model->shear_style== 0 ) {
+                
                     // Matching BC nodes WEST
-                    if (k==0 ) {
+                    if ( k==0 ) {
                         mesh->BCu.type[c] = 0;
                         mesh->BCu.val[c]  = -mesh->xg_coord[k] * (model->EpsBG - model->DivBG/3.0);
                     }
                     
                     // Matching BC nodes EAST
-                    if (k==mesh->Nx-1 ) {
+                    if ( k==mesh->Nx-1 ) {
                         mesh->BCu.type[c] = 0;
                         mesh->BCu.val[c]  = -mesh->xg_coord[k] * (model->EpsBG - model->DivBG/3.0);
                     }
                     
                     // Free slip SOUTH
-                    if (l==0  ) {
+                    if ( l==0 ) {
                         mesh->BCu.type[c] = 13;
                         mesh->BCu.val[c]  =  0;
                     }
@@ -542,39 +243,41 @@ void SetBCs( grid *mesh, params *model, scale scaling, markers* particles, mat_p
                         mesh->BCu.type[c] = 13;
                         mesh->BCu.val[c]  =  0;
                     }
-                        
-                    }
-                    if (model->shear_style== 1 ) {
-                        
-                        // Matching BC nodes WEST
-                        if (k==0 ) {
-                            mesh->BCu.type[c] = -2;
-                            mesh->BCu.val[c]  = 0.0*model->EpsBG*Lx;
-                        }
-                        
-                        // Matching BC nodes EAST
-                        if (k==mesh->Nx-1 ) {
-                            mesh->BCu.type[c] =  -12;
-                            mesh->BCu.val[c]  = -0.0*model->EpsBG*Lx;
-                        }
-                        
-                        // Free slip S
-                        if (l==0 ) { //&& (k>0 && k<NX-1) ) {
-                            mesh->BCu.type[c] =  11;
-                            mesh->BCu.val[c]  = -1*model->EpsBG*Lz;
-                        }
-                        
-                        // Free slip N
-                        if ( l==mesh->Nz) {// && (k>0 && k<NX-1)) {
-                            mesh->BCu.type[c] =  11;
-                            mesh->BCu.val[c]  =  1*model->EpsBG*Lz;
-                        }
-                        
-                    }
+                    
                 }
-                
+
+                // ------------------- PERIODIC SIMPLE SHEAR ------------------- // 
+                if (model->shear_style== 1 ) {
+                    
+                    // Matching BC nodes WEST
+                    if ( k==0 ) {
+                        mesh->BCu.type[c] = -2;
+                        mesh->BCu.val[c]  = 0.0*model->EpsBG*Lx;
+                    }
+                    
+                    // Matching BC nodes EAST
+                    if ( k==mesh->Nx-1 ) {
+                        mesh->BCu.type[c] =  -12;
+                        mesh->BCu.val[c]  = -0.0*model->EpsBG*Lx;
+                    }
+                    
+                    // Free slip S
+                    if ( l==0 ) { //&& (k>0 && k<NX-1) ) {
+                        mesh->BCu.type[c] =  11;
+                        mesh->BCu.val[c]  = -1*model->EpsBG*Lz;
+                    }
+                    
+                    // Free slip N
+                    if ( l==mesh->Nz ) {// && (k>0 && k<NX-1)) {
+                        mesh->BCu.type[c] =  11;
+                        mesh->BCu.val[c]  =  1*model->EpsBG*Lz;
+                    }
+                    
+                }
             }
+            
         }
+    }
         
     
     /* --------------------------------------------------------------------------------------------------------*/
@@ -588,83 +291,77 @@ void SetBCs( grid *mesh, params *model, scale scaling, markers* particles, mat_p
     /* Type -1: not a BC point (tag for inner points)                                                          */
     /* Type 30: not calculated (part of the "air")                                                             */
     /* --------------------------------------------------------------------------------------------------------*/
-    
-        NX  = mesh->Nx;
-        NZ  = mesh->Nz;
-        NCX = NX-1;
-        NCZ = NZ-1;
-        NXVZ = NX+1;
-        NZVX = NZ+1;
         
-        for (l=0; l<mesh->Nz; l++) {
-            for (k=0; k<mesh->Nx+1; k++) {
+    for (l=0; l<mesh->Nz; l++) {
+        for (k=0; k<mesh->Nx+1; k++) {
+            
+            c  = k + l*(mesh->Nx+1);
+            
+            if ( mesh->BCv.type[c] != 30 ) {
                 
-                c  = k + l*(mesh->Nx+1);
+                // Internal points:  -1
+                mesh->BCv.type[c] = -1;
+                mesh->BCv.val[c]  =  0;
                 
-                if ( mesh->BCv.type[c] != 30 ) {
-                    
-                    // Internal points:  -1
-                    mesh->BCv.type[c] = -1;
-                    mesh->BCv.val[c]  =  0;
-                    
-                    if (model->shear_style== 0 ) {
-                    
-                        // Matching BC nodes SOUTH
-                        if (l==0 ) {
-                            mesh->BCv.type[c] = 0;
-                            mesh->BCv.val[c]  = mesh->zg_coord[l] * (model->EpsBG + model->DivBG/3.0);
-                        }
-                        
-                        // Matching BC nodes NORTH
-                        if (l==mesh->Nz-1 ) {
-                            mesh->BCv.type[c] = 0;
-                            mesh->BCv.val[c]  = mesh->zg_coord[l] * (model->EpsBG + model->DivBG/3.0);
-                        }
-                        
-                        // Non-matching boundary WEST
-                        if ( (k==0) ) {
-                            mesh->BCv.type[c] =   13;
-                            mesh->BCv.val[c]  =   0;
-                        }
-                        
-                        // Non-matching boundary EAST
-                        if ( (k==mesh->Nx) ) {
-                            mesh->BCv.type[c] =   13;
-                            mesh->BCv.val[c]  =   0;
-                        }
+                // ------------------- PURE SHEAR ------------------- // 
+                if ( model->shear_style== 0 ) {
+                
+                    // Matching BC nodes SOUTH
+                    if ( l==0 ) {
+                        mesh->BCv.type[c] = 0;
+                        mesh->BCv.val[c]  = mesh->zg_coord[l] * (model->EpsBG + model->DivBG/3.0);
                     }
                     
-                    
-                    if (model->shear_style== 1 ) {
-                        // Matching BC nodes SOUTH
-                        if (l==0 ) {
-                            mesh->BCv.type[c] = 0;
-                            mesh->BCv.val[c]  = -0.0*model->EpsBG*Lz + model->DivBG/3.0;
-                        }
-                        
-                        // Matching BC nodes NORTH
-                        if (l==mesh->Nz-1 ) {
-                            mesh->BCv.type[c] = 0;
-                            mesh->BCv.val[c]  = 0.0*model->EpsBG*Lz + model->DivBG/3.0;
-                        }
-                        
-                        // Non-matching boundary points
-                        if ( (k==0)   ) {    //&& (l>0 && l<NZ-1)
-                            mesh->BCv.type[c] =  -12;
-                            mesh->BCv.val[c]  =   0;
-                        }
-                        
-                        // Non-matching boundary points
-                        if ( (k==mesh->Nx)  ) { // && (l>0 && l<NZ-1)
-                            mesh->BCv.type[c] =  -12;
-                            mesh->BCv.val[c]  =   0;
-                        }
+                    // Matching BC nodes NORTH
+                    if ( l==mesh->Nz-1 ) {
+                        mesh->BCv.type[c] = 0;
+                        mesh->BCv.val[c]  = mesh->zg_coord[l] * (model->EpsBG + model->DivBG/3.0);
                     }
                     
+                    // Non-matching boundary WEST
+                    if ( k==0 ) {
+                        mesh->BCv.type[c] =   13;
+                        mesh->BCv.val[c]  =   0;
+                    }
+                    
+                    // Non-matching boundary EAST
+                    if ( k==mesh->Nx ) {
+                        mesh->BCv.type[c] =   13;
+                        mesh->BCv.val[c]  =   0;
+                    }
+                }
+                
+                // ------------------- PERIODIC SIMPLE SHEAR ------------------- // 
+                if (model->shear_style== 1 ) {
+                    // Matching BC nodes SOUTH
+                    if ( l==0 ) {
+                        mesh->BCv.type[c] = 0;
+                        mesh->BCv.val[c]  = -0.0*model->EpsBG*Lz + model->DivBG/3.0;
+                    }
+                    
+                    // Matching BC nodes NORTH
+                    if ( l==mesh->Nz-1 ) {
+                        mesh->BCv.type[c] = 0;
+                        mesh->BCv.val[c]  = 0.0*model->EpsBG*Lz + model->DivBG/3.0;
+                    }
+                    
+                    // Non-matching boundary points
+                    if ( k==0 ) {    //&& (l>0 && l<NZ-1)
+                        mesh->BCv.type[c] =  -12;
+                        mesh->BCv.val[c]  =   0;
+                    }
+                    
+                    // Non-matching boundary points
+                    if ( k==mesh->Nx ) { // && (l>0 && l<NZ-1)
+                        mesh->BCv.type[c] =  -12;
+                        mesh->BCv.val[c]  =   0;
+                    }
                 }
                 
             }
+            
         }
+    }
         
     
     /* --------------------------------------------------------------------------------------------------------*/
@@ -674,28 +371,20 @@ void SetBCs( grid *mesh, params *model, scale scaling, markers* particles, mat_p
     /* Type 30: not calculated (part of the "air")                                                             */
     /* Type 31: surface pressure (Dirichlet)                                                                   */
     /* --------------------------------------------------------------------------------------------------------*/
-    
-    
-        NX  = mesh->Nx;
-        NZ  = mesh->Nz;
-        NCX = NX-1;
-        NCZ = NZ-1;
-        NXVZ = NX+1;
-        NZVX = NZ+1;
         
-        for (l=0; l<NCZ; l++) {
-            for (k=0; k<NCX; k++) {
-                
-                c  = k + l*(NCX);
-                
-                if (mesh->BCt.type[c] != 30) {
-                            
-                    // Internal points:  -1
-                    mesh->BCp.type[c] = -1;
-                    mesh->BCp.val[c]  =  0;
-                }
+    for (l=0; l<NCZ; l++) {
+        for (k=0; k<NCX; k++) {
+            
+            c  = k + l*(NCX);
+            
+            if ( mesh->BCt.type[c] != 30 ) {
+                        
+                // Internal points:  -1
+                mesh->BCp.type[c] = -1;
+                mesh->BCp.val[c]  =  0;
             }
         }
+    }
     
     /* -------------------------------------------------------------------------------------------------------*/
     /* Set the BCs for T on all grid levels                                                                   */
@@ -708,14 +397,6 @@ void SetBCs( grid *mesh, params *model, scale scaling, markers* particles, mat_p
     
     double Ttop = 273.15/scaling.T;
     double Tbot, Tleft, Tright;
-    
-    
-        NX  = mesh->Nx;
-        NZ  = mesh->Nz;
-        NCX = NX-1;
-        NCZ = NZ-1;
-        NXVZ = NX+1;
-        NZVX = NZ+1;
         
         for (l=0; l<mesh->Nz-1; l++) {
             for (k=0; k<mesh->Nx-1; k++) {
@@ -723,6 +404,9 @@ void SetBCs( grid *mesh, params *model, scale scaling, markers* particles, mat_p
                 c = k + l*(NCX);
                 
                 if ( mesh->BCt.type[c] != 30 ) {
+
+                    // !!!!!!!!!! FORCE TEMPERATURE
+                    mesh->T[c] = Tfix;
                     
                     // LEFT
                     if ( k==0 ) {
@@ -761,12 +445,6 @@ void SetBCs( grid *mesh, params *model, scale scaling, markers* particles, mat_p
             }
         }
         
-    
-    free(X);
-    free(Z);
-    free(XC);
-    free(ZC);
-    printf("Velocity and pressure were initialised\n");
     printf("Boundary conditions were set up\n");
     
 }
