@@ -13,49 +13,61 @@ writer_energies = 0
 eta = 1
 L   = 1
 V   = 1
-T   = 20
+T   = 1
 
-/**** SPACE-TIME ****/
+/**** SPACE ****/
 Nx      = 101
 Nz      = 101
 Nt      = 1
 xmin    = -5.000000e-1
-zmin    = -5.000000e-1
+zmin    = -5.000000e-1 
 xmax    =  5.000000e-1
 zmax    =  5.000000e-1
-dt      = 0.5
+
+/**** PARTICLES ****/
+Nx_part = 4
+Nz_part = 4
+
+/**** TIME ****/
 dt_constant = 1
-Courant = 0.3
-penalty = 1e5
-lsolver = -1
-DefectCorrectionForm = 1
+Courant     = 0.3
+dt          = 0.5
+RK          = 4
+
+/**** LINEAR SOLVER ****/
+noisy        = 0
+penalty      = 1e5
+lsolver      = -1
 diag_scaling = 0
-abs_tol_div = 1e-8
-rel_tol_div = 1e-8
+abs_tol_div  = 1e-8
+rel_tol_div  = 1e-8
+
+/**** NON-LINEAR SOLVER ****/
+Newton      = 10 
+line_search = 1
+nit_max     = 100
+rel_tol_KSP = 1e-4
+abs_tol_u   = 1e-8
+abs_tol_u   = 1e-8
+rel_tol_p   = 1e-8
+rel_tol_p   = 1e-8
+
+/**** VISCOSITY CUT-OFF ****/
+mineta      = 1e-3
+maxeta      = 1e6
 
 /**** SWITCHES ****/
-shear_style     = 0
-ismechanical    = 1
-dt_constant     = 0
-RK              = 4
-isperiodic_x    = 0
-ispureshear_ALE = 1
-isinertial      = 0
-iselastic       = 0
-isthermal       = 0
-line_search     = 1
-free_surf       = 0
-free_surf_stab  = 0
-eqn_state       = 0
-thermal_eq      = 0
-subgrid_diff    = 1
-shear_heat      = 1
-adiab_heat      = 0
-fstrain         = 1
-advection       = 0
+iselastic         = 0
+free_surf         = 0
+free_surf_stab    = 0
+fstrain           = 1
+advection         = 0
 GNUplot_residuals = 1
 
-/**** SETUP DEPENDANT ****/
+/**** SETUP-DEPENDANT ****/
+shear_style     = 0
+isperiodic_x    = 0
+ispureshear_ALE = 1
 EpsBG           = 1
 user0           = 1     / temperature [°C]
 user1           = 0.05  / inclusion radius [m]
@@ -82,8 +94,8 @@ Slim = 500e9
 alp  = 10.0e-6
 bet  = 1e-11
 drho = 0
-cstv = 0             / constant visc law
-pwlv = 1            / disloc. creep
+cstv = 1             / constant visc law
+pwlv = 0            / disloc. creep
 linv = 0             / diff. creep
 gbsv = 0             / grain boundary sliding
 expv = 0             / peierls creep
@@ -114,29 +126,3 @@ gsel = 0             / grain size evo.
 eta0 = 1e1
 npwl = 3
 Qpwl = 0
-
-/**** DEFMAPS ****/
-nT    =    51      / Temperature resolutin []
-nE    =    51      / Strain rate resolution []
-nd    =    2        / Grain size resolution []
-Tmin  =    240      / Temperature minimum [°C]
-Tmax  =    2000     / Temperature maximum [°C]
-Emin  =    -50      / Strain rate minimum log_10 [1/s]
-Emax  =    5        / Strain rate maximum log_10 [1/s]
-dmin  =    -7       / Grain size minimum log_10 [m]
-dmax  =    -2       / Grain size maximum log_10 [m]
-Pn    =  1e9        / Pressure [Pa]
-
-/**** PARTICLES ****/
-Nx_part  = 4
-Nz_part  = 4
-min_part_cell = 16
-
-/**** NON-LINEAR ITERATIONS ****/
-Newton  = 1 
-nit_max = 100
-rel_tol_KSP = 1e-4
-tol_u   = 1e-9
-tol_p   = 1e-9
-mineta  = 1e-3
-maxeta  = 1e6
