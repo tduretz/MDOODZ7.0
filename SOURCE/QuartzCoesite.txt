@@ -1,5 +1,5 @@
 /**** RESTART ****/
-istep = 00200
+istep = 00100
 irestart = 0
 
 /**** INPUT FILE ****/
@@ -20,17 +20,17 @@ V   = 1e-18
 T   = 600
 
 /**** SPACE-TIME ****/
-Nx      = 401
-Nz      = 401
+Nx      = 201
+Nz      = 201
 Nt      = 200
 xmin    = -2.500000e-3
 zmin    = -2.500000e-3
 xmax    =  2.500000e-3
 zmax    =  2.500000e-3
 dt      = 0.125e11
-dt_constant = 1
-Courant     = 0.3
-penalty     = 1e5
+dt_constant  = 1
+Courant      = 0.3
+penalty      = 1e5
 DefectCorrectionForm = 1
 diag_scaling = 0
 
@@ -65,10 +65,10 @@ EpsBG           = 1e-25
 DivBG           = 1e-14
 PrBG            = 3.45e9  / pressure [Pa]
 user0           = 600     / temperature [°C]
-user1           = 1       / 1: fancy set up --- 0: simple inclusion
+user1           = 0       / 2: fancy set up --- 1: simple inclusion --- 0: homogeneous
 user2           = 0.5e-3  / inclusion radius [m]
-user3           = 0
-user4           = 0
+user3           = 6.9462     / fit coefficient a for T=(P/b)^(1/a) 
+user4           = 5.5398e-20 / fit coefficient b for T=(P/b)^(1/a) 
 
 /**** GRAVITY ****/
 gx = 0.0000
