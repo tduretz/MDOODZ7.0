@@ -2393,17 +2393,17 @@ void GenerateDeformationMaps( grid* mesh, mat_prop *materials, params *model, Np
         params[2] = nd;
 
         // Send data to file
-        create_output_hdf5( filename );
-        AddGroup_to_hdf5( filename, "model" );
-        AddGroup_to_hdf5( filename, "arrays" );
+        CreateOutputHDF5( filename );
+        AddGroupToHDF5( filename, "model" );
+        AddGroupToHDF5( filename, "arrays" );
 
-        AddFieldToGroup_generic( _TRUE_, filename, "model", "params" , 'd',  3, params,  1 );
-        AddFieldToGroup_generic( _TRUE_, filename, "arrays", "T"     , 'd', nT, CT,  1 );
-        AddFieldToGroup_generic( _TRUE_, filename, "arrays", "E"     , 'd', nE, CE,  1 );
-        AddFieldToGroup_generic( _TRUE_, filename, "arrays", "d"     , 'd', nd, Cd,  1 );
-        AddFieldToGroup_generic( _TRUE_, filename, "arrays", "stress", 'd', nT*nE*nd, Cstress,  1 );
-        AddFieldToGroup_generic( _TRUE_, filename, "arrays", "visco" , 'd', nT*nE*nd, Cvisco,  1 );
-        AddFieldToGroup_generic( _TRUE_, filename, "arrays", "map"   , 'i', nT*nE*nd, dom_mech,  1 );
+        AddFieldToGroup( filename, "model", "params" , 'd',  3, params,  1 );
+        AddFieldToGroup( filename, "arrays", "T"     , 'd', nT, CT,  1 );
+        AddFieldToGroup( filename, "arrays", "E"     , 'd', nE, CE,  1 );
+        AddFieldToGroup( filename, "arrays", "d"     , 'd', nd, Cd,  1 );
+        AddFieldToGroup( filename, "arrays", "stress", 'd', nT*nE*nd, Cstress,  1 );
+        AddFieldToGroup( filename, "arrays", "visco" , 'd', nT*nE*nd, Cvisco,  1 );
+        AddFieldToGroup( filename, "arrays", "map"   , 'i', nT*nE*nd, dom_mech,  1 );
 
 
         free(filename);
@@ -4636,17 +4636,17 @@ void GenerateDeformationMaps( grid* mesh, mat_prop *materials, params *model, Np
         params[2] = nd;
 
         // Send data to file
-        create_output_hdf5( filename );
-        AddGroup_to_hdf5( filename, "model" );
-        AddGroup_to_hdf5( filename, "arrays" );
+        CreateOutputHDF5( filename );
+        AddGroupToHDF5( filename, "model" );
+        AddGroupToHDF5( filename, "arrays" );
 
-        AddFieldToGroup_generic( _TRUE_, filename, "model", "params" , 'd',  3, params,  1 );
-        AddFieldToGroup_generic( _TRUE_, filename, "arrays", "T"     , 'd', nT, CT,  1 );
-        AddFieldToGroup_generic( _TRUE_, filename, "arrays", "E"     , 'd', nE, CE,  1 );
-        AddFieldToGroup_generic( _TRUE_, filename, "arrays", "d"     , 'd', nd, Cd,  1 );
-        AddFieldToGroup_generic( _TRUE_, filename, "arrays", "stress", 'd', nT*nE*nd, Cstress,  1 );
-        AddFieldToGroup_generic( _TRUE_, filename, "arrays", "visco" , 'd', nT*nE*nd, Cvisco,  1 );
-        AddFieldToGroup_generic( _TRUE_, filename, "arrays", "map"   , 'i', nT*nE*nd, dom_mech,  1 );
+        AddFieldToGroup( filename, "model", "params" , 'd',  3, params,  1 );
+        AddFieldToGroup( filename, "arrays", "T"     , 'd', nT, CT,  1 );
+        AddFieldToGroup( filename, "arrays", "E"     , 'd', nE, CE,  1 );
+        AddFieldToGroup( filename, "arrays", "d"     , 'd', nd, Cd,  1 );
+        AddFieldToGroup( filename, "arrays", "stress", 'd', nT*nE*nd, Cstress,  1 );
+        AddFieldToGroup( filename, "arrays", "visco" , 'd', nT*nE*nd, Cvisco,  1 );
+        AddFieldToGroup( filename, "arrays", "map"   , 'i', nT*nE*nd, dom_mech,  1 );
 
 
         free(filename);

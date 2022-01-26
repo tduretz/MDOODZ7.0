@@ -166,8 +166,9 @@ struct _n_params {
     double resx0, resz0, resp0;
     double resx_f, resz_f, resp_f;
 	double vrlx,  prlx, trlx;
-    int    Picard2Newton, let_res_grow, nit_Pic_max;
+    int    Picard2Newton, let_res_grow, nit_Pic_max, *LogIsNewtonStep;
     double Pic2NewtCond;
+    double *rx_abs, *rz_abs, *rp_abs, *rx_rel, *rz_rel, *rp_rel;
 };
 
 // grid contains all the fine grid arrays (double *)
@@ -368,12 +369,12 @@ void EvaluateRHS( grid*, params, scale, double );
 //void Interp_C2F_V( grid*, int, double*, double* );
 //
 //// Visualisation prototypes
-void create_output_hdf5( const char[] );
-void AddGroup_to_hdf5( const char[], const char[] );
-void AddFieldToGroup_generic( int, const char[], const char[], const char[], char, int, void*, int );
+void CreateOutputHDF5( const char[] );
+void AddGroupToHDF5( const char[], const char[] );
+void AddFieldToGroup( const char[], const char[], const char[], const char, int, void*, int );
 //void Myfopen( char*, FILE** );
 //void MViz_vtk( grid*, char*OutputSparseMatrix  );
-void WriteOutputHDF5( grid*, markers*, surface*, markers*, params, char*, mat_prop, scale );
+void WriteOutputHDF5( grid*, markers*, surface*, markers*, params, Nparams, char*, mat_prop, scale );
 void WriteOutputHDF5Particles( grid*, markers*, surface*, markers*, surface*, markers* , params, char*, mat_prop, scale );
 void WriteResiduals( grid, params, Nparams, scale );
 //

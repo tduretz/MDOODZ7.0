@@ -77,12 +77,12 @@ void DoubleToFloat(double* FieldD, float* FieldF, int size) {
 /*--------------------------------------------------------------------------------------------------------------------*/
 
 // The following routines were originally writen by D. A. May, and used in I2VIS //
-void create_output_hdf5( const char name[] )
+void CreateOutputHDF5( const char FileName[] )
 {
 	hid_t       file_id;   /* file identifier */
 
 	/* Create a new file using default properties. */
-	file_id = H5Fcreate( name, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+	file_id = H5Fcreate( FileName, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
 
 	/* Terminate access to the file. */
 	H5Fclose(file_id);
@@ -92,7 +92,7 @@ void create_output_hdf5( const char name[] )
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-void AddGroup_to_hdf5( const char filename[], const char group[] )
+void AddGroupToHDF5( const char filename[], const char group[] )
 {
 	hid_t       file_id, group_id;  /* identifiers */
 	char        *group_name;
@@ -118,7 +118,7 @@ void AddGroup_to_hdf5( const char filename[], const char group[] )
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-void AddFieldToGroup_generic( int compress, const char filename[], const char group[], const char field[], char d_type, int np, void* data, int dim )
+void AddFieldToGroup( const char filename[], const char group[], const char field[], char d_type, int np, void* data, int dim )
 {
 	hid_t   file_id, particle_group_id, coord_dataset_id, coord_dataspace_id;  /* identifiers */
 	hsize_t length;
@@ -129,6 +129,7 @@ void AddFieldToGroup_generic( int compress, const char filename[], const char gr
 	double percentage_chunk;
 	double chunk_size;
 	int deflation_level, quiet=1;
+    int compress=_TRUE_;
 
 	asprintf( &group_name, "/%s", group );
 	asprintf( &dataset_name, "%s/%s", group, field );
@@ -234,9 +235,9 @@ void AddFieldToGroup_generic( int compress, const char filename[], const char gr
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* topo_chain, params model, char *txtout, mat_prop materials, scale scaling ) {
+void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* topo_chain, params model, Nparams Nmodel, char *txtout, mat_prop materials, scale scaling ) {
 
-    char *name;
+    char *FileName;
     double A[8], E[5];
     int k;
     double *strain, *strain_el, *strain_pl, *strain_pwl, *strain_exp, *strain_lin, *strain_gbs, *X;
@@ -538,6 +539,7 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
     }
 
     if ( model.rec_T_P_x_z == 1 ) {
+
         // T0
         T0  = DoodzCalloc((model.Nx-1)*(model.Nz-1), sizeof(double));
         P2Mastah( &model, *particles, particles->T0,     mesh, T0,   mesh->BCp.type,  1, 0, interp, cent, model.itp_stencil);
@@ -547,7 +549,6 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
         CT0  = DoodzMalloc( sizeof(float)*(model.Nx-1)*(model.Nz-1));
         DoubleToFloat( T0, CT0, (model.Nx-1)*(model.Nz-1) );
         ScaleBack( CT0, scaling.T, (model.Nx-1)*(model.Nz-1) );
-
 
         // P0
         P0  = DoodzCalloc((model.Nx-1)*(model.Nz-1), sizeof(double));
@@ -568,7 +569,6 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
         CTmax  = DoodzMalloc( sizeof(float)*(model.Nx-1)*(model.Nz-1));
         DoubleToFloat( Tmax, CTmax, (model.Nx-1)*(model.Nz-1) );
         ScaleBack( CTmax, scaling.T, (model.Nx-1)*(model.Nz-1) );
-
 
         // Pmax
         Pmax  = DoodzCalloc((model.Nx-1)*(model.Nz-1),sizeof(double));
@@ -646,19 +646,20 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
     }
 
     // Generate file name
-    asprintf( &name, "%s%05d%s",txtout, model.step, ".gzip.h5");
-    create_output_hdf5( name );
+    asprintf( &FileName, "%s%05d%s",txtout, model.step, ".gzip.h5");
+    CreateOutputHDF5( FileName );
 
     // Add groups
-    AddGroup_to_hdf5( name, "Model" );
-    AddGroup_to_hdf5( name, "Vertices" );
-    AddGroup_to_hdf5( name, "Centers" );
-    AddGroup_to_hdf5( name, "VxNodes" );
-    AddGroup_to_hdf5( name, "VzNodes" );
-    AddGroup_to_hdf5( name, "Particles" );
-    AddGroup_to_hdf5( name, "VizGrid" );
-    AddGroup_to_hdf5( name, "Topo" );
-    AddGroup_to_hdf5( name, "Flags" );
+    AddGroupToHDF5( FileName, "Model" );
+    AddGroupToHDF5( FileName, "Vertices" );
+    AddGroupToHDF5( FileName, "Centers" );
+    AddGroupToHDF5( FileName, "VxNodes" );
+    AddGroupToHDF5( FileName, "VzNodes" );
+    AddGroupToHDF5( FileName, "Particles" );
+    AddGroupToHDF5( FileName, "VizGrid" );
+    AddGroupToHDF5( FileName, "Topo" );
+    AddGroupToHDF5( FileName, "Flags" );
+    AddGroupToHDF5( FileName, "Iterations");
 
     // Model Parameters
     A[0] = (double)(model.time) * scaling.t;
@@ -677,110 +678,116 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
     E[4] = mesh->W *scaling.S*scaling.L*scaling.L;
 
     // Parameter array
-    AddFieldToGroup_generic( _TRUE_, name, "Model", "Params"   , 'd', 8,  A, 1 );
-    AddFieldToGroup_generic( _TRUE_, name, "Model", "Energy"   , 'd', 5,  E, 1 );
+    AddFieldToGroup( FileName, "Model", "Params"   , 'd', 8,  A, 1 );
+    AddFieldToGroup( FileName, "Model", "Energy"   , 'd', 5,  E, 1 );
 
     // Grid coordinate arrays
-    AddFieldToGroup_generic( _TRUE_, name, "Model", "xg_coord" , 'f', model.Nx,    Cxg_coord,  1 );
-    AddFieldToGroup_generic( _TRUE_, name, "Model", "zg_coord" , 'f', model.Nz,    Czg_coord,  1 );
-    AddFieldToGroup_generic( _TRUE_, name, "Model", "xc_coord" , 'f', model.Nx-1,  Cxc_coord,  1 );
-    AddFieldToGroup_generic( _TRUE_, name, "Model", "zc_coord" , 'f', model.Nz-1,  Czc_coord,  1 );
-    AddFieldToGroup_generic( _TRUE_, name, "Model", "xvz_coord", 'f', model.Nx+1,  Cxvz_coord, 1 );
-    AddFieldToGroup_generic( _TRUE_, name, "Model", "zvx_coord", 'f', model.Nz+1,  Czvx_coord, 1 );
+    AddFieldToGroup( FileName, "Model", "xg_coord" , 'f', model.Nx,    Cxg_coord,  1 );
+    AddFieldToGroup( FileName, "Model", "zg_coord" , 'f', model.Nz,    Czg_coord,  1 );
+    AddFieldToGroup( FileName, "Model", "xc_coord" , 'f', model.Nx-1,  Cxc_coord,  1 );
+    AddFieldToGroup( FileName, "Model", "zc_coord" , 'f', model.Nz-1,  Czc_coord,  1 );
+    AddFieldToGroup( FileName, "Model", "xvz_coord", 'f', model.Nx+1,  Cxvz_coord, 1 );
+    AddFieldToGroup( FileName, "Model", "zvx_coord", 'f', model.Nz+1,  Czvx_coord, 1 );
 
     // Visualisation grid
-    AddFieldToGroup_generic( _TRUE_, name, "VizGrid", "xviz"    , 'f', nxviz, Cxviz,     1 );
-    AddFieldToGroup_generic( _TRUE_, name, "VizGrid", "zviz"    , 'f', nzviz, Czviz,     1 );
-    AddFieldToGroup_generic( _TRUE_, name, "VizGrid", "xviz_hr" , 'f', nxviz_hr, Cxviz_hr,  1 );
-    AddFieldToGroup_generic( _TRUE_, name, "VizGrid", "zviz_hr" , 'f', nzviz_hr, Czviz_hr,  1 );
-    AddFieldToGroup_generic( _TRUE_, name, "VizGrid", "compo"   , 'c', (nxviz-1)*(nzviz-1), compo,    1 );
-    AddFieldToGroup_generic( _TRUE_, name, "VizGrid", "compo_hr", 'c', (nxviz_hr-1)*(nzviz_hr-1), compo_hr,    1 );
+    AddFieldToGroup( FileName, "VizGrid", "xviz"    , 'f', nxviz, Cxviz,     1 );
+    AddFieldToGroup( FileName, "VizGrid", "zviz"    , 'f', nzviz, Czviz,     1 );
+    AddFieldToGroup( FileName, "VizGrid", "xviz_hr" , 'f', nxviz_hr, Cxviz_hr,  1 );
+    AddFieldToGroup( FileName, "VizGrid", "zviz_hr" , 'f', nzviz_hr, Czviz_hr,  1 );
+    AddFieldToGroup( FileName, "VizGrid", "compo"   , 'c', (nxviz-1)*(nzviz-1), compo,    1 );
+    AddFieldToGroup( FileName, "VizGrid", "compo_hr", 'c', (nxviz_hr-1)*(nzviz_hr-1), compo_hr,    1 );
 
     // Add casted grid fields
-    AddFieldToGroup_generic( _TRUE_, name, "Vertices", "rho_s", 'f', model.Nx*model.Nz,         Crho_s, 1 );
-    AddFieldToGroup_generic( _TRUE_, name, "Centers" , "rho_n", 'f', (model.Nx-1)*(model.Nz-1), Crho_n, 1 );
+    AddFieldToGroup( FileName, "Vertices", "rho_s", 'f', model.Nx*model.Nz,         Crho_s, 1 );
+    AddFieldToGroup( FileName, "Centers" , "rho_n", 'f', (model.Nx-1)*(model.Nz-1), Crho_n, 1 );
 
-    AddFieldToGroup_generic( _TRUE_, name, "Vertices", "eta_s", 'f', model.Nx*model.Nz,         Ceta_s, 1 );
-    AddFieldToGroup_generic( _TRUE_, name, "Centers" , "eta_n", 'f', (model.Nx-1)*(model.Nz-1), Ceta_n, 1 );
-    AddFieldToGroup_generic( _TRUE_, name, "VxNodes" , "Vx"   , 'f', model.Nx*(model.Nz+1),     CVx, 1 );
-    AddFieldToGroup_generic( _TRUE_, name, "VzNodes" , "Vz"   , 'f', (model.Nx+1)*model.Nz,     CVz, 1 );
-    AddFieldToGroup_generic( _TRUE_, name, "Centers" , "P"    , 'f', (model.Nx-1)*(model.Nz-1), CP, 1 );
-    AddFieldToGroup_generic( _TRUE_, name, "Centers" , "sxxd" , 'f', (model.Nx-1)*(model.Nz-1), Csxxd, 1 );
-    AddFieldToGroup_generic( _TRUE_, name, "Centers" , "szzd" , 'f', (model.Nx-1)*(model.Nz-1), Cszzd, 1 );
+    AddFieldToGroup( FileName, "Vertices", "eta_s", 'f', model.Nx*model.Nz,         Ceta_s, 1 );
+    AddFieldToGroup( FileName, "Centers" , "eta_n", 'f', (model.Nx-1)*(model.Nz-1), Ceta_n, 1 );
+    AddFieldToGroup( FileName, "VxNodes" , "Vx"   , 'f', model.Nx*(model.Nz+1),     CVx, 1 );
+    AddFieldToGroup( FileName, "VzNodes" , "Vz"   , 'f', (model.Nx+1)*model.Nz,     CVz, 1 );
+    AddFieldToGroup( FileName, "Centers" , "P"    , 'f', (model.Nx-1)*(model.Nz-1), CP, 1 );
+    AddFieldToGroup( FileName, "Centers" , "sxxd" , 'f', (model.Nx-1)*(model.Nz-1), Csxxd, 1 );
+    AddFieldToGroup( FileName, "Centers" , "szzd" , 'f', (model.Nx-1)*(model.Nz-1), Cszzd, 1 );
 
-    AddFieldToGroup_generic( _TRUE_, name, "Centers" , "strain",    'f', (model.Nx-1)*(model.Nz-1), Cstrain, 1 );
-    AddFieldToGroup_generic( _TRUE_, name, "Centers" , "strain_el", 'f', (model.Nx-1)*(model.Nz-1), Cstrain_el, 1 );
-    AddFieldToGroup_generic( _TRUE_, name, "Centers" , "strain_pl", 'f', (model.Nx-1)*(model.Nz-1), Cstrain_pl, 1 );
-    AddFieldToGroup_generic( _TRUE_, name, "Centers" , "strain_pwl", 'f', (model.Nx-1)*(model.Nz-1), Cstrain_pwl, 1 );
-    AddFieldToGroup_generic( _TRUE_, name, "Centers" , "strain_exp", 'f', (model.Nx-1)*(model.Nz-1), Cstrain_exp, 1 );
-    AddFieldToGroup_generic( _TRUE_, name, "Centers" , "strain_lin", 'f', (model.Nx-1)*(model.Nz-1), Cstrain_lin, 1 );
-    AddFieldToGroup_generic( _TRUE_, name, "Centers" , "strain_gbs", 'f', (model.Nx-1)*(model.Nz-1), Cstrain_gbs, 1 );
-    AddFieldToGroup_generic( _TRUE_, name, "Centers" , "T",     'f', (model.Nx-1)*(model.Nz-1), CT, 1 );
-    AddFieldToGroup_generic( _TRUE_, name, "Vertices", "sxz"  , 'f', model.Nx*model.Nz,         Csxz, 1 );
-    AddFieldToGroup_generic( _TRUE_, name, "Centers" , "exxd" , 'f', (model.Nx-1)*(model.Nz-1), Cexxd, 1 );
-    AddFieldToGroup_generic( _TRUE_, name, "Centers" , "ezzd" , 'f', (model.Nx-1)*(model.Nz-1), Cezzd, 1 );
-    AddFieldToGroup_generic( _TRUE_, name, "Centers" , "divu" , 'f', (model.Nx-1)*(model.Nz-1), Cdivu, 1 );
-    AddFieldToGroup_generic( _TRUE_, name, "Centers" , "divu_el" , 'f', (model.Nx-1)*(model.Nz-1), Cdivu_el, 1 );
-    AddFieldToGroup_generic( _TRUE_, name, "Centers" , "divu_pl" , 'f', (model.Nx-1)*(model.Nz-1), Cdivu_pl, 1 );
-    AddFieldToGroup_generic( _TRUE_, name, "Centers" , "divu_th" , 'f', (model.Nx-1)*(model.Nz-1), Cdivu_th, 1 );
-    AddFieldToGroup_generic( _TRUE_, name, "Centers" , "divu_r"  , 'f', (model.Nx-1)*(model.Nz-1), Cdivu_r , 1 );
-    AddFieldToGroup_generic( _TRUE_, name, "Vertices", "exz"  , 'f', model.Nx*model.Nz,         Cexz, 1 );
-    AddFieldToGroup_generic( _TRUE_, name, "Centers" , "eII_el" , 'f', (model.Nx-1)*(model.Nz-1), CeII_el, 1 );
-    AddFieldToGroup_generic( _TRUE_, name, "Centers" , "eII_pl" , 'f', (model.Nx-1)*(model.Nz-1), CeII_pl, 1 );
-    AddFieldToGroup_generic( _TRUE_, name, "Centers" , "eII_pwl" , 'f', (model.Nx-1)*(model.Nz-1), CeII_pwl, 1 );
-    AddFieldToGroup_generic( _TRUE_, name, "Centers" , "eII_exp" , 'f', (model.Nx-1)*(model.Nz-1), CeII_exp, 1 );
-    AddFieldToGroup_generic( _TRUE_, name, "Centers" , "eII_lin" , 'f', (model.Nx-1)*(model.Nz-1), CeII_lin, 1 );
-    AddFieldToGroup_generic( _TRUE_, name, "Centers" , "eII_gbs" , 'f', (model.Nx-1)*(model.Nz-1), CeII_gbs, 1 );
-    AddFieldToGroup_generic( _TRUE_, name, "Centers" , "d" , 'f', (model.Nx-1)*(model.Nz-1), Cd, 1 );
-    AddFieldToGroup_generic( _TRUE_, name, "Centers" , "X" , 'f', (model.Nx-1)*(model.Nz-1), CX, 1 );
-    AddFieldToGroup_generic( _TRUE_, name, "Centers" , "OverS",'f', (model.Nx-1)*(model.Nz-1), COverS, 1 );
+    AddFieldToGroup( FileName, "Centers" , "strain",    'f', (model.Nx-1)*(model.Nz-1), Cstrain, 1 );
+    AddFieldToGroup( FileName, "Centers" , "strain_el", 'f', (model.Nx-1)*(model.Nz-1), Cstrain_el, 1 );
+    AddFieldToGroup( FileName, "Centers" , "strain_pl", 'f', (model.Nx-1)*(model.Nz-1), Cstrain_pl, 1 );
+    AddFieldToGroup( FileName, "Centers" , "strain_pwl", 'f', (model.Nx-1)*(model.Nz-1), Cstrain_pwl, 1 );
+    AddFieldToGroup( FileName, "Centers" , "strain_exp", 'f', (model.Nx-1)*(model.Nz-1), Cstrain_exp, 1 );
+    AddFieldToGroup( FileName, "Centers" , "strain_lin", 'f', (model.Nx-1)*(model.Nz-1), Cstrain_lin, 1 );
+    AddFieldToGroup( FileName, "Centers" , "strain_gbs", 'f', (model.Nx-1)*(model.Nz-1), Cstrain_gbs, 1 );
+    AddFieldToGroup( FileName, "Centers" , "T",     'f', (model.Nx-1)*(model.Nz-1), CT, 1 );
+    AddFieldToGroup( FileName, "Vertices", "sxz"  , 'f', model.Nx*model.Nz,         Csxz, 1 );
+    AddFieldToGroup( FileName, "Centers" , "exxd" , 'f', (model.Nx-1)*(model.Nz-1), Cexxd, 1 );
+    AddFieldToGroup( FileName, "Centers" , "ezzd" , 'f', (model.Nx-1)*(model.Nz-1), Cezzd, 1 );
+    AddFieldToGroup( FileName, "Centers" , "divu" , 'f', (model.Nx-1)*(model.Nz-1), Cdivu, 1 );
+    AddFieldToGroup( FileName, "Centers" , "divu_el" , 'f', (model.Nx-1)*(model.Nz-1), Cdivu_el, 1 );
+    AddFieldToGroup( FileName, "Centers" , "divu_pl" , 'f', (model.Nx-1)*(model.Nz-1), Cdivu_pl, 1 );
+    AddFieldToGroup( FileName, "Centers" , "divu_th" , 'f', (model.Nx-1)*(model.Nz-1), Cdivu_th, 1 );
+    AddFieldToGroup( FileName, "Centers" , "divu_r"  , 'f', (model.Nx-1)*(model.Nz-1), Cdivu_r , 1 );
+    AddFieldToGroup( FileName, "Vertices", "exz"  , 'f', model.Nx*model.Nz,         Cexz, 1 );
+    AddFieldToGroup( FileName, "Centers" , "eII_el" , 'f', (model.Nx-1)*(model.Nz-1), CeII_el, 1 );
+    AddFieldToGroup( FileName, "Centers" , "eII_pl" , 'f', (model.Nx-1)*(model.Nz-1), CeII_pl, 1 );
+    AddFieldToGroup( FileName, "Centers" , "eII_pwl" , 'f', (model.Nx-1)*(model.Nz-1), CeII_pwl, 1 );
+    AddFieldToGroup( FileName, "Centers" , "eII_exp" , 'f', (model.Nx-1)*(model.Nz-1), CeII_exp, 1 );
+    AddFieldToGroup( FileName, "Centers" , "eII_lin" , 'f', (model.Nx-1)*(model.Nz-1), CeII_lin, 1 );
+    AddFieldToGroup( FileName, "Centers" , "eII_gbs" , 'f', (model.Nx-1)*(model.Nz-1), CeII_gbs, 1 );
+    AddFieldToGroup( FileName, "Centers" , "d" , 'f', (model.Nx-1)*(model.Nz-1), Cd, 1 );
+    AddFieldToGroup( FileName, "Centers" , "X" , 'f', (model.Nx-1)*(model.Nz-1), CX, 1 );
+    AddFieldToGroup( FileName, "Centers" , "OverS",'f', (model.Nx-1)*(model.Nz-1), COverS, 1 );
 
     if ( model.free_surf == 1 ) {
-        AddFieldToGroup_generic( _TRUE_, name, "Topo", "z_grid" , 'f', (model.Nx), Cheight, 1 );
-        AddFieldToGroup_generic( _TRUE_, name, "Topo", "Vx_grid" , 'f', (model.Nx), Ctopovx, 1 );
-        AddFieldToGroup_generic( _TRUE_, name, "Topo", "Vz_grid" , 'f', (model.Nx+1), Ctopovz, 1 );
-        AddFieldToGroup_generic( _TRUE_, name, "Topo", "x_mark" , 'f', topo_chain->Nb_part, Cxtopo, 1 );
-        AddFieldToGroup_generic( _TRUE_, name, "Topo", "z_mark" , 'f', topo_chain->Nb_part, Cztopo, 1 );
-        AddFieldToGroup_generic( _TRUE_, name, "Topo", "Vx_mark" , 'f', topo_chain->Nb_part, Ctopovx_mark, 1 );
-        AddFieldToGroup_generic( _TRUE_, name, "Topo", "Vz_mark" , 'f', topo_chain->Nb_part, Ctopovz_mark, 1 );
-        AddFieldToGroup_generic( _TRUE_, name, "Topo", "phase_mark" , 'i', topo_chain->Nb_part, topo_chain->phase, 1 );
+        AddFieldToGroup( FileName, "Topo", "z_grid" , 'f', (model.Nx), Cheight, 1 );
+        AddFieldToGroup( FileName, "Topo", "Vx_grid" , 'f', (model.Nx), Ctopovx, 1 );
+        AddFieldToGroup( FileName, "Topo", "Vz_grid" , 'f', (model.Nx+1), Ctopovz, 1 );
+        AddFieldToGroup( FileName, "Topo", "x_mark" , 'f', topo_chain->Nb_part, Cxtopo, 1 );
+        AddFieldToGroup( FileName, "Topo", "z_mark" , 'f', topo_chain->Nb_part, Cztopo, 1 );
+        AddFieldToGroup( FileName, "Topo", "Vx_mark" , 'f', topo_chain->Nb_part, Ctopovx_mark, 1 );
+        AddFieldToGroup( FileName, "Topo", "Vz_mark" , 'f', topo_chain->Nb_part, Ctopovz_mark, 1 );
+        AddFieldToGroup( FileName, "Topo", "phase_mark" , 'i', topo_chain->Nb_part, topo_chain->phase, 1 );
     }
 
-    AddFieldToGroup_generic( _TRUE_, name, "Centers" , "friction", 'f', (model.Nx-1)*(model.Nz-1), Cfriction, 1 );
-    AddFieldToGroup_generic( _TRUE_, name, "Centers" , "cohesion", 'f', (model.Nx-1)*(model.Nz-1), Ccohesion, 1 );
+    AddFieldToGroup( FileName, "Centers" , "friction", 'f', (model.Nx-1)*(model.Nz-1), Cfriction, 1 );
+    AddFieldToGroup( FileName, "Centers" , "cohesion", 'f', (model.Nx-1)*(model.Nz-1), Ccohesion, 1 );
 
     if (model.fstrain == 1) {
-        AddFieldToGroup_generic( _TRUE_, name, "Centers" , "Fxx", 'f', (model.Nx-1)*(model.Nz-1), CFxx, 1 );
-        AddFieldToGroup_generic( _TRUE_, name, "Centers" , "Fxz", 'f', (model.Nx-1)*(model.Nz-1), CFxz, 1 );
-        AddFieldToGroup_generic( _TRUE_, name, "Centers" , "Fzx", 'f', (model.Nx-1)*(model.Nz-1), CFzx, 1 );
-        AddFieldToGroup_generic( _TRUE_, name, "Centers" , "Fzz", 'f', (model.Nx-1)*(model.Nz-1), CFzz, 1 );
+        AddFieldToGroup( FileName, "Centers" , "Fxx", 'f', (model.Nx-1)*(model.Nz-1), CFxx, 1 );
+        AddFieldToGroup( FileName, "Centers" , "Fxz", 'f', (model.Nx-1)*(model.Nz-1), CFxz, 1 );
+        AddFieldToGroup( FileName, "Centers" , "Fzx", 'f', (model.Nx-1)*(model.Nz-1), CFzx, 1 );
+        AddFieldToGroup( FileName, "Centers" , "Fzz", 'f', (model.Nx-1)*(model.Nz-1), CFzz, 1 );
     }
 
     if (model.aniso == 1) {
-        AddFieldToGroup_generic( _TRUE_, name, "Centers" , "nx", 'f', (model.Nx-1)*(model.Nz-1), Cnx, 1 );
-        AddFieldToGroup_generic( _TRUE_, name, "Centers" , "nz", 'f', (model.Nx-1)*(model.Nz-1), Cnz, 1 );
+        AddFieldToGroup( FileName, "Centers" , "nx", 'f', (model.Nx-1)*(model.Nz-1), Cnx, 1 );
+        AddFieldToGroup( FileName, "Centers" , "nz", 'f', (model.Nx-1)*(model.Nz-1), Cnz, 1 );
     }
 
     if (model.rec_T_P_x_z == 1) {
-        AddFieldToGroup_generic( _TRUE_, name, "Centers" , "T0", 'f', (model.Nx-1)*(model.Nz-1), CT0, 1 );
-        AddFieldToGroup_generic( _TRUE_, name, "Centers" , "P0", 'f', (model.Nx-1)*(model.Nz-1), CP0, 1 );
-        AddFieldToGroup_generic( _TRUE_, name, "Centers" , "Tmax", 'f', (model.Nx-1)*(model.Nz-1), CTmax, 1 );
-        AddFieldToGroup_generic( _TRUE_, name, "Centers" , "Pmax", 'f', (model.Nx-1)*(model.Nz-1), CPmax, 1 );
-        AddFieldToGroup_generic( _TRUE_, name, "Centers" , "x0", 'f', (model.Nx-1)*(model.Nz-1), Cx0, 1 );
-        AddFieldToGroup_generic( _TRUE_, name, "Centers" , "z0", 'f', (model.Nx-1)*(model.Nz-1), Cz0, 1 );
+        AddFieldToGroup( FileName, "Centers" , "T0", 'f', (model.Nx-1)*(model.Nz-1), CT0, 1 );
+        AddFieldToGroup( FileName, "Centers" , "P0", 'f', (model.Nx-1)*(model.Nz-1), CP0, 1 );
+        AddFieldToGroup( FileName, "Centers" , "Tmax", 'f', (model.Nx-1)*(model.Nz-1), CTmax, 1 );
+        AddFieldToGroup( FileName, "Centers" , "Pmax", 'f', (model.Nx-1)*(model.Nz-1), CPmax, 1 );
+        AddFieldToGroup( FileName, "Centers" , "x0", 'f', (model.Nx-1)*(model.Nz-1), Cx0, 1 );
+        AddFieldToGroup( FileName, "Centers" , "z0", 'f', (model.Nx-1)*(model.Nz-1), Cz0, 1 );
     }
 
-    AddFieldToGroup_generic( _TRUE_, name, "Centers" , "BCp" , 'c', (model.Nx-1)*(model.Nz-1), mesh->BCp.type, 1 );
+    // Add cell flags for debugging 
+    AddFieldToGroup( FileName, "Centers" , "BCp" , 'c', (model.Nx-1)*(model.Nz-1), mesh->BCp.type, 1 );
+    AddFieldToGroup( FileName, "Flags", "tag_s" , 'c', (model.Nx-0)*(model.Nz-0), mesh->BCg.type,  1 );
+    AddFieldToGroup( FileName, "Flags", "tag_n" , 'c', (model.Nx-1)*(model.Nz-1), mesh->BCp.type,  1 );
+    AddFieldToGroup( FileName, "Flags", "tag_u" , 'c', (model.Nx-0)*(model.Nz+1), mesh->BCu.type,  1 );
+    AddFieldToGroup( FileName, "Flags", "tag_v" , 'c', (model.Nx+1)*(model.Nz-0), mesh->BCv.type,  1 );
 
-    AddFieldToGroup_generic( _TRUE_, name, "Flags", "tag_s" , 'c', (model.Nx-0)*(model.Nz-0), mesh->BCg.type,  1 );
-    AddFieldToGroup_generic( _TRUE_, name, "Flags", "tag_n" , 'c', (model.Nx-1)*(model.Nz-1), mesh->BCp.type,  1 );
-    AddFieldToGroup_generic( _TRUE_, name, "Flags", "tag_u" , 'c', (model.Nx-0)*(model.Nz+1), mesh->BCu.type,  1 );
-    AddFieldToGroup_generic( _TRUE_, name, "Flags", "tag_v" , 'c', (model.Nx+1)*(model.Nz-0), mesh->BCv.type,  1 );
-
+    // Add non-iteration log
+    AddFieldToGroup( FileName, "Iterations", "rx_abs"          , 'd', Nmodel.nit_max+1, Nmodel.rx_abs         ,  1 );
+    AddFieldToGroup( FileName, "Iterations", "rz_abs"          , 'd', Nmodel.nit_max+1, Nmodel.rz_abs         ,  1 );
+    AddFieldToGroup( FileName, "Iterations", "rp_abs"          , 'd', Nmodel.nit_max+1, Nmodel.rp_abs         ,  1 );
+    AddFieldToGroup( FileName, "Iterations", "LogIsNewtonStep" , 'i', Nmodel.nit_max+1, Nmodel.LogIsNewtonStep,  1 );
+    AddFieldToGroup( FileName, "Iterations", "NumberSteps"     , 'i',                1, &(Nmodel.nit)         ,  1 );
 
 
     // Freedom
-    free( name );
+    free( FileName );
     //------------//
     DoodzFree( Crho_s );
     DoodzFree( Crho_n );
@@ -895,7 +902,7 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
 
 void WriteOutputHDF5Particles( grid *mesh, markers *particles, surface *topo, markers* topo_chain, surface *topo_ini, markers* topo_chain_ini, params model, char *txtout, mat_prop materials, scale scaling ) {
 
-    char *name;
+    char *FileName;
     double A[8];
     char  *part_ph, *part_gen;
     float *part_x, *part_z, *part_Vx, *part_Vz, *part_T, *part_P, *part_sxxd, *part_sxz;
@@ -1039,19 +1046,19 @@ void WriteOutputHDF5Particles( grid *mesh, markers *particles, surface *topo, ma
     }
 
     // Generate file name
-    asprintf( &name, "%s%05d%s",txtout, model.step, ".gzip.h5");
-    create_output_hdf5( name );
+    asprintf( &FileName, "%s%05d%s",txtout, model.step, ".gzip.h5");
+    CreateOutputHDF5( FileName );
 
     // Add groups
-    AddGroup_to_hdf5( name, "Model" );
-    AddGroup_to_hdf5( name, "Vertices" );
-    AddGroup_to_hdf5( name, "Centers" );
-    AddGroup_to_hdf5( name, "VxNodes" );
-    AddGroup_to_hdf5( name, "VzNodes" );
-    AddGroup_to_hdf5( name, "Particles" );
-    AddGroup_to_hdf5( name, "VizGrid" );
-    AddGroup_to_hdf5( name, "Topo" );
-    AddGroup_to_hdf5( name, "Topo_ini" );
+    AddGroupToHDF5( FileName, "Model" );
+    AddGroupToHDF5( FileName, "Vertices" );
+    AddGroupToHDF5( FileName, "Centers" );
+    AddGroupToHDF5( FileName, "VxNodes" );
+    AddGroupToHDF5( FileName, "VzNodes" );
+    AddGroupToHDF5( FileName, "Particles" );
+    AddGroupToHDF5( FileName, "VizGrid" );
+    AddGroupToHDF5( FileName, "Topo" );
+    AddGroupToHDF5( FileName, "Topo_ini" );
 
     // Model Parameters
     A[0] = (double)(model.time) * scaling.t;
@@ -1064,50 +1071,50 @@ void WriteOutputHDF5Particles( grid *mesh, markers *particles, surface *topo, ma
     A[7] = (double)model.dt * scaling.t;
 
     // Parameter array
-    AddFieldToGroup_generic( _TRUE_, name, "Model", "Params"   , 'd', 8,  A, 1 );
+    AddFieldToGroup( FileName, "Model", "Params"   , 'd', 8,  A, 1 );
 
     // Add casted partial particle fields
-    AddFieldToGroup_generic( _TRUE_, name, "Particles", "x"    , 'f', Nb_part_viz, part_x,     1 );
-    AddFieldToGroup_generic( _TRUE_, name, "Particles", "z"    , 'f', Nb_part_viz, part_z,     1 );
-    AddFieldToGroup_generic( _TRUE_, name, "Particles", "phase", 'c', Nb_part_viz, part_ph,    1 );
+    AddFieldToGroup( FileName, "Particles", "x"    , 'f', Nb_part_viz, part_x,     1 );
+    AddFieldToGroup( FileName, "Particles", "z"    , 'f', Nb_part_viz, part_z,     1 );
+    AddFieldToGroup( FileName, "Particles", "phase", 'c', Nb_part_viz, part_ph,    1 );
     
     // Tracer: write to file
-    AddFieldToGroup_generic( _TRUE_, name, "Particles", "index"    , 'i', Nb_part_viz, part_index,     1 );
+    AddFieldToGroup( FileName, "Particles", "index"    , 'i', Nb_part_viz, part_index,     1 );
 
-    AddFieldToGroup_generic( _TRUE_, name, "Particles", "generation", 'c', Nb_part_viz, part_gen,    1 );
-
-
-    AddFieldToGroup_generic( _TRUE_, name, "Particles", "T", 'f', Nb_part_viz, part_T,     1 );
-    AddFieldToGroup_generic( _TRUE_, name, "Particles", "P", 'f', Nb_part_viz, part_P,    1 );
+    AddFieldToGroup( FileName, "Particles", "generation", 'c', Nb_part_viz, part_gen,    1 );
 
 
-    AddFieldToGroup_generic( _TRUE_, name, "Particles", "Vx", 'f', Nb_part_viz, part_Vx,    1 );
-    AddFieldToGroup_generic( _TRUE_, name, "Particles", "Vz", 'f', Nb_part_viz, part_Vz,    1 );
+    AddFieldToGroup( FileName, "Particles", "T", 'f', Nb_part_viz, part_T,     1 );
+    AddFieldToGroup( FileName, "Particles", "P", 'f', Nb_part_viz, part_P,    1 );
 
-    AddFieldToGroup_generic( _TRUE_, name, "Particles", "sxxd", 'f', Nb_part_viz, part_sxxd,    1 );
-    AddFieldToGroup_generic( _TRUE_, name, "Particles", "sxz",  'f', Nb_part_viz, part_sxz,    1 );
+
+    AddFieldToGroup( FileName, "Particles", "Vx", 'f', Nb_part_viz, part_Vx,    1 );
+    AddFieldToGroup( FileName, "Particles", "Vz", 'f', Nb_part_viz, part_Vz,    1 );
+
+    AddFieldToGroup( FileName, "Particles", "sxxd", 'f', Nb_part_viz, part_sxxd,    1 );
+    AddFieldToGroup( FileName, "Particles", "sxz",  'f', Nb_part_viz, part_sxz,    1 );
 
     if ( model.free_surf == 1 ) {
-        AddFieldToGroup_generic( _TRUE_, name, "Topo", "height" , 'f', (model.Nx), Cheight, 1 );
-        AddFieldToGroup_generic( _TRUE_, name, "Topo", "vxsurf" , 'f', (model.Nx), Cvxsurf, 1 );
-        AddFieldToGroup_generic( _TRUE_, name, "Topo", "vzsurf" , 'f', (model.Nx+1), Cvzsurf, 1 );
-        AddFieldToGroup_generic( _TRUE_, name, "Topo", "x" , 'f', topo_chain->Nb_part, Cxtopo, 1 );
-        AddFieldToGroup_generic( _TRUE_, name, "Topo", "z" , 'f', topo_chain->Nb_part, Cztopo, 1 );
-        AddFieldToGroup_generic( _TRUE_, name, "Topo", "vx" , 'f', topo_chain->Nb_part, Cvxtopo, 1 );
-        AddFieldToGroup_generic( _TRUE_, name, "Topo", "vz" , 'f', topo_chain->Nb_part, Cvztopo, 1 );
-        AddFieldToGroup_generic( _TRUE_, name, "Topo", "phase" , 'i', topo_chain->Nb_part, topo_chain->phase, 1 );
-        AddFieldToGroup_generic( _TRUE_, name, "Topo_ini", "height" , 'f', (model.Nx), Cheight_ini, 1 );
-        AddFieldToGroup_generic( _TRUE_, name, "Topo_ini", "vxsurf" , 'f', (model.Nx), Cvxsurf_ini, 1 );
-        AddFieldToGroup_generic( _TRUE_, name, "Topo_ini", "vzsurf" , 'f', (model.Nx+1), Cvzsurf_ini, 1 );
-        AddFieldToGroup_generic( _TRUE_, name, "Topo_ini", "x" , 'f', topo_chain_ini->Nb_part, Cxtopo_ini, 1 );
-        AddFieldToGroup_generic( _TRUE_, name, "Topo_ini", "z" , 'f', topo_chain_ini->Nb_part, Cztopo_ini, 1 );
-        AddFieldToGroup_generic( _TRUE_, name, "Topo_ini", "vx" , 'f', topo_chain_ini->Nb_part, Cvxtopo_ini, 1 );
-        AddFieldToGroup_generic( _TRUE_, name, "Topo_ini", "vz" , 'f', topo_chain_ini->Nb_part, Cvztopo_ini, 1 );
-        AddFieldToGroup_generic( _TRUE_, name, "Topo_ini", "phase" , 'i', topo_chain_ini->Nb_part, topo_chain_ini->phase, 1 );
+        AddFieldToGroup( FileName, "Topo", "height" , 'f', (model.Nx), Cheight, 1 );
+        AddFieldToGroup( FileName, "Topo", "vxsurf" , 'f', (model.Nx), Cvxsurf, 1 );
+        AddFieldToGroup( FileName, "Topo", "vzsurf" , 'f', (model.Nx+1), Cvzsurf, 1 );
+        AddFieldToGroup( FileName, "Topo", "x" , 'f', topo_chain->Nb_part, Cxtopo, 1 );
+        AddFieldToGroup( FileName, "Topo", "z" , 'f', topo_chain->Nb_part, Cztopo, 1 );
+        AddFieldToGroup( FileName, "Topo", "vx" , 'f', topo_chain->Nb_part, Cvxtopo, 1 );
+        AddFieldToGroup( FileName, "Topo", "vz" , 'f', topo_chain->Nb_part, Cvztopo, 1 );
+        AddFieldToGroup( FileName, "Topo", "phase" , 'i', topo_chain->Nb_part, topo_chain->phase, 1 );
+        AddFieldToGroup( FileName, "Topo_ini", "height" , 'f', (model.Nx), Cheight_ini, 1 );
+        AddFieldToGroup( FileName, "Topo_ini", "vxsurf" , 'f', (model.Nx), Cvxsurf_ini, 1 );
+        AddFieldToGroup( FileName, "Topo_ini", "vzsurf" , 'f', (model.Nx+1), Cvzsurf_ini, 1 );
+        AddFieldToGroup( FileName, "Topo_ini", "x" , 'f', topo_chain_ini->Nb_part, Cxtopo_ini, 1 );
+        AddFieldToGroup( FileName, "Topo_ini", "z" , 'f', topo_chain_ini->Nb_part, Cztopo_ini, 1 );
+        AddFieldToGroup( FileName, "Topo_ini", "vx" , 'f', topo_chain_ini->Nb_part, Cvxtopo_ini, 1 );
+        AddFieldToGroup( FileName, "Topo_ini", "vz" , 'f', topo_chain_ini->Nb_part, Cvztopo_ini, 1 );
+        AddFieldToGroup( FileName, "Topo_ini", "phase" , 'i', topo_chain_ini->Nb_part, topo_chain_ini->phase, 1 );
     }
 
     // Freedom
-    free( name );
+    free( FileName );
     //------------//
     DoodzFree( part_x );
     DoodzFree( part_z );
@@ -1147,11 +1154,11 @@ void WriteOutputHDF5Particles( grid *mesh, markers *particles, surface *topo, ma
 
 void WriteResiduals( grid Mmesh, params model, Nparams Nmodel, scale scaling ) {
 
-    char *name;
+    char *FileName;
     double A[8];
 
-    asprintf( &name, "Residuals%05d%s", Nmodel.nit, ".gzip.h5");
-    create_output_hdf5( name );
+    asprintf( &FileName, "Residuals%05d%s", Nmodel.nit, ".gzip.h5");
+    CreateOutputHDF5( FileName );
 
 
     // Model Parameters
@@ -1165,14 +1172,14 @@ void WriteResiduals( grid Mmesh, params model, Nparams Nmodel, scale scaling ) {
     A[7] = (double)model.dt * scaling.t;
 
     // Add groups
-    AddGroup_to_hdf5( name, "Model" );
-    AddGroup_to_hdf5( name, "Vertices" );
-    AddGroup_to_hdf5( name, "Centers" );
-    AddGroup_to_hdf5( name, "VxNodes" );
-    AddGroup_to_hdf5( name, "VzNodes" );
-    AddGroup_to_hdf5( name, "Particles" );
-    AddGroup_to_hdf5( name, "VizGrid" );
-    AddGroup_to_hdf5( name, "Topo" );
+    AddGroupToHDF5( FileName, "Model" );
+    AddGroupToHDF5( FileName, "Vertices" );
+    AddGroupToHDF5( FileName, "Centers" );
+    AddGroupToHDF5( FileName, "VxNodes" );
+    AddGroupToHDF5( FileName, "VzNodes" );
+    AddGroupToHDF5( FileName, "Particles" );
+    AddGroupToHDF5( FileName, "VizGrid" );
+    AddGroupToHDF5( FileName, "Topo" );
 
     // Scaling
     ArrayTimesScalar( Mmesh.eta_phys_n, scaling.eta, (model.Nx-1)*(model.Nz-1) );
@@ -1184,15 +1191,15 @@ void WriteResiduals( grid Mmesh, params model, Nparams Nmodel, scale scaling ) {
     ArrayTimesScalar( Mmesh.rv,      scaling.F,   (model.Nx+1)*(model.Nz) );
 
     // Parameter array
-    AddFieldToGroup_generic( _TRUE_, name, "Model", "Params"   , 'd', 8,  A, 1 );
+    AddFieldToGroup( FileName, "Model", "Params"   , 'd', 8,  A, 1 );
 
-    AddFieldToGroup_generic( _TRUE_, name, "VxNodes" , "ru"  , 'd', model.Nx*(model.Nz+1),     Mmesh.ru, 1 );
-    AddFieldToGroup_generic( _TRUE_, name, "VzNodes" , "rv"  , 'd', (model.Nx+1)*model.Nz,     Mmesh.rv, 1 );
-    AddFieldToGroup_generic( _TRUE_, name, "Centers" , "rp"  , 'd', (model.Nx-1)*(model.Nz-1), Mmesh.rp, 1 );
-    AddFieldToGroup_generic( _TRUE_, name, "Centers" , "rho"  , 'd', (model.Nx-1)*(model.Nz-1), Mmesh.rho_n, 1 );
-    AddFieldToGroup_generic( _TRUE_, name, "Vertices" , "rho"  , 'd', (model.Nx)*(model.Nz), Mmesh.rho_s, 1 );
-    AddFieldToGroup_generic( _TRUE_, name, "Centers" , "eta"  , 'd', (model.Nx-1)*(model.Nz-1), Mmesh.eta_phys_n, 1 );
-    AddFieldToGroup_generic( _TRUE_, name, "Vertices" , "eta"  , 'd', (model.Nx)*(model.Nz), Mmesh.eta_phys_s, 1 );
+    AddFieldToGroup( FileName, "VxNodes" , "ru"  , 'd', model.Nx*(model.Nz+1),     Mmesh.ru, 1 );
+    AddFieldToGroup( FileName, "VzNodes" , "rv"  , 'd', (model.Nx+1)*model.Nz,     Mmesh.rv, 1 );
+    AddFieldToGroup( FileName, "Centers" , "rp"  , 'd', (model.Nx-1)*(model.Nz-1), Mmesh.rp, 1 );
+    AddFieldToGroup( FileName, "Centers" , "rho"  , 'd', (model.Nx-1)*(model.Nz-1), Mmesh.rho_n, 1 );
+    AddFieldToGroup( FileName, "Vertices" , "rho"  , 'd', (model.Nx)*(model.Nz), Mmesh.rho_s, 1 );
+    AddFieldToGroup( FileName, "Centers" , "eta"  , 'd', (model.Nx-1)*(model.Nz-1), Mmesh.eta_phys_n, 1 );
+    AddFieldToGroup( FileName, "Vertices" , "eta"  , 'd', (model.Nx)*(model.Nz), Mmesh.eta_phys_s, 1 );
 
     // Scaling
     ArrayTimesScalar( Mmesh.eta_phys_n, 1.0/scaling.eta, (model.Nx-1)*(model.Nz-1) );
@@ -1203,6 +1210,6 @@ void WriteResiduals( grid Mmesh, params model, Nparams Nmodel, scale scaling ) {
     ArrayTimesScalar( Mmesh.ru,      1.0/scaling.F,   (model.Nx)*(model.Nz+1) );
     ArrayTimesScalar( Mmesh.rv,      1.0/scaling.F,   (model.Nx+1)*(model.Nz) );
 
-    free( name );
+    free( FileName );
 
 }

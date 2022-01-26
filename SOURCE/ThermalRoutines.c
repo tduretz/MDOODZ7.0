@@ -475,18 +475,18 @@ void EnergyDirectSolve( grid *mesh, params model, double *rhoE, double *drhoE, d
             }
 
             // Send data to file
-            create_output_hdf5( filename );
-            AddGroup_to_hdf5( filename, "model" );
-            AddGroup_to_hdf5( filename, "matrix" );
-            AddGroup_to_hdf5( filename, "numbering" );
-            AddGroup_to_hdf5( filename, "fields" );
-            AddFieldToGroup_generic( _TRUE_, filename, "model", "params" , 'd', 4, OutputDD.params,  1 );
-            AddFieldToGroup_generic( _TRUE_, filename, "numbering", "eqn_p" , 'i', ncx*ncz, OutputDD.eqn_p,  1 );
-            AddFieldToGroup_generic( _TRUE_, filename, "fields", "tag_n" , 'c', ncx*ncz, mesh->BCp.type,  1 );
-            AddFieldToGroup_generic( _TRUE_, filename, "matrix", "I" , 'i', neq+1, OutputDD.Ic,  1 );
-            AddFieldToGroup_generic( _TRUE_, filename, "matrix", "J" , 'i', nnzc,  OutputDD.J,  1 );
-            AddFieldToGroup_generic( _TRUE_, filename, "matrix", "V" , 'd', nnzc,  OutputDD.V,  1 );
-            AddFieldToGroup_generic( _TRUE_, filename, "matrix", "rhs" , 'd', neq, OutputDD.b,  1 );
+            CreateOutputHDF5( filename );
+            AddGroupToHDF5( filename, "model" );
+            AddGroupToHDF5( filename, "matrix" );
+            AddGroupToHDF5( filename, "numbering" );
+            AddGroupToHDF5( filename, "fields" );
+            AddFieldToGroup( filename, "model", "params" , 'd', 4, OutputDD.params,  1 );
+            AddFieldToGroup( filename, "numbering", "eqn_p" , 'i', ncx*ncz, OutputDD.eqn_p,  1 );
+            AddFieldToGroup( filename, "fields", "tag_n" , 'c', ncx*ncz, mesh->BCp.type,  1 );
+            AddFieldToGroup( filename, "matrix", "I" , 'i', neq+1, OutputDD.Ic,  1 );
+            AddFieldToGroup( filename, "matrix", "J" , 'i', nnzc,  OutputDD.J,  1 );
+            AddFieldToGroup( filename, "matrix", "V" , 'd', nnzc,  OutputDD.V,  1 );
+            AddFieldToGroup( filename, "matrix", "rhs" , 'd', neq, OutputDD.b,  1 );
 
             DoodzFree( OutputDD.eqn_p );
             free(filename);
@@ -571,13 +571,13 @@ void Energies( grid* mesh, params model, scale scaling ) {
 
     if ( model.step == model.Nt ) {
 
-        create_output_hdf5( "Energies.gzip.h5" );
-        AddGroup_to_hdf5( "Energies.gzip.h5", "Fields" );
-        AddFieldToGroup_generic( _TRUE_,  "Energies.gzip.h5", "Fields", "Time" ,     'd', model.Nt,  mesh->Time,      1 );
-        AddFieldToGroup_generic( _TRUE_,  "Energies.gzip.h5", "Fields", "Short" ,    'd', model.Nt,  mesh->Short,     1 );
-        AddFieldToGroup_generic( _TRUE_,  "Energies.gzip.h5", "Fields", "Work" ,     'd', model.Nt,  mesh->Work,      1 );
-        AddFieldToGroup_generic( _TRUE_,  "Energies.gzip.h5", "Fields", "Uthermal" , 'd', model.Nt,  mesh->Uthermal,  1 );
-        AddFieldToGroup_generic( _TRUE_,  "Energies.gzip.h5", "Fields", "Uelastic" , 'd', model.Nt,  mesh->Uelastic,  1 );
+        CreateOutputHDF5( "Energies.gzip.h5" );
+        AddGroupToHDF5( "Energies.gzip.h5", "Fields" );
+        AddFieldToGroup(  "Energies.gzip.h5", "Fields", "Time" ,     'd', model.Nt,  mesh->Time,      1 );
+        AddFieldToGroup(  "Energies.gzip.h5", "Fields", "Short" ,    'd', model.Nt,  mesh->Short,     1 );
+        AddFieldToGroup(  "Energies.gzip.h5", "Fields", "Work" ,     'd', model.Nt,  mesh->Work,      1 );
+        AddFieldToGroup(  "Energies.gzip.h5", "Fields", "Uthermal" , 'd', model.Nt,  mesh->Uthermal,  1 );
+        AddFieldToGroup(  "Energies.gzip.h5", "Fields", "Uelastic" , 'd', model.Nt,  mesh->Uelastic,  1 );
 
     }
 }

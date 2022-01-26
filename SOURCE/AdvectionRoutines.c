@@ -1,7 +1,7 @@
 // =========================================================================
 // MDOODZ - Visco-Elasto-Plastic Thermo-Mechanical solver
 //
-// Copyright (C) 2018  MDOODZ Developper team
+// Copyright (C) 2022  MDOODZ Developper team
 //
 // This file is part of MDOODZ.
 //
@@ -37,6 +37,10 @@
 #ifdef _VG_
 #define printf(...) printf("")
 #endif
+
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
 
 void RogerGunther( markers *particles, params model, grid mesh, int precise, scale scaling ) {
 
@@ -338,234 +342,6 @@ void isoutPart( markers *particles, params *model, int k ) {
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-//void RogerGunther( markers *particles, params model, grid mesh, int precise, scale scaling ) {
-//
-//    DoodzFP *VxA, *VxB, *VxC, *VxD;
-//    DoodzFP *VzA, *VzB, *VzC, *VzD;
-//    DoodzFP *OmA, *OmB, *OmC, *OmD, *om_n;
-//    DoodzFP *xA, *zA;
-//    int k, k1, l, c1, c3, Nb_part = particles->Nb_part;
-//    clock_t t_omp = (double)omp_get_wtime();
-//
-//
-//    VxA = DoodzCalloc( Nb_part,sizeof(DoodzFP));
-//    VzA = DoodzCalloc( Nb_part,sizeof(DoodzFP));
-//
-//    VxB = DoodzCalloc( Nb_part,sizeof(DoodzFP));
-//    VzB = DoodzCalloc( Nb_part,sizeof(DoodzFP));
-//
-//    VxC = DoodzCalloc( Nb_part,sizeof(DoodzFP));
-//    VzC = DoodzCalloc( Nb_part,sizeof(DoodzFP));
-//
-//    VxD = DoodzCalloc( Nb_part,sizeof(DoodzFP));
-//    VzD = DoodzCalloc( Nb_part,sizeof(DoodzFP));
-//
-//    xA  = DoodzCalloc( Nb_part,sizeof(DoodzFP));
-//    zA  = DoodzCalloc( Nb_part,sizeof(DoodzFP));
-//
-//    // Caculate rotation rate of the stress tensor
-//    if ( model.iselastic == 1 ) {
-//
-//        om_n = DoodzMalloc ((model.Nx)*(model.Nz)*sizeof(double));
-//        OmA  = DoodzCalloc( Nb_part,sizeof(DoodzFP));
-//        OmB  = DoodzCalloc( Nb_part,sizeof(DoodzFP));
-//        OmC  = DoodzCalloc( Nb_part,sizeof(DoodzFP));
-//        OmD  = DoodzCalloc( Nb_part,sizeof(DoodzFP));
-//
-//#pragma omp parallel for shared ( mesh, om_n ) \
-//private ( k, l, k1, c1, c3 )                            \
-//firstprivate( model ) // schedule( static )
-//        for ( k1=0; k1<model.Nx*model.Nz; k1++ ) {
-//            k  = mesh.kn[k1];
-//            l  = mesh.ln[k1];
-//
-//            //        for (k=0; k<model.Nx; k++) {
-//            //            for (l=0; l<model.Nz; l++) {
-//            c1 = k + l*model.Nx;
-//            c3 = k + l*(model.Nx+1);
-//            om_n[c1] = -(mesh.v_in[c3+1] - mesh.v_in[c3])/model.dx + (mesh.u_in[c1+model.Nx] - mesh.u_in[c1])/model.dz;
-//            om_n[c1] = 0.5*om_n[c1];
-//            //            om_n[c1] = model.EpsBG/2.0;
-//            //}
-//        }
-//        Interp_Grid2P( *particles, OmA, &mesh, om_n, mesh.xg_coord,  mesh.zg_coord,  mesh.Nx,   mesh.Nz, mesh.BCg.type   );
-//    }
-//
-//    // Print2DArrayDouble( om_n, model.Nx, model.Nz, scaling.t );
-//
-//    // Initial position save
-//    ArrayEqualArray( xA, particles->x, particles->Nb_part );
-//    ArrayEqualArray( zA, particles->z, particles->Nb_part );
-//
-//    // Initial velocity save
-//    ArrayEqualArray( VxA, particles->Vx, particles->Nb_part );
-//    ArrayEqualArray( VzA, particles->Vz, particles->Nb_part );
-//
-//    // Calculate Runge-Kutta velocity (4th order)
-//    if ( precise == 1 ) {
-//
-//#pragma omp parallel for shared ( particles, xA, zA, VxA, VzA ) \
-//private ( k )                            \
-//firstprivate( Nb_part, model ) // schedule( static )
-//        for(k=0; k<Nb_part; k++) {
-//
-//            // Marker shoot #1
-//            if (particles->phase[k] != -1) {
-//                particles->x[k] = xA[k] + 0.5 * model.dt * VxA[k];
-//                particles->z[k] = zA[k] + 0.5 * model.dt * VzA[k];
-//            }
-//        }
-//
-//        // Check if particles are outside of the box
-//        isout( particles, model );
-//
-//        //-----------------------------------------------------------------------------------------------------------------------
-//
-//        // Get the velocity after dt/2
-//        //        Interp_Grid2P( *particles, VxB, &mesh, mesh.u_in, mesh.xg_coord,  mesh.zvx_coord, mesh.Nx,   mesh.Nz+1, mesh.BCu.type );
-//        //        Interp_Grid2P( *particles, VzB, &mesh, mesh.v_in, mesh.xvz_coord, mesh.zg_coord,  mesh.Nx+1, mesh.Nz, mesh.BCv.type   );
-//
-////        VelocitiesToParticles( &mesh, particles, VxB, VzB, model, scaling );
-//        if (model.iselastic == 1) Interp_Grid2P( *particles, OmB, &mesh, om_n, mesh.xg_coord,  mesh.zg_coord,  mesh.Nx,   mesh.Nz, mesh.BCg.type   );
-//
-//        // Get the velocity after dt/2
-//        Interp_Grid2P( *particles, VxB, &mesh, mesh.u_in, mesh.xg_coord,  mesh.zvx_coord, mesh.Nx,   mesh.Nz+1, mesh.BCu.type );
-//        Interp_Grid2P( *particles, VzB, &mesh, mesh.v_in, mesh.xvz_coord, mesh.zg_coord,  mesh.Nx+1, mesh.Nz, mesh.BCv.type   );
-//
-//        if ( model.RK == 4 ) {
-//
-//            // Get xB and zB
-//#pragma omp parallel for shared ( particles, xA, zA, VxB, VzB ) \
-//private ( k )                            \
-//firstprivate( Nb_part, model )  //schedule( static )
-//
-//            for(k=0; k<Nb_part; k++) {
-//                // Marker shoot #2
-//                if (particles->phase[k] != -1) {
-//                    particles->x[k] = xA[k] + 0.5 * model.dt * VxB[k];
-//                    particles->z[k] = zA[k] + 0.5 * model.dt * VzB[k];
-//                }
-//            }
-//
-//            // Check if particles are outside of the box
-//            isout( particles, model );
-//
-//            //-----------------------------------------------------------------------------------------------------------------------
-//
-//            // Get the velocity after dt/2
-//            //            Interp_Grid2P( *particles, VxC, &mesh, mesh.u_in, mesh.xg_coord,  mesh.zvx_coord, mesh.Nx,   mesh.Nz+1,  mesh.BCu.type );
-//            //            Interp_Grid2P( *particles, VzC, &mesh, mesh.v_in, mesh.xvz_coord, mesh.zg_coord,  mesh.Nx+1, mesh.Nz,  mesh.BCv.type   );
-////            VelocitiesToParticles( &mesh, particles, VxC, VzC, model, scaling );
-//
-//            // Get the velocity after dt/2
-//            Interp_Grid2P( *particles, VxC, &mesh, mesh.u_in, mesh.xg_coord,  mesh.zvx_coord, mesh.Nx,   mesh.Nz+1,  mesh.BCu.type );
-//            Interp_Grid2P( *particles, VzC, &mesh, mesh.v_in, mesh.xvz_coord, mesh.zg_coord,  mesh.Nx+1, mesh.Nz,  mesh.BCv.type   );
-//
-//            if (model.iselastic == 1) Interp_Grid2P( *particles, OmC, &mesh, om_n, mesh.xg_coord,  mesh.zg_coord,  mesh.Nx,   mesh.Nz, mesh.BCg.type   );
-//
-//            // Get xC and zC
-//#pragma omp parallel for shared ( particles, xA, zA, VxC, VzC ) \
-//private ( k )                            \
-//firstprivate( Nb_part, model )  //schedule( static )
-//
-//            for(k=0; k<Nb_part; k++) {
-//                // Marker shoot #3
-//                if (particles->phase[k] != -1) {
-//                    particles->x[k] = xA[k] + 1.0 * model.dt * VxC[k];
-//                    particles->z[k] = zA[k] + 1.0 * model.dt * VzC[k];
-//                }
-//            }
-//
-//            // Check if particles are outside of the box
-//            isout( particles, model );
-//
-//            //-----------------------------------------------------------------------------------------------------------------------
-//
-//            // Get the velocity after dt
-//            //            Interp_Grid2P( *particles, VxD, &mesh, mesh.u_in, mesh.xg_coord,  mesh.zvx_coord, mesh.Nx,   mesh.Nz+1, mesh.BCu.type );
-//            //            Interp_Grid2P( *particles, VzD, &mesh, mesh.v_in, mesh.xvz_coord, mesh.zg_coord,  mesh.Nx+1, mesh.Nz,  mesh.BCv.type   );
-////            VelocitiesToParticles( &mesh, particles, VxD, VzD, model, scaling );
-//
-//            // Get the velocity after dt
-//            Interp_Grid2P( *particles, VxD, &mesh, mesh.u_in, mesh.xg_coord,  mesh.zvx_coord, mesh.Nx,   mesh.Nz+1, mesh.BCu.type );
-//            Interp_Grid2P( *particles, VzD, &mesh, mesh.v_in, mesh.xvz_coord, mesh.zg_coord,  mesh.Nx+1, mesh.Nz,  mesh.BCv.type   );
-//
-//            if (model.iselastic == 1) Interp_Grid2P( *particles, OmD, &mesh, om_n, mesh.xg_coord,  mesh.zg_coord,  mesh.Nx,   mesh.Nz, mesh.BCg.type   );
-//            //-----------------------------------------------------------------------------------------------------------------------
-//
-//        }
-//
-//        // Calculate Roger-Gunther velocity
-//#pragma omp parallel for shared ( particles, VxA, VzA ,VxB, VzB, VxC, VzC, VxD, VzD, OmA, OmB, OmC, OmD) \
-//private ( k )                              \
-//firstprivate( Nb_part, model ) //schedule( static )
-//
-//        for(k=0; k<Nb_part; k++) {
-//
-//            // RK2
-//            if ( model.RK == 2 ) {
-//                if (particles->phase[k] != -1) {
-//                    VxA[k] = 0.5 * (VxA[k] +  VxB[k]);
-//                    VzA[k] = 0.5 * (VzA[k] +  VzB[k]);
-//                    if ( model.iselastic == 1 ) OmA[k] = 0.5 * (OmA[k] +  OmB[k]);
-//                }
-//            }
-//
-//            // RK4
-//            if ( model.RK == 4 ) {
-//                if (particles->phase[k] != -1) {
-//                    VxA[k] = (1.0/6.0) * ( VxA[k] + 2.0 * VxB[k] + 2.0 * VxC[k] + VxD[k]);
-//                    VzA[k] = (1.0/6.0) * ( VzA[k] + 2.0 * VzB[k] + 2.0 * VzC[k] + VzD[k]);
-//                    if ( model.iselastic == 1 ) OmA[k] = (1.0/6.0) * ( OmA[k] + 2.0 * OmB[k] + 2.0 * OmC[k] + OmD[k]);
-//                }
-//            }
-//        }
-//
-//    }
-//
-//    // Regular first order in time
-//#pragma omp parallel for shared ( particles, VxA, VzA, xA, zA )    \
-//private ( k )                              \
-//firstprivate( Nb_part, model ) //schedule ( static )
-//    for(k=0; k<Nb_part; k++) {
-//        if (particles->phase[k] != -1) {
-//            particles->x[k]    = xA[k] + model.dt * VxA[k];
-//            particles->z[k]    = zA[k] + model.dt * VzA[k];
-//        }
-//    }
-//    //    }
-//
-//    // Check if particles are outside of the box
-//    isout( particles, model );
-//
-//    DoodzFree(VxA);
-//    DoodzFree(VzA);
-//    DoodzFree(VzB);
-//    DoodzFree(VxB);
-//    DoodzFree(VzC);
-//    DoodzFree(VxC);
-//    DoodzFree(VzD);
-//    DoodzFree(VxD);
-//    DoodzFree(xA);
-//    DoodzFree(zA);
-//
-//    if ( model.iselastic == 1 ) {
-//        DoodzFree(om_n);
-//        DoodzFree(OmA);
-//        DoodzFree(OmB);
-//        DoodzFree(OmC);
-//        DoodzFree(OmD);
-//    }
-//
-//    printf("** Time for Roger Gunther = %lf sec\n",  (double)((double)omp_get_wtime() - t_omp) );
-//
-//}
-
-
-/*--------------------------------------------------------------------------------------------------------------------*/
-/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
-/*--------------------------------------------------------------------------------------------------------------------*/
-
 void RogerGuntherII( markers *particles, params model, grid mesh, int precise, scale scaling ) {
 
     DoodzFP VxA, VxB, VxC, VxD;
@@ -631,7 +407,7 @@ firstprivate( model, dx, dz, new )
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-void PureShearALE( params *model, grid *Mmesh, markers *topo_chain, scale scaling ) {
+void PureShearALE( params *model, grid *mesh, markers *topo_chain, scale scaling ) {
 
     double VxW=0.0, VxE=0.0, VzS=0.0, VzN=0.0;
     int i, j, icount1, icount2, c1, c2;
@@ -646,16 +422,16 @@ void PureShearALE( params *model, grid *Mmesh, markers *topo_chain, scale scalin
 
     // Loop on E-W sides: calculate average boundary velocity
     icount1 = 0; icount2 = 0;
-    for (j=0; j<Mmesh->Nz; j++) {
-        c1 = 0 +j*(Mmesh->Nx);
-        c2 = (Mmesh->Nx-1) +j*(Mmesh->Nx);
+    for (j=0; j<mesh->Nz; j++) {
+        c1 = 0 +j*(mesh->Nx);
+        c2 = (mesh->Nx-1) +j*(mesh->Nx);
 
-        if (Mmesh->BCu.type[c1] == 0) {
-            VxW += Mmesh->u_in[c1];
+        if (mesh->BCu.type[c1] == 0) {
+            VxW += mesh->u_in[c1];
             icount1++;
         }
-        if (Mmesh->BCu.type[c2] == 0) {
-            VxE += Mmesh->u_in[c2];
+        if (mesh->BCu.type[c2] == 0) {
+            VxE += mesh->u_in[c2];
             icount2++;
         }
     }
@@ -664,30 +440,30 @@ void PureShearALE( params *model, grid *Mmesh, markers *topo_chain, scale scalin
 
     // Loop on N-S sides: calculate average boundary velocity
     icount1 = 0; icount2 = 0;
-    for (i=0; i<Mmesh->Nx; i++) {
-        c1 = i + 0*(Mmesh->Nx+1);
-        c2 = i + (Mmesh->Nz-1)*(Mmesh->Nx+1);
+    for (i=0; i<mesh->Nx; i++) {
+        c1 = i + 0*(mesh->Nx+1);
+        c2 = i + (mesh->Nz-1)*(mesh->Nx+1);
 
-        if (Mmesh->BCv.type[c1] == 0) {
+        if (mesh->BCv.type[c1] == 0) {
             if (model->free_surf == 0) {
-                VzS += Mmesh->v_in[c1];
+                VzS += mesh->v_in[c1];
             }
             else {
-                VzS += Mmesh->BCv.val[c1];
+                VzS += mesh->BCv.val[c1];
             }
 
             icount1++;
         }
-        if (Mmesh->BCv.type[c2] == 0 || Mmesh->BCv.type[c2] == 30) {
+        if (mesh->BCv.type[c2] == 0 || mesh->BCv.type[c2] == 30) {
             if (model->free_surf == 0) {
-                VzN += Mmesh->v_in[c2];
+                VzN += mesh->v_in[c2];
             }
             else {
                 // Force the N boundary velocity in case ispureshear_ale == 2
                 if (model->ispureshear_ale == 2) VzN += MaxFreeSurfaceUpliftRate;
-                if (Mmesh->BCv.type[c2] == 0) VzN += Mmesh->BCv.val[c2];
-                //                if (model->ispureshear_ale == 2) VzN += Mmesh->BCv.val[c2];
-                //                if (Mmesh->BCv.type[c2] == 0) VzN += Mmesh->BCv.val[c2];
+                if (mesh->BCv.type[c2] == 0) VzN += mesh->BCv.val[c2];
+                //                if (model->ispureshear_ale == 2) VzN += mesh->BCv.val[c2];
+                //                if (mesh->BCv.type[c2] == 0) VzN += mesh->BCv.val[c2];
             }
             icount2++;
         }
@@ -726,7 +502,7 @@ void PureShearALE( params *model, grid *Mmesh, markers *topo_chain, scale scalin
     printf("zmin = %lf, zmax = %lf\n", model->zmin*scaling.L, model->zmax*scaling.L);
 
     // Remesh
-    SetGridCoordinates( Mmesh, model, model->Nx, model->Nz);
+    SetGridCoordinates( mesh, model, model->Nx, model->Nz);
 
     // Re-generate homogeneous pure shear fields
     printf("Re-generate homogeneous pure shear fields\n");
@@ -735,46 +511,8 @@ void PureShearALE( params *model, grid *Mmesh, markers *topo_chain, scale scalin
 /*--------------------------------------------------------------------------------------------------------------------*/
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
-//void VelocitiesToParticles( grid *mesh, markers *particles, DoodzFP *Vx, DoodzFP *Vz, params model, scale scaling ) {
-//
-//    DoodzFP *VxFromCenters, *VzFromCenters, *VxCenters, *VzCenters;
-//    int k;
-//
-//    VxFromCenters = DoodzCalloc( particles->Nb_part, sizeof(DoodzFP) );
-//    VzFromCenters = DoodzCalloc( particles->Nb_part, sizeof(DoodzFP) );
-//    VxCenters     = DoodzCalloc( (mesh->Nx-1)*(mesh->Nz-1), sizeof(DoodzFP) );
-//    VzCenters     = DoodzCalloc( (mesh->Nx-1)*(mesh->Nz-1), sizeof(DoodzFP) );
-//
-//    // Interp Vx, Vz on centroids
-//    VelocitiesOnCenters(  mesh->u_in, mesh->v_in, VxCenters, VzCenters, mesh->Nx, mesh->Nz, scaling );
-//    Interp_Grid2P( *particles, VxFromCenters, mesh, VxCenters, mesh->xc_coord,  mesh->zc_coord, mesh->Nx-1,   mesh->Nz-1, mesh->BCp.type ); //
-//    Interp_Grid2P( *particles, VzFromCenters, mesh, VzCenters, mesh->xc_coord,  mesh->zc_coord, mesh->Nx-1,   mesh->Nz-1, mesh->BCp.type );
-//
-//    // Vx  <-- u_in
-//    Interp_Grid2P( *particles, Vx, mesh, mesh->u_in, mesh->xg_coord,  mesh->zvx_coord, mesh->Nx,   mesh->Nz+1, mesh->BCu.type );
-//    Interp_Grid2P( *particles, Vz, mesh, mesh->v_in, mesh->xvz_coord, mesh->zg_coord,  mesh->Nx+1, mesh->Nz,   mesh->BCv.type );
-//
-//
-//#pragma omp parallel for shared ( particles, VxFromCenters, VzFromCenters ) \
-//private ( k )
-//    for ( k=0; k<particles->Nb_part; k++ ) {
-//        Vx[k] *= 0.666666666666;
-//        Vz[k] *= 0.666666666666;
-//        Vx[k] += 0.333333333333*VxFromCenters[k];
-//        Vz[k] += 0.333333333333*VzFromCenters[k];
-//    }
-//
-//    DoodzFree( VxFromCenters );
-//    DoodzFree( VzFromCenters );
-//    DoodzFree( VxCenters );
-//    DoodzFree( VzCenters );
-//}
 
-/*--------------------------------------------------------------------------------------------------------------------*/
-/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
-/*--------------------------------------------------------------------------------------------------------------------*/
-
-void DefineInitialTimestep( params *model, grid *Mmesh, markers particles, mat_prop materials, scale scaling ) {
+void DefineInitialTimestep( params *model, grid *mesh, markers particles, mat_prop materials, scale scaling ) {
     int k;
     double dt_maxwell, minMaxwell = 1e100, maxMaxwell = 0.0;
     int interp = 0, vert = 0, cent = 1;
@@ -782,17 +520,17 @@ void DefineInitialTimestep( params *model, grid *Mmesh, markers particles, mat_p
 // Define initial timestep is elasticity is turned on
 if ( model->iselastic == 1 && model->dt_constant != 1 ) {
 
-    P2Mastah( model, particles, materials.mu,     Mmesh, Mmesh->mu_n,   Mmesh->BCp.type,  0, 0, interp, cent, model->itp_stencil );
-    P2Mastah( model, particles, materials.mu,     Mmesh, Mmesh->mu_s,   Mmesh->BCg.type,  0, 0, interp, vert, model->itp_stencil );
+    P2Mastah( model, particles, materials.mu,     mesh, mesh->mu_n,   mesh->BCp.type,  0, 0, interp, cent, model->itp_stencil );
+    P2Mastah( model, particles, materials.mu,     mesh, mesh->mu_s,   mesh->BCg.type,  0, 0, interp, vert, model->itp_stencil );
 
-    for ( k=0; k<Mmesh->Nx*Mmesh->Nz; k++) {
+    for ( k=0; k<mesh->Nx*mesh->Nz; k++) {
 
-        if ( Mmesh->BCg.type[k] != 30 ) {
-            if ( Mmesh->eta_s[k]/Mmesh->mu_s[k] < minMaxwell ) {
-                minMaxwell = Mmesh->eta_s[k]/Mmesh->mu_s[k];
+        if ( mesh->BCg.type[k] != 30 ) {
+            if ( mesh->eta_s[k]/mesh->mu_s[k] < minMaxwell ) {
+                minMaxwell = mesh->eta_s[k]/mesh->mu_s[k];
             }
-            if ( Mmesh->eta_s[k]/Mmesh->mu_s[k] > maxMaxwell ) {
-                maxMaxwell = Mmesh->eta_s[k]/Mmesh->mu_s[k];
+            if ( mesh->eta_s[k]/mesh->mu_s[k] > maxMaxwell ) {
+                maxMaxwell = mesh->eta_s[k]/mesh->mu_s[k];
             }
         }
     }
@@ -815,7 +553,7 @@ if ( model->iselastic == 1 && model->dt_constant != 1 ) {
 //}
 
 if (model->iselastic == 1) printf("min. Maxwell = %2.2e s, max. Maxwell = %2.2e s\n", minMaxwell*scaling.t, maxMaxwell*scaling.t);
-if (model->iselastic == 1)printf("Suggested dt = %2.2e s, VE dt = %2.2e s\n", model->dt*scaling.t, exp((log(minMaxwell)+log(maxMaxwell))/2.0)*scaling.t );
+if (model->iselastic == 1) printf("Suggested dt = %2.2e s, VE dt = %2.2e s\n", model->dt*scaling.t, exp((log(minMaxwell)+log(maxMaxwell))/2.0)*scaling.t );
 printf("Initial timestep = %2.2e s\n", model->dt*scaling.t);
 
 }
@@ -824,7 +562,6 @@ printf("Initial timestep = %2.2e s\n", model->dt*scaling.t);
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-//#if 0
 void EvaluateCourantCriterion( double* Vx, double* Vz, params *model, scale scaling, grid *mesh, int quiet ) {
 
     int k, l, c;
@@ -857,7 +594,6 @@ void EvaluateCourantCriterion( double* Vx, double* Vz, params *model, scale scal
     vmin = MAXV(fabs(minVx), fabs(minVz));
     vmax = MAXV(fabs(vmax),  fabs(vmin));
     
-
     if (model->dt_constant == 0) {
 
         double fact = 1.0;
@@ -888,13 +624,8 @@ void EvaluateCourantCriterion( double* Vx, double* Vz, params *model, scale scal
 
         // If timestep is adaptive
         if ( model->dt_constant != 1 ) {
-            
+            printf("Timestep limited by advection\n");
             model->dt = dtc;
-            
-//            if (dtc<model->dt) {
-                printf("Timestep limited by advection\n");
-//                model->dt = dtc;
-//            }
             if ( model->surf_processes>0 && dt_surf<model->dt) {
                 printf("Timestep limited by surface processes\n");
                 model->dt = dt_surf;
@@ -915,116 +646,15 @@ void EvaluateCourantCriterion( double* Vx, double* Vz, params *model, scale scal
             model->dt = model->dt_start;
         }
 
-        if ( model->dt>model->dt_max ) {
-            printf("Setting dt to dt_max\n");
-            model->dt = model->dt_max;
-        }
-        if ( model->dt<model->dt_min ) {
-            printf("Setting dt to dt_min\n");
-            model->dt = model->dt_min;
-        }
-        if (quiet==0) printf("Current dt = %2.2e s / Courant dt = %2.2e s\n", model->dt * scaling.t, dtc * scaling.t );
-    }
-    else {
-        model->dt = model->dt_start;
-        if (quiet==0) printf("Fixed timestep dt = %2.2e s\n", model->dt * scaling.t );
-    }
-
-}
-//#endif
-
-#if 0
-void EvaluateCourantCriterion( double* Vx, double* Vz, params *model, scale scaling, grid *mesh, int quiet ) {
-
-    int k, l, c;
-    double minVx=0.0, minVz=0.0, maxVx=0.0, maxVz=0.0, dmin, dtc=0.0, vmax, vmin;
-    double C = model->Courant;
-//    double time_reaction = 3.1558e11;
-//    int reaction_in_progress;
-
-//    model->dt0 = model->dt;
-
-    for (k=0; k<model->Nx; k++) {
-        for (l=0; l<model->Nz+1; l++) {
-            c = k + l*model->Nx;
-            maxVx = MAXV(maxVx, (Vx[c]));
-            minVx = MINV(minVx, (Vx[c]));
-        }
-    }
-
-    for (k=0; k<model->Nx+1; k++) {
-        for (l=0; l<model->Nz; l++) {
-            c = k + l*(model->Nx+1);
-            maxVz = MAXV(maxVz, (Vz[c]));
-            minVz = MINV(minVz, (Vz[c]));
-        }
-    }
-    if (quiet==0) printf("Min Vxm = %2.2e m/s / Max Vxm = %2.2e m/s\n", minVx * scaling.V, maxVx * scaling.V);
-    if (quiet==0) printf("Min Vzm = %2.2e m/s / Max Vzm = %2.2e m/s\n", minVz * scaling.V, maxVz * scaling.V);
-
-    dmin = MINV(model->dx, model->dz);
-    vmax = MAXV(fabs(maxVx), fabs(maxVz));
-    vmin = MAXV(fabs(minVx), fabs(minVz));
-    vmax = MAXV(fabs(vmax),  fabs(vmin));
-
-    if (model->dt_constant == 0) {
-
-        double fact = 1.0;
-
-        // Timestep increase factor
-        if ( model->iselastic == 1 ) {
-            fact = 1.25;
-        }
-        else {
-            fact = 2.00;
-        }
-
-        // Courant dt
-        dtc = C * dmin / fabs(vmax);
-
-        printf("Courant number = %2.2e --- dtc = %2.2e\n", C, dtc*scaling.t);
-
-
-        // Timestep cutoff : Do not allow for very large timestep increase
-        if (dtc > fact*model->dt0 ) {
-            dtc = fact*model->dt0;
-        }
-
-        // If timestep is adaptive
-        if ( model->dt_constant != 1 ) {
-            if (dtc<model->dt) printf("Timestep limited by Courant\n");
-            model->dt = dtc;
-        }
-
-        //  Chemical limitation: ================================================
-        //    get min max kc
-        double min_tau_kin = model->user1/scaling.t;
-        double dt_reac = min_tau_kin/model->user2;
-        //        double min_kc=1.0e30, max_kc=0.0;
-        //        for ( k=0; k<materials->Nb_phases; k++) {
-        //            if (materials->k_chem[k]<min_kc) min_kc = materials->k_chem[k];
-        //            if (materials->k_chem[k]>max_kc) max_kc = materials->k_chem[k];
-        //        }
-        //        printf("EvaluateCourantCriterion: --> min kc = %2.2e m2.s-1 - max kc = %2.2e m2.s-1 \n", min_kc*scaling.L*scaling.L/scaling.t, max_kc*scaling.L*scaling.L/scaling.t );
-        printf("EvaluateCourantCriterion: --> min_tau_kin = %2.2e s \n", min_tau_kin*scaling.t);
-        
-        // If timestep is adaptive
-        if ( model->dt_constant != 1 ) {
-            if (dt_reac<model->dt) {
-                printf("Timestep limited by Chemical Reaction\n");
-                model->dt = dt_reac;
-            }
-        }
-        
-        //=======================================================================
-        
-        // If there is no motion, then the timestep becomes huge: cut off the motion.
-        if ( model->dt>1.0e30 || vmax<1.0e-30) {
-            dtc = 0.0;
-            model->dt = model->dt_start;
-        }
-
-        if ( model->dt>model->dt_max ) model->dt = model->dt_max;
+        // THESE LINES ARE MORE DANGEROUS THAN USEFUL
+        // if ( model->dt>model->dt_max ) {
+        //     printf("Setting dt to dt_max\n");
+        //     model->dt = model->dt_max;
+        // }
+        // if ( model->dt<model->dt_min ) {
+        //     printf("Setting dt to dt_min\n");
+        //     model->dt = model->dt_min;
+        // }
 
         if (quiet==0) printf("Current dt = %2.2e s / Courant dt = %2.2e s\n", model->dt * scaling.t, dtc * scaling.t );
     }
@@ -1034,7 +664,6 @@ void EvaluateCourantCriterion( double* Vx, double* Vz, params *model, scale scal
     }
 
 }
-#endif
 
 /*--------------------------------------------------------------------------------------------------------------------*/
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
@@ -1099,110 +728,6 @@ void Check_dt_for_advection( double* Vx, double* Vz, params *model, scale scalin
         if (quiet==0) printf("Fixed timestep dt = %2.2e s\n", model->dt * scaling.t );
     }
 }
-
-/*--------------------------------------------------------------------------------------------------------------------*/
-/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
-/*--------------------------------------------------------------------------------------------------------------------*/
-
-//void EvaluateCourantCriterionParticles( markers particles, params *model, scale scaling ) {
-//
-//    int k;
-//    double minVx=0.0, minVz=0.0, maxVx=0.0, maxVz=0.0, dmin, dtc=0.0, vmax;
-//    double C = 0.5;
-//
-//    model->dt0 = model->dt;
-//
-//    if (model->dt_constant == 0) {
-//
-//        #pragma omp parallel
-//        {
-//            double pminVx=0.0, pminVz=0.0, pmaxVx=0.0, pmaxVz=0.0;
-//            #pragma omp for schedule( static )
-//            for (k=0; k<particles.Nb_part; k++) {
-//                if (particles.Vx[k]>pmaxVx) pmaxVx = particles.Vx[k];
-//                if (particles.Vx[k]<pminVx) pminVx = particles.Vx[k];
-//                if (particles.Vz[k]>pmaxVz) pmaxVz = particles.Vz[k];
-//                if (particles.Vz[k]<pminVz) pminVz = particles.Vz[k];
-//            }
-//            #pragma omp flush (maxVx)
-//            if (pmaxVx>maxVx) {
-//                #pragma omp critical
-//                {
-//                    if (pmaxVx>maxVx) maxVx = pmaxVx;
-//                }
-//            }
-//
-//            #pragma omp flush (maxVz)
-//            if (pmaxVz>maxVz) {
-//                #pragma omp critical
-//                {
-//                    if (pmaxVz>maxVz) maxVz = pmaxVz;
-//                }
-//            }
-//
-//            #pragma omp flush (minVx)
-//            if (pminVx<minVx) {
-//                #pragma omp critical
-//                {
-//                    if (pminVx<minVx) minVx = pminVx;
-//                }
-//            }
-//
-//            #pragma omp flush (minVz)
-//            if (pminVz<minVz) {
-//                #pragma omp critical
-//                {
-//                    if (pminVz<minVz) minVz = pminVz;
-//                }
-//            }
-//        }
-//
-//        printf("Min( Vx ) = %2.2e m/s / Min( Vz ) = %2.2e m/s\n", minVx * scaling.V, minVz * scaling.V);
-//        printf("Max( Vx ) = %2.2e m/s / Max( Vz ) = %2.2e m/s\n", maxVx * scaling.V, maxVz * scaling.V);
-//
-//        dmin = MINV(model->dx, model->dz);
-//        vmax = MAXV(maxVx, maxVz);
-//
-//        double fact;
-//
-//        // Timestep increase factor
-//        if ( model->iselastic == 1 ) {
-//            fact = 1.05;
-//        }
-//        else {
-//            fact = 2.0;
-//        }
-//
-//        // Courant dt
-//        dtc = C * dmin / fabs(vmax);
-//
-//        // Timestep cutoff : Do not allow for very large timestep increase
-//        if (dtc > fact*model->dt0 ) {
-//            dtc = fact*model->dt0;
-//        }
-//
-//        // If timestep is adaptive
-//        if ( model->dt_constant != 1 ) {
-//            model->dt = dtc;
-//        }
-//
-//        // If there is no motion, then the timestep becomes huge: cut off the motion.
-//        if( model->dt>1.0e30 ) {
-//            dtc = 0;
-//            model->dt = 0.0;
-//        }
-//
-//        // Cutoff infinitely slow motion
-//        if (vmax<1.0e-30) {
-//            dtc = 0.0;
-//            model->dt = 0.0;
-//        }
-//    }
-//
-//    printf("Running with Courant dt = %2.2e s / previous dt = %2.2e s\n", model->dt * scaling.t, model->dt0 * scaling.t );
-//    //printf("Current dt = %2.2e s / Courant dt = %2.2e s\n", model->dt * scaling.t, dtc * scaling.t );
-//
-//}
 
 /*--------------------------------------------------------------------------------------------------------------------*/
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
@@ -1293,7 +818,7 @@ firstprivate( Nx, Nz )
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-void PureShearALE_X( params *model,  grid *Mmesh, markers *topo_chain, scale scaling ) {
+void PureShearALE_X( params *model,  grid *mesh, markers *topo_chain, scale scaling ) {
 
     double VxW=0.0, VxE=0.0, VzS=0.0, VzN=0.0;
     int i, j, icount1, icount2, c1, c2;
@@ -1309,16 +834,16 @@ void PureShearALE_X( params *model,  grid *Mmesh, markers *topo_chain, scale sca
 
     // Loop on E-W sides: calculate average boundary velocity
     icount1 = 0; icount2 = 0;
-    for (j=0; j<Mmesh->Nz; j++) {
-        c1 = 0 +j*(Mmesh->Nx);
-        c2 = (Mmesh->Nx-1) +j*(Mmesh->Nx);
+    for (j=0; j<mesh->Nz; j++) {
+        c1 = 0 +j*(mesh->Nx);
+        c2 = (mesh->Nx-1) +j*(mesh->Nx);
 
-        if (Mmesh->BCu.type[c1] == 0) {
-            VxW += Mmesh->u_in[c1];
+        if (mesh->BCu.type[c1] == 0) {
+            VxW += mesh->u_in[c1];
             icount1++;
         }
-        if (Mmesh->BCu.type[c2] == 0) {
-            VxE += Mmesh->u_in[c2];
+        if (mesh->BCu.type[c2] == 0) {
+            VxE += mesh->u_in[c2];
             icount2++;
         }
     }
@@ -1327,28 +852,28 @@ void PureShearALE_X( params *model,  grid *Mmesh, markers *topo_chain, scale sca
 
     // Loop on N-S sides: calculate average boundary velocity
     icount1 = 0; icount2 = 0;
-    for (i=0; i<Mmesh->Nx; i++) {
-        c1 = i + 0*(Mmesh->Nx+1);
-        c2 = i + (Mmesh->Nz-1)*(Mmesh->Nx+1);
+    for (i=0; i<mesh->Nx; i++) {
+        c1 = i + 0*(mesh->Nx+1);
+        c2 = i + (mesh->Nz-1)*(mesh->Nx+1);
 
-        if (Mmesh->BCv.type[c1] == 0) {
+        if (mesh->BCv.type[c1] == 0) {
             if (model->free_surf == 0) {
-                VzS += Mmesh->v_in[c1];
+                VzS += mesh->v_in[c1];
             }
             else {
-                VzS += Mmesh->BCv.val[c1];
+                VzS += mesh->BCv.val[c1];
             }
 
             icount1++;
         }
-        if (Mmesh->BCv.type[c2] == 0 || Mmesh->BCv.type[c2] == 30) {
+        if (mesh->BCv.type[c2] == 0 || mesh->BCv.type[c2] == 30) {
             if (model->free_surf == 0) {
-                VzN += Mmesh->v_in[c2];
+                VzN += mesh->v_in[c2];
             }
             else {
                 // Force the N boundary velocity in case ispureshear_ale == 2
                 if (model->ispureshear_ale == 2) VzN += MaxFreeSurfaceUpliftRate;
-                if (Mmesh->BCv.type[c2] == 0) VzN += Mmesh->BCv.val[c2];
+                if (mesh->BCv.type[c2] == 0) VzN += mesh->BCv.val[c2];
             }
             icount2++;
         }
@@ -1379,14 +904,14 @@ void PureShearALE_X( params *model,  grid *Mmesh, markers *topo_chain, scale sca
     printf("zmin = %lf, zmax = %lf\n", model->zmin*scaling.L, model->zmax*scaling.L);
 
     // Remesh
-    SetGridCoordinates( Mmesh, model, model->Nx, model->Nz);
+    SetGridCoordinates( mesh, model, model->Nx, model->Nz);
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-void PureShearALE_Z( params *model,  grid *Mmesh, markers *topo_chain, scale scaling ) {
+void PureShearALE_Z( params *model,  grid *mesh, markers *topo_chain, scale scaling ) {
 
     double VxW=0.0, VxE=0.0, VzS=0.0, VzN=0.0;
     int i, j, icount1, icount2, c1, c2;
@@ -1401,16 +926,16 @@ void PureShearALE_Z( params *model,  grid *Mmesh, markers *topo_chain, scale sca
 
     // Loop on E-W sides: calculate average boundary velocity
     icount1 = 0; icount2 = 0;
-    for (j=0; j<Mmesh->Nz; j++) {
-        c1 = 0 +j*(Mmesh->Nx);
-        c2 = (Mmesh->Nx-1) +j*(Mmesh->Nx);
+    for (j=0; j<mesh->Nz; j++) {
+        c1 = 0 +j*(mesh->Nx);
+        c2 = (mesh->Nx-1) +j*(mesh->Nx);
 
-        if (Mmesh->BCu.type[c1] == 0) {
-            VxW += Mmesh->u_in[c1];
+        if (mesh->BCu.type[c1] == 0) {
+            VxW += mesh->u_in[c1];
             icount1++;
         }
-        if (Mmesh->BCu.type[c2] == 0) {
-            VxE += Mmesh->u_in[c2];
+        if (mesh->BCu.type[c2] == 0) {
+            VxE += mesh->u_in[c2];
             icount2++;
         }
     }
@@ -1419,28 +944,28 @@ void PureShearALE_Z( params *model,  grid *Mmesh, markers *topo_chain, scale sca
 
     // Loop on N-S sides: calculate average boundary velocity
     icount1 = 0; icount2 = 0;
-    for (i=0; i<Mmesh->Nx; i++) {
-        c1 = i + 0*(Mmesh->Nx+1);
-        c2 = i + (Mmesh->Nz-1)*(Mmesh->Nx+1);
+    for (i=0; i<mesh->Nx; i++) {
+        c1 = i + 0*(mesh->Nx+1);
+        c2 = i + (mesh->Nz-1)*(mesh->Nx+1);
 
-        if (Mmesh->BCv.type[c1] == 0) {
+        if (mesh->BCv.type[c1] == 0) {
             if (model->free_surf == 0) {
-                VzS += Mmesh->v_in[c1];
+                VzS += mesh->v_in[c1];
             }
             else {
-                VzS += Mmesh->BCv.val[c1];
+                VzS += mesh->BCv.val[c1];
             }
 
             icount1++;
         }
-        if (Mmesh->BCv.type[c2] == 0 || Mmesh->BCv.type[c2] == 30) {
+        if (mesh->BCv.type[c2] == 0 || mesh->BCv.type[c2] == 30) {
             if (model->free_surf == 0) {
-                VzN += Mmesh->v_in[c2];
+                VzN += mesh->v_in[c2];
             }
             else {
                 // Force the N boundary velocity in case ispureshear_ale == 2
                 if (model->ispureshear_ale == 2) VzN += MaxFreeSurfaceUpliftRate;
-                if (Mmesh->BCv.type[c2] == 0) VzN += Mmesh->BCv.val[c2];
+                if (mesh->BCv.type[c2] == 0) VzN += mesh->BCv.val[c2];
             }
             icount2++;
         }
@@ -1470,7 +995,7 @@ void PureShearALE_Z( params *model,  grid *Mmesh, markers *topo_chain, scale sca
     printf("zmin = %lf, zmax = %lf\n", model->zmin*scaling.L, model->zmax*scaling.L);
 
     // Remesh
-    SetGridCoordinates( Mmesh, model, model->Nx, model->Nz);
+    SetGridCoordinates( mesh, model, model->Nx, model->Nz);
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/

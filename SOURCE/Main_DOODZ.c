@@ -29,7 +29,6 @@
 #include "cholmod.h"
 #include "header_MDOODZ.h"
 
-
 #ifdef _OMP_
 #include "omp.h"
 #else
@@ -60,12 +59,10 @@ int main( int nargs, char *args[] ) {
     SparseMat    StokesA, StokesB, StokesC, StokesD;
     SparseMat    JacobA,  JacobB,  JacobC,  JacobD;
     int          Nx, Nz, Ncx, Ncz;
-    int          IsNewtonStep, *LogIsNewtonStep, IsFirstNewtonStep, IsJacobianUsed;
+    int          IsNewtonStep, IsFirstNewtonStep, IsJacobianUsed;
     int cent=1, vert=0, prop=1, interp=0, vxnodes=-1, vznodes=-2;
     FILE        *GNUplotPipe;
-    
-    double *rx_abs, *rz_abs, *rp_abs, *rx_rel, *rz_rel, *rp_rel;
-    
+        
     // Initialise integrated quantities
     mesh.W    = 0.0; // Work
     mesh.Ut   = 0.0; // heat
@@ -117,10 +114,10 @@ int main( int nargs, char *args[] ) {
     // Get grid indices
     GridIndices( &mesh );
     
-    rx_abs  = DoodzCalloc(Nmodel.nit_max+1, sizeof(double)); rx_rel = DoodzCalloc(Nmodel.nit_max+1, sizeof(double));
-    rz_abs  = DoodzCalloc(Nmodel.nit_max+1, sizeof(double)); rz_rel = DoodzCalloc(Nmodel.nit_max+1, sizeof(double));
-    rp_abs  = DoodzCalloc(Nmodel.nit_max+1, sizeof(double)); rp_rel = DoodzCalloc(Nmodel.nit_max+1, sizeof(double));
-    LogIsNewtonStep = DoodzCalloc(Nmodel.nit_max+1, sizeof(int));
+    Nmodel.rx_abs  = DoodzCalloc(Nmodel.nit_max+1, sizeof(double)); Nmodel.rx_rel = DoodzCalloc(Nmodel.nit_max+1, sizeof(double));
+    Nmodel.rz_abs  = DoodzCalloc(Nmodel.nit_max+1, sizeof(double)); Nmodel.rz_rel = DoodzCalloc(Nmodel.nit_max+1, sizeof(double));
+    Nmodel.rp_abs  = DoodzCalloc(Nmodel.nit_max+1, sizeof(double)); Nmodel.rp_rel = DoodzCalloc(Nmodel.nit_max+1, sizeof(double));
+    Nmodel.LogIsNewtonStep = DoodzCalloc(Nmodel.nit_max+1, sizeof(int));
     
     Nx = mesh.Nx; Nz = mesh.Nz; Ncx = Nx-1; Ncz = Nz-1;
     if ( model.aniso  == 1 ) model.Newton = 1;
@@ -435,7 +432,7 @@ int main( int nargs, char *args[] ) {
         
         // Write initial output
         if ( writer == 1 ) {
-            WriteOutputHDF5( &mesh, &particles, &topo, &topo_chain, model, "Output",  materials, scaling );
+            WriteOutputHDF5( &mesh, &particles, &topo, &topo_chain, model, Nmodel, "Output",  materials, scaling );
             if ( model.write_markers == 1 ) WriteOutputHDF5Particles( &mesh, &particles, &topo, &topo_chain, &topo_ini, &topo_chain_ini, model, "Particles",  materials, scaling );
         }
         
@@ -770,7 +767,7 @@ int main( int nargs, char *args[] ) {
             while ( Nmodel.nit <= Nmax_picard && nstag<model.nstagmax) {
                 
                 if ( Nmodel.nit > 0 && Nmodel.Picard2Newton == 1 ) {
-                    if ( rx_rel[Nmodel.nit-1] < Nmodel.Pic2NewtCond || rz_rel[Nmodel.nit-1] < Nmodel.Pic2NewtCond || rp_rel[Nmodel.nit-1] < Nmodel.Pic2NewtCond || Nmodel.nit>= Nmodel.nit_Pic_max) {
+                    if ( Nmodel.rx_rel[Nmodel.nit-1] < Nmodel.Pic2NewtCond || Nmodel.rz_rel[Nmodel.nit-1] < Nmodel.Pic2NewtCond || Nmodel.rp_rel[Nmodel.nit-1] < Nmodel.Pic2NewtCond || Nmodel.nit>= Nmodel.nit_Pic_max) {
                         if ( IsFirstNewtonStep == 0 ) CholmodSolver.Analyze = 0;
                         if ( IsFirstNewtonStep == 1 ) {
                             cholmod_free_factor ( &CholmodSolver.Lfact, &CholmodSolver.c);
@@ -787,11 +784,11 @@ int main( int nargs, char *args[] ) {
                 printf("**********************************************\n");
                 if ( model.Newton == 1 ) { 
                     printf("*** Newton it. %02d of %02d (step = %05d) ***\n", Nmodel.nit, Nmodel.nit_max, model.step); 
-                    LogIsNewtonStep[Nmodel.nit] = 1;
+                    Nmodel.LogIsNewtonStep[Nmodel.nit] = 1;
                 }
                 else { 
                     printf("*** Picard it. %02d of %02d (step = %05d) ***\n", Nmodel.nit, Nmodel.nit_max, model.step); 
-                    LogIsNewtonStep[Nmodel.nit] = 0;
+                    Nmodel.LogIsNewtonStep[Nmodel.nit] = 0;
                 }
                 printf("**********************************************\n");
                 
@@ -801,6 +798,7 @@ int main( int nargs, char *args[] ) {
                 NonNewtonianViscosityGrid (     &mesh, &materials, &model, Nmodel, &scaling );    // ??????????? déjà fait dans UpdateNonLinearity
 
                 if ( model.noisy == 1 ) {
+                    MinMaxArrayTag( mesh.T,         scaling.T, (mesh.Nx-1)*(mesh.Nz-1), "T         ", mesh.BCt.type );
                     MinMaxArrayTag( mesh.p0_n,      scaling.S, (mesh.Nx-1)*(mesh.Nz-1), "P old     ", mesh.BCp.type );
                     MinMaxArrayTag( mesh.p_in,      scaling.S, (mesh.Nx-1)*(mesh.Nz-1), "P         ", mesh.BCp.type );
                     MinMaxArrayTag( mesh.div_u,     scaling.E, (mesh.Nx-1)*(mesh.Nz-1), "div       ", mesh.BCp.type );
@@ -821,7 +819,7 @@ int main( int nargs, char *args[] ) {
                 }
                 
                 if ( model.write_debug == 1 ) {
-                    WriteOutputHDF5( &mesh, &particles, &topo, &topo_chain, model, "Output_BeforeSolve", materials, scaling );
+                    WriteOutputHDF5( &mesh, &particles, &topo, &topo_chain, model, Nmodel, "Output_BeforeSolve", materials, scaling );
                     WriteOutputHDF5Particles( &mesh, &particles, &topo, &topo_chain, &topo_ini, &topo_chain_ini, model, "Particles_BeforeSolve", materials, scaling );
                 }
                 
@@ -872,9 +870,9 @@ int main( int nargs, char *args[] ) {
                 if ( model.Newton == 1 && model.diag_scaling ) ScaleMatrix( &JacobA,  &JacobB,  &JacobC,  &JacobD  );
                 
                 // Store residuals
-                Nmodel.resx_f = Nmodel.resx; rx_abs[Nmodel.nit] = Nmodel.resx; rx_rel[Nmodel.nit] = Nmodel.resx/Nmodel.resx0;
-                Nmodel.resz_f = Nmodel.resz; rz_abs[Nmodel.nit] = Nmodel.resz; rz_rel[Nmodel.nit] = Nmodel.resz/Nmodel.resz0;
-                Nmodel.resp_f = Nmodel.resp; rp_abs[Nmodel.nit] = Nmodel.resp; rp_rel[Nmodel.nit] = Nmodel.resp/Nmodel.resp0;
+                Nmodel.resx_f = Nmodel.resx; Nmodel.rx_abs[Nmodel.nit] = Nmodel.resx; Nmodel.rx_rel[Nmodel.nit] = Nmodel.resx/Nmodel.resx0;
+                Nmodel.resz_f = Nmodel.resz; Nmodel.rz_abs[Nmodel.nit] = Nmodel.resz; Nmodel.rz_rel[Nmodel.nit] = Nmodel.resz/Nmodel.resz0;
+                Nmodel.resp_f = Nmodel.resp; Nmodel.rp_abs[Nmodel.nit] = Nmodel.resp; Nmodel.rp_rel[Nmodel.nit] = Nmodel.resp/Nmodel.resp0;
                 
                 if ( model.write_debug == 1 ) WriteResiduals( mesh, model, Nmodel, scaling );
                 
@@ -899,7 +897,6 @@ int main( int nargs, char *args[] ) {
                         FreeSparseSystems( IsJacobianUsed, model.decoupled_solve, &Stokes, &StokesA, &StokesB, &StokesC, &StokesD, &JacobA, &JacobB, &JacobC, &JacobD );
                         break;
                     }
-                    
                 }
 
                 if ( Nmodel.stagnated == 1 && model.iselastic == 1 && model.safe_mode == 1 ) {
@@ -953,8 +950,8 @@ int main( int nargs, char *args[] ) {
             if (Nmodel.nit< Nmodel.nit_max)  nit = Nmodel.nit;
             if (Nmodel.Picard2Newton == 1 )  printf("Picard 2 Newton is activated with condition: %2.2e\n", Nmodel.Pic2NewtCond);
             for (i=0; i<=nit; i++) {
-                if (LogIsNewtonStep[i] == 1) printf("New. it. %02d: abs: |Fx| = %2.2e - |Fz| = %2.2e - |Fp| = %2.2e --- rel: |Fx| = %2.2e - |Fz| = %2.2e - |Fp| = %2.2e\n", i, rx_abs[i], rz_abs[i], rp_abs[i], rx_rel[i], rz_rel[i], rp_rel[i]);
-                else                         printf("Pic. it. %02d: abs: |Fx| = %2.2e - |Fz| = %2.2e - |Fp| = %2.2e --- rel: |Fx| = %2.2e - |Fz| = %2.2e - |Fp| = %2.2e\n", i, rx_abs[i], rz_abs[i], rp_abs[i], rx_rel[i], rz_rel[i], rp_rel[i]);
+                if (Nmodel.LogIsNewtonStep[i] == 1) printf("New. it. %02d: abs: |Fx| = %2.2e - |Fz| = %2.2e - |Fp| = %2.2e --- rel: |Fx| = %2.2e - |Fz| = %2.2e - |Fp| = %2.2e\n", i, Nmodel.rx_abs[i], Nmodel.rz_abs[i], Nmodel.rp_abs[i], Nmodel.rx_rel[i], Nmodel.rz_rel[i], Nmodel.rp_rel[i]);
+                else                         printf("Pic. it. %02d: abs: |Fx| = %2.2e - |Fz| = %2.2e - |Fp| = %2.2e --- rel: |Fx| = %2.2e - |Fz| = %2.2e - |Fp| = %2.2e\n", i, Nmodel.rx_abs[i], Nmodel.rz_abs[i], Nmodel.rp_abs[i], Nmodel.rx_rel[i], Nmodel.rz_rel[i], Nmodel.rp_rel[i]);
                 if (i == Nmodel.nit_max && model.safe_mode == 1) {
                     printf("Exit: Max iteration reached: Nmodel.nit_max = %02d! Check what you wanna do now...\n",Nmodel.nit_max);
                     if ( (Nmodel.resx < Nmodel.abs_tol_u) && (Nmodel.resz < Nmodel.abs_tol_u) && (Nmodel.resp < Nmodel.abs_tol_p) ) {}
@@ -974,7 +971,7 @@ int main( int nargs, char *args[] ) {
                 
                 fprintf(GNUplotPipe, "plot '-' with linespoints linestyle 1\n");
                 for (i=0; i< Nmodel.nit+1; i++) {
-                    fprintf(GNUplotPipe, "%lf %lf \n", (double)i, log10(rx_rel[i])); //Write the data to a temporary file
+                    fprintf(GNUplotPipe, "%lf %lf \n", (double)i, log10(Nmodel.rx_rel[i])); //Write the data to a temporary file
                 }
                 fprintf(GNUplotPipe, "e\n");
                 fflush(GNUplotPipe);
@@ -1132,7 +1129,7 @@ int main( int nargs, char *args[] ) {
                 if ( model.fstrain == 1 ) DeformationGradient( mesh, scaling, model, &particles );
                 
                 if ( model.write_debug == 1 ) {
-                    WriteOutputHDF5( &mesh, &particles, &topo, &topo_chain, model, "Output_BeforeSurfRemesh", materials, scaling );
+                    WriteOutputHDF5( &mesh, &particles, &topo, &topo_chain, model, Nmodel, "Output_BeforeSurfRemesh", materials, scaling );
                     WriteOutputHDF5Particles( &mesh, &particles, &topo, &topo_chain, &topo_ini, &topo_chain_ini, model, "Particles_BeforeSurfRemesh", materials, scaling );
                 }
                 
@@ -1166,7 +1163,7 @@ int main( int nargs, char *args[] ) {
                     //                    ArrayEqualArray( topo_ini.height0, topo_ini.height, mesh.Nx );
                     
                     if ( model.write_debug == 1 ) {
-                        WriteOutputHDF5( &mesh, &particles, &topo, &topo_chain, model, "Output_AfterSurfRemesh", materials, scaling );
+                        WriteOutputHDF5( &mesh, &particles, &topo, &topo_chain, model, Nmodel, "Output_AfterSurfRemesh", materials, scaling );
                         WriteOutputHDF5Particles( &mesh, &particles, &topo, &topo_chain, &topo_ini, &topo_chain_ini, model, "Particles_AfterSurfRemesh", materials, scaling );
                     }
                     
@@ -1187,7 +1184,7 @@ int main( int nargs, char *args[] ) {
                     }
                     
                     if ( model.write_debug == 1 ) {
-                        WriteOutputHDF5( &mesh, &particles, &topo, &topo_chain, model, "Outputx", materials, scaling );
+                        WriteOutputHDF5( &mesh, &particles, &topo, &topo_chain, model, Nmodel, "Outputx", materials, scaling );
                         WriteOutputHDF5Particles( &mesh, &particles, &topo, &topo_chain, &topo_ini, &topo_chain_ini, model, "Particlesx", materials, scaling );
                     }
                     
@@ -1208,7 +1205,7 @@ int main( int nargs, char *args[] ) {
                 
 #ifdef _HDF5_
                 if ( model.write_debug == 1 ) {
-                    WriteOutputHDF5( &mesh, &particles, &topo, &topo_chain, model, "Outputxx", materials, scaling );
+                    WriteOutputHDF5( &mesh, &particles, &topo, &topo_chain, model, Nmodel, "Outputxx", materials, scaling );
                     WriteOutputHDF5Particles( &mesh, &particles, &topo, &topo_chain, &topo_ini, &topo_chain_ini, model, "Particlesxx", materials, scaling );
                 }
 #endif
@@ -1293,7 +1290,7 @@ int main( int nargs, char *args[] ) {
             // Visualisation file
 #ifndef _VG_
             t_omp = (double)omp_get_wtime();
-            WriteOutputHDF5( &mesh, &particles, &topo, &topo_chain, model, "Output", materials, scaling );
+            WriteOutputHDF5( &mesh, &particles, &topo, &topo_chain, model, Nmodel, "Output", materials, scaling );
             if ( model.write_markers == 1 ) WriteOutputHDF5Particles( &mesh, &particles, &topo, &topo_chain, &topo_ini, &topo_chain_ini, model, "Particles", materials, scaling );
             printf("** Time for Output file write = %lf sec\n", (double)((double)omp_get_wtime() - t_omp));
 #endif
@@ -1337,13 +1334,13 @@ int main( int nargs, char *args[] ) {
 #endif
     
     // GNU plot
-    DoodzFree( rx_abs );
-    DoodzFree( rz_abs );
-    DoodzFree( rp_abs );
-    DoodzFree( rx_rel );
-    DoodzFree( rz_rel );
-    DoodzFree( rp_rel );
-    DoodzFree( LogIsNewtonStep );
+    DoodzFree( Nmodel.rx_abs );
+    DoodzFree( Nmodel.rz_abs );
+    DoodzFree( Nmodel.rp_abs );
+    DoodzFree( Nmodel.rx_rel );
+    DoodzFree( Nmodel.rz_rel );
+    DoodzFree( Nmodel.rp_rel );
+    DoodzFree( Nmodel.LogIsNewtonStep );
     
     // just for the quartz-coesite case
     for ( int k=0; k<model.Nb_phases; k++) {

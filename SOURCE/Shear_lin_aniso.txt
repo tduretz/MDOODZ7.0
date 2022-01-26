@@ -16,17 +16,17 @@ V   = 1
 T   = 20
 
 /**** SPACE-TIME ****/
-Nx      = 100
-Nz      = 100
+Nx      = 101
+Nz      = 101
 Nt      = 1
 xmin    = -5.000000e-1
 zmin    = -5.000000e-1
 xmax    =  5.000000e-1
 zmax    =  5.000000e-1
-dt      = 0.05
+dt      = 0.5
 dt_constant = 0
 Courant = 0.3
-penalty = 1e2
+penalty = 1e5
 lsolver = -1
 DefectCorrectionForm = 1
 diag_scaling = 0
@@ -35,7 +35,6 @@ rel_tol_div  = 1e-8
 
 /**** SWITCHES ****/
 ismechanical    = 1
-dt_constant     = 0
 RK              = 4
 isperiodic_x    = 0
 ispureshear_ALE = 0
