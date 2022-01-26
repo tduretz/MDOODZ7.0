@@ -16,8 +16,8 @@ V   = 1
 T   = 20
 
 /**** SPACE-TIME ****/
-Nx      = 15
-Nz      = 20
+Nx      = 101
+Nz      = 101
 Nt      = 1
 xmin    = -5.000000e-1
 zmin    = -5.000000e-1
@@ -35,16 +35,15 @@ rel_tol_div  = 1e-8
 
 /**** SWITCHES ****/
 ismechanical    = 1
-dt_constant     = 0
 RK              = 4
 isperiodic_x    = 0
 ispureshear_ALE = 1
 isinertial      = 0
-iselastic       = 1
+iselastic       = 0
 isthermal       = 0
 line_search     = 1
-free_surf       = 1
-free_surf_stab  = 1
+free_surf       = 0
+free_surf_stab  = 0
 eqn_state       = 0
 thermal_eq      = 0
 subgrid_diff    = 1
@@ -60,15 +59,15 @@ aniso_fstrain   = 0 // finite strain anisotropy activated
 
 /**** SETUP DEPENDANT ****/
 EpsBG           = 1
-shear_style     = 0
+shear_style     = 1
 user0           = 1     / temperature [°C]
-user1           = 0.05  / inclusion radius [m]
+user1           = 0.15   / inclusion radius [m]
 user2           = 0
 user3           = 0
 
 /**** GRAVITY ****/
 gx = 0.0000
-gz = -1
+gz = 0
 
 /**** MAT PROPERTIES ****/
 Nb_phases = 2

@@ -2012,28 +2012,28 @@ void BuildStokesOperator( grid *mesh, params model, int lev, double *p, double *
             }
 
             // Send data to file
-            create_output_hdf5( filename );
-            AddGroup_to_hdf5( filename, "model" );
-            AddGroup_to_hdf5( filename, "matrix" );
-            AddGroup_to_hdf5( filename, "numbering" );
-            AddGroup_to_hdf5( filename, "fields" );
-            AddFieldToGroup_generic( _TRUE_, filename, "model", "params" , 'd', 4, OutputDD.params,  1 );
-            AddFieldToGroup_generic( _TRUE_, filename, "numbering", "eqn_u" , 'i', nx*nzvx, OutputDD.eqn_u,  1 );
-            AddFieldToGroup_generic( _TRUE_, filename, "numbering", "eqn_v" , 'i', nxvz*nz, OutputDD.eqn_v,  1 );
-            AddFieldToGroup_generic( _TRUE_, filename, "numbering", "eqn_p" , 'i', ncx*ncz, OutputDD.eqn_p,  1 );
-            AddFieldToGroup_generic( _TRUE_, filename, "fields", "eta_n" , 'd', ncx*ncz, mesh->eta_n,  1 );
-            AddFieldToGroup_generic( _TRUE_, filename, "fields", "eta_s" , 'd', nx*nz, mesh->eta_s,  1 );
-            AddFieldToGroup_generic( _TRUE_, filename, "fields", "tag_s" , 'c', nx*nz, mesh->BCg.type,  1 );
-            AddFieldToGroup_generic( _TRUE_, filename, "fields", "tag_n" , 'c', ncx*ncz, mesh->BCp.type,  1 );
-            AddFieldToGroup_generic( _TRUE_, filename, "fields", "tag_u" , 'c', nx*nzvx, mesh->BCu.type,  1 );
-            AddFieldToGroup_generic( _TRUE_, filename, "fields", "tag_v" , 'c', nxvz*nz, mesh->BCv.type,  1 );
+            CreateOutputHDF5( filename );
+            AddGroupToHDF5( filename, "model" );
+            AddGroupToHDF5( filename, "matrix" );
+            AddGroupToHDF5( filename, "numbering" );
+            AddGroupToHDF5( filename, "fields" );
+            AddFieldToGroup( filename, "model", "params" , 'd', 4, OutputDD.params,  1 );
+            AddFieldToGroup( filename, "numbering", "eqn_u" , 'i', nx*nzvx, OutputDD.eqn_u,  1 );
+            AddFieldToGroup( filename, "numbering", "eqn_v" , 'i', nxvz*nz, OutputDD.eqn_v,  1 );
+            AddFieldToGroup( filename, "numbering", "eqn_p" , 'i', ncx*ncz, OutputDD.eqn_p,  1 );
+            AddFieldToGroup( filename, "fields", "eta_n" , 'd', ncx*ncz, mesh->eta_n,  1 );
+            AddFieldToGroup( filename, "fields", "eta_s" , 'd', nx*nz, mesh->eta_s,  1 );
+            AddFieldToGroup( filename, "fields", "tag_s" , 'c', nx*nz, mesh->BCg.type,  1 );
+            AddFieldToGroup( filename, "fields", "tag_n" , 'c', ncx*ncz, mesh->BCp.type,  1 );
+            AddFieldToGroup( filename, "fields", "tag_u" , 'c', nx*nzvx, mesh->BCu.type,  1 );
+            AddFieldToGroup( filename, "fields", "tag_v" , 'c', nxvz*nz, mesh->BCv.type,  1 );
 
 
-            AddFieldToGroup_generic( _TRUE_, filename, "matrix", "I" , 'i', Stokes->neq+1, OutputDD.Ic,  1 );
-            AddFieldToGroup_generic( _TRUE_, filename, "matrix", "J" , 'i', nnzc,  OutputDD.J,  1 );
-            AddFieldToGroup_generic( _TRUE_, filename, "matrix", "V" , 'd', nnzc,  OutputDD.V,  1 );
-            AddFieldToGroup_generic( _TRUE_, filename, "matrix", "eta_cell" , 'd', ncx*ncz, OutputDD.eta_cell,  1 );
-            AddFieldToGroup_generic( _TRUE_, filename, "matrix", "rhs" , 'd', Stokes->neq, OutputDD.b,  1 );
+            AddFieldToGroup( filename, "matrix", "I" , 'i', Stokes->neq+1, OutputDD.Ic,  1 );
+            AddFieldToGroup( filename, "matrix", "J" , 'i', nnzc,  OutputDD.J,  1 );
+            AddFieldToGroup( filename, "matrix", "V" , 'd', nnzc,  OutputDD.V,  1 );
+            AddFieldToGroup( filename, "matrix", "eta_cell" , 'd', ncx*ncz, OutputDD.eta_cell,  1 );
+            AddFieldToGroup( filename, "matrix", "rhs" , 'd', Stokes->neq, OutputDD.b,  1 );
 
             DoodzFree(OutputDD.eqn_u);
             DoodzFree(OutputDD.eqn_v);
