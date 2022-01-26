@@ -369,9 +369,9 @@ void EvaluateRHS( grid*, params, scale, double );
 //void Interp_C2F_V( grid*, int, double*, double* );
 //
 //// Visualisation prototypes
-void create_output_hdf5( const char[] );
-void AddGroup_to_hdf5( const char[], const char[] );
-void AddFieldToGroup_generic( int, const char[], const char[], const char[], char, int, void*, int );
+void CreateOutputHDF5( const char[] );
+void AddGroupToHDF5( const char[], const char[] );
+void AddFieldToGroup( const char[], const char[], const char[], const char, int, void*, int );
 //void Myfopen( char*, FILE** );
 //void MViz_vtk( grid*, char*OutputSparseMatrix  );
 void WriteOutputHDF5( grid*, markers*, surface*, markers*, params, Nparams, char*, mat_prop, scale );
