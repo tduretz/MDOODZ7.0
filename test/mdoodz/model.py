@@ -30,5 +30,5 @@ class MdoodzModel:
         stream.wait()
 
     def get_results(self):
-        file_name = 'Output00000.gzip.h5'
+        file_name = 'Output00001.gzip.h5'
         return h5py.File(f'{mdoodz_source_dir}/{file_name}', 'r')
