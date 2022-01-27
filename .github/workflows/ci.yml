@@ -23,7 +23,13 @@ jobs:
         run: sudo apt -y install libhdf5-serial-dev
       - name: prepare makefiile
         run: mv SOURCE/Makefiles/makefile_ubuntu_ci SOURCE/makefile
+      - name: Install pipenv
+        run: pipx install pipenv
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.7.0'
+          cache: 'pipenv'
       - name: install python dependencies
-        run: sudo apt install python3.7 && sudo apt -y install pipenv && pipenv install
+        run: pipenv install
       - name: run test suite
         run: pipenv run test
