@@ -24,6 +24,6 @@ jobs:
       - name: prepare makefiile
         run: mv SOURCE/Makefiles/makefile_ubuntu_ci SOURCE/makefile
       - name: install python dependencies
-        run: sudo apt install python3.7.0 && sudo apt -y install pipenv && pipenv install
+        run: sudo apt install python3.7 && pip3.7 install numpy && pip3.7 install h5py
       - name: run test suite
-        run: pipenv run test
+        run: cd SOURCE && make test
