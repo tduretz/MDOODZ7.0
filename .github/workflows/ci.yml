@@ -27,7 +27,7 @@ jobs:
         run: pipx install pipenv
       - uses: actions/setup-python@v2
         with:
-          python-version: '3.7.0'
+          python-version: '3.7'
           cache: 'pipenv'
       - name: install python dependencies
         run: pipenv install
