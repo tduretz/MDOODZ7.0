@@ -23,5 +23,7 @@ jobs:
         run: sudo apt -y install libhdf5-serial-dev
       - name: prepare makefiile
         run: mv SOURCE/Makefiles/makefile_ubuntu_ci SOURCE/makefile
+      - name: install python dependencies
+        run: pipenv install
       - name: run test suite
         run: cd SOURCE/ && make test
