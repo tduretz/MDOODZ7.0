@@ -1,0 +1,27 @@
+name: ci
+on: [push]
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    env:
+      HDF5_USE_FILE_LOCKING: FALSE
+      C_INCLUDE_PATH: /usr/local/include:/usr/include/hdf5/serial:/usr/include/suitesparse
+      LIBRARY_PATH: /usr/lib/:/usr/local/lib:/usr/lib/x86_64-linux-gnu:/usr/lib/x86_64-linux-gnu/hdf5/serial
+      OMP_NUM_THREADS: 8
+    strategy:
+      matrix:
+        node-version: [14.x]
+    steps:
+      - uses: actions/checkout@v2
+      - name: update Ubuntu
+        run: sudo apt update
+      - name: install gcc@7
+        run: sudo apt -y install gcc-7
+      - name: install suite-sparse
+        run: sudo apt -y install libsuitesparse-dev
+      - name: install hdf5
+        run: sudo apt -y install libhdf5-serial-dev
+      - name: prepare makefiile
+        run: mv SOURCE/Makefiles/makefile_ubuntu_ci SOURCE/makefile
+      - name: run test suite
+        run: cd SOURCE/ && make test
