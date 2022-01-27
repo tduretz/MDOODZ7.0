@@ -22,7 +22,7 @@ endif
 CFLAGS += -Wno-unused-variable  -Wno-comment
 #---------------------------------------------------#
 # Libraries
-LIBS = -lz -lhdf5
+LIBS = -lm -lz -lhdf5
 
 # Related to SuiteSparse
 LIBS += -L /usr/lib/ -llapack -lcxsparse -lumfpack -lcblas -lamd -lcholmod -lcolamd -lbtf -lsuitesparseconfig -lblas
