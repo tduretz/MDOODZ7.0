@@ -25,7 +25,6 @@ class MdoodzModel:
         stream = subprocess.Popen([
             f'./Doodzi_{self.model_name}',
             f'{self.model_name}.txt',
-            f'"{str.join(self.argv, " ")}"'
         ], cwd=mdoodz_source_dir)
         print(stream.stdout)
         stream.wait()

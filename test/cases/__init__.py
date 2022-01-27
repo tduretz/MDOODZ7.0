@@ -1,1 +1,1 @@
-from . import ShearTemplate
+from . import test_ShearTemplate

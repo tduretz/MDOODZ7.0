@@ -13,4 +13,4 @@ h5py = "*"
 python_version = "3.7"
 
 [scripts]
-test = "python3 -m unittest test.cases.ShearTemplate"
+test = "python3 -m unittest discover -s test/cases"
