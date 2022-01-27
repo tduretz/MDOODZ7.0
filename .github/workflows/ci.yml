@@ -14,7 +14,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: update Ubuntu
-        run: echo $PYTHONPATH && sudo apt update && sudo apt install software-properties-common && sudo add-apt-repository ppa:deadsnakes/ppa
+        run: sudo apt update && sudo apt install software-properties-common && sudo add-apt-repository ppa:deadsnakes/ppa
       - name: install gcc@7
         run: sudo apt -y install gcc-7
       - name: install suite-sparse
@@ -24,6 +24,6 @@ jobs:
       - name: prepare makefiile
         run: mv SOURCE/Makefiles/makefile_ubuntu_ci SOURCE/makefile
       - name: install python dependencies
-        run: sudo apt install python3.7 && pip install numpy && pip install h5py
+        run: sudo apt install python3.7 && pip3.7 install numpy && pip3.7 install h5py
       - name: run test suite
-        run: cd SOURCE && make test
+        run: pipenv run test
