@@ -48,4 +48,4 @@ clean:
 	rm -rf *o ./$(MODEL_PATH)/*.o Doodzi_$(MODEL)
 
 test:
-	cd ../ && python3 -m unittest test.cases.ShearTemplate
+	cd ../ && pipenv run test

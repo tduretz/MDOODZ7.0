@@ -26,4 +26,4 @@ jobs:
       - name: install python dependencies
         run: sudo apt -y install pipenv && pipenv install
       - name: run test suite
-        run: cd SOURCE/ && make test
+        run: pipenv run test

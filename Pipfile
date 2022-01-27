@@ -9,4 +9,7 @@ h5py = "*"
 [dev-packages]
 
 [requires]
-python_version = "3.8"
+python_version = "3.7"
+
+[scripts]
+test = "python3 -m unittest test.cases.ShearTemplate"
