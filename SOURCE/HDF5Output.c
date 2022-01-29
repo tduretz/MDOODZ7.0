@@ -778,14 +778,12 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
     AddFieldToGroup( FileName, "Flags", "tag_u" , 'c', (model.Nx-0)*(model.Nz+1), mesh->BCu.type,  1 );
     AddFieldToGroup( FileName, "Flags", "tag_v" , 'c', (model.Nx+1)*(model.Nz-0), mesh->BCv.type,  1 );
 
-    int nit = Nmodel.nit + 1;
-
     // Add non-iteration log
     AddFieldToGroup( FileName, "Iterations", "rx_abs"          , 'd', Nmodel.nit_max+1, Nmodel.rx_abs         ,  1 );
     AddFieldToGroup( FileName, "Iterations", "rz_abs"          , 'd', Nmodel.nit_max+1, Nmodel.rz_abs         ,  1 );
     AddFieldToGroup( FileName, "Iterations", "rp_abs"          , 'd', Nmodel.nit_max+1, Nmodel.rp_abs         ,  1 );
     AddFieldToGroup( FileName, "Iterations", "LogIsNewtonStep" , 'i', Nmodel.nit_max+1, Nmodel.LogIsNewtonStep,  1 );
-    AddFieldToGroup( FileName, "Iterations", "NumberSteps"     , 'i',                1, &(nit)         ,  1 );
+    AddFieldToGroup( FileName, "Iterations", "NumberSteps"     , 'i',                1, &(Nmodel.nit)         ,  1 );
 
 
     // Freedom
