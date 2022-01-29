@@ -15,7 +15,7 @@ jobs:
       - name: install gcc@7
         run: sudo apt -y install gcc-7
       - name: install suite-sparse
-        run: sudo apt -y install libcblas-dev && sudo apt -y install libsuitesparse-dev
+        run: sudo apt -y install libatlas-base-dev && sudo apt -y install libsuitesparse-dev
       - name: install hdf5
         run: sudo apt -y install libhdf5-serial-dev && apt list --installed
       - name: prepare makefiile
