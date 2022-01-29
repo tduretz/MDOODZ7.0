@@ -8,13 +8,10 @@ jobs:
       C_INCLUDE_PATH: /usr/local/include:/usr/include/hdf5/serial:/usr/include/suitesparse
       LIBRARY_PATH: /usr/lib/:/usr/local/lib:/usr/lib/x86_64-linux-gnu:/usr/lib/x86_64-linux-gnu/hdf5/serial
       OMP_NUM_THREADS: 8
-    strategy:
-      matrix:
-        node-version: [14.x]
     steps:
       - uses: actions/checkout@v2
       - name: update Ubuntu
-        run: sudo apt update && sudo apt install software-properties-common && sudo add-apt-repository ppa:deadsnakes/ppa
+        run: sudo apt update
       - name: install gcc@7
         run: sudo apt -y install gcc-7
       - name: install suite-sparse
