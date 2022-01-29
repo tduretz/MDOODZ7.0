@@ -25,7 +25,7 @@ CFLAGS += -Wno-unused-variable  -Wno-comment
 LIBS = -lm -lz -lhdf5
 
 # Related to SuiteSparse
-LIBS += -L /usr/lib/ -llapack -lcxsparse -lumfpack -lcblas -lamd -lcholmod -lcolamd -lbtf -lsuitesparseconfig -lblas
+LIBS += -llapack -lcxsparse -lumfpack -lcblas -lamd -lcholmod -lcolamd -lbtf -lsuitesparseconfig -lblas
 
 # Link to openmp
 ifeq ($(OMP),yes)
