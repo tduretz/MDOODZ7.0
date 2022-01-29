@@ -30,8 +30,5 @@ class MdoodzModel:
         stream.wait()
 
     def get_results(self):
-        stream = subprocess.Popen(['ls'], cwd=mdoodz_source_dir)
-        print(stream.stdout)
-        stream.wait()
         file_name = 'Output00001.gzip.h5'
         return h5py.File(f'{mdoodz_source_dir}/{file_name}', 'r')
