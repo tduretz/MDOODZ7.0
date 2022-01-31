@@ -33,12 +33,19 @@ add_executable(MDOODZ7
         SOURCE/ThermalRoutines.c
         SOURCE/ThermalSolver.c)
 
+
 include(FindHDF5)
-
-
-FIND_PACKAGE(SuiteSparse)
 FIND_PACKAGE(HDF5 REQUIRED COMPONENTS C)
+FIND_PACKAGE(SuiteSparse)
 
-target_link_libraries(MDOODZ7 PRIVATE SuiteSparse::cholmod)
-
-target_link_libraries(MDOODZ7 PRIVATE HDF5)
+target_link_libraries(MDOODZ7 PRIVATE
+        SuiteSparse::suitesparseconfig
+        SuiteSparse::amd
+        SuiteSparse::btf
+        SuiteSparse::camd
+        SuiteSparse::ccolamd
+        SuiteSparse::colamd
+        SuiteSparse::cholmod
+        SuiteSparse::cxsparse
+        SuiteSparse::umfpack
+        ${HDF5_LIBRARIES})
