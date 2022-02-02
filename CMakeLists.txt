@@ -5,6 +5,12 @@ set(CMAKE_C_STANDARD 11)
 
 include_directories(SOURCE)
 
+if (NOT MODEL)
+    set(MODEL ShearTemplate)
+    message("MODEL is not set, setting a default '${MODEL}' model")
+    message("To set a model use -DMODEL=ModelName option")
+endif ()
+
 add_executable(MDOODZ
         SOURCE/AdvectionRoutines.c
         SOURCE/BC.c
@@ -24,7 +30,7 @@ add_executable(MDOODZ
         SOURCE/RheologyDensity.c
         SOURCE/RheologyParticles.c
         SOURCE/Routines_BEN.c
-        SOURCE/set_ShearTemplate.c
+        SOURCE/set_${MODEL}.c
         SOURCE/Solvers.c
         SOURCE/SparseTools.c
         SOURCE/StokesAssemblyCoupled.c
@@ -33,13 +39,16 @@ add_executable(MDOODZ
         SOURCE/ThermalRoutines.c
         SOURCE/ThermalSolver.c)
 
-file(COPY SOURCE/ShearTemplate.txt DESTINATION ${CMAKE_BINARY_DIR})
+configure_file("SOURCE/${MODEL}.txt" "${CMAKE_BINARY_DIR}/setup.txt" COPYONLY)
 
+option(SEARCH_SUITESPARSE "If option is 'ON' it will set path to SuiteSparse. Should run only once" OFF)
+if (SEARCH_SUITESPARSE)
+    include(FindSuiteSparse.cmake)
+endif ()
+FIND_PACKAGE(SuiteSparse)
 
 include(FindHDF5)
-include(FindSuiteSparse.cmake)
 FIND_PACKAGE(HDF5 REQUIRED COMPONENTS C)
-FIND_PACKAGE(SuiteSparse)
 
 target_link_libraries(MDOODZ PRIVATE
         SuiteSparse::suitesparseconfig
