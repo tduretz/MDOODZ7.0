@@ -1,11 +1,11 @@
 cmake_minimum_required(VERSION 3.21)
-project(MDOODZ7 C)
+project(MDOODZ C)
 
 set(CMAKE_C_STANDARD 11)
 
 include_directories(SOURCE)
 
-add_executable(MDOODZ7
+add_executable(MDOODZ
         SOURCE/AdvectionRoutines.c
         SOURCE/BC.c
         SOURCE/ChemicalRoutines.c
@@ -33,12 +33,14 @@ add_executable(MDOODZ7
         SOURCE/ThermalRoutines.c
         SOURCE/ThermalSolver.c)
 
+file(COPY SOURCE/ShearTemplate.txt DESTINATION ${CMAKE_BINARY_DIR})
+
 
 include(FindHDF5)
 FIND_PACKAGE(HDF5 REQUIRED COMPONENTS C)
 FIND_PACKAGE(SuiteSparse)
 
-target_link_libraries(MDOODZ7 PRIVATE
+target_link_libraries(MDOODZ PRIVATE
         SuiteSparse::suitesparseconfig
         SuiteSparse::amd
         SuiteSparse::btf

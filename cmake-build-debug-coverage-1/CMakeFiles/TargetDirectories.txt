@@ -1,0 +1,3 @@
+/Users/romankulakov/CLionProjects/MDOODZ7/cmake-build-debug-coverage-1/CMakeFiles/MDOODZ.dir
+/Users/romankulakov/CLionProjects/MDOODZ7/cmake-build-debug-coverage-1/CMakeFiles/edit_cache.dir
+/Users/romankulakov/CLionProjects/MDOODZ7/cmake-build-debug-coverage-1/CMakeFiles/rebuild_cache.dir
