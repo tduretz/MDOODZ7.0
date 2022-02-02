@@ -12,25 +12,14 @@ jobs:
       - uses: actions/checkout@v2
       - name: update Ubuntu
         run: sudo apt update
-      - name: install gcc@7
-        run: sudo apt -y install gcc-7
+      - uses: egor-tensin/setup-gcc@v1
+      - uses: lukka/get-cmake@latest
       - name: install suite-sparse
         run: sudo apt -y install libatlas-base-dev && sudo apt -y install libsuitesparse-dev
       - name: install hdf5
         run: sudo apt -y install libhdf5-serial-dev && apt list --installed
       - name: prepare makefiile
         run: mv SOURCE/Makefiles/makefile_ubuntu_ci SOURCE/makefile
-      - name: Install pipenv
-        run: pipx install pipenv
-      - uses: actions/setup-python@v2
-        with:
-          python-version: '3.7'
-          cache: 'pipenv'
-      - name: install python dependencies
-        run: pipenv install
-      - name: run test suite
-        run: pipenv run test
-      - uses: lukka/get-cmake@latest
       - name: Builds cmake project
         run: cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_MAKE_PROGRAM=ninja -DMODEL=ShearTemplate -G Ninja -B./cmake-build -DSEARCH_SUITESPARSE=ON
           && cmake --build ./cmake-build  --target MDOODZ
