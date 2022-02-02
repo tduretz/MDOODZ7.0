@@ -23,19 +23,15 @@ set(SuiteSparse_INCLUDE_DIRS ${CMAKE_INSTALL_PREFIX}/include)
 
 # Report SuiteSparse libraries.
 set(SuiteSparse_LIBRARIES
-	SuiteSparse::suitesparseconfig
-	SuiteSparse::amd
-	SuiteSparse::btf
-	SuiteSparse::camd
-	SuiteSparse::ccolamd
-	SuiteSparse::colamd
-	SuiteSparse::cholmod
-	SuiteSparse::cxsparse
-	SuiteSparse::klu
-	SuiteSparse::ldl
-	SuiteSparse::umfpack
-	SuiteSparse::spqr
-	SuiteSparse::metis
+		SuiteSparse::suitesparseconfig
+		SuiteSparse::amd
+		SuiteSparse::btf
+		SuiteSparse::camd
+		SuiteSparse::ccolamd
+		SuiteSparse::colamd
+		SuiteSparse::cholmod
+		SuiteSparse::cxsparse
+		SuiteSparse::umfpack
 )
 
 unset(_SuiteSparse_PREFIX)
