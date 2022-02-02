@@ -30,3 +30,8 @@ jobs:
         run: pipenv install
       - name: run test suite
         run: pipenv run test
+      - uses: lukka/get-cmake@latest
+      - name: Build cmake project
+        run: cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_MAKE_PROGRAM=ninja -DMODEL=ShearTemplate -G Ninja ./build
+      - name: Runs cmake project
+        run: ./MDOODZ input.txt
