@@ -14,7 +14,7 @@ jobs:
         run: sudo apt update
       - uses: egor-tensin/setup-gcc@v1
       - name: Install cmake and ninja-build
-        run: sudo apt -y install cmake && sudo apt -y install ninja
+        run: sudo apt -y install cmake && sudo apt -y install ninja-build
       - name: install suite-sparse
         run: sudo apt -y install libatlas-base-dev && sudo apt -y install libsuitesparse-dev
       - name: install hdf5
