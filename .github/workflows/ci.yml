@@ -16,7 +16,7 @@ jobs:
       - name: Install cmake and ninja-build
         run: sudo apt -y install cmake && sudo apt -y install ninja-build
       - name: install suite-sparse
-        run: sudo apt -y install libatlas-base-dev && sudo apt -y install libsuitesparse-dev && apt-get install -y libmetis-dev && dpkg -L libsuitesparse-dev && dpkg -L libmetis-dev
+        run: sudo apt -y install libatlas-base-dev && sudo apt -y install libsuitesparse-dev && sudo apt install -y libmetis-dev && dpkg -L libsuitesparse-dev && dpkg -L libmetis-dev
       - name: install hdf5
         run: sudo apt -y install libhdf5-serial-dev
       - name: prepare makefiile
