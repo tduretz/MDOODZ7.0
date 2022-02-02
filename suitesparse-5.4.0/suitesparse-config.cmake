@@ -18,19 +18,23 @@ endif ()
 include(${_SuiteSparse_SELF_DIR}/SuiteSparse-targets.cmake)
 
 # Report SuiteSparse header search locations.
-set(SuiteSparse_INCLUDE_DIRS ${_SuiteSparse_PREFIX}/include)
+set(SuiteSparse_INCLUDE_DIRS ${CMAKE_INSTALL_PREFIX}/include)
 
 # Report SuiteSparse libraries.
 set(SuiteSparse_LIBRARIES
-		SuiteSparse::suitesparseconfig
-		SuiteSparse::amd
-		SuiteSparse::btf
-		SuiteSparse::camd
-		SuiteSparse::ccolamd
-		SuiteSparse::colamd
-		SuiteSparse::cholmod
-		SuiteSparse::cxsparse
-		SuiteSparse::umfpack
+	SuiteSparse::suitesparseconfig
+	SuiteSparse::amd
+	SuiteSparse::btf
+	SuiteSparse::camd
+	SuiteSparse::ccolamd
+	SuiteSparse::colamd
+	SuiteSparse::cholmod
+	SuiteSparse::cxsparse
+	SuiteSparse::klu
+	SuiteSparse::ldl
+	SuiteSparse::umfpack
+	SuiteSparse::spqr
+	SuiteSparse::metis
 )
 
 unset(_SuiteSparse_PREFIX)
