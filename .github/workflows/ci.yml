@@ -11,24 +11,20 @@ jobs:
       OMP_NUM_THREADS: 8
     steps:
       - uses: actions/checkout@v2
-      - name: update Ubuntu
-        run: sudo apt update
-      - uses: egor-tensin/setup-gcc@v1
-      - name: install gcc@7
-        run: sudo apt -y install gcc-7
-      - name: install cmake and ninja
-        run: sudo apt -y install cmake && sudo apt -y install ninja-build && dpkg -L ninja-build
+      - name: Install packages with apt
+        run: wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | sudo tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null
+          && sudo apt-add-repository "deb https://apt.kitware.com/ubuntu/ $(lsb_release -cs) main"
+          && sudo apt update
+          && sudo apt install kitware-archive-keyring && sudo rm /etc/apt/trusted.gpg.d/kitware.gpg
+          && sudo apt update && sudo apt install -y cmake liblapack-dev libblas-dev libboost-all-dev ninja-build libhdf5-serial-dev
       - name: install suite-sparse
-        run: sudo apt -y install libatlas-base-dev
-          && git clone https://github.com/jlblancoc/suitesparse-metis-for-windows/
+        run: git clone https://github.com/jlblancoc/suitesparse-metis-for-windows/
           && cd suitesparse-metis-for-windows && cmake BUILD_METIS=0 -S . -B _build
           && cd _build && sudo make install
       - name: install hdf5
-        run: sudo apt -y install libhdf5-serial-dev
-      - name: prepare makefiile
-        run: mv SOURCE/Makefiles/makefile_ubuntu_ci SOURCE/makefile
+        run: sudo apt -y install
       - name: Builds cmake project
-        run: cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_MAKE_PROGRAM=ninja -DMODEL=ShearTemplate -G Ninja -B./cmake-build -CMAKE_C_COMPILER=/usr/bin/gcc-7
-          && cmake --build ./cmake-build  --target MDOODZ
+        run: cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=gcc -G "Unix Makefiles" -DMODEL=ShearTemplate
+          && cmake --build .  --target MDOODZ
       - name: Runs cmake project
-        run: cd cmake-build && ./MDOODZ input.txt
+        run: ./MDOODZ setup.txt
