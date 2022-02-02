@@ -37,6 +37,7 @@ file(COPY SOURCE/ShearTemplate.txt DESTINATION ${CMAKE_BINARY_DIR})
 
 
 include(FindHDF5)
+include(FindSuiteSparse.cmake)
 FIND_PACKAGE(HDF5 REQUIRED COMPONENTS C)
 FIND_PACKAGE(SuiteSparse)
 
