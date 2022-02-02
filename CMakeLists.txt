@@ -39,6 +39,8 @@ add_executable(MDOODZ
         SOURCE/ThermalRoutines.c
         SOURCE/ThermalSolver.c)
 
+message(SuiteSparse_DIR: ${SuiteSparse_DIR})
+
 FIND_PACKAGE(SuiteSparse)
 include(FindHDF5)
 FIND_PACKAGE(HDF5 REQUIRED COMPONENTS C)
