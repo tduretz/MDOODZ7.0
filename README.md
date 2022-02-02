@@ -15,14 +15,23 @@ Check the [Documentation](https://github.com/tduretz/MDOODZ6.0/blob/master/Docum
 
 ## Simple shear (power-law viscous)
 
-Compile: make clean all MODEL=Shear_pwl OPT=yes OMP=yes
+Compile: 
+```bash
+make clean all MODEL=Shear_pwl OPT=yes OMP=yes
+```
 
-Run: ./Doodzi_Shear_pwl Shear_pwl.txt
+Run:
+```bash
+./Doodzi_Shear_pwl Shear_pwl.txt
+```
 
 ## Lithosphere deformation
 Compile: make clean all MODEL=LithoScale OPT=yes OMP=yes
 
-Run: ./Doodzi_LithoScale LithoScale.txt
+Run: 
+```bash
+./Doodzi_LithoScale LithoScale.txt
+```
 
 Visualize using either Matlab, Python, Julia or whatever language that can handle HDF5 files and enjoy!
 
@@ -33,4 +42,20 @@ The code relies on two libraries: <br>
 1. SuiteSparse provides efficient linear algebra and matrix manipulation routines. It is available at: http://www.suitesparse.com <br>
 2. HDF5 is the main format for output files and is readable into MATLAB. It is available at: http://www.hdfgroup.org <br>
 
+# Autotests
+
+Tests are requiring python3.7 && pipenv.
+Don't forget to install python dependencies with:
+```bash
+pipenv install
+```
+
+To run all autotests:
+```bash
+pipenv run test
+```
+or from /SOURCE:
+```bash
+make test
+```
 
