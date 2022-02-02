@@ -13,7 +13,8 @@ jobs:
       - name: update Ubuntu
         run: sudo apt update
       - uses: egor-tensin/setup-gcc@v1
-      - uses: lukka/get-cmake@latest
+      - name: Install cmake and ninja
+        run: sudi apt -y install cmake && sudi apt -y install ninja
       - name: install suite-sparse
         run: sudo apt -y install libatlas-base-dev && sudo apt -y install libsuitesparse-dev
       - name: install hdf5

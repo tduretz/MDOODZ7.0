@@ -40,10 +40,7 @@ add_executable(MDOODZ
         SOURCE/ThermalSolver.c)
 
 set(SuiteSparse_DIR suitesparse-5.4.0)
-FIND_PACKAGE(SuiteSparse PATHS
-        ${CMAKE_INSTALL_PREFIX}
-        ${CMAKE_INSTALL_PREFIX}/lib
-        ${CMAKE_INSTALL_PREFIX}/lib/x86_64-linux-gnu)
+FIND_PACKAGE(SuiteSparse PATHS)
 include(FindHDF5)
 FIND_PACKAGE(HDF5 REQUIRED COMPONENTS C)
 

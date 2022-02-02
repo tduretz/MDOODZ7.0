@@ -11,6 +11,7 @@ if (NO) # SuiteSparse_LAPACK_used_CONFIG
 else()
   # try to find BLAS and LAPACK with modules
   find_dependency(BLAS)
+  message(BLAS DIR: ${BLAS_DIR})
   find_dependency(LAPACK)
 endif ()
 
