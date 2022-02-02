@@ -25,7 +25,7 @@ jobs:
       - name: prepare makefiile
         run: mv SOURCE/Makefiles/makefile_ubuntu_ci SOURCE/makefile
       - name: Builds cmake project
-        run: cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_MAKE_PROGRAM=ninja -DMODEL=ShearTemplate -G Ninja -B./cmake-build -DSEARCH_SUITESPARSE=ON
+        run: cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_MAKE_PROGRAM=ninja -DMODEL=ShearTemplate -G Ninja -B./cmake-build -CMAKE_C_COMPILER=/usr/bin/gcc-7
           && cmake --build ./cmake-build  --target MDOODZ
       - name: Runs cmake project
         run: cd cmake-build && ./MDOODZ input.txt
