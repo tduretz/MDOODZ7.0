@@ -13,7 +13,8 @@ jobs:
       - name: update Ubuntu
         run: sudo apt update
       - uses: egor-tensin/setup-gcc@v1
-      - uses: lukka/get-cmake@latest
+      - name: install gcc@7
+        run: sudo apt -y install gcc-7
       - name: install suite-sparse
         run: sudo apt -y install libatlas-base-dev
           && git clone https://github.com/jlblancoc/suitesparse-metis-for-windows/
