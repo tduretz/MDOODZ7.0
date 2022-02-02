@@ -39,16 +39,12 @@ add_executable(MDOODZ
         SOURCE/ThermalRoutines.c
         SOURCE/ThermalSolver.c)
 
-configure_file("SOURCE/${MODEL}.txt" "${CMAKE_BINARY_DIR}/setup.txt" COPYONLY)
-
-option(SEARCH_SUITESPARSE "If option is 'ON' it will set path to SuiteSparse. Should run only once" OFF)
-if (SEARCH_SUITESPARSE)
-    include(FindSuiteSparse.cmake)
-endif ()
+set(SuiteSparse_DIR suitesparse-5.4.0)
 FIND_PACKAGE(SuiteSparse)
-
 include(FindHDF5)
 FIND_PACKAGE(HDF5 REQUIRED COMPONENTS C)
+
+configure_file("SOURCE/${MODEL}.txt" "${CMAKE_BINARY_DIR}/setup.txt" COPYONLY)
 
 target_link_libraries(MDOODZ PRIVATE
         SuiteSparse::suitesparseconfig
