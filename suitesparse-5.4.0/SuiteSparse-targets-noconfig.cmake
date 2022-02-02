@@ -6,7 +6,7 @@
 set(CMAKE_IMPORT_FILE_VERSION 1)
 
 if (CMAKE_SYSTEM_NAME MATCHES "Linux" OR UNIX AND NOT APPLE)
-    set(LIBRARY_PATH /usr/lib)
+    set(LIBRARY_PATH /usr/lib/x86_64-linux-gnu)
 else()
     set(LIBRARY_PATH ${CMAKE_INSTALL_PREFIX}/lib)
 endif()
