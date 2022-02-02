@@ -31,7 +31,8 @@ jobs:
       - name: run test suite
         run: pipenv run test
       - uses: lukka/get-cmake@latest
-      - name: Build cmake project
-        run: cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_MAKE_PROGRAM=ninja -DMODEL=ShearTemplate -G Ninja -B./cmake-build
+      - name: Builds cmake project
+        run: cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_MAKE_PROGRAM=ninja -DMODEL=ShearTemplate -G Ninja -B./cmake-build 
+          && cmake --build ./cmake-build  --target MDOODZ
       - name: Runs cmake project
-        run: ./cmake-build/MDOODZ input.txt
+        run: cd cmake-build && ./MDOODZ input.txt
