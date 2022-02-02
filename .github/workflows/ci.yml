@@ -18,7 +18,7 @@ jobs:
         run: sudo apt -y install libatlas-base-dev 
           && git clone https://github.com/jlblancoc/suitesparse-metis-for-windows/
           && cd suitesparse-metis-for-windows && cmake BUILD_METIS=0 -S . -B _build
-          && cd _build && make install
+          && cd _build && sudo make install
       - name: install hdf5
         run: sudo apt -y install libhdf5-serial-dev
       - name: prepare makefiile
