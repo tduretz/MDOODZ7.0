@@ -1,0 +1,5 @@
+/Users/romankulakov/CLionProjects/MDOODZ7/CMakeFiles/MDOODZ.dir
+/Users/romankulakov/CLionProjects/MDOODZ7/CMakeFiles/ShearTemplate_test.dir
+/Users/romankulakov/CLionProjects/MDOODZ7/CMakeFiles/test.dir
+/Users/romankulakov/CLionProjects/MDOODZ7/CMakeFiles/edit_cache.dir
+/Users/romankulakov/CLionProjects/MDOODZ7/CMakeFiles/rebuild_cache.dir
