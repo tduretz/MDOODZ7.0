@@ -14,9 +14,8 @@ jobs:
       - name: Install packages with apt
         run: wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | sudo tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null
           && sudo apt-add-repository "deb https://apt.kitware.com/ubuntu/ $(lsb_release -cs) main"
-          && sudo apt update
           && sudo apt install kitware-archive-keyring && sudo rm /etc/apt/trusted.gpg.d/kitware.gpg
-          && sudo apt update && sudo apt install -y cmake liblapack-dev libblas-dev libboost-all-dev ninja-build libhdf5-serial-dev
+          && sudo apt install -y cmake liblapack-dev libblas-dev libboost-all-dev ninja-build libhdf5-serial-dev
       - name: install suite-sparse
         run: git clone https://github.com/jlblancoc/suitesparse-metis-for-windows/
           && cd suitesparse-metis-for-windows && cmake BUILD_METIS=0 -S . -B _build
