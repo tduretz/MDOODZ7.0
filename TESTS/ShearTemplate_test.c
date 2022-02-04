@@ -20,5 +20,5 @@ int main() {
           NumberStepsArray);
   int StepsCount = NumberStepsArray[0];
 
-  assert(StepsCount == 2);
+  assert(StepsCount == 1);
 }
