@@ -25,6 +25,5 @@ jobs:
         run: sudo apt -y install
       - name: Builds cmake project
         run: cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=gcc -G "Unix Makefiles" -DMODEL=ShearTemplate
-          && cmake --build .  --target MDOODZ
-      - name: Runs cmake project
-        run: ./MDOODZ setup.txt
+      - name: Runs tests
+        run: cmake --build . --target ShearTemplate_test -- -j 6 && ./ShearTemplate_test

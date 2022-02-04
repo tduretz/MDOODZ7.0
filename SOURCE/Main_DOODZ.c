@@ -41,7 +41,8 @@
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-int main( int nargs, char *args[] ) {
+// TODO we should not be dealing with command line arguments on that level
+int RunMDOODZ( int nargs, char *args[] ) {
     
     int          istep, irestart, writer = 0, writer_step;
     char         *fin_name, *PartFileName;

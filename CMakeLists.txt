@@ -3,7 +3,6 @@ project(MDOODZ C)
 
 set(CMAKE_C_STANDARD 11)
 
-include_directories(SOURCE)
 
 if (NOT MODEL)
     set(MODEL ShearTemplate)
@@ -11,7 +10,8 @@ if (NOT MODEL)
     message("To set a model use -DMODEL=ModelName option")
 endif ()
 
-add_executable(MDOODZ
+include_directories(SOURCE)
+set(SOURCE_FILES
         SOURCE/AdvectionRoutines.c
         SOURCE/BC.c
         SOURCE/ChemicalRoutines.c
@@ -39,15 +39,13 @@ add_executable(MDOODZ
         SOURCE/ThermalRoutines.c
         SOURCE/ThermalSolver.c)
 
-message(SuiteSparse_DIR: ${SuiteSparse_DIR})
 
 FIND_PACKAGE(SuiteSparse)
 include(FindHDF5)
 FIND_PACKAGE(HDF5 REQUIRED COMPONENTS C)
-
 configure_file("SOURCE/${MODEL}.txt" "${CMAKE_BINARY_DIR}/setup.txt" COPYONLY)
 
-target_link_libraries(MDOODZ PRIVATE
+set(DEPENDENCIES
         SuiteSparse::suitesparseconfig
         SuiteSparse::amd
         SuiteSparse::btf
@@ -58,3 +56,17 @@ target_link_libraries(MDOODZ PRIVATE
         SuiteSparse::cxsparse
         SuiteSparse::umfpack
         ${HDF5_LIBRARIES})
+
+add_executable(MDOODZ SOURCE/main.c ${SOURCE_FILES})
+target_link_libraries(MDOODZ PRIVATE ${DEPENDENCIES})
+
+# TESTING
+
+include_directories(TESTS)
+
+add_executable(ShearTemplate_test TESTS/ShearTemplate_test.c ${SOURCE_FILES})
+target_link_libraries(ShearTemplate_test PRIVATE ${DEPENDENCIES})
+
+enable_testing()
+
+add_test(shearTemplate ShearTemplate_test)
