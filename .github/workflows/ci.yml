@@ -20,6 +20,6 @@ jobs:
           && cd suitesparse-metis-for-windows && cmake BUILD_METIS=0 -S . -B _build
           && cd _build && sudo make install
       - name: Builds cmake project
-        run: cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=gcc -G "Unix Makefiles" -DMODEL=ShearTemplate
+        run: cmake -DMODEL=ShearTemplate
       - name: Runs tests
         run: cmake --build . --target ShearTemplate_test -- -j 6 && ./ShearTemplate_test
