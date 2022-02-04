@@ -4,11 +4,7 @@ jobs:
   ci:
     runs-on: ubuntu-latest
     env:
-      HDF5_USE_FILE_LOCKING: FALSE
-      C_INCLUDE_PATH: /usr/local/include:/usr/include/hdf5/serial:/usr/include/suitesparse
-      LIBRARY_PATH: /usr/lib/:/usr/local/lib:/usr/lib/x86_64-linux-gnu:/usr/lib/x86_64-linux-gnu/hdf5/serial
       SuiteSparse_DIR: /usr/local/lib/cmake/suitesparse-5.4.0
-      OMP_NUM_THREADS: 8
     steps:
       - uses: actions/checkout@v2
       - name: Install packages with apt
