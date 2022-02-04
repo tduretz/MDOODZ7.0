@@ -4,6 +4,8 @@ jobs:
   ci:
     runs-on: ubuntu-latest
     env:
+      C_INCLUDE_PATH: /usr/local/include:/usr/include/hdf5/serial:/usr/include/suitesparse
+      LIBRARY_PATH: /usr/lib/:/usr/local/lib:/usr/lib/x86_64-linux-gnu:/usr/lib/x86_64-linux-gnu/hdf5/serial
       SuiteSparse_DIR: /usr/local/lib/cmake/suitesparse-5.4.0
     steps:
       - uses: actions/checkout@v2
