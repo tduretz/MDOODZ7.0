@@ -11,7 +11,7 @@ jobs:
       - name: Install packages with apt
         run: wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | sudo tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null
           && sudo apt-add-repository "deb https://apt.kitware.com/ubuntu/ $(lsb_release -cs) main"
-          && sudo apt install -y cmake libblas-dev libboost-all-dev libhdf5-serial-dev
+          && sudo apt install -y cmake libboost-all-dev libhdf5-serial-dev
       - name: install SuiteSparse package
         run: make install-suitesparse
       - name: Builds cmake project
