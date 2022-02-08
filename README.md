@@ -54,7 +54,7 @@ SuiteSparse officially is not distributed as a CMake project, but workarounds ca
 One of those is used in a CI pipeline:
 
 ```bash
-git clone https://github.com/jlblancoc/suitesparse-metis-for-windows/ 
+git clone https://github.com/jlblancoc/suitesparse-metis-for-windows/ lib/suitesparse
   && cd suitesparse-metis-for-windows 
   && cmake BUILD_METIS=0 -S . -B _build && cd _build && sudo make install
 ```

@@ -6,15 +6,14 @@ jobs:
     env:
       C_INCLUDE_PATH: /usr/local/include:/usr/include/hdf5/serial:/usr/include/suitesparse
       LIBRARY_PATH: /usr/lib/:/usr/local/lib:/usr/lib/x86_64-linux-gnu:/usr/lib/x86_64-linux-gnu/hdf5/serial
-      SuiteSparse_DIR: /usr/local/lib/cmake/suitesparse-5.4.0
     steps:
       - uses: actions/checkout@v2
       - name: Install packages with apt
         run: wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | sudo tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null
           && sudo apt-add-repository "deb https://apt.kitware.com/ubuntu/ $(lsb_release -cs) main"
           && sudo apt install -y cmake libblas-dev libboost-all-dev libhdf5-serial-dev
-      - name: install suite-sparse
-        run: git clone https://github.com/jlblancoc/suitesparse-metis-for-windows/ && cd suitesparse-metis-for-windows && cmake BUILD_METIS=0 -S . -B _build && cd _build && sudo make install
+      - name: install SuiteSparse package
+        run: make install-suitesparse
       - name: Builds cmake project
         run: make build
       - name: Runs tests
