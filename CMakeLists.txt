@@ -41,11 +41,9 @@ set(SOURCE_FILES
 
 set(SuiteSparse_DIR lib/suitesparse/install/lib/cmake/suitesparse-5.4.0)
 FIND_PACKAGE(SuiteSparse)
-set(HDF5_DIR lib/hdf5/install/share/cmake)
+include(FindHDF5)
 FIND_PACKAGE(HDF5 REQUIRED COMPONENTS C)
 configure_file("SOURCE/${MODEL}.txt" "${CMAKE_BINARY_DIR}/setup.txt" COPYONLY)
-
-message(HDF5_LIBRARIES=${HDF5_LIBRARIES})
 
 set(DEPENDENCIES
         SuiteSparse::suitesparseconfig
