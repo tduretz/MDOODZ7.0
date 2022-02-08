@@ -46,18 +46,15 @@ The code relies on two libraries: <br>
 
 ## Prequisites and setup
 
-In order to build MDOODZ with CMake you have to install cmake 3.21 or newer version.
+In order to build MDOODZ with CMake you have to install **cmake 3.21** or newer version.
 `hdf5`, `blas` and `lapack` libraries are CMake compatible and does not require any additional setup other than installing them with your package manager
 
-SuiteSparse officially is not distributed as a CMake project, but workarounds can be found:
-
-One of those is used in a CI pipeline:
+To install SuiteSparse to the project:
 
 ```bash
-git clone https://github.com/jlblancoc/suitesparse-metis-for-windows/ lib/suitesparse
-  && cd suitesparse-metis-for-windows 
-  && cmake BUILD_METIS=0 -S . -B _build && cd _build && sudo make install
+make install-suitesparse
 ```
+
 It will build a SuiteSparse and the default environmental variable should be `SuiteSparse_DIR: /usr/local/lib/cmake/suitesparse-5.4.0`.
 
 ## How to use
