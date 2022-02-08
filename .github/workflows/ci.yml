@@ -4,7 +4,7 @@ jobs:
   ci:
     runs-on: ubuntu-latest
     env:
-      C_INCLUDE_PATH: /usr/local/include:/usr/include/hdf5/serial:/usr/include/suitesparse
+      C_INCLUDE_PATH: /usr/local/include:/usr/include/hdf5/serial
       LIBRARY_PATH: /usr/lib/:/usr/local/lib:/usr/lib/x86_64-linux-gnu:/usr/lib/x86_64-linux-gnu/hdf5/serial
     steps:
       - uses: actions/checkout@v2
