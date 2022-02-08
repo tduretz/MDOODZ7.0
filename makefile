@@ -11,7 +11,7 @@ clean:
 	rm -rf *build*/
 
 install-hdf5:
-	git clone https://github.com/HDFGroup/hdf5 lib/hdf5 && cd lib/hdf5 && mkdir install && cmake -S . -B _build -DCMAKE_INSTALL_PREFIX=install && cd _build && cmake --build . -j --target install
+	git clone https://github.com/HDFGroup/hdf5 lib/hdf5 && cd lib/hdf5 && mkdir install && cmake -S . -B _build -DCMAKE_INSTALL_PREFIX=install && cd _build && cmake --build . -j --target hdf5-shared
 
 install-suitesparse:
-	git clone https://github.com/jlblancoc/suitesparse-metis-for-windows/ lib/suitesparse && cd lib/suitesparse && mkdir install && cmake BUILD_METIS=0 -S . -B _build -DCMAKE_INSTALL_PREFIX=install && cd _build && cmake --build . -j --target install
+	git clone https://github.com/jlblancoc/suitesparse-metis-for-windows/ lib/suitesparse && cd lib/suitesparse && mkdir install && cmake BUILD_METIS=0 -S . -B _build -DCMAKE_INSTALL_PREFIX=install && cd _build && cmake --build . -j --target amd btf camd ccolamd cholmod colamd cxsparse umfpack suitesparseconfig

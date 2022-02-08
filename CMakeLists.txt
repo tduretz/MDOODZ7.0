@@ -45,6 +45,8 @@ set(HDF5_DIR lib/hdf5/install/share/cmake)
 FIND_PACKAGE(HDF5 REQUIRED COMPONENTS C)
 configure_file("SOURCE/${MODEL}.txt" "${CMAKE_BINARY_DIR}/setup.txt" COPYONLY)
 
+message(HDF5_LIBRARIES=${HDF5_LIBRARIES})
+
 set(DEPENDENCIES
         SuiteSparse::suitesparseconfig
         SuiteSparse::amd
