@@ -55,13 +55,9 @@ To install SuiteSparse to the project:
 make install-suitesparse
 ```
 
-It will build a SuiteSparse and the default environmental variable should be `SuiteSparse_DIR: /usr/local/lib/cmake/suitesparse-5.4.0`.
-
 ## How to use
 
 CMake gives us a framework for building MDOODZ in developer mode or as a separate package and CTest can be used as test suite.
-
-make clean build MODEL=ShearTemplate run-tests
 
 Separate makefile related to cmake is located in a root directory
 
@@ -80,4 +76,10 @@ make run
 or build autotests:
 ```bash
 make run-tests
+```
+
+Whole process:
+
+```bash
+make clean build MODEL=ShearTemplate run
 ```
