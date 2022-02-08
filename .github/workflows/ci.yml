@@ -16,6 +16,6 @@ jobs:
       - name: install suite-sparse
         run: git clone https://github.com/jlblancoc/suitesparse-metis-for-windows/ && cd suitesparse-metis-for-windows && cmake BUILD_METIS=0 -S . -B _build && cd _build && sudo make install
       - name: Builds cmake project
-        run: cmake -DMODEL=ShearTemplate
+        run: make build
       - name: Runs tests
-        run: cmake --build . --target ShearTemplate_test -- -j 6 && ./ShearTemplate_test
+        run: make run-tests
