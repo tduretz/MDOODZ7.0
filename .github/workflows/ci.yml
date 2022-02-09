@@ -4,14 +4,14 @@ jobs:
   ci:
     runs-on: ubuntu-latest
     env:
-      C_INCLUDE_PATH: /usr/local/include
-      LIBRARY_PATH: /usr/lib/:/usr/local/lib:/usr/lib/x86_64-linux-gnu
+      C_INCLUDE_PATH: /usr/local/include:/usr/include/hdf5/serial
+      LIBRARY_PATH: /usr/lib/:/usr/local/lib:/usr/lib/x86_64-linux-gnu:/usr/lib/x86_64-linux-gnu/hdf5/serial
     steps:
       - uses: actions/checkout@v2
       - name: Install packages with apt
-        run: sudo apt install -y cmake libboost-all-dev
+        run: sudo apt install -y cmake libboost-all-dev libhdf5-serial-dev
       - name: install SuiteSparse package
-        run: make install-deps
+        run: make install-suitesparse
       - name: Builds cmake project
         run: make build
       - name: Runs tests
