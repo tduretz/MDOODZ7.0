@@ -39,7 +39,7 @@ set(SOURCE_FILES
         SOURCE/ThermalRoutines.c
         SOURCE/ThermalSolver.c)
 
-set(SuiteSparse_DIR ${CMAKE_SOURCE_DIR}lib/suitesparse/install/lib/cmake/suitesparse-5.4.0)
+set(SuiteSparse_DIR ${CMAKE_SOURCE_DIR}/lib/suitesparse/install/lib/cmake/suitesparse-5.4.0)
 set(HDF5_DIR ${CMAKE_SOURCE_DIR}/lib/hdf5/install/share/cmake/)
 
 find_package(SuiteSparse CONFIG REQUIRED)
