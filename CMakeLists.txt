@@ -46,9 +46,6 @@ find_package(SuiteSparse CONFIG REQUIRED)
 FIND_PACKAGE(HDF5 CONFIG REQUIRED COMPONENTS C)
 configure_file("SOURCE/${MODEL}.txt" "${CMAKE_BINARY_DIR}/setup.txt" COPYONLY)
 
-message(HDF5_LIBRARIES=${HDF5_LIBRARIES})
-message(SuiteSparse_DIR=${SuiteSparse_DIR})
-
 set(DEPENDENCIES
         SuiteSparse::suitesparseconfig
         SuiteSparse::amd
@@ -59,7 +56,7 @@ set(DEPENDENCIES
         SuiteSparse::cholmod
         SuiteSparse::cxsparse
         SuiteSparse::umfpack
-        ${HDF5_LIBRARIES})
+        HDF5:hdf5)
 
 add_executable(MDOODZ SOURCE/main.c ${SOURCE_FILES})
 target_link_libraries(MDOODZ PRIVATE ${DEPENDENCIES})
