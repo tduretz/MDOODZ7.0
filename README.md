@@ -42,20 +42,44 @@ The code relies on two libraries: <br>
 1. SuiteSparse provides efficient linear algebra and matrix manipulation routines. It is available at: http://www.suitesparse.com <br>
 2. HDF5 is the main format for output files and is readable into MATLAB. It is available at: http://www.hdfgroup.org <br>
 
-# Autotests
+# CMake project
 
-Tests are requiring python3.7 && pipenv.
-Don't forget to install python dependencies with:
+## Prequisites and setup
+
+In order to build MDOODZ with CMake you have to install **cmake 3.21** or newer version.
+`hdf5`, `blas` and `lapack` libraries are CMake compatible and does not require any additional setup other than installing them with your package manager
+
+To install SuiteSparse to the project:
+
 ```bash
-pipenv install
+make install-suitesparse
 ```
 
-To run all autotests:
+## How to use
+
+CMake gives us a framework for building MDOODZ in developer mode or as a separate package and CTest can be used as test suite.
+
+Separate makefile related to cmake is located in a root directory
+
+To build executables you will have to specify your model name:
 ```bash
-pipenv run test
-```
-or from /SOURCE:
-```bash
-make test
+make build MODEL=
 ```
 
+All build files will be located at the cmake-build directory
+
+After building you could run a MDOODZ with:
+```bash
+make run
+```
+
+or build autotests:
+```bash
+make run-tests
+```
+
+Whole process:
+
+```bash
+make clean build MODEL=ShearTemplate run
+```

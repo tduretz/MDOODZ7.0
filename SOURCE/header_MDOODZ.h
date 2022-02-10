@@ -247,6 +247,8 @@ struct _DirectSolver {
 //------------------------------------------------ FUNCTION PROTOTYPES ------------------------------------------------------//
 //---------------------------------------------------------------------------------------------------------------------------//
 
+int RunMDOODZ(int, char*[]);
+
 // Miscellaneous functions
 void Initialise1DArrayDouble( double*, int, double );
 
