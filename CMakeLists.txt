@@ -41,6 +41,8 @@ set(SOURCE_FILES
 
 set(SuiteSparse_DIR ${CMAKE_SOURCE_DIR}/lib/suitesparse/install/lib/cmake/suitesparse-5.4.0)
 
+set(HDF5_LIBRARIES ${CMAKE_SOURCE_DIR}/lib/suitesparse/install/include)
+set(HDF5_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/lib/suitesparse/install/lib)
 include(FindHDF5)
 find_package(SuiteSparse CONFIG REQUIRED)
 FIND_PACKAGE(HDF5 REQUIRED COMPONENTS C)
