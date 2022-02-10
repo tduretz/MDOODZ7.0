@@ -40,11 +40,13 @@ set(SOURCE_FILES
         SOURCE/ThermalSolver.c)
 
 set(SuiteSparse_DIR ${CMAKE_SOURCE_DIR}/lib/suitesparse/install/lib/cmake/suitesparse-5.4.0)
-set(HDF5_DIR ${CMAKE_SOURCE_DIR}/lib/hdf5/install/share/cmake/)
 
+include(FindHDF5)
 find_package(SuiteSparse CONFIG REQUIRED)
-FIND_PACKAGE(HDF5 CONFIG REQUIRED COMPONENTS C)
+FIND_PACKAGE(HDF5 REQUIRED COMPONENTS C)
 configure_file("SOURCE/${MODEL}.txt" "${CMAKE_BINARY_DIR}/setup.txt" COPYONLY)
+
+message(HDF5_LIBRARIES = ${HDF5_LIBRARIES})
 
 set(DEPENDENCIES
         SuiteSparse::suitesparseconfig
@@ -55,11 +57,10 @@ set(DEPENDENCIES
         SuiteSparse::colamd
         SuiteSparse::cholmod
         SuiteSparse::cxsparse
-        SuiteSparse::umfpack
-        HDF5:hdf5)
+        SuiteSparse::umfpack)
 
 add_executable(MDOODZ SOURCE/main.c ${SOURCE_FILES})
-target_link_libraries(MDOODZ PRIVATE ${DEPENDENCIES})
+target_link_libraries(MDOODZ PRIVATE ${DEPENDENCIES} HDF5)
 
 # TESTING
 
