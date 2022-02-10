@@ -41,14 +41,11 @@ set(SOURCE_FILES
 
 set(SuiteSparse_DIR ${CMAKE_SOURCE_DIR}/lib/suitesparse/install/lib/cmake/suitesparse-5.4.0)
 
-set(HDF5_LIBRARIES ${CMAKE_SOURCE_DIR}/lib/suitesparse/install/include)
-set(HDF5_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/lib/suitesparse/install/lib)
 include(FindHDF5)
+find_package(HDF5 COMPONENTS C)
 find_package(SuiteSparse CONFIG REQUIRED)
-FIND_PACKAGE(HDF5 REQUIRED COMPONENTS C)
 configure_file("SOURCE/${MODEL}.txt" "${CMAKE_BINARY_DIR}/setup.txt" COPYONLY)
 
-message(HDF5_LIBRARIES = ${HDF5_LIBRARIES})
 
 set(DEPENDENCIES
         SuiteSparse::suitesparseconfig
@@ -59,10 +56,16 @@ set(DEPENDENCIES
         SuiteSparse::colamd
         SuiteSparse::cholmod
         SuiteSparse::cxsparse
-        SuiteSparse::umfpack)
+        SuiteSparse::umfpack
+        hdf5::hdf5)
 
 add_executable(MDOODZ SOURCE/main.c ${SOURCE_FILES})
-target_link_libraries(MDOODZ PRIVATE ${DEPENDENCIES} HDF5)
+target_link_libraries(MDOODZ PUBLIC ${DEPENDENCIES})
+
+message(HDF5_C_DEFINITIONS=${HDF5_C_DEFINITIONS})
+message(HDF5_LIBRARIES=${HDF5_LIBRARIES})
+message(HDF5_C_INCLUDE_DIRS=${HDF5_C_INCLUDE_DIRS})
+
 
 # TESTING
 
@@ -70,6 +73,7 @@ include_directories(TESTS)
 
 add_executable(ShearTemplate_test TESTS/ShearTemplate_test.c ${SOURCE_FILES})
 target_link_libraries(ShearTemplate_test PRIVATE ${DEPENDENCIES})
+target_include_directories(ShearTemplate_test PUBLIC ${HDF5_INCLUDE})
 
 enable_testing()
 
