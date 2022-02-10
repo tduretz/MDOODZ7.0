@@ -11,7 +11,7 @@ jobs:
       - name: Install packages with apt
         run: sudo apt install -y cmake libboost-all-dev libhdf5-serial-dev
       - name: install SuiteSparse package
-        run: make install-suitesparse
+        run: make install-deps
       - name: Builds cmake project
         run: make build
       - name: Runs tests
