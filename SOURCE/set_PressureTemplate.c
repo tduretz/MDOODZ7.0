@@ -31,8 +31,6 @@
 
 void BuildInitialTopography( surface *topo, markers *topo_chain, params model, grid mesh, scale scaling ) {
     
-    double TopoLevel = 0.0e3/scaling.L; // set initial topography (could be different)
-
     for ( int k=0; k<topo_chain->Nb_part; k++ ) {
         topo_chain->z[k]     = 0.0;
         topo_chain->phase[k] = 0;
@@ -46,8 +44,8 @@ void BuildInitialTopography( surface *topo, markers *topo_chain, params model, g
 /*--------------------------------------------------------------------------------------------------------------------*/
 void SetParticles( markers *particles, scale scaling, params model, mat_prop *materials  ) {    int np;
     
-    double T_init = (model.user0 + zeroC)/scaling.T;
-    double P_init = model.PrBG;
+    const double T_init = (model.user0 + zeroC)/scaling.T;
+    const double P_init = model.PrBG;
     
     // Loop on particles
     for( np=0; np<particles->Nb_part; np++ ) {
@@ -74,10 +72,10 @@ void SetParticles( markers *particles, scale scaling, params model, mat_prop *ma
         //--------------------------//
     }
 
-    double Lx = (double) (model.xmax - model.xmin) ;
-    double Lz = (double) (model.zmax - model.zmin) ;
+    const double Lx = (double) (model.xmax - model.xmin) ;
+    const double Lz = (double) (model.zmax - model.zmin) ;
     double Ax, Az;
-    
+
     // Generate checkerboard
     for ( np=0; np<particles->Nb_part; np++ ) {
             Ax = cos( 6.0*2.0*M_PI*particles->x[np] / Lx  );
@@ -117,19 +115,22 @@ void SetParticles( markers *particles, scale scaling, params model, mat_prop *ma
 // Set physical properties on the grid and boundary conditions
 void SetBCs( grid *mesh, params *model, scale scaling, markers* particles, mat_prop *materials, surface* topo ) {
 
-    int    kk, k, l, c, c1;
-    int    NX, NZ, NCX, NCZ;
-    double Lx, Lz, a = model->user3, b = model->user4;
+    int   kk, k, l, c, c1;
+    const double a = model->user3;
+    const double b = model->user4;
     
     // Define dimensions;
-    Lx = (double) (model->xmax - model->xmin) ;
-    Lz = (double) (model->zmax - model->zmin) ;
+    const double  Lx = (double) (model->xmax - model->xmin) ;
+    const double  Lz = (double) (model->zmax - model->zmin) ;
         
     // Sizes
-    NX  = mesh->Nx; NCX = NX-1;
-    NZ  = mesh->Nz; NCZ = NZ-1;
+    const int NX  = mesh->Nx; 
+    const int NCX = NX-1;
+    const int NZ  = mesh->Nz;  
+    const int NCZ = NZ-1;
 
-    double Tfix = (pow(mesh->p_in[0]*scaling.S/1e9/b, 1/a) + zeroC)/scaling.T;
+    // Define initial T
+    const double Tfix = (pow(mesh->p_in[0]*scaling.S/1e9/b, 1/a) + zeroC)/scaling.T;
     printf("Pressure: %2.2e , Temperature: %2.2e\n", mesh->p_in[0]*scaling.S,  pow(mesh->p_in[0]*scaling.S/1e9/b, 1/a));
     
     /* --------------------------------------------------------------------------------------------------------*/
@@ -215,7 +216,6 @@ void SetBCs( grid *mesh, params *model, scale scaling, markers* particles, mat_p
             
         }
     }
-        
     
     /* --------------------------------------------------------------------------------------------------------*/
     /* Set the BCs for Vz on all grid levels                                                                   */
@@ -300,7 +300,6 @@ void SetBCs( grid *mesh, params *model, scale scaling, markers* particles, mat_p
         }
     }
         
-    
     /* --------------------------------------------------------------------------------------------------------*/
     /* Set the BCs for P on all grid levels                                                                    */
     /* Type  0: Dirichlet within the grid                                                                      */
@@ -333,7 +332,6 @@ void SetBCs( grid *mesh, params *model, scale scaling, markers* particles, mat_p
     /* -------------------------------------------------------------------------------------------------------*/
     
     double Ttop = 273.15/scaling.T;
-    double Tbot, Tleft, Tright;
         
         for (l=0; l<mesh->Nz-1; l++) {
             for (k=0; k<mesh->Nx-1; k++) {
