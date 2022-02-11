@@ -1,7 +1,7 @@
 // =========================================================================
 // MDOODZ - Visco-Elasto-Plastic Thermo-Mechanical solver
 //
-// Copyright (C) 2018  MDOODZ Developper team
+// Copyright (C) 2022  MDOODZ Developper team
 //
 // This file is part of MDOODZ.
 //
@@ -29,16 +29,12 @@
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-// SIMPLE
 void BuildInitialTopography( surface *topo, markers *topo_chain, params model, grid mesh, scale scaling ) {
     
-    int k;
-    double TopoLevel = 0.0e3/scaling.L; // sets zero initial topography
-    double A = model.zmax/2.0;
-    double s = model.zmax/4.0;
+    double TopoLevel = 0.0e3/scaling.L; // set initial topography (could be different)
 
-    for ( k=0; k<topo_chain->Nb_part; k++ ) {
-        topo_chain->z[k]     = A*exp(-pow(topo_chain->x[k],2) / 2.0/s/s  );// TopoLevel;
+    for ( int k=0; k<topo_chain->Nb_part; k++ ) {
+        topo_chain->z[k]     = 0.0;
         topo_chain->phase[k] = 0;
     }
     
@@ -49,42 +45,9 @@ void BuildInitialTopography( surface *topo, markers *topo_chain, params model, g
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 void SetParticles( markers *particles, scale scaling, params model, mat_prop *materials  ) {    int np;
-    FILE *read;
-    int s1, s2;
     
-    // Define dimensions;
-    double Lx = (double) (model.xmax - model.xmin) ;
-    double Lz = (double) (model.zmax - model.zmin) ;
     double T_init = (model.user0 + zeroC)/scaling.T;
     double P_init = model.PrBG;
-    double setup  = (int)model.user1;
-    double radius = model.user2/scaling.L;
-    double X, Z, Xn, Zn, xc = 0.0, zc = 0.0, sa=radius/2.0, la=radius*2.0, theta=-30.0*M_PI/180.0;
-    double Ax, Az;
-
-    // Fixed random seed
-    srand(69);
-
-    char *ph_hr;
-    int nb_elems;
-
-    if (setup==2) {
-        // Read input file
-        FILE *fid;
-        nb_elems = 1921*1921;
-        ph_hr = malloc((nb_elems)*sizeof(char));
-        fid = fopen(model.input_file, "rb"); // Open file
-        if (!fid){
-            fprintf(stderr, "\nUnable to open file %s. I will exit here ... \n", model.input_file); exit(2);
-        }
-        fread( ph_hr, sizeof(char), nb_elems, fid);
-        fclose(fid);
-    }
-    // image properties
-    int nx_hr = 1922, nz_hr = 1922, ix, iz;
-    double dx_hr = (model.xmax - model.xmin)/(nx_hr-1.0);
-    double dz_hr = (model.zmax - model.zmin)/(nz_hr-1.0);
-    double dstx, dstz;
     
     // Loop on particles
     for( np=0; np<particles->Nb_part; np++ ) {
@@ -98,32 +61,7 @@ void SetParticles( markers *particles, scale scaling, params model, mat_prop *ma
         particles->T[np]     = T_init;
         particles->P[np]     = P_init;
         particles->noise[np] = ((double)rand() / (double)RAND_MAX) - 0.5;
-        
-        if (setup==2) {
-            // ------------------------- //
-            // Locate markers in the image files
-            // Find index of minimum/west temperature node
-            dstx = ( particles->x[np] - model.xmin );
-            ix   = ceil( dstx/dx_hr - 0.0 ) - 1;
-            // Find index of minimum/west pressure node
-            dstz = ( particles->z[np] - model.zmin );
-            iz   = ceil( dstz/dz_hr  - 0.0 ) - 1;
-            // Attribute phase
-            if (ix<0) {printf("sauceisse!!!\n"); exit(1);}
-            if (iz<0) {printf("puréee!!!\n"); exit(1);}
-            if (ix + iz*(nx_hr-1) > nb_elems) {printf("puréee!!!\n"); exit(1);}
-    //        printf("%d\n", (int)ph_hr[ix + iz*(nx_hr-1)]);
-            particles->phase[np] = (int)ph_hr[ix + iz*(nx_hr-1)];
-        }
-        if (setup==1) {
-            // DRAW INCLUSION
-            X  = particles->x[np]-xc;
-            Z  = particles->z[np]-zc;
-            Xn = X*cos(theta) - Z*sin(theta);
-            Zn = X*sin(theta) + Z*cos(theta);
-            if ( pow(Xn/la,2) + pow(Zn/sa,2) - 1 < 0 ) particles->phase[np] = 1;
-        }
-        
+                
         // SANITY CHECK
         if (particles->phase[np] > model.Nb_phases-1) {
             printf("Lazy bastard! Fix your particle phase ID! \n");
@@ -136,6 +74,10 @@ void SetParticles( markers *particles, scale scaling, params model, mat_prop *ma
         //--------------------------//
     }
 
+    double Lx = (double) (model.xmax - model.xmin) ;
+    double Lz = (double) (model.zmax - model.zmin) ;
+    double Ax, Az;
+    
     // Generate checkerboard
     for ( np=0; np<particles->Nb_part; np++ ) {
             Ax = cos( 6.0*2.0*M_PI*particles->x[np] / Lx  );
@@ -165,11 +107,6 @@ void SetParticles( markers *particles, scale scaling, params model, mat_prop *ma
                 particles->dual[np] += model.Nb_phases; 
             }
     }
-
-    MinMaxArray(particles->Vx, scaling.V, particles->Nb_part, "Vxp init" );
-    MinMaxArray(particles->Vz, scaling.V, particles->Nb_part, "Vzp init" );
-    MinMaxArray(particles->T, scaling.T, particles->Nb_part, "Tp init" );
-    if (setup==1) DoodzFree(ph_hr);
 }
 
 
