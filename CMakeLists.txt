@@ -39,13 +39,14 @@ set(SOURCE_FILES
         SOURCE/ThermalRoutines.c
         SOURCE/ThermalSolver.c)
 
-set(SuiteSparse_DIR ${CMAKE_SOURCE_DIR}/lib/suitesparse/install/lib/cmake/suitesparse-5.4.0)
-
-include(FindHDF5)
-find_package(HDF5 COMPONENTS C)
-find_package(SuiteSparse CONFIG REQUIRED)
+set(SuiteSparse_DIR ${PROJECT_SOURCE_DIR}/lib/suitesparse/install/lib/cmake/suitesparse-5.4.0)
+set(HDF5_DIR ${PROJECT_SOURCE_DIR}/lib/hdf5/install/share/cmake)
+FIND_PACKAGE(SuiteSparse CONFIG)
+FIND_PACKAGE(HDF5 CONFIG)
+message(HDF5_INCLUDE_DIR = ${HDF5_INCLUDE_DIR})
 configure_file("SOURCE/${MODEL}.txt" "${CMAKE_BINARY_DIR}/setup.txt" COPYONLY)
 
+message(HDF5_EXPORT_LIBRARIES = ${HDF5_EXPORT_LIBRARIES})
 
 set(DEPENDENCIES
         SuiteSparse::suitesparseconfig
@@ -57,15 +58,10 @@ set(DEPENDENCIES
         SuiteSparse::cholmod
         SuiteSparse::cxsparse
         SuiteSparse::umfpack
-        hdf5::hdf5)
+        hdf5-static)
 
 add_executable(MDOODZ SOURCE/main.c ${SOURCE_FILES})
-target_link_libraries(MDOODZ PUBLIC ${DEPENDENCIES})
-
-message(HDF5_C_DEFINITIONS=${HDF5_C_DEFINITIONS})
-message(HDF5_LIBRARIES=${HDF5_LIBRARIES})
-message(HDF5_C_INCLUDE_DIRS=${HDF5_C_INCLUDE_DIRS})
-
+target_link_libraries(MDOODZ PRIVATE ${DEPENDENCIES})
 
 # TESTING
 
@@ -73,7 +69,6 @@ include_directories(TESTS)
 
 add_executable(ShearTemplate_test TESTS/ShearTemplate_test.c ${SOURCE_FILES})
 target_link_libraries(ShearTemplate_test PRIVATE ${DEPENDENCIES})
-target_include_directories(ShearTemplate_test PUBLIC ${HDF5_INCLUDE})
 
 enable_testing()
 
