@@ -3,7 +3,6 @@ project(MDOODZ C)
 
 set(CMAKE_C_STANDARD 11)
 
-
 if (NOT MODEL)
     set(MODEL ShearTemplate)
     message("MODEL is not set, setting a default '${MODEL}' model")
@@ -43,10 +42,7 @@ set(SuiteSparse_DIR ${PROJECT_SOURCE_DIR}/lib/suitesparse/install/lib/cmake/suit
 set(HDF5_DIR ${PROJECT_SOURCE_DIR}/lib/hdf5/install/share/cmake)
 FIND_PACKAGE(SuiteSparse CONFIG)
 FIND_PACKAGE(HDF5 CONFIG)
-message(HDF5_INCLUDE_DIR = ${HDF5_INCLUDE_DIR})
 configure_file("SOURCE/${MODEL}.txt" "${CMAKE_BINARY_DIR}/setup.txt" COPYONLY)
-
-message(HDF5_EXPORT_LIBRARIES = ${HDF5_EXPORT_LIBRARIES})
 
 set(DEPENDENCIES
         SuiteSparse::suitesparseconfig
