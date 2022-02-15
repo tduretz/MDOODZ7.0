@@ -41,6 +41,7 @@ So far MDOODZ has been successfully built on LINUX/UNIX and MAC OS systems. The 
 The code relies on two libraries: <br>
 1. SuiteSparse provides efficient linear algebra and matrix manipulation routines. It is available at: http://www.suitesparse.com <br>
 2. HDF5 is the main format for output files and is readable into MATLAB. It is available at: http://www.hdfgroup.org <br>
+Optionally, it is possible to use Gnuplot to monitor progress of non-linear iterations. Find it there: http://www.gnuplot.info/
 
 # CMake project
 
