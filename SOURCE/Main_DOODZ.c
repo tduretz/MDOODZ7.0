@@ -65,10 +65,10 @@ int RunMDOODZ( int nargs, char *args[] ) {
     FILE        *GNUplotPipe;
         
     // Initialise integrated quantities
-    mesh.W    = 0.0; // Work
-    mesh.Ut   = 0.0; // heat
-    mesh.Ue   = 0.0; // elastic energy
-    
+    mesh.Work       = 0.0; // Work                 
+    mesh.Uthermal   = 0.0; // heat
+    mesh.Uelastic   = 0.0; // elastic energy
+        
 #ifdef _NEW_INPUT_
     // Input file name
     if ( nargs < 3 ) {
@@ -426,6 +426,8 @@ int RunMDOODZ( int nargs, char *args[] ) {
             ArrayEqualArray( particles.Tmax, particles.T, particles.Nb_part );
             ArrayEqualArray( particles.Pmax, particles.P, particles.Nb_part );
         }
+        ComputeMeanQuantitesForTimeSeries( &mesh );
+        LogTimeSeries( &mesh, model, scaling );
         
         printf("*************************************\n");
         printf("*** Write initial file or restart ***\n");
@@ -1032,10 +1034,7 @@ int RunMDOODZ( int nargs, char *args[] ) {
             // Update energy on particles
             UpdateParticleEnergy( &mesh, scaling, model, &particles, &materials );
             MinMaxArray(particles.T, scaling.T, particles.Nb_part, "T part. after UpdateParticleEnergy");
-            
-            // Calculate energies
-            if ( model.write_energies == 1 ) Energies( &mesh, model, scaling );
-            
+                        
             printf("** Time for Thermal solver = %lf sec\n", (double)((double)omp_get_wtime() - t_omp));
         }
         
@@ -1057,6 +1056,9 @@ int RunMDOODZ( int nargs, char *args[] ) {
         // Update maximum pressure and temperature on markers
         if ( model.rec_T_P_x_z == 1 )  UpdateMaxPT( scaling, model, &particles );
         
+        ComputeMeanQuantitesForTimeSeries( &mesh );
+        LogTimeSeries( &mesh, model, scaling );
+
         //------------------------------------------------------------------------------------------------------------------------------//
         
         
