@@ -176,8 +176,8 @@ void EnergyDirectSolve( grid *mesh, params model, double *rhoE, double *drhoE, d
         MinMaxArrayTag( mesh->T, scaling.T, ncx*ncz, "T0", mesh->BCt.type );
         MinMaxArrayTag( Ha, scaling.S*scaling.E, ncx*ncz, "Ha", mesh->BCt.type );
         MinMaxArrayTag( Hs, scaling.S*scaling.E, ncx*ncz, "Hs", mesh->BCt.type );
-        mesh->Ue += dUe;
-        mesh->W  += dW;
+        mesh->Uelastic += dUe;
+        mesh->Work  += dW;
 
         //----------------------------------------------------//
         if ( it == 0 ) {
@@ -444,7 +444,7 @@ void EnergyDirectSolve( grid *mesh, params model, double *rhoE, double *drhoE, d
                 mesh->T[c2]  = zero_celsius/scaling.T;
             }
         }
-        mesh->Ut += dUt*model.dx*model.dz;
+        mesh->Uthermal += dUt*model.dx*model.dz;
         MinMaxArrayTag( mesh->T, scaling.T, (mesh->Nx-1)*(mesh->Nz-1), "T", mesh->BCt.type );
 #ifndef _VG_
         // Write matrix in a HDF5 file for debugging purposes
@@ -549,38 +549,38 @@ void ThermalSteps( grid *mesh, params model, double *rhoE, double *drhoE, double
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-void Energies( grid* mesh, params model, scale scaling ) {
+// void Energies( grid* mesh, params model, scale scaling ) {
 
-    int noisy=1;
+//     int noisy=1;
 
-    if ( noisy==1 ) {
-        printf("Thermal energy = %2.8e\n",  mesh->Ut*scaling.S*scaling.L*scaling.L );
-        printf("Mechnical work = %2.8e\n",  mesh->W *scaling.S*scaling.L*scaling.L );
-        if (model.iselastic == 1) printf("Elastic energy = %2.8e\n", mesh->Ue*scaling.S*scaling.L*scaling.L );
-        if (model.iselastic == 1) printf("Remainder      = %2.8e\n", (mesh->W - mesh->Ut - mesh->Ue)/mesh->W );
-        else {
-            if (noisy==1) printf("Difference     = %2.8e\n", (mesh->W - mesh->Ut)/mesh->W );
-        }
-    }
+//     if ( noisy==1 ) {
+//         printf("Thermal energy = %2.8e\n",  mesh->Uthermal*scaling.S*scaling.L*scaling.L );
+//         printf("Mechnical work = %2.8e\n",  mesh->Work *scaling.S*scaling.L*scaling.L );
+//         if (model.iselastic == 1) printf("Elastic energy = %2.8e\n", mesh->Uelastic*scaling.S*scaling.L*scaling.L );
+//         if (model.iselastic == 1) printf("Remainder      = %2.8e\n", (mesh->Work - mesh->Uthermal - mesh->Uelastic)/mesh->Work );
+//         else {
+//             if (noisy==1) printf("Difference     = %2.8e\n", (mesh->Work - mesh->Uthermal)/mesh->Work );
+//         }
+//     }
 
-    mesh->Uthermal[model.step-1] = mesh->Ut*scaling.S*scaling.L*scaling.L;
-    mesh->Uelastic[model.step-1] = mesh->Ue*scaling.S*scaling.L*scaling.L;
-    mesh->Work[model.step-1]     = mesh->W*scaling.S*scaling.L*scaling.L;
-    mesh->Time[model.step-1]     = model.time*scaling.t;
-    mesh->Short[model.step-1]    = (model.L0-(model.xmax - model.xmin))/model.L0 * 100.0;
+//     mesh->Uthermal[model.step-1] = mesh->Uthermal*scaling.S*scaling.L*scaling.L;
+//     mesh->Uelastic[model.step-1] = mesh->Uelastic*scaling.S*scaling.L*scaling.L;
+//     mesh->Work[model.step-1]     = mesh->Work*scaling.S*scaling.L*scaling.L;
+//     mesh->Time[model.step-1]     = model.time*scaling.t;
+//     mesh->Short[model.step-1]    = (model.L0-(model.xmax - model.xmin))/model.L0 * 100.0;
 
-    if ( model.step == model.Nt ) {
+//     if ( model.step == model.Nt ) {
 
-        CreateOutputHDF5( "Energies.gzip.h5" );
-        AddGroupToHDF5( "Energies.gzip.h5", "Fields" );
-        AddFieldToGroup(  "Energies.gzip.h5", "Fields", "Time" ,     'd', model.Nt,  mesh->Time,      1 );
-        AddFieldToGroup(  "Energies.gzip.h5", "Fields", "Short" ,    'd', model.Nt,  mesh->Short,     1 );
-        AddFieldToGroup(  "Energies.gzip.h5", "Fields", "Work" ,     'd', model.Nt,  mesh->Work,      1 );
-        AddFieldToGroup(  "Energies.gzip.h5", "Fields", "Uthermal" , 'd', model.Nt,  mesh->Uthermal,  1 );
-        AddFieldToGroup(  "Energies.gzip.h5", "Fields", "Uelastic" , 'd', model.Nt,  mesh->Uelastic,  1 );
+//         CreateOutputHDF5( "Energies.gzip.h5" );
+//         AddGroupToHDF5( "Energies.gzip.h5", "Fields" );
+//         AddFieldToGroup(  "Energies.gzip.h5", "Fields", "Time" ,     'd', model.Nt,  mesh->Time,      1 );
+//         AddFieldToGroup(  "Energies.gzip.h5", "Fields", "Short" ,    'd', model.Nt,  mesh->Short,     1 );
+//         AddFieldToGroup(  "Energies.gzip.h5", "Fields", "Work" ,     'd', model.Nt,  mesh->Work,      1 );
+//         AddFieldToGroup(  "Energies.gzip.h5", "Fields", "Uthermal" , 'd', model.Nt,  mesh->Uthermal,  1 );
+//         AddFieldToGroup(  "Energies.gzip.h5", "Fields", "Uelastic" , 'd', model.Nt,  mesh->Uelastic,  1 );
 
-    }
-}
+//     }
+// }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/

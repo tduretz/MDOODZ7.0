@@ -110,7 +110,7 @@ struct _params {
 	int Nx, Nz, Nt, step, nit, Newton, noisy;
 	int eta_avg, itp_stencil;
     double nexp_radial_basis;
-	int ismechanical, isperiodic_x, isinertial, iselastic, isnonnewtonian, isthermal, ispureshear_ale, free_surf, write_markers, write_debug, write_energies, no_markers;
+	int ismechanical, isperiodic_x, isinertial, iselastic, isnonnewtonian, isthermal, ispureshear_ale, free_surf, write_markers, write_debug, no_markers;
     double free_surf_stab;
     int dt_constant, RK, line_search, thermal_eq, subgrid_diff, adiab_heat, shear_heat, advection, fstrain, ConservInterp;
     int surf_processes, cpc, surf_remesh, loc_iter, therm_pert, surf_ised1, surf_ised2, MantleID, topografix, Reseed, SmoothSoftening;
@@ -197,7 +197,8 @@ struct _grid {
     double **phase_perc_n, **phase_perc_s;
     double *sxxd0_s, *szzd0_s, *sxz0_n, *exxd_s, *ezzd_s, *exz_n, *sxz_n;
     double *rho0_n;
-    double Ut, Ue, W, *Work, *Uelastic, *Uthermal, *Time, *Short;
+    double Uthermal, Uelastic, Work, Tii_mean, Eii_mean, T_mean, P_mean;
+    double *Work_time, *Uelastic_time, *Uthermal_time, *Time_time, *Short_time, *P_mean_time, *T_mean_time, *Tii_mean_time, *Eii_mean_time;
     double *T, *dT, *d_n, *d0_n, *phi_n, *phi0_n;
     double *eII_el, *eII_pl, *eII_pl_s, *eII_pwl, *eII_exp, *eII_lin, *eII_gbs, *eII_cst;
     double *eII_pwl_s;
@@ -447,7 +448,6 @@ cholmod_factor* FactorEnergyCHOLMOD( cholmod_common*, cs_di*, double*, int*, int
 cs_di* TransposeA( cholmod_common*, double*, int*, int*, int, int );
 void SolveEnergyCHOLMOD( cholmod_common*, cs_di*, cholmod_factor*, double*, double*, int, int, int );
 void ThermalSteps( grid*, params, double*, double*, double*, double*, markers*, double, scale );
-void Energies( grid*, params, scale );
 void SetThermalPert( grid*, params, scale );
 void UpdateMaxPT ( scale, params, markers* );
 
@@ -604,3 +604,5 @@ void InitialiseGrainSizeParticles( markers*, mat_prop* );
 void ViscosityDerivatives( grid*, mat_prop*, params*, Nparams, scale*);
 double ViscosityConcise( int , double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, mat_prop*, params*, scale*, double*, double*, double*, double*, double*, double*, double*, double*, double* , double*, double*, double*, double*, double*, double*, double*, double*, double*, double*, double, double, double, double, double,  double*, double*, double*, double*, double, double, double*, double*, double*, int );
 double EvaluateDensity( int, double, double, double, params*, mat_prop* );
+void ComputeMeanQuantitesForTimeSeries( grid *mesh );
+void LogTimeSeries( grid*, params, scale );

@@ -238,7 +238,7 @@ void AddFieldToGroup( const char filename[], const char group[], const char fiel
 void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* topo_chain, params model, Nparams Nmodel, char *txtout, mat_prop materials, scale scaling ) {
 
     char *FileName;
-    double A[8], E[5];
+    double A[8];
     int k;
     double *strain, *strain_el, *strain_pl, *strain_pwl, *strain_exp, *strain_lin, *strain_gbs, *X;
     float *Crho_s, *Crho_n, *Ceta_s, *Ceta_n, *CVx, *CVz, *CP, *Csxxd, *Cszzd, *Csxz, *Cexxd, *Cezzd, *Cexz, *Cstrain, *Cstrain_el, *Cstrain_pl, *Cstrain_pwl, *Cstrain_exp, *Cstrain_lin, *Cstrain_gbs, *CT, *Cd;
@@ -660,6 +660,7 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
     AddGroupToHDF5( FileName, "Topo" );
     AddGroupToHDF5( FileName, "Flags" );
     AddGroupToHDF5( FileName, "Iterations");
+    AddGroupToHDF5( FileName, "TimeSeries" );
 
     // Model Parameters
     A[0] = (double)(model.time) * scaling.t;
@@ -671,15 +672,20 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
     A[6] = (double)model.dz * scaling.L;
     A[7] = (double)model.dt * scaling.t;
 
-    E[0] = model.time*scaling.t;
-    E[1] = (model.L0-(model.xmax - model.xmin))/model.L0 * 100.0;
-    E[2] = mesh->Ut*scaling.S*scaling.L*scaling.L;
-    E[3] = mesh->Ue*scaling.S*scaling.L*scaling.L;
-    E[4] = mesh->W *scaling.S*scaling.L*scaling.L;
-
     // Parameter array
     AddFieldToGroup( FileName, "Model", "Params"   , 'd', 8,  A, 1 );
-    AddFieldToGroup( FileName, "Model", "Energy"   , 'd', 5,  E, 1 );
+
+    // Add time series
+    AddFieldToGroup(  FileName, "TimeSeries", "Time_time" ,     'd', model.Nt,  mesh->Time_time,      1 );
+    AddFieldToGroup(  FileName, "TimeSeries", "Short_time" ,    'd', model.Nt,  mesh->Short_time,     1 );
+    AddFieldToGroup(  FileName, "TimeSeries", "Work_time" ,     'd', model.Nt,  mesh->Work_time,      1 );
+    AddFieldToGroup(  FileName, "TimeSeries", "Uthermal_time" , 'd', model.Nt,  mesh->Uthermal_time,  1 );
+    AddFieldToGroup(  FileName, "TimeSeries", "Uelastic_time" , 'd', model.Nt,  mesh->Uelastic_time,  1 );
+    AddFieldToGroup(  FileName, "TimeSeries", "T_mean_time" ,   'd', model.Nt,  mesh->T_mean_time,    1 );
+    AddFieldToGroup(  FileName, "TimeSeries", "P_mean_time" ,   'd', model.Nt,  mesh->P_mean_time,    1 );
+    AddFieldToGroup(  FileName, "TimeSeries", "Tii_mean_time" , 'd', model.Nt,  mesh->Tii_mean_time,  1 );
+    AddFieldToGroup(  FileName, "TimeSeries", "Eii_mean_time" , 'd', model.Nt,  mesh->Eii_mean_time,  1 );
+
 
     // Grid coordinate arrays
     AddFieldToGroup( FileName, "Model", "xg_coord" , 'f', model.Nx,    Cxg_coord,  1 );
