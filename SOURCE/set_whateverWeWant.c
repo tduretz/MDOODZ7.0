@@ -38,10 +38,8 @@ void BuildInitialTopography( surface *topo, markers *topo_chain, params model, g
 void SetParticles( markers *particles, scale scaling, params model, mat_prop *materials  ) {
 
     // Define dimensions;
-    double Lx = (double) (model.xmax - model.xmin) ;
-    double Lz = (double) (model.zmax - model.zmin) ;
-    double T_init = (model.user0 + zeroC)/scaling.T;
-    double radius = model.user1/scaling.L;
+    const double T_init = (model.user0 + zeroC)/scaling.T;
+    const double radius = model.user1/scaling.L;
 
     // Loop on particles
     for ( int ip=0; ip<particles->Nb_part; ip++ ) {
@@ -103,25 +101,64 @@ void SetBCs( grid *mesh, params *model, scale scaling, markers* particles, mat_p
     // Set the BCs for Vz on all grid levels
     for (int j=0; j < Nz; j++) {
         for (int i=0; i < Nx+1; i++) {
-            
+        int c = (Nx + 1) * j + i;
 
+        // Internal points:  -1
+        mesh->BCv.type[c] = -1;
+        mesh->BCv.val[c] = 0;
+
+        // North & South boundary
+        if (j == 0 || j == (Nz - 1)) {
+          mesh->BCv.type[c] = 0;
+          mesh->BCv.val[c] = mesh->zg_coord[i] * model->EpsBG;
         }
+
+        // West & East boundary
+        if (i == 0 || i == Nx) {
+          mesh->BCv.type[c] = 13;
+          mesh->BCv.val[c] = 0.0;
+        }
+      }
     }
 
     // Set the BCs for P on all grid levels
     for (int j=0; j < Nz-1; j++) {
         for (int i=0; i < Nx-1; i++) {
-            
-
-        }
+        int c = (Nx - 1) * j + i;
+        // Internal points:  -1
+        mesh->BCp.type[c] = -1; // BCp is not used
+        mesh->BCp.val[c] = 0;
+      }
     }
 
     // Set the BCs for T on all grid levels
     for (int j=0; j < Nz-1; j++) {
         for (int i=0; i < Nx-1; i++) {
-            
+        int c = (Nx - 1) * j + i;
 
+        if (i == 0) {
+          mesh->BCt.type[c] = 0; // BCp is not used
+          mesh->BCt.typW[c] = 0; // 0 corresponds to Neumann BC and 1 corresponds to Dirichlet
+          mesh->BCt.valW[c] = 0.0;
         }
-    }
 
+        if (i == Nx - 2) {
+          mesh->BCt.type[c] = 0; // BCp is not used
+          mesh->BCt.typE[c] = 0;
+          mesh->BCt.valE[c] = 0.0;
+        }
+
+        if (j == 0) {
+          mesh->BCt.type[c] = 0; // BCp is not used
+          mesh->BCt.typS[c] = 0;
+          mesh->BCt.valS[c] = 0.0;
+        }
+
+        if (j == Nz - 2) {
+          mesh->BCt.type[c] = 0; // BCp is not used
+          mesh->BCt.typN[c] = 0;
+          mesh->BCt.valN[c] = 0.0;
+        }
+      }
+    }
 }
