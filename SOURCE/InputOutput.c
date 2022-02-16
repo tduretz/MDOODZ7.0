@@ -294,8 +294,8 @@ void LoadBreakpointParticles( markers *particles, grid* mesh, markers *topo_chai
     fread( mesh->p_lith,  s3, ((Nz-1)*(Nx-1)), file );
     fread( mesh->p_lith0, s3, ((Nz-1)*(Nx-1)), file );
 
-    fread( &mesh->Ut,  s3, 1, file );
-    fread( &mesh->W,   s3, 1, file );
+    fread( &mesh->Uthermal,  s3, 1, file );
+    fread( &mesh->Work,   s3, 1, file );
     fread( &model->L0, s3, 1, file );
 
     // This is to avoid any problem with restarting - more data needs to be stored
@@ -484,8 +484,8 @@ void LoadBreakpointParticles( markers *particles, grid* mesh, markers *topo_chai
         }
     }
 
-    mesh->Ut   /= (scaling.rhoE*scaling.L*scaling.L);
-    mesh->W    /= (scaling.rhoE*scaling.L*scaling.L);
+    mesh->Uthermal   /= (scaling.rhoE*scaling.L*scaling.L);
+    mesh->Work    /= (scaling.rhoE*scaling.L*scaling.L);
     model->L0  /= (scaling.L);
 
 //    MinMaxArray(particles->T, scaling.T, particles->Nb_part, "T part");
@@ -642,8 +642,8 @@ void MakeBreakpointParticles( markers *particles,  grid* mesh, markers *topo_cha
         }
     }
 
-    mesh->Ut *= (scaling.rhoE*scaling.L*scaling.L);
-    mesh->W  *= (scaling.rhoE*scaling.L*scaling.L);
+    mesh->Uthermal *= (scaling.rhoE*scaling.L*scaling.L);
+    mesh->Work  *= (scaling.rhoE*scaling.L*scaling.L);
     model.L0 *= (scaling.L);
 
 
@@ -783,8 +783,8 @@ void MakeBreakpointParticles( markers *particles,  grid* mesh, markers *topo_cha
     fwrite( mesh->p_lith,  s3, ((Nx-1)*(Nz-1)), file );
     fwrite( mesh->p_lith0, s3, ((Nx-1)*(Nz-1)), file );
 
-    fwrite( &mesh->Ut, s3, 1, file );
-    fwrite( &mesh->W,  s3, 1, file );
+    fwrite( &mesh->Uthermal, s3, 1, file );
+    fwrite( &mesh->Work,  s3, 1, file );
     fwrite( &model.L0, s3, 1, file );
 
     // This is to avoid any problem with restarting - more data needs to be stored
@@ -972,8 +972,8 @@ void MakeBreakpointParticles( markers *particles,  grid* mesh, markers *topo_cha
         }
     }
 
-    mesh->Ut  /= (scaling.rhoE*scaling.L*scaling.L);
-    mesh->W   /= (scaling.rhoE*scaling.L*scaling.L);
+    mesh->Uthermal  /= (scaling.rhoE*scaling.L*scaling.L);
+    mesh->Work   /= (scaling.rhoE*scaling.L*scaling.L);
     model.L0  /= (scaling.L);
 }
 
@@ -1015,7 +1015,6 @@ void ReadInputFile( char* fin_name, int *istep, int *irestart, int *writer, int 
     *writer_step           = ReadInt2( fin, "writer_step",     1 );
     model->write_markers   = ReadInt2( fin, "writer_markers",  0 );
     model->write_debug     = ReadInt2( fin, "writer_debug",    0 );
-    model->write_energies  = ReadInt2( fin, "writer_energies", 0 );
 
     // Input
     model->input_file      = ReadChar( fin, "input_file", "blah.bin");
@@ -1251,7 +1250,7 @@ void ReadInputFile( char* fin_name, int *istep, int *irestart, int *writer, int 
         printf("Zmin   = %2.1lf  km         Zmax   = %2.1lf  km      Nz   = %3d    dz   = %.2lf m\n", (model->zmin*scaling->L)/1e3, (model->zmax*scaling->L)/1e3, model->Nz, model->dz*scaling->L );
         printf("-------------------------------------------- PHASE: %d -------------------------------------------\n", k);
         printf("rho    = %2.2e kg/m^3     mu = %2.2e Pa\n", materials->rho[k]*scaling->rho, materials->mu[k]*scaling->S );
-        printf("Cv     = %2.2e J/kg/K      k = %2.2e W/m/K      Qr = %2.2e W/m3\n", materials->Cv[k]*scaling->Cv, materials->k[k]*scaling->k, materials->Qr[k]*(scaling->W / pow(scaling->L,3)) );
+        printf("Cv     = %2.2e J/kg/K      k = %2.2e Work/m/K      Qr = %2.2e Work/m3\n", materials->Cv[k]*scaling->Cv, materials->k[k]*scaling->k, materials->Qr[k]*(scaling->W / pow(scaling->L,3)) );
         printf("C      = %2.2e Pa        phi = %2.2e deg      Slim = %2.2e Pa\n",  materials->C[k]*scaling->S, materials->phi[k]*180/M_PI, materials->Slim[k]*scaling->S );
         printf("alp    = %2.2e 1/T        T0 = %2.2e K         bet = %2.2e 1/Pa       P0 = %2.2e Pa       drho = %2.2e kg/m^3 \n", materials->alp[k]*(1/scaling->T), materials->T0[k]*(scaling->T), materials->bet[k]*(1/scaling->S), materials->P0[k]*(scaling->S), materials->drho[k]*scaling->rho );
         printf("prefactor for power-law: %2.2e\n", materials->pref_pwl[k]);
@@ -1343,7 +1342,7 @@ void ReadInputFile( char* fin_name, int *istep, int *irestart, int *writer, int 
                 
             //    //-------- In situ VISU for debugging: do not delete ------------------------//
             //    FILE        *GNUplotPipe;
-            //    GNUplotPipe = popen ("gnuplot -persistent", "w");
+            //    GNUplotPipe = popen ("gnuplot -persistent", "Work");
             //    int NumCommands = 2;
             //    char *GNUplotCommands[] = { "set style line 1 lc rgb '#0060ad' lt 1 lw 2 pt 7 pi -1 ps 1.5", "set pointintervalbox 3"};
             //    for (int i=0; i<NumCommands; i++) fprintf(GNUplotPipe, "%s \n", GNUplotCommands[i]); //Send commands to gnuplot one by one.

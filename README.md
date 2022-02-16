@@ -42,17 +42,19 @@ The code relies on two libraries: <br>
 1. SuiteSparse provides efficient linear algebra and matrix manipulation routines. It is available at: http://www.suitesparse.com <br>
 2. HDF5 is the main format for output files and is readable into MATLAB. It is available at: http://www.hdfgroup.org <br>
 
+Optionally, it is possible to use Gnuplot to monitor progress of non-linear iterations. Find it there: http://www.gnuplot.info/
+
 # CMake project
 
 ## Prequisites and setup
 
 In order to build MDOODZ with CMake you have to install **cmake 3.21** or newer version.
-`hdf5`, `blas` and `lapack` libraries are CMake compatible and does not require any additional setup other than installing them with your package manager
+`blas` and `lapack` libraries are CMake compatible and does not require any additional setup other than installing them with your package manager
 
-To install SuiteSparse to the project:
+To install SuiteSparse and HDF5 to the project:
 
 ```bash
-make install-suitesparse
+make install
 ```
 
 ## How to use

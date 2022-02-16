@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.16)
+
 project(MDOODZ C)
 
 set(CMAKE_C_STANDARD 11)
-
 
 if (NOT MODEL)
     set(MODEL ShearTemplate)
@@ -39,14 +39,11 @@ set(SOURCE_FILES
         SOURCE/ThermalRoutines.c
         SOURCE/ThermalSolver.c)
 
-set(SuiteSparse_DIR lib/suitesparse/install/lib/cmake/suitesparse-5.4.0)
-set(HDF5_DIR lib/hdf5/install/share/cmake/hdf5-1.8.7)
-FIND_PACKAGE(SuiteSparse)
-FIND_PACKAGE(HDF5 REQUIRED COMPONENTS C)
+set(SuiteSparse_DIR ${PROJECT_SOURCE_DIR}/lib/suitesparse/install/lib/cmake/suitesparse-5.4.0)
+set(HDF5_DIR ${PROJECT_SOURCE_DIR}/lib/hdf5/install/share/cmake)
+FIND_PACKAGE(SuiteSparse CONFIG)
+FIND_PACKAGE(HDF5 CONFIG)
 configure_file("SOURCE/${MODEL}.txt" "${CMAKE_BINARY_DIR}/setup.txt" COPYONLY)
-
-message(HDF5_LIBRARIES=${HDF5_LIBRARIES})
-message(SuiteSparse_DIR=${SuiteSparse_DIR})
 
 set(DEPENDENCIES
         SuiteSparse::suitesparseconfig
@@ -58,7 +55,7 @@ set(DEPENDENCIES
         SuiteSparse::cholmod
         SuiteSparse::cxsparse
         SuiteSparse::umfpack
-        ${HDF5_LIBRARIES})
+        hdf5-static)
 
 add_executable(MDOODZ SOURCE/main.c ${SOURCE_FILES})
 target_link_libraries(MDOODZ PRIVATE ${DEPENDENCIES})
