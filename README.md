@@ -49,12 +49,12 @@ Optionally, it is possible to use Gnuplot to monitor progress of non-linear iter
 ## Prequisites and setup
 
 In order to build MDOODZ with CMake you have to install **cmake 3.21** or newer version.
-`hdf5`, `blas` and `lapack` libraries are CMake compatible and does not require any additional setup other than installing them with your package manager
+`blas` and `lapack` libraries are CMake compatible and does not require any additional setup other than installing them with your package manager
 
-To install SuiteSparse to the project:
+To install SuiteSparse and HDF5 to the project:
 
 ```bash
-make install-suitesparse
+make install
 ```
 
 ## How to use
