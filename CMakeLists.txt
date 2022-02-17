@@ -5,7 +5,7 @@ project(MDOODZ C)
 set(CMAKE_C_STANDARD 11)
 
 if (NOT MODEL)
-    set(MODEL whateverWeWant)
+    set(MODEL WhatEverWeWant)
     message("MODEL is not set, setting a default '${MODEL}' model")
     message("To set a model use -DMODEL=ModelName option")
 endif ()
