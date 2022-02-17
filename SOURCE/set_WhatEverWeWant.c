@@ -48,6 +48,8 @@ void SetParticles( markers *particles, scale scaling, params model, mat_prop *ma
         if ( ( pow(particles->x[ip],2) + pow(particles->z[ip],2) ) < pow(radius,2) ) {
             particles->phase[ip] = 1;
         }
+        // SET DEFAULT DUAL PHASE NUMBER used for visualisation of phase on grid
+        particles->dual[ip] = particles->phase[ip];
     }
 }
 
@@ -110,7 +112,7 @@ void SetBCs( grid *mesh, params *model, scale scaling, markers* particles, mat_p
         // North & South boundary
         if (j == 0 || j == (Nz - 1)) {
           mesh->BCv.type[c] = 0;
-          mesh->BCv.val[c] = mesh->zg_coord[i] * model->EpsBG;
+          mesh->BCv.val[c] = mesh->zg_coord[j] * model->EpsBG; // corrected valgrind!
         }
 
         // West & East boundary
@@ -138,26 +140,26 @@ void SetBCs( grid *mesh, params *model, scale scaling, markers* particles, mat_p
 
         if (i == 0) {
           mesh->BCt.type[c] = 0; // BCp is not used
-          mesh->BCt.typW[c] = 0; // 0 corresponds to Neumann BC and 1 corresponds to Dirichlet
-          mesh->BCt.valW[c] = 0.0;
+          mesh->BCt.typW[j] = 0; // 0 corresponds to Neumann BC and 1 corresponds to Dirichlet
+          mesh->BCt.valW[j] = 0.0;
         }
 
         if (i == Nx - 2) {
           mesh->BCt.type[c] = 0; // BCp is not used
-          mesh->BCt.typE[c] = 0;
-          mesh->BCt.valE[c] = 0.0;
+          mesh->BCt.typE[j] = 0;
+          mesh->BCt.valE[j] = 0.0;
         }
 
         if (j == 0) {
           mesh->BCt.type[c] = 0; // BCp is not used
-          mesh->BCt.typS[c] = 0;
-          mesh->BCt.valS[c] = 0.0;
+          mesh->BCt.typS[i] = 0;
+          mesh->BCt.valS[i] = 0.0;
         }
 
         if (j == Nz - 2) {
           mesh->BCt.type[c] = 0; // BCp is not used
-          mesh->BCt.typN[c] = 0;
-          mesh->BCt.valN[c] = 0.0;
+          mesh->BCt.typN[i] = 0;
+          mesh->BCt.valN[i] = 0.0;
         }
       }
     }

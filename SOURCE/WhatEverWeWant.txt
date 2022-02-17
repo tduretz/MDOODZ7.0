@@ -3,15 +3,15 @@ istep = 00001
 irestart = 0
 
 /**** OUTPUT FILES ****/
-writer          = 1
+writer          = 0
 writer_step     = 1
-writer_markers  = 0
+writer_markers  = 1
 
 /**** SCALES ****/
 eta = 1e20 // Pascals * second
 L   = 50e3 // meters
 V   = 1e-9 // meters / second
-T   = 630 // Kelvins
+T   = 630  // Kelvins
 
 /**** SPACE ****/
 Nx      = 150
@@ -28,7 +28,7 @@ Nz_part = 4
 
 /**** TIME ****/
 dt_constant = 0
-Courant     = 0.3 // relative max displacement of the point inside the cell https://en.wikipedia.org/wiki/Courant%E2%80%93Friedrichs%E2%80%93Lewy_condition
+Courant     = 0.3 
 dt          = 0.5 // not used if dt_constant == 0
 
 /**** LINEAR SOLVER ****/
@@ -87,7 +87,7 @@ Slim = 500e9
 alp  = 10.0e-6
 bet  = 1e-11
 drho = 0
-cstv = 1             / constant visc law
+cstv = 0             / constant visc law
 pwlv = 12            / disloc. creep
 linv = 0             / diff. creep
 gbsv = 0             / grain boundary sliding
@@ -110,7 +110,7 @@ Slim = 500e9
 alp  = 10.0e-6
 bet  = 1e-11
 drho = 0
-cstv = 1             / constant visc law
+cstv = 0             / constant visc law
 pwlv = 10             / disloc. creep
 linv = 0             / diff. creep
 gbsv = 0             / grain boundary sliding
