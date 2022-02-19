@@ -791,7 +791,6 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
     AddFieldToGroup( FileName, "Iterations", "LogIsNewtonStep" , 'i', Nmodel.nit_max+1, Nmodel.LogIsNewtonStep,  1 );
     AddFieldToGroup( FileName, "Iterations", "NumberSteps"     , 'i',                1, &(Nmodel.nit)         ,  1 );
 
-
     // Freedom
     free( FileName );
     //------------//
