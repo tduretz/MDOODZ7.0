@@ -1281,7 +1281,7 @@ void ReadInputFile( char* fin_name, int *istep, int *irestart, int *writer, int 
     materials->R = Rg / (scaling->J/scaling->T);
     
     //------------------------------------------------------------------------------------------------------------------------------//
-    // PHASE DIAGRAM INFO - simple density model == 4 --- for quartz/coesite study
+    // PHASE DIAGRAM INFO - simple pressure-dependent density model == 4 --- for quartz/coesite study
     //------------------------------------------------------------------------------------------------------------------------------//
     
     model->PD1DnP  = DoodzCalloc( model->Nb_phases, sizeof(int));
@@ -1315,18 +1315,13 @@ void ReadInputFile( char* fin_name, int *istep, int *irestart, int *writer, int 
                     model->PD1Drho[k][i] /= scaling->rho;
                     if (i>0) p[i] = p[i-1] + dP;
                 }
-                
-                // // FAKE
-                // model->PD1Drho[k][0] = materials->rho[k];
-                // for (int i=1; i<model->PD1DnP[k]; i++) {
-                //     model->PD1Drho[k][i] = materials->rho[k] * exp( p[i]*materials->bet[k] - materials->alp[k]*873.0/scaling->T);
-                // }
-                
+
                 // Apply some diffusion...
+                const double Kdiff   = 1e0;              // diffusivity
+                const double dt_exp  =  dP*dP/Kdiff/2.1; // explicit time step
+                const int    n_steps = 200;              // number of steps
+                double qxW, qxE;   
                 double *rho0   = DoodzCalloc( model->PD1DnP[k], sizeof(double));
-                double Kdiff   = 1e0, qxW, qxE;
-                double dt_exp  =  dP*dP/Kdiff/2.1;
-                int    n_steps = 200;
                 
                 for (int it=0; it<n_steps; it++) {
                     ArrayEqualArray( rho0, model->PD1Drho[k], model->PD1DnP[k]);
@@ -1337,8 +1332,6 @@ void ReadInputFile( char* fin_name, int *istep, int *irestart, int *writer, int 
                     }
                 }
                 DoodzFree(rho0);
-
-                // printf("%2.2e\n", model->PD1Drho[k][0]*scaling->rho); exit(1);
                 
             //    //-------- In situ VISU for debugging: do not delete ------------------------//
             //    FILE        *GNUplotPipe;
@@ -1385,7 +1378,7 @@ void ReadInputFile( char* fin_name, int *istep, int *irestart, int *writer, int 
 
         printf("Loading phase_diagrams...\n");
         int pid;
-        model->num_PD = 9;
+        model->num_PD = 10;
 
         // Allocate
         AllocatePhaseDiagrams( model );
@@ -1404,7 +1397,7 @@ void ReadInputFile( char* fin_name, int *istep, int *irestart, int *writer, int 
         model->PDMPmax[pid]       = 15e9 /scaling->S;         // Maximum pressure           (MANTLE) [Pa]
         model->PDMrho[pid]        = ReadBin( "PHASE_DIAGRAMS/Hawaiian_Pyrolite_rho_bin.dat", model->PDMnT[pid], model->PDMnP[pid], scaling->rho);
 
-        /**** PHASE DIAGRAMS #00 - Mantle (Jenadi_stx_HR.dat)  ****/
+        /**** PHASE DIAGRAMS #01 - Mantle (Jenadi_stx_HR.dat)  ****/
         pid                       = 1;         // Kaus & Connolly, 2005: Effect of mineral phase transitions on sedimentary basin subsidence and uplift
         if (pid > (model->num_PD-1) ) {
             printf ("One should increment 'model->num_PD' to allocate enough memory and store the database\n");
@@ -1418,7 +1411,7 @@ void ReadInputFile( char* fin_name, int *istep, int *irestart, int *writer, int 
         model->PDMPmax[pid]       = 25e9 /scaling->S;         // Maximum pressure           (MANTLE) [Pa]
         model->PDMrho[pid]        = ReadBin( "PHASE_DIAGRAMS/Hawaiian_Pyrolite_HR_rho_bin.dat", model->PDMnT[pid], model->PDMnP[pid], scaling->rho);
 
-        /**** PHASE DIAGRAMS #01 - Basalt (MORB_L.dat)  ****/
+        /**** PHASE DIAGRAMS #02 - Basalt (MORB_L.dat)  ****/
         pid                       = 2;  // Water saturated MORB - Bulk composition taken from Schmidt & Poli 1998 EPSL (Table 1)
         if (pid > (model->num_PD-1) ) {
             printf ("One should increment 'model->num_PD' to allocate enough memory and store the database\n");
@@ -1432,7 +1425,7 @@ void ReadInputFile( char* fin_name, int *istep, int *irestart, int *writer, int 
         model->PDMPmax[pid]       = 5.1e9 /scaling->S;        // Maximum pressure           (MANTLE) [Pa]
         model->PDMrho[pid]        = ReadBin( "PHASE_DIAGRAMS/MORB_H2Osat_rho_bin.dat", model->PDMnT[pid], model->PDMnP[pid], scaling->rho);
 
-        /**** PHASE DIAGRAMS #04 - Andesite (Andesite.dat)  ****/
+        /**** PHASE DIAGRAMS #03 - Andesite (Andesite.dat)  ****/
         pid                       = 3;  // Andesite
         if (pid > (model->num_PD-1) ) {
             printf ("One should increment 'model->num_PD' to allocate enough memory and store the database\n");
@@ -1446,7 +1439,7 @@ void ReadInputFile( char* fin_name, int *istep, int *irestart, int *writer, int 
         model->PDMPmax[pid]       = 5.5816e9 /scaling->S;        // Maximum pressure           (MANTLE) [Pa]
         model->PDMrho[pid]        = ReadBin( "PHASE_DIAGRAMS/Andesite.dat", model->PDMnT[pid], model->PDMnP[pid], scaling->rho);
 
-        /**** PHASE DIAGRAMS #05 - Hydrated Peridotite (Hydrated_Pdt.dat)  ****/
+        /**** PHASE DIAGRAMS #04 - Hydrated Peridotite (Hydrated_Pdt.dat)  ****/
         pid                       = 4;  // Hydrated peridotite
         if (pid > (model->num_PD-1) ) {
             printf ("One should increment 'model->num_PD' to allocate enough memory and store the database\n");
@@ -1460,7 +1453,7 @@ void ReadInputFile( char* fin_name, int *istep, int *irestart, int *writer, int 
         model->PDMPmax[pid]       = 5.5816e9 /scaling->S;        // Maximum pressure           (MANTLE) [Pa]
         model->PDMrho[pid]        = ReadBin( "PHASE_DIAGRAMS/Hydrated_Pdt.dat", model->PDMnT[pid], model->PDMnP[pid], scaling->rho);
 
-        /**** PHASE DIAGRAMS #06 - MORB (MORB.dat)  ****/
+        /**** PHASE DIAGRAMS #05 - MORB (MORB.dat)  ****/
         pid                       = 5;  // MORB
         if (pid > (model->num_PD-1) ) {
             printf ("One should increment 'model->num_PD' to allocate enough memory and store the database\n");
@@ -1474,7 +1467,7 @@ void ReadInputFile( char* fin_name, int *istep, int *irestart, int *writer, int 
         model->PDMPmax[pid]       = 5.5816e9 /scaling->S;        // Maximum pressure           (MANTLE) [Pa]
         model->PDMrho[pid]        = ReadBin( "PHASE_DIAGRAMS/MORB.dat", model->PDMnT[pid], model->PDMnP[pid], scaling->rho);
 
-        /**** PHASE DIAGRAMS #07 - Pelite (Pelite.dat)  ****/
+        /**** PHASE DIAGRAMS #06 - Pelite (Pelite.dat)  ****/
         pid                       = 6;  // Pelite
         if (pid > (model->num_PD-1) ) {
             printf ("One should increment 'model->num_PD' to allocate enough memory and store the database\n");
@@ -1488,7 +1481,7 @@ void ReadInputFile( char* fin_name, int *istep, int *irestart, int *writer, int 
         model->PDMPmax[pid]       = 5.5816e9 /scaling->S;        // Maximum pressure           (MANTLE) [Pa]
         model->PDMrho[pid]        = ReadBin( "PHASE_DIAGRAMS/Pelite.dat", model->PDMnT[pid], model->PDMnP[pid], scaling->rho);
 
-        /**** PHASE DIAGRAMS #08 - Rhyolite (Rhyolite.dat)  ****/
+        /**** PHASE DIAGRAMS #07 - Rhyolite (Rhyolite.dat)  ****/
         pid                       = 7;  // Rhyolite
         if (pid > (model->num_PD-1) ) {
             printf ("One should increment 'model->num_PD' to allocate enough memory and store the database\n");
@@ -1502,7 +1495,7 @@ void ReadInputFile( char* fin_name, int *istep, int *irestart, int *writer, int 
         model->PDMPmax[pid]       = 5.5816e9 /scaling->S;        // Maximum pressure           (MANTLE) [Pa]
         model->PDMrho[pid]        = ReadBin( "PHASE_DIAGRAMS/Rhyolite.dat", model->PDMnT[pid], model->PDMnP[pid], scaling->rho);
 
-        /**** PHASE DIAGRAMS #09 - Serpentinite (Serpentinite.dat)  ****/
+        /**** PHASE DIAGRAMS #08 - Serpentinite (Serpentinite.dat)  ****/
         pid                       = 8;  // Serpentinite
         if (pid > (model->num_PD-1) ) {
             printf ("One should increment 'model->num_PD' to allocate enough memory and store the database\n");
@@ -1515,6 +1508,20 @@ void ReadInputFile( char* fin_name, int *istep, int *irestart, int *writer, int 
         model->PDMPmin[pid]       = 10.13e6/scaling->S;         // Minimum pressure           (MANTLE) [Pa]
         model->PDMPmax[pid]       = 5.5816e9 /scaling->S;        // Maximum pressure           (MANTLE) [Pa]
         model->PDMrho[pid]        = ReadBin( "PHASE_DIAGRAMS/Serpentinite.dat", model->PDMnT[pid], model->PDMnP[pid], scaling->rho);
+
+        /**** PHASE DIAGRAMS #09 - Si02 (Si02.dat)  ****/
+        pid                       = 9;  // Serpentinite
+        if (pid > (model->num_PD-1) ) {
+            printf ("One should increment 'model->num_PD' to allocate enough memory and store the database\n");
+            exit(5);
+        }
+        model->PDMnT[pid]         = 793;                     // Resolution for temperature (MANTLE) []
+        model->PDMnP[pid]         = 793;                     // Resolution for pressure    (MANTLE) []
+        model->PDMTmin[pid]       = 373.0/scaling->T;         // Minimum temperature        (MANTLE) [K]
+        model->PDMTmax[pid]       = 1373.0/scaling->T;        // Maximum temperature        (MANTLE) [K]
+        model->PDMPmin[pid]       = 10.13e6/scaling->S;         // Minimum pressure           (MANTLE) [Pa]
+        model->PDMPmax[pid]       = 5.5816e9 /scaling->S;        // Maximum pressure           (MANTLE) [Pa]
+        model->PDMrho[pid]        = ReadBin( "PHASE_DIAGRAMS/Si02.dat", model->PDMnT[pid], model->PDMnP[pid], scaling->rho);
 
     }
 

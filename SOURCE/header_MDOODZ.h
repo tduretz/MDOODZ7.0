@@ -189,7 +189,7 @@ struct _grid {
 	double *eta_s, *eta_n, *rho_s, *rho_n;
         // TODO eta_s -> eta_v (for vertex) eta_n -> eta_c (c for centroids)
     double *X_s, *X_n, *X0_s, *X0_n, *p0_n, *p0_s;
-    double *OverS_n,  *OverS_s;
+    double *OverS_n;
     double *strain_n, *strain_s;
 	double *u, *v, *p;
 	double *ru, *rv, *rp;
