@@ -141,6 +141,9 @@ struct _params {
     int    isPD, num_PD, *PDMnT, *PDMnP, *PD1DnP;
     double **PDMrho, *PDMTmin, *PDMTmax, *PDMPmin, *PDMPmax;
     double **PD1Drho,*PD1Dmin, *PD1Dmax;
+    // Kinetics
+    int    kin_nP, kin_nT;
+    double *kin_dG, kin_Tmin, kin_Tmax, kin_Pmin, kin_Pmax;
     // Visualisation
     int rec_T_P_x_z, delete_breakpoints, GNUplot_residuals;
     // Boundary conditions type
@@ -150,7 +153,7 @@ struct _params {
     int diffuse_X, diffuse_avg;
     double diffusion_length;
     // For Pips
-    int ProgReac, NoReturn, VolChangeReac, Plith_trick, UnsplitDiffReac;
+    int ProgReac, NoReturn, VolChangeReac, Plith_trick, UnsplitDiffReac, kinetics;
     // Anisotropy
     int aniso, aniso_fstrain, oop, noise_bg;
     int eqn_state;

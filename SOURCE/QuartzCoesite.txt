@@ -1,5 +1,5 @@
 /**** RESTART ****/
-istep = 00200
+istep = 00001
 irestart = 0
 
 /**** INPUT FILE ****/
@@ -7,7 +7,7 @@ input_file = GarnetCoesite.bin /indicates the name in the input file for geometr
 
 /**** OUTPUT FILES ****/
 writer          = 1
-writer_step     = 10
+writer_step     = 1
 writer_markers  = 0
 writer_debug    = 0
 writer_energies = 0
@@ -20,9 +20,9 @@ V   = 1e-18
 T   = 600
 
 /**** SPACE-TIME ****/
-Nx      = 51
-Nz      = 51
-Nt      = 00
+Nx      = 151
+Nz      = 151
+Nt      = 1
 xmin    = -2.500000e-3
 zmin    = -2.500000e-3
 xmax    =  2.500000e-3
@@ -51,7 +51,8 @@ shear_heat      = 1
 adiab_heat      = 0
 fstrain         = 1
 advection       = 1
-GNUplot_residuals = 0 
+GNUplot_residuals = 0
+kinetics          = 1 
 
 /**** SETUP DEPENDANT ****/
 eta_avg         = 0
@@ -65,7 +66,7 @@ EpsBG           = 1e-25
 DivBG           = 1e-14
 PrBG            = 3.45e9  / pressure [Pa]
 user0           = 600     / temperature [°C]
-user1           = 0       / 2: fancy set up --- 1: simple inclusion --- 0: homogeneous
+user1           = 2       / 2: fancy set up --- 1: simple inclusion --- 0: homogeneous
 user2           = 0.5e-3  / inclusion radius [m]
 user3           = 6.9462     / fit coefficient a for T=(P/b)^(1/a) 
 user4           = 5.5398e-20 / fit coefficient b for T=(P/b)^(1/a) 
@@ -156,7 +157,8 @@ npwl = 1
 Qpwl = 0
 eta_vp = 1e20
 n_vp   = 1.0
-density_model = 4
+density_model = 2
+phase_diagram = 9
 
 /**** DEFMAPS ****/
 nT    =    51      / Temperature resolutin []

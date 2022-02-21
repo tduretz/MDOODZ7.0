@@ -659,7 +659,7 @@ void GridAlloc ( grid* mesh, params* model ) {
     mesh->X0_s       = DoodzCalloc ((Nx)*(Nz),sizeof(double));
     mesh->X_s        = DoodzCalloc ((Nx)*(Nz),sizeof(double));
     mesh->noise_s    = DoodzCalloc ((Nx)*(Nz),sizeof(double));
-    // Viscoplasticitu
+    // Viscoplasticity
     mesh->OverS_n    = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
 
     printf("Memory succesfully allocated : \nDiantre, que c'est bon!\n");
@@ -963,6 +963,7 @@ void GridFree( grid* mesh, params* model ) {
     DoodzFree(mesh->X0_s);
     // Viscoplasticity
     DoodzFree(mesh->OverS_n);
+
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/

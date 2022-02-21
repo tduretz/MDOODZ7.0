@@ -1359,6 +1359,7 @@ int RunMDOODZ( int nargs, char *args[] ) {
     DoodzFree(model.PD1Drho);
     DoodzFree(model.PD1Dmin);
     DoodzFree(model.PD1Dmax);
+    if ( model.kinetics==1 ) DoodzFree(model.kin_dG);
     
     printf("\n********************************************************\n");
     printf("************* Ending MDOODZ 6.0 simulation *************\n");

@@ -44,6 +44,34 @@
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
+void ExplicitDiffusion2D( double* rho, int nT, int nP, double dT, double dP, scale *scaling ) {
+    // Apply some diffusion...
+    const double Kdiff   = 1e0;              // diffusivity
+    const double dt_exp  =  MINV(dP*dP,dT*dT)/Kdiff/2.1; // explicit time step
+    const int    n_steps = 200;              // number of steps
+    double       qW, qE, qS, qN;   
+    double *rho0   = DoodzCalloc( nT*nP, sizeof(double)); 
+
+    for ( int it=0; it<n_steps; it++) {
+        ArrayEqualArray( rho0, rho, nT*nP);
+        for (int iz = 1; iz<nT-1; iz++) {
+            for (int ix = 1; ix<nP-1; ix++) {
+                int c = nT*iz + ix;
+                qW      = - Kdiff*(rho0[c] - rho0[c- 1])/dT;
+                qE      = - Kdiff*(rho0[c+1] - rho0[ix])/dT;
+                qS      = - Kdiff*(rho0[c] - rho0[c-nT])/dP;
+                qN      = - Kdiff*(rho0[c+nT] - rho0[c])/dP;
+                rho[c]  = rho0[c] - dt_exp*(qE - qW)/dT - dt_exp*(qN - qS)/dP;
+            }
+        }
+    }
+    DoodzFree(rho0);
+}
+
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
+
 void LoadIniParticles( char* name, markers* particles, grid* mesh, markers *topo_chain, markers *topo_chain_ini, params *model, scale scaling ) {
 
     //char *name;
@@ -1083,16 +1111,17 @@ void ReadInputFile( char* fin_name, int *istep, int *irestart, int *writer, int 
     model->aniso_fstrain   = ReadInt2( fin, "aniso_fstrain",   0 ); // Make anisotropy factor dependent on finite strain aspect ratio
     model->compressible    = ReadInt2( fin, "compressible",    0 ); // Turns on compressibility
     model->GNUplot_residuals = ReadInt2( fin, "GNUplot_residuals",    0 ); // Activate GNU plot residuals visualisation
-    model->no_markers      = ReadInt2( fin, "no_markers",     0 );
-    model->shear_style     = ReadInt2( fin, "shear_style",    0 ); // 0: pure shear, 2: periodic simple shear
-    model->StressRotation  = ReadInt2( fin, "StressRotation", 1 ); // 0: no stress rotation, 1: analytic rotation, 2: upper convected rate
-    model->StressUpdate    = ReadInt2( fin, "StressUpdate",   0 );
-    model->polar           = ReadInt2( fin, "polar",          0 ); // Activate polar-Cartesian coordinates
-    model->ProgReac        = ReadInt2( fin, "ProgReac",       0 ); // Activate progressive reactions
-    model->NoReturn        = ReadInt2( fin, "NoReturn",       0 ); // Turns off retrogression if 1.0
-    model->UnsplitDiffReac = ReadInt2( fin, "UnsplitDiffReac",0 ); // Unsplit diffusion reaction
-    model->VolChangeReac   = ReadInt2( fin, "VolChangeReac",  0 ); // Turns on volume change due to reaction if 1
-    model->Plith_trick     = ReadInt2( fin, "Plith_trick",    0 );
+    model->no_markers      = ReadInt2( fin, "no_markers",      0 );
+    model->shear_style     = ReadInt2( fin, "shear_style",     0 ); // 0: pure shear, 2: periodic simple shear
+    model->StressRotation  = ReadInt2( fin, "StressRotation",  1 ); // 0: no stress rotation, 1: analytic rotation, 2: upper convected rate
+    model->StressUpdate    = ReadInt2( fin, "StressUpdate",    0 );
+    model->polar           = ReadInt2( fin, "polar",           0 ); // Activate polar-Cartesian coordinates
+    model->ProgReac        = ReadInt2( fin, "ProgReac",        0 ); // Activate progressive reactions
+    model->NoReturn        = ReadInt2( fin, "NoReturn",        0 ); // Turns off retrogression if 1.0
+    model->UnsplitDiffReac = ReadInt2( fin, "UnsplitDiffReac", 0 ); // Unsplit diffusion reaction
+    model->kinetics        = ReadInt2( fin, "kinetics",        0 ); // Unsplit diffusion reaction
+    model->VolChangeReac   = ReadInt2( fin, "VolChangeReac",   0 ); // Turns on volume change due to reaction if 1
+    model->Plith_trick     = ReadInt2( fin, "Plith_trick",     0 );
     model->DirectNeighbour = ReadInt2( fin, "DirectNeighbour", 0);
     model->Reseed          = ReadInt2( fin, "Reseed",          1); // Activates reseeding / particle injection
     model->ConservInterp   = ReadInt2( fin, "ConservInterp",   0); // Activates Taras conservative interpolation
@@ -1250,7 +1279,7 @@ void ReadInputFile( char* fin_name, int *istep, int *irestart, int *writer, int 
         printf("Zmin   = %2.1lf  km         Zmax   = %2.1lf  km      Nz   = %3d    dz   = %.2lf m\n", (model->zmin*scaling->L)/1e3, (model->zmax*scaling->L)/1e3, model->Nz, model->dz*scaling->L );
         printf("-------------------------------------------- PHASE: %d -------------------------------------------\n", k);
         printf("rho    = %2.2e kg/m^3     mu = %2.2e Pa\n", materials->rho[k]*scaling->rho, materials->mu[k]*scaling->S );
-        printf("Cv     = %2.2e J/kg/K      k = %2.2e Work/m/K      Qr = %2.2e Work/m3\n", materials->Cv[k]*scaling->Cv, materials->k[k]*scaling->k, materials->Qr[k]*(scaling->W / pow(scaling->L,3)) );
+        printf("Cv     = %2.2e J/kg/K      k = %2.2e W/m/K      Qr = %2.2e W/m3\n", materials->Cv[k]*scaling->Cv, materials->k[k]*scaling->k, materials->Qr[k]*(scaling->W / pow(scaling->L,3)) );
         printf("C      = %2.2e Pa        phi = %2.2e deg      Slim = %2.2e Pa\n",  materials->C[k]*scaling->S, materials->phi[k]*180/M_PI, materials->Slim[k]*scaling->S );
         printf("alp    = %2.2e 1/T        T0 = %2.2e K         bet = %2.2e 1/Pa       P0 = %2.2e Pa       drho = %2.2e kg/m^3 \n", materials->alp[k]*(1/scaling->T), materials->T0[k]*(scaling->T), materials->bet[k]*(1/scaling->S), materials->P0[k]*(scaling->S), materials->drho[k]*scaling->rho );
         printf("prefactor for power-law: %2.2e\n", materials->pref_pwl[k]);
@@ -1376,7 +1405,7 @@ void ReadInputFile( char* fin_name, int *istep, int *irestart, int *writer, int 
     // Phase diagrams
     if ( model->isPD == 1 ) {
 
-        printf("Loading phase_diagrams...\n");
+        printf("Loading phase diagrams...\n");
         int pid;
         model->num_PD = 10;
 
@@ -1510,7 +1539,7 @@ void ReadInputFile( char* fin_name, int *istep, int *irestart, int *writer, int 
         model->PDMrho[pid]        = ReadBin( "PHASE_DIAGRAMS/Serpentinite.dat", model->PDMnT[pid], model->PDMnP[pid], scaling->rho);
 
         /**** PHASE DIAGRAMS #09 - Si02 (Si02.dat)  ****/
-        pid                       = 9;  // Serpentinite
+        pid                       = 9;  // Si02
         if (pid > (model->num_PD-1) ) {
             printf ("One should increment 'model->num_PD' to allocate enough memory and store the database\n");
             exit(5);
@@ -1521,8 +1550,34 @@ void ReadInputFile( char* fin_name, int *istep, int *irestart, int *writer, int 
         model->PDMTmax[pid]       = 1373.0/scaling->T;        // Maximum temperature        (MANTLE) [K]
         model->PDMPmin[pid]       = 10.13e6/scaling->S;         // Minimum pressure           (MANTLE) [Pa]
         model->PDMPmax[pid]       = 5.5816e9 /scaling->S;        // Maximum pressure           (MANTLE) [Pa]
-        model->PDMrho[pid]        = ReadBin( "PHASE_DIAGRAMS/Si02.dat", model->PDMnT[pid], model->PDMnP[pid], scaling->rho);
+        model->PDMrho[pid]        = ReadBin( "PHASE_DIAGRAMS/SiO2.dat", model->PDMnT[pid], model->PDMnP[pid], scaling->rho);
 
+        for (pid=0; pid<model->num_PD; pid++) {
+            printf("Running diffusion on density table %0d\n", pid);
+            double dT = (model->PDMTmax[pid] - model->PDMTmin[pid]) / (model->PDMnT[pid] - 1);
+            double dP = (model->PDMPmax[pid] - model->PDMPmin[pid]) / (model->PDMnP[pid] - 1);
+            ExplicitDiffusion2D( model->PDMrho[pid],  model->PDMnT[pid], model->PDMnP[pid], dT, dP, scaling );
+        }
+
+
+    }
+
+    //------------------------------------------------------------------------------------------------------------------------------//
+    // KINETIC DATA
+    //------------------------------------------------------------------------------------------------------------------------------//
+
+    if ( model->kinetics == 1 ) {
+
+        printf("Loading kinetic data...\n");
+
+        /**** Quartz Coesite (dG_QuartzCoesite.dat)  ****/
+        model->kin_nT        = 1300;                         // Resolution for temperature (MANTLE) []
+        model->kin_nP        = 1000;                         // Resolution for pressure    (MANTLE) []
+        model->kin_Tmin      = (298+1e-3)/scaling->T;        // Minimum temperature        (MANTLE) [K]
+        model->kin_Tmax      = 1598/scaling->T;              // Maximum temperature        (MANTLE) [K]
+        model->kin_Pmin      = (0.049/10*1e9)/scaling->S;   // Minimum pressure           (MANTLE) [Pa]
+        model->kin_Pmax      = (99.95/10*1e9)/scaling->S;    // Maximum pressure           (MANTLE) [Pa]
+        model->kin_dG        = ReadBin( "PHASE_DIAGRAMS/dG_QuartzCoesite.dat", model->kin_nT, model->kin_nP, scaling->J/scaling->m);
     }
 
     //------------------------------------------------------------------------------------------------------------------------------//
