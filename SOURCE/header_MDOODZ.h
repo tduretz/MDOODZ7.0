@@ -180,9 +180,14 @@ struct _grid {
 	int    *iter_smooth;
 	int    *nb_part_cell, *nb_part_vert;
 	BC     BCu, BCv, BCp, BCp_exp;
+        // TODO rename BCu and rename BCv to BCVx and BCVz
+        // TODO rename BCp to BCP (P as pressure is always capital P)
+        // TODO find and and do the same for (T as temperature)
 	BCT    BCt, BCg, BCc;
+        // TODO rename BCg to BCv (v is not capital and stands for vertex)
 	double *xg_coord, *zg_coord, *xc_coord, *zc_coord, *xvz_coord, *zvx_coord, *xg_coord0, *zg_coord0, *xg_coord_ext, *zg_coord_ext;
 	double *eta_s, *eta_n, *rho_s, *rho_n;
+        // TODO eta_s -> eta_v (for vertex) eta_n -> eta_c (c for centroids)
     double *X_s, *X_n, *X0_s, *X0_n, *p0_n, *p0_s;
     double *OverS_n,  *OverS_s;
     double *strain_n, *strain_s;

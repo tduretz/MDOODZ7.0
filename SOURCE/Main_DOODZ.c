@@ -115,9 +115,11 @@ int RunMDOODZ( int nargs, char *args[] ) {
     // Get grid indices
     GridIndices( &mesh );
     
-    Nmodel.rx_abs  = DoodzCalloc(Nmodel.nit_max+1, sizeof(double)); Nmodel.rx_rel = DoodzCalloc(Nmodel.nit_max+1, sizeof(double));
-    Nmodel.rz_abs  = DoodzCalloc(Nmodel.nit_max+1, sizeof(double)); Nmodel.rz_rel = DoodzCalloc(Nmodel.nit_max+1, sizeof(double));
-    Nmodel.rp_abs  = DoodzCalloc(Nmodel.nit_max+1, sizeof(double)); Nmodel.rp_rel = DoodzCalloc(Nmodel.nit_max+1, sizeof(double));
+    // Initialise data for logs of iterations
+    Nmodel.nit             = 0;
+    Nmodel.rx_abs          = DoodzCalloc(Nmodel.nit_max+1, sizeof(double)); Nmodel.rx_rel = DoodzCalloc(Nmodel.nit_max+1, sizeof(double));
+    Nmodel.rz_abs          = DoodzCalloc(Nmodel.nit_max+1, sizeof(double)); Nmodel.rz_rel = DoodzCalloc(Nmodel.nit_max+1, sizeof(double));
+    Nmodel.rp_abs          = DoodzCalloc(Nmodel.nit_max+1, sizeof(double)); Nmodel.rp_rel = DoodzCalloc(Nmodel.nit_max+1, sizeof(double));
     Nmodel.LogIsNewtonStep = DoodzCalloc(Nmodel.nit_max+1, sizeof(int));
     
     Nx = mesh.Nx; Nz = mesh.Nz; Ncx = Nx-1; Ncz = Nz-1;

@@ -529,15 +529,15 @@ void GridAlloc ( grid* mesh, params* model ) {
     mesh->VxVz   = DoodzCalloc (NxVz*Nz,sizeof(double));
 
     // Time-series
-    mesh->Uthermal_time   = DoodzCalloc (model->Nt,sizeof(double));
-    mesh->Uelastic_time   = DoodzCalloc (model->Nt,sizeof(double));
-    mesh->Work_time       = DoodzCalloc (model->Nt,sizeof(double));
-    mesh->Time_time       = DoodzCalloc (model->Nt,sizeof(double));
-    mesh->Short_time      = DoodzCalloc (model->Nt,sizeof(double));
-    mesh->P_mean_time     = DoodzCalloc (model->Nt,sizeof(double));
-    mesh->T_mean_time     = DoodzCalloc (model->Nt,sizeof(double));
-    mesh->Tii_mean_time   = DoodzCalloc (model->Nt,sizeof(double));
-    mesh->Eii_mean_time   = DoodzCalloc (model->Nt,sizeof(double));
+    mesh->Uthermal_time   = DoodzCalloc (model->Nt+1,sizeof(double)); // +1 to include step 000
+    mesh->Uelastic_time   = DoodzCalloc (model->Nt+1,sizeof(double));
+    mesh->Work_time       = DoodzCalloc (model->Nt+1,sizeof(double));
+    mesh->Time_time       = DoodzCalloc (model->Nt+1,sizeof(double));
+    mesh->Short_time      = DoodzCalloc (model->Nt+1,sizeof(double));
+    mesh->P_mean_time     = DoodzCalloc (model->Nt+1,sizeof(double));
+    mesh->T_mean_time     = DoodzCalloc (model->Nt+1,sizeof(double));
+    mesh->Tii_mean_time   = DoodzCalloc (model->Nt+1,sizeof(double));
+    mesh->Eii_mean_time   = DoodzCalloc (model->Nt+1,sizeof(double));
 
     mesh->T          = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
     mesh->T0_n       = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));

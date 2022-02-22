@@ -137,7 +137,7 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
     double Exx_pl=0.0, Exx_pwl=0.0, Ezz_pl=0.0, Ezz_pwl=0.0, Exz_pl=0.0, Exz_pwl=0.0;
     int gs = materials->gs[phase];
     double pg = materials->ppzm[phase], Kg = materials->Kpzm[phase], Qg = materials->Qpzm[phase], gam = materials->Gpzm[phase], cg = materials->cpzm[phase], lambda = materials->Lpzm[phase];
-    double eta_vp0 = materials->eta_vp[phase], n_vp = materials->n_vp[phase], eta_vp;
+    double eta_vp0 = materials->eta_vp[phase], n_vp = materials->n_vp[phase], eta_vp = materials->eta_vp[phase];
     double dQdP=0.0, K = 1.0/beta; //1.0/materials->bet[phase];
     int    dens_mod = materials->density_model[phase];
     double F_trial0 = F_trial;
@@ -399,7 +399,6 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
     eta_ve = eta_up;
 
     // printf("%2.2e %2.2e %2.2e %2.2e %2.2e %2.2e\n", eta_el*scaling->eta, eta_cst*scaling->eta, eta_pwl*scaling->eta, eta_lin*scaling->eta, eta_lo*scaling->eta, eta_up*scaling->eta);
-
 
     // Local iterations
     for (it=0; it<nitmax; it++) {

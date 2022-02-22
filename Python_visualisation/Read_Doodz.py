@@ -2,8 +2,8 @@ import h5py as h5py
 import numpy as np
 import matplotlib.pyplot as mpl
 
-file = h5py.File('/Users/tduretz/REPO_GIT/MDOODZ6.0/SOURCE/Extension/Output00100.gzip.h5', 'r')
-P    = file['Centers/P']
+file = h5py.File('/Users/romankulakov/CLionProjects/MDOODZ7/cmake-build-debug/Output00000.gzip.h5', 'r')
+P    = file['Centers/T']
 xc   = file['/Model/xc_coord']
 zc   = file['/Model/zc_coord']
 data = file['/Model/Params']
@@ -27,4 +27,4 @@ mpl.tight_layout()
 #mpl.contour(x,y,h.transpose(), [500])
 #mpl.quiver(xv[::10,::10],yv[::10,::10],hx_itp[::10,::10], hy_itp[::10,::10])
 mpl.show()
-mpl.title('P')
+mpl.title('T')

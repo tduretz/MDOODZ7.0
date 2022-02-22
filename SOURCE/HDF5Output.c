@@ -676,15 +676,15 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
     AddFieldToGroup( FileName, "Model", "Params"   , 'd', 8,  A, 1 );
 
     // Add time series
-    AddFieldToGroup(  FileName, "TimeSeries", "Time_time" ,     'd', model.Nt,  mesh->Time_time,      1 );
-    AddFieldToGroup(  FileName, "TimeSeries", "Short_time" ,    'd', model.Nt,  mesh->Short_time,     1 );
-    AddFieldToGroup(  FileName, "TimeSeries", "Work_time" ,     'd', model.Nt,  mesh->Work_time,      1 );
-    AddFieldToGroup(  FileName, "TimeSeries", "Uthermal_time" , 'd', model.Nt,  mesh->Uthermal_time,  1 );
-    AddFieldToGroup(  FileName, "TimeSeries", "Uelastic_time" , 'd', model.Nt,  mesh->Uelastic_time,  1 );
-    AddFieldToGroup(  FileName, "TimeSeries", "T_mean_time" ,   'd', model.Nt,  mesh->T_mean_time,    1 );
-    AddFieldToGroup(  FileName, "TimeSeries", "P_mean_time" ,   'd', model.Nt,  mesh->P_mean_time,    1 );
-    AddFieldToGroup(  FileName, "TimeSeries", "Tii_mean_time" , 'd', model.Nt,  mesh->Tii_mean_time,  1 );
-    AddFieldToGroup(  FileName, "TimeSeries", "Eii_mean_time" , 'd', model.Nt,  mesh->Eii_mean_time,  1 );
+    AddFieldToGroup(  FileName, "TimeSeries", "Time_time" ,     'd', model.Nt+1,  mesh->Time_time,      1 );
+    AddFieldToGroup(  FileName, "TimeSeries", "Short_time" ,    'd', model.Nt+1,  mesh->Short_time,     1 );
+    AddFieldToGroup(  FileName, "TimeSeries", "Work_time" ,     'd', model.Nt+1,  mesh->Work_time,      1 );
+    AddFieldToGroup(  FileName, "TimeSeries", "Uthermal_time" , 'd', model.Nt+1,  mesh->Uthermal_time,  1 );
+    AddFieldToGroup(  FileName, "TimeSeries", "Uelastic_time" , 'd', model.Nt+1,  mesh->Uelastic_time,  1 );
+    AddFieldToGroup(  FileName, "TimeSeries", "T_mean_time" ,   'd', model.Nt+1,  mesh->T_mean_time,    1 );
+    AddFieldToGroup(  FileName, "TimeSeries", "P_mean_time" ,   'd', model.Nt+1,  mesh->P_mean_time,    1 );
+    AddFieldToGroup(  FileName, "TimeSeries", "Tii_mean_time" , 'd', model.Nt+1,  mesh->Tii_mean_time,  1 );
+    AddFieldToGroup(  FileName, "TimeSeries", "Eii_mean_time" , 'd', model.Nt+1,  mesh->Eii_mean_time,  1 );
 
 
     // Grid coordinate arrays
@@ -790,7 +790,6 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
     AddFieldToGroup( FileName, "Iterations", "rp_abs"          , 'd', Nmodel.nit_max+1, Nmodel.rp_abs         ,  1 );
     AddFieldToGroup( FileName, "Iterations", "LogIsNewtonStep" , 'i', Nmodel.nit_max+1, Nmodel.LogIsNewtonStep,  1 );
     AddFieldToGroup( FileName, "Iterations", "NumberSteps"     , 'i',                1, &(Nmodel.nit)         ,  1 );
-
 
     // Freedom
     free( FileName );
