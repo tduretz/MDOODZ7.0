@@ -5,7 +5,7 @@ project(MDOODZ C)
 set(CMAKE_C_STANDARD 11)
 
 if (NOT MODEL)
-    set(MODEL ShearTemplate)
+    set(MODEL RiftingPaulineMD6)
     message("MODEL is not set, setting a default '${MODEL}' model")
     message("To set a model use -DMODEL=ModelName option")
 endif ()
@@ -30,7 +30,6 @@ set(SOURCE_FILES
         SOURCE/RheologyDensity.c
         SOURCE/RheologyParticles.c
         SOURCE/Routines_BEN.c
-        SOURCE/set_${MODEL}.c
         SOURCE/Solvers.c
         SOURCE/SparseTools.c
         SOURCE/StokesAssemblyCoupled.c
@@ -57,16 +56,9 @@ set(DEPENDENCIES
         SuiteSparse::umfpack
         hdf5-static)
 
-add_executable(MDOODZ SOURCE/main.c ${SOURCE_FILES})
+add_executable(MDOODZ SOURCE/main.c ${SOURCE_FILES} SOURCE/set_${MODEL}.c)
 target_link_libraries(MDOODZ PRIVATE ${DEPENDENCIES})
 
 # TESTING
 
-include_directories(TESTS)
-
-add_executable(ShearTemplate_test TESTS/ShearTemplate_test.c ${SOURCE_FILES})
-target_link_libraries(ShearTemplate_test PRIVATE ${DEPENDENCIES})
-
-enable_testing()
-
-add_test(shearTemplate ShearTemplate_test)
+include(Tests.cmake)
