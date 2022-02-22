@@ -61,4 +61,4 @@ target_link_libraries(MDOODZ PRIVATE ${DEPENDENCIES})
 
 # TESTING
 
-include(tests.cmake)
+include(Tests.cmake)
