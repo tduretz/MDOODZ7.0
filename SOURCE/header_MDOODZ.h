@@ -129,7 +129,7 @@ struct _params {
     int    safe_mode, nstagmax;
     // Deformation maps
     int nT, nE, nd, def_maps;
-    double Pn, Tmin, Tmax, Emin, Emax, dmin, dmax, PrBG;
+    double Pn, Tmin, Tmax, Emin, Emax, dmin, dmax, PrBG, TBG;
     // Surface processes
     double surf_diff, surf_sedirate, surf_baselev, surf_Winc, surf_Vinc;
     // Initial thermal perturbation

@@ -58,46 +58,46 @@ double ItpRho1D( double Pgrid, params* model, int k ) {
     return rho;
 }
 
-double ItpRho2D( double Tgrid, double Pgrid, int p, params *model, mat_prop *materials) {
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
+
+double Interpolate2Ddata( double Tgrid, double Pgrid, double Tmin, double Tmax, double Pmin, double Pmax, int nT, int nP, double* data ) {
     // Declarations
-    double rho, dstT, dstP, TW, PW;
+    double data_itp, dstT, dstP, TW, PW;
     double wT, wP;
     int iT, iP, iSW, iSE, iNW, iNE;
-    // Identify current phase diagram
-    const int phase_diag = materials->phase_diagram[p];
     // Determine T and P increments in the current phase diagram
-    const    int NT = model->PDMnT[phase_diag];
-    const    int NP = model->PDMnP[phase_diag];
-    const double dT = (model->PDMTmax[phase_diag] - model->PDMTmin[phase_diag])/(NT-1.0);
-    const double dP = (model->PDMPmax[phase_diag] - model->PDMPmin[phase_diag])/(NP-1.0);
+    const double dT = (Tmax - Tmin)/(nT-1.0);
+    const double dP = (Pmax - Pmin)/(nP-1.0);
     // Pressure and temperature + correct to remain within the database bounds
-    if (Tgrid<model->PDMTmin[phase_diag]) Tgrid = model->PDMTmin[phase_diag] + 0.01*dT;
-    if (Tgrid>model->PDMTmax[phase_diag]) Tgrid = model->PDMTmax[phase_diag] - 0.01*dT;
-    if (Pgrid<model->PDMPmin[phase_diag]) Pgrid = model->PDMPmin[phase_diag] + 0.01*dP;
-    if (Pgrid>model->PDMPmax[phase_diag]) Pgrid = model->PDMPmax[phase_diag] - 0.01*dP;
+    if ( Tgrid < Tmin ) Tgrid = Tmin + 0.01*dT;
+    if ( Tgrid > Tmax ) Tgrid = Tmax - 0.01*dT;
+    if ( Pgrid < Pmin ) Pgrid = Pmin + 0.01*dP;
+    if ( Pgrid > Pmax ) Pgrid = Pmax - 0.01*dP;
     // Find index of minimum/west temperature node
-    dstT  = ( Tgrid - model->PDMTmin[phase_diag] );
+    dstT  = Tgrid - Tmin ;
     iT    = ceil( dstT/dT - 0.0 ) - 1;
     // Find index of minimum/west pressure node
-    dstP  = ( Pgrid - model->PDMPmin[phase_diag] );
+    dstP  = Pgrid - Pmin;
     iP    = ceil( dstP/dP - 0.0 ) - 1;
     // Calculate weights for bilinear interpolant
-    TW    = (model->PDMTmin[phase_diag] + iT*dT);
-    PW    = (model->PDMPmin[phase_diag] + iP*dP);
+    TW    = Tmin + iT*dT;
+    PW    = Pmin + iP*dP;
     wT    = 1.0 - (Tgrid - TW )/dT;
     wP    = 1.0 - (Pgrid - PW )/dP;
     // Indices of neigbours
-    iSW   = iT + iP*NT;
-    iSE   = iT + iP*NT+1;
-    iNW   = iT + (iP+1)*NT;
-    iNE   = iT + (iP+1)*NT+1;
+    iSW   = iT + iP*nT;
+    iSE   = iT + iP*nT+1;
+    iNW   = iT + (iP+1)*nT;
+    iNE   = iT + (iP+1)*nT+1;
     // Interpolate from 4 neighbours
-    rho  = 0.0;
-    rho +=  (1.0 - wT)* (1.0 - wP) * model->PDMrho[phase_diag][iSW];
-    rho +=  (      wT)* (1.0 - wP) * model->PDMrho[phase_diag][iSE];
-    rho +=  (1.0 - wT)* (      wP) * model->PDMrho[phase_diag][iNW];
-    rho +=  (      wT)* (      wP) * model->PDMrho[phase_diag][iNE];
-    return rho;
+    data_itp  = 0.0;
+    data_itp +=  (1.0 - wT)* (1.0 - wP) * data[iNE];
+    data_itp +=  (      wT)* (1.0 - wP) * data[iNW];
+    data_itp +=  (1.0 - wT)* (      wP) * data[iSE];
+    data_itp +=  (      wT)* (      wP) * data[iSW];
+    return data_itp;
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
@@ -1614,7 +1614,8 @@ double EvaluateDensity( int p, double T, double P, double X, params *model, mat_
 
     // T and P dependent density based on phase diagrams
     if ( materials->density_model[p] == 2 ) {
-        rho    = ItpRho2D( T, P, p, model, materials);
+        int PD = materials->phase_diagram[p]; // PD: index of phase diagram
+        rho    = Interpolate2Ddata( T, P, model->PDMTmin[PD], model->PDMTmax[PD], model->PDMPmin[PD], model->PDMPmax[PD], model->PDMnT[PD], model->PDMnP[PD], model->PDMrho[PD] );
     }
 
     // P-T dependent density

@@ -83,7 +83,9 @@ void PhaseRheologyLoop( int centroid, double sign, double denom, double Exx, dou
         }
         if (centroid == 2) { // if centroid and pressure is varied compute drhodp
             if ( cond == 1 ) drhodP[c0]      += sign*vol[p][c0] * rho/(denom);
-            if (p==2 &&  drhodP[c0]<0.0) printf("phase = %d, drhodP = %2.2e, P = %2.10e, perturbed rho = %2.10e --- denom = %2.2e \n", p, drhodP[c0], P, rho, denom);
+//            if (c0==8621 && p==2 ) { //&&  drhodP[c0]<0.0
+//                printf("cell %d, perturbed rho = %2.10e, P = %2.10e phase = %d, drhodP = %2.2e, P = %2.10e --- denom = %2.2e \n", c0, rho*scaling->rho, P*scaling->S, p, drhodP[c0], P, denom);
+//            }
         }
     }
     

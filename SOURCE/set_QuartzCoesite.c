@@ -181,9 +181,9 @@ void SetParticles( markers *particles, scale scaling, params model, mat_prop *ma
 void SetBCs( grid *mesh, params *model, scale scaling, markers* particles, mat_prop *materials, surface* topo ) {
 
     int    kk, k, l, c, c1;
-    int    NX, NZ, NCX, NCZ;
-    double Lx, Lz, a = model->user3, b = model->user4;
-    
+    int    NX, NZ, NCX, NCZ, thermal_evolution = (int)model->user0;
+    double Lx, Lz, a = model->user3, b = model->user4, Tfix = model->TBG;
+        
     // Define dimensions;
     Lx = (double) (model->xmax - model->xmin) ;
     Lz = (double) (model->zmax - model->zmin) ;
@@ -191,9 +191,11 @@ void SetBCs( grid *mesh, params *model, scale scaling, markers* particles, mat_p
     // Sizes
     NX  = mesh->Nx; NCX = NX-1;
     NZ  = mesh->Nz; NCZ = NZ-1;
-
-    double Tfix = (pow(mesh->p_in[0]*scaling.S/1e9/b, 1/a) + zeroC)/scaling.T;
-    printf("Pressure: %2.2e , Temperature: %2.2e\n", mesh->p_in[0]*scaling.S,  pow(mesh->p_in[0]*scaling.S/1e9/b, 1/a));
+    
+    if ( thermal_evolution == 1 ) {
+        Tfix = (pow(mesh->p_in[0]*scaling.S/1e9/b, 1/a) + zeroC)/scaling.T;
+        printf("Pressure: %2.2e , Temperature: %2.2e\n", mesh->p_in[0]*scaling.S,  pow(mesh->p_in[0]*scaling.S/1e9/b, 1/a));
+    }
     
     /* --------------------------------------------------------------------------------------------------------*/
     /* Set the BCs for Vx on all grid levels                                                                   */

@@ -1138,6 +1138,7 @@ void ReadInputFile( char* fin_name, int *istep, int *irestart, int *writer, int 
     model->EpsBG           = ReadDou2( fin, "EpsBG",           0.0 ) / scaling->E;
     model->DivBG           = ReadDou2( fin, "DivBG",           0.0 ) / scaling->E;
     model->PrBG            = ReadDou2( fin, "PrBG",            0.0 ) / scaling->S;
+    model->TBG             = ReadDou2( fin, "TBG",             0.0 ) / scaling->T;
     // Anisotropy
 //    model->director_angle  = ReadDou2( fin, "director_angle",  0.0 )  * M_PI/ 180.0;
 //    model->aniso_factor    = ReadDou2( fin, "aniso_factor",    1.0 );
@@ -1362,20 +1363,20 @@ void ReadInputFile( char* fin_name, int *istep, int *irestart, int *writer, int 
                 }
                 DoodzFree(rho0);
                 
-            //    //-------- In situ VISU for debugging: do not delete ------------------------//
-            //    FILE        *GNUplotPipe;
-            //    GNUplotPipe = popen ("gnuplot -persistent", "Work");
-            //    int NumCommands = 2;
-            //    char *GNUplotCommands[] = { "set style line 1 lc rgb '#0060ad' lt 1 lw 2 pt 7 pi -1 ps 1.5", "set pointintervalbox 3"};
-            //    for (int i=0; i<NumCommands; i++) fprintf(GNUplotPipe, "%s \n", GNUplotCommands[i]); //Send commands to gnuplot one by one.
-
-            //    fprintf(GNUplotPipe, "plot '-' with lines linestyle 1\n");
-            //    for (int i=0; i<model->PD1DnP[k]; i++) {
-            //        fprintf(GNUplotPipe, "%lf %lf \n", p[i]*scaling->S, model->PD1Drho[k][i]*scaling->rho); //Write the data to a temporary file
-            //    }
-            //    fprintf(GNUplotPipe, "e\n");
-            //    fflush(GNUplotPipe);
-            //     //-------- In situ VISU for debugging: do not delete ------------------------//
+//                //-------- In situ VISU for debugging: do not delete ------------------------//
+//                FILE        *GNUplotPipe;
+//                GNUplotPipe = popen ("gnuplot -persistent", "Work");
+//                int NumCommands = 2;
+//                char *GNUplotCommands[] = { "set style line 1 lc rgb '#0060ad' lt 1 lw 2 pt 7 pi -1 ps 1.5", "set pointintervalbox 3"};
+//                for (int i=0; i<NumCommands; i++) fprintf(GNUplotPipe, "%s \n", GNUplotCommands[i]); //Send commands to gnuplot one by one.
+//
+//                fprintf(GNUplotPipe, "plot '-' with lines linestyle 1\n");
+//                for (int i=0; i<model->PD1DnP[k]; i++) {
+//                    fprintf(GNUplotPipe, "%lf %lf \n", p[i]*scaling->S, model->PD1Drho[k][i]*scaling->rho); //Write the data to a temporary file
+//                }
+//                fprintf(GNUplotPipe, "e\n");
+//                fflush(GNUplotPipe);
+//                 //-------- In situ VISU for debugging: do not delete ------------------------//
             }
             else {
                 printf("Cannot open file %s, check if the file exists in the current location !\n Exiting", fname);
@@ -1544,20 +1545,20 @@ void ReadInputFile( char* fin_name, int *istep, int *irestart, int *writer, int 
             printf ("One should increment 'model->num_PD' to allocate enough memory and store the database\n");
             exit(5);
         }
-        model->PDMnT[pid]         = 793;                     // Resolution for temperature (MANTLE) []
-        model->PDMnP[pid]         = 793;                     // Resolution for pressure    (MANTLE) []
-        model->PDMTmin[pid]       = 373.0/scaling->T;         // Minimum temperature        (MANTLE) [K]
-        model->PDMTmax[pid]       = 1373.0/scaling->T;        // Maximum temperature        (MANTLE) [K]
-        model->PDMPmin[pid]       = 10.13e6/scaling->S;         // Minimum pressure           (MANTLE) [Pa]
-        model->PDMPmax[pid]       = 5.5816e9 /scaling->S;        // Maximum pressure           (MANTLE) [Pa]
-        model->PDMrho[pid]        = ReadBin( "PHASE_DIAGRAMS/SiO2.dat", model->PDMnT[pid], model->PDMnP[pid], scaling->rho);
+        model->PDMnT[pid]         = 675;                         // Resolution for temperature (MANTLE) []
+        model->PDMnP[pid]         = 2500;                        // Resolution for pressure    (MANTLE) []
+        model->PDMTmin[pid]       = 398+1e-3/scaling->T;         // Minimum temperature        (MANTLE) [K]
+        model->PDMTmax[pid]       = 800+273/scaling->T;          // Maximum temperature        (MANTLE) [K]
+        model->PDMPmin[pid]       = 0.0090/10*1e9/scaling->S;    // Minimum pressure           (MANTLE) [Pa]
+        model->PDMPmax[pid]       = 49.9890/10*1e9 /scaling->S;  // Maximum pressure           (MANTLE) [Pa]
+        model->PDMrho[pid]        = ReadBin( "PHASE_DIAGRAMS/SiO2_nsm005.dat", model->PDMnT[pid], model->PDMnP[pid], scaling->rho);
 
-        for (pid=0; pid<model->num_PD; pid++) {
-            printf("Running diffusion on density table %0d\n", pid);
-            double dT = (model->PDMTmax[pid] - model->PDMTmin[pid]) / (model->PDMnT[pid] - 1);
-            double dP = (model->PDMPmax[pid] - model->PDMPmin[pid]) / (model->PDMnP[pid] - 1);
-            ExplicitDiffusion2D( model->PDMrho[pid],  model->PDMnT[pid], model->PDMnP[pid], dT, dP, scaling );
-        }
+//        for (pid=0; pid<model->num_PD; pid++) {
+//            printf("Running diffusion on density table %0d\n", pid);
+//            double dT = (model->PDMTmax[pid] - model->PDMTmin[pid]) / (model->PDMnT[pid] - 1);
+//            double dP = (model->PDMPmax[pid] - model->PDMPmin[pid]) / (model->PDMnP[pid] - 1);
+//            ExplicitDiffusion2D( model->PDMrho[pid],  model->PDMnT[pid], model->PDMnP[pid], dT, dP, scaling );
+//        }
 
 
     }
