@@ -1000,9 +1000,9 @@ void MakeBreakpointParticles( markers *particles,  grid* mesh, markers *topo_cha
         }
     }
 
-    mesh->Uthermal  /= (scaling.rhoE*scaling.L*scaling.L);
-    mesh->Work   /= (scaling.rhoE*scaling.L*scaling.L);
-    model.L0  /= (scaling.L);
+    mesh->Uthermal /= (scaling.rhoE*scaling.L*scaling.L);
+    mesh->Work     /= (scaling.rhoE*scaling.L*scaling.L);
+    model.L0       /= (scaling.L);
 }
 
 
@@ -1229,6 +1229,7 @@ void ReadInputFile( char* fin_name, int *istep, int *irestart, int *writer, int 
         materials->pref_pwl[k] = ReadMatProps( fin, "pref_pwl",k,    1.0 );    // weakening prefactor for power law
         materials->gs[k]    = ReadMatProps( fin, "gs",    k,    0.0   );
         materials->gs_ref[k]= ReadMatProps( fin, "gs_ref" ,k,  2.0e-3  ) /scaling->L;
+        materials->kin[k]   = ReadMatProps( fin, "kin",    k,    0.0   );
         // Strain softening
         materials->coh_soft[k]   = (int)ReadMatProps( fin, "coh_soft",   k,    0.0   );
         materials->phi_soft[k]   = (int)ReadMatProps( fin, "phi_soft",   k,    0.0   );
@@ -1300,7 +1301,8 @@ void ReadInputFile( char* fin_name, int *istep, int *irestart, int *writer, int 
         if ( abs(materials->linv[k])>0 ) ReadDataLinear     ( materials, model, k, materials->linv[k], scaling );
         if ( abs(materials->gbsv[k])>0 ) ReadDataGBS        ( materials, model, k, materials->gbsv[k], scaling );
         if ( abs(materials->expv[k])>0 ) ReadDataExponential( materials, model, k, materials->expv[k], scaling );
-        if ( abs(materials->gs[k])  >0 ) ReadDataGSE        ( materials, model, k, materials->gs[k], scaling );
+        if ( abs(materials->gs[k])  >0 ) ReadDataGSE        ( materials, model, k, materials->gs[k],   scaling );
+        if ( abs(materials->kin[k]) >0 ) ReadDataKinetics   ( materials, model, k, materials->kin[k],  scaling );
 
         if ( abs(materials->cstv[k])>0 ) {
             materials->eta0[k]  /= scaling->eta;
@@ -1362,6 +1364,11 @@ void ReadInputFile( char* fin_name, int *istep, int *irestart, int *writer, int 
                     }
                 }
                 DoodzFree(rho0);
+                
+//                printf("scaling->rho = %2.10e\n",scaling->rho);
+//                FILE* write = fopen("PHASE_DIAGRAMS/QuartzCoesite600C_smoothed.bin", "wb");
+//                fwrite ( model->PD1Drho[k],     sizeof(double), model->PD1DnP[k] , write);
+//                fclose(write);
                 
 //                //-------- In situ VISU for debugging: do not delete ------------------------//
 //                FILE        *GNUplotPipe;
@@ -1545,22 +1552,13 @@ void ReadInputFile( char* fin_name, int *istep, int *irestart, int *writer, int 
             printf ("One should increment 'model->num_PD' to allocate enough memory and store the database\n");
             exit(5);
         }
-        model->PDMnT[pid]         = 675;                         // Resolution for temperature (MANTLE) []
-        model->PDMnP[pid]         = 2500;                        // Resolution for pressure    (MANTLE) []
-        model->PDMTmin[pid]       = 398+1e-3/scaling->T;         // Minimum temperature        (MANTLE) [K]
-        model->PDMTmax[pid]       = 800+273/scaling->T;          // Maximum temperature        (MANTLE) [K]
-        model->PDMPmin[pid]       = 0.0090/10*1e9/scaling->S;    // Minimum pressure           (MANTLE) [Pa]
-        model->PDMPmax[pid]       = 49.9890/10*1e9 /scaling->S;  // Maximum pressure           (MANTLE) [Pa]
-        model->PDMrho[pid]        = ReadBin( "PHASE_DIAGRAMS/SiO2_nsm005.dat", model->PDMnT[pid], model->PDMnP[pid], scaling->rho);
-
-//        for (pid=0; pid<model->num_PD; pid++) {
-//            printf("Running diffusion on density table %0d\n", pid);
-//            double dT = (model->PDMTmax[pid] - model->PDMTmin[pid]) / (model->PDMnT[pid] - 1);
-//            double dP = (model->PDMPmax[pid] - model->PDMPmin[pid]) / (model->PDMnP[pid] - 1);
-//            ExplicitDiffusion2D( model->PDMrho[pid],  model->PDMnT[pid], model->PDMnP[pid], dT, dP, scaling );
-//        }
-
-
+        model->PDMnT[pid]         = 675;                           // Resolution for temperature (MANTLE) []
+        model->PDMnP[pid]         = 2500;                          // Resolution for pressure    (MANTLE) []
+        model->PDMTmin[pid]       = (398+1e-3)/scaling->T;         // Minimum temperature        (MANTLE) [K]
+        model->PDMTmax[pid]       = (800+273)/scaling->T;          // Maximum temperature        (MANTLE) [K]
+        model->PDMPmin[pid]       = (0.0090/10*1e9)/scaling->S;    // Minimum pressure           (MANTLE) [Pa]
+        model->PDMPmax[pid]       = (49.9890/10*1e9)/scaling->S;   // Maximum pressure           (MANTLE) [Pa]
+        model->PDMrho[pid]        = ReadBin( "PHASE_DIAGRAMS/SiO2_nsm100.dat", model->PDMnT[pid], model->PDMnP[pid], scaling->rho);
     }
 
     //------------------------------------------------------------------------------------------------------------------------------//
@@ -1572,13 +1570,13 @@ void ReadInputFile( char* fin_name, int *istep, int *irestart, int *writer, int 
         printf("Loading kinetic data...\n");
 
         /**** Quartz Coesite (dG_QuartzCoesite.dat)  ****/
-        model->kin_nT        = 1300;                         // Resolution for temperature (MANTLE) []
-        model->kin_nP        = 1000;                         // Resolution for pressure    (MANTLE) []
-        model->kin_Tmin      = (298+1e-3)/scaling->T;        // Minimum temperature        (MANTLE) [K]
-        model->kin_Tmax      = 1598/scaling->T;              // Maximum temperature        (MANTLE) [K]
-        model->kin_Pmin      = (0.049/10*1e9)/scaling->S;   // Minimum pressure           (MANTLE) [Pa]
-        model->kin_Pmax      = (99.95/10*1e9)/scaling->S;    // Maximum pressure           (MANTLE) [Pa]
-        model->kin_dG        = ReadBin( "PHASE_DIAGRAMS/dG_QuartzCoesite.dat", model->kin_nT, model->kin_nP, scaling->J/scaling->m);
+        model->kin_nT        = 675;                          // Resolution for temperature (MANTLE) []
+        model->kin_nP        = 2500;                         // Resolution for pressure    (MANTLE) []
+        model->kin_Tmin      = (398+1e-3)/scaling->T;        // Minimum temperature        (MANTLE) [K]
+        model->kin_Tmax      = (800+273)/scaling->T;         // Maximum temperature        (MANTLE) [K]
+        model->kin_Pmin      = (0.0090/10*1e9)/scaling->S;   // Minimum pressure           (MANTLE) [Pa]
+        model->kin_Pmax      = (49.9890/10*1e9)/scaling->S;  // Maximum pressure           (MANTLE) [Pa]
+        model->kin_dG        = ReadBin( "PHASE_DIAGRAMS/dG_QuartzCoesite.dat", model->kin_nT, model->kin_nP, scaling->J);
     }
 
     //------------------------------------------------------------------------------------------------------------------------------//

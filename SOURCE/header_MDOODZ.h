@@ -53,7 +53,8 @@ struct _mat_prop {
     DoodzFP tlin[20], Qlin[20], Vlin[20], nlin[20], mlin[20], Alin[20], alin[20], flin[20], rlin[20], Flin[20];
     DoodzFP tgbs[20], Qgbs[20], Vgbs[20], ngbs[20], mgbs[20], Agbs[20], agbs[20], fgbs[20], rgbs[20], Fgbs[20];
     DoodzFP ppzm[20], Kpzm[20], Qpzm[20], Vpzm[20], Gpzm[20], cpzm[20], Lpzm[20], gs_ref[20];
-    int     gs[20], cstv[20], pwlv[20], linv[20], expv[20], gbsv[20], phase_diagram[20], density_model[20];
+    DoodzFP Skin[20], kkin[20], Qkin[20];
+    int     kin[20], gs[20], cstv[20], pwlv[20], linv[20], expv[20], gbsv[20], phase_diagram[20], density_model[20];
     DoodzFP C_end[20], phi_end[20], psi_end[20], pls_start[20], pls_end[20], eta_vp[20], n_vp[20];
     int     phi_soft[20], psi_soft[20], coh_soft[20], is_tensile[20];
     DoodzFP Pr[20], tau_kin[20], dPr[20], k_chem[20];
@@ -507,6 +508,8 @@ void ReadDataLinear     ( mat_prop*, params*, int, int, scale* );
 void ReadDataGBS        ( mat_prop*, params*, int, int, scale* );
 void ReadDataExponential( mat_prop*, params*, int, int, scale* );
 void ReadDataGSE        ( mat_prop*, params*, int, int, scale* );
+void ReadDataKinetics   ( mat_prop*, params*, int, int, scale* );
+
 void AllocatePhaseDiagrams( params* );
 void FreePhaseDiagrams( params* );
 
@@ -610,7 +613,7 @@ void ChemicalDirectSolve( grid*, params, markers*, mat_prop*, double, scale );
 void InitialiseGrainSizeParticles( markers*, mat_prop* );
 
 void ViscosityDerivatives( grid*, mat_prop*, params*, Nparams, scale*);
-double ViscosityConcise( int , double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, mat_prop*, params*, scale*, double*, double*, double*, double*, double*, double*, double*, double*, double* , double*, double*, double*, double*, double*, double*, double*, double*, double*, double*, double, double, double, double, double,  double*, double*, double*, double*, double, double, double*, double*, double*, int );
+double ViscosityConcise( int , double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, mat_prop*, params*, scale*, double*, double*, double*, double*, double*, double*, double*, double*, double* , double*, double*, double*, double*, double*, double*, double*, double*, double*, double*, double, double, double, double, double, double,  double*, double*, double*, double*, double, double, double*, double*, double*, int, int );
 double EvaluateDensity( int, double, double, double, params*, mat_prop* );
 void ComputeMeanQuantitesForTimeSeries( grid *mesh );
 void LogTimeSeries( grid*, params, scale );

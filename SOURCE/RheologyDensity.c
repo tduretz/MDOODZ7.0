@@ -48,10 +48,10 @@ double ItpRho1D( double Pgrid, params* model, int k ) {
     if (Pgrid<model->PD1Dmin[k]) Pgrid = model->PD1Dmin[k] + 0.01*dP;
     if (Pgrid>model->PD1Dmax[k]) Pgrid = model->PD1Dmax[k] - 0.01*dP;
     // Find index of minimum/west pressure node
-    double dstP = ( Pgrid - model->PD1Dmin[k] );
+    double dstP = Pgrid - model->PD1Dmin[k];
     int    iP   = ceil( dstP/dP ) - 1;
     // Calculate weighting coefficients for linear interpolant
-    double PW   = (model->PD1Dmin[k] + iP*dP);
+    double PW   = model->PD1Dmin[k] + iP*dP;
     double wW   = 1.0 - (Pgrid - PW)/dP;
     // Interpolate from 2 neighbours
     double rho   = wW * model->PD1Drho[k][iP] + (1.0-wW) * model->PD1Drho[k][iP+1];
@@ -77,10 +77,10 @@ double Interpolate2Ddata( double Tgrid, double Pgrid, double Tmin, double Tmax, 
     if ( Pgrid > Pmax ) Pgrid = Pmax - 0.01*dP;
     // Find index of minimum/west temperature node
     dstT  = Tgrid - Tmin ;
-    iT    = ceil( dstT/dT - 0.0 ) - 1;
+    iT    = ceil( dstT/dT ) - 1;
     // Find index of minimum/west pressure node
     dstP  = Pgrid - Pmin;
-    iP    = ceil( dstP/dP - 0.0 ) - 1;
+    iP    = ceil( dstP/dP ) - 1;
     // Calculate weights for bilinear interpolant
     TW    = Tmin + iT*dT;
     PW    = Pmin + iP*dP;
@@ -104,7 +104,7 @@ double Interpolate2Ddata( double Tgrid, double Pgrid, double Tmin, double Tmax, 
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-double ViscosityConcise( int phase, double G, double T, double P, double d, double phi, double X0, double Exx, double Ezz, double Exz, double Gxx, double Gzz, double Gxz, double Txx0, double Tzz0, double Txz0, mat_prop* materials, params *model, scale *scaling, double *Txx, double *Tzz, double *Txz, double* etaVE, double* VEcoeff, double* Eii_el, double* Eii_pl, double* Eii_pwl, double* Eii_exp , double* Eii_lin, double* Eii_gbs, double* Eii_cst, double* Exx_el, double* Ezz_el, double* Exz_el, double* Exx_diss, double* Ezz_diss, double* Exz_diss, double *d1, double strain_acc, double dil, double fric, double C, double P0,  double *X1, double *OverS, double *Pcorr, double *rho, double beta, double div, double *div_el, double *div_pl, double *div_r, int post_process ) {
+double ViscosityConcise( int phase, double G, double T, double P, double d, double phi, double X0, double Exx, double Ezz, double Exz, double Gxx, double Gzz, double Gxz, double Txx0, double Tzz0, double Txz0, mat_prop* materials, params *model, scale *scaling, double *Txx, double *Tzz, double *Txz, double* etaVE, double* VEcoeff, double* Eii_el, double* Eii_pl, double* Eii_pwl, double* Eii_exp , double* Eii_lin, double* Eii_gbs, double* Eii_cst, double* Exx_el, double* Ezz_el, double* Exz_el, double* Exx_diss, double* Ezz_diss, double* Exz_diss, double *d1, double strain_acc, double dil, double fric, double C, double P0, double T0,  double *X1, double *OverS, double *Pcorr, double *rho, double beta, double div, double *div_el, double *div_pl, double *div_r, int post_process, int centroid ) {
     
     // General paramaters
     double eta=0.0, R=materials->R, dt=model->dt;
@@ -113,7 +113,7 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
     
     // Parameters for deformation map calculations
     int    local_iter = model->loc_iter, it, nitmax = 20, noisy = 0;
-    int    constant=0, dislocation=0, peierls=0, diffusion=0, gbs=0, elastic = model->iselastic, comp = model->compressible, VolChangeReac = model->VolChangeReac;
+    int    constant=0, dislocation=0, peierls=0, diffusion=0, gbs=0, elastic = model->iselastic, comp = model->compressible, VolChangeReac = model->VolChangeReac, kinetics=0;
     double tol = 1.0e-11, res=0.0, res0=0.0, dfdeta=0.0, Tii=0.0, ieta_sum=0.0, Tii0 = sqrt(Txx0*Txx0 + Txz0*Txz0);
     double eta_up=0.0, eta_lo=0.0, eta_ve=0.0, eta_p=0.0, r_eta_pl=0.0, r_eta_ve=0.0, r_eta_p=0.0;
     double eta_pwl=0.0, eta_exp=0.0, eta_vep=0.0, eta_lin=0.0, eta_el=0.0, eta_gbs=0.0, eta_cst=0.0, eta_step=0.0;
@@ -133,6 +133,7 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
     double Exx_pl=0.0, Exx_pwl=0.0, Ezz_pl=0.0, Ezz_pwl=0.0, Exz_pl=0.0, Exz_pwl=0.0;
     int gs = materials->gs[phase];
     double pg = materials->ppzm[phase], Kg = materials->Kpzm[phase], Qg = materials->Qpzm[phase], gam = materials->Gpzm[phase], cg = materials->cpzm[phase], lambda = materials->Lpzm[phase];
+    double Qkin = materials->Qkin[phase], Skin = materials->Skin[phase], kkin = materials->kkin[phase], Vkin, dG=-1.0, rho_eq, rho0;
     double eta_vp0 = materials->eta_vp[phase], n_vp = materials->n_vp[phase], eta_vp = materials->eta_vp[phase];
     double dQdP=0.0, K = 1.0/beta; //1.0/materials->bet[phase];
     int    dens_mod = materials->density_model[phase];
@@ -189,6 +190,7 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
     if ( materials->linv[phase] !=0                  ) diffusion   = 1;
     if ( materials->gbsv[phase] !=0                  ) gbs         = 1;
     if ( materials->gs[phase]   !=0                  ) gs          = 1;
+    if ( materials->kin[phase]  !=0                  ) kinetics    = 1;
     
     // Turn of elasticity for the initialisation step  (viscous flow stress)
     if ( model->step    == 0                         ) elastic     = 0;
@@ -491,14 +493,27 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
     }
     
     
-    // ----------------- Reaction volume changes
-    
-    if (ProgressiveReaction == 1) {
-        rho_ref      = (1.0-X)*rho1 + X*rho2;
-        *rho         = rho_ref * exp(P/K - alpha*T);  
-    }
-    else {
-        *rho         = EvaluateDensity( phase, T, P, X, model, materials );
+    // ----------------- Reaction volume changes, computation of updated density only on centroid nodes
+    if ( centroid > 0 ) {
+        if (ProgressiveReaction == 1) {
+            rho_ref      = (1.0-X)*rho1 + X*rho2;
+            *rho         = rho_ref * exp(P/K - alpha*T);
+        }
+        else {
+            rho_eq = EvaluateDensity( phase, T, P, X, model, materials );
+            if ( kinetics == 1 ) dG            = Interpolate2Ddata( T0, P0, model->kin_Tmin, model->kin_Tmax, model->kin_Pmin, model->kin_Pmax, model->kin_nT, model->kin_nP, model->kin_dG );
+            if ( kinetics == 1 && dG>0.0 ) {
+                Vkin          = kkin*T*( exp(-Qkin/R/T) * (1.0 - exp(-dG/R/T)) ); // growth rate [m/s]
+                tau_kin       = log(1-0.6666666) * pow(-2*Skin*Vkin, -1);
+                rho0          = EvaluateDensity( phase, T0, P0, X, model, materials );
+                *rho          = 1.0/(tau_kin+dt) * (tau_kin*rho0 + dt*rho_eq);
+//                printf("rho = %03f, rho0 =  %03f, T = %2.2e, P = %2.6e, dG = %2.6e, Vkin = %2.6e tau_kin = %2.6e\n", *rho*scaling->rho, rho0*scaling->rho, T*scaling->T, P*scaling->S, dG*scaling->J, Vkin*scaling->V, tau_kin*scaling->t);
+//                printf("kkin = %2.6e\n", kkin*scaling->L/scaling->t/scaling->T);
+            }
+            else {
+                *rho          = rho_eq;
+            }
+        }
     }
 
     if (is_pl == 0) {
@@ -729,7 +744,7 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
                 cond =  fabs(mesh->phase_perc_n[p][c0])>1.0e-13;
 
                 if ( cond == 1 ) {                    
-                    eta =  ViscosityConcise( p, mesh->mu_n[c0], mesh->T[c0], mesh->p_in[c0], mesh->d0_n[c0], mesh->phi0_n[c0], mesh->X0_n[c0], Exx, Ezz, Exz, Gxx, Gzz, Gxz, mesh->sxxd0[c0], mesh->szzd0[c0], mesh->sxz0_n[c0], materials    , model, scaling, &txx1, &tzz1, &txz1, &etaVE, &VEcoeff, &eII_el, &eII_pl, &eII_pwl, &eII_exp, &eII_lin, &eII_gbs, &eII_cst, &exx_el, &ezz_el, &exz_el, &exx_diss, &ezz_diss, &exz_diss, &dnew, mesh->strain_n[c0], mesh->dil_n[c0], mesh->fric_n[c0], mesh->C_n[c0], mesh->p0_n[c0], &Xreac, &OverS, &Pcorr, &rho, mesh->bet_n[c0], mesh->div_u[c0], &div_el, &div_pl, &div_r, 1 );
+                    eta =  ViscosityConcise( p, mesh->mu_n[c0], mesh->T[c0], mesh->p_in[c0], mesh->d0_n[c0], mesh->phi0_n[c0], mesh->X0_n[c0], Exx, Ezz, Exz, Gxx, Gzz, Gxz, mesh->sxxd0[c0], mesh->szzd0[c0], mesh->sxz0_n[c0], materials    , model, scaling, &txx1, &tzz1, &txz1, &etaVE, &VEcoeff, &eII_el, &eII_pl, &eII_pwl, &eII_exp, &eII_lin, &eII_gbs, &eII_cst, &exx_el, &ezz_el, &exz_el, &exx_diss, &ezz_diss, &exz_diss, &dnew, mesh->strain_n[c0], mesh->dil_n[c0], mesh->fric_n[c0], mesh->C_n[c0], mesh->p0_n[c0], mesh->T0_n[c0], &Xreac, &OverS, &Pcorr, &rho, mesh->bet_n[c0], mesh->div_u[c0], &div_el, &div_pl, &div_r, 1, 1 );
                 
                     // printf("%2.2e %2.2e %2.2e\n", eta, etaVE, 1.0/(1.0/(materials->mu[p]*model->dt) + 1.0/materials->eta0[p]) );
 
@@ -948,7 +963,7 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
 
                 if ( cond == 1 ) {
 
-                    eta =  ViscosityConcise( p, mesh->mu_s[c1], mesh->T_s[c1], mesh->P_s[c1], mesh->d0_s[c1], mesh->phi0_s[c1], mesh->X0_s[c1], Exx, Ezz, Exz, Gxx, Gzz, Gxz, mesh->sxxd0_s[c1], mesh->szzd0_s[c1], mesh->sxz0[c1], materials, model, scaling, &txx1, &tzz1, &txz1, &etaVE, &VEcoeff, &eII_el, &eII_pl, &eII_pwl, &eII_exp, &eII_lin, &eII_gbs, &eII_cst, &exx_el, &ezz_el, &exz_el, &exx_diss, &ezz_diss, &exz_diss, &dnew, mesh->strain_s[c1], mesh->dil_s[c1], mesh->fric_s[c1], mesh->C_s[c1], mesh->p0_s[c1], &Xreac, &OverS, &Pcorr, &rho, mesh->bet_s[c1], mesh->div_u_s[c1], &div_el, &div_pl, &div_r, 1 );
+                    eta =  ViscosityConcise( p, mesh->mu_s[c1], mesh->T_s[c1], mesh->P_s[c1], mesh->d0_s[c1], mesh->phi0_s[c1], mesh->X0_s[c1], Exx, Ezz, Exz, Gxx, Gzz, Gxz, mesh->sxxd0_s[c1], mesh->szzd0_s[c1], mesh->sxz0[c1], materials, model, scaling, &txx1, &tzz1, &txz1, &etaVE, &VEcoeff, &eII_el, &eII_pl, &eII_pwl, &eII_exp, &eII_lin, &eII_gbs, &eII_cst, &exx_el, &ezz_el, &exz_el, &exx_diss, &ezz_diss, &exz_diss, &dnew, mesh->strain_s[c1], mesh->dil_s[c1], mesh->fric_s[c1], mesh->C_s[c1], mesh->p0_s[c1], 0.0, &Xreac, &OverS, &Pcorr, &rho, mesh->bet_s[c1], mesh->div_u_s[c1], &div_el, &div_pl, &div_r, 1, 0 );
 
                     switch ( average ) {  
                     case 0 : 
@@ -1861,7 +1876,7 @@ void GenerateDeformationMaps( grid* mesh, mat_prop *materials, params *model, Np
                 for ( iy=0; iy<nE; iy++) {
 
                     // Evaluate viscosity and stress
-                    eta =  ViscosityConcise( k, 0.0, T[ix], Pn, d[iz], 0.0, 0.0, E[iy], E[iy], 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, materials, model, scaling, &txx1, &tzz1, &txz1, &etaVE, &VEcoeff, &eII_el, &eII_pl, &eII_pwl, &eII_exp, &eII_lin, &eII_gbs, &eII_cst, &exx_el, &ezz_el, &exz_el, &exx_diss, &ezz_diss, &exz_diss,  &d1, 0.0, materials->psi[k], materials->phi[k], materials->C[k], 0.0, &Xreac, &OverS, &Pcorr, &rho, 0.0, 0.0, &div_el, &div_pl, &div_r, 0  );
+                    eta =  ViscosityConcise( k, 0.0, T[ix], Pn, d[iz], 0.0, 0.0, E[iy], E[iy], 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, materials, model, scaling, &txx1, &tzz1, &txz1, &etaVE, &VEcoeff, &eII_el, &eII_pl, &eII_pwl, &eII_exp, &eII_lin, &eII_gbs, &eII_cst, &exx_el, &ezz_el, &exz_el, &exx_diss, &ezz_diss, &exz_diss,  &d1, 0.0, materials->psi[k], materials->phi[k], materials->C[k], 0.0, 0.0, &Xreac, &OverS, &Pcorr, &rho, 0.0, 0.0, &div_el, &div_pl, &div_r, 0, 0  );
 
                     //                    if(k==0 && eII_exp*scaling->E>1e-17)printf("eII_exp = %2.2e eII_pwl = %2.2e \n", eII_exp*scaling->E, eII_pwl*scaling->E);
 
