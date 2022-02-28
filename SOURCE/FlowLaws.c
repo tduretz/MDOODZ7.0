@@ -897,14 +897,9 @@ void ReadDataGSE( mat_prop* mat, params* model, int k, int number, scale* scalin
 
 void ReadDataKinetics( mat_prop* mat, params* model, int k, int number, scale* scaling ) {
     
-    int success=0;
+    int success = 0;
     
     switch ( abs(number) ) {
-            
-        case 0 :
-            printf ("should not be here\n");
-            success      = 0;
-            break;
             
         case 9 :
             printf("Quartz-Coesite - Mosenfelder & Bohlen (1997);");
@@ -913,8 +908,9 @@ void ReadDataKinetics( mat_prop* mat, params* model, int k, int number, scale* s
             mat->Qkin[k] = 243e3     / scaling->J;
             success      = 1;
             break;
-            
     }
+    
+    if ( success==0 ) { printf("Error: Non existing kinetic number\n"); exit(12);}
     
 }
 
