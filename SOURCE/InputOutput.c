@@ -1558,7 +1558,7 @@ void ReadInputFile( char* fin_name, int *istep, int *irestart, int *writer, int 
         model->PDMTmax[pid]       = (800+273)/scaling->T;          // Maximum temperature        (MANTLE) [K]
         model->PDMPmin[pid]       = (0.0090/10*1e9)/scaling->S;    // Minimum pressure           (MANTLE) [Pa]
         model->PDMPmax[pid]       = (49.9890/10*1e9)/scaling->S;   // Maximum pressure           (MANTLE) [Pa]
-        model->PDMrho[pid]        = ReadBin( "PHASE_DIAGRAMS/SiO2_nsm100.dat", model->PDMnT[pid], model->PDMnP[pid], scaling->rho);
+        model->PDMrho[pid]        = ReadBin( "PHASE_DIAGRAMS/SiO2_nsm010.dat", model->PDMnT[pid], model->PDMnP[pid], scaling->rho);
     }
 
     //------------------------------------------------------------------------------------------------------------------------------//

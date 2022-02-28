@@ -1,5 +1,5 @@
 /**** RESTART ****/
-istep = 00250
+istep = 00500
 irestart = 0
 
 /**** INPUT FILE ****/
@@ -7,7 +7,7 @@ input_file = GarnetCoesite.bin /indicates the name in the input file for geometr
 
 /**** OUTPUT FILES ****/
 writer          = 1
-writer_step     = 10
+writer_step     = 20
 writer_markers  = 0
 writer_debug    = 0
 writer_energies = 0
@@ -22,17 +22,16 @@ T   = 600
 /**** SPACE-TIME ****/
 Nx      = 151
 Nz      = 151
-Nt      = 250
+Nt      = 500
 xmin    = -2.500000e-3
 zmin    = -2.500000e-3
 xmax    =  2.500000e-3
 zmax    =  2.500000e-3
-dt      = 0.125e11
+dt      = 0.125e9
 dt_constant  = 1
 Courant      = 0.3
 penalty      = 1e5
-DefectCorrectionForm = 1
-diag_scaling = 0
+safe_mode    = 1
 
 /**** SWITCHES ****/
 ismechanical    = 1
@@ -63,10 +62,10 @@ compressible    = 1
 shear_style     = 0
 iselastic       = 1
 EpsBG           = 1e-25
-DivBG           = 1e-14
+DivBG           = 1e-13
 PrBG            = 3.45e9  / pressure [Pa]
-TBG             = 873.15  / temperature [K]
-user0           = 0       / 0: fix T=TBG, 1: use T=(P/b)^(1/a)
+TBG             = 973.15  / temperature [K]
+user0           = 1       / 0: fix T=TBG, 1: use T=(P/b)^(1/a)
 user1           = 2       / 2: fancy set up --- 1: simple inclusion --- 0: homogeneous
 user2           = 0.5e-3  / inclusion radius [m]
 user3           = 6.9462     / fit coefficient a for T=(P/b)^(1/a) 
@@ -102,7 +101,7 @@ gsel = 0             / grain size evo.
 eta0 = 1e22
 npwl = 1
 Qpwl = 0
-eta_vp = 1e20
+eta_vp = 5e18
 n_vp   = 1.0
 density_model = 3
 
@@ -113,9 +112,9 @@ mu   = 9e10
 Cv   = 1050
 k    = 2.5
 Qr   = 0
-C    = 1e7
-phi  = 35
-psi  = 10
+C    = 1e6
+phi  = 5
+psi  = 0
 Slim = 500e9
 alp  = 10.0e-6
 bet  = 5.8824e-12
@@ -129,7 +128,7 @@ gsel = 0             / grain size evo.
 eta0 = 1e20
 npwl = 1
 Qpwl = 0
-eta_vp = 1e20
+eta_vp = 5e18
 n_vp   = 1.0
 density_model = 3
 
@@ -156,13 +155,14 @@ gsel = 0             / grain size evo.
 eta0 = 1e20
 npwl = 1
 Qpwl = 0
-eta_vp = 1e20
+eta_vp = 5e18
 n_vp   = 1.0
-density_model = 4
+density_model = 2
+kin           = 9  / include kinetics law from Mosenfelder
 phase_diagram = 9
 
 /**** DEFMAPS ****/
-nT    =    51      / Temperature resolutin []
+nT    =    51      / Temperature resolution []
 nE    =    51      / Strain rate resolution []
 nd    =    2        / Grain size resolution []
 Tmin  =    240      / Temperature minimum [°C]
