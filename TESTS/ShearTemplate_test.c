@@ -6,7 +6,7 @@
 int main() {
   const char *args[] = {
       "Some string",
-      "setup.txt",
+      "ShearTemplate.txt",
   };
   RunMDOODZ(2, (char **)args);
 
