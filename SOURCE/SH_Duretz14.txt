@@ -1,6 +1,6 @@
 /**** RESTART ****/
 istep = 00024
-irestart = 1
+irestart = 0
 
 /**** OUTPUT FILES ****/
 writer          = 1
@@ -13,12 +13,12 @@ writer_energies = 1
 eta = 3.2095e+22
 L   = 30e4
 V   = 1.5e-8
-T   = 3.3197e+04
+T   = 3.3197e+04Duretz14
 
 /**** SPACE-TIME ****/
 Nx      = 101
 Nz      = 101
-Nt      = 50
+Nt      = 0
 xmin    = -25.000000e3
 zmin    = -25.000000e3
 xmax    =  25.000000e3

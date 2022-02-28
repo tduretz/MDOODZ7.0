@@ -649,19 +649,18 @@ void GridAlloc ( grid* mesh, params* model ) {
     if ( model->aniso == 1 ) Initialise1DArrayDouble (mesh->FS_AR_s,  (Nx-0)*(Nz-0), 1.0 );
     if ( model->aniso == 1 ) mesh->aniso_factor_n = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
     if ( model->aniso == 1 ) mesh->aniso_factor_s = DoodzCalloc ((Nx-0)*(Nz-0),sizeof(double));
-
+    // Compressibility
     mesh->p0_n       = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
     mesh->p0_s       = DoodzCalloc ((Nx)*(Nz),sizeof(double));
-    // reaction
+    // Reaction
     mesh->X0_n       = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
     mesh->X_n        = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
     mesh->noise_n    = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
     mesh->X0_s       = DoodzCalloc ((Nx)*(Nz),sizeof(double));
     mesh->X_s        = DoodzCalloc ((Nx)*(Nz),sizeof(double));
     mesh->noise_s    = DoodzCalloc ((Nx)*(Nz),sizeof(double));
-
+    // Viscoplasticity
     mesh->OverS_n    = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    mesh->OverS_s    = DoodzCalloc ((Nx)*(Nz),sizeof(double));
 
     printf("Memory succesfully allocated : \nDiantre, que c'est bon!\n");
 
@@ -952,20 +951,18 @@ void GridFree( grid* mesh, params* model ) {
     if ( model->aniso == 1 ) DoodzFree(mesh->FS_AR_s);
     if ( model->aniso == 1 ) DoodzFree(mesh->aniso_factor_n);
     if ( model->aniso == 1 ) DoodzFree(mesh->aniso_factor_s);
-
-    // reac
+    // Compressibilitu
+    DoodzFree(mesh->p0_n);
+    DoodzFree(mesh->p0_s);
+    // Reaction
     DoodzFree(mesh->X_n);
     DoodzFree(mesh->noise_n);
     DoodzFree(mesh->X_s);
     DoodzFree(mesh->noise_s);
     DoodzFree(mesh->X0_n);
     DoodzFree(mesh->X0_s);
-    DoodzFree(mesh->p0_n);
-    DoodzFree(mesh->p0_s);
-
+    // Viscoplasticity
     DoodzFree(mesh->OverS_n);
-    DoodzFree(mesh->OverS_s);
-
 
 }
 
