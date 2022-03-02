@@ -1,13 +1,13 @@
 /**** RESTART ****/
-istep = 00320
-irestart = 0
+istep = 00500
+irestart = 1
 
 /**** INPUT FILE ****/
 input_file = GarnetCoesite.bin /indicates the name in the input file for geometry
 
 /**** OUTPUT FILES ****/
 writer          = 1
-writer_step     = 20
+writer_step     = 10
 writer_markers  = 0
 writer_debug    = 0
 writer_energies = 0
@@ -27,7 +27,7 @@ xmin    = -2.500000e-3
 zmin    = -2.500000e-3
 xmax    =  2.500000e-3
 zmax    =  2.500000e-3
-dt      = 6.2500e+09
+dt      = 6.250e+09
 dt_constant  = 1
 Courant      = 0.3
 penalty      = 1e5
@@ -64,12 +64,12 @@ iselastic       = 1
 EpsBG           = 1e-25
 DivBG           = 1e-14
 PrBG            = 3.45e9  / pressure [Pa]
-TBG             = 873.15  / temperature [K]
-user0           = 0       / 0: fix T=TBG, 1: use T=(P/b)^(1/a)
+TBG             = 973.15  / temperature [K]
+user0           = 1       / 0: fix T=TBG, 1: use T=(1/a)*ln(P/b)
 user1           = 2       / 2: fancy set up --- 1: simple inclusion --- 0: homogeneous
 user2           = 0.5e-3  / inclusion radius [m]
-user3           = 6.9462     / fit coefficient a for T=(P/b)^(1/a) 
-user4           = 5.5398e-20 / fit coefficient b for T=(P/b)^(1/a) 
+user3           = 1.02e-2     / fit coefficient a for T=(1/a)*ln(P/b) 
+user4           = 2.523e-3 / fit coefficient b for T=(1/a)*ln(P/b) 
 
 /**** GRAVITY ****/
 gx = 0.0000

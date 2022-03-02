@@ -48,7 +48,8 @@ void BuildInitialTopography( surface *topo, markers *topo_chain, params model, g
 /*--------------------------------------------------------------------------------------------------------------------*/
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
-void SetParticles( markers *particles, scale scaling, params model, mat_prop *materials  ) {    int np;
+void SetParticles( markers *particles, scale scaling, params model, mat_prop *materials  ) {
+
     FILE *read;
     int s1, s2;
     
@@ -87,84 +88,84 @@ void SetParticles( markers *particles, scale scaling, params model, mat_prop *ma
     double dstx, dstz;
     
     // Loop on particles
-    for( np=0; np<particles->Nb_part; np++ ) {
+    for( int p=0; p<particles->Nb_part; p++ ) {
         
         // Standard initialisation of particles
-        particles->Vx[np]    = -1.0*particles->x[np]*model.EpsBG;               // set initial particle velocity (unused)
-        particles->Vz[np]    =  particles->z[np]*model.EpsBG;                   // set initial particle velocity (unused)
-        particles->phase[np] = 0;                                               // same phase number everywhere
-        particles->d[np]     = 0;                                               // same grain size everywhere
-        particles->phi[np]   = 0.0;                                             // zero porosity everywhere
-        particles->T[np]     = T_init;
-        particles->P[np]     = P_init;
-        particles->noise[np] = ((double)rand() / (double)RAND_MAX) - 0.5;
+        particles->Vx[p]    = -1.0*particles->x[p]*model.EpsBG;               // set initial particle velocity (unused)
+        particles->Vz[p]    =  particles->z[p]*model.EpsBG;                   // set initial particle velocity (unused)
+        particles->phase[p] = 0;                                               // same phase number everywhere
+        particles->d[p]     = 0;                                               // same grain size everywhere
+        particles->phi[p]   = 0.0;                                             // zero porosity everywhere
+        particles->T[p]     = T_init;
+        particles->P[p]     = P_init;
+        particles->noise[p] = ((double)rand() / (double)RAND_MAX) - 0.5;
         
         if (setup==2) {
             // ------------------------- //
             // Locate markers in the image files
             // Find index of minimum/west temperature node
-            dstx = ( particles->x[np] - model.xmin );
+            dstx = ( particles->x[p] - model.xmin );
             ix   = ceil( dstx/dx_hr - 0.0 ) - 1;
             // Find index of minimum/west pressure node
-            dstz = ( particles->z[np] - model.zmin );
+            dstz = ( particles->z[p] - model.zmin );
             iz   = ceil( dstz/dz_hr  - 0.0 ) - 1;
             // Attribute phase
             if (ix<0) {printf("sauceisse!!!\n"); exit(1);}
             if (iz<0) {printf("puréee!!!\n"); exit(1);}
             if (ix + iz*(nx_hr-1) > nb_elems) {printf("puréee!!!\n"); exit(1);}
     //        printf("%d\n", (int)ph_hr[ix + iz*(nx_hr-1)]);
-            particles->phase[np] = (int)ph_hr[ix + iz*(nx_hr-1)];
+            particles->phase[p] = (int)ph_hr[ix + iz*(nx_hr-1)];
         }
         if (setup==1) {
             // DRAW INCLUSION
-            X  = particles->x[np]-xc;
-            Z  = particles->z[np]-zc;
+            X  = particles->x[p]-xc;
+            Z  = particles->z[p]-zc;
             Xn = X*cos(theta) - Z*sin(theta);
             Zn = X*sin(theta) + Z*cos(theta);
-            if ( pow(Xn/la,2) + pow(Zn/sa,2) - 1 < 0 ) particles->phase[np] = 1;
+            if ( pow(Xn/la,2) + pow(Zn/sa,2) - 1 < 0 ) particles->phase[p] = 1;
         }
         
         // SANITY CHECK
-        if (particles->phase[np] > model.Nb_phases-1) {
+        if (particles->phase[p] > model.Nb_phases-1) {
             printf("Lazy bastard! Fix your particle phase ID! \n");
             exit(144);
         }
 
         // SET DEFAULT DUAL PHASE NUMBER
-        particles->dual[np] = particles->phase[np];
+        particles->dual[p] = particles->phase[p];
 
         //--------------------------//
     }
 
-    // Generate checkerboard
-    for ( np=0; np<particles->Nb_part; np++ ) {
-            Ax = cos( 6.0*2.0*M_PI*particles->x[np] / Lx  );
-            Az = sin( 6.0*2.0*M_PI*particles->z[np] / Lz  );
+    /* // Generate checkerboard
+    for ( p=0; p<particles->Nb_part; p++ ) {
+            Ax = cos( 6.0*2.0*M_PI*particles->x[p] / Lx  );
+            Az = sin( 6.0*2.0*M_PI*particles->z[p] / Lz  );
 
-            if ( ( (Az<0.0 && Ax<0.0) || (Az>0.0 && Ax>0.0) ) && particles->dual[np]==0 ) {
-                particles->dual[np] += model.Nb_phases; 
+            if ( ( (Az<0.0 && Ax<0.0) || (Az>0.0 && Ax>0.0) ) && particles->dual[p]==0 ) {
+                particles->dual[p] += model.Nb_phases;
             }
     }
 
     // Generate checkerboard
-    for ( np=0; np<particles->Nb_part; np++ ) {
-            Ax = cos( 12.0*2.0*M_PI*particles->x[np] / Lx  );
-            Az = sin( 12.0*2.0*M_PI*particles->z[np] / Lz  );
+    for ( p=0; p<particles->Nb_part; p++ ) {
+            Ax = cos( 12.0*2.0*M_PI*particles->x[p] / Lx  );
+            Az = sin( 12.0*2.0*M_PI*particles->z[p] / Lz  );
 
-            if ( ( (Az<0.0 && Ax<0.0) || (Az>0.0 && Ax>0.0) ) && particles->dual[np]==1 ) {
-                particles->dual[np] += model.Nb_phases; 
+            if ( ( (Az<0.0 && Ax<0.0) || (Az>0.0 && Ax>0.0) ) && particles->dual[p]==1 ) {
+                particles->dual[p] += model.Nb_phases;
             }
     }
 
     // Generate checkerboard
-    for ( np=0; np<particles->Nb_part; np++ ) {
-            Ax = cos( 24.0*2.0*M_PI*particles->x[np] / Lx  );
-            Az = sin( 24.0*2.0*M_PI*particles->z[np] / Lz  );
+    for ( p=0; p<particles->Nb_part; p++ ) {
+            Ax = cos( 24.0*2.0*M_PI*particles->x[p] / Lx  );
+            Az = sin( 24.0*2.0*M_PI*particles->z[p] / Lz  );
 
-            if ( ( (Az<0.0 && Ax<0.0) || (Az>0.0 && Ax>0.0) ) && particles->dual[np]==2 ) {
-                particles->dual[np] += model.Nb_phases; 
+            if ( ( (Az<0.0 && Ax<0.0) || (Az>0.0 && Ax>0.0) ) && particles->dual[p]==2 ) {
+                particles->dual[p] += model.Nb_phases;
             }
-    }
+    } */
 
     MinMaxArray(particles->Vx, scaling.V, particles->Nb_part, "Vxp init" );
     MinMaxArray(particles->Vz, scaling.V, particles->Nb_part, "Vzp init" );
@@ -193,9 +194,12 @@ void SetBCs( grid *mesh, params *model, scale scaling, markers* particles, mat_p
     NZ  = mesh->Nz; NCZ = NZ-1;
     
     if ( thermal_evolution == 1 ) {
-        Tfix = (pow(mesh->p_in[0]*scaling.S/1e9/b, 1/a) + zeroC)/scaling.T;
+       // Tfix = (pow(mesh->p_in[0]*scaling.S/1e9/b, 1/a) + zeroC)/scaling.T;
+        Tfix = (log( mesh->p_in[0]*scaling.S/1e9 /b) / a + zeroC)/scaling.T;
         printf("Pressure: %2.2e , Temperature: %2.2e\n", mesh->p_in[0]*scaling.S,  pow(mesh->p_in[0]*scaling.S/1e9/b, 1/a));
     }
+#pragma omp parellel for shared(particles) firstprivate(Tfix)
+    for( int p=0; p<particles->Nb_part; p++ ) particles->T[p]     = Tfix;
     
     /* --------------------------------------------------------------------------------------------------------*/
     /* Set the BCs for Vx on all grid levels                                                                   */
