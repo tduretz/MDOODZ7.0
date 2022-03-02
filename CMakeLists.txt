@@ -70,3 +70,7 @@ target_link_libraries(MDOODZ PRIVATE ${DEPENDENCIES})
 # TESTING
 
 include(Tests.cmake)
+
+# PLOTTING
+
+include(Plots.cmake)
