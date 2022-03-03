@@ -38,7 +38,14 @@ set(SOURCE_FILES
         SOURCE/ThermalRoutines.c
         SOURCE/ThermalSolver.c)
 
-set(SuiteSparse_DIR ${PROJECT_SOURCE_DIR}/lib/suitesparse/install/lib/cmake/suitesparse-5.4.0)
+if (EXISTS ${PROJECT_SOURCE_DIR}/lib/suitesparse/install/lib/cmake/suitesparse-5.4.0)
+    set(SuiteSparse_DIR ${PROJECT_SOURCE_DIR}/lib/suitesparse/install/lib/cmake/suitesparse-5.4.0)
+elseif(EXISTS ${PROJECT_SOURCE_DIR}/lib/suitesparse/install/lib64/cmake/suitesparse-5.4.0)
+    set(SuiteSparse_DIR ${PROJECT_SOURCE_DIR}/lib/suitesparse/install/lib64/cmake/suitesparse-5.4.0)
+else()
+    message(FATAL_ERROR please set up a path to the suitesparse-config.cmake file)
+endif()
+
 set(HDF5_DIR ${PROJECT_SOURCE_DIR}/lib/hdf5/install/share/cmake)
 FIND_PACKAGE(SuiteSparse CONFIG)
 FIND_PACKAGE(HDF5 CONFIG)
