@@ -72,7 +72,7 @@ struct _p_markers {
 	int    *phase, *generation, *dual;
     markers* marker_chain;
     int    *intag;
-    double *Fxx, *Fxz, *Fzx, *Fzz, *dnx, *dnz, *nx, *nz;
+    double *Fxx, *Fxz, *Fzx, *Fzz, *nx, *nz;
     double *T0, *P0, *x0, *z0, *Tmax, *Pmax, *divth;
     double *dsxxd, *dszzd, *dsxz;
     double *noise, *rho;
@@ -223,8 +223,8 @@ struct _grid {
     double *drhodp_n;
     double *phi0_s, *d0_s, *T_s, *P_s;
     // For anisotropy
-    double *nx_n, *nz_n, *nx_s, *nz_s, *FS_AR_n, *FS_AR_s, *aniso_factor_n, *aniso_factor_s;
-    double *nx0_n, *nz0_n, *nx0_s, *nz0_s;
+    double *FS_AR_n, *FS_AR_s, *aniso_factor_n, *aniso_factor_s;
+    double *d1_n, *d2_n, *d1_s, *d2_s;
     
     double *cell_min_z, *cell_max_z, *vert_min_z, *vert_max_z;
     double *dil_n, *dil_s, *fric_n, *fric_s, *C_n, *C_s;

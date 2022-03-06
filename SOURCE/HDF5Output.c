@@ -524,7 +524,7 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
 
     if ( model.aniso == 1 ) {
 
-       // nx
+        // nx
         nx  = DoodzCalloc((model.Nx-1)*(model.Nz-1),sizeof(double));
         P2Mastah( &model, *particles, particles->nx,     mesh, nx,   mesh->BCp.type,  1, 0, interp, cent, model.itp_stencil);
         Cnx = DoodzMalloc( sizeof(float)*(model.Nx-1)*(model.Nz-1));

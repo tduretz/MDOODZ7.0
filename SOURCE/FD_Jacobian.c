@@ -160,14 +160,11 @@ void ViscosityDerivatives( grid *mesh, mat_prop *materials, params *model, Npara
                 ani = 0.0; d0   = 0.0; d1   = 0.0;
             }
             else {
-                // Director
-                nx = mesh->nx0_n[c0];
-                nz = mesh->nz0_n[c0];
-                // See Anisotropy_v2.ipynb
+                // Anisotropy
                 if ( model->aniso_fstrain  == 0 ) ani = 1.0 - 1.0 / mesh->aniso_factor_n[c0];
                 if ( model->aniso_fstrain  == 1 ) ani = 1.0 - 1.0 / mesh->FS_AR_n[c0];
-                d0   =  2.0*pow(nx, 2.0)*pow(nz, 2.0);
-                d1   = nx*nz*(-pow(nx, 2.0) + pow(nz, 2.0));
+                d0   = mesh->d1_n[k];
+                d1   = mesh->d2_n[k];
             }
             //----------------------------------------------------------//
 //            Exx = mesh->exxd[c0]  + mesh->sxxd0[c0] /etae/2.0;
@@ -321,14 +318,11 @@ void ViscosityDerivatives( grid *mesh, mat_prop *materials, params *model, Npara
                 ani = 0.0; d0   = 0.0; d1   = 0.0;
             }
             else {
-                // Director
-                nx = mesh->nx0_s[c1];
-                nz = mesh->nz0_s[c1];
-                // See Anisotropy_v2.ipynb
+                // Anisotropy
                 if ( model->aniso_fstrain  == 0 ) ani = 1.0 - 1.0 / mesh->aniso_factor_s[c1];
                 if ( model->aniso_fstrain  == 1 ) ani = 1.0 - 1.0 / mesh->FS_AR_s[c1];
-                d0   =  2.0*pow(nx, 2.0)*pow(nz, 2.0);
-                d1   = nx*nz*(-pow(nx, 2.0) + pow(nz, 2.0));
+                d0   = mesh->d1_s[k];
+                d1   = mesh->d2_s[k];
             }
             //----------------------------------------------------------//
             //            Exx = mesh->exxd_s[c1] + mesh->sxxd0_s[c1]/etae/2.0;
