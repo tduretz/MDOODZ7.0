@@ -344,11 +344,10 @@ int RunMDOODZ( int nargs, char *args[] ) {
             
             if ( model.aniso == 1 ) {
                 InitialiseDirectorVector ( &mesh, &particles, &model, &materials );
-                P2Mastah( &model, particles, particles.nx,     &mesh, mesh.nx0_n , mesh.BCp.type,  1, 0, interp, cent, model.itp_stencil);
-                P2Mastah( &model, particles, particles.nz,     &mesh, mesh.nz0_n , mesh.BCp.type,  1, 0, interp, cent, model.itp_stencil);
-                P2Mastah( &model, particles, particles.nx,     &mesh, mesh.nx0_s , mesh.BCg.type,  1, 0, interp, vert, model.itp_stencil);
-                P2Mastah( &model, particles, particles.nz,     &mesh, mesh.nz0_s , mesh.BCg.type,  1, 0, interp, vert, model.itp_stencil);
-                NormalizeDirector( &mesh, mesh.nx0_n, mesh.nz0_n, mesh.nx0_s, mesh.nz0_s, &model );
+                P2Mastah( &model, particles, particles.nx, &mesh, mesh.d1_n , mesh.BCp.type, -1, 0, interp, cent, model.itp_stencil);
+                P2Mastah( &model, particles, particles.nx, &mesh, mesh.d2_n , mesh.BCp.type, -2, 0, interp, cent, model.itp_stencil);
+                P2Mastah( &model, particles, particles.nx, &mesh, mesh.d1_s , mesh.BCg.type, -1, 0, interp, vert, model.itp_stencil);
+                P2Mastah( &model, particles, particles.nx, &mesh, mesh.d2_s , mesh.BCg.type, -2, 0, interp, vert, model.itp_stencil);
                 FiniteStrainAspectRatio ( &mesh, scaling, model, &particles );
                 P2Mastah( &model, particles, materials.aniso_factor,     &mesh, mesh.aniso_factor_n , mesh.BCp.type,  0, 0, interp, cent, model.itp_stencil);
                 P2Mastah( &model, particles, materials.aniso_factor,     &mesh, mesh.aniso_factor_s , mesh.BCg.type,  0, 0, interp, vert, model.itp_stencil);
@@ -575,11 +574,10 @@ int RunMDOODZ( int nargs, char *args[] ) {
             
             // Director vector
             if (model.aniso == 1 ) {
-                P2Mastah( &model, particles, particles.nx,     &mesh, mesh.nx0_n , mesh.BCp.type,  1, 0, interp, cent, model.itp_stencil);
-                P2Mastah( &model, particles, particles.nz,     &mesh, mesh.nz0_n , mesh.BCp.type,  1, 0, interp, cent, model.itp_stencil);
-                P2Mastah( &model, particles, particles.nx,     &mesh, mesh.nx0_s , mesh.BCg.type,  1, 0, interp, vert, model.itp_stencil);
-                P2Mastah( &model, particles, particles.nz,     &mesh, mesh.nz0_s , mesh.BCg.type,  1, 0, interp, vert, model.itp_stencil);
-                NormalizeDirector( &mesh, mesh.nx0_n, mesh.nz0_n, mesh.nx0_s, mesh.nz0_s, &model );
+                P2Mastah( &model, particles, particles.nx, &mesh, mesh.d1_n , mesh.BCp.type, -1, 0, interp, cent, model.itp_stencil);
+                P2Mastah( &model, particles, particles.nx, &mesh, mesh.d2_n , mesh.BCp.type, -2, 0, interp, cent, model.itp_stencil);
+                P2Mastah( &model, particles, particles.nx, &mesh, mesh.d1_s , mesh.BCg.type, -1, 0, interp, vert, model.itp_stencil);
+                P2Mastah( &model, particles, particles.nx, &mesh, mesh.d2_s , mesh.BCg.type, -2, 0, interp, vert, model.itp_stencil);
                 FiniteStrainAspectRatio ( &mesh, scaling, model, &particles );
                 P2Mastah( &model, particles, materials.aniso_factor,     &mesh, mesh.aniso_factor_n , mesh.BCp.type,  0, 0, interp, cent, model.itp_stencil);
                 P2Mastah( &model, particles, materials.aniso_factor,     &mesh, mesh.aniso_factor_s , mesh.BCg.type,  0, 0, interp, vert, model.itp_stencil);
@@ -676,10 +674,6 @@ int RunMDOODZ( int nargs, char *args[] ) {
                 MinMaxArrayTag( mesh.phase_perc_s[p],    1.0, (mesh.Nx-0)*(mesh.Nz-0), "ph_s      ", mesh.BCg.type );
             }
             
-            if  ( model.aniso == 1 ) MinMaxArrayTag( mesh.nx0_n,    1.0,   (mesh.Nx-1)*(mesh.Nz-1), "nx0_n  ", mesh.BCp.type );
-            if  ( model.aniso == 1 ) MinMaxArrayTag( mesh.nz0_n,    1.0,   (mesh.Nx-1)*(mesh.Nz-1), "nz0_n  ", mesh.BCp.type );
-            if  ( model.aniso == 1 ) MinMaxArrayTag( mesh.nx0_s,    1.0,   (mesh.Nx)*(mesh.Nz),     "nx0_s  ", mesh.BCg.type );
-            if  ( model.aniso == 1 ) MinMaxArrayTag( mesh.nz0_s,    1.0,   (mesh.Nx)*(mesh.Nz),     "n0z_s  ", mesh.BCg.type );
             if  ( model.aniso == 1 ) MinMaxArrayTag( mesh.FS_AR_n,  1.0,   (mesh.Nx-1)*(mesh.Nz-1), "FS_AR_n", mesh.BCp.type );
             if  ( model.aniso == 1 ) MinMaxArrayTag( mesh.FS_AR_s,  1.0,   (mesh.Nx)*(mesh.Nz),     "FS_AR_s", mesh.BCg.type );
             if  ( model.aniso == 1 ) MinMaxArrayTag( mesh.aniso_factor_n,  1.0,   (mesh.Nx-1)*(mesh.Nz-1), "aniso_factor_n", mesh.BCp.type );

@@ -679,14 +679,11 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
                 ani = 0.0; d0   = 0.0; d1   = 0.0;
             }
             else {
-                // Director
-                nx = mesh->nx0_n[c0];
-                nz = mesh->nz0_n[c0];
-                // See Anisotropy_v2.ipynb
+                // Anisotropy
                 if ( model->aniso_fstrain  == 0 ) ani = 1.0 - 1.0 / mesh->aniso_factor_n[c0];
                 if ( model->aniso_fstrain  == 1 ) ani = 1.0 - 1.0 / mesh->FS_AR_n[c0];
-                d0   =  2.0*pow(nx, 2.0)*pow(nz, 2.0);
-                d1   = nx*nz*(-pow(nx, 2.0) + pow(nz, 2.0));
+                d0   = mesh->d1_n[k];
+                d1   = mesh->d2_n[k];
             }
             //----------------------------------------------------------//
             // Exx = mesh->exxd[c0]  + mesh->sxxd0[c0] /etae/2.0;
@@ -905,14 +902,11 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
                 ani = 0.0; d0   = 0.0; d1   = 0.0;
             }
             else {
-                // Director
-                nx = mesh->nx0_s[c1];
-                nz = mesh->nz0_s[c1];
-                // See Anisotropy_v2.ipynb
+                // Anisotropy
                 if ( model->aniso_fstrain  == 0 ) ani = 1.0 - 1.0 / mesh->aniso_factor_s[c1];
                 if ( model->aniso_fstrain  == 1 ) ani = 1.0 - 1.0 / mesh->FS_AR_s[c1];
-                d0   =  2.0*pow(nx, 2.0)*pow(nz, 2.0);
-                d1   = nx*nz*(-pow(nx, 2.0) + pow(nz, 2.0));
+                d0   = mesh->d1_s[k];
+                d1   = mesh->d2_s[k];
             }
             //----------------------------------------------------------//
 //            Exx = mesh->exxd_s[c1] + mesh->sxxd0_s[c1]/etae/2.0;
@@ -1082,14 +1076,11 @@ void RheologicalOperators( grid* mesh, params* model, scale* scaling, int Jacobi
                     ani = 0.0; d0   = 0.0; d1   = 0.0;
                 }
                 else {
-                    // Director
-                    nx = mesh->nx0_n[k];
-                    nz = mesh->nz0_n[k];
-                    // See Anisotropy_v2.ipynb
+                    // Anisotropy
                     if ( model->aniso_fstrain  == 0 ) ani = 1.0 - 1.0 / mesh->aniso_factor_n[k];
                     if ( model->aniso_fstrain  == 1 ) ani = 1.0 - 1.0 / mesh->FS_AR_n[k];
-                    d0   =  2.0*pow(nx, 2.0)*pow(nz, 2.0);
-                    d1   = nx*nz*(-pow(nx, 2.0) + pow(nz, 2.0));
+                    d0   = mesh->d1_n[k];
+                    d1   = mesh->d2_n[k];
                 }
                 //----------------------------------------------------------//
                 mesh->D11_n[k] = 2.0*mesh->eta_n[k] - 2.0*ani*d0*mesh->eta_n[k];
@@ -1121,14 +1112,11 @@ void RheologicalOperators( grid* mesh, params* model, scale* scaling, int Jacobi
                     ani = 0.0; d0   = 0.0; d1   = 0.0;
                 }
                 else {
-                    // Director
-                    nx = mesh->nx0_s[k];
-                    nz = mesh->nz0_s[k];
-                    // See Anisotropy_v2.ipynb
+                    // Anisotropy
                     if ( model->aniso_fstrain  == 0 ) ani = 1.0 - 1.0 / mesh->aniso_factor_s[k];
                     if ( model->aniso_fstrain  == 1 ) ani = 1.0 - 1.0 / mesh->FS_AR_s[k];
-                    d0   =  2.0*pow(nx, 2.0)*pow(nz, 2.0);
-                    d1   = nx*nz*(-pow(nx, 2.0) + pow(nz, 2.0));
+                    d0   = mesh->d1_s[k];
+                    d1   = mesh->d2_s[k];
                 }
                 //----------------------------------------------------------//
                 mesh->D31_s[k] =                  2.0*ani*d1*mesh->eta_s[k];
@@ -1165,14 +1153,11 @@ void RheologicalOperators( grid* mesh, params* model, scale* scaling, int Jacobi
                     ani = 0.0; d0   = 0.0; d1   = 0.0;
                 }
                 else {
-                    // Director
-                    nx = mesh->nx0_n[k];
-                    nz = mesh->nz0_n[k];
-                    // See Anisotropy_v2.ipynb
+                    // Anisotropy
                     if ( model->aniso_fstrain  == 0 ) ani = 1.0 - 1.0 / mesh->aniso_factor_n[k];
                     if ( model->aniso_fstrain  == 1 ) ani = 1.0 - 1.0 / mesh->FS_AR_n[k];
-                    d0   =  2.0*pow(nx, 2.0)*pow(nz, 2.0);
-                    d1   = nx*nz*(-pow(nx, 2.0) + pow(nz, 2.0));
+                    d0   = mesh->d1_n[k];
+                    d1   = mesh->d2_n[k];
                 }
                 //----------------------------------------------------------//
 //                Exx = mesh->exxd[k]  + mesh->sxxd0[k] /etae/2.0;
@@ -1243,14 +1228,11 @@ void RheologicalOperators( grid* mesh, params* model, scale* scaling, int Jacobi
                     ani = 0.0; d0   = 0.0; d1   = 0.0;
                 }
                 else {
-                    // Director
-                    nx = mesh->nx0_s[k];
-                    nz = mesh->nz0_s[k];
-                    // See Anisotropy_v2.ipynb
+                    // Anisotropy
                     if ( model->aniso_fstrain  == 0 ) ani = 1.0 - 1.0 / mesh->aniso_factor_s[k];
                     if ( model->aniso_fstrain  == 1 ) ani = 1.0 - 1.0 / mesh->FS_AR_s[k];
-                    d0   =  2.0*pow(nx, 2.0)*pow(nz, 2.0);
-                    d1   = nx*nz*(-pow(nx, 2.0) + pow(nz, 2.0));
+                    d0   = mesh->d1_s[k];
+                    d1   = mesh->d2_s[k];
                 }
                 //----------------------------------------------------------//
 //                Exx = mesh->exxd_s[k] + mesh->sxxd0_s[k]/etae/2.0;
@@ -2027,11 +2009,6 @@ void InitialiseDirectorVector (grid* mesh, markers* particles, params* model, ma
             particles->nz[k] /= norm;
         }
     }
-
-    P2Mastah( model, *particles, particles->nx,     mesh, mesh->nx0_n,   mesh->BCp.type,  1, 0, interp, cent, model->itp_stencil);
-    P2Mastah( model, *particles, particles->nz,     mesh, mesh->nz0_n,   mesh->BCp.type,  1, 0, interp, cent, model->itp_stencil);
-    P2Mastah( model, *particles, particles->nx,     mesh, mesh->nx0_s,   mesh->BCg.type,  1, 0, interp, vert, model->itp_stencil);
-    P2Mastah( model, *particles, particles->nz,     mesh, mesh->nz0_s,   mesh->BCg.type,  1, 0, interp, vert, model->itp_stencil);
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/

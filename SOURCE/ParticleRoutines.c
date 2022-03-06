@@ -471,7 +471,9 @@ double Vertices2Particle( markers* particles, double* NodeField, double* X_vect,
         dst    = fabs(particles->x[k]-X_vect[0]);
         j_part = ceil((dst/dx)) - 1;
         if (j_part<0) {
-            printf("Should never be here I! (Vertices2Particle)\n"); exit(1);
+            // printf("Should never be here I! (Vertices2Particle)\n");
+            // printf("%2.10e %2.10e\n", particles->x[k],  X_vect[0]);
+            // exit(1);
             j_part = 0;
         }
         if (j_part>Nx-2) {
@@ -720,8 +722,6 @@ void AssignMarkerProperties (markers* particles, int new_ind, int min_index, par
         particles->Pmax[new_ind]         = particles->Pmax[min_index];
     }
     if (model->aniso == 1) {
-        particles->dnx[new_ind]          = particles->dnx[min_index];
-        particles->dnz[new_ind]          = particles->dnz[min_index];
         particles->nx[new_ind]           = particles->nx[min_index];
         particles->nz[new_ind]           = particles->nz[min_index];
     }
@@ -3346,6 +3346,14 @@ void P2Mastah ( params *model, markers particles, DoodzFP* mat_prop, grid *mesh,
                     if (flag==1) {
                         mark_val = mat_prop[k];
                     }
+                    //----------------------
+                    if (flag==-1) { // Anisotropy: Anisotropy_v2.ipynb
+                        mark_val =  2.0*pow(particles.nx[k], 2.0)*pow(particles.nz[k], 2.0);
+                    }
+                    if (flag==-2) { // Anisotropy: Anisotropy_v2.ipynb
+                        mark_val = particles.nx[k]*particles.nz[k]*(-pow(particles.nx[k], 2.0) + pow(particles.nz[k], 2.0));
+                    }
+                    //----------------------
                     if (avg==1) {
                         mark_val =  1.0/mark_val;
                     }
