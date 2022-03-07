@@ -5,7 +5,7 @@ run:
 	cd cmake-build && ./MDOODZ
 
 build:
-	cmake -G "Unix Makefiles" -DMODEL=$(MODEL) -B ./cmake-build && cmake --build ./cmake-build -- -j 6
+	cmake -G "Unix Makefiles" -DMODEL=$(MODEL) -DOPT=$(OPT) -DOMP=$(OMP) -B ./cmake-build && cmake --build ./cmake-build -- -j 6
 
 clean:
 	rm -rf *build*/
