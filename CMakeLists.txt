@@ -75,7 +75,7 @@ add_executable(MDOODZ SOURCE/main.c ${SOURCE_FILES} SOURCE/set_${MODEL}.c)
 target_link_libraries(MDOODZ PRIVATE ${DEPENDENCIES})
 
 option(OMP "Set this for using OpenMP" OFF)
-option(OPT "Set this for using optinisation" OFF)
+option(OPT "Set this for using optimisation" OFF)
 
 if (OPT)
     message("Using optimization")
