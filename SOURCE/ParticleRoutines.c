@@ -3228,6 +3228,8 @@ void P2Mastah ( params *model, markers particles, DoodzFP* mat_prop, grid *mesh,
     
     // flag == 0 --> interpolate from material properties structure
     // flag == 1 --> interpolate straight from the particle arrays
+    // flag ==-1 --> specific for anisotropy (see Anisotropy_v2.ipynb)
+    // flag ==-2 --> specific for anisotropy (see Anisotropy_v2.ipynb)
     // avg  == 0 --> arithmetic distance-weighted average
     // avg  == 1 --> harmonic distance-weighted average
     // avg  == 2 --> geometric distance-weighted average
@@ -3323,35 +3325,41 @@ void P2Mastah ( params *model, markers particles, DoodzFP* mat_prop, grid *mesh,
                 
                 // Get the column:
                 distance = ( particles.x[k] - X_vect[0] );
-                ip   = ceil( (distance/dx) + 0.5) - 1;
-
+                ip       = ceil( (distance/dx) + 0.5) - 1;
                 if (ip<0   ) ip = 0;
                 if (ip>Nx-1) ip = Nx-1;
 
                 // Get the line:
                 distance = ( particles.z[k] - Z_vect[0] );
-                jp   = ceil( (distance/dz) + 0.5) - 1;
-                
+                jp       = ceil( (distance/dz) + 0.5) - 1;
                 if (jp<0   ) jp = 0;
                 if (jp>Nz-1) jp = Nz-1;
 
+                // Distance to node
                 dxm = fabs( X_vect[ip] - particles.x[k]);
                 dzm = fabs( Z_vect[jp] - particles.z[k]);
                 
                 if ( prop == 0 ) {
                     // Get material properties (from particules or mat_prop array)
-                    if (flag==0) {
-                        mark_val = mat_prop[particles.phase[k]];
-                    }
-                    if (flag==1) {
-                        mark_val = mat_prop[k];
-                    }
-                    //----------------------
-                    if (flag==-1) { // Anisotropy: Anisotropy_v2.ipynb
-                        mark_val =  2.0*pow(particles.nx[k], 2.0)*pow(particles.nz[k], 2.0);
-                    }
-                    if (flag==-2) { // Anisotropy: Anisotropy_v2.ipynb
-                        mark_val = particles.nx[k]*particles.nz[k]*(-pow(particles.nx[k], 2.0) + pow(particles.nz[k], 2.0));
+                    switch (flag) {
+                        case 0:
+                            mark_val = mat_prop[particles.phase[k]];
+                            break;
+                            
+                        case 1:
+                            mark_val = mat_prop[k];
+                            break;
+                            
+                        case -1: // Anisotropy: Anisotropy_v2.ipynb
+                            mark_val =  2.0*pow(particles.nx[k], 2.0)*pow(particles.nz[k], 2.0);
+                            break;
+                            
+                        case -2: // Anisotropy: Anisotropy_v2.ipynb
+                            mark_val = particles.nx[k]*particles.nz[k]*(-pow(particles.nx[k], 2.0) + pow(particles.nz[k], 2.0));
+                            break;
+                            
+                        default:
+                            break;
                     }
                     //----------------------
                     if (avg==1) {
