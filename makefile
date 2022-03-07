@@ -13,5 +13,5 @@ build:
 clean:
 	rm -rf *build*/
 
-install:
+deps:
 	rm -rf lib && git clone https://github.com/kulakovri/MDOODZ-dependencies lib && cd lib && make install-hdf5 && make install-suitesparse
