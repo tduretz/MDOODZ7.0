@@ -696,7 +696,6 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
 //            printf("Eii=%2.2e Gii=%2.2e\n", Eii, Gii);
 //            exit(1);
             
-            //
             Da11  = 2.0 - 2.0*ani*d0;
             Da12  = 2.0*ani*d0;
             Da13  = 2.0*ani*d1;
