@@ -76,7 +76,7 @@ make build-dev MODEL=
 
 All build files will be located at the cmake-build directory
 
-After building you could run a MDOODZ with:
+After building you could run MDOODZ with:
 ```bash
 make run
 ```
