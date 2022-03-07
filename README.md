@@ -54,7 +54,7 @@ In order to build MDOODZ with CMake you have to install **cmake 3.21** or newer 
 To install SuiteSparse and HDF5 to the project:
 
 ```bash
-make install
+make deps
 ```
 
 ## How to use
