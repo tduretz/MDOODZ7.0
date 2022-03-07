@@ -85,14 +85,11 @@ else()
     set(CMAKE_C_FLAGS "-g -Wall -O0 -fno-inline -fno-omit-frame-pointer")
 endif()
 
-set(OpenMP_lgomp_LIBRARY "lgomp")
-find_package(OpenMP)
-target_link_libraries(MDOODZ PUBLIC OpenMP::OpenMP_C)
-message("Using OpenMP")
-
-
 if (OMP)
-    message("Using omp")
+    set(OpenMP_lgomp_LIBRARY "lgomp")
+    find_package(OpenMP)
+    target_link_libraries(MDOODZ PUBLIC OpenMP::OpenMP_C)
+    message("Using OpenMP")
 endif()
 
 # TESTING

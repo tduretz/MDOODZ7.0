@@ -10,6 +10,6 @@ jobs:
       - name: install packages
         run: make install
       - name: Builds cmake project
-        run: make build
+        run: make build OPT OMP
       - name: Runs tests
         run: make run-tests
