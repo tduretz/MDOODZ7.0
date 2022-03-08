@@ -53,7 +53,8 @@ struct _mat_prop {
     DoodzFP tlin[20], Qlin[20], Vlin[20], nlin[20], mlin[20], Alin[20], alin[20], flin[20], rlin[20], Flin[20];
     DoodzFP tgbs[20], Qgbs[20], Vgbs[20], ngbs[20], mgbs[20], Agbs[20], agbs[20], fgbs[20], rgbs[20], Fgbs[20];
     DoodzFP ppzm[20], Kpzm[20], Qpzm[20], Vpzm[20], Gpzm[20], cpzm[20], Lpzm[20], gs_ref[20];
-    int     gs[20], cstv[20], pwlv[20], linv[20], expv[20], gbsv[20], phase_diagram[20], density_model[20];
+    DoodzFP Skin[20], kkin[20], Qkin[20];
+    int     kin[20], gs[20], cstv[20], pwlv[20], linv[20], expv[20], gbsv[20], phase_diagram[20], density_model[20];
     DoodzFP C_end[20], phi_end[20], psi_end[20], pls_start[20], pls_end[20], eta_vp[20], n_vp[20];
     int     phi_soft[20], psi_soft[20], coh_soft[20], is_tensile[20];
     DoodzFP Pr[20], tau_kin[20], dPr[20], k_chem[20];
@@ -71,7 +72,7 @@ struct _p_markers {
 	int    *phase, *generation, *dual;
     markers* marker_chain;
     int    *intag;
-    double *Fxx, *Fxz, *Fzx, *Fzz, *dnx, *dnz, *nx, *nz;
+    double *Fxx, *Fxz, *Fzx, *Fzz, *nx, *nz;
     double *T0, *P0, *x0, *z0, *Tmax, *Pmax, *divth;
     double *dsxxd, *dszzd, *dsxz;
     double *noise, *rho;
@@ -129,7 +130,7 @@ struct _params {
     int    safe_mode, nstagmax;
     // Deformation maps
     int nT, nE, nd, def_maps;
-    double Pn, Tmin, Tmax, Emin, Emax, dmin, dmax, PrBG;
+    double Pn, Tmin, Tmax, Emin, Emax, dmin, dmax, PrBG, TBG;
     // Surface processes
     double surf_diff, surf_sedirate, surf_baselev, surf_Winc, surf_Vinc;
     // Initial thermal perturbation
@@ -141,6 +142,9 @@ struct _params {
     int    isPD, num_PD, *PDMnT, *PDMnP, *PD1DnP;
     double **PDMrho, *PDMTmin, *PDMTmax, *PDMPmin, *PDMPmax;
     double **PD1Drho,*PD1Dmin, *PD1Dmax;
+    // Kinetics
+    int    kin_nP, kin_nT;
+    double *kin_dG, kin_Tmin, kin_Tmax, kin_Pmin, kin_Pmax;
     // Visualisation
     int rec_T_P_x_z, delete_breakpoints, GNUplot_residuals;
     // Boundary conditions type
@@ -150,7 +154,7 @@ struct _params {
     int diffuse_X, diffuse_avg;
     double diffusion_length;
     // For Pips
-    int ProgReac, NoReturn, VolChangeReac, Plith_trick, UnsplitDiffReac;
+    int ProgReac, NoReturn, VolChangeReac, Plith_trick, UnsplitDiffReac, kinetics;
     // Anisotropy
     int aniso, aniso_fstrain, oop, noise_bg;
     int eqn_state;
@@ -189,7 +193,7 @@ struct _grid {
 	double *eta_s, *eta_n, *rho_s, *rho_n;
         // TODO eta_s -> eta_v (for vertex) eta_n -> eta_c (c for centroids)
     double *X_s, *X_n, *X0_s, *X0_n, *p0_n, *p0_s;
-    double *OverS_n,  *OverS_s;
+    double *OverS_n;
     double *strain_n, *strain_s;
 	double *u, *v, *p;
 	double *ru, *rv, *rp;
@@ -219,8 +223,8 @@ struct _grid {
     double *drhodp_n;
     double *phi0_s, *d0_s, *T_s, *P_s;
     // For anisotropy
-    double *nx_n, *nz_n, *nx_s, *nz_s, *FS_AR_n, *FS_AR_s, *aniso_factor_n, *aniso_factor_s;
-    double *nx0_n, *nz0_n, *nx0_s, *nz0_s;
+    double *FS_AR_n, *FS_AR_s, *aniso_factor_n, *aniso_factor_s;
+    double *d1_n, *d2_n, *d1_s, *d2_s;
     
     double *cell_min_z, *cell_max_z, *vert_min_z, *vert_max_z;
     double *dil_n, *dil_s, *fric_n, *fric_s, *C_n, *C_s;
@@ -504,6 +508,8 @@ void ReadDataLinear     ( mat_prop*, params*, int, int, scale* );
 void ReadDataGBS        ( mat_prop*, params*, int, int, scale* );
 void ReadDataExponential( mat_prop*, params*, int, int, scale* );
 void ReadDataGSE        ( mat_prop*, params*, int, int, scale* );
+void ReadDataKinetics   ( mat_prop*, params*, int, int, scale* );
+
 void AllocatePhaseDiagrams( params* );
 void FreePhaseDiagrams( params* );
 
@@ -607,7 +613,7 @@ void ChemicalDirectSolve( grid*, params, markers*, mat_prop*, double, scale );
 void InitialiseGrainSizeParticles( markers*, mat_prop* );
 
 void ViscosityDerivatives( grid*, mat_prop*, params*, Nparams, scale*);
-double ViscosityConcise( int , double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, mat_prop*, params*, scale*, double*, double*, double*, double*, double*, double*, double*, double*, double* , double*, double*, double*, double*, double*, double*, double*, double*, double*, double*, double, double, double, double, double,  double*, double*, double*, double*, double, double, double*, double*, double*, int );
+double ViscosityConcise( int , double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, mat_prop*, params*, scale*, double*, double*, double*, double*, double*, double*, double*, double*, double* , double*, double*, double*, double*, double*, double*, double*, double*, double*, double*, double, double, double, double, double, double,  double*, double*, double*, double*, double, double, double*, double*, double*, int, int );
 double EvaluateDensity( int, double, double, double, params*, mat_prop* );
 void ComputeMeanQuantitesForTimeSeries( grid *mesh );
 void LogTimeSeries( grid*, params, scale );

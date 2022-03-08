@@ -1,6 +1,6 @@
 /**** RESTART ****/
-istep = 00200
-irestart = 0
+istep = 00500
+irestart = 1
 
 /**** INPUT FILE ****/
 input_file = GarnetCoesite.bin /indicates the name in the input file for geometry
@@ -20,19 +20,18 @@ V   = 1e-18
 T   = 600
 
 /**** SPACE-TIME ****/
-Nx      = 51
-Nz      = 51
-Nt      = 200
+Nx      = 151
+Nz      = 151
+Nt      = 500
 xmin    = -2.500000e-3
 zmin    = -2.500000e-3
 xmax    =  2.500000e-3
 zmax    =  2.500000e-3
-dt      = 0.125e11
+dt      = 6.250e+09
 dt_constant  = 1
 Courant      = 0.3
 penalty      = 1e5
-DefectCorrectionForm = 1
-diag_scaling = 0
+safe_mode    = 1
 
 /**** SWITCHES ****/
 ismechanical    = 1
@@ -51,7 +50,8 @@ shear_heat      = 1
 adiab_heat      = 0
 fstrain         = 1
 advection       = 1
-GNUplot_residuals = 0 
+GNUplot_residuals = 0
+kinetics          = 1 
 
 /**** SETUP DEPENDANT ****/
 eta_avg         = 0
@@ -64,11 +64,12 @@ iselastic       = 1
 EpsBG           = 1e-25
 DivBG           = 1e-14
 PrBG            = 3.45e9  / pressure [Pa]
-user0           = 600     / temperature [°C]
-user1           = 0       / 2: fancy set up --- 1: simple inclusion --- 0: homogeneous
+TBG             = 973.15  / temperature [K]
+user0           = 1       / 0: fix T=TBG, 1: use T=(1/a)*ln(P/b)
+user1           = 2       / 2: fancy set up --- 1: simple inclusion --- 0: homogeneous
 user2           = 0.5e-3  / inclusion radius [m]
-user3           = 6.9462     / fit coefficient a for T=(P/b)^(1/a) 
-user4           = 5.5398e-20 / fit coefficient b for T=(P/b)^(1/a) 
+user3           = 1.02e-2     / fit coefficient a for T=(1/a)*ln(P/b) 
+user4           = 2.523e-3 / fit coefficient b for T=(1/a)*ln(P/b) 
 
 /**** GRAVITY ****/
 gx = 0.0000
@@ -100,7 +101,7 @@ gsel = 0             / grain size evo.
 eta0 = 1e22
 npwl = 1
 Qpwl = 0
-eta_vp = 1e20
+eta_vp = 5e19
 n_vp   = 1.0
 density_model = 3
 
@@ -111,9 +112,9 @@ mu   = 9e10
 Cv   = 1050
 k    = 2.5
 Qr   = 0
-C    = 1e7
+C    = 1e6
 phi  = 35
-psi  = 10
+psi  = 0
 Slim = 500e9
 alp  = 10.0e-6
 bet  = 5.8824e-12
@@ -127,7 +128,7 @@ gsel = 0             / grain size evo.
 eta0 = 1e20
 npwl = 1
 Qpwl = 0
-eta_vp = 1e20
+eta_vp = 5e19
 n_vp   = 1.0
 density_model = 3
 
@@ -154,12 +155,14 @@ gsel = 0             / grain size evo.
 eta0 = 1e20
 npwl = 1
 Qpwl = 0
-eta_vp = 1e20
+eta_vp = 5e18
 n_vp   = 1.0
-density_model = 4
+density_model = 2
+kin           = 9  / include kinetics law from Mosenfelder
+phase_diagram = 9
 
 /**** DEFMAPS ****/
-nT    =    51      / Temperature resolutin []
+nT    =    51      / Temperature resolution []
 nE    =    51      / Strain rate resolution []
 nd    =    2        / Grain size resolution []
 Tmin  =    240      / Temperature minimum [°C]

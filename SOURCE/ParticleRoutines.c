@@ -471,7 +471,9 @@ double Vertices2Particle( markers* particles, double* NodeField, double* X_vect,
         dst    = fabs(particles->x[k]-X_vect[0]);
         j_part = ceil((dst/dx)) - 1;
         if (j_part<0) {
-            printf("Should never be here I! (Vertices2Particle)\n"); exit(1);
+            // printf("Should never be here I! (Vertices2Particle)\n");
+            // printf("%2.10e %2.10e\n", particles->x[k],  X_vect[0]);
+            // exit(1);
             j_part = 0;
         }
         if (j_part>Nx-2) {
@@ -720,8 +722,6 @@ void AssignMarkerProperties (markers* particles, int new_ind, int min_index, par
         particles->Pmax[new_ind]         = particles->Pmax[min_index];
     }
     if (model->aniso == 1) {
-        particles->dnx[new_ind]          = particles->dnx[min_index];
-        particles->dnz[new_ind]          = particles->dnz[min_index];
         particles->nx[new_ind]           = particles->nx[min_index];
         particles->nz[new_ind]           = particles->nz[min_index];
     }
@@ -3228,6 +3228,8 @@ void P2Mastah ( params *model, markers particles, DoodzFP* mat_prop, grid *mesh,
     
     // flag == 0 --> interpolate from material properties structure
     // flag == 1 --> interpolate straight from the particle arrays
+    // flag ==-1 --> specific for anisotropy (see Anisotropy_v2.ipynb)
+    // flag ==-2 --> specific for anisotropy (see Anisotropy_v2.ipynb)
     // avg  == 0 --> arithmetic distance-weighted average
     // avg  == 1 --> harmonic distance-weighted average
     // avg  == 2 --> geometric distance-weighted average
@@ -3323,29 +3325,43 @@ void P2Mastah ( params *model, markers particles, DoodzFP* mat_prop, grid *mesh,
                 
                 // Get the column:
                 distance = ( particles.x[k] - X_vect[0] );
-                ip   = ceil( (distance/dx) + 0.5) - 1;
-
+                ip       = ceil( (distance/dx) + 0.5) - 1;
                 if (ip<0   ) ip = 0;
                 if (ip>Nx-1) ip = Nx-1;
 
                 // Get the line:
                 distance = ( particles.z[k] - Z_vect[0] );
-                jp   = ceil( (distance/dz) + 0.5) - 1;
-                
+                jp       = ceil( (distance/dz) + 0.5) - 1;
                 if (jp<0   ) jp = 0;
                 if (jp>Nz-1) jp = Nz-1;
 
+                // Distance to node
                 dxm = fabs( X_vect[ip] - particles.x[k]);
                 dzm = fabs( Z_vect[jp] - particles.z[k]);
                 
                 if ( prop == 0 ) {
                     // Get material properties (from particules or mat_prop array)
-                    if (flag==0) {
-                        mark_val = mat_prop[particles.phase[k]];
+                    switch (flag) {
+                        case 0:
+                            mark_val = mat_prop[particles.phase[k]];
+                            break;
+                            
+                        case 1:
+                            mark_val = mat_prop[k];
+                            break;
+                            
+                        case -1: // Anisotropy: Anisotropy_v2.ipynb
+                            mark_val =  2.0*pow(particles.nx[k], 2.0)*pow(particles.nz[k], 2.0);
+                            break;
+                            
+                        case -2: // Anisotropy: Anisotropy_v2.ipynb
+                            mark_val = particles.nx[k]*particles.nz[k]*(-pow(particles.nx[k], 2.0) + pow(particles.nz[k], 2.0));
+                            break;
+                            
+                        default:
+                            break;
                     }
-                    if (flag==1) {
-                        mark_val = mat_prop[k];
-                    }
+                    //----------------------
                     if (avg==1) {
                         mark_val =  1.0/mark_val;
                     }

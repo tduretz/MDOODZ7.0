@@ -239,8 +239,6 @@ void PartAlloc( markers *particles, params* model  ) {
     }
 
     if (model->aniso == 1) {
-        particles->dnx       = DoodzCalloc( particles->Nb_part_max,sizeof(DoodzFP));
-        particles->dnz       = DoodzCalloc( particles->Nb_part_max,sizeof(DoodzFP));
         particles->nx        = DoodzCalloc( particles->Nb_part_max,sizeof(DoodzFP));
         particles->nz        = DoodzCalloc( particles->Nb_part_max,sizeof(DoodzFP));
     }
@@ -316,8 +314,6 @@ void PartFree( markers *particles, params* model ) {
     }
 
     if (model->aniso == 1) {
-        DoodzFree(particles->dnx);
-        DoodzFree(particles->dnz);
         DoodzFree(particles->nx);
         DoodzFree(particles->nz);
     }
@@ -635,33 +631,28 @@ void GridAlloc ( grid* mesh, params* model ) {
     mesh->T_s    = DoodzCalloc ((Nx-0)*(Nz-0),sizeof(double));
     mesh->P_s    = DoodzCalloc ((Nx-0)*(Nz-0),sizeof(double));
 
-    if ( model->aniso == 1 ) mesh->nx_n    = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    if ( model->aniso == 1 ) mesh->nx_s    = DoodzCalloc ((Nx-0)*(Nz-0),sizeof(double));
-    if ( model->aniso == 1 ) mesh->nz_n    = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    if ( model->aniso == 1 ) mesh->nz_s    = DoodzCalloc ((Nx-0)*(Nz-0),sizeof(double));
-    if ( model->aniso == 1 ) mesh->nx0_n   = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    if ( model->aniso == 1 ) mesh->nx0_s   = DoodzCalloc ((Nx-0)*(Nz-0),sizeof(double));
-    if ( model->aniso == 1 ) mesh->nz0_n   = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    if ( model->aniso == 1 ) mesh->nz0_s   = DoodzCalloc ((Nx-0)*(Nz-0),sizeof(double));
+    if ( model->aniso == 1 ) mesh->d1_n    = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
+    if ( model->aniso == 1 ) mesh->d1_s    = DoodzCalloc ((Nx-0)*(Nz-0),sizeof(double));
+    if ( model->aniso == 1 ) mesh->d2_n    = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
+    if ( model->aniso == 1 ) mesh->d2_s    = DoodzCalloc ((Nx-0)*(Nz-0),sizeof(double));
     if ( model->aniso == 1 ) mesh->FS_AR_n = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
     if ( model->aniso == 1 ) mesh->FS_AR_s = DoodzCalloc ((Nx-0)*(Nz-0),sizeof(double));
     if ( model->aniso == 1 ) Initialise1DArrayDouble (mesh->FS_AR_n,  (Nx-1)*(Nz-1), 1.0 );
     if ( model->aniso == 1 ) Initialise1DArrayDouble (mesh->FS_AR_s,  (Nx-0)*(Nz-0), 1.0 );
     if ( model->aniso == 1 ) mesh->aniso_factor_n = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
     if ( model->aniso == 1 ) mesh->aniso_factor_s = DoodzCalloc ((Nx-0)*(Nz-0),sizeof(double));
-
+    // Compressibility
     mesh->p0_n       = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
     mesh->p0_s       = DoodzCalloc ((Nx)*(Nz),sizeof(double));
-    // reaction
+    // Reaction
     mesh->X0_n       = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
     mesh->X_n        = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
     mesh->noise_n    = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
     mesh->X0_s       = DoodzCalloc ((Nx)*(Nz),sizeof(double));
     mesh->X_s        = DoodzCalloc ((Nx)*(Nz),sizeof(double));
     mesh->noise_s    = DoodzCalloc ((Nx)*(Nz),sizeof(double));
-
+    // Viscoplasticity
     mesh->OverS_n    = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    mesh->OverS_s    = DoodzCalloc ((Nx)*(Nz),sizeof(double));
 
     printf("Memory succesfully allocated : \nDiantre, que c'est bon!\n");
 
@@ -940,32 +931,26 @@ void GridFree( grid* mesh, params* model ) {
     DoodzFree(mesh->T_s);
     DoodzFree(mesh->P_s);
 
-    if ( model->aniso == 1 ) DoodzFree(mesh->nx_n);
-    if ( model->aniso == 1 ) DoodzFree(mesh->nx_s);
-    if ( model->aniso == 1 ) DoodzFree(mesh->nz_n);
-    if ( model->aniso == 1 ) DoodzFree(mesh->nz_s);
-    if ( model->aniso == 1 ) DoodzFree(mesh->nx0_n);
-    if ( model->aniso == 1 ) DoodzFree(mesh->nx0_s);
-    if ( model->aniso == 1 ) DoodzFree(mesh->nz0_n);
-    if ( model->aniso == 1 ) DoodzFree(mesh->nz0_s);
+    if ( model->aniso == 1 ) DoodzFree(mesh->d1_n);
+    if ( model->aniso == 1 ) DoodzFree(mesh->d1_s);
+    if ( model->aniso == 1 ) DoodzFree(mesh->d2_n);
+    if ( model->aniso == 1 ) DoodzFree(mesh->d2_s);
     if ( model->aniso == 1 ) DoodzFree(mesh->FS_AR_n);
     if ( model->aniso == 1 ) DoodzFree(mesh->FS_AR_s);
     if ( model->aniso == 1 ) DoodzFree(mesh->aniso_factor_n);
     if ( model->aniso == 1 ) DoodzFree(mesh->aniso_factor_s);
-
-    // reac
+    // Compressibility
+    DoodzFree(mesh->p0_n);
+    DoodzFree(mesh->p0_s);
+    // Reaction
     DoodzFree(mesh->X_n);
     DoodzFree(mesh->noise_n);
     DoodzFree(mesh->X_s);
     DoodzFree(mesh->noise_s);
     DoodzFree(mesh->X0_n);
     DoodzFree(mesh->X0_s);
-    DoodzFree(mesh->p0_n);
-    DoodzFree(mesh->p0_s);
-
+    // Viscoplasticity
     DoodzFree(mesh->OverS_n);
-    DoodzFree(mesh->OverS_s);
-
 
 }
 

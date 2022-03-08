@@ -344,11 +344,10 @@ int RunMDOODZ( int nargs, char *args[] ) {
             
             if ( model.aniso == 1 ) {
                 InitialiseDirectorVector ( &mesh, &particles, &model, &materials );
-                P2Mastah( &model, particles, particles.nx,     &mesh, mesh.nx0_n , mesh.BCp.type,  1, 0, interp, cent, model.itp_stencil);
-                P2Mastah( &model, particles, particles.nz,     &mesh, mesh.nz0_n , mesh.BCp.type,  1, 0, interp, cent, model.itp_stencil);
-                P2Mastah( &model, particles, particles.nx,     &mesh, mesh.nx0_s , mesh.BCg.type,  1, 0, interp, vert, model.itp_stencil);
-                P2Mastah( &model, particles, particles.nz,     &mesh, mesh.nz0_s , mesh.BCg.type,  1, 0, interp, vert, model.itp_stencil);
-                NormalizeDirector( &mesh, mesh.nx0_n, mesh.nz0_n, mesh.nx0_s, mesh.nz0_s, &model );
+                P2Mastah( &model, particles, NULL, &mesh, mesh.d1_n , mesh.BCp.type, -1, 0, interp, cent, model.itp_stencil);
+                P2Mastah( &model, particles, NULL, &mesh, mesh.d2_n , mesh.BCp.type, -2, 0, interp, cent, model.itp_stencil);
+                P2Mastah( &model, particles, NULL, &mesh, mesh.d1_s , mesh.BCg.type, -1, 0, interp, vert, model.itp_stencil);
+                P2Mastah( &model, particles, NULL, &mesh, mesh.d2_s , mesh.BCg.type, -2, 0, interp, vert, model.itp_stencil);
                 FiniteStrainAspectRatio ( &mesh, scaling, model, &particles );
                 P2Mastah( &model, particles, materials.aniso_factor,     &mesh, mesh.aniso_factor_n , mesh.BCp.type,  0, 0, interp, cent, model.itp_stencil);
                 P2Mastah( &model, particles, materials.aniso_factor,     &mesh, mesh.aniso_factor_s , mesh.BCg.type,  0, 0, interp, vert, model.itp_stencil);
@@ -366,17 +365,9 @@ int RunMDOODZ( int nargs, char *args[] ) {
             Interp_Grid2P_centroids2( particles, particles.P,    &mesh, mesh.p_in, mesh.xvz_coord,  mesh.zvx_coord,  mesh.Nx-1, mesh.Nz-1, mesh.BCp.type, &model );
             Interp_Grid2P_centroids2( particles, particles.T,    &mesh, mesh.T,    mesh.xvz_coord,  mesh.zvx_coord,  mesh.Nx-1, mesh.Nz-1, mesh.BCt.type, &model );
             NonNewtonianViscosityGrid (     &mesh, &materials, &model, Nmodel, &scaling );
-            // MinMaxArrayTag( mesh.rho_s,      scaling.rho, (mesh.Nx)*(mesh.Nz),     "rho_s     ", mesh.BCg.type );
-            // MinMaxArrayTag( mesh.rho_n,      scaling.rho, (mesh.Nx-1)*(mesh.Nz-1), "rho_n     ", mesh.BCp.type );
-            // Interp_Grid2P_centroids( particles, particles.rho, &mesh, mesh.rho_n, mesh.xc_coord,  mesh.zc_coord,  mesh.Nx-1, mesh.Nz-1, mesh.BCp.type, &model );
-            // ArrayEqualArray( mesh.rho0_n, mesh.rho_n, (mesh.Nx-1)*(mesh.Nz-1) );
-            // exit(1);
-                        // P2Mastah( &model, particles, particles.rho,   &mesh, mesh.rho0_n, mesh.BCp.type,  1, 0, interp, cent, model.itp_stencil);
-                        // Interp_Grid2P_centroids( particles, particles.rho, &mesh, mesh.rho_n, mesh.xc_coord,  mesh.zc_coord,  mesh.Nx-1, mesh.Nz-1, mesh.BCp.type, &model );
-
         } // end of no_markers --- debug
         else {
-            
+            // Here we treat the case without marker interpolations
             Initialise1DArrayChar( mesh.BCu.type,  (mesh.Nx+0)*(mesh.Nz+1), -1 ); // make sure dofs are activated
             Initialise1DArrayChar( mesh.BCv.type,  (mesh.Nx+1)*(mesh.Nz+0), -1 );
             Initialise1DArrayChar( mesh.BCp.type,  (mesh.Nx-1)*(mesh.Nz-1), -1 );
@@ -388,7 +379,6 @@ int RunMDOODZ( int nargs, char *args[] ) {
             ComputeLithostaticPressure( &mesh, &model, materials.rho[0], scaling, 1 );
             NonNewtonianViscosityGrid (     &mesh, &materials, &model, Nmodel, &scaling );
             ArrayEqualArray( mesh.rho0_n, mesh.rho_n, (mesh.Nx-1)*(mesh.Nz-1) );
-
         }
         
         printf("Number of phases : %d\n", model.Nb_phases);
@@ -442,9 +432,6 @@ int RunMDOODZ( int nargs, char *args[] ) {
         }
         
         // Set initial stresses and pressure to zero
-        //        Initialise1DArrayDouble( particles.X,      particles.Nb_part, 0.0 ); // set X to zero for the first time step
-        //        Initialise1DArrayDouble( particles.P,      particles.Nb_part, 0.0 ); // now dynamic pressure...
-        //        Initialise1DArrayDouble( mesh.p_in,  (mesh.Nx-1)*(mesh.Nz-1), 0.0 );
         Initialise1DArrayDouble( mesh.sxxd,  (mesh.Nx-1)*(mesh.Nz-1), 0.0 );
         Initialise1DArrayDouble( mesh.szzd,  (mesh.Nx-1)*(mesh.Nz-1), 0.0 );
         Initialise1DArrayDouble( mesh.sxz,   (mesh.Nx)  *(mesh.Nz)  , 0.0 );
@@ -527,19 +514,10 @@ int RunMDOODZ( int nargs, char *args[] ) {
             //-----------------------------------------------------------------------------------------------------------
             // Interp P --> p0_n , p0_s
             P2Mastah( &model, particles, particles.P,     &mesh, mesh.p0_n,   mesh.BCp.type,  1, 0, interp, cent, model.itp_stencil);
-            // P2Mastah( &model, particles, particles.rho,   &mesh, mesh.rho0_n, mesh.BCp.type,  1, 0, interp, cent, model.itp_stencil);
 
             // Get physical properties that are constant throughout each timestep
-            // if ( model.eqn_state  > 0 ) {
-                UpdateDensity( &mesh, &particles, &materials, &model, &scaling );
-            // }
-            // else {
-            //     P2Mastah( &model, particles, materials.rho, &mesh, mesh.rho_s, mesh.BCg.type,  0, 0, interp, vert, model.itp_stencil);
-            //     P2Mastah( &model, particles, materials.rho, &mesh, mesh.rho_n, mesh.BCp.type,  0, 0, interp, cent, model.itp_stencil);
-            // }
-            
-            
-            
+            UpdateDensity( &mesh, &particles, &materials, &model, &scaling );
+
             // Free surface - subgrid density correction
             if ( model.free_surf == 1 ) {
                 SurfaceDensityCorrection( &mesh, model, topo, scaling  );
@@ -561,10 +539,6 @@ int RunMDOODZ( int nargs, char *args[] ) {
                     P2Mastah( &model, particles, particles.sxz,     &mesh, mesh.sxz0,  mesh.BCg.type,  1, 0, interp, vert, model.itp_stencil);
                 }
                 
-                //                ArrayEqualArray(  mesh.sxxd0,  mesh.sxxd, Ncx*Ncz );
-                //                ArrayEqualArray(  mesh.szzd0,  mesh.szzd, Ncx*Ncz );
-                //                ArrayEqualArray(  mesh.sxz0,   mesh.sxz,   Nx*Nz );
-                
                 InterpCentroidsToVerticesDouble( mesh.sxxd0, mesh.sxxd0_s, &mesh, &model );
                 InterpCentroidsToVerticesDouble( mesh.szzd0, mesh.szzd0_s, &mesh, &model );
                 InterpVerticesToCentroidsDouble( mesh.sxz0_n,  mesh.sxz0,  &mesh, &model );
@@ -575,11 +549,10 @@ int RunMDOODZ( int nargs, char *args[] ) {
             
             // Director vector
             if (model.aniso == 1 ) {
-                P2Mastah( &model, particles, particles.nx,     &mesh, mesh.nx0_n , mesh.BCp.type,  1, 0, interp, cent, model.itp_stencil);
-                P2Mastah( &model, particles, particles.nz,     &mesh, mesh.nz0_n , mesh.BCp.type,  1, 0, interp, cent, model.itp_stencil);
-                P2Mastah( &model, particles, particles.nx,     &mesh, mesh.nx0_s , mesh.BCg.type,  1, 0, interp, vert, model.itp_stencil);
-                P2Mastah( &model, particles, particles.nz,     &mesh, mesh.nz0_s , mesh.BCg.type,  1, 0, interp, vert, model.itp_stencil);
-                NormalizeDirector( &mesh, mesh.nx0_n, mesh.nz0_n, mesh.nx0_s, mesh.nz0_s, &model );
+                P2Mastah( &model, particles, NULL, &mesh, mesh.d1_n , mesh.BCp.type, -1, 0, interp, cent, model.itp_stencil);
+                P2Mastah( &model, particles, NULL, &mesh, mesh.d2_n , mesh.BCp.type, -2, 0, interp, cent, model.itp_stencil);
+                P2Mastah( &model, particles, NULL, &mesh, mesh.d1_s , mesh.BCg.type, -1, 0, interp, vert, model.itp_stencil);
+                P2Mastah( &model, particles, NULL, &mesh, mesh.d2_s , mesh.BCg.type, -2, 0, interp, vert, model.itp_stencil);
                 FiniteStrainAspectRatio ( &mesh, scaling, model, &particles );
                 P2Mastah( &model, particles, materials.aniso_factor,     &mesh, mesh.aniso_factor_n , mesh.BCp.type,  0, 0, interp, cent, model.itp_stencil);
                 P2Mastah( &model, particles, materials.aniso_factor,     &mesh, mesh.aniso_factor_s , mesh.BCg.type,  0, 0, interp, vert, model.itp_stencil);
@@ -676,10 +649,6 @@ int RunMDOODZ( int nargs, char *args[] ) {
                 MinMaxArrayTag( mesh.phase_perc_s[p],    1.0, (mesh.Nx-0)*(mesh.Nz-0), "ph_s      ", mesh.BCg.type );
             }
             
-            if  ( model.aniso == 1 ) MinMaxArrayTag( mesh.nx0_n,    1.0,   (mesh.Nx-1)*(mesh.Nz-1), "nx0_n  ", mesh.BCp.type );
-            if  ( model.aniso == 1 ) MinMaxArrayTag( mesh.nz0_n,    1.0,   (mesh.Nx-1)*(mesh.Nz-1), "nz0_n  ", mesh.BCp.type );
-            if  ( model.aniso == 1 ) MinMaxArrayTag( mesh.nx0_s,    1.0,   (mesh.Nx)*(mesh.Nz),     "nx0_s  ", mesh.BCg.type );
-            if  ( model.aniso == 1 ) MinMaxArrayTag( mesh.nz0_s,    1.0,   (mesh.Nx)*(mesh.Nz),     "n0z_s  ", mesh.BCg.type );
             if  ( model.aniso == 1 ) MinMaxArrayTag( mesh.FS_AR_n,  1.0,   (mesh.Nx-1)*(mesh.Nz-1), "FS_AR_n", mesh.BCp.type );
             if  ( model.aniso == 1 ) MinMaxArrayTag( mesh.FS_AR_s,  1.0,   (mesh.Nx)*(mesh.Nz),     "FS_AR_s", mesh.BCg.type );
             if  ( model.aniso == 1 ) MinMaxArrayTag( mesh.aniso_factor_n,  1.0,   (mesh.Nx-1)*(mesh.Nz-1), "aniso_factor_n", mesh.BCp.type );
@@ -1359,6 +1328,7 @@ int RunMDOODZ( int nargs, char *args[] ) {
     DoodzFree(model.PD1Drho);
     DoodzFree(model.PD1Dmin);
     DoodzFree(model.PD1Dmax);
+    if ( model.kinetics==1 ) DoodzFree(model.kin_dG);
     
     printf("\n********************************************************\n");
     printf("************* Ending MDOODZ 6.0 simulation *************\n");

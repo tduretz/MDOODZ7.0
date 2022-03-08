@@ -38,7 +38,14 @@ set(SOURCE_FILES
         SOURCE/ThermalRoutines.c
         SOURCE/ThermalSolver.c)
 
-set(SuiteSparse_DIR ${PROJECT_SOURCE_DIR}/lib/suitesparse/install/lib/cmake/suitesparse-5.4.0)
+if (EXISTS ${PROJECT_SOURCE_DIR}/lib/suitesparse/install/lib/cmake/suitesparse-5.4.0)
+    set(SuiteSparse_DIR ${PROJECT_SOURCE_DIR}/lib/suitesparse/install/lib/cmake/suitesparse-5.4.0)
+elseif(EXISTS ${PROJECT_SOURCE_DIR}/lib/suitesparse/install/lib64/cmake/suitesparse-5.4.0)
+    set(SuiteSparse_DIR ${PROJECT_SOURCE_DIR}/lib/suitesparse/install/lib64/cmake/suitesparse-5.4.0)
+else()
+    message(FATAL_ERROR "Please set up a path to the suitesparse-config.cmake file")
+endif()
+
 set(HDF5_DIR ${PROJECT_SOURCE_DIR}/lib/hdf5/install/share/cmake)
 FIND_PACKAGE(SuiteSparse CONFIG)
 FIND_PACKAGE(HDF5 CONFIG)
@@ -66,6 +73,24 @@ set(DEPENDENCIES
 
 add_executable(MDOODZ SOURCE/main.c ${SOURCE_FILES} SOURCE/set_${MODEL}.c)
 target_link_libraries(MDOODZ PRIVATE ${DEPENDENCIES})
+
+option(OMP "Set this for using OpenMP" OFF)
+option(OPT "Set this for using optimisation" OFF)
+
+if (OPT)
+    message("Using optimization")
+    set(CMAKE_C_FLAGS "-O3 -ftree-vectorize -funroll-loops")
+else()
+    message("Not using optimization")
+    set(CMAKE_C_FLAGS "-g -Wall -O0 -fno-inline -fno-omit-frame-pointer")
+endif()
+
+if (OMP)
+    set(OpenMP_lgomp_LIBRARY "lgomp")
+    find_package(OpenMP)
+    target_link_libraries(MDOODZ PUBLIC OpenMP::OpenMP_C)
+    message("Using OpenMP")
+endif()
 
 # TESTING
 

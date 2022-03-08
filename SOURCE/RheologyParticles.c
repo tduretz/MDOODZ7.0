@@ -1165,7 +1165,7 @@ firstprivate( model )
         if ( mesh->BCg.type[c1] != 30 ) {
             om_s[c1]   = 0.5*( (mesh->v_in[c3+1] - mesh->v_in[c3])/dx - (mesh->u_in[c1+Nx] - mesh->u_in[c1])/dz);
             dudz_s[c1] = (mesh->u_in[c1+Nx] - mesh->u_in[c1])/dz;
-            dvdx_s[c1] = (mesh->v_in[c3+1       ] - mesh->v_in[c3])/dx;
+            dvdx_s[c1] = (mesh->v_in[c3+1 ] - mesh->v_in[c3])/dx;
         }
     }
     
@@ -1180,7 +1180,7 @@ firstprivate( model )
         c2 = k  + l*(Nx+1);
         if ( mesh->BCp.type[c0] != 30 && mesh->BCp.type[c0] != 31) {
             dudx_n[c0]  = (mesh->u_in[c1+1+Nx]     - mesh->u_in[c1+Nx] )/dx;
-            dvdz_n[c0]  = (mesh->v_in[c2+1+(Nx+1)] - mesh->v_in[c2+1]        )/dz;
+            dvdz_n[c0]  = (mesh->v_in[c2+1+(Nx+1)] - mesh->v_in[c2+1]  )/dz;
         }
     }
     
@@ -1193,79 +1193,63 @@ firstprivate( model )
     InterpVerticesToCentroidsDouble( txz_n, mesh->sxz, mesh, model );
     InterpVerticesToCentroidsDouble( om_n, om_s, mesh, model );
     
-    // Rotate stresses and director
-    double nx, nz, ndotx, ndotz, *dnx_n, *dnz_n, *dnx_s, *dnz_s;
-    
-    dnx_n   = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    dnz_n   = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    dnx_s   = DoodzCalloc ((Nx-0)*(Nz-0),sizeof(double));
-    dnz_s   = DoodzCalloc ((Nx-0)*(Nz-0),sizeof(double));
-    
 #pragma omp parallel for shared ( mesh, dudz_n, dvdx_n, dudx_n, dvdz_n, om_n ) \
-private ( k1, txx, tzz, txz, angle, nx, nz, ndotx, ndotz )                     \
+private ( k1, txx, tzz, txz, angle)                     \
 firstprivate( model, dt )
     for ( k1=0; k1<(Nx-1)*(Nz-1); k1++ ) {
         
         txx   = mesh->sxxd[k1];
         tzz   = mesh->szzd[k1];
         txz   = txz_n[k1];
-        if (model->StressRotation==1) {
+        if (model->StressRotation==1) { // Jaumann rate
             angle = dt*om_n[k1];
             mesh->sxxd[k1] = (txx*cos(angle) - txz*sin(angle))*cos(angle) - (txz*cos(angle) - tzz*sin(angle))*sin(angle);
             mesh->szzd[k1] = (txx*sin(angle) + txz*cos(angle))*sin(angle) + (txz*sin(angle) + tzz*cos(angle))*cos(angle);
         }
-        if (model->StressRotation==2) {
+        if (model->StressRotation==2) { // Upper convected rate
             mesh->sxxd[k1] = mesh->sxxd[k1] - dt * mesh->VE_n[k1] * ( -2.0*txx*dudx_n[k1] - 2.0*txz*dudz_n[k1]);
             mesh->szzd[k1] = mesh->szzd[k1] - dt * mesh->VE_n[k1] * ( -2.0*tzz*dvdz_n[k1] - 2.0*txz*dvdx_n[k1]);
-        }
-        
-        if ( model->aniso == 1 ) { // Director vector rotation/deformation
-            nx        = mesh->nx0_n[k1];// = 0.0;
-            nz        = mesh->nz0_n[k1];// = 1.0;
-            ndotx     = (-(dudx_n[k1] - dvdz_n[k1])*nx*nz - dvdx_n[k1]*nz*nz + dudz_n[k1]*nx*nx)*nz;
-            ndotz     = ( (dudx_n[k1] - dvdz_n[k1])*nx*nz + dvdx_n[k1]*nz*nz - dudz_n[k1]*nx*nx)*nx;
-            dnx_n[k1] = ndotx*dt;
-            dnz_n[k1] = ndotz*dt;
-        }
-        
+        }        
     }
     
 #pragma omp parallel for shared ( mesh, dudz_s, dvdx_s, dudx_s, dvdz_s, om_s ) \
-private ( k1, txx, tzz, txz, angle, nx, nz, ndotx, ndotz )                     \
+private ( k1, txx, tzz, txz, angle )                     \
 firstprivate( model, dt )
     for ( k1=0; k1<(Nx-0)*(Nz-0); k1++ ) {
         
         txx   = txx_s[k1];
         tzz   = tzz_s[k1];
         txz   = mesh->sxz[k1];
-        if (model->StressRotation==1) {
+        if (model->StressRotation==1) { // Jaumann rate
             angle = dt*om_s[k1];
             mesh->sxz[k1] = (txx*cos(angle) - txz*sin(angle))*sin(angle) + (txz*cos(angle) - tzz*sin(angle))*cos(angle);
         }
-        if (model->StressRotation==2) {
+        if (model->StressRotation==2) { // Upper convected rate
             mesh->sxz[k1] = mesh->sxz[k1] - dt * mesh->VE_s[k1] * (      txx*dudz_s[k1] -     txx*dvdx_s[k1] - txz*(dudx_s[k1]+ dvdz_s[k1]) );
         }
-        
-        if ( model->aniso == 1 ) { // Director vector rotation/deformation
-            nx        = mesh->nx0_s[k1];
-            nz        = mesh->nz0_s[k1];
-            ndotx     = (-(dudx_s[k1] - dvdz_s[k1])*nx*nz - dvdx_s[k1]*nz*nz + dudz_s[k1]*nx*nx)*nz;
-            ndotz     = ( (dudx_s[k1] - dvdz_s[k1])*nx*nz + dvdx_s[k1]*nz*nz - dudz_s[k1]*nx*nx)*nx;
-            dnx_s[k1] = ndotx*dt;
-            dnz_s[k1] = ndotz*dt;
+    }
+    
+    // Rotate director directly on particles
+    if ( model->aniso == 1 ) {
+
+#pragma omp parallel for shared( particles, mesh ) firstprivate( dt, model ) private( k )
+        for ( k=0; k<particles->Nb_part; k++ ) {
+            if (particles->phase[k] != -1) {
+                double nx = particles->nx[k];
+                double nz = particles->nz[k];
+                double mdudx =  Centers2Particle( particles, dudx_n,     mesh->xvz_coord, mesh->zvx_coord, mesh->Nx-1, mesh->Nz-1, mesh->BCp.type, mesh->dx, mesh->dz, k, model->isperiodic_x );
+                double mdudz = Vertices2Particle( particles, dudz_s,     mesh->xg_coord,  mesh->zg_coord,  mesh->Nx-0, mesh->Nz-0, mesh->BCg.type, mesh->dx, mesh->dz, k );
+                double mdvdz =  Centers2Particle( particles, dvdz_n,     mesh->xvz_coord, mesh->zvx_coord, mesh->Nx-1, mesh->Nz-1, mesh->BCp.type, mesh->dx, mesh->dz, k, model->isperiodic_x );
+                double mdvdx = Vertices2Particle( particles, dvdx_s,     mesh->xg_coord,  mesh->zg_coord,  mesh->Nx-0, mesh->Nz-0, mesh->BCg.type, mesh->dx, mesh->dz, k );
+                particles->nx[k] += dt*(-(mdudx - mdvdz)*nx*nz - mdvdx*nz*nz + mdudz*nx*nx)*nz;
+                particles->nz[k] += dt*( (mdudx - mdvdz)*nx*nz + mdvdx*nz*nz - mdudz*nx*nx)*nx;
+                double norm = sqrt( pow(particles->nx[k],2) + pow(particles->nz[k],2));
+                particles->nx[k] /= norm;
+                particles->nz[k] /= norm;
+            }
         }
     }
-    
-    // interpolate increments of director vectors to particles
-    if ( model->aniso == 1 ) {
-        //    if ( model->aniso == 1 ) Interp_Grid2P_centroids( *particles, particles->dnx, mesh, dnx_n, mesh->xc_coord,  mesh->zc_coord, Nx-1, Nz-1, mesh->BCp.type, model  );
-        //    if ( model->aniso == 1 ) Interp_Grid2P_centroids( *particles, particles->dnz, mesh, dnz_n, mesh->xc_coord,  mesh->zc_coord, Nx-1, Nz-1, mesh->BCp.type, model  );
-        Interp_Grid2P ( *particles, particles->dnx, mesh, dnx_s, mesh->xg_coord,  mesh->zg_coord, Nx  , Nz  , mesh->BCg.type         );
-        Interp_Grid2P ( *particles, particles->dnz, mesh, dnz_s, mesh->xg_coord,  mesh->zg_coord, Nx  , Nz  , mesh->BCg.type         );
-        ArrayPlusArray(  particles->nx, particles->dnx, particles->Nb_part );
-        ArrayPlusArray(  particles->nz, particles->dnz, particles->Nb_part );
-    }
-    
+
     DoodzFree(txx_s);
     DoodzFree(tzz_s);
     DoodzFree(txz_n);
@@ -1279,11 +1263,6 @@ firstprivate( model, dt )
     DoodzFree(dvdx_n);
     DoodzFree(dvdz_s);
     DoodzFree(dudx_s);
-    DoodzFree(dnx_n);
-    DoodzFree(dnz_n);
-    DoodzFree(dnx_s);
-    DoodzFree(dnz_s);
-    //
     
     Nx = mesh->Nx; Ncx = Nx-1;
     Nz = mesh->Nz; Ncz = Nz-1;
