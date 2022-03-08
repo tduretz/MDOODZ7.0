@@ -54,7 +54,7 @@ In order to build MDOODZ with CMake you have to install **cmake 3.21** or newer 
 To install SuiteSparse and HDF5 to the project:
 
 ```bash
-make install
+make deps
 ```
 
 ## How to use
@@ -68,9 +68,15 @@ To build executables you will have to specify your model name:
 make build MODEL=
 ```
 
+or for the debug mode:
+
+```bash
+make build-dev MODEL=
+```
+
 All build files will be located at the cmake-build directory
 
-After building you could run a MDOODZ with:
+After building you could run MDOODZ with:
 ```bash
 make run
 ```
@@ -80,8 +86,14 @@ or build autotests:
 make run-tests
 ```
 
-Whole process:
+Whole process in cluster mode with optimisation and OpenMP:
 
 ```bash
 make clean build MODEL=ShearTemplate run
+```
+
+Whole process in debug mode without OpenMP and optimisation:
+
+```bash
+make clean build-dev MODEL=ShearTemplate run
 ```
