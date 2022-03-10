@@ -203,7 +203,7 @@ struct _grid {
     double *VxVz, *VzVx;
     int    *P2N, *P2C;
     int    *kvx, *lvx, *kvz, *lvz, *kp, *lp, *kn, *ln;
-    double **phase_perc_n, **phase_perc_s;
+    double **phase_perc_n, **phase_perc_s,  **phase_visc_n, **phase_visc_s;
     double *sxxd0_s, *szzd0_s, *sxz0_n, *exxd_s, *ezzd_s, *exz_n, *sxz_n;
     double *rho0_n;
     double Uthermal, Uelastic, Work, Tii_mean, Eii_mean, T_mean, P_mean;

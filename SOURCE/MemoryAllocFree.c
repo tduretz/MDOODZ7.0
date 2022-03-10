@@ -389,16 +389,28 @@ void GridAlloc ( grid* mesh, params* model ) {
 
     //-------------------------------------------------------------------------------------------------//
 
-    // Allocate 2D array : phase percentage per cell center (fine mesh only)
+    // Allocate 2D array : phase percentage per cell center 
     mesh->phase_perc_n = (double**) DoodzCalloc( model->Nb_phases,sizeof(double*));
     for ( k=0; k<model->Nb_phases; k++ ) {
         mesh->phase_perc_n[k] = (double*) DoodzCalloc( (mesh->Nx-1)*(mesh->Nz-1), sizeof(double));
     }
 
-    // Allocate 2D array : phase percentage per cell vertices (fine mesh only)
+    // Allocate 2D array : phase percentage per cell vertices 
     mesh->phase_perc_s = (double**) DoodzCalloc( model->Nb_phases,sizeof(double*));
     for ( k=0; k<model->Nb_phases; k++ ) {
         mesh->phase_perc_s[k] = (double*) DoodzCalloc( (mesh->Nx)*(mesh->Nz), sizeof(double));
+    }
+
+    // Allocate 2D array : phase viscosity per cell center 
+    mesh->phase_visc_n = (double**) DoodzCalloc( model->Nb_phases,sizeof(double*));
+    for ( k=0; k<model->Nb_phases; k++ ) {
+        mesh->phase_visc_n[k] = (double*) DoodzCalloc( (mesh->Nx-1)*(mesh->Nz-1), sizeof(double));
+    }
+
+    // Allocate 2D array : phase viscosity per cell vertices
+    mesh->phase_visc_s = (double**) DoodzCalloc( model->Nb_phases,sizeof(double*));
+    for ( k=0; k<model->Nb_phases; k++ ) {
+        mesh->phase_visc_s[k] = (double*) DoodzCalloc( (mesh->Nx)*(mesh->Nz), sizeof(double));
     }
 
     //--------------------------------------------------//
@@ -831,6 +843,18 @@ void GridFree( grid* mesh, params* model ) {
         DoodzFree( mesh->phase_perc_s[k] );
     }
     DoodzFree( mesh->phase_perc_s );
+
+    // Phases cell centers
+    for ( k=0; k<model->Nb_phases; k++ ) {
+        DoodzFree( mesh->phase_visc_n[k] );
+    }
+    DoodzFree( mesh->phase_visc_n );
+
+    // Phases cell vertices
+    for ( k=0; k<model->Nb_phases; k++ ) {
+        DoodzFree( mesh->phase_visc_s[k] );
+    }
+    DoodzFree( mesh->phase_visc_s );
 
     // Inertia
     DoodzFree(mesh->VxVz);
