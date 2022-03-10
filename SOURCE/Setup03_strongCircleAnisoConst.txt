@@ -95,7 +95,7 @@ gsel = 0             / grain size evo.
 eta0 = 1e0
 npwl = 1.0
 Qpwl = 0
-aniso_angle  = 45
+aniso_angle  = -45
 aniso_factor = 10.0
 
 /**** PHASE 2 ****/
@@ -120,7 +120,7 @@ gsel = 0             / grain size evo.
 eta0 = 1e2
 npwl = 1
 Qpwl = 0
-aniso_angle  = -45
+aniso_angle  = 45
 aniso_factor = 1.0
 
 /**** DEFMAPS ****/
