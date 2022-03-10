@@ -67,7 +67,7 @@ void PhaseRheologyLoop( int centroid, double sign, double denom, double Exx, dou
         }
         
         if ( model->eta_avg == 0) { // ARITHMETIC AVERAGE
-            if ( cond == 1 ) detadE[c0]      += sign*vol[p][c0] * etaVE/(denom);
+            if ( cond == 1 ) detadE[c0]      += sign*vol[p][c0] * etaVE/(denom); // TODO: reformat etaVE to eta_eff
         }
         
         if ( model->eta_avg == 1) { // HARMONIC AVERAGE
