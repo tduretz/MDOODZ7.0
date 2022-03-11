@@ -647,14 +647,14 @@ void EvaluateCourantCriterion( double* Vx, double* Vz, params *model, scale scal
         }
 
         // THESE LINES ARE MORE DANGEROUS THAN USEFUL
-        // if ( model->dt>model->dt_max ) {
-        //     printf("Setting dt to dt_max\n");
-        //     model->dt = model->dt_max;
-        // }
-        // if ( model->dt<model->dt_min ) {
-        //     printf("Setting dt to dt_min\n");
-        //     model->dt = model->dt_min;
-        // }
+         if ( model->dt>model->dt_max ) {
+             printf("Setting dt to dt_max\n");
+             model->dt = model->dt_max;
+         }
+         if ( model->dt<model->dt_min ) {
+             printf("Setting dt to dt_min\n");
+             model->dt = model->dt_min;
+         }
 
         if (quiet==0) printf("Current dt = %2.2e s / Courant dt = %2.2e s\n", model->dt * scaling.t, dtc * scaling.t );
     }
