@@ -92,7 +92,7 @@ stp = 9
 
 contours = plt.contour(xc2, zc2, Tiic.transpose(), [2.0], colors='white')
 axs[1].clabel(contours, inline=True, fontsize=15)
-axs[1].pcolormesh(xc, zc, P.transpose(), shading='auto')
+im = axs[1].pcolormesh(xc, zc, P.transpose(), shading='auto')
 axs[1].quiver(xc2[::stp, ::stp], zc2[::stp, ::stp], Vxc[::stp, ::stp].transpose(), Vzc[::stp, ::stp].transpose())
 axs[1].set_title(h5_filename)
 axs[1].set_aspect('equal')
