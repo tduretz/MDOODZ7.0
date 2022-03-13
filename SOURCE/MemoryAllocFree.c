@@ -402,15 +402,15 @@ void GridAlloc ( grid* mesh, params* model ) {
     }
 
     // Allocate 2D array : phase viscosity per cell center 
-    mesh->phase_visc_n = (double**) DoodzCalloc( model->Nb_phases,sizeof(double*));
+    mesh->phase_eta_n = (double**) DoodzCalloc( model->Nb_phases,sizeof(double*));
     for ( k=0; k<model->Nb_phases; k++ ) {
-        mesh->phase_visc_n[k] = (double*) DoodzCalloc( (mesh->Nx-1)*(mesh->Nz-1), sizeof(double));
+        mesh->phase_eta_n[k] = (double*) DoodzCalloc( (mesh->Nx-1)*(mesh->Nz-1), sizeof(double));
     }
 
     // Allocate 2D array : phase viscosity per cell vertices
-    mesh->phase_visc_s = (double**) DoodzCalloc( model->Nb_phases,sizeof(double*));
+    mesh->phase_eta_s = (double**) DoodzCalloc( model->Nb_phases,sizeof(double*));
     for ( k=0; k<model->Nb_phases; k++ ) {
-        mesh->phase_visc_s[k] = (double*) DoodzCalloc( (mesh->Nx)*(mesh->Nz), sizeof(double));
+        mesh->phase_eta_s[k] = (double*) DoodzCalloc( (mesh->Nx)*(mesh->Nz), sizeof(double));
     }
 
     //--------------------------------------------------//
@@ -846,15 +846,15 @@ void GridFree( grid* mesh, params* model ) {
 
     // Phases cell centers
     for ( k=0; k<model->Nb_phases; k++ ) {
-        DoodzFree( mesh->phase_visc_n[k] );
+        DoodzFree( mesh->phase_eta_n[k] );
     }
-    DoodzFree( mesh->phase_visc_n );
+    DoodzFree( mesh->phase_eta_n );
 
     // Phases cell vertices
     for ( k=0; k<model->Nb_phases; k++ ) {
-        DoodzFree( mesh->phase_visc_s[k] );
+        DoodzFree( mesh->phase_eta_s[k] );
     }
-    DoodzFree( mesh->phase_visc_s );
+    DoodzFree( mesh->phase_eta_s );
 
     // Inertia
     DoodzFree(mesh->VxVz);

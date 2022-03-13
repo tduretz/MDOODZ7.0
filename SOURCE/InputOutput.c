@@ -1145,8 +1145,8 @@ void ReadInputFile( char* fin_name, int *istep, int *irestart, int *writer, int 
     model->dz                = (model->zmax - model->zmin) / (model->Nz - 1);
     model->dt0               = model->dt;
     model->dt_start          = model->dt;
-    model->dt_max            = ReadDou2( fin, "dt_max",     1e20 ) / scaling->t; // maximum allowed time step
-    model->dt_min            = ReadDou2( fin, "dt_min",    -1e20 ) / scaling->t; // minimum allowed time step
+    model->dt_max            = ReadDou2( fin, "dt_max",     1e20 ) / scaling->t; // maximum allowed time step, the default value is set to ~infinite, it we become effective only if specificaly set in XXX.txt (see e.g. LithoScale.txt)
+    model->dt_min            = ReadDou2( fin, "dt_min",    -1e20 ) / scaling->t; // minimum allowed time step, defaut is negative such that it will never be activated unless specifically set in XXX.txt file
     model->eta_avg           = ReadInt2( fin, "eta_avg",       0 );              // 0: arithmetic mean - 1: harmonic mean - 2: geometric mean
     model->itp_stencil       = ReadInt2( fin, "itp_stencil",       1   );        // 1: 1-Cell          - 9: 9-Cell
     if (model->itp_stencil!=1 && model->itp_stencil!=9) { printf("Wrong value of itp_stencil: shoulbd be 1 or 9.\n"); exit(1); }
