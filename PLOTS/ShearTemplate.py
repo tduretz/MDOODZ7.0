@@ -44,7 +44,7 @@ Tiic = np.sqrt(0.5 * (Txx ** 2 + Tzz ** 2) + Txzc ** 2)
 # Step for visualisation of quiver arrows
 stp = 9
 
-contours = plt.contour(xc2, zc2, Tiic.transpose(), [2.0], colors='white')
+contours = axs[0].contour(xc2, zc2, Tiic.transpose(), [2.0], colors='white')
 axs[0].clabel(contours, inline=True, fontsize=15)
 im = axs[0].pcolormesh(xc, zc, P.transpose(), shading='auto')
 axs[0].quiver(xc2[::stp, ::stp], zc2[::stp, ::stp], Vxc[::stp, ::stp].transpose(), Vzc[::stp, ::stp].transpose())
@@ -90,7 +90,7 @@ Tiic = np.sqrt(0.5 * (Txx ** 2 + Tzz ** 2) + Txzc ** 2)
 # Step for visualisation of quiver arrows
 stp = 9
 
-contours = plt.contour(xc2, zc2, Tiic.transpose(), [2.0], colors='white')
+contours = axs[1].contour(xc2, zc2, Tiic.transpose(), [2.0], colors='white')
 axs[1].clabel(contours, inline=True, fontsize=15)
 im = axs[1].pcolormesh(xc, zc, P.transpose(), shading='auto')
 axs[1].quiver(xc2[::stp, ::stp], zc2[::stp, ::stp], Vxc[::stp, ::stp].transpose(), Vzc[::stp, ::stp].transpose())
