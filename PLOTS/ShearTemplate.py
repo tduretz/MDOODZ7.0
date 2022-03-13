@@ -6,13 +6,13 @@ fig, axs = plt.subplots(1, 2)
 plt.set_cmap('inferno')
 plt.tight_layout()
 
-h5_filename = 'ShearTemplateReference.gzip.h5'
+h5_filename = 'Output00010.gzip.h5'
 file = h5py.File(h5_filename, 'r')
 P = file['Centers/P']
-Vx = file['VxNodes/Vx']
-Vz = file['VzNodes/Vz']
 Txx = file['Centers/sxxd']
 Tzz = file['Centers/szzd']
+Vx = file['VxNodes/Vx']
+Vz = file['VzNodes/Vz']
 Txz = file['Vertices/sxz']
 xc = file['/Model/xc_coord']
 zc = file['/Model/zc_coord']
