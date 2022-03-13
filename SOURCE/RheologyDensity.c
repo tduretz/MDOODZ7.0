@@ -961,7 +961,7 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
                 // Detect if there is a fraction of phase p in the cell c: compute only if there is a non-zero fraction
                 bool is_phase_active;
                 const double min_fraction=1e-13; 
-                if ( fabs(mesh->phase_perc_n[p][c0])>min_fraction ) is_phase_active = true;
+                if ( fabs(mesh->phase_perc_s[p][c1])>min_fraction ) is_phase_active = true;
 
                 if ( is_phase_active==true ) {  
 
