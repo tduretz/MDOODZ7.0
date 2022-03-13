@@ -6,7 +6,7 @@ fig, axs = plt.subplots(1, 2)
 plt.set_cmap('inferno')
 plt.tight_layout()
 
-h5_filename = 'Output00010.gzip.h5'
+h5_filename = 'ShearTemplateReference.gzip.h5'
 file = h5py.File(h5_filename, 'r')
 P = file['Centers/P']
 Txx = file['Centers/sxxd']
