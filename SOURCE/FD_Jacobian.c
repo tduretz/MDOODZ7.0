@@ -60,7 +60,7 @@ void PhaseRheologyLoop( int is_centroid, double sign, double denom, double Exx, 
     for (int p=0; p<model->Nb_phases; p++) {
 
         // Detect if there is a fraction of phase p in the cell c: compute only if there is a non-zero fraction
-        bool is_phase_active;
+        bool is_phase_active = false;
         const double min_fraction=1e-13;
         if ( fabs(vol[p][c])>min_fraction ) is_phase_active = true;
 

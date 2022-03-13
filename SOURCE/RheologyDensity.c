@@ -736,12 +736,11 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
 //            exit(1);
             
 //            printf("%2.2e %2.2e\n", Gxz, Exz );
-
             // Loop on phases
             for ( p=0; p<model->Nb_phases; p++) {
                                 
                 // Detect if there is a fraction of phase p in the cell c: compute only if there is a non-zero fraction
-                bool is_phase_active;
+                bool is_phase_active = false;
                 const double min_fraction=1e-13; 
                 if ( fabs(mesh->phase_perc_n[p][c0])>min_fraction ) is_phase_active = true;
 
@@ -751,21 +750,21 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
                     // printf("%2.2e %2.2e %2.2e\n", eta, etaVE, 1.0/(1.0/(materials->mu[p]*model->dt) + 1.0/materials->eta0[p]) );
 
                     switch ( average ) {  
-                    case 0 :
-                        // ARITHMETIC AVERAGE
-                        mesh->eta_n[c0]       += mesh->phase_perc_n[p][c0] * etaVE;
-                        mesh->eta_phys_n[c0]  += mesh->phase_perc_n[p][c0] * eta;
-                        break;
-                    case 1 :
-                        // HARMONIC AVERAGE
-                        mesh->eta_n[c0]      += mesh->phase_perc_n[p][c0] * 1.0/etaVE;
-                        mesh->eta_phys_n[c0] += mesh->phase_perc_n[p][c0] * 1.0/eta;
-                        break;
-                    case 2 :
-                        // GEOMETRIC AVERAGE
-                        mesh->eta_n[c0]      += mesh->phase_perc_n[p][c0] * log(etaVE);
-                        mesh->eta_phys_n[c0] += mesh->phase_perc_n[p][c0] * log(eta);
-                        break;
+                        case 0 :
+                            // ARITHMETIC AVERAGE
+                            mesh->eta_n[c0]       += mesh->phase_perc_n[p][c0] * etaVE;
+                            mesh->eta_phys_n[c0]  += mesh->phase_perc_n[p][c0] * eta;
+                            break;
+                        case 1 :
+                            // HARMONIC AVERAGE
+                            mesh->eta_n[c0]      += mesh->phase_perc_n[p][c0] * 1.0/etaVE;
+                            mesh->eta_phys_n[c0] += mesh->phase_perc_n[p][c0] * 1.0/eta;
+                            break;
+                        case 2 :
+                            // GEOMETRIC AVERAGE
+                            mesh->eta_n[c0]      += mesh->phase_perc_n[p][c0] * log(etaVE);
+                            mesh->eta_phys_n[c0] += mesh->phase_perc_n[p][c0] * log(eta);
+                            break;
                     }
 
                     // printf("%2.4e %2.4e\n", txx1,  2.0*etaVE*Gxx);
@@ -959,7 +958,7 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
             for ( p=0; p<model->Nb_phases; p++) {
 
                 // Detect if there is a fraction of phase p in the cell c: compute only if there is a non-zero fraction
-                bool is_phase_active;
+                bool is_phase_active = false;
                 const double min_fraction=1e-13; 
                 if ( fabs(mesh->phase_perc_s[p][c1])>min_fraction ) is_phase_active = true;
 
@@ -969,18 +968,18 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
                     mesh->phase_eta_s[p][c1] = etaVE;
 
                     switch ( average ) {  
-                    case 0 : 
-                        mesh->eta_s[c1]      += mesh->phase_perc_s[p][c1] * etaVE;
-                        mesh->eta_phys_s[c1] += mesh->phase_perc_s[p][c1] * eta;
-                        break;
-                    case 1:
-                        mesh->eta_s[c1]      += mesh->phase_perc_s[p][c1] * 1.0/etaVE;
-                        mesh->eta_phys_s[c1] += mesh->phase_perc_s[p][c1] * 1.0/eta;
-                        break;
-                    case 2:
-                        mesh->eta_s[c1]      += mesh->phase_perc_s[p][c1] * log(etaVE);
-                        mesh->eta_phys_s[c1] += mesh->phase_perc_s[p][c1] * log(eta);
-                        break;
+                        case 0 : 
+                            mesh->eta_s[c1]      += mesh->phase_perc_s[p][c1] * etaVE;
+                            mesh->eta_phys_s[c1] += mesh->phase_perc_s[p][c1] * eta;
+                            break;
+                        case 1:
+                            mesh->eta_s[c1]      += mesh->phase_perc_s[p][c1] * 1.0/etaVE;
+                            mesh->eta_phys_s[c1] += mesh->phase_perc_s[p][c1] * 1.0/eta;
+                            break;
+                        case 2:
+                            mesh->eta_s[c1]      += mesh->phase_perc_s[p][c1] * log(etaVE);
+                            mesh->eta_phys_s[c1] += mesh->phase_perc_s[p][c1] * log(eta);
+                            break;
                     }
                     mesh->VE_s[c1]       += mesh->phase_perc_s[p][c1] * VEcoeff;
                     mesh->exz_el[c1]     += mesh->phase_perc_s[p][c1] * exz_el;
