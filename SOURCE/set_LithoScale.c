@@ -99,29 +99,9 @@ void SetParticles( markers *particles, scale scaling, params model, mat_prop *ma
         z_ell =-(particles->x[np]-x0)*sin(angle) + (particles->z[np]-z0)*cos(angle);
         if (pow(x_ell/a_ell,2) + pow(z_ell/b_ell,2) < 1) particles->phase[np] = 1;
         
-        
-        // Weak zone
-        //        if (particles->z[np]>-HLit && particles->x[np]>-WZHW + particles->z[np]*angle && particles->x[np]<WZHW + particles->z[np]*angle) particles->phase[np] = 1;
-        
-        
-        //        // Crust layer
-        //        if (particles->z[np]>-Hcrust) {
-        //            particles->phase[np] = 1;
-        ////            particles->X[np]     = 1.0;
-        //        }
-        
-        particles->d[np]     = materials->gs_ref[particles->phase[np]];                                            // same grain size everywhere
-        
-        
-        //        //--------------------------//
-        //        // DENSITY
-        //        if ( model.eqn_state > 0 ) {
-        //            particles->rho[np] = materials->rho[particles->phase[np]] * (1 -  materials->alp[particles->phase[np]] * (Tpart - materials->T0[particles->phase[np]]) );
-        //        }
-        //        else {
-        //            particles->rho[np] = materials->rho[particles->phase[np]];
-        //        }
-        //        //--------------------------//
+        particles->d[np]     = materials->gs_ref[particles->phase[np]];  // same grain size everywhere
+        particles->dual[np]  = particles->phase[np] ; // particule ID for visualisation (can be different is you want a passive strain marker, e.g. checkerboard)
+    
     }
     MinMaxArray(particles->Vx, scaling.V, particles->Nb_part, "Vxp init" );
     MinMaxArray(particles->Vz, scaling.V, particles->Nb_part, "Vzp init" );

@@ -23,6 +23,7 @@
 #define _GNU_SOURCE 1
 #endif
 #include "stdio.h"
+#include "stdbool.h"
 #include "stdlib.h"
 #include "string.h"
 #include "math.h"
@@ -491,6 +492,7 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
         *Pcorr  = Pc;
         eta_vep = Tiic / (2.0*Eii);
         Tii     = Tiic;
+//        if (Pc<0) printf("%2.2e\n", eta_vep*scaling->eta);
     }
     
     
@@ -599,7 +601,7 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
 
 void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, Nparams Nmodel, scale *scaling ) {
 
-    int p, k, l, Nx, Nz, Ncx, Ncz, c0, c1, k1, cond;
+    int p, k, l, Nx, Nz, Ncx, Ncz, c0, c1, k1;
     double eta, txx1, tzz1, txz1, Pn, Tn, etaVE, VEcoeff=0.0, eII_el, eII_pl, eII_pwl, eII_exp, eII_lin, eII_gbs, eII_cst, dnew, div_el, div_pl, div_r;
     double exx_pwl, exz_pwl, exx_el, ezz_el, exz_el, exx_diss, ezz_diss, exz_diss;
     int average = model->eta_avg, UnsplitDiffReac = model->UnsplitDiffReac;
@@ -622,7 +624,7 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
     InterpCentroidsToVerticesDouble( mesh->phi0_n,  mesh->phi0_s,  mesh, model ); // ACHTUNG NOT FRICTION ANGLE
 
     // Evaluate cell center viscosities
- #pragma omp parallel for shared( mesh ) private( cond, k, l, k1, p, eta, c1, c0, txx1, tzz1, txz1, etaVE, VEcoeff, eII_el, eII_pl, eII_pwl, eII_exp, eII_lin, eII_gbs, eII_cst, dnew, exx_el, ezz_el, exz_el, exx_diss, ezz_diss, exz_diss, Xreac, OverS, Pcorr, rho, div_el, div_pl, div_r, Exx, Ezz, Exz, gxz, Gxx, Gzz, Gxz, etae, ani, d0, d1, nx, nz, Da11, Da12, Da13, Da22, Da23, Da33, iDa11, iDa12, iDa13, iDa22, iDa23, iDa33, a11, a12, a13, a22, a23, a33, det ) firstprivate( el, UnsplitDiffReac, materials, scaling, average, model, Ncx, Ncz )
+ #pragma omp parallel for shared( mesh ) private( k, l, k1, p, eta, c1, c0, txx1, tzz1, txz1, etaVE, VEcoeff, eII_el, eII_pl, eII_pwl, eII_exp, eII_lin, eII_gbs, eII_cst, dnew, exx_el, ezz_el, exz_el, exx_diss, ezz_diss, exz_diss, Xreac, OverS, Pcorr, rho, div_el, div_pl, div_r, Exx, Ezz, Exz, gxz, Gxx, Gzz, Gxz, etae, ani, d0, d1, nx, nz, Da11, Da12, Da13, Da22, Da23, Da33, iDa11, iDa12, iDa13, iDa22, iDa23, iDa33, a11, a12, a13, a22, a23, a33, det ) firstprivate( el, UnsplitDiffReac, materials, scaling, average, model, Ncx, Ncz )
     for ( k1=0; k1<Ncx*Ncz; k1++ ) {
 
         //    for ( l=0; l<Ncz; l++ ) {
@@ -734,33 +736,35 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
 //            exit(1);
             
 //            printf("%2.2e %2.2e\n", Gxz, Exz );
-
             // Loop on phases
             for ( p=0; p<model->Nb_phases; p++) {
                                 
-                cond =  fabs(mesh->phase_perc_n[p][c0])>1.0e-13;
+                // Detect if there is a fraction of phase p in the cell c: compute only if there is a non-zero fraction
+                bool is_phase_active = false;
+                const double min_fraction=1e-13; 
+                if ( fabs(mesh->phase_perc_n[p][c0])>min_fraction ) is_phase_active = true;
 
-                if ( cond == 1 ) {                    
+                if ( is_phase_active==true ) {                  
                     eta =  ViscosityConcise( p, mesh->mu_n[c0], mesh->T[c0], mesh->p_in[c0], mesh->d0_n[c0], mesh->phi0_n[c0], mesh->X0_n[c0], Exx, Ezz, Exz, Gxx, Gzz, Gxz, mesh->sxxd0[c0], mesh->szzd0[c0], mesh->sxz0_n[c0], materials    , model, scaling, &txx1, &tzz1, &txz1, &etaVE, &VEcoeff, &eII_el, &eII_pl, &eII_pwl, &eII_exp, &eII_lin, &eII_gbs, &eII_cst, &exx_el, &ezz_el, &exz_el, &exx_diss, &ezz_diss, &exz_diss, &dnew, mesh->strain_n[c0], mesh->dil_n[c0], mesh->fric_n[c0], mesh->C_n[c0], mesh->p0_n[c0], mesh->T0_n[c0], &Xreac, &OverS, &Pcorr, &rho, mesh->bet_n[c0], mesh->div_u[c0], &div_el, &div_pl, &div_r, 1, 1 );
-                
+                    mesh->phase_eta_n[p][c0] = etaVE;
                     // printf("%2.2e %2.2e %2.2e\n", eta, etaVE, 1.0/(1.0/(materials->mu[p]*model->dt) + 1.0/materials->eta0[p]) );
 
                     switch ( average ) {  
-                    case 0 :
-                        // ARITHMETIC AVERAGE
-                        mesh->eta_n[c0]       += mesh->phase_perc_n[p][c0] * etaVE;
-                        mesh->eta_phys_n[c0]  += mesh->phase_perc_n[p][c0] * eta;
-                        break;
-                    case 1 :
-                        // HARMONIC AVERAGE
-                        mesh->eta_n[c0]      += mesh->phase_perc_n[p][c0] * 1.0/etaVE;
-                        mesh->eta_phys_n[c0] += mesh->phase_perc_n[p][c0] * 1.0/eta;
-                        break;
-                    case 2 :
-                        // GEOMETRIC AVERAGE
-                        mesh->eta_n[c0]      += mesh->phase_perc_n[p][c0] * log(etaVE);
-                        mesh->eta_phys_n[c0] += mesh->phase_perc_n[p][c0] * log(eta);
-                        break;
+                        case 0 :
+                            // ARITHMETIC AVERAGE
+                            mesh->eta_n[c0]       += mesh->phase_perc_n[p][c0] * etaVE;
+                            mesh->eta_phys_n[c0]  += mesh->phase_perc_n[p][c0] * eta;
+                            break;
+                        case 1 :
+                            // HARMONIC AVERAGE
+                            mesh->eta_n[c0]      += mesh->phase_perc_n[p][c0] * 1.0/etaVE;
+                            mesh->eta_phys_n[c0] += mesh->phase_perc_n[p][c0] * 1.0/eta;
+                            break;
+                        case 2 :
+                            // GEOMETRIC AVERAGE
+                            mesh->eta_n[c0]      += mesh->phase_perc_n[p][c0] * log(etaVE);
+                            mesh->eta_phys_n[c0] += mesh->phase_perc_n[p][c0] * log(eta);
+                            break;
                     }
 
                     // printf("%2.4e %2.4e\n", txx1,  2.0*etaVE*Gxx);
@@ -821,7 +825,7 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
                     printf("NaN: Problem on cell centers:\n");
                     printf("ProgReac %d\n", model->ProgReac);
                     for ( p=0; p<model->Nb_phases; p++) printf("phase %d vol=%2.2e\n", p, mesh->phase_perc_n[p][c0]);
-                    printf("%2.2e %2.2e %2.2e %2.2e %2.2e %2.2e %2.2e %2.2e %2.2e %2.2e\n", eta, mesh->mu_n[c0], mesh->T[c0], mesh->p_in[c0], mesh->d0_n[c0], mesh->phi_n[c0], mesh->exxd[c0], mesh->exz_n[c0], mesh->sxxd0[c0], mesh->sxz0_n[c0]);
+                    printf("eta=%2.2e G=%2.2e T=%2.2e P=%2.2e d=%2.2e phi=%2.2e %2.2e %2.2e %2.2e %2.2e\n", eta*scaling->eta, mesh->mu_n[c0]*scaling->S, mesh->T[c0]*scaling->T, mesh->p_in[c0]*scaling->S, mesh->d0_n[c0]*scaling->L, mesh->phi_n[c0], mesh->exxd[c0], mesh->exz_n[c0], mesh->sxxd0[c0], mesh->sxz0_n[c0]);
                     printf("flag %d nb part cell = %d cell index = %d\n", mesh->BCp.type[c0],mesh->nb_part_cell[c0], c0);
                     printf("x=%2.2e z=%2.2e\n", mesh->xc_coord[k]*scaling->L/1000.0, mesh->zc_coord[l]*scaling->L/1000.0);
                     exit(1);
@@ -876,7 +880,7 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
 
     // Calculate vertices viscosity
 
- #pragma omp parallel for shared( mesh ) private( cond, k, l, k1, p, eta, c1, c0, txx1, tzz1, txz1, etaVE, VEcoeff, eII_el, eII_pl, eII_pwl, eII_exp, eII_lin, eII_gbs, eII_cst, dnew, exx_el, ezz_el, exz_el, exx_diss, ezz_diss, exz_diss, Xreac, OverS, Pcorr, rho, div_el, div_pl, div_r, Exx, Ezz, Exz, gxz, Gxx, Gzz, Gxz, etae, ani, d0, d1, nx, nz, Da11, Da12, Da13, Da22, Da23, Da33, iDa11, iDa12, iDa13, iDa22, iDa23, iDa33, a11, a12, a13, a22, a23, a33, det ) firstprivate( el, UnsplitDiffReac, materials, scaling, average, model, Nx, Nz )
+ #pragma omp parallel for shared( mesh ) private( k, l, k1, p, eta, c1, c0, txx1, tzz1, txz1, etaVE, VEcoeff, eII_el, eII_pl, eII_pwl, eII_exp, eII_lin, eII_gbs, eII_cst, dnew, exx_el, ezz_el, exz_el, exx_diss, ezz_diss, exz_diss, Xreac, OverS, Pcorr, rho, div_el, div_pl, div_r, Exx, Ezz, Exz, gxz, Gxx, Gzz, Gxz, etae, ani, d0, d1, nx, nz, Da11, Da12, Da13, Da22, Da23, Da33, iDa11, iDa12, iDa13, iDa22, iDa23, iDa33, a11, a12, a13, a22, a23, a33, det ) firstprivate( el, UnsplitDiffReac, materials, scaling, average, model, Nx, Nz )
     for ( k1=0; k1<Nx*Nz; k1++ ) {
 
         k  = mesh->kn[k1];
@@ -953,25 +957,29 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
             // Loop on phases
             for ( p=0; p<model->Nb_phases; p++) {
 
-                cond = fabs(mesh->phase_perc_s[p][c1])>1.0e-13;
+                // Detect if there is a fraction of phase p in the cell c: compute only if there is a non-zero fraction
+                bool is_phase_active = false;
+                const double min_fraction=1e-13; 
+                if ( fabs(mesh->phase_perc_s[p][c1])>min_fraction ) is_phase_active = true;
 
-                if ( cond == 1 ) {
+                if ( is_phase_active==true ) {  
 
                     eta =  ViscosityConcise( p, mesh->mu_s[c1], mesh->T_s[c1], mesh->P_s[c1], mesh->d0_s[c1], mesh->phi0_s[c1], mesh->X0_s[c1], Exx, Ezz, Exz, Gxx, Gzz, Gxz, mesh->sxxd0_s[c1], mesh->szzd0_s[c1], mesh->sxz0[c1], materials, model, scaling, &txx1, &tzz1, &txz1, &etaVE, &VEcoeff, &eII_el, &eII_pl, &eII_pwl, &eII_exp, &eII_lin, &eII_gbs, &eII_cst, &exx_el, &ezz_el, &exz_el, &exx_diss, &ezz_diss, &exz_diss, &dnew, mesh->strain_s[c1], mesh->dil_s[c1], mesh->fric_s[c1], mesh->C_s[c1], mesh->p0_s[c1], 0.0, &Xreac, &OverS, &Pcorr, &rho, mesh->bet_s[c1], mesh->div_u_s[c1], &div_el, &div_pl, &div_r, 1, 0 );
+                    mesh->phase_eta_s[p][c1] = etaVE;
 
                     switch ( average ) {  
-                    case 0 : 
-                        mesh->eta_s[c1]      += mesh->phase_perc_s[p][c1] * etaVE;
-                        mesh->eta_phys_s[c1] += mesh->phase_perc_s[p][c1] * eta;
-                        break;
-                    case 1:
-                        mesh->eta_s[c1]      += mesh->phase_perc_s[p][c1] * 1.0/etaVE;
-                        mesh->eta_phys_s[c1] += mesh->phase_perc_s[p][c1] * 1.0/eta;
-                        break;
-                    case 2:
-                        mesh->eta_s[c1]      += mesh->phase_perc_s[p][c1] * log(etaVE);
-                        mesh->eta_phys_s[c1] += mesh->phase_perc_s[p][c1] * log(eta);
-                        break;
+                        case 0 : 
+                            mesh->eta_s[c1]      += mesh->phase_perc_s[p][c1] * etaVE;
+                            mesh->eta_phys_s[c1] += mesh->phase_perc_s[p][c1] * eta;
+                            break;
+                        case 1:
+                            mesh->eta_s[c1]      += mesh->phase_perc_s[p][c1] * 1.0/etaVE;
+                            mesh->eta_phys_s[c1] += mesh->phase_perc_s[p][c1] * 1.0/eta;
+                            break;
+                        case 2:
+                            mesh->eta_s[c1]      += mesh->phase_perc_s[p][c1] * log(etaVE);
+                            mesh->eta_phys_s[c1] += mesh->phase_perc_s[p][c1] * log(eta);
+                            break;
                     }
                     mesh->VE_s[c1]       += mesh->phase_perc_s[p][c1] * VEcoeff;
                     mesh->exz_el[c1]     += mesh->phase_perc_s[p][c1] * exz_el;

@@ -383,6 +383,7 @@ void Xjacobian_InnerNodesDecoupled3( SparseMat *Stokes, SparseMat *StokesA, Spar
 
         switch( model.residual_form ) {
             case 0:
+                // TODO Thibault remove this and use different algorithm for free surface
                 // Residual function
                 StokesA->F[eqn] = uC*u[iVxC];
                 if ( mesh->BCp.type[iPrSW] != 30 && Newton==1 && l>1   )   StokesA->F[eqn] += pSW*p[iPrSW];
