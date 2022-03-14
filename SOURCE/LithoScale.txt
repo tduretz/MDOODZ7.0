@@ -18,7 +18,7 @@ T   = 100
 /**** SPACE-TIME ****/
 Nx      = 201
 Nz      = 75
-Nt      = 250
+Nt      = 2
 xmin    = -150.000000e3
 zmin    = -100.000000e3
 xmax    =  150.000000e3
@@ -43,7 +43,7 @@ shear_heat      = 1
 adiab_heat      = 2
 fstrain         = 0
 delete_breakpoints = 0
-GNUplot_residuals  = 0
+GNUplot_residuals  = 1
 eta_avg         = 1
 advection       = 1
 noisy           = 1
@@ -57,6 +57,7 @@ compressible    = 1
 StressRotation  = 2
 subgrid_diff    = 2
 ConservInterp   = 1
+residual_form   = 0
 
 /**** SETUP DEPENDANT ****/
 EpsBG           = -1e-15
