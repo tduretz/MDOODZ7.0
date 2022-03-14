@@ -69,17 +69,6 @@ int RunMDOODZ( int nargs, char *args[] ) {
     mesh.Uthermal   = 0.0; // heat
     mesh.Uelastic   = 0.0; // elastic energy
         
-#ifdef _NEW_INPUT_
-    // Input file name
-    if ( nargs < 3 ) {
-        printf( "NEW INPUT: You should enter the setup file and the initial particle file names as command line arguments.\nExiting...\n" );
-        exit(1);
-    }
-    else {
-        asprintf(&fin_name,"%s", args[1]);
-        asprintf(&PartFileName,"%s", args[2]);
-    }
-#else
     // Input file name
     if ( nargs < 2 ) {
         printf( "OLD INPUT: You should (at least) enter the setup file name as a command line argument.\nExiting...\n" );
@@ -88,7 +77,6 @@ int RunMDOODZ( int nargs, char *args[] ) {
     else {
         asprintf(&fin_name,"%s", args[1]);
     }
-#endif
     
     printf("\n********************************************************\n");
     printf("************ Starting MDOODZ 6.0 simulation ************\n");
@@ -149,25 +137,6 @@ int RunMDOODZ( int nargs, char *args[] ) {
             // Initialise particle fields
             PartInit( &particles, &model );
             
-#ifdef _NEW_INPUT_
-            // Initial grid tags
-            model.BC_setup_type = 1; // eventually it should be set from the input file
-            SetBCs_new( &mesh, &model, scaling, &particles, &materials);
-            
-            LoadIniParticles( PartFileName, &particles, &mesh, &topo_chain, &topo_chain_ini, &model, scaling );
-            
-            if ( model.free_surf == 1 ) {
-                // Project topography on vertices
-                ProjectTopography( &topo, &topo_chain, model, mesh, scaling, mesh.xg_coord, 0 );
-                
-                // Marker chain polynomial fit
-                MarkerChainPolyFit( &topo, &topo_chain, model, mesh );
-                
-                // Call cell flagging routine for free surface calculations
-                CellFlagging( &mesh, model, topo, scaling );
-            }
-            
-#else
             // Initial grid tags
             SetBCs( &mesh, &model, scaling , &particles, &materials, &topo);
             if ( model.free_surf == 1 ) {
@@ -194,8 +163,7 @@ int RunMDOODZ( int nargs, char *args[] ) {
             
             // Set phases on particles
             SetParticles( &particles, scaling, model, &materials );
-            
-#endif
+
             if ( model.free_surf == 1 ) CleanUpSurfaceParticles( &particles, &mesh, topo, scaling );
 
             // Create phase percentage arrays
@@ -236,11 +204,7 @@ int RunMDOODZ( int nargs, char *args[] ) {
                 MinMaxArray( mesh.p_in,  scaling.S, (mesh.Nx-1)*(mesh.Nz-1), "       P" );
             }
             // Initial solution fields (Fine mesh)
-#ifdef _NEW_INPUT_
-            SetBCs_new( &mesh, &model, scaling , &particles, &materials );
-#else
             SetBCs( &mesh, &model, scaling , &particles, &materials, &topo);
-#endif
             InitialiseSolutionFields( &mesh, &model );
             
             MinMaxArray( mesh.u_in,  scaling.V, (mesh.Nx)*(mesh.Nz+1),   "Vx. grid" );
@@ -258,11 +222,7 @@ int RunMDOODZ( int nargs, char *args[] ) {
             P2Mastah( &model, particles, materials.Cv,    &mesh, mesh.Cv, mesh.BCp.type,  0, 0, interp, cent, 1);
             P2Mastah( &model, particles, materials.Qr,    &mesh, mesh.Qr, mesh.BCp.type,  0, 0, interp, cent, 1);
             
-#ifdef _NEW_INPUT_
-            SetBCs_new( &mesh, &model, scaling , &particles, &materials );
-#else
             SetBCs( &mesh, &model, scaling , &particles, &materials, &topo);
-#endif
             if ( model.thermal_eq == 1 ) ThermalSteps( &mesh, model,  mesh.T,  mesh.dT,  mesh.rhs_t, mesh.T, &particles, model.cooling_time, scaling );
             if ( model.therm_pert == 1 ) SetThermalPert( &mesh, model, scaling );
             //            Interp_Grid2P_centroids ( particles, particles.T,    &mesh, mesh.T, mesh.xc_coord,  mesh.zc_coord,  mesh.Nx-1, mesh.Nz-1, mesh.BCt.type, &model );
@@ -633,15 +593,12 @@ int RunMDOODZ( int nargs, char *args[] ) {
             MinMaxArrayTag( mesh.strain_n,   1.0,       (mesh.Nx-1)*(mesh.Nz-1), "strain_n", mesh.BCp.type );
             MinMaxArrayTag( mesh.bet_s,    1.0/scaling.S,   (mesh.Nx)*(mesh.Nz),     "beta_s  ", mesh.BCg.type );
             MinMaxArrayTag( mesh.bet_n,    1.0/scaling.S,   (mesh.Nx-1)*(mesh.Nz-1), "beta_n  ", mesh.BCp.type );
-            IsInfArray2DFP(mesh.bet_n, (mesh.Nx-1)*(mesh.Nz-1));
-            IsNanArray2DFP(mesh.bet_n, (mesh.Nx-1)*(mesh.Nz-1));
             MinMaxArrayTag( mesh.T0_n,     scaling.T,   (mesh.Nx-1)*(mesh.Nz-1), "T       ", mesh.BCt.type );
             MinMaxArrayTag( mesh.p_in,     scaling.S,   (mesh.Nx-1)*(mesh.Nz-1), "P       ", mesh.BCt.type );
             MinMaxArrayI  ( mesh.comp_cells, 1.0, (mesh.Nx-1)*(mesh.Nz-1), "comp_cells" );
             MinMaxArrayTag( mesh.rho_s,      scaling.rho, (mesh.Nx)*(mesh.Nz),     "rho_s     ", mesh.BCg.type );
             MinMaxArrayTag( mesh.rho_n,      scaling.rho, (mesh.Nx-1)*(mesh.Nz-1), "rho_n     ", mesh.BCp.type );
             MinMaxArrayTag( mesh.rho0_n,     scaling.rho, (mesh.Nx-1)*(mesh.Nz-1), "rho0_n    ", mesh.BCp.type );
-           
             
             for (int p=0; p<model.Nb_phases; p++) {
                 printf("Phase number %d:\n", p);
@@ -657,9 +614,6 @@ int RunMDOODZ( int nargs, char *args[] ) {
         
         printf("** Time for particles interpolations I = %lf sec\n",  (double)((double)omp_get_wtime() - t_omp) );
         
-        
-        
-        
 //        struct timespec begin, end;
 //        clock_gettime(CLOCK_REALTIME, &begin);
 //
@@ -674,16 +628,12 @@ int RunMDOODZ( int nargs, char *args[] ) {
 //        printf("** Time for ViscosityDerivatives = %3f sec\n",  elapsed );
 //
 //        exit(0);
-    
-        
+ 
         if ( model.ismechanical == 1 ) {
             
             // Allocate and initialise solution and RHS vectors
-#ifdef _NEW_INPUT_
-            SetBCs_new( &mesh, &model, scaling , &particles, &materials );
-#else
             SetBCs( &mesh, &model, scaling , &particles, &materials, &topo);
-#endif
+
             // Reset fields and BC values if needed
             //        if ( model.ispureshear_ale == 1 ) InitialiseSolutionFields( &mesh, &model );
             InitialiseSolutionFields( &mesh, &model );
@@ -806,6 +756,11 @@ int RunMDOODZ( int nargs, char *args[] ) {
                 if ( model.Newton == 1 && Nmodel.nit > 0 ) RheologicalOperators( &mesh, &model, &scaling, 1 );
                 if ( IsJacobianUsed == 1 )                  BuildJacobianOperatorDecoupled( &mesh, model, 0, mesh.p_corr, mesh.p_in, mesh.u_in, mesh.v_in,  &Jacob,  &JacobA,  &JacobB,  &JacobC,   &JacobD, 1 );
                 
+                // IsNanArray2DFP(mesh.eta_n, (mesh.Nx-1)*(mesh.Nz-1));
+                // IsInfArray2DFP(mesh.eta_n, (mesh.Nx-1)*(mesh.Nz-1));
+
+                // IsNanArray2DFP(mesh.eta_s, (mesh.Nx-0)*(mesh.Nz));
+                // IsInfArray2DFP(mesh.eta_s, (mesh.Nx-0)*(mesh.Nz));
                 //                MinMaxArrayTag( mesh.detadexx_n,      scaling.eta, (mesh.Nx-1)*(mesh.Nz-1),     "detadexx_n     ", mesh.BCg.type );
                 //                MinMaxArrayTag( mesh.detadezz_n,      scaling.eta, (mesh.Nx-1)*(mesh.Nz-1),     "detadezz_n     ", mesh.BCg.type );
                 //                MinMaxArrayTag( mesh.detadexx_n,      scaling.eta, (mesh.Nx-1)*(mesh.Nz-1),     "detadgxz_n     ", mesh.BCg.type );
@@ -1303,9 +1258,6 @@ int RunMDOODZ( int nargs, char *args[] ) {
     // Free char*'s
     free(model.input_file);
     free(fin_name);
-#ifdef _NEW_INPUT_
-    free(PartFileName);
-#endif
     
     // GNU plot
     DoodzFree( Nmodel.rx_abs );

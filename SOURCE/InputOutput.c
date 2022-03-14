@@ -1174,7 +1174,7 @@ void ReadInputFile( char* fin_name, int *istep, int *irestart, int *writer, int 
         materials->C[k]    = ReadMatProps( fin, "C",   k,   1.0e7  )  / scaling->S;
         materials->phi[k]  = ReadMatProps( fin, "phi", k,    30.0  )  * M_PI/ 180.0;
         materials->psi[k]  = ReadMatProps( fin, "psi", k,     0.0  )  * M_PI/ 180.0;
-        materials->Slim[k] = ReadMatProps( fin, "Slim",k,   1.0e10 )  / scaling->S;
+        materials->Slim[k] = ReadMatProps( fin, "Slim",k,   1.0e90 )  / scaling->S;
         materials->alp[k]  = ReadMatProps( fin, "alp", k,      0.0)  / (1.0/scaling->T);
         materials->bet[k]  = ReadMatProps( fin, "bet", k,  1.0e-40 )  / (1.0/scaling->S);
         materials->drho[k] = ReadMatProps( fin, "drho",k,      0.0 )  / (scaling->rho);

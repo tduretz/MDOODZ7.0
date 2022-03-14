@@ -398,7 +398,7 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
 //    eta_ve                  = 0.5*(eta_up+eta_lo);
     eta_ve = eta_up;
 
-    // printf("%2.2e %2.2e %2.2e %2.2e %2.2e %2.2e\n", eta_el*scaling->eta, eta_cst*scaling->eta, eta_pwl*scaling->eta, eta_lin*scaling->eta, eta_lo*scaling->eta, eta_up*scaling->eta);
+    //  printf("%2.2e %2.2e %2.2e %2.2e %2.2e %2.2e\n", eta_el*scaling->eta, eta_cst*scaling->eta, eta_pwl*scaling->eta, eta_lin*scaling->eta, eta_lo*scaling->eta, eta_up*scaling->eta);
 
     // Local iterations
     for (it=0; it<nitmax; it++) {
@@ -444,6 +444,8 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
     
     // Check yield stress
     F_trial = Tii - Tyield;
+
+    // if (F_trial>0) printf("%2.2e %2.2e %2.2e %2.2e %2.2e\n", F_trial*scaling->S, C*scaling->S, cos_fric, P*scaling->S, sin_fric);
     
     double Tyield_trial = Tyield, Tiic;
     double F_corr1=F_trial, F_corr2=F_trial, Tc, Pc_chk, Tc_chk;
@@ -527,6 +529,9 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
         (*etaVE)    = eta_vep;
         (*div_pl)   = divp;
     }
+
+    // printf("%d %2.2e %2.2e %2.2e %2.2e %2.2e %2.2e %2.2e %2.2e\n",is_pl, *etaVE, eta_ve, eta_el*scaling->eta, eta_cst*scaling->eta, eta_pwl*scaling->eta, eta_lin*scaling->eta, eta_lo*scaling->eta, eta_up*scaling->eta);
+
     
     /*----------------------------------------------------*/
     /*----------------------------------------------------*/
@@ -747,6 +752,11 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
                 if ( is_phase_active==true ) {                  
                     eta =  ViscosityConcise( p, mesh->mu_n[c0], mesh->T[c0], mesh->p_in[c0], mesh->d0_n[c0], mesh->phi0_n[c0], mesh->X0_n[c0], Exx, Ezz, Exz, Gxx, Gzz, Gxz, mesh->sxxd0[c0], mesh->szzd0[c0], mesh->sxz0_n[c0], materials    , model, scaling, &txx1, &tzz1, &txz1, &etaVE, &VEcoeff, &eII_el, &eII_pl, &eII_pwl, &eII_exp, &eII_lin, &eII_gbs, &eII_cst, &exx_el, &ezz_el, &exz_el, &exx_diss, &ezz_diss, &exz_diss, &dnew, mesh->strain_n[c0], mesh->dil_n[c0], mesh->fric_n[c0], mesh->C_n[c0], mesh->p0_n[c0], mesh->T0_n[c0], &Xreac, &OverS, &Pcorr, &rho, mesh->bet_n[c0], mesh->div_u[c0], &div_el, &div_pl, &div_r, 1, 1 );
                     mesh->phase_eta_n[p][c0] = etaVE;
+
+                    // if (c0==9042 ) {
+                    //     printf("cell %d %d etaVE = %2.2e mu = %2.2e\n", c0, is_phase_active, etaVE, mesh->mu_n[c0]);
+                    //     exit(1);
+                    // }
                     // printf("%2.2e %2.2e %2.2e\n", eta, etaVE, 1.0/(1.0/(materials->mu[p]*model->dt) + 1.0/materials->eta0[p]) );
 
                     switch ( average ) {  
