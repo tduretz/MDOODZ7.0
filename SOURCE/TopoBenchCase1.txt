@@ -1,5 +1,5 @@
 /**** RESTART ****/
-istep = 000220
+istep = 000250
 irestart = 0
 
 /**** OUTPUT FILES ****/
@@ -28,7 +28,7 @@ zmax    =  50.000000e3
 
 /**** TIME ****/
 dt_constant = 1
-dt          = 5e9e
+dt          = 5e9
 RK          = 4
 
 /**** LINEAR SOLVER ****/
@@ -58,14 +58,12 @@ Nb_phases = 2
 ID            = 0 / Mantle
 density_model = 0
 rho           = 3300.00 
-C             = 1e70
 cstv          = 1
 eta0          = 1e21
 
 ID            = 1 / Lithosphere
 density_model = 0 
 rho           = 3300.00  
-C             = 1e70  
 cstv          = 1
 eta0          = 1e23
 
