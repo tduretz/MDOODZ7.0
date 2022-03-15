@@ -1,6 +1,5 @@
 #include "stdio.h"
 #include "stdlib.h"
-#include "string.h"
 #include "math.h"
 #include "header_MDOODZ.h"
 
@@ -55,43 +54,12 @@ void SetParticles( markers *particles, scale scaling, params model, mat_prop *ma
 // Set physical properties on the grid and boundary conditions
 void SetBCs( grid *mesh, params *model, scale scaling, markers* particles, mat_prop *materials, surface* topo ) {
     
-    int   kk, k, l, c, c1, np;
+    int   k, l, c;
     double *X, *Z, *XC, *ZC;
-    int   NX, NZ, NCX, NCZ, NXVZ, NZVX;
-    double TN =  273.15/scaling.T, TS = (1330.+273.15)/scaling.T;
+    int   NX, NZ, NCX, NCZ;
+    double TN =  273.15/scaling.T;
     double TW = (1330.+273.15)/scaling.T, TE = (1330.+273.15)/scaling.T;
-    double Tbot, Tleft, Tright;
 
-    double xW = -100e3/scaling.L;
-    double xE =  100e3/scaling.L;
-    double zS = -600e3/scaling.L;
-    double zN = -500e3/scaling.L;
-    double VxBC =  1.5e-9/scaling.V;
-    double VzBC = -1.5e-9/scaling.V;
-    
-    double zW  = model->user6/scaling.L;
-    double dip = atan(model->user7*M_PI/180.0);
-    double Vel = model->user8/scaling.V;
-    
-    // Linear gradient of velocity along West boundary
-    double zlabW = -model->user0/scaling.L;
-    double dVdzW = Vel / (zW-zlabW);
-    
-    // Linear gradient of velocity along East boundary
-    double dLab  = 40e3/scaling.L;
-    double zE    = zW - dip*(model->xmax-model->xmin);
-    double zlabE = zlabW - dLab;
-    double dVdzE = Vel / (zE-zlabE);
-    double V;
-    
-    double Hslab = 100e3/scaling.L;
-    double ztop, zbot;
-    
-    // super idée de Ben: utiliser des demi gaussiennes au nord/sud du slab sur une epaisseur donnée Hsig
-    double sigma   = 10e3/scaling.L;
-    double Hsigma  = 4.0*sigma;
-    
-    
     // Set unresaonable conductivity in the mantle to generate and adiabatic mantle as initial condition
     int    phase_ast1 = 2;                     // This has to be the ASTHENOSPHERE phase number
     int    phase_ast2 = 4;
@@ -113,8 +81,6 @@ void SetBCs( grid *mesh, params *model, scale scaling, markers* particles, mat_p
     NZ  = mesh->Nz;
     NCX = NX-1;
     NCZ = NZ-1;
-    NXVZ = NX+1;
-    NZVX = NZ+1;
     
     X  = malloc (NX*sizeof(double));
     Z  = malloc (NZ*sizeof(double));
@@ -251,8 +217,6 @@ void SetBCs( grid *mesh, params *model, scale scaling, markers* particles, mat_p
         NZ  = mesh->Nz;
         NCX = NX-1;
         NCZ = NZ-1;
-        NXVZ = NX+1;
-        NZVX = NZ+1;
         
         for (l=0; l<NCZ; l++) {
             for (k=0; k<NCX; k++) {
@@ -286,8 +250,6 @@ void SetBCs( grid *mesh, params *model, scale scaling, markers* particles, mat_p
         NZ  = mesh->Nz;
         NCX = NX-1;
         NCZ = NZ-1;
-        NXVZ = NX+1;
-        NZVX = NZ+1;
         
         for (l=0; l<mesh->Nz-1; l++) {
             for (k=0; k<mesh->Nx-1; k++) {

@@ -1,5 +1,3 @@
-from fileinput import filename
-from unittest.main import MAIN_EXAMPLES
 import h5py as h5py
 import numpy as np
 import matplotlib.pyplot as mpl
