@@ -11,9 +11,10 @@ path = "/REPO_GIT/MDOODZ7.0/SOURCE/"
 
 # File numbers
 file_start = 0
-file_step  = 5
+file_step  = 10
 file_end   = 250
 
+# Allocate arrays for logs
 num_files  = int( (file_end-file_start)/file_step + 1)
 time_all   = np.zeros((num_files), dtype=float)
 max_topo   = np.zeros((num_files), dtype=float)
@@ -30,7 +31,7 @@ for step in range(file_start, file_end+1, file_step):
     i          += 1
     file.close()
 
-# Analytical solution from Crameri et al., 2012
+# Analytical solution from Crameri et al. (2012)
 ky       = 1e3*365.25*24*3600
 hmax     = 7e3
 h_dot    = 0.2139e-11
@@ -43,4 +44,5 @@ axs.plot(time_all/ky, max_topo/1e3, color='b', zorder=2, marker='+', linewidth=0
 axs.set_xlabel('t [ky]')
 axs.set_ylabel('h [m]')
 axs.legend(['Expected', 'MDoodz'])
+axs.set_title('Case 1 test from Crameri et al. (2012)')
 mpl.show()

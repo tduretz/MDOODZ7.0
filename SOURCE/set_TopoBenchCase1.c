@@ -12,7 +12,7 @@
 void BuildInitialTopography( surface *topo, markers *topo_chain, params model, grid mesh, scale scaling ) {
     
     double Amplitude  = 7e3/scaling.L;
-    double Wavelength = model.xmax-model.xmin;
+    double Wavelength = 2800e3/scaling.L;
 
     for ( int k=0; k<topo_chain->Nb_part; k++ ) {
         topo_chain->z[k]     = -Amplitude*cos(2.0*M_PI*topo_chain->x[k]/Wavelength);

@@ -4,12 +4,7 @@ irestart = 0
 
 /**** OUTPUT FILES ****/
 writer         = 1
-writer_step    = 5
-writer_markers = 0
-writer_debug   = 0 
-
-/**** INPUT FILE FOR PARTICLES ****/
-input_file = setup_r501x501_fsp40.bin
+writer_step    = 10
 
 /**** SCALES ****/
 eta = 1e+22
@@ -18,76 +13,44 @@ V   = 1.0e-8
 T   = 1e+02
  
 /**** SPACE ****/
-Nx      = 100
+Nx      = 50
 Nz      = 100
 Nt      = 250
 xmin    = -1400.000000e3
-xmax    =  1400.000000e3
-zmin    = -700.000000e3
-zmax    =  50.000000e3 
+xmax    =    00.000000e3
+zmin    =  -700.000000e3
+zmax    =    50.000000e3 
 
 /**** TIME ****/
 dt_constant = 1
 dt          = 5e9
-RK          = 4
 
 /**** LINEAR SOLVER ****/
 abs_tol_div     = 1e-9
 rel_tol_div     = 1e-9
 penalty         = 1e3
 residual_form   = 0
-GNUplot_residuals = 0
 
 /**** SWITCHES ****/
-eta_avg         = 0
-ismechanical    = 1
-line_search     = 0
 free_surf       = 1
 free_surf_stab  = 1
 
-/**** SETUP DEPENDANT ****/
-EpsBG           = 1e-20 /Background strain rate
-
 /**** GRAVITY ****/
-gx = 0.0000
 gz = -10.00
 
 /**** PHASE PROPERTIES ****/
 Nb_phases = 2
 
+/**** Phase 0 ****/
 ID            = 0 / Mantle
 density_model = 0
 rho           = 3300.00 
 cstv          = 1
 eta0          = 1e21
 
+/**** Phase 1 ****/
 ID            = 1 / Lithosphere
 density_model = 0 
 rho           = 3300.00  
 cstv          = 1
 eta0          = 1e23
-
-/**** DEFMAPS ****/
-nT    =    200      / Temperature resolutin []
-nE    =    200      / Strain rate resolution []
-nd    =    6        / Grain size resolution []
-Tmin  =    127      / Temperature minimum [°C]
-Tmax  =    1827     / Temperature maximum [°C]
-Emin  =    -50      / Strain rate minimum log_10 [1/s]
-Emax  =    5        / Strain rate maximum log_10 [1/s]
-dmin  =    -7       / Grain size minimum log_10 [m]
-dmax  =    -2       / Grain size maximum log_10 [m]
-Pn    =  1e9        / Pressure [Pa]
-
-/**** PARTICLES ****/
-Nx_part  = 4
-Nz_part  = 4
-min_part_cell = 16
-
-/**** PICARD ITERATIONS ****/
-Newton  = 0
-nit_max = 10
-tol_u   = 5e-8
-tol_p   = 5e-8
-mineta  = 1e19
-maxeta  = 1e25
