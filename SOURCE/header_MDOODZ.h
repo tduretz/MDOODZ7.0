@@ -111,7 +111,7 @@ struct _params {
 	int Nx, Nz, Nt, step, nit, Newton, noisy;
 	int eta_avg, itp_stencil;
     double nexp_radial_basis;
-	int ismechanical, isperiodic_x, isinertial, iselastic, isnonnewtonian, isthermal, ispureshear_ale, free_surf, write_markers, write_debug, no_markers;
+	int ismechanical, isperiodic_x, isinertial, iselastic, isnonnewtonian, isthermal, ispureshear_ale, free_surf, write_markers, write_debug;
     double free_surf_stab;
     int dt_constant, RK, line_search, thermal_eq, subgrid_diff, adiab_heat, shear_heat, advection, fstrain, ConservInterp;
     int surf_processes, cpc, surf_remesh, loc_iter, therm_pert, surf_ised1, surf_ised2, MantleID, topografix, Reseed, SmoothSoftening;

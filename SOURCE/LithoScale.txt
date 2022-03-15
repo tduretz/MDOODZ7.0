@@ -30,6 +30,7 @@ Courant     = 0.25
 
 /**** SWITCHES ****/
 ismechanical    = 1
+advection       = 0
 RK              = 4
 isperiodic_x    = 0
 ispureshear_ALE = -1
@@ -57,7 +58,6 @@ compressible    = 1
 StressRotation  = 2
 subgrid_diff    = 2
 ConservInterp   = 1
-residual_form   = 0
 
 /**** SETUP DEPENDANT ****/
 EpsBG           = -1e-15

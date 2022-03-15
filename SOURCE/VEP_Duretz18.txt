@@ -1,10 +1,10 @@
 /**** RESTART ****/
-istep = 00030
-irestart = 0
+istep = 00022
+irestart = 1
 
 /**** OUTPUT FILES ****/
 writer          = 1
-writer_step     = 1
+writer_step     = 5
 writer_markers  = 0
 writer_debug    = 0
 writer_energies = 0
@@ -19,7 +19,7 @@ T   = 1
 /**** SPACE-TIME ****/
 Nx      = 101
 Nz      = 51
-Nt      = 30
+Nt      = 23
 xmin    = -2.000000e3
 xmax    =  2.000000e3
 zmin    = -2.000000e3
@@ -63,6 +63,8 @@ eta_avg           = 0
 num_deriv         = 0
 let_res_grow      = 1
 
+residual_form = 0
+
 /**** SETUP DEPENDANT ****/
 EpsBG           = 5e-15
 user0           = 1     / temperature [°C]
@@ -83,7 +85,8 @@ rho  = 2700.00 / matrix
 mu   = 1e10
 Cv   = 1050
 k    = 2.5
-Qr   = 0
+Qr   = 0i
+plast = 1
 C    = 3e7
 phi  = 30
 psi  = 10
@@ -110,6 +113,7 @@ mu   = 2.5e9
 Cv   = 1050
 k    = 2.5
 Qr   = 0
+plast = 1
 C    = 3e7
 phi  = 30
 psi  = 10

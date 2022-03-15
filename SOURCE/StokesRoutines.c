@@ -957,7 +957,6 @@ void EvaluateRHS( grid* mesh, params model, scale scaling, double RHO_REF ) {
                 if (tet<0.0) gx     =-model.gz*cos(tet);
             }
             mesh->gx[c]         = gx;
-
 //            printf("gx = %2.2e\n", gx*scaling.L/pow(scaling.t,2.0));
 
             if (l>0 && l<NzVx-1) {
@@ -973,34 +972,15 @@ void EvaluateRHS( grid* mesh, params model, scale scaling, double RHO_REF ) {
                     // Periodic BC !!!!!!!!!!!
                     if ( mesh->BCu.type[c] == -2 ) iPrW  = c2+Ncx-1;
 
-                    // Free surface
-                    inW=0.0, inE = 0.0, inS=0.0, inN = 0.0;
-                    if (mesh->BCp.type[iPrW] == -1) inW = 1.0;
-                    if (mesh->BCp.type[iPrE] == -1) inE = 1.0;
-                    if (mesh->BCg.type[ixyS] != 30 && mesh->BCu.type[iVxS] != 13) inS = 1.0;
-                    if (mesh->BCg.type[ixyN] != 30 && mesh->BCu.type[iVxN] != 13) inN = 1.0;
-
-                    // Gravity force: take apparent viscosity (free surface correction)
+                    // Gravity force: take apparent density (free surface correction)
                     if (model.polar==0) rhoVx             = 0.5*(mesh->rho_s[ixyS] + mesh->rho_s[ixyN]);
                     if (model.polar==1) rhoVx             = 0.5*(mesh->rho_n[iPrW] + mesh->rho_n[iPrE]);
                     mesh->roger_x[c]  = - gx * rhoVx;
-
-                    // Elastic force
-                    if ( model.iselastic == 1 ) {
-                        // Inner nodes
-                        if (k>0 && k<Nx-1) {
-                            if ( inE ) mesh->roger_x[c]  -= 1.0/dx * ( mesh->eta_n[iPrE] / (mesh->mu_n[iPrE]*model.dt)  * mesh->sxxd0[iPrE] );
-                            if ( inW ) mesh->roger_x[c]  -= 1.0/dx * (-mesh->eta_n[iPrW] / (mesh->mu_n[iPrW]*model.dt)  * mesh->sxxd0[iPrW] );
-                            if ( inN ) mesh->roger_x[c]  -= 1.0/dz * ( mesh->eta_s[ixyN] / (mesh->mu_s[ixyN]*model.dt)  * mesh->sxz0[ixyN] );
-                            if ( inS ) mesh->roger_x[c]  -= 1.0/dz * (-mesh->eta_s[ixyS] / (mesh->mu_s[ixyS]*model.dt)  * mesh->sxz0[ixyS] );
-                        }
-                    }
                 }
             }
             mesh->roger_x[c] = -mesh->roger_x[c];
         }
     }
-
 
     /* --------------------------------------------------------------------*/
     /* Here we calculate the forcing term -rho*gz on the finest grid level */
@@ -1035,24 +1015,10 @@ void EvaluateRHS( grid* mesh, params model, scale scaling, double RHO_REF ) {
 
                 if ( mesh->BCv.type[c] == -1  ) {
 
-                    iPrS   = c2;
-                    iPrN   = c2+Ncx;
-                    ixyE   = c1+1;
-                    ixyW   = c1;
-                    iVyW   = c-1;
-                    iVyE   = c+1;
-
-                    // Free surface
-                    inS=0.0, inN = 0.0, inW=0.0, inE = 0.0;
-                    if (mesh->BCp.type[iPrS] == -1) inS = 1.0;
-                    if (mesh->BCp.type[iPrN] == -1) inN = 1.0;
-                    if (mesh->BCg.type[ixyW] != 30 && mesh->BCv.type[iVyW] != 13 ) inW = 1.0;
-                    if (mesh->BCg.type[ixyE] != 30 && mesh->BCv.type[iVyE] != 13 ) inE = 1.0;
-
                     // Gravity force: use apparent density (free surface correction)
 //                    if (model.polar==0) rhoVz             = 0.5 * (mesh->rho_s[ixyW] + mesh->rho_s[ixyE]);  // USE THIS ALWAYS but not for polar!
 //                    if (model.polar==1) rhoVz             = 0.5 * (mesh->rho_n[iPrS] + mesh->rho_n[iPrN]);
-                    rhoVz             = 0.5 * (mesh->rho_n[iPrS] + mesh->rho_n[iPrN]);
+                    rhoVz             = 0.5 * (mesh->rho_n[c2] + mesh->rho_n[c2+Ncx]);
                     
                     mesh->roger_z[c]  = - gz * rhoVz;
 
@@ -1063,16 +1029,6 @@ void EvaluateRHS( grid* mesh, params model, scale scaling, double RHO_REF ) {
 //                            mesh->roger_z[c]  += -1.0*om*Vinc*model.dt*gz*drhodz;
 //                        }
 //                    }
-                    
-                    // Elastic force
-                    if  (model.iselastic == 1 && model.residual_form==0 ) {
-                        if ( l>0 && l<Nz-1 ) {
-                            if ( inN ) mesh->roger_z[c]  -= 1.0/dz * (  mesh->eta_n[iPrN] / (mesh->mu_n[iPrN] *model.dt ) * (mesh->szzd0[iPrN]) );
-                            if ( inS ) mesh->roger_z[c]  -= 1.0/dz * ( -mesh->eta_n[iPrS] / (mesh->mu_n[iPrS] *model.dt ) * (mesh->szzd0[iPrS]) );
-                            if ( inE ) mesh->roger_z[c]  -= 1.0/dx * (  mesh->eta_s[ixyE] / (mesh->mu_s[ixyE] *model.dt ) *  mesh->sxz0[ixyE]) ;
-                            if ( inW ) mesh->roger_z[c]  -= 1.0/dx * ( -mesh->eta_s[ixyW] / (mesh->mu_s[ixyW] *model.dt ) *  mesh->sxz0[ixyW]) ;
-                        }
-                    }
                 }
             }
             mesh->roger_z[c] = -mesh->roger_z[c];

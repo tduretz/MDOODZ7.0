@@ -1087,7 +1087,6 @@ void ReadInputFile( char* fin_name, int *istep, int *irestart, int *writer, int 
     model->aniso_fstrain   = ReadInt2( fin, "aniso_fstrain",   0 ); // Make anisotropy factor dependent on finite strain aspect ratio
     model->compressible    = ReadInt2( fin, "compressible",    0 ); // Turns on compressibility
     model->GNUplot_residuals = ReadInt2( fin, "GNUplot_residuals",    0 ); // Activate GNU plot residuals visualisation
-    model->no_markers      = ReadInt2( fin, "no_markers",      0 );
     model->shear_style     = ReadInt2( fin, "shear_style",     0 ); // 0: pure shear, 2: periodic simple shear
     model->StressRotation  = ReadInt2( fin, "StressRotation",  1 ); // 0: no stress rotation, 1: analytic rotation, 2: upper convected rate
     model->StressUpdate    = ReadInt2( fin, "StressUpdate",    0 );
@@ -1176,12 +1175,6 @@ void ReadInputFile( char* fin_name, int *istep, int *irestart, int *writer, int 
         materials->drho[k] = ReadMatProps( fin, "drho",k,      0.0 )  / (scaling->rho);
         materials->T0[k]   = (zeroC) / (scaling->T); // +20
         materials->P0[k]   = 1e5 / (scaling->S);
-        // Read plasticity parameters
-        materials->plast[k]= ReadMatProps( fin, "plast",k,     0.0 );
-        materials->C[k]    = ReadMatProps( fin, "C",    k,   1.0e7 )  / scaling->S;
-        materials->phi[k]  = ReadMatProps( fin, "phi",  k,    30.0 )  * M_PI/ 180.0;
-        materials->psi[k]  = ReadMatProps( fin, "psi",  k,     0.0 )  * M_PI/ 180.0;
-        materials->Slim[k] = ReadMatProps( fin, "Slim" ,k,  1.0e90 )  / scaling->S;
         // Read flow law parameters
         materials->cstv[k]  = ReadMatProps( fin, "cstv",k,    1.0  );
         materials->pwlv[k]  = ReadMatProps( fin, "pwlv",k,    0.0  );
@@ -1196,6 +1189,12 @@ void ReadInputFile( char* fin_name, int *istep, int *irestart, int *writer, int 
         materials->gs[k]    = ReadMatProps( fin, "gs",    k,    0.0   );
         materials->gs_ref[k]= ReadMatProps( fin, "gs_ref" ,k,  2.0e-3  ) /scaling->L;
         materials->kin[k]   = ReadMatProps( fin, "kin",    k,    0.0   );
+        // Read generals plasticity parameters
+        materials->plast[k]= ReadMatProps( fin, "plast",k,     0.0 );               // This indicates if plasticity is activated for a given phase
+        materials->C[k]    = ReadMatProps( fin, "C",    k,   1.0e7 )  / scaling->S;
+        materials->phi[k]  = ReadMatProps( fin, "phi",  k,    30.0 )  * M_PI/ 180.0;
+        materials->psi[k]  = ReadMatProps( fin, "psi",  k,     0.0 )  * M_PI/ 180.0;
+        materials->Slim[k] = ReadMatProps( fin, "Slim" ,k,  1.0e90 )  / scaling->S;
         // Strain softening
         materials->coh_soft[k]   = (int)ReadMatProps( fin, "coh_soft",   k,    0.0   );
         materials->phi_soft[k]   = (int)ReadMatProps( fin, "phi_soft",   k,    0.0   );
