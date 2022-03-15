@@ -1171,16 +1171,18 @@ void ReadInputFile( char* fin_name, int *istep, int *irestart, int *writer, int 
         materials->k[k]    = ReadMatProps( fin, "k",   k,   1.0e-6 )  / scaling->k;
         materials->k_eff[k] = materials->k[k];
         materials->Qr[k]   = ReadMatProps( fin, "Qr",  k,   1.0e-30)  / (scaling->W / pow(scaling->L,3.0));
-        materials->C[k]    = ReadMatProps( fin, "C",   k,   1.0e7  )  / scaling->S;
-        materials->phi[k]  = ReadMatProps( fin, "phi", k,    30.0  )  * M_PI/ 180.0;
-        materials->psi[k]  = ReadMatProps( fin, "psi", k,     0.0  )  * M_PI/ 180.0;
-        materials->Slim[k] = ReadMatProps( fin, "Slim",k,   1.0e90 )  / scaling->S;
         materials->alp[k]  = ReadMatProps( fin, "alp", k,      0.0)  / (1.0/scaling->T);
         materials->bet[k]  = ReadMatProps( fin, "bet", k,  1.0e-40 )  / (1.0/scaling->S);
         materials->drho[k] = ReadMatProps( fin, "drho",k,      0.0 )  / (scaling->rho);
         materials->T0[k]   = (zeroC) / (scaling->T); // +20
         materials->P0[k]   = 1e5 / (scaling->S);
-        // Read flow law settings
+        // Read plasticity parameters
+        materials->plast[k]= ReadMatProps( fin, "plast",k,     0.0 );
+        materials->C[k]    = ReadMatProps( fin, "C",    k,   1.0e7 )  / scaling->S;
+        materials->phi[k]  = ReadMatProps( fin, "phi",  k,    30.0 )  * M_PI/ 180.0;
+        materials->psi[k]  = ReadMatProps( fin, "psi",  k,     0.0 )  * M_PI/ 180.0;
+        materials->Slim[k] = ReadMatProps( fin, "Slim" ,k,  1.0e90 )  / scaling->S;
+        // Read flow law parameters
         materials->cstv[k]  = ReadMatProps( fin, "cstv",k,    1.0  );
         materials->pwlv[k]  = ReadMatProps( fin, "pwlv",k,    0.0  );
         materials->linv[k]  = ReadMatProps( fin, "linv",k,    0.0  );

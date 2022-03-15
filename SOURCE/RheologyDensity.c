@@ -114,7 +114,7 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
     
     // Parameters for deformation map calculations
     int    local_iter = model->loc_iter, it, nitmax = 20, noisy = 0;
-    int    constant=0, dislocation=0, peierls=0, diffusion=0, gbs=0, elastic = model->iselastic, comp = model->compressible, VolChangeReac = model->VolChangeReac, kinetics=0;
+    int    plastic=0, constant=0, dislocation=0, peierls=0, diffusion=0, gbs=0, elastic = model->iselastic, comp = model->compressible, VolChangeReac = model->VolChangeReac, kinetics=0;
     double tol = 1.0e-11, res=0.0, res0=0.0, dfdeta=0.0, Tii=0.0, ieta_sum=0.0, Tii0 = sqrt(Txx0*Txx0 + Txz0*Txz0);
     double eta_up=0.0, eta_lo=0.0, eta_ve=0.0, eta_p=0.0, r_eta_pl=0.0, r_eta_ve=0.0, r_eta_p=0.0;
     double eta_pwl=0.0, eta_exp=0.0, eta_vep=0.0, eta_lin=0.0, eta_el=0.0, eta_gbs=0.0, eta_cst=0.0, eta_step=0.0;
@@ -123,7 +123,7 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
     
     // Flow law parameters from input file
     double Tyield=0.0, F_trial = 0.0, F_corr = 0.0, gdot = 0.0, dQdtxx = 0.0, dQdtyy = 0.0, dQdtzz= 0.0, dQdtxz= 0.0;
-    int    is_pl = 0;
+    int    is_pl  = 0;
     double Ea_pwl = materials->Qpwl[phase], Va_pwl = materials->Vpwl[phase], n_pwl  = materials->npwl[phase], m_pwl  = materials->mpwl[phase], r_pwl  = materials->rpwl[phase], A_pwl  = materials->Apwl[phase], f_pwl = materials->fpwl[phase], a_pwl = materials->apwl[phase], F_pwl  = materials->Fpwl[phase], pre_factor = materials->pref_pwl[phase], t_pwl  = materials->tpwl[phase];
     double Ea_lin = materials->Qlin[phase], Va_lin = materials->Vlin[phase], n_lin  = materials->nlin[phase], m_lin  = materials->mlin[phase], r_lin  = materials->rlin[phase], A_lin  = materials->Alin[phase], f_lin = materials->flin[phase], a_lin = materials->alin[phase], F_lin  = materials->Flin[phase];
     double Ea_gbs = materials->Qgbs[phase], Va_gbs = materials->Vgbs[phase], n_gbs  = materials->ngbs[phase], m_gbs  = materials->mgbs[phase], r_gbs  = materials->rgbs[phase], A_gbs  = materials->Agbs[phase], f_gbs = materials->fgbs[phase], a_gbs = materials->agbs[phase], F_gbs  = materials->Fgbs[phase];
@@ -193,6 +193,7 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
     if ( materials->gbsv[phase] !=0                  ) gbs         = 1;
     if ( materials->gs[phase]   !=0                  ) gs          = 1;
     if ( materials->kin[phase]  !=0                  ) kinetics    = 1;
+    if ( materials->plast[phase]!=0                  ) plastic     = 1;
     
     // Turn of elasticity for the initialisation step  (viscous flow stress)
     if ( model->step    == 0                         ) elastic     = 0;
@@ -253,27 +254,30 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
     double cos_fric = cos(fric);
     double sin_fric = sin(fric);
     double sin_dil = sin(dil);
-    Tyield     = C*cos_fric + P*sin_fric;
-    
-    // Von-Mises cut-off
-    if (materials->Slim[phase] < Tyield) {
-        sin_fric   = 0.0;
-        cos_fric   = 1.0;
-        sin_dil    = 0.0;
-        C          = materials->Slim[phase];
-        Tyield     = materials->Slim[phase];
-    }
-    
-    // Tension cut-off
     int    is_tensile = materials->is_tensile[phase], tens = 0;
     double P_tens = -25e6/scaling->S;
     double sin_fric_tens = -C*cos_fric/P_tens; // Compute appropriate slope of the tension yield (SimpleYields.m)
     
-    if (C*cos_fric + P*sin_fric_tens < Tyield && is_tensile==1 ) {
-        if (noisy>0) printf("Switching to tension yield stress, P = %2.2e\n", P*scaling->S);
-        sin_fric   = sin_fric_tens;
-        Tyield     = C*cos_fric + P*sin_fric_tens;
-        tens       = 1;
+    if ( plastic==1 ) {
+
+        Tyield     = C*cos_fric + P*sin_fric;
+
+        // Von-Mises cut-off
+        if (materials->Slim[phase] < Tyield) {
+            sin_fric   = 0.0;
+            cos_fric   = 1.0;
+            sin_dil    = 0.0;
+            C          = materials->Slim[phase];
+            Tyield     = materials->Slim[phase];
+        }
+        
+        // Tension cut-off
+        if (C*cos_fric + P*sin_fric_tens < Tyield && is_tensile==1 ) {
+            if (noisy>0) printf("Switching to tension yield stress, P = %2.2e\n", P*scaling->S);
+            sin_fric   = sin_fric_tens;
+            Tyield     = C*cos_fric + P*sin_fric_tens;
+            tens       = 1;
+        }
     }
     
     //------------------------------------------------------------------------//
@@ -442,59 +446,61 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
     
     //------------------------------------------------------------------------//
     
-    // Check yield stress
-    F_trial = Tii - Tyield;
+    if ( plastic==1 ) {
+        // Check yield stress
+        F_trial = Tii - Tyield;
 
-    // if (F_trial>0) printf("%2.2e %2.2e %2.2e %2.2e %2.2e\n", F_trial*scaling->S, C*scaling->S, cos_fric, P*scaling->S, sin_fric);
-    
-    double Tyield_trial = Tyield, Tiic;
-    double F_corr1=F_trial, F_corr2=F_trial, Tc, Pc_chk, Tc_chk;
-    
-    // Select appropriate dilation angle for tensile domain, see SimpleYields.m
-    if (tens == 1) {
-        eta_vp   = eta_vp0 * pow(Eii, 1.0/n_vp - 1);
-        Pc_chk    = -(C*cos_fric) / (- Tii/P + sin_fric);
-        Tc_chk    = Tii/P*Pc_chk;
-        sin_dil = (P*eta_ve + P*eta_vp - Pc_chk*eta_ve - Pc_chk*eta_vp)/(K*dt*(C*cos_fric + Pc_chk*sin_fric - Tii));
-    }
-    
-    if (F_trial > 1e-17) {
+        // if (F_trial>0) printf("%2.2e %2.2e %2.2e %2.2e %2.2e\n", F_trial*scaling->S, C*scaling->S, cos_fric, P*scaling->S, sin_fric);
         
-        // Initial guess - eta_vp = 0
-        is_pl    = 1;
-        eta_vp   = eta_vp0 * pow(Eii, 1.0/n_vp - 1);
-        gdot     = F_trial / ( eta_ve + eta_vp + K*dt*sin_fric*sin_dil);
-        dQdP     = -sin_dil; //printf("%2.2e %2.2e\n", dQdP, K*scaling->S);
-        res0     = F_trial;
-        F_trial0 = F_trial;
-
-        // Return mapping --> find plastic multiplier rate (gdot)
-        for (it=0; it<nitmax; it++) {
-            
-            dQdP    = -sin_dil;
-            divp    = -gdot*dQdP;
-            Pc      = P + K*dt*divp; // P0 - k*dt*(div-divp) = P + k*dt*divp
-            if (noisy>0 && tens==1) { printf("Pc = %2.4e Pc_chk=%2.4e sin_dil = %2.2e\n",Pc, Pc_chk, sin_dil);  };
-            eta_vp  = eta_vp0 * pow(fabs(gdot), 1.0/n_vp - 1.0);
-            //            if (tens==1) sin_dil = (F_trial0 - eta_ve*gdot - eta_vp*gdot)/(K*dt*gdot*sin_fric);
-            Tyield  = C*cos_fric + Pc*sin_fric +  gdot*eta_vp;
-            Tiic    = Tii - eta_ve*gdot;
-            F_trial = Tiic - Tyield;
-            
-            // Residual check
-            res = fabs(F_trial);
-            if (noisy>0 ) printf("%02d Viscoplastic iterations It., tens = %d F = %2.2e Frel = %2.2e --- n_vp = %2.2e, eta_vp = %2.2e\n", it, tens, res, res/F_trial0, n_vp, eta_vp*scaling->eta);
-            if ( res < tol || res/F_trial0 < tol ) break;
-            dFdgdot  = - eta_ve - eta_vp/n_vp - K*dt*sin_fric*sin_dil;
-            gdot    -= F_trial / dFdgdot;
-            
+        double Tyield_trial = Tyield, Tiic;
+        double F_corr1=F_trial, F_corr2=F_trial, Tc, Pc_chk, Tc_chk;
+        
+        // Select appropriate dilation angle for tensile domain, see SimpleYields.m
+        if (tens == 1) {
+            eta_vp   = eta_vp0 * pow(Eii, 1.0/n_vp - 1);
+            Pc_chk    = -(C*cos_fric) / (- Tii/P + sin_fric);
+            Tc_chk    = Tii/P*Pc_chk;
+            sin_dil = (P*eta_ve + P*eta_vp - Pc_chk*eta_ve - Pc_chk*eta_vp)/(K*dt*(C*cos_fric + Pc_chk*sin_fric - Tii));
         }
-        if ( it==nitmax-1 && (res > tol || res/F_trial0 > tol)  ) { printf("Visco-Plastic iterations failed!\n"); exit(0);}
         
-        *Pcorr  = Pc;
-        eta_vep = Tiic / (2.0*Eii);
-        Tii     = Tiic;
-//        if (Pc<0) printf("%2.2e\n", eta_vep*scaling->eta);
+        if (F_trial > 1e-17) {
+            
+            // Initial guess - eta_vp = 0
+            is_pl    = 1;
+            eta_vp   = eta_vp0 * pow(Eii, 1.0/n_vp - 1);
+            gdot     = F_trial / ( eta_ve + eta_vp + K*dt*sin_fric*sin_dil);
+            dQdP     = -sin_dil; //printf("%2.2e %2.2e\n", dQdP, K*scaling->S);
+            res0     = F_trial;
+            F_trial0 = F_trial;
+
+            // Return mapping --> find plastic multiplier rate (gdot)
+            for (it=0; it<nitmax; it++) {
+                
+                dQdP    = -sin_dil;
+                divp    = -gdot*dQdP;
+                Pc      = P + K*dt*divp; // P0 - k*dt*(div-divp) = P + k*dt*divp
+                if (noisy>0 && tens==1) { printf("Pc = %2.4e Pc_chk=%2.4e sin_dil = %2.2e\n",Pc, Pc_chk, sin_dil);  };
+                eta_vp  = eta_vp0 * pow(fabs(gdot), 1.0/n_vp - 1.0);
+                //            if (tens==1) sin_dil = (F_trial0 - eta_ve*gdot - eta_vp*gdot)/(K*dt*gdot*sin_fric);
+                Tyield  = C*cos_fric + Pc*sin_fric +  gdot*eta_vp;
+                Tiic    = Tii - eta_ve*gdot;
+                F_trial = Tiic - Tyield;
+                
+                // Residual check
+                res = fabs(F_trial);
+                if (noisy>0 ) printf("%02d Viscoplastic iterations It., tens = %d F = %2.2e Frel = %2.2e --- n_vp = %2.2e, eta_vp = %2.2e\n", it, tens, res, res/F_trial0, n_vp, eta_vp*scaling->eta);
+                if ( res < tol || res/F_trial0 < tol ) break;
+                dFdgdot  = - eta_ve - eta_vp/n_vp - K*dt*sin_fric*sin_dil;
+                gdot    -= F_trial / dFdgdot;
+                
+            }
+            if ( it==nitmax-1 && (res > tol || res/F_trial0 > tol)  ) { printf("Visco-Plastic iterations failed!\n"); exit(0);}
+            
+            *Pcorr  = Pc;
+            eta_vep = Tiic / (2.0*Eii);
+            Tii     = Tiic;
+    //        if (Pc<0) printf("%2.2e\n", eta_vep*scaling->eta);
+        }
     }
     
     
