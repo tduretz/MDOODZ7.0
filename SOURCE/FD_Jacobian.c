@@ -289,13 +289,13 @@ void ViscosityDerivatives( grid *mesh, mat_prop *materials, params *model, Npara
             // }
 
             //----------------------------------------------------------------------------------------------------------------------------------------------------//
-            if ( model->eta_avg==1 ) { // Harmonic
+            if ( model->eta_avg == HARMONIC ) { // Harmonic
                 mesh->detadexx_n[c0] *= pow(mesh->eta_n[c0] , 2);
                 mesh->detadezz_n[c0] *= pow(mesh->eta_n[c0] , 2);
                 mesh->detadgxz_n[c0] *= pow(mesh->eta_n[c0] , 2);
                 mesh->detadp_n[c0]   *= pow(mesh->eta_n[c0] , 2);
             }
-            if ( model->eta_avg==2 ) { // Geometric
+            if ( model->eta_avg == GEOMETRIC ) { // Geometric
                 mesh->detadexx_n[c0] *= mesh->eta_n[c0];
                 mesh->detadezz_n[c0] *= mesh->eta_n[c0];
                 mesh->detadgxz_n[c0] *= mesh->eta_n[c0];
@@ -454,13 +454,13 @@ void ViscosityDerivatives( grid *mesh, mat_prop *materials, params *model, Npara
                               mesh->detadp_s, NULL, NULL, mesh->phase_eta_s );
 
             //----------------------------------------------------------------------------------------------------------------------------------------------------//
-            if ( model->eta_avg==1 ) { // Harmonic
+            if ( model->eta_avg == HARMONIC ) { // Harmonic
                 mesh->detadexx_s[c1] *= pow(mesh->eta_s[c1] , 2);
                 mesh->detadezz_s[c1] *= pow(mesh->eta_s[c1] , 2);
                 mesh->detadgxz_s[c1] *= pow(mesh->eta_s[c1] , 2);
                 mesh->detadp_s[c1]   *= pow(mesh->eta_s[c1] , 2);
             }
-            if ( model->eta_avg==2 ) { // Geometric
+            if ( model->eta_avg == GEOMETRIC ) { // Geometric
                 mesh->detadexx_s[c1] *= mesh->eta_s[c1];
                 mesh->detadezz_s[c1] *= mesh->eta_s[c1];
                 mesh->detadgxz_s[c1] *= mesh->eta_s[c1];
