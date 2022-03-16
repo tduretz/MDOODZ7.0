@@ -4,6 +4,7 @@
 #define FILENAME "Output00001.gzip.h5"
 
 int main() {
+  printf("Test: ShearTemplate model should be converged in one step");
   const char *args[] = {
       "Some string",
       "ShearTemplate.txt",

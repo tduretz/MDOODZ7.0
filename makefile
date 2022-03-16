@@ -1,5 +1,5 @@
 run-tests:
-	cd cmake-build && ./ShearTemplate_test && ./shearPwl_test
+	cd cmake-build && ./shearPwl_test && ./ShearTemplate_test
 
 run:
 	cd cmake-build && ./MDOODZ

@@ -4,6 +4,7 @@
 #define FILENAME "Output00001.gzip.h5"
 
 int main() {
+  printf("Test: Shear_pwl model with OPT=ON and OMP=ON should finish and produce output");
   const char *args[] = {
       "Some string",
       "Setup03_strongCircleAnisoConst.txt",
