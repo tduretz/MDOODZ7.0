@@ -1827,7 +1827,7 @@ char* ReadPhaseDiagram( FILE *fin, char FieldName[] ) {
 
 int ReadInt2( FILE *fin, char FieldName[], int Default )
 {
-    // Some declaration.
+    // Declarations
     int     bufmax=1000;
     int     h = 0;
     char    line[bufmax];
@@ -1919,7 +1919,7 @@ double ReadDou2( FILE *fin, char FieldName[], double Default )
         // Read new line
         fgets ( line, sizeof(line), fin );
         if (feof(fin)) {
-            printf("Warning : Parameter '%s' not found in the setup file, running with default value %2.2e\n", FieldName, Default);
+            // printf("Warning : Parameter '%s' not found in the setup file, running with default value %2.2e\n", FieldName, Default);
             rewind (fin);
             free(param1);
             return Default;
@@ -2059,8 +2059,8 @@ double ReadMatProps( FILE *fin, char FieldName[], int PhaseID, double Default )
 
                     // Break in case the parameter has not been defined for the current phase.
                     if ( strcmp(param3,"ID") == 0 || feof(fin) ) {
-                        if ( fabs(Default) <  100 ) printf("Warning : Parameter '%s' not found in the setup file, running with default value %.2lf\n", FieldName, Default);
-                        if ( fabs(Default) >= 100 ) printf("Warning : Parameter '%s' not found in the setup file, running with default value %2.2e\n", FieldName, Default);
+                        if ( fabs(Default) <  100.0 ) printf("Warning : Parameter '%s' not found in the setup file, running with default value %.2lf\n", FieldName, Default);
+                        if ( fabs(Default) >= 100.0 ) printf("Warning : Parameter '%s' not found in the setup file, running with default value %2.2e\n", FieldName, Default);
                         rewind (fin);
                         free(param1);
                         free(param2);

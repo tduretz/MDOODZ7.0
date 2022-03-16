@@ -628,7 +628,6 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
     Nz  = mesh->Nz;  Ncz = Nz-1;
    
     // Stuff to be interpolated to vertices
-    InterpCentroidsToVerticesDouble( mesh->div_u,   mesh->div_u_s, mesh, model );
     InterpCentroidsToVerticesDouble( mesh->T,       mesh->T_s,     mesh, model );
     InterpCentroidsToVerticesDouble( mesh->p_in,    mesh->P_s,     mesh, model );
     InterpCentroidsToVerticesDouble( mesh->d0_n,    mesh->d0_s,    mesh, model );
@@ -1732,7 +1731,6 @@ void StrainRateComponents( grid* mesh, scale scaling, params* model ) {
             // Normal strain rates
             mesh->exxd[c0]  = dvxdx - 1.0/3.0*mesh->div_u[c0];
             mesh->ezzd[c0]  = dvzdz - 1.0/3.0*mesh->div_u[c0];
-//            printf("exxd %2.2e ezzd %2.2e eyyd %2.2e %2.2e \n", mesh->exxd[c0], mesh->ezzd[c0], - mesh->exxd[c0] - mesh->ezzd[c0], dvydy - 1.0/3.0*mesh->div_u[c0]);
         }
         else {
             mesh->div_u[c0] = 0.0;
@@ -1785,6 +1783,8 @@ void StrainRateComponents( grid* mesh, scale scaling, params* model ) {
     // Interpolate normal strain rate on vertices
     InterpCentroidsToVerticesDouble( mesh->exxd, mesh->exxd_s, mesh, model );
     InterpCentroidsToVerticesDouble( mesh->ezzd, mesh->ezzd_s, mesh, model );
+    InterpCentroidsToVerticesDouble( mesh->div_u,   mesh->div_u_s, mesh, model );
+
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/

@@ -958,8 +958,6 @@ void EvaluateRHS( grid* mesh, params model, scale scaling, double RHO_REF ) {
             }
             mesh->gx[c]         = gx;
 
-//            printf("gx = %2.2e\n", gx*scaling.L/pow(scaling.t,2.0));
-
             if (l>0 && l<NzVx-1) {
 
                 if ( mesh->BCu.type[c] == -1 || mesh->BCu.type[c] == 2 || mesh->BCu.type[c] == -2 ) {
@@ -985,16 +983,16 @@ void EvaluateRHS( grid* mesh, params model, scale scaling, double RHO_REF ) {
                     if (model.polar==1) rhoVx             = 0.5*(mesh->rho_n[iPrW] + mesh->rho_n[iPrE]);
                     mesh->roger_x[c]  = - gx * rhoVx;
 
-                    // Elastic force
-                    if ( model.iselastic == 1 ) {
+                    // // Elastic force
+                    // if ( model.iselastic == 1 && model.residual_form==0 ) {
                         // Inner nodes
-                        if (k>0 && k<Nx-1) {
-                            if ( inE ) mesh->roger_x[c]  -= 1.0/dx * ( mesh->eta_n[iPrE] / (mesh->mu_n[iPrE]*model.dt)  * mesh->sxxd0[iPrE] );
-                            if ( inW ) mesh->roger_x[c]  -= 1.0/dx * (-mesh->eta_n[iPrW] / (mesh->mu_n[iPrW]*model.dt)  * mesh->sxxd0[iPrW] );
-                            if ( inN ) mesh->roger_x[c]  -= 1.0/dz * ( mesh->eta_s[ixyN] / (mesh->mu_s[ixyN]*model.dt)  * mesh->sxz0[ixyN] );
-                            if ( inS ) mesh->roger_x[c]  -= 1.0/dz * (-mesh->eta_s[ixyS] / (mesh->mu_s[ixyS]*model.dt)  * mesh->sxz0[ixyS] );
-                        }
-                    }
+                        // if (k>0 && k<Nx-1) {
+                        //     if ( inE ) mesh->roger_x[c]  -= 1.0/dx * ( mesh->eta_n[iPrE] / (mesh->mu_n[iPrE]*model.dt)  * mesh->sxxd0[iPrE] );
+                        //     if ( inW ) mesh->roger_x[c]  -= 1.0/dx * (-mesh->eta_n[iPrW] / (mesh->mu_n[iPrW]*model.dt)  * mesh->sxxd0[iPrW] );
+                        //     if ( inN ) mesh->roger_x[c]  -= 1.0/dz * ( mesh->eta_s[ixyN] / (mesh->mu_s[ixyN]*model.dt)  * mesh->sxz0[ixyN] );
+                        //     if ( inS ) mesh->roger_x[c]  -= 1.0/dz * (-mesh->eta_s[ixyS] / (mesh->mu_s[ixyS]*model.dt)  * mesh->sxz0[ixyS] );
+                        // }
+                    // }
                 }
             }
             mesh->roger_x[c] = -mesh->roger_x[c];
@@ -1064,15 +1062,15 @@ void EvaluateRHS( grid* mesh, params model, scale scaling, double RHO_REF ) {
 //                        }
 //                    }
                     
-                    // Elastic force
-                    if  (model.iselastic == 1 && model.residual_form==0 ) {
-                        if ( l>0 && l<Nz-1 ) {
-                            if ( inN ) mesh->roger_z[c]  -= 1.0/dz * (  mesh->eta_n[iPrN] / (mesh->mu_n[iPrN] *model.dt ) * (mesh->szzd0[iPrN]) );
-                            if ( inS ) mesh->roger_z[c]  -= 1.0/dz * ( -mesh->eta_n[iPrS] / (mesh->mu_n[iPrS] *model.dt ) * (mesh->szzd0[iPrS]) );
-                            if ( inE ) mesh->roger_z[c]  -= 1.0/dx * (  mesh->eta_s[ixyE] / (mesh->mu_s[ixyE] *model.dt ) *  mesh->sxz0[ixyE]) ;
-                            if ( inW ) mesh->roger_z[c]  -= 1.0/dx * ( -mesh->eta_s[ixyW] / (mesh->mu_s[ixyW] *model.dt ) *  mesh->sxz0[ixyW]) ;
-                        }
-                    }
+                    // // Elastic force
+                    // if  (model.iselastic == 1 && model.residual_form==0 ) {
+                        // if ( l>0 && l<Nz-1 ) {
+                        //     if ( inN ) mesh->roger_z[c]  -= 1.0/dz * (  mesh->eta_n[iPrN] / (mesh->mu_n[iPrN] *model.dt ) * (mesh->szzd0[iPrN]) );
+                        //     if ( inS ) mesh->roger_z[c]  -= 1.0/dz * ( -mesh->eta_n[iPrS] / (mesh->mu_n[iPrS] *model.dt ) * (mesh->szzd0[iPrS]) );
+                        //     if ( inE ) mesh->roger_z[c]  -= 1.0/dx * (  mesh->eta_s[ixyE] / (mesh->mu_s[ixyE] *model.dt ) *  mesh->sxz0[ixyE]) ;
+                        //     if ( inW ) mesh->roger_z[c]  -= 1.0/dx * ( -mesh->eta_s[ixyW] / (mesh->mu_s[ixyW] *model.dt ) *  mesh->sxz0[ixyW]) ;
+                        // }
+                    // }
                 }
             }
             mesh->roger_z[c] = -mesh->roger_z[c];

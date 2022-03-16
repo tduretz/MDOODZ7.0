@@ -127,47 +127,47 @@ void InterpCentroidsToVerticesDouble( double* CentroidArray, double* VertexArray
         }
     }
     
-    // Fill sides - avoid corners - assume zero flux
-    for (k=1; k<Ncx+1; k++) {
-        c0 = k + (0)*(Ncx+2);       // South
-        c1 = k + (1)*(Ncx+2);       // up neighbour
-        temp[c0] = temp[c1];
-    }
-    for (k=1; k<Ncx+1; k++) {
-        c0 = k + (Ncz+1)*(Ncx+2);   // North
-        c1 = k + (Ncz  )*(Ncx+2);   // down neighbour
-        temp[c0] = temp[c1];
-    }
-    for (l=1; l<Ncz+1; l++) {
-        c0 = 0 + (l)*(Ncx+2);       // West
-        if (per == 0) c1 = 1           + (l)*(Ncx+2);       // right neighbour
-        if (per == 1) c1 = (Ncx+2-1-1) + (l)*(Ncx+2);       // right neighbour
-        temp[c0] = temp[c1];
-    }
-    for (l=1; l<Ncz+1; l++) {
-        c0 = (Ncx+1) + (l)*(Ncx+2); // East
-        if (per==0) c1 = (Ncx  ) + (l)*(Ncx+2); // left neighbour
-        if (per==1) c1 = 1       + (l)*(Ncx+2); // left neighbour
-        temp[c0] = temp[c1];
-    }
+    // // Fill sides - avoid corners - assume zero flux
+    // for (k=1; k<Ncx+1; k++) {
+    //     c0 = k + (0)*(Ncx+2);       // South
+    //     c1 = k + (1)*(Ncx+2);       // up neighbour
+    //     temp[c0] = temp[c1];
+    // }
+    // for (k=1; k<Ncx+1; k++) {
+    //     c0 = k + (Ncz+1)*(Ncx+2);   // North
+    //     c1 = k + (Ncz  )*(Ncx+2);   // down neighbour
+    //     temp[c0] = temp[c1];
+    // }
+    // for (l=1; l<Ncz+1; l++) {
+    //     c0 = 0 + (l)*(Ncx+2);       // West
+    //     if (per == 0) c1 = 1           + (l)*(Ncx+2);       // right neighbour
+    //     if (per == 1) c1 = (Ncx+2-1-1) + (l)*(Ncx+2);       // right neighbour
+    //     temp[c0] = temp[c1];
+    // }
+    // for (l=1; l<Ncz+1; l++) {
+    //     c0 = (Ncx+1) + (l)*(Ncx+2); // East
+    //     if (per==0) c1 = (Ncx  ) + (l)*(Ncx+2); // left neighbour
+    //     if (per==1) c1 = 1       + (l)*(Ncx+2); // left neighbour
+    //     temp[c0] = temp[c1];
+    // }
     
-    // Corners - assume zero flux
-    c0 = (0) + (0)*(Ncx+2);         // South-West
-    if (per==0) c1 = (1) + (1)*(Ncx+2);         // up-right neighbour
-    if (per==1) c1 = (0) + (1)*(Ncx+2);         // up       neighbour
-    temp[c0] = temp[c1];
-    c0 = (Ncx+1) + (0)*(Ncx+2);     // South-East
-    if (per==0) c1 = (Ncx  ) + (1)*(Ncx+2);     // up-left neighbour
-    if (per==1) c1 = (Ncx+1) + (1)*(Ncx+2);     // up      neighbour
-    temp[c0] = temp[c1];
-    c0 = (0) + (Ncz+1)*(Ncx+2);     // North-West
-    if (per==0) c1 = (1) + (Ncz  )*(Ncx+2);     // down-right neighbour
-    if (per==1) c1 = (0) + (Ncz  )*(Ncx+2);     // down       neighbour
-    temp[c0] = temp[c1];
-    c0 = (Ncx+1) + (Ncz+1)*(Ncx+2); // North-West
-    if (per==0) c1 = (Ncx  ) + (Ncz  )*(Ncx+2); // down-left neighbour
-    if (per==1) c1 = (Ncx+1) + (Ncz  )*(Ncx+2); // down      neighbour
-    temp[c0] = temp[c1];
+    // // Corners - assume zero flux
+    // c0 = (0) + (0)*(Ncx+2);         // South-West
+    // if (per==0) c1 = (1) + (1)*(Ncx+2);         // up-right neighbour
+    // if (per==1) c1 = (0) + (1)*(Ncx+2);         // up       neighbour
+    // temp[c0] = temp[c1];
+    // c0 = (Ncx+1) + (0)*(Ncx+2);     // South-East
+    // if (per==0) c1 = (Ncx  ) + (1)*(Ncx+2);     // up-left neighbour
+    // if (per==1) c1 = (Ncx+1) + (1)*(Ncx+2);     // up      neighbour
+    // temp[c0] = temp[c1];
+    // c0 = (0) + (Ncz+1)*(Ncx+2);     // North-West
+    // if (per==0) c1 = (1) + (Ncz  )*(Ncx+2);     // down-right neighbour
+    // if (per==1) c1 = (0) + (Ncz  )*(Ncx+2);     // down       neighbour
+    // temp[c0] = temp[c1];
+    // c0 = (Ncx+1) + (Ncz+1)*(Ncx+2); // North-West
+    // if (per==0) c1 = (Ncx  ) + (Ncz  )*(Ncx+2); // down-left neighbour
+    // if (per==1) c1 = (Ncx+1) + (Ncz  )*(Ncx+2); // down      neighbour
+    // temp[c0] = temp[c1];
     
 #pragma omp parallel for shared( temp, VertexArray, mesh ) private( k,l,c1, c0 )  firstprivate( Ncx,Ncz, Nx, Nz )
     // interpolate from temp array to actual vertices array
