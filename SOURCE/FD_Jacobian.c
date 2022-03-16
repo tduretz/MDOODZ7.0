@@ -68,15 +68,15 @@ void PhaseRheologyLoop( int is_centroid, double sign, double denom, double Exx, 
 
             ViscosityConcise( p, G[c], T[c], P, gs0[c], phi0[c], X0[c], Exx, Ezz, Exz, Gxx, Gzz, Gxz, txx0[c], tzz0[c], txz0[c], materials, model, scaling, &txx1, &tzz1, &txz1, &etaVE, &VEcoeff, &eII_el, &eII_pl, &eII_pwl, &eII_exp, &eII_lin, &eII_gbs, &eII_cst, &exx_el, &ezz_el, &exz_el, &exx_diss, &ezz_diss, &exz_diss, &dnew, strain[c], dil[c], fric[c], C[c], P0[c], T0, &Xreac, &OverS, &Pcorr, &rho, beta[c], div[c], &div_el, &div_pl, &div_r, 0, is_centroid );
             
-            if ( model->eta_avg == 0) { // ARITHMETIC AVERAGE
+            if ( model->eta_avg == ARITHMETIC) {
                 detadE[c]      += sign*vol[p][c] * etaVE/(denom); // TODO: reformat etaVE to eta_eff
             }
             
-            if ( model->eta_avg == 1) { // HARMONIC AVERAGE
+            if ( model->eta_avg == HARMONIC) {
                 detadE[c]      += sign*vol[p][c] * etaVE/(denom) / pow(eta_phase[p][c],2.0);
             }
             
-            if ( model->eta_avg == 2) { // GEOMETRIC AVERAGE
+            if ( model->eta_avg == GEOMETRIC) {
                 detadE[c]      += sign*vol[p][c] * etaVE/(denom) / eta_phase[p][c];
             }
 
