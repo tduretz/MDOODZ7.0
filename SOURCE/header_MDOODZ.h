@@ -103,13 +103,20 @@ struct _SparseMat {
 };
 
 // params contains the model parameters
+typedef enum ETA_AVG {
+  ARITHMETIC = 0,
+  HARMONIC = 1,
+  GEOMETRIC = 2
+} ETA_AVG;
+
 typedef struct _params params;
 struct _params {
 	double  xmin, zmin, xmax, zmax, time, dx, dz, dt, dt0, dt_start, dt_max, L0, dt_min;
     double  xmin0, zmin0, xmax0, zmax0;
 	double gx, gz;
 	int Nx, Nz, Nt, step, nit, Newton, noisy;
-	int eta_avg, itp_stencil;
+    ETA_AVG eta_avg;
+	int itp_stencil;
     double nexp_radial_basis;
 	int ismechanical, isperiodic_x, isinertial, iselastic, isnonnewtonian, isthermal, ispureshear_ale, free_surf, write_markers, write_debug, no_markers;
     double free_surf_stab;
