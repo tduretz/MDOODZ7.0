@@ -7,6 +7,10 @@ target_link_libraries(ShearTemplate_test PRIVATE ${DEPENDENCIES})
 configure_file("TESTS/Setup03_strongCircleAnisoConst.txt" "${CMAKE_BINARY_DIR}/Setup03_strongCircleAnisoConst.txt" COPYONLY)
 add_executable(shearPwl_test TESTS/Shear_pwl_test.c ${SOURCE_FILES} SOURCE/set_Shear_pwl.c)
 target_link_libraries(shearPwl_test PRIVATE ${DEPENDENCIES})
+set(OpenMP_lgomp_LIBRARY "lgomp")
+find_package(OpenMP)
+target_link_libraries(shearPwl_test PUBLIC OpenMP::OpenMP_C)
+message("Using OpenMP")
 
 enable_testing()
 
