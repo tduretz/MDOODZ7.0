@@ -5,7 +5,7 @@ from os.path import expanduser
 home = expanduser("~")
 
 # Path relative to your home directory
-path = "/REPO_GIT/MDOODZ7.0/SOURCE/"
+path = "/REPO_GIT/MDOODZ7.0_OK/SOURCE/"
 
 # File numbers
 file_start = 0
