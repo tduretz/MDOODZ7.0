@@ -103,13 +103,20 @@ struct _SparseMat {
 };
 
 // params contains the model parameters
+typedef enum ETA_AVG {
+  ARITHMETIC = 0,
+  HARMONIC = 1,
+  GEOMETRIC = 2
+} ETA_AVG;
+
 typedef struct _params params;
 struct _params {
 	double  xmin, zmin, xmax, zmax, time, dx, dz, dt, dt0, dt_start, dt_max, L0, dt_min;
     double  xmin0, zmin0, xmax0, zmax0;
 	double gx, gz;
 	int Nx, Nz, Nt, step, nit, Newton, noisy;
-	int eta_avg, itp_stencil;
+    ETA_AVG eta_avg;
+	int itp_stencil;
     double nexp_radial_basis;
 	int ismechanical, isperiodic_x, isinertial, iselastic, isnonnewtonian, isthermal, ispureshear_ale, free_surf, write_markers, write_debug, no_markers;
     double free_surf_stab;
@@ -203,7 +210,7 @@ struct _grid {
     double *VxVz, *VzVx;
     int    *P2N, *P2C;
     int    *kvx, *lvx, *kvz, *lvz, *kp, *lp, *kn, *ln;
-    double **phase_perc_n, **phase_perc_s;
+    double **phase_perc_n, **phase_perc_s,  **phase_eta_n, **phase_eta_s; // TODO: refactor to _c and _v
     double *sxxd0_s, *szzd0_s, *sxz0_n, *exxd_s, *ezzd_s, *exz_n, *sxz_n;
     double *rho0_n;
     double Uthermal, Uelastic, Work, Tii_mean, Eii_mean, T_mean, P_mean;

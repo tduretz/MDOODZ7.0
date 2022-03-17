@@ -1104,21 +1104,16 @@ void ReadInputFile( char* fin_name, int *istep, int *irestart, int *writer, int 
     model->SmoothSoftening = ReadInt2( fin, "SmoothSoftening", 1); // Activates smooth explicit kinematic softening function
     model->oop             = ReadInt2( fin, "oop",             0); // Out-of-plane strain 
     model->noise_bg        = ReadInt2( fin, "noise_bg",        0); // Background noise generated on the particles --> mesh (used for cohesion)
-    model->residual_form   = ReadInt2( fin, "residual_form",   0); // form of residual - to be deleted once everything works with 1
-
+    model->residual_form   = ReadInt2( fin, "residual_form",   1); // form of residual - TODO: delete if our models work with new default value (1)
     if ( model->shear_style == 1 ) model->isperiodic_x  = 1;
     if ( model->shear_style == 0 ) model->isperiodic_x  = 0;
     if ( model->aniso       == 1 ) model->fstrain       = 1;
-
     // Setup dependant
     model->EpsBG           = ReadDou2( fin, "EpsBG",           0.0 ) / scaling->E;
     model->DivBG           = ReadDou2( fin, "DivBG",           0.0 ) / scaling->E;
     model->PrBG            = ReadDou2( fin, "PrBG",            0.0 ) / scaling->S;
     model->TBG             = ReadDou2( fin, "TBG",             0.0 ) / scaling->T;
-    // Anisotropy
-//    model->director_angle  = ReadDou2( fin, "director_angle",  0.0 )  * M_PI/ 180.0;
-//    model->aniso_factor    = ReadDou2( fin, "aniso_factor",    1.0 );
-        // Surface processes
+    // Surface processes
     model->surf_diff       = ReadDou2( fin, "surf_diff",       0.0 ) / (pow(scaling->L,2.0)/scaling->t);
     model->surf_ised1      = ReadInt2( fin, "surf_ised1",      0.0 );
     model->surf_ised2      = ReadInt2( fin, "surf_ised2",      0.0 );
@@ -1135,12 +1130,6 @@ void ReadInputFile( char* fin_name, int *istep, int *irestart, int *writer, int 
     model->force_act_vol_ast = ReadInt2( fin, "force_act_vol_ast",   0 );
     model->act_vol_dis_ast   = ReadDou2( fin, "act_vol_dis_ast" ,  0.0 );
     model->act_vol_dif_ast   = ReadDou2( fin, "act_vol_dif_ast" ,  0.0 );
-    // Reaction
-//    model->Pr              = ReadDou2( fin, "Pr",          0.0  ) / scaling->S;
-//    model->dPr             = ReadDou2( fin, "dPr",         0.0  ) / scaling->S;
-//    model->tau_kin         = ReadDou2( fin, "tau_kin",     0.0  ) / scaling->t;
-//    model->k_chem          = ReadDou2( fin, "k_chem",      0.0  ) / (scaling->L*scaling->L/scaling->t);
-
     // Model user's delights
     model->user0           = ReadDou2( fin, "user0",           0.0 );
     model->user1           = ReadDou2( fin, "user1",           0.0 );
@@ -1151,18 +1140,17 @@ void ReadInputFile( char* fin_name, int *istep, int *irestart, int *writer, int 
     model->user6           = ReadDou2( fin, "user6",           0.0 );
     model->user7           = ReadDou2( fin, "user7",           0.0 );
     model->user8           = ReadDou2( fin, "user8",           0.0 );
-
     // Derived quantities
     model->dx                = (model->xmax - model->xmin) / (model->Nx - 1);
     model->dz                = (model->zmax - model->zmin) / (model->Nz - 1);
     model->dt0               = model->dt;
     model->dt_start          = model->dt;
-    model->dt_max            = ReadDou2( fin, "dt_max",     1e20 ) / scaling->t; // maximum allowed time step
-    model->dt_min            = ReadDou2( fin, "dt_min",      1e6 ) / scaling->t; // minimum allowed time step
+    model->dt_max            = ReadDou2( fin, "dt_max",     1e20 ) / scaling->t; // maximum allowed time step, the default value is set to ~infinite, it we become effective only if specificaly set in XXX.txt (see e.g. LithoScale.txt)
+    model->dt_min            = ReadDou2( fin, "dt_min",    -1e20 ) / scaling->t; // minimum allowed time step, defaut is negative such that it will never be activated unless specifically set in XXX.txt file
     model->eta_avg           = ReadInt2( fin, "eta_avg",       0 );              // 0: arithmetic mean - 1: harmonic mean - 2: geometric mean
     model->itp_stencil       = ReadInt2( fin, "itp_stencil",       1   );        // 1: 1-Cell          - 9: 9-Cell
     if (model->itp_stencil!=1 && model->itp_stencil!=9) { printf("Wrong value of itp_stencil: shoulbd be 1 or 9.\n"); exit(1); }
-    model->nexp_radial_basis = ReadDou2( fin, "nexp_radial_basis", 1.0 ); // exponent for radial basis function interp.
+    model->nexp_radial_basis = ReadDou2( fin, "nexp_radial_basis", 1.0 ); // exponent for radial basis function interp. TODO: remove this unused option
 
        // For Cindy's setup
     model->diffuse_X       = ReadInt2( fin, "diffuse_X",     0 );              // 0 or 1
@@ -1199,9 +1187,9 @@ void ReadInputFile( char* fin_name, int *istep, int *irestart, int *writer, int 
         materials->gbsv[k]  = ReadMatProps( fin, "gbsv",k,    0.0  );
         materials->expv[k]  = ReadMatProps( fin, "expv",k,    0.0  );
         gsel                = ReadMatProps( fin, "gsel",k,    0.0  );
-        materials->eta0[k]  = ReadMatProps( fin, "eta0",k, 1.0e20  );//  / scaling->eta;
+        materials->eta0[k]  = ReadMatProps( fin, "eta0",k, 1.0e20  );
         materials->npwl[k]  = ReadMatProps( fin, "npwl",k,    1.0  );
-        materials->Qpwl[k]  = ReadMatProps( fin, "Qpwl",k,    0.0  );//   / scaling->J;
+        materials->Qpwl[k]  = ReadMatProps( fin, "Qpwl",k,    0.0  );
         materials->pref_pwl[k] = ReadMatProps( fin, "pref_pwl",k,    1.0 );    // weakening prefactor for power law
         materials->gs[k]    = ReadMatProps( fin, "gs",    k,    0.0   );
         materials->gs_ref[k]= ReadMatProps( fin, "gs_ref" ,k,  2.0e-3  ) /scaling->L;

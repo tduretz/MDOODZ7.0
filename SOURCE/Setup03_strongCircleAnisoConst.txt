@@ -16,44 +16,41 @@ V   = 1
 T   = 20
 
 /**** SPACE-TIME ****/
-Nx      = 100
-Nz      = 100
-Nt      = 0001
+Nx      = 101
+Nz      = 101
+Nt      = 1
 xmin    = -5.000000e-1
 zmin    = -5.000000e-1
 xmax    =  5.000000e-1
 zmax    =  5.000000e-1
-advection       = 1
-
-noisy = 0
-dt_constant = 0
-dt      = 0.05
-dt_min      = 1e-6
-RK              = 4
+dt      = 0.0000001
+dt_constant = 1
 Courant = 0.3
-penalty = 1e2
+penalty = 1e5
 lsolver = -1
 DefectCorrectionForm = 1
 diag_scaling = 0
-abs_tol_div = 1e-8
-rel_tol_div = 1e-8
+abs_tol_div  = 1e-8
+rel_tol_div  = 1e-8
 
 /**** SWITCHES ****/
 ismechanical    = 1
-isperiodic_x    = 0
+RK              = 4
+isperiodic_x    = 1
 ispureshear_ALE = 0
 isinertial      = 0
-iselastic       = 1
+iselastic       = 0
 isthermal       = 0
-line_search     = 0
+line_search     = 1
 free_surf       = 0
 free_surf_stab  = 0
 eqn_state       = 0
 thermal_eq      = 0
-subgrid_diff    = 2
+subgrid_diff    = 1
 shear_heat      = 1
 adiab_heat      = 0
 fstrain         = 1
+advection       = 0
 GNUplot_residuals = 0
 
 /**** ANISOTROPY ****/
@@ -62,16 +59,16 @@ aniso_fstrain   = 0 // finite strain anisotropy activated
 
 /**** SETUP DEPENDANT ****/
 pc_type = 1
-EpsBG           = 1
+EpsBG           = 0.5
 shear_style     = 1
 user0           = 1     / temperature [°C]
-user1           = 0.05  / inclusion radius [m]
+user1           = 0.12  / inclusion radius [m]
 user2           = 0
 user3           = 0
 
 /**** GRAVITY ****/
 gx = 0.0000
-gz = 0.000
+gz = 0.0000
 
 /**** MAT PROPERTIES ****/
 Nb_phases = 2
@@ -89,16 +86,16 @@ Slim = 500e9
 alp  = 10.0e-6
 bet  = 1e-11
 drho = 0
-cstv = 0             / constant visc law
-pwlv = 1            / disloc. creep
+cstv = 1             / constant visc law
+pwlv = 0             / disloc. creep
 linv = 0             / diff. creep
 gbsv = 0             / grain boundary sliding
 expv = 0             / peierls creep
 gsel = 0             / grain size evo.
-eta0 = 1e1
+eta0 = 1e0
 npwl = 1.0
 Qpwl = 0
-aniso_angle  = 65
+aniso_angle  = -45
 aniso_factor = 10.0
 
 /**** PHASE 2 ****/
@@ -108,9 +105,9 @@ mu   = 1e3
 Cv   = 1050
 k    = 2.5
 Qr   = 0
-C    = 1e90
+C    = 1e90 	/ cohesion (->plasticité pas allumée)
 phi  = 30
-Slim = 500e9
+Slim = 500e9 	/ stress limit (idem)
 alp  = 10.0e-6
 bet  = 1e-11
 drho = 0
@@ -120,11 +117,11 @@ linv = 0             / diff. creep
 gbsv = 0             / grain boundary sliding
 expv = 0             / peierls creep
 gsel = 0             / grain size evo.
-eta0 = 1e0
+eta0 = 1e2
 npwl = 1
 Qpwl = 0
 aniso_angle  = 45
-aniso_factor = 1
+aniso_factor = 1.0
 
 /**** DEFMAPS ****/
 nT    =    51      / Temperature resolutin []
@@ -145,7 +142,7 @@ min_part_cell = 16
 
 /**** NON-LINEAR ITERATIONS ****/
 Newton        = 1 
-Picard2Newton = 0
+Picard2Newton = 1
 nit_max       = 20
 rel_tol_KSP   = 1e-4
 tol_u         = 1e-9
