@@ -469,9 +469,6 @@ void ProjectTopography( surface *topo, markers *topo_chain, params model, grid m
     int k, in, Nx=mesh.Nx;
     double dx=mesh.dx, distance, dxm, mark_val, *Xc_virtual, *Wm, *BmWm;
 
-    printf("In project Topography:\n");
-
-
    Wm              = DoodzCalloc ( Nx-1, sizeof(double));
    BmWm            = DoodzCalloc ( Nx-1, sizeof(double));
    double *heightc = DoodzCalloc ( Nx-1, sizeof(double));

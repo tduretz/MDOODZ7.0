@@ -1755,35 +1755,30 @@ void StrainRateComponents( grid* mesh, scale scaling, params* model ) {
         }
     }
 
-    double sum=0.0;
-#pragma omp parallel for shared( mesh ) private( k, k1, l, c0, c1, sum ) firstprivate( Nx, Ncx, Ncz )
+#pragma omp parallel for shared( mesh ) private( k1 ) firstprivate( Nx, Ncx, Ncz )
     for ( k1=0; k1<Ncx*Ncz; k1++ ) {
 
-        k  = mesh->kp[k1];
-        l  = mesh->lp[k1];
-        c0 = k  + l*(Nx-1);
-        c1 = k  + l*(Nx);
-        mesh->exz_n[c0] = 0.0;
-        sum = 0.0;
+        int k  = mesh->kp[k1];
+        int l  = mesh->lp[k1];
+        int c0 = k  + l*(Nx-1);
+        int c1 = k  + l*(Nx);
         
-        if ( mesh->BCp.type[c0]      != 30) mesh->exz_n[c0] = 0.25*(mesh->exz[c1] + mesh->exz[c1+1] + mesh->exz[c1+Nx] + mesh->exz[c1+Nx+1]);
+        mesh->exz_n[c0] = 0.0;
+        
+        // if ( mesh->BCp.type[c0]      != 30) mesh->exz_n[c0] = 0.25*(mesh->exz[c1] + mesh->exz[c1+1] + mesh->exz[c1+Nx] + mesh->exz[c1+Nx+1]);
 
-//        if ( mesh->BCp.type[c0]      != 30 && mesh->BCp.type[c0] != 31) {
-//            if (mesh->BCg.type[c1]      != 30 ) { mesh->exz_n[c0] += mesh->exz[c1];      sum++;}
-//            if (mesh->BCg.type[c1+1]    != 30 ) { mesh->exz_n[c0] += mesh->exz[c1+1];    sum++;}
-//            if (mesh->BCg.type[c1+Nx]   != 30 ) { mesh->exz_n[c0] += mesh->exz[c1+Nx];   sum++;}
-//            if (mesh->BCg.type[c1+Nx+1] != 30 ) { mesh->exz_n[c0] += mesh->exz[c1+Nx+1]; sum++;}
-//            if (sum>0) mesh->exz_n[c0] /= sum;
-//        }
-//        else {
-//            mesh->exz_n[c0] = 0.0;
-//        }
+       if ( mesh->BCp.type[c0] != 30 && mesh->BCp.type[c0] != 31 ) {
+           if (mesh->BCg.type[c1]      != 30 ) { mesh->exz_n[c0] += 0.25*mesh->exz[c1];      }
+           if (mesh->BCg.type[c1+1]    != 30 ) { mesh->exz_n[c0] += 0.25*mesh->exz[c1+1];    }
+           if (mesh->BCg.type[c1+Nx]   != 30 ) { mesh->exz_n[c0] += 0.25*mesh->exz[c1+Nx];   }
+           if (mesh->BCg.type[c1+Nx+1] != 30 ) { mesh->exz_n[c0] += 0.25*mesh->exz[c1+Nx+1]; }
+       }
     }
 
     // Interpolate normal strain rate on vertices
-    InterpCentroidsToVerticesDouble( mesh->exxd, mesh->exxd_s, mesh, model );
-    InterpCentroidsToVerticesDouble( mesh->ezzd, mesh->ezzd_s, mesh, model );
-    InterpCentroidsToVerticesDouble( mesh->div_u,   mesh->div_u_s, mesh, model );
+    InterpCentroidsToVerticesDouble( mesh->exxd,  mesh->exxd_s,  mesh, model );
+    InterpCentroidsToVerticesDouble( mesh->ezzd,  mesh->ezzd_s,  mesh, model );
+    InterpCentroidsToVerticesDouble( mesh->div_u, mesh->div_u_s, mesh, model );
 
 }
 
