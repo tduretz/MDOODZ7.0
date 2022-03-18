@@ -24,6 +24,7 @@ Ncz = Nz - 1
 
 # Reshape arrays
 P = np.reshape(P, (Ncz, Ncx)).transpose()
+print(P)
 Vx = np.reshape(Vx, (Nz + 1, Nx)).transpose()
 Vz = np.reshape(Vz, (Nz, Nx + 1)).transpose()
 Txx = np.reshape(Txx, (Ncz, Ncx)).transpose()
