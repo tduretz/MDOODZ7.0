@@ -89,7 +89,7 @@ void Xjacobian_InnerNodesDecoupled3( SparseMat *Stokes, SparseMat *StokesA, Spar
     // if (mesh->BCv.type[iVzNWW] == -12)  iVzNWW = iVzNW + (nx-2);
     // if (mesh->BCv.type[iVzSEE] == -12)  iVzSEE = iVzSE - (nx-2);
     // if (mesh->BCv.type[iVzNEE] == -12)  iVzNEE = iVzNE - (nx-2);
-    if (k==0)     iVzSWW = iVzSW + (nx-2);
+    if (k==0)     iVzSWW = iVzSW + (nx-2); // TODO: check what to do for non-periodic
     if (k==0)     iVzNWW = iVzNW + (nx-2);
     if (k==nx-1)  iVzSEE = iVzSE - (nx-2);
     if (k==nx-1)  iVzNEE = iVzNE - (nx-2);
