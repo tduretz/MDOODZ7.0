@@ -35,6 +35,10 @@ hmax     = 7e3
 h_dot    = 0.2139e-11
 exp_topo = hmax*np.exp(-h_dot*time_all)
 
+# Compute error
+err = abs(exp_topo-max_topo)/abs(exp_topo)*100
+print(err)
+
 # Figure
 fig, axs = mpl.subplots(1)
 axs.plot(time_all/ky, exp_topo/1e3, color='r', zorder=1)
@@ -44,3 +48,4 @@ axs.set_ylabel('h [m]')
 axs.legend(['Expected', 'MDoodz'])
 axs.set_title('Case 1 test from Crameri et al. (2012)')
 mpl.show()
+
