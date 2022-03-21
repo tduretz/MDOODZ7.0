@@ -463,8 +463,8 @@ void RemeshMarkerChain( markers *topo_chain, surface *topo, params model, scale 
 //    DoodzFree(BmWm);
 //}
 
-// MD6
-void ProjectTopography( surface *topo, markers *topo_chain, params model, grid mesh, scale scaling, double* X_vect, int itp_type ) {
+// MD6 TODO: find a more explicit name like `InterpolateTopographyMarker2Grid`
+void ProjectTopography( surface *topo, markers *topo_chain, params model, grid mesh, scale scaling, double* X_vect, int itp_type ) { 
 
     int k, in, Nx=mesh.Nx;
     double dx=mesh.dx, distance, dxm, mark_val, *Xc_virtual, *Wm, *BmWm;
