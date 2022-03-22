@@ -92,6 +92,8 @@ if (OMP)
     message("Using OpenMP")
 endif()
 
+include_directories(UTILS)
+
 # TESTING
 
 include(Tests.cmake)
