@@ -105,25 +105,25 @@ void ExpandCentroidArray( double* CentroidArray, double* temp, grid* mesh, param
 
 void InterpCentroidsToVerticesDouble( double* CentroidArray, double* VertexArray, grid* mesh, params *model ) {
     
-    int k, l, Nx, Nz, Ncx, Ncz, c0, c1;
-    double *temp;
-    
+    int k, l, Nx, Nz, Ncx, Ncz, c0, c1;    
     int per = model->isperiodic_x;
     
-    Nx = mesh->Nx;
-    Nz = mesh->Nz;
+    Nx  = mesh->Nx;
+    Nz  = mesh->Nz;
     Ncx = Nx-1;
     Ncz = Nz-1;
     
     // Allocate temporary swelled centroid of size = (ncx+2) * (ncz+2)
-    temp = DoodzCalloc((Ncx+2)*(Ncz+2),sizeof(DoodzFP));
+    DoodzFP* temp      = DoodzCalloc((Ncx+2)*(Ncz+2), sizeof(DoodzFP));
+    int*     temp_flag = DoodzCalloc((Ncx+2)*(Ncz+2), sizeof(int));
     
     // Fill interior points
     for (k=0; k<Ncx; k++) {
         for (l=0; l<Ncz; l++) {
             c0 = k + l*(Ncx);
             c1 = k + (l+1)*(Ncx+2) + 1;
-            temp[c1] = CentroidArray[c0];
+            temp[c1]      = CentroidArray[c0];
+            temp_flag[c1] = mesh->BCp.type[c0];
         }
     }
     
@@ -131,45 +131,53 @@ void InterpCentroidsToVerticesDouble( double* CentroidArray, double* VertexArray
     for (k=1; k<Ncx+1; k++) {
         c0 = k + (0)*(Ncx+2);       // South
         c1 = k + (1)*(Ncx+2);       // up neighbour
-        temp[c0] = temp[c1];
+        temp[c0]      = temp[c1];
+        temp_flag[c0] = temp_flag[c1];
     }
     for (k=1; k<Ncx+1; k++) {
         c0 = k + (Ncz+1)*(Ncx+2);   // North
         c1 = k + (Ncz  )*(Ncx+2);   // down neighbour
-        temp[c0] = temp[c1];
+        temp[c0]      = temp[c1];
+        temp_flag[c0] = temp_flag[c1];
     }
     for (l=1; l<Ncz+1; l++) {
         c0 = 0 + (l)*(Ncx+2);       // West
         if (per == 0) c1 = 1           + (l)*(Ncx+2);       // right neighbour
         if (per == 1) c1 = (Ncx+2-1-1) + (l)*(Ncx+2);       // right neighbour
-        temp[c0] = temp[c1];
+        temp[c0]      = temp[c1];
+        temp_flag[c0] = temp_flag[c1];
     }
     for (l=1; l<Ncz+1; l++) {
         c0 = (Ncx+1) + (l)*(Ncx+2); // East
         if (per==0) c1 = (Ncx  ) + (l)*(Ncx+2); // left neighbour
         if (per==1) c1 = 1       + (l)*(Ncx+2); // left neighbour
-        temp[c0] = temp[c1];
+        temp[c0]      = temp[c1];
+        temp_flag[c0] = temp_flag[c1];
     }
     
     // Corners - assume zero flux
     c0 = (0) + (0)*(Ncx+2);         // South-West
     if (per==0) c1 = (1) + (1)*(Ncx+2);         // up-right neighbour
     if (per==1) c1 = (0) + (1)*(Ncx+2);         // up       neighbour
-    temp[c0] = temp[c1];
+    temp[c0]      = temp[c1];
+    temp_flag[c0] = temp_flag[c1];
     c0 = (Ncx+1) + (0)*(Ncx+2);     // South-East
     if (per==0) c1 = (Ncx  ) + (1)*(Ncx+2);     // up-left neighbour
     if (per==1) c1 = (Ncx+1) + (1)*(Ncx+2);     // up      neighbour
-    temp[c0] = temp[c1];
+    temp[c0]      = temp[c1];
+    temp_flag[c0] = temp_flag[c1];
     c0 = (0) + (Ncz+1)*(Ncx+2);     // North-West
     if (per==0) c1 = (1) + (Ncz  )*(Ncx+2);     // down-right neighbour
     if (per==1) c1 = (0) + (Ncz  )*(Ncx+2);     // down       neighbour
-    temp[c0] = temp[c1];
+    temp[c0]      = temp[c1];
+    temp_flag[c0] = temp_flag[c1];
     c0 = (Ncx+1) + (Ncz+1)*(Ncx+2); // North-West
     if (per==0) c1 = (Ncx  ) + (Ncz  )*(Ncx+2); // down-left neighbour
     if (per==1) c1 = (Ncx+1) + (Ncz  )*(Ncx+2); // down      neighbour
-    temp[c0] = temp[c1];
+    temp[c0]      = temp[c1];
+    temp_flag[c0] = temp_flag[c1];
     
-#pragma omp parallel for shared( temp, VertexArray, mesh ) private( k,l,c1, c0 )  firstprivate( Ncx,Ncz, Nx, Nz )
+#pragma omp parallel for shared( temp, temp_flag, VertexArray, mesh ) private( k,l,c1, c0 )  firstprivate( Ncx,Ncz, Nx, Nz )
     // interpolate from temp array to actual vertices array
     for (k=0; k<Nx; k++) {
         for (l=0; l<Nz; l++) {
@@ -182,7 +190,12 @@ void InterpCentroidsToVerticesDouble( double* CentroidArray, double* VertexArray
             
             // Else interpolate
             if ( mesh->BCg.type[c1] != 30 ) {
-                VertexArray[c1] = 0.25*( temp[c0-1-(Ncx+2)] + temp[c0-0-(Ncx+2)] + temp[c0-1] + temp[c0] );
+                int inSW = 1, inSE = 1, inNW = 1, inNE = 1;
+                if (temp_flag[c0-1-(Ncx+2)] == 30 || temp_flag[c0-1-(Ncx+2)] == 31) inSW = 0; 
+                if (temp_flag[c0-0-(Ncx+2)] == 30 || temp_flag[c0-0-(Ncx+2)] == 31) inSE = 0;
+                if (temp_flag[c0-1]         == 30 || temp_flag[c0-1]         == 31) inNW = 0;
+                if (temp_flag[c0-0]         == 30 || temp_flag[c0-0]         == 31) inNE = 0;
+                VertexArray[c1] = 0.25*( inSW*temp[c0-1-(Ncx+2)] + inSE*temp[c0-0-(Ncx+2)] + inNW*temp[c0-1] + inNE*temp[c0] );
   
             }
         }
@@ -190,6 +203,7 @@ void InterpCentroidsToVerticesDouble( double* CentroidArray, double* VertexArray
     
     // Free temporary array
     DoodzFree(temp);
+    DoodzFree(temp_flag);
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
