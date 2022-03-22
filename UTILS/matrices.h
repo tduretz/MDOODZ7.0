@@ -10,19 +10,24 @@ typedef struct Reshape {
   int yMaxLimit;
 } Reshape;
 
-int *ReshapeIntArray(int *array, Reshape *reshape);
+Reshape InitReshape(int rows, int cols);
 
-float *ReshapeFloatArray(float *array, Reshape *reshape);
+int *ReshapeIntArray(const int *array, Reshape *reshape);
 
-double *ReshapeDoubleArray(double *array, Reshape *reshape);
+float *ReshapeFloatArray(const float *array, Reshape *reshape);
+
+double *ReshapeDoubleArray(const double *array, Reshape *reshape);
 
 typedef struct Sum {
   int rows;
   int cols;
+  double multiplier;
 } Sum;
 
-int *SumIntMatrices(int *matrix, int *matrix2, Sum *sum);
+Sum InitSum(int rows, int cols);
 
-double *SumDoubleMatrices(double *matrix, double *matrix2, Sum *sum);
+int *SumIntMatrices(const int *matrix, const int *matrix2, Sum *sum);
+
+double *SumDoubleMatrices(const double *matrix, const double *matrix2, Sum *sum);
 
 #endif
