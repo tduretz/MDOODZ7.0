@@ -9,14 +9,14 @@ static void ShouldCutMatrices() {
       4, 6, 9, 7,
       8, 9, 10, 30,
       8, 9, 10, 30};
-  CutCommand cutCommand;
-  cutCommand.cols = 4;
-  cutCommand.rows = 4;
-  cutCommand.xMaxLimit = 0;
-  cutCommand.xMinLimit = 1;
-  cutCommand.yMinLimit = 1;
-  cutCommand.yMaxLimit = -1;
-  const int(*cutMatrix)[3] = ReshapeIntArray(array, &cutCommand);
+  Reshape reshape;
+  reshape.cols = 4;
+  reshape.rows = 4;
+  reshape.xMaxLimit = 0;
+  reshape.xMinLimit = 1;
+  reshape.yMinLimit = 1;
+  reshape.yMaxLimit = -1;
+  const int(*cutMatrix)[3] = ReshapeIntArray(array, &reshape);
   assert(cutMatrix[0][0] == 6);
   assert(cutMatrix[0][2] == 7);
   assert(cutMatrix[1][1] == 10);
@@ -30,14 +30,14 @@ static void ShouldCutMatrices2() {
       4, 6, 9, 7,
       8, 9, 10, 30,
       8, 9, 10, 30};
-  CutCommand cutCommand;
-  cutCommand.cols = 4;
-  cutCommand.rows = 4;
-  cutCommand.xMinLimit = 1;
-  cutCommand.xMaxLimit = -1;
-  cutCommand.yMinLimit = 1;
-  cutCommand.yMaxLimit = -1;
-  const int(*cutMatrix)[2] = ReshapeIntArray(array, &cutCommand);
+  Reshape reshape;
+  reshape.cols = 4;
+  reshape.rows = 4;
+  reshape.xMinLimit = 1;
+  reshape.xMaxLimit = -1;
+  reshape.yMinLimit = 1;
+  reshape.yMaxLimit = -1;
+  const int(*cutMatrix)[2] = ReshapeIntArray(array, &reshape);
   assert(cutMatrix[0][0] == 6);
   assert(cutMatrix[0][1] == 9);
   assert(cutMatrix[1][0] == 9);
@@ -51,14 +51,14 @@ static void ShouldCutMatrices3() {
       4, 6, 9, 7,
       8, 9, 10, 30,
       8, 9, 10, 30};
-  CutCommand cutCommand;
-  cutCommand.cols = 4;
-  cutCommand.rows = 4;
-  cutCommand.xMinLimit = 2;
-  cutCommand.xMaxLimit = 0;
-  cutCommand.yMinLimit = 2;
-  cutCommand.yMaxLimit = 0;
-  const int(*cutMatrix)[2] = ReshapeIntArray(array, &cutCommand);
+  Reshape reshape;
+  reshape.cols = 4;
+  reshape.rows = 4;
+  reshape.xMinLimit = 2;
+  reshape.xMaxLimit = 0;
+  reshape.yMinLimit = 2;
+  reshape.yMaxLimit = 0;
+  const int(*cutMatrix)[2] = ReshapeIntArray(array, &reshape);
   assert(cutMatrix[0][0] == 10);
   assert(cutMatrix[0][1] == 30);
   assert(cutMatrix[1][0] == 10);
@@ -72,14 +72,14 @@ static void ShouldCutMatrices4() {
       4, 6, 9, 7,
       8, 9, 10, 30,
       8, 9, 10, 30};
-  CutCommand cutCommand;
-  cutCommand.cols = 4;
-  cutCommand.rows = 4;
-  cutCommand.xMaxLimit = -2;
-  cutCommand.yMaxLimit = -2;
-  cutCommand.xMinLimit = 0;
-  cutCommand.yMaxLimit = 0;
-  const int(*cutMatrix)[2] = ReshapeIntArray(array, &cutCommand);
+  Reshape reshape;
+  reshape.cols = 4;
+  reshape.rows = 4;
+  reshape.xMaxLimit = -2;
+  reshape.yMaxLimit = -2;
+  reshape.xMinLimit = 0;
+  reshape.yMaxLimit = 0;
+  const int(*cutMatrix)[2] = ReshapeIntArray(array, &reshape);
   assert(cutMatrix[0][0] == 10);
   assert(cutMatrix[0][1] == 1);
   assert(cutMatrix[1][0] == 4);
@@ -94,7 +94,7 @@ static void ShouldSumMatrices() {
       4, 6, 9, 7,
       8, 9, 10, 30,
       8, 9, 10, 30};
-  CutCommand reshape;
+  Reshape reshape;
   reshape.cols = 4;
   reshape.rows = 4;
   reshape.xMinLimit = 0;
@@ -102,7 +102,7 @@ static void ShouldSumMatrices() {
   reshape.yMaxLimit = -2;
   reshape.yMinLimit = 0;
   const int(*cutMatrix)[2] = ReshapeIntArray(array, &reshape);
-  CutCommand reshape2;
+  Reshape reshape2;
   reshape2.cols = 4;
   reshape2.rows = 4;
   reshape2.xMinLimit = 2;

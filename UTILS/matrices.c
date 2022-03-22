@@ -2,29 +2,29 @@
 #include "matrices.h"
 #include "stdbool.h"
 
-bool IsCutOff(int i, int j, CutCommand *cutCommand) {
-  if (j + 1 <= cutCommand->xMinLimit) {
+bool IsCutOff(int i, int j, Reshape *reshape) {
+  if (j + 1 <= reshape->xMinLimit) {
     return true;
   }
-  if (j >= cutCommand->cols + cutCommand->xMaxLimit) {
+  if (j >= reshape->cols + reshape->xMaxLimit) {
     return true;
   }
-  if (i + 1 <= cutCommand->yMinLimit) {
+  if (i + 1 <= reshape->yMinLimit) {
     return true;
   }
-  if (i >= cutCommand->cols + cutCommand->yMaxLimit) {
+  if (i >= reshape->cols + reshape->yMaxLimit) {
     return true;
   }
   return false;
 }
 
-int *ReshapeIntArray(int *array, CutCommand *cutCommand) {
+int *ReshapeIntArray(int *array, Reshape *reshape) {
   int(*arr) = malloc(sizeof *arr);
   int updatedIndex = 0;
-  for (int i = 0 ; i < cutCommand->rows ; i++) {
-    for (int j = 0 ; j < cutCommand->cols ; j++) {
-      int flatIndex = j + i * cutCommand->cols;
-      if (IsCutOff(i, j, cutCommand)) {
+  for (int i = 0 ; i < reshape->rows ; i++) {
+    for (int j = 0 ; j < reshape->cols ; j++) {
+      int flatIndex = j + i * reshape->cols;
+      if (IsCutOff(i, j, reshape)) {
         continue;
       }
       arr[updatedIndex] = array[flatIndex];
@@ -34,13 +34,13 @@ int *ReshapeIntArray(int *array, CutCommand *cutCommand) {
   return arr;
 }
 
-int *ReshapeFloatArray(float *array, CutCommand *cutCommand) {
+int *ReshapeFloatArray(float *array, Reshape *reshape) {
   float(*arr) = malloc(sizeof *arr);
   int updatedIndex = 0;
-  for (int i = 0 ; i < cutCommand->rows ; i++) {
-    for (int j = 0 ; j < cutCommand->cols ; j++) {
-      int flatIndex = j + i * cutCommand->cols;
-      if (IsCutOff(i, j, cutCommand)) {
+  for (int i = 0 ; i < reshape->rows ; i++) {
+    for (int j = 0 ; j < reshape->cols ; j++) {
+      int flatIndex = j + i * reshape->cols;
+      if (IsCutOff(i, j, reshape)) {
         continue;
       }
       arr[updatedIndex] = array[flatIndex];
@@ -50,13 +50,13 @@ int *ReshapeFloatArray(float *array, CutCommand *cutCommand) {
   return arr;
 }
 
-int *ReshapeDoubleArray(double *array, CutCommand *cutCommand) {
+int *ReshapeDoubleArray(double *array, Reshape *reshape) {
   double (*arr) = malloc(sizeof *arr);
   int updatedIndex = 0;
-  for (int i = 0 ; i < cutCommand->rows ; i++) {
-    for (int j = 0 ; j < cutCommand->cols ; j++) {
-      int flatIndex = j + i * cutCommand->cols;
-      if (IsCutOff(i, j, cutCommand)) {
+  for (int i = 0 ; i < reshape->rows ; i++) {
+    for (int j = 0 ; j < reshape->cols ; j++) {
+      int flatIndex = j + i * reshape->cols;
+      if (IsCutOff(i, j, reshape)) {
         continue;
       }
       arr[updatedIndex] = array[flatIndex];

@@ -1,20 +1,20 @@
 #ifndef MDOODZ_MATRICES_H
 #define MDOODZ_MATRICES_H
 
-typedef struct CutCommand {
+typedef struct Reshape {
   int rows;
   int cols;
   int xMinLimit;
   int xMaxLimit;
   int yMinLimit;
   int yMaxLimit;
-} CutCommand;
+} Reshape;
 
-int *ReshapeIntArray(int *array, CutCommand *cutCommand);
+int *ReshapeIntArray(int *array, Reshape *reshape);
 
-int *ReshapeFloatArray(float *array, CutCommand *cutCommand);
+int *ReshapeFloatArray(float *array, Reshape *reshape);
 
-int *ReshapeDoubleArray(double *array, CutCommand *cutCommand);
+int *ReshapeDoubleArray(double *array, Reshape *reshape);
 
 typedef struct Sum {
   int rows;
