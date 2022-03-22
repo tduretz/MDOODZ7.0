@@ -8,8 +8,8 @@ configure_file("TESTS/Setup03_strongCircleAnisoConst.txt" "${CMAKE_BINARY_DIR}/S
 add_executable(shearPwl_test TESTS/Shear_pwl_test.c ${SOURCE_FILES} SOURCE/set_Shear_pwl.c)
 target_link_libraries(shearPwl_test PRIVATE ${DEPENDENCIES})
 
-add_executable(arrays_test
-        TESTS/arrays_test.c
+add_executable(matrices_test
+        TESTS/matrices_test.c
         UTILS/matrices.c
         UTILS/matrices.h)
 
@@ -17,5 +17,5 @@ enable_testing()
 
 add_test(shearTemplate ShearTemplate_test)
 add_test(shearPwl Shear_pwl_test)
-add_test(arrays arrays_test)
+add_test(matrices matrices_test)
 

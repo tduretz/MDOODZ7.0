@@ -1,8 +1,6 @@
 #include "assert.h"
 #include "stdlib.h"
 #include "matrices.h"
-#include "stdio.h"
-
 
 static void ShouldCutMatrices() {
   const int array[16] = {
