@@ -34,7 +34,7 @@ int *ReshapeIntArray(int *array, Reshape *reshape) {
   return arr;
 }
 
-int *ReshapeFloatArray(float *array, Reshape *reshape) {
+float *ReshapeFloatArray(float *array, Reshape *reshape) {
   float(*arr) = malloc(sizeof *arr);
   int updatedIndex = 0;
   for (int i = 0 ; i < reshape->rows ; i++) {
@@ -50,7 +50,7 @@ int *ReshapeFloatArray(float *array, Reshape *reshape) {
   return arr;
 }
 
-int *ReshapeDoubleArray(double *array, Reshape *reshape) {
+double *ReshapeDoubleArray(double *array, Reshape *reshape) {
   double (*arr) = malloc(sizeof *arr);
   int updatedIndex = 0;
   for (int i = 0 ; i < reshape->rows ; i++) {
@@ -72,6 +72,18 @@ int *SumIntMatrices(int *matrix, int *matrix2, Sum *sum) {
     for (int j = 0 ; j < sum->cols ; j++) {
       int flatIndex = j + i * sum->cols;
       arr[flatIndex] = matrix[flatIndex] + matrix2[flatIndex];
+    }
+  }
+  return arr;
+}
+
+double *SumDoubleMatrices(double *matrix, double *matrix2, Sum *sum) {
+  double(*arr) = malloc(sizeof *arr);
+  for (int i = 0 ; i < sum->rows ; i++) {
+    for (int j = 0 ; j < sum->cols ; j++) {
+      int flatIndex = j + i * sum->cols;
+      double doubleSum = matrix[flatIndex] + matrix2[flatIndex];
+      arr[flatIndex] = doubleSum;
     }
   }
   return arr;

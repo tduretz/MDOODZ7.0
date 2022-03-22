@@ -12,9 +12,9 @@ typedef struct Reshape {
 
 int *ReshapeIntArray(int *array, Reshape *reshape);
 
-int *ReshapeFloatArray(float *array, Reshape *reshape);
+float *ReshapeFloatArray(float *array, Reshape *reshape);
 
-int *ReshapeDoubleArray(double *array, Reshape *reshape);
+double *ReshapeDoubleArray(double *array, Reshape *reshape);
 
 typedef struct Sum {
   int rows;
@@ -22,5 +22,7 @@ typedef struct Sum {
 } Sum;
 
 int *SumIntMatrices(int *matrix, int *matrix2, Sum *sum);
+
+double *SumDoubleMatrices(double *matrix, double *matrix2, Sum *sum);
 
 #endif
