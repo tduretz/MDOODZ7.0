@@ -1087,7 +1087,6 @@ void ReadInputFile( char* fin_name, int *istep, int *irestart, int *writer, int 
     model->aniso_fstrain   = ReadInt2( fin, "aniso_fstrain",   0 ); // Make anisotropy factor dependent on finite strain aspect ratio
     model->compressible    = ReadInt2( fin, "compressible",    0 ); // Turns on compressibility
     model->GNUplot_residuals = ReadInt2( fin, "GNUplot_residuals",    0 ); // Activate GNU plot residuals visualisation
-    model->no_markers      = ReadInt2( fin, "no_markers",      0 );
     model->shear_style     = ReadInt2( fin, "shear_style",     0 ); // 0: pure shear, 2: periodic simple shear
     model->StressRotation  = ReadInt2( fin, "StressRotation",  1 ); // 0: no stress rotation, 1: analytic rotation, 2: upper convected rate
     model->StressUpdate    = ReadInt2( fin, "StressUpdate",    0 );
@@ -1109,7 +1108,7 @@ void ReadInputFile( char* fin_name, int *istep, int *irestart, int *writer, int 
     if ( model->shear_style == 0 ) model->isperiodic_x  = 0;
     if ( model->aniso       == 1 ) model->fstrain       = 1;
     // Setup dependant
-    model->EpsBG           = ReadDou2( fin, "EpsBG",           0.0 ) / scaling->E;
+    model->EpsBG           = ReadDou2( fin, "EpsBG",         1e-30 ) / scaling->E; // Background tectonic rate, defaut is close to zero to avoid any Nans of Infs in rheology
     model->DivBG           = ReadDou2( fin, "DivBG",           0.0 ) / scaling->E;
     model->PrBG            = ReadDou2( fin, "PrBG",            0.0 ) / scaling->S;
     model->TBG             = ReadDou2( fin, "TBG",             0.0 ) / scaling->T;
@@ -1171,16 +1170,18 @@ void ReadInputFile( char* fin_name, int *istep, int *irestart, int *writer, int 
         materials->k[k]    = ReadMatProps( fin, "k",   k,   1.0e-6 )  / scaling->k;
         materials->k_eff[k] = materials->k[k];
         materials->Qr[k]   = ReadMatProps( fin, "Qr",  k,   1.0e-30)  / (scaling->W / pow(scaling->L,3.0));
-        materials->C[k]    = ReadMatProps( fin, "C",   k,   1.0e7  )  / scaling->S;
-        materials->phi[k]  = ReadMatProps( fin, "phi", k,    30.0  )  * M_PI/ 180.0;
-        materials->psi[k]  = ReadMatProps( fin, "psi", k,     0.0  )  * M_PI/ 180.0;
-        materials->Slim[k] = ReadMatProps( fin, "Slim",k,   1.0e10 )  / scaling->S;
         materials->alp[k]  = ReadMatProps( fin, "alp", k,      0.0)  / (1.0/scaling->T);
         materials->bet[k]  = ReadMatProps( fin, "bet", k,  1.0e-40 )  / (1.0/scaling->S);
         materials->drho[k] = ReadMatProps( fin, "drho",k,      0.0 )  / (scaling->rho);
         materials->T0[k]   = (zeroC) / (scaling->T); // +20
         materials->P0[k]   = 1e5 / (scaling->S);
-        // Read flow law settings
+        // Read plasticity parameters
+        materials->plast[k]= ReadMatProps( fin, "plast",k,     0.0 );
+        materials->C[k]    = ReadMatProps( fin, "C",    k,   1.0e7 )  / scaling->S;
+        materials->phi[k]  = ReadMatProps( fin, "phi",  k,    30.0 )  * M_PI/ 180.0;
+        materials->psi[k]  = ReadMatProps( fin, "psi",  k,     0.0 )  * M_PI/ 180.0;
+        materials->Slim[k] = ReadMatProps( fin, "Slim" ,k,  1.0e90 )  / scaling->S;
+        // Read flow law parameters
         materials->cstv[k]  = ReadMatProps( fin, "cstv",k,    1.0  );
         materials->pwlv[k]  = ReadMatProps( fin, "pwlv",k,    0.0  );
         materials->linv[k]  = ReadMatProps( fin, "linv",k,    0.0  );
@@ -1825,7 +1826,7 @@ char* ReadPhaseDiagram( FILE *fin, char FieldName[] ) {
 
 int ReadInt2( FILE *fin, char FieldName[], int Default )
 {
-    // Some declaration.
+    // Declarations
     int     bufmax=1000;
     int     h = 0;
     char    line[bufmax];
@@ -1917,7 +1918,7 @@ double ReadDou2( FILE *fin, char FieldName[], double Default )
         // Read new line
         fgets ( line, sizeof(line), fin );
         if (feof(fin)) {
-            printf("Warning : Parameter '%s' not found in the setup file, running with default value %2.2e\n", FieldName, Default);
+            // printf("Warning : Parameter '%s' not found in the setup file, running with default value %2.2e\n", FieldName, Default);
             rewind (fin);
             free(param1);
             return Default;
@@ -2057,8 +2058,8 @@ double ReadMatProps( FILE *fin, char FieldName[], int PhaseID, double Default )
 
                     // Break in case the parameter has not been defined for the current phase.
                     if ( strcmp(param3,"ID") == 0 || feof(fin) ) {
-                        if ( fabs(Default) <  100 ) printf("Warning : Parameter '%s' not found in the setup file, running with default value %.2lf\n", FieldName, Default);
-                        if ( fabs(Default) >= 100 ) printf("Warning : Parameter '%s' not found in the setup file, running with default value %2.2e\n", FieldName, Default);
+                        if ( fabs(Default) <  100.0 ) printf("Warning : Parameter '%s' not found in the setup file, running with default value %.2lf\n", FieldName, Default);
+                        if ( fabs(Default) >= 100.0 ) printf("Warning : Parameter '%s' not found in the setup file, running with default value %2.2e\n", FieldName, Default);
                         rewind (fin);
                         free(param1);
                         free(param2);

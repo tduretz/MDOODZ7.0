@@ -29,15 +29,14 @@
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-// SIMPLE
 void BuildInitialTopography( surface *topo, markers *topo_chain, params model, grid mesh, scale scaling ) {
     
     int k;
-    double TopoLevel = 2.e-1/scaling.L; // sets zero initial topography
-    double sig = 0.5/scaling.L;
+    double BasinDepth = 0*5e3/scaling.L; // sets zero initial topography
+    double BasinWidth = 50e3/scaling.L;
     
     for ( k=0; k<topo_chain->Nb_part; k++ ) {
-        topo_chain->z[k]     = 0;//TopoLevel * exp(-topo_chain->x[k]*topo_chain->x[k]/sig/sig) ;
+        topo_chain->z[k]     -= BasinDepth * exp(-topo_chain->x[k]*topo_chain->x[k]/pow(BasinWidth,2)) ;
         topo_chain->phase[k] = 0;
     }
     

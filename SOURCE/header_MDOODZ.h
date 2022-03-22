@@ -56,7 +56,7 @@ struct _mat_prop {
     DoodzFP Skin[20], kkin[20], Qkin[20];
     int     kin[20], gs[20], cstv[20], pwlv[20], linv[20], expv[20], gbsv[20], phase_diagram[20], density_model[20];
     DoodzFP C_end[20], phi_end[20], psi_end[20], pls_start[20], pls_end[20], eta_vp[20], n_vp[20];
-    int     phi_soft[20], psi_soft[20], coh_soft[20], is_tensile[20];
+    int     plast[20], phi_soft[20], psi_soft[20], coh_soft[20], is_tensile[20];
     DoodzFP Pr[20], tau_kin[20], dPr[20], k_chem[20];
     int     reac_soft[20], reac_phase[20];
     int     phase_mix[20], phase_two[20];
@@ -118,7 +118,7 @@ struct _params {
     ETA_AVG eta_avg;
 	int itp_stencil;
     double nexp_radial_basis;
-	int ismechanical, isperiodic_x, isinertial, iselastic, isnonnewtonian, isthermal, ispureshear_ale, free_surf, write_markers, write_debug, no_markers;
+	int ismechanical, isperiodic_x, isinertial, iselastic, isnonnewtonian, isthermal, ispureshear_ale, free_surf, write_markers, write_debug;
     double free_surf_stab;
     int dt_constant, RK, line_search, thermal_eq, subgrid_diff, adiab_heat, shear_heat, advection, fstrain, ConservInterp;
     int surf_processes, cpc, surf_remesh, loc_iter, therm_pert, surf_ised1, surf_ised2, MantleID, topografix, Reseed, SmoothSoftening;
