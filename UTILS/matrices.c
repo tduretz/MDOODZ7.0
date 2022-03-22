@@ -33,3 +33,46 @@ int *ReshapeIntArray(int *array, CutCommand *cutCommand) {
   }
   return arr;
 }
+
+int *ReshapeFloatArray(float *array, CutCommand *cutCommand) {
+  float(*arr) = malloc(sizeof *arr);
+  int updatedIndex = 0;
+  for (int i = 0 ; i < cutCommand->rows ; i++) {
+    for (int j = 0 ; j < cutCommand->cols ; j++) {
+      int flatIndex = j + i * cutCommand->cols;
+      if (IsCutOff(i, j, cutCommand)) {
+        continue;
+      }
+      arr[updatedIndex] = array[flatIndex];
+      updatedIndex++;
+    }
+  }
+  return arr;
+}
+
+int *ReshapeDoubleArray(double *array, CutCommand *cutCommand) {
+  double (*arr) = malloc(sizeof *arr);
+  int updatedIndex = 0;
+  for (int i = 0 ; i < cutCommand->rows ; i++) {
+    for (int j = 0 ; j < cutCommand->cols ; j++) {
+      int flatIndex = j + i * cutCommand->cols;
+      if (IsCutOff(i, j, cutCommand)) {
+        continue;
+      }
+      arr[updatedIndex] = array[flatIndex];
+      updatedIndex++;
+    }
+  }
+  return arr;
+}
+
+int *SumIntMatrices(int *matrix, int *matrix2, Sum *sum) {
+  int(*arr) = malloc(sizeof *arr);
+  for (int i = 0 ; i < sum->rows ; i++) {
+    for (int j = 0 ; j < sum->cols ; j++) {
+      int flatIndex = j + i * sum->cols;
+      arr[flatIndex] = matrix[flatIndex] + matrix2[flatIndex];
+    }
+  }
+  return arr;
+}

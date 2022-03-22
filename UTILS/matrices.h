@@ -16,4 +16,11 @@ int *ReshapeFloatArray(float *array, CutCommand *cutCommand);
 
 int *ReshapeDoubleArray(double *array, CutCommand *cutCommand);
 
+typedef struct Sum {
+  int rows;
+  int cols;
+} Sum;
+
+int *SumIntMatrices(int *matrix, int *matrix2, Sum *sum);
+
 #endif
