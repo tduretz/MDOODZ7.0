@@ -13,9 +13,16 @@ add_executable(matrices_test
         UTILS/matrices.c
         UTILS/matrices.h)
 
+add_executable(hdf5read_test
+        TESTS/hdf5read_test.c
+        UTILS/hdf5read.c
+        UTILS/hdf5read.h)
+target_link_libraries(hdf5read_test hdf5-static)
+
 enable_testing()
 
 add_test(shearTemplate ShearTemplate_test)
 add_test(shearPwl Shear_pwl_test)
 add_test(matrices matrices_test)
+add_test(hdf5read hdf5read_test)
 

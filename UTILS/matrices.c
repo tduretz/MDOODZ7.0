@@ -1,7 +1,6 @@
 #include "stdlib.h"
 #include "matrices.h"
 #include "stdbool.h"
-#include "stdio.h"
 
 static bool IsCutOff(int i, int j, Reshape *reshape) {
   if (j + 1 <= reshape->xMinLimit) {
@@ -31,9 +30,9 @@ Reshape InitReshape(int rows, int cols) {
 
 Sum InitSum(int rows, int cols) {
   Sum const e = {
-      .rows = rows,
-      .cols = cols,
-      .multiplier = 1,
+          .rows = rows,
+          .cols = cols,
+          .multiplier = 1,
   };
   return e;
 }
@@ -72,7 +71,7 @@ float *ReshapeFloatArray(const float *array, Reshape *reshape) {
 
 double *ReshapeDoubleArray(const double *array, Reshape *reshape) {
   double *arr =
-      (double *)malloc(sizeof(double) * reshape->cols * reshape->rows);
+          (double *) malloc(sizeof(double) * reshape->cols * reshape->rows);
   int updatedIndex = 0;
   for (int i = 0; i < reshape->rows; i++) {
     for (int j = 0; j < reshape->cols; j++) {
@@ -105,7 +104,7 @@ double *SumDoubleMatrices(const double *matrix, const double *matrix2,
     for (int j = 0; j < sum->cols; j++) {
       int flatIndex = j + i * sum->cols;
       double doubleSum =
-          sum->multiplier * (matrix[flatIndex] + matrix2[flatIndex]);
+              sum->multiplier * (matrix[flatIndex] + matrix2[flatIndex]);
       arr[flatIndex] = doubleSum;
     }
   }
