@@ -9,7 +9,9 @@ add_executable(ShearTemplate_plot
         ${SOURCE_FILES}
         SOURCE/set_ShearTemplate.c
         UTILS/matrices.h
-        UTILS/matrices.c)
+        UTILS/matrices.c
+        UTILS/hdf5read.h
+        UTILS/hdf5read.c)
 target_link_libraries(ShearTemplate_plot PRIVATE ${DEPENDENCIES})
 
 enable_testing()

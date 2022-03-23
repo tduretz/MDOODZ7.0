@@ -1,7 +1,6 @@
 #include "hdf5read.h"
 
 #include "assert.h"
-#include "stdio.h"
 #include "math.h"
 #include "stdlib.h"
 
@@ -37,17 +36,14 @@ void ShouldReadCoordinates() {
 void ShouldReadNodes() {
   Hdf5File hdf5File = ReadHdf5("ShearTemplateReference.gzip.h5");
   Nodes nodes = GetNodes(hdf5File);
-  printf("%f\n", nodes.VzArray[0]);
-  printf("%f\n", nodes.VzArray[10200]);
-  printf("%f\n", nodes.VxArray[312]);
-  printf("%f\n", nodes.VzArray[8099]);
-  printf("%f\n", nodes.VxArray[1]);
   assert(EqualsF(nodes.VzArray[0], -0.500000));
   assert(EqualsF(nodes.VzArray[10200], 0.500000));
   assert(EqualsF(nodes.VxArray[312], 0.412373));
   assert(EqualsF(nodes.VzArray[8099], 0.283529));
   assert(EqualsF(nodes.VxArray[1], 0.490271));
   assert(EqualsF(nodes.VxArray[0], 0.500000));
+  free(nodes.VzArray);
+  free(nodes.VxArray);
 }
 
 int main() {
