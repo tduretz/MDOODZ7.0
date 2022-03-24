@@ -14,4 +14,4 @@ clean:
 	rm -rf *build*/
 
 deps:
-	rm -rf lib && git clone https://github.com/kulakovri/MDOODZ-dependencies lib && cd lib && make install-hdf5 && make install-suitesparse
+	rm -rf lib && git clone https://github.com/kulakovri/MDOODZ-dependencies deps && cd deps && make install-hdf5 && make install-suitesparse

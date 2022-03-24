@@ -41,9 +41,7 @@
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-// TODO we should not be dealing with command line arguments on that level
-int RunMDOODZ( int nargs, char *args[] ) {
-    
+int RunMDOODZ( char *inputFileName, void (*BuildInitialTopography)(), void (*SetParticles)(), void (*SetBCs)()) {
     int          istep, irestart, writer = 0, writer_step;
     char         *fin_name, *PartFileName;
     params       model;
@@ -68,18 +66,11 @@ int RunMDOODZ( int nargs, char *args[] ) {
     mesh.Work       = 0.0; // Work                 
     mesh.Uthermal   = 0.0; // heat
     mesh.Uelastic   = 0.0; // elastic energy
-        
-    // Input file name
-    if ( nargs < 2 ) {
-        printf( "OLD INPUT: You should (at least) enter the setup file name as a command line argument.\nExiting...\n" );
-        exit(1);
-    }
-    else {
-        asprintf(&fin_name,"%s", args[1]);
-    }
+
+    asprintf(&fin_name,"%s", inputFileName);
     
     printf("\n********************************************************\n");
-    printf("************ Starting MDOODZ 6.0 simulation ************\n");
+    printf("************ Starting MDOODZ 7.0 simulation ************\n");
     printf("********************************************************\n");
     
     // Read input data

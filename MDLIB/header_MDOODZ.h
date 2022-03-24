@@ -264,7 +264,7 @@ struct _DirectSolver {
 //------------------------------------------------ FUNCTION PROTOTYPES ------------------------------------------------------//
 //---------------------------------------------------------------------------------------------------------------------------//
 
-int RunMDOODZ(int, char*[]);
+int RunMDOODZ(char*, void(), void(), void());
 
 // Miscellaneous functions
 void Initialise1DArrayDouble( double*, int, double );
@@ -339,7 +339,6 @@ void InterpVerticesToCentroidsDouble( double*, double*, grid*, params* );
 // Grid initialisation and boundary conditions
 //void MInitialiseSolutionFields( grid*, params* );
 //void MinitMG( grid*, paramsOutputSparseMatrix  );
-void SetBCs( grid*, params*, scale, markers*, mat_prop* , surface*);
 void SetBCs_new( grid*, params*, scale, markers*, mat_prop* );
 void SetBCs_user( grid*, params*, scale, markers*, mat_prop* );
 //void MSetRes( grid*, paramsOutputSparseMatrix  );
@@ -351,7 +350,6 @@ void ComputeLithostaticPressure( grid*, params*, double, scale, int );
 
 //// Particles
 void PutPartInBox( markers*, grid*, params, surface, scale );
-void SetParticles( markers*, scale, params, mat_prop* );
 void PartInit( markers*, params* );
 void Interp_P2U( markers, DoodzFP*, grid*, double*, double*, double*, int, int, int, char* , params* );
 void Interp_P2N( markers, DoodzFP*, grid*, double*, double*, double*, int, int, params* );
@@ -468,7 +466,6 @@ void SetThermalPert( grid*, params, scale );
 void UpdateMaxPT ( scale, params, markers* );
 
 // Free surface routines
-void BuildInitialTopography( surface*, markers*, params, grid, scale );
 void SetTopoChainHorizontalCoords( surface*, markers*, params, grid, scale );
 void AllocateMarkerChain( surface*, markers*, params );
 void FreeMarkerChain( surface*, markers* );
