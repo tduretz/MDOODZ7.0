@@ -135,8 +135,8 @@ int RunMDOODZ( char *inputFileName, void (*BuildInitialTopography)(), void (*Set
             SetTopoChainHorizontalCoords( &topo_ini, &topo_chain_ini, model, mesh, scaling );
             
             // Define the vertical position of the surface marker chain
-            BuildInitialTopography( &topo,     &topo_chain,     model, mesh, scaling );
-            BuildInitialTopography( &topo_ini, &topo_chain_ini, model, mesh, scaling );
+            BuildInitialTopography( &topo_chain, model, scaling );
+            BuildInitialTopography( &topo_chain_ini, model, scaling );
             
             // Project topography on vertices
             ProjectTopography( &topo, &topo_chain, model, mesh, scaling, mesh.xg_coord, 0 );
@@ -1236,7 +1236,7 @@ int RunMDOODZ( char *inputFileName, void (*BuildInitialTopography)(), void (*Set
     if ( model.kinetics==1 ) DoodzFree(model.kin_dG);
     
     printf("\n********************************************************\n");
-    printf("************* Ending MDOODZ 6.0 simulation *************\n");
+    printf("************* Ending MDOODZ 7.0 simulation *************\n");
     printf("********************************************************\n");
     
     // Exit success signal

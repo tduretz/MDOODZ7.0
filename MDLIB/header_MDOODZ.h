@@ -271,6 +271,7 @@ void Initialise1DArrayDouble( double*, int, double );
 
 // Input/Output
 void ScaleMe( scale* );
+char* GetSetupFileName(int nargs, char *args[]);
 void    ReadInputFile( char*, int*, int*, int*, int*, params*, scale*, mat_prop*, markers*, Nparams* );
 void    UpdateInputFile( char[], int );
 int     ReadInt2( FILE*, char[], int );

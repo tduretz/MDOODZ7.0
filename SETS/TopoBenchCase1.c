@@ -4,7 +4,7 @@
 #include "stdlib.h"
 #include "string.h"
 
-void BuildInitialTopography(markers *topo_chain, scale scaling) {
+void BuildInitialTopography(markers *topo_chain, params model, scale scaling) {
 
   double Amplitude = 7e3 / scaling.L;
   double Wavelength = 2800e3 / scaling.L;
@@ -316,12 +316,6 @@ void SetBCs(grid *mesh, params *model, scale scaling, markers *particles,
 }
 
 int main(int nargs, char *args[]) {
-  char *setupFileName;
-  if (nargs == 2) {
-    setupFileName = args[1];
-  } else {
-    setupFileName = strcat(args[0], ".txt");
-  }
-  printf("setup file: %s", setupFileName);
+  char *setupFileName = GetSetupFileName(nargs, args);
   RunMDOODZ(setupFileName, BuildInitialTopography, SetParticles, SetBCs);
 }
