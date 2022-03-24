@@ -13,18 +13,20 @@ Hdf5File ReadHdf5(char *filename) {
           params);
   int nx = (int) params[3];
   int nz = (int) params[4];
-  hid_t *file_p = &file;
+
+  hid_t *filePtr = malloc(sizeof(file));
+  memcpy(filePtr, &file, sizeof(file));
   Hdf5File hdf5File = {
           .fileName = filename,
           .nz = nz,
           .nx = nx,
-          .file_p = file_p};
+          .filePtr = filePtr};
   return hdf5File;
 }
 
 float *GetPressureArray(Hdf5File hdf5File) {
   int arraySize = (hdf5File.nx - 1) * (hdf5File.nz - 1);
-  hid_t centersGroup = H5Gopen(*hdf5File.file_p, "Centers", H5P_DEFAULT);
+  hid_t centersGroup = H5Gopen(*hdf5File.filePtr, "Centers", H5P_DEFAULT);
   hid_t pressureDataset = H5Dopen(centersGroup, "P", H5P_DEFAULT);
   float pressureArray[arraySize];
   H5Dread(pressureDataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
@@ -35,9 +37,7 @@ float *GetPressureArray(Hdf5File hdf5File) {
 }
 
 Coordinates GetCoordinates(Hdf5File hdf5File) {
-  int arraySize = hdf5File.nx - 1;
-
-  hid_t modelGroup = H5Gopen(*hdf5File.file_p, "Model", H5P_DEFAULT);
+  hid_t modelGroup = H5Gopen(*hdf5File.filePtr, "Model", H5P_DEFAULT);
 
   hid_t xcCoord = H5Dopen(modelGroup, "xc_coord", H5P_DEFAULT);
   float xcCoordArray[hdf5File.nx - 1];
@@ -49,10 +49,10 @@ Coordinates GetCoordinates(Hdf5File hdf5File) {
   H5Dread(zcCoord, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           zcCoordArray);
 
-  float *xcCoordArrayPtr = malloc(sizeof(float) * arraySize);
-  memcpy(xcCoordArrayPtr, xcCoordArray, sizeof(float) * arraySize);
-  float *zcCoordArrayPtr = malloc(sizeof(float) * arraySize);
-  memcpy(zcCoordArrayPtr, zcCoordArray, sizeof(float) * arraySize);
+  float *xcCoordArrayPtr = malloc(sizeof(float) * hdf5File.nx - 1);
+  memcpy(xcCoordArrayPtr, xcCoordArray, sizeof(float) * hdf5File.nx - 1);
+  float *zcCoordArrayPtr = malloc(sizeof(float) * hdf5File.nz - 1);
+  memcpy(zcCoordArrayPtr, zcCoordArray, sizeof(float) * hdf5File.nz - 1);
 
   Coordinates coordinates = {.xcCoordArray = xcCoordArrayPtr, .zcCoordArray = zcCoordArrayPtr};
   return coordinates;
@@ -61,7 +61,7 @@ Coordinates GetCoordinates(Hdf5File hdf5File) {
 Nodes GetNodes(Hdf5File hdf5File) {
   int nxVx = hdf5File.nx;
   int nzVx = hdf5File.nz + 1;
-  hid_t VxNodesGroup = H5Gopen(*hdf5File.file_p, "VxNodes", H5P_DEFAULT);
+  hid_t VxNodesGroup = H5Gopen(*hdf5File.filePtr, "VxNodes", H5P_DEFAULT);
   hid_t VxDataset = H5Dopen(VxNodesGroup, "Vx", H5P_DEFAULT);
   float VxArray[nxVx * nzVx];
   H5Dread(VxDataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
@@ -71,7 +71,7 @@ Nodes GetNodes(Hdf5File hdf5File) {
 
   int nxVz = hdf5File.nx + 1;
   int nzVz = hdf5File.nz;
-  hid_t VzNodesGroup = H5Gopen(*hdf5File.file_p, "VzNodes", H5P_DEFAULT);
+  hid_t VzNodesGroup = H5Gopen(*hdf5File.filePtr, "VzNodes", H5P_DEFAULT);
   hid_t VzDataset = H5Dopen(VzNodesGroup, "Vz", H5P_DEFAULT);
   float VzArray[nxVz * nzVz];
   H5Dread(VzDataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,

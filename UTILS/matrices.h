@@ -8,6 +8,7 @@ typedef struct Reshape {
   int xMaxLimit;
   int yMinLimit;
   int yMaxLimit;
+  int transpose;
 } Reshape;
 
 Reshape InitReshape(int rows, int cols);
@@ -29,5 +30,7 @@ Sum InitSum(int rows, int cols);
 int *SumIntMatrices(const int *matrix, const int *matrix2, Sum *sum);
 
 double *SumDoubleMatrices(const double *matrix, const double *matrix2, Sum *sum);
+
+float *SumFloatMatrices(const float *matrix, const float *matrix2, Sum *sum);
 
 #endif

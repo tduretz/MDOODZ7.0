@@ -24,7 +24,8 @@ Reshape InitReshape(int rows, int cols) {
                      .xMinLimit = 0,
                      .xMaxLimit = 0,
                      .yMinLimit = 0,
-                     .yMaxLimit = 0};
+                     .yMaxLimit = 0,
+                     .transpose = false};
   return e;
 }
 
@@ -38,7 +39,7 @@ Sum InitSum(int rows, int cols) {
 }
 
 int *ReshapeIntArray(const int *array, Reshape *reshape) {
-  int(*arr) = malloc(sizeof *arr);
+  int(*arr) = malloc(sizeof(int) * reshape->cols * reshape->rows);
   int updatedIndex = 0;
   for (int i = 0; i < reshape->rows; i++) {
     for (int j = 0; j < reshape->cols; j++) {
@@ -54,7 +55,7 @@ int *ReshapeIntArray(const int *array, Reshape *reshape) {
 }
 
 float *ReshapeFloatArray(const float *array, Reshape *reshape) {
-  float(*arr) = malloc(sizeof *arr);
+  float(*arr) = malloc(sizeof(float) * reshape->cols * reshape->rows);
   int updatedIndex = 0;
   for (int i = 0; i < reshape->rows; i++) {
     for (int j = 0; j < reshape->cols; j++) {
@@ -87,7 +88,7 @@ double *ReshapeDoubleArray(const double *array, Reshape *reshape) {
 }
 
 int *SumIntMatrices(const int *matrix, const int *matrix2, Sum *sum) {
-  int(*arr) = malloc(sizeof *arr);
+  int(*arr) = malloc(sizeof(int) * sum->cols * sum->rows);
   for (int i = 0; i < sum->rows; i++) {
     for (int j = 0; j < sum->cols; j++) {
       int flatIndex = j + i * sum->cols;
@@ -99,12 +100,26 @@ int *SumIntMatrices(const int *matrix, const int *matrix2, Sum *sum) {
 
 double *SumDoubleMatrices(const double *matrix, const double *matrix2,
                           Sum *sum) {
-  double(*arr) = malloc(sizeof *arr);
+  double(*arr) = malloc(sizeof(double) * sum->cols * sum->rows);
   for (int i = 0; i < sum->rows; i++) {
     for (int j = 0; j < sum->cols; j++) {
       int flatIndex = j + i * sum->cols;
       double doubleSum =
               sum->multiplier * (matrix[flatIndex] + matrix2[flatIndex]);
+      arr[flatIndex] = doubleSum;
+    }
+  }
+  return arr;
+}
+
+float *SumFloatMatrices(const float *matrix, const float *matrix2,
+                        Sum *sum) {
+  float(*arr) = malloc(sizeof(float) * sum->cols * sum->rows);
+  for (int i = 0; i < sum->rows; i++) {
+    for (int j = 0; j < sum->cols; j++) {
+      int flatIndex = j + i * sum->cols;
+      float doubleSum =
+              (float) sum->multiplier * (matrix[flatIndex] + matrix2[flatIndex]);
       arr[flatIndex] = doubleSum;
     }
   }

@@ -4,7 +4,7 @@
 
 typedef struct Hdf5File {
     char *fileName;
-    hid_t *file_p;
+    hid_t *filePtr;
     int nx;
     int nz;
 } Hdf5File;
