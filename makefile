@@ -1,5 +1,5 @@
 run-tests:
-	cd cmake-build && ctest --extra-verbose
+	cd cmake-build && ctest --extra-verbose --output-on-failure
 
 run:
 	cd cmake-exec/$(SET) && ./$(SET)
