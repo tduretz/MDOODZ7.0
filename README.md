@@ -65,20 +65,20 @@ Separate makefile related to cmake is located in a root directory
 
 To build executables you will have to specify your model name:
 ```bash
-make build MODEL=
+make build
 ```
 
-or for the debug mode:
+For the debug mode if OMP and OPT are not set they are OFF by default:
 
 ```bash
-make build-dev MODEL=
+make build-dev OMP=ON OPT=ON
 ```
 
-All build files will be located at the cmake-build directory
+All build files will be located at the `cmake-build` directory. Executables are stored in `cmake-exec`
 
-After building you could run MDOODZ with:
+After building, you could run MDOODZ with:
 ```bash
-make run
+make run SET=ShearTemplate
 ```
 
 or build autotests:
@@ -89,11 +89,12 @@ make run-tests
 Whole process in cluster mode with optimisation and OpenMP:
 
 ```bash
-make clean build MODEL=ShearTemplate run
+make clean build run SET=ShearTemplate
 ```
 
 Whole process in debug mode without OpenMP and optimisation:
 
 ```bash
-make clean build-dev MODEL=ShearTemplate run
+make clean build-dev run SET=ShearTemplate
 ```
+
