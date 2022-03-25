@@ -25,10 +25,9 @@
 
 #include "stdio.h"
 #include "stdlib.h"
-#include "string.h"
 #include "math.h"
-#include "ctype.h"
-#include "header_MDOODZ.h"
+#include "mdoodz.h"
+#include "mdoodz-private.h"
 
 #ifdef _OMP_
 #include "omp.h"
@@ -181,7 +180,7 @@ void ArrayTimesScalar( double* arr1, double scalar, int size ) {
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-void MinMaxArray( DoodzFP* array, double scale, int size, char* text ) {
+void MinMaxArray( double * array, double scale, int size, char* text ) {
 
     // Search min/max values of an array and prints it to standard out
     double min=array[0], max=array[0];

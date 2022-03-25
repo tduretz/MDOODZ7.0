@@ -2,7 +2,7 @@
 #include "stdio.h"
 #include "math.h"
 #include "stdlib.h"
-#include "header_MDOODZ.h"
+#include "mdoodz-private.h"
 #include "time.h"
 
 #define USE_BC_USER 0

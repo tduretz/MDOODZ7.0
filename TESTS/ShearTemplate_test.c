@@ -1,5 +1,5 @@
 #include "hdf5.h"
-#include "header_MDOODZ.h"
+#include "mdoodz-private.h"
 #include "assert.h"
 #include "stdio.h"
 #include "stdlib.h"

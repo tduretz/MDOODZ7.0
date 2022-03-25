@@ -23,7 +23,7 @@
 #include "stdlib.h"
 #include "string.h"
 #include "math.h"
-#include "header_MDOODZ.h"
+#include "mdoodz-private.h"
 #include "ctype.h"
 
 #ifdef _OMP_

@@ -3,7 +3,7 @@
 #include "string.h"
 #include "math.h"
 //---- M-Doodz header file
-#include "header_MDOODZ.h"
+#include "mdoodz-private.h"
 #include "umfpack.h"
 
 #ifdef _OMP_

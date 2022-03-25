@@ -27,7 +27,7 @@
 #include "string.h"
 #include "math.h"
 #include "ctype.h"
-#include "header_MDOODZ.h"
+#include "mdoodz-private.h"
 
 #ifdef _OMP_
 #include "omp.h"

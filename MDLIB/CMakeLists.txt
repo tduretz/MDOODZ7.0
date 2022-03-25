@@ -1,4 +1,5 @@
-add_library(MDLIB AdvectionRoutines.c
+add_library(MDLIB
+        AdvectionRoutines.c
         BC.c
         ChemicalRoutines.c
         FD_Jacobian.c
@@ -23,4 +24,4 @@ add_library(MDLIB AdvectionRoutines.c
         ThermalRoutines.c
         ThermalSolver.c)
 target_link_libraries(MDLIB ${DEPENDENCIES})
-target_include_directories(MDLIB PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(MDLIB PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)

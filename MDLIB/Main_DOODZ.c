@@ -23,11 +23,11 @@
 #endif
 #include "stdio.h"
 #include "stdlib.h"
-#include "string.h"
 #include "math.h"
 #include "time.h"
 #include "cholmod.h"
-#include "header_MDOODZ.h"
+#include "mdoodz-private.h"
+#include "mdoodz.h"
 
 #ifdef _OMP_
 #include "omp.h"
@@ -41,7 +41,14 @@
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-int RunMDOODZ( char *inputFileName, void (*BuildInitialTopography)(), void (*SetParticles)(), void (*SetBCs)()) {
+int RunMDOODZ(char *inputFileName,
+              void BuildInitialTopography(markers *topo_chain, params model,
+                                          scale scaling),
+              void SetParticles(markers *particles, scale scaling, params model,
+                                mat_prop *materials),
+              void SetBCs(grid *mesh, params *model, scale scaling,
+                          markers *particles, mat_prop *materials,
+                          surface *topo)) {
     int          istep, irestart, writer = 0, writer_step;
     char         *fin_name, *PartFileName;
     params       model;

@@ -24,7 +24,7 @@
 #include "string.h"
 #include "math.h"
 #include "ctype.h"
-#include "header_MDOODZ.h"
+#include "mdoodz-private.h"
 
 #include "cs.h" 
 

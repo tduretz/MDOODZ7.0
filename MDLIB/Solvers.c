@@ -24,7 +24,7 @@
 #include "string.h"
 #include "math.h"
 #include "time.h"
-#include "header_MDOODZ.h"
+#include "mdoodz-private.h"
 #include "umfpack.h"
 #include "amd.h"
 #include "cs.h"

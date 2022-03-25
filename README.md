@@ -1,55 +1,54 @@
 # MDOODZ7.0
 
 Welcome to MDOODZ7.0 public repository!
-This version of MDoodz is under construction, more testing will be progressively added...
+This version of MDOODZ is under construction, more testing will be progressively added...
 
 ![](/images/Compression_Symmetric.gif)
 
-# Quickstart
+# Library usage
 
-Check the [Documentation](https://github.com/tduretz/MDOODZ6.0/blob/master/Documentation/MDOODZ_docu.pdf)
+MDOODZ Source Code stored in `MDLIB` directory and compiled as a separate library with the public include header `mdoodz.h`.
 
-0. go to SOURCE/ folder
-1. copy one makefile from Makefile/ folder into SOURCE/
-2. edit the makefile for your specific computer
+In order to use it in your program, you need a setup .txt file and implemented functions `BuildInitialTopography`, `SetParticles` and `SetBCs`. 
+They are passed to `RunMDOODZ` function as arguments. 
 
-## Simple shear (power-law viscous)
+Simplified example:
 
-Compile: 
-```bash
-make clean all MODEL=Shear_pwl OPT=yes OMP=yes
+```code
+#include "mdoodz.h"
+
+void BuildInitialTopography(markers *topo_chain, params model, scale scaling) {
+  // topography set up routine here
+}
+
+void SetParticles(markers *particles, scale scaling, params model, mat_prop *materials) {
+  // particles set up routine here
+}
+
+void SetBCs(grid *mesh, params *model, scale scaling, markers *particles, mat_prop *materials, surface *topo) {
+  // Boundary conditions set up routine here
+}
+
+int main(int nargs, char *args[]) {
+  char *setupFileName = GetSetupFileName(nargs, args);
+  RunMDOODZ(setupFileName, BuildInitialTopography, SetParticles, SetBCs);
+}
 ```
 
-Run:
-```bash
-./Doodzi_Shear_pwl Shear_pwl.txt
-```
+More examples you could find in `SETS` directory such as `ShearTemplate` or `TopoBenchCase1`.
 
-## Lithosphere deformation
-Compile: make clean all MODEL=LithoScale OPT=yes OMP=yes
+# CMake usage
 
-Run: 
-```bash
-./Doodzi_LithoScale LithoScale.txt
-```
-
-Visualize using either Matlab, Python, Julia or whatever language that can handle HDF5 files and enjoy!
-
-# Prequisites
-
-So far MDOODZ has been successfully built on LINUX/UNIX and MAC OS systems. The code can be built with GCC compiler from GNU (http://gcc.gnu.org) or with ICC compiler from Intel MKL library (https://software.intel.com/en-us/intel-mkl).
-The code relies on two libraries: <br>
-1. SuiteSparse provides efficient linear algebra and matrix manipulation routines. It is available at: http://www.suitesparse.com <br>
-2. HDF5 is the main format for output files and is readable into MATLAB. It is available at: http://www.hdfgroup.org <br>
-
-Optionally, it is possible to use Gnuplot to monitor progress of non-linear iterations. Find it there: http://www.gnuplot.info/
-
-# CMake project
+Project is ready to be build in CMake
 
 ## Prequisites and setup
 
-In order to build MDOODZ with CMake you have to install **cmake 3.21** or newer version.
-`blas` and `lapack` libraries are CMake compatible and does not require any additional setup other than installing them with your package manager
+In order to build MDOODZ with CMake you have to install **cmake 3.16** or newer version.
+`blas`, `zlib` and `lapack`  libraries are CMake compatible and does not require any additional setup other than installing them with your package manager:
+
+```bash
+sudo apt-get install libblas-dev liblapack-dev zlib1g-dev
+```
 
 To install SuiteSparse and HDF5 to the project:
 
@@ -59,29 +58,39 @@ make deps
 
 ## How to use
 
+### Add your set to the CMake
+
+1) In a `SETS` directory you need to create executable `YourSetName.c` file and the `YourSetName.txt` setup file. Both files should have a same name.
+2) In `SETS/CMakeLists.txt` file add a line with the command `add_set(YourSetName)`
+
+
+### Build and run
+
 CMake gives us a framework for building MDOODZ in developer mode or as a separate package and CTest can be used as test suite.
 
-Separate makefile related to cmake is located in a root directory
+Makefile related to cmake is located in a root directory
 
-To build executables you will have to specify your model name:
+To build library, tests and executables:
+
 ```bash
 make build
 ```
 
-For the debug mode if OMP and OPT are not set they are OFF by default:
+To explicitly set OPT (optimisation) and OMP (OpenMP)
 
 ```bash
 make build-dev OMP=ON OPT=ON
 ```
 
-All build files will be located at the `cmake-build` directory. Executables are stored in `cmake-exec`
+Build files will be located at the `cmake-build/` directory.
+Executables will be stored in a `cmake-exec/YourSetName/` directory
 
 After building, you could run MDOODZ with:
 ```bash
-make run SET=ShearTemplate
+make run SET=YourSetName
 ```
 
-or build autotests:
+or run autotests:
 ```bash
 make run-tests
 ```
@@ -89,12 +98,14 @@ make run-tests
 Whole process in cluster mode with optimisation and OpenMP:
 
 ```bash
-make clean build run SET=ShearTemplate
+make clean build run SET=YourSetName
 ```
 
-Whole process in debug mode without OpenMP and optimisation:
+All output files generated by the runtime will be stored in a same directory as the executable.
+
+Setup `.txt` file will be automatically detected if it has a same name as the executable. But alternatively you can specify it explicitly:
 
 ```bash
-make clean build-dev run SET=ShearTemplate
+cd cmake-exec/YourSetName
+./YourSetName /path/to/setup.txt
 ```
-

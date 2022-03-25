@@ -22,7 +22,7 @@
 #include "stdio.h"
 #include "math.h"
 #include "stdlib.h"
-#include "header_MDOODZ.h"
+#include "mdoodz-private.h"
 #include "time.h"
 
 #ifdef _OMP_
