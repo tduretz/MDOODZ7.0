@@ -10,6 +10,6 @@ jobs:
       - name: install dependencies
         run: make deps
       - name: Builds cmake project
-        run: make build
+        run: cmake -B ./cmake-build && cmake --build ./cmake-build
       - name: Runs tests
         run: make run-tests

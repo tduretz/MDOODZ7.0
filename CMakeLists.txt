@@ -16,5 +16,6 @@ endif()
 include(Deps.cmake)
 add_subdirectory(MDLIB)
 add_subdirectory(SETS)
-#add_subdirectory(TESTS)
+enable_testing()
+add_subdirectory(TESTS)
 

@@ -1,14 +1,14 @@
 run-tests:
-	cd cmake-build && ./ShearTemplate_test
+	cd cmake-build && ctest --extra-verbose
 
 run:
-	cd cmake-build && ./MDOODZ
+	cd cmake-exec/$(SET) && ./$(SET)
 
 build-dev:
-	cmake -G "Unix Makefiles" -B ./cmake-build && cmake --build ./cmake-build -- -j 6
+	cmake -B ./cmake-build -DOPT=$(OPT) -DOMP=$(OMP) && cmake --build ./cmake-build
 
 build:
-	cmake -G "Unix Makefiles" -DOPT=ON -DOMP=ON -B ./cmake-build && cmake --build ./cmake-build -- -j 6
+	cmake -DOPT=ON -DOMP=ON -B ./cmake-build && cmake --build ./cmake-build
 
 clean:
 	rm -rf *build*/
