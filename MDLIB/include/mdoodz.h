@@ -12,7 +12,7 @@ typedef struct {
   double *val;
 } BC;
 
-// BC is a boundary condition structure for the thermal solver
+// BCT is a boundary condition structure for the thermal solver
 typedef struct {
   char *type, *typW, *typE, *typS, *typN;
   double *val, *valW, *valE, *valS, *valN;
