@@ -7,19 +7,19 @@
 #define Rad_Earth 6370000
 
 // BC is a boundary condition structure for the mechanical solver
-typedef struct BC {
+typedef struct {
   char *type;
   double *val;
 } BC;
 
 // BC is a boundary condition structure for the thermal solver
-typedef struct BCT {
+typedef struct {
   char *type, *typW, *typE, *typS, *typN;
   double *val, *valW, *valE, *valS, *valN;
 } BCT;
 
 // grid contains all the fine grid arrays (double *)
-typedef struct grid {
+typedef struct {
   int Nx, Nz, NN, NC;
   double dx, dz;
   double *roger_x, *roger_z, *div_u, *div_u_s, *div_u_el, *div_u_pl, *div_u_r,
@@ -85,9 +85,9 @@ typedef struct grid {
 } grid;
 
 // params contains the model parameters
-typedef enum ETA_AVG { ARITHMETIC = 0, HARMONIC = 1, GEOMETRIC = 2 } ETA_AVG;
+typedef enum { ARITHMETIC = 0, HARMONIC = 1, GEOMETRIC = 2 } ETA_AVG;
 
-typedef struct params {
+typedef struct {
   double xmin, zmin, xmax, zmax, time, dx, dz, dt, dt0, dt_start, dt_max, L0,
       dt_min;
   double xmin0, zmin0, xmax0, zmax0;
@@ -153,12 +153,12 @@ typedef struct params {
 } params;
 
 // Stucture scale contains scaling parameters
-typedef struct scale {
+typedef struct {
   double eta, L, V, T, t, a, E, S, m, rho, F, J, W, Cv, rhoE, k;
 } scale;
 
 // markers is the particles structure
-typedef struct markers {
+typedef struct {
   int Nx_part, Nz_part, Nb_part, Nb_part_max, min_part_cell, Nb_part_ini;
   double *x, *z, *Vx, *Vz, *P, *sxxd, *szzd, *sxz, *progress, *T, *d, *phi, *X,
       *syy, *dsyy;
@@ -173,7 +173,7 @@ typedef struct markers {
 } markers;
 
 // mat_prop contains information related to material phase properties
-typedef struct mat_prop {
+typedef struct {
   int Nb_phases;
   double R;
   double eta0[20], rho[20], mu[20], Cv[20], k[20], Qr[20], C[20], phi[20],
@@ -202,7 +202,7 @@ typedef struct mat_prop {
 } mat_prop;
 
 // Structure surface contains free surface data
-typedef struct surface {
+typedef struct {
   double *a, *b, *height, *vx, *vz, *a0, *b0, *height0;
   int *VertInd;
 } surface;
