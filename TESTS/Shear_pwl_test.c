@@ -1,5 +1,5 @@
 #include "hdf5.h"
-#include "mdoodz-private.h"
+#include "mdoodz.h"
 #include "assert.h"
 #define FILENAME "Output00001.gzip.h5"
 
