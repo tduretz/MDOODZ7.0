@@ -4,6 +4,7 @@ set(CMAKE_C_STANDARD 11)
 
 option(OMP "Set this for using OpenMP" OFF)
 option(OPT "Set this for using optimisation" OFF)
+option(VALGRIND "Set this for enabling Valgrind for tests" OFF)
 
 if (OPT)
     message("Using optimization")

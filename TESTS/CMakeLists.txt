@@ -1,6 +1,7 @@
 if (VALGRIND)
     find_program( MEMORYCHECK_COMMAND valgrind )
     set( MEMORYCHECK_COMMAND_OPTIONS "--trace-children=yes --leak-check=full" )
+    message("Valgrind is ON for testing")
 endif()
 
 add_executable(ShearTemplate_test ShearTemplate_test.c ShearTemplate.txt)
