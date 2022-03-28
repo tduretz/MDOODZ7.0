@@ -5,10 +5,16 @@ elseif(EXISTS ${PROJECT_SOURCE_DIR}/deps/suitesparse/install/lib64/cmake/suitesp
 else()
     message(FATAL_ERROR "Please set up a path to the suitesparse-config.cmake file")
 endif()
-
-set(HDF5_DIR ${PROJECT_SOURCE_DIR}/deps/hdf5/install/share/cmake)
 FIND_PACKAGE(SuiteSparse CONFIG)
-FIND_PACKAGE(HDF5 CONFIG)
+
+if (FINDHDF5)
+    include(FindHDF5)
+    FIND_PACKAGE(HDF5)
+else()
+    set(HDF5_DIR ${PROJECT_SOURCE_DIR}/deps/hdf5/install/share/cmake)
+    FIND_PACKAGE(HDF5 CONFIG)
+endif()
+
 
 set(DEPENDENCIES
         SuiteSparse::suitesparseconfig
