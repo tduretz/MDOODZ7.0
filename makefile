@@ -15,3 +15,6 @@ clean:
 
 deps:
 	rm -rf deps && git clone https://github.com/kulakovri/MDOODZ-dependencies deps && cd deps && make install-hdf5 && make install-suitesparse
+
+install-suitesparse:
+	rm -rf deps && git clone https://github.com/kulakovri/MDOODZ-dependencies deps && cd deps && make install-suitesparse
