@@ -26,6 +26,7 @@ if (HDF5_FOUND)
 else()
     set(HDF5_DIR ${PROJECT_SOURCE_DIR}/lib/hdf5/install/share/cmake)
     FIND_PACKAGE(SuiteSparse CONFIG)
+    set(DEPENDENCIES ${DEPENDENCIES} hdf5-static)
 endif()
 
 if (OMP)
