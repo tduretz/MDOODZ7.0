@@ -7,12 +7,26 @@ else()
 endif()
 FIND_PACKAGE(SuiteSparse CONFIG)
 
+set(DEPENDENCIES
+        SuiteSparse::suitesparseconfig
+        SuiteSparse::amd
+        SuiteSparse::btf
+        SuiteSparse::camd
+        SuiteSparse::ccolamd
+        SuiteSparse::colamd
+        SuiteSparse::cholmod
+        SuiteSparse::cxsparse
+        SuiteSparse::umfpack)
+
 if (FINDHDF5)
     include(FindHDF5)
-    FIND_PACKAGE(HDF5)
+    find_package(HDF5 COMPONENTS C)
+    set(DEPENDENCIES ${DEPENDENCIES} hdf5-static)
+    include_directories(${HDF5_INCLUDE_DIR})
 else()
     set(HDF5_DIR ${PROJECT_SOURCE_DIR}/deps/hdf5/install/share/cmake)
-    FIND_PACKAGE(HDF5 CONFIG)
+    find_package(HDF5 CONFIG)
+    set(DEPENDENCIES ${DEPENDENCIES} hdf5-static)
 endif()
 
 
