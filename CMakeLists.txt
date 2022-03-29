@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 3.16)
 project(MDOODZ C)
 set(CMAKE_C_STANDARD 11)
 
-option(FINDHDF5 "Set this for finding HDF5 in System" OFF)
 option(OMP "Set this for using OpenMP" OFF)
 option(OPT "Set this for using optimisation" OFF)
 option(VALGRIND "Set this for enabling Valgrind for tests" OFF)
