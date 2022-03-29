@@ -84,9 +84,10 @@ typedef struct {
   double *noise_n, *noise_s;
 } grid;
 
-// params contains the model parameters
+// address Williams comments
 typedef enum { ARITHMETIC = 0, HARMONIC = 1, GEOMETRIC = 2 } ETA_AVG;
 
+// params contains the model parameters
 typedef struct {
   double xmin, zmin, xmax, zmax, time, dx, dz, dt, dt0, dt_start, dt_max, L0,
       dt_min;
