@@ -20,8 +20,9 @@ set(DEPENDENCIES
 
 if (FINDHDF5)
     include(FindHDF5)
+    message("Looked up for HDF5")
     find_package(HDF5 COMPONENTS C)
-    set(DEPENDENCIES ${DEPENDENCIES} hdf5-static)
+    set(DEPENDENCIES ${DEPENDENCIES} ${HDF5_LIBRARIES})
     include_directories(${HDF5_INCLUDE_DIR})
 else()
     set(HDF5_DIR ${PROJECT_SOURCE_DIR}/deps/hdf5/install/share/cmake)
@@ -29,18 +30,6 @@ else()
     set(DEPENDENCIES ${DEPENDENCIES} hdf5-static)
 endif()
 
-
-set(DEPENDENCIES
-        SuiteSparse::suitesparseconfig
-        SuiteSparse::amd
-        SuiteSparse::btf
-        SuiteSparse::camd
-        SuiteSparse::ccolamd
-        SuiteSparse::colamd
-        SuiteSparse::cholmod
-        SuiteSparse::cxsparse
-        SuiteSparse::umfpack
-        hdf5-static)
 
 if (OMP)
     set(OpenMP_lgomp_LIBRARY "lgomp")
