@@ -47,7 +47,7 @@ In order to build MDOODZ with CMake you have to install **cmake 3.16** or newer 
 `blas`, `zlib` and `lapack`  libraries are CMake compatible and does not require any additional setup other than installing them with your package manager:
 
 ```bash
-sudo apt-get install libblas-dev liblapack-dev zlib1g-dev
+sudo apt-get install libblas-dev liblapack-dev zlib1g-dev libhdf5-serial-dev
 ```
 
 To install SuiteSparse and HDF5 to the project:
