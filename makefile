@@ -8,7 +8,7 @@ build-dev:
 	cmake -B ./cmake-build -DOPT=$(OPT) -DOMP=$(OMP) -DCC=$(CC) && cmake --build ./cmake-build
 
 build:
-	cmake -DOPT=ON -DOMP=ON -B -DCC=$(CC) ./cmake-build && cmake --build ./cmake-build
+	cmake -DOPT=ON -DOMP=ON -B ./cmake-build && cmake --build ./cmake-build
 
 clean:
 	rm -rf *build*/ && rm -rf *exec*/
