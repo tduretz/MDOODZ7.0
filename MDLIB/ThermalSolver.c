@@ -20,14 +20,9 @@
 // =========================================================================
 
 #include "stdio.h"
-#include "stdlib.h"
-#include "string.h"
-#include "math.h"
 #include "mdoodz-private.h"
-#include "umfpack.h"
 
 #include "time.h"
-#include "amd.h"
 #include "cs.h"
 #include "cholmod.h"
 

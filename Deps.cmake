@@ -7,22 +7,23 @@ else()
 endif()
 FIND_PACKAGE(SuiteSparse CONFIG)
 
-set(DEPENDENCIES
-        SuiteSparse::suitesparseconfig
-        SuiteSparse::amd
-        SuiteSparse::btf
-        SuiteSparse::camd
-        SuiteSparse::ccolamd
-        SuiteSparse::colamd
-        SuiteSparse::cholmod
-        SuiteSparse::cxsparse
-        SuiteSparse::umfpack)
+set(SuiteSparse_DIR /Users/romankulakov/CLionProjects/MDOODZ7/deps/suitesparse/install)
+
+include_directories(/Users/romankulakov/CLionProjects/MDOODZ7/deps/suitesparse/install/include/suitesparse)
+find_library(lapack NAMES "lapack")
+find_library(cblas NAMES "cblas")
+
+include(FindSuiteSparse.cmake)
+message(SuiteSparse_LIBRARIES=${SuiteSparse_LIBRARIES})
+
+set(DEPENDENCIES ${SuiteSparse_LIBRARIES})
 
 include(FindHDF5)
 if (HDF5_FOUND)
     find_package(HDF5 COMPONENTS C)
     set(DEPENDENCIES ${DEPENDENCIES} ${HDF5_LIBRARIES})
     include_directories(${HDF5_INCLUDE_DIR})
+    message("HDF5 include dir ${HDF5_INCLUDE_DIR}")
 else()
     set(HDF5_DIR ${PROJECT_SOURCE_DIR}/deps/hdf5/install/share/cmake)
     FIND_PACKAGE(SuiteSparse CONFIG)
