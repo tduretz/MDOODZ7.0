@@ -4,3 +4,4 @@ cmake-build**/
 cmake-exec**/
 deps/
 .DS_Store
+env.cmake
