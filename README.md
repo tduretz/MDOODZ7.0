@@ -50,13 +50,30 @@ In order to build MDOODZ with CMake you have to install **cmake 3.16** or newer 
 sudo apt-get install libblas-dev liblapack-dev zlib1g-dev libhdf5-serial-dev
 ```
 
-To install SuiteSparse and HDF5 to the project:
+There are two ways how to use SuiteSparse:
+
+1) Build SuiteSparse to the project:
 
 ```bash
-make deps
+make install-suitesparse
 ```
 
+2) Specify path to the build SuiteSparse on your machine in the `env.cmake` file:
+
+```code
+set(SuiteSparse_DIR /usr/lib/x86_64-linux-gnu/)
+```
+
+If there is a SuiteSparse in a `deps` folder, it will be automatically linked with the MDOODZ. 
+Otherwise it will try to find library and headers in a specified path.
+
 ## How to use
+
+You can specify C Compiler in the `env.cmake` file. By default, it's gcc:
+
+```code
+set(C_COMPILER gcc)
+```
 
 ### Add your set to the CMake
 
