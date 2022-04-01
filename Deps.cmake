@@ -1,18 +1,3 @@
-if (EXISTS ${PROJECT_SOURCE_DIR}/deps/suitesparse/install/lib/cmake/suitesparse-5.4.0)
-    set(SuiteSparse_DIR ${PROJECT_SOURCE_DIR}/deps/suitesparse/install/lib/cmake/suitesparse-5.4.0)
-elseif(EXISTS ${PROJECT_SOURCE_DIR}/deps/suitesparse/install/lib64/cmake/suitesparse-5.4.0)
-    set(SuiteSparse_DIR ${PROJECT_SOURCE_DIR}/deps/suitesparse/install/lib64/cmake/suitesparse-5.4.0)
-else()
-    message(FATAL_ERROR "Please set up a path to the suitesparse-config.cmake file")
-endif()
-FIND_PACKAGE(SuiteSparse CONFIG)
-
-set(SuiteSparse_DIR /Users/romankulakov/CLionProjects/MDOODZ7/deps/suitesparse/install)
-
-include_directories(/Users/romankulakov/CLionProjects/MDOODZ7/deps/suitesparse/install/include/suitesparse)
-find_library(lapack NAMES "lapack")
-find_library(cblas NAMES "cblas")
-
 include(FindSuiteSparse.cmake)
 message(SuiteSparse_LIBRARIES=${SuiteSparse_LIBRARIES})
 
