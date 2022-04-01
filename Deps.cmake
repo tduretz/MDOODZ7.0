@@ -1,5 +1,6 @@
 include(FindSuiteSparse.cmake)
 message(SuiteSparse_LIBRARIES=${SuiteSparse_LIBRARIES})
+message(SuiteSparse_INCLUDE_DIRS=${SuiteSparse_INCLUDE_DIRS})
 
 set(DEPENDENCIES ${SuiteSparse_LIBRARIES})
 include_directories(${SuiteSparse_INCLUDE_DIRS})
