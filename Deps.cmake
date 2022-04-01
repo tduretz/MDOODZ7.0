@@ -2,6 +2,7 @@ include(FindSuiteSparse.cmake)
 message(SuiteSparse_LIBRARIES=${SuiteSparse_LIBRARIES})
 
 set(DEPENDENCIES ${SuiteSparse_LIBRARIES})
+include_directories(${SuiteSparse_INCLUDE_DIRS})
 
 include(FindHDF5)
 if (HDF5_FOUND)
