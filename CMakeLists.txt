@@ -2,12 +2,13 @@ cmake_minimum_required(VERSION 3.16)
 project(MDOODZ C)
 set(CMAKE_C_STANDARD 11)
 
+include(env.cmake)
+
 option(OMP "Set this for using OpenMP" OFF)
 option(OPT "Set this for using optimisation" OFF)
 option(VALGRIND "Set this for enabling Valgrind for tests" OFF)
 
-set(CMAKE_C_COMPILER ${CC})
-message("Setting a custom compiler ${CC}")
+set(CMAKE_C_COMPILER ${C_COMPILER})
 
 if (OPT)
     message("Using optimization")
