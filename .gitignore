@@ -1,5 +1,7 @@
 .idea
 __pycache__/
 cmake-build**/
-lib/
+cmake-exec**/
+deps/
 .DS_Store
+env.cmake
