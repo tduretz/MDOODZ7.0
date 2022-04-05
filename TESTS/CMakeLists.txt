@@ -1,0 +1,10 @@
+if (VALGRIND)
+    find_program( MEMORYCHECK_COMMAND valgrind )
+    set( MEMORYCHECK_COMMAND_OPTIONS "--trace-children=yes --leak-check=full" )
+    message("Valgrind is ON for testing")
+endif()
+
+configure_file("${PROJECT_SOURCE_DIR}/TESTS/ShearTemplate.txt" "${PROJECT_BINARY_DIR}/TESTS/ShearTemplate.txt" COPYONLY)
+add_executable(ShearTemplate_test ShearTemplate_test.c)
+target_link_libraries(ShearTemplate_test LINK_PUBLIC MDLIB)
+add_test(shearTemplate ShearTemplate_test)
