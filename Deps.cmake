@@ -45,3 +45,5 @@ if (OMP)
     set(CMAKE_C_FLAGS "-fopenmp -D _OMP_")
     message("Using OpenMP")
 endif()
+
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -lm")
