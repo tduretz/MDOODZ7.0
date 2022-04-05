@@ -1,4 +1,4 @@
-add_library(MDLIB
+add_library(mdoodz
         AdvectionRoutines.c
         BC.c
         ChemicalRoutines.c
@@ -23,5 +23,5 @@ add_library(MDLIB
         StokesRoutines.c
         ThermalRoutines.c
         ThermalSolver.c)
-target_link_libraries(MDLIB ${DEPENDENCIES})
-target_include_directories(MDLIB PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_link_libraries(mdoodz ${DEPENDENCIES})
+target_include_directories(mdoodz PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
