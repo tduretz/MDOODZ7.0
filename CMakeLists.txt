@@ -5,6 +5,8 @@ project(MDOODZ C)
 set(CMAKE_C_STANDARD 11)
 
 message("CMAKE_INSTALL_PREFIX = ${CMAKE_INSTALL_PREFIX}")
+message("CMAKE_CURRENT_LIST_DIR = ${CMAKE_CURRENT_LIST_DIR}")
+message("CMAKE_CURRENT_SOURCE_DIR = ${CMAKE_CURRENT_SOURCE_DIR}")
 
 if (OPT)
     message("Using optimization")
