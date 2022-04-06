@@ -215,6 +215,7 @@ macro(SuiteSparse_FIND_COMPONENTS )
 							/usr/lib${SuiteSparse_SEARCH_LIB_POSTFIX}
 							/usr/local/lib${SuiteSparse_SEARCH_LIB_POSTFIX}
 							${SuiteSparse_DIR}/lib${SuiteSparse_SEARCH_LIB_POSTFIX}
+							${SuiteSparse_DIR}/bin${SuiteSparse_SEARCH_LIB_POSTFIX}
 							${${suitesparseCompUC}_DIR}/lib${SuiteSparse_SEARCH_LIB_POSTFIX}
 							${${suitesparseCompUC}_DIR}
 			PATH_SUFFIXES	Debug
@@ -311,6 +312,7 @@ if(SuiteSparse_USE_LAPACK_BLAS)
 	## set additional search dirs
 	set(ADDITIONAL_SEARCH_DIRS 
 		${SuiteSparse_DIR}/lib${SuiteSparse_SEARCH_LIB_POSTFIX}
+		${SuiteSparse_DIR}/bin${SuiteSparse_SEARCH_LIB_POSTFIX}
 		${SuiteSparse_DIR}/lapack_windows/lib${SuiteSparse_SEARCH_LIB_POSTFIX}
 		${SuiteSparse_DIR}/lapack_windows/x${SuiteSparse_SEARCH_LIB_POSTFIX}
 		${SuiteSparse_DIR}/blas_windows/lib${SuiteSparse_SEARCH_LIB_POSTFIX}
