@@ -32,6 +32,7 @@ else()
     include_directories(${SuiteSparse_INCLUDE_DIRS})
 endif()
 
+set(HDF5_FIND_DEBUG ON)
 include(FindHDF5)
 find_package(HDF5 COMPONENTS C)
 set(DEPENDENCIES ${DEPENDENCIES} ${HDF5_LIBRARIES})
