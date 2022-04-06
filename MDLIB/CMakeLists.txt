@@ -25,3 +25,5 @@ add_library(mdoodz SHARED
         ThermalSolver.c)
 target_link_libraries(mdoodz ${DEPENDENCIES})
 target_include_directories(mdoodz PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+
+install(TARGETS mdoodz)
