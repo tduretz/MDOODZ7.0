@@ -9,10 +9,6 @@ option(OMP "Set this for using OpenMP" OFF)
 option(OPT "Set this for using optimisation" OFF)
 option(VALGRIND "Set this for enabling Valgrind for tests" OFF)
 
-message("CMAKE_INSTALL_PREFIX = ${CMAKE_INSTALL_PREFIX}")
-message("CMAKE_CURRENT_LIST_DIR = ${CMAKE_CURRENT_LIST_DIR}")
-message("CMAKE_CURRENT_SOURCE_DIR = ${CMAKE_CURRENT_SOURCE_DIR}")
-
 if (OPT)
     message("Using optimization")
     set(CMAKE_C_FLAGS "-O3 -ftree-vectorize -funroll-loops")

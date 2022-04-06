@@ -32,7 +32,6 @@ else()
     include_directories(${SuiteSparse_INCLUDE_DIRS})
 endif()
 
-set(HDF5_FIND_DEBUG ON)
 include(FindHDF5)
 find_package(HDF5 COMPONENTS C)
 if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
@@ -41,8 +40,8 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
             PATHS 			/opt/local/lib${SuiteSparse_SEARCH_LIB_POSTFIX}
             /usr/lib
             /usr/local/lib
-            ${SuiteSparse_DIR}/lib
-            ${SuiteSparse_DIR}/bin
+            ${CMAKE_INSTALL_PREFIX}/lib
+            ${CMAKE_INSTALL_PREFIX}/bin
             )
 endif()
 

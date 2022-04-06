@@ -618,17 +618,17 @@ function MinMaxArray(array, scale_, size, text)
     ccall((:MinMaxArray, libmdoodz), Cvoid, (Ptr{Cdouble}, Cdouble, Cint, Ptr{Cchar}), array, scale_, size, text)
 end
 
-# typedef void ( * BuildInitialTopography ) ( markers * topo_chain , params model , scale scaling )
-const BuildInitialTopography = Ptr{Cvoid}
+# typedef void ( * BuildInitialTopography_f ) ( markers * topo_chain , params model , scale scaling )
+const BuildInitialTopography_f = Ptr{Cvoid}
 
-# typedef void ( * SetParticles ) ( markers * particles , scale scaling , params model , mat_prop * materials )
-const SetParticles = Ptr{Cvoid}
+# typedef void ( * SetParticles_f ) ( markers * particles , scale scaling , params model , mat_prop * materials )
+const SetParticles_f = Ptr{Cvoid}
 
-# typedef void ( * SetBCs ) ( grid * mesh , params * model , scale scaling , markers * particles , mat_prop * materials , surface * topo )
-const SetBCs = Ptr{Cvoid}
+# typedef void ( * SetBCs_f ) ( grid * mesh , params * model , scale scaling , markers * particles , mat_prop * materials , surface * topo )
+const SetBCs_f = Ptr{Cvoid}
 
 function RunMDOODZ(inputFileName, arg2, arg3, arg4)
-    ccall((:RunMDOODZ, libmdoodz), Cint, (Ptr{Cchar}, BuildInitialTopography, SetParticles, SetBCs), inputFileName, arg2, arg3, arg4)
+    ccall((:RunMDOODZ, libmdoodz), Cint, (Ptr{Cchar}, BuildInitialTopography_f, SetParticles_f, SetBCs_f), inputFileName, arg2, arg3, arg4)
 end
 
 const zeroC = 273.15
