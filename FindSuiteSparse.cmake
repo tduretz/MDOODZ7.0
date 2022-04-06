@@ -203,6 +203,7 @@ macro(SuiteSparse_FIND_COMPONENTS )
 							/usr/lib${SuiteSparse_SEARCH_LIB_POSTFIX}
 							/usr/local/lib${SuiteSparse_SEARCH_LIB_POSTFIX}
 							${SuiteSparse_DIR}/lib${SuiteSparse_SEARCH_LIB_POSTFIX}
+							${SuiteSparse_DIR}/bin${SuiteSparse_SEARCH_LIB_POSTFIX}
 							${${suitesparseCompUC}_DIR}/lib${SuiteSparse_SEARCH_LIB_POSTFIX}
 							${${suitesparseCompUC}_DIR}
 			PATH_SUFFIXES	Release

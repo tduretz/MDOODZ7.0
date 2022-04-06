@@ -1,15 +1,4 @@
-if (JULIA AND CMAKE_SYSTEM_NAME STREQUAL "Windows")
-    set(DEPENDENCIES
-            "${CMAKE_INSTALL_PREFIX}/bin/libsuitesparseconfig.dll"
-            "${CMAKE_INSTALL_PREFIX}/bin/libamd.dll"
-            "${CMAKE_INSTALL_PREFIX}/bin/libbtf.dll"
-            "${CMAKE_INSTALL_PREFIX}/bin/libcamd.dll"
-            "${CMAKE_INSTALL_PREFIX}/bin/libccolamd.dll"
-            "${CMAKE_INSTALL_PREFIX}/bin/libcolamd.dll"
-            "${CMAKE_INSTALL_PREFIX}/bin/libcholmod.dll"
-            "${CMAKE_INSTALL_PREFIX}/bin/libcxsparse.dll"
-            "${CMAKE_INSTALL_PREFIX}/bin/libcumfpack.dll")
-elseif (EXISTS ${PROJECT_SOURCE_DIR}/deps/suitesparse/install/lib/cmake/suitesparse-5.4.0)
+if (EXISTS ${PROJECT_SOURCE_DIR}/deps/suitesparse/install/lib/cmake/suitesparse-5.4.0)
     set(SuiteSparse_DIR ${PROJECT_SOURCE_DIR}/deps/suitesparse/install/lib/cmake/suitesparse-5.4.0)
     FIND_PACKAGE(SuiteSparse CONFIG)
     set(DEPENDENCIES
@@ -43,15 +32,12 @@ else()
     include_directories(${SuiteSparse_INCLUDE_DIRS})
 endif()
 
-if (JULIA AND CMAKE_SYSTEM_NAME STREQUAL "Windows")
-    set(DEPENDENCIES ${DEPENDENCIES} "${CMAKE_INSTALL_PREFIX}/bin/libhdf5-0.dll")
-else()
-    include(FindHDF5)
-    find_package(HDF5 COMPONENTS C)
-    set(DEPENDENCIES ${DEPENDENCIES} ${HDF5_LIBRARIES})
-    include_directories(${HDF5_INCLUDE_DIR})
-    message("HDF5 include dir ${HDF5_INCLUDE_DIR}")
-endif()
+set(HDF5_FIND_DEBUG ON)
+include(FindHDF5)
+find_package(HDF5 COMPONENTS C)
+set(DEPENDENCIES ${DEPENDENCIES} ${HDF5_LIBRARIES})
+include_directories(${HDF5_INCLUDE_DIR})
+message("HDF5 include dir ${HDF5_INCLUDE_DIR}")
 
 if (OMP)
     set(OpenMP_lgomp_LIBRARY "lgomp")
