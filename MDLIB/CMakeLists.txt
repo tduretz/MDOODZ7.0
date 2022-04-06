@@ -1,4 +1,4 @@
-add_library(mdoodz
+add_library(mdoodz SHARED
         AdvectionRoutines.c
         BC.c
         ChemicalRoutines.c
