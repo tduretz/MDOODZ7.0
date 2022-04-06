@@ -4,6 +4,11 @@ set(CMAKE_C_COMPILER ${C_COMPILER})
 project(MDOODZ C)
 set(CMAKE_C_STANDARD 11)
 
+option(JULIA "Set this for enabling Julia BinaryBuilder mode" OFF)
+option(OMP "Set this for using OpenMP" OFF)
+option(OPT "Set this for using optimisation" OFF)
+option(VALGRIND "Set this for enabling Valgrind for tests" OFF)
+
 message("CMAKE_INSTALL_PREFIX = ${CMAKE_INSTALL_PREFIX}")
 message("CMAKE_CURRENT_LIST_DIR = ${CMAKE_CURRENT_LIST_DIR}")
 message("CMAKE_CURRENT_SOURCE_DIR = ${CMAKE_CURRENT_SOURCE_DIR}")
