@@ -196,19 +196,36 @@ macro(SuiteSparse_FIND_COMPONENTS )
 		endif()
 
 		## try to find filepath lib name (looking for very important lib file)
-		find_file(SuiteSparse_${suitesparseCompUC}_LIBRARY_RELEASE
-			NAMES 			lib${suitesparseComp} 	lib${suitesparseCompLC} lib${suitesparseCompUC}
-							lib${suitesparseComp}.dll 	lib${suitesparseCompLC}.dll lib${suitesparseCompUC}.dll
-							${suitesparseComp} 		${suitesparseCompLC} 	${suitesparseCompUC}
-			PATHS 			/opt/local/lib${SuiteSparse_SEARCH_LIB_POSTFIX} 		
-							/usr/lib${SuiteSparse_SEARCH_LIB_POSTFIX}
-							/usr/local/lib${SuiteSparse_SEARCH_LIB_POSTFIX}
-							${SuiteSparse_DIR}/lib${SuiteSparse_SEARCH_LIB_POSTFIX}
-							${SuiteSparse_DIR}/bin${SuiteSparse_SEARCH_LIB_POSTFIX}
-							${SuiteSparse_DIR}/bin
-							${${suitesparseCompUC}_DIR}/lib${SuiteSparse_SEARCH_LIB_POSTFIX}
-							${${suitesparseCompUC}_DIR}
-		)
+		if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
+			find_file(SuiteSparse_${suitesparseCompUC}_LIBRARY_RELEASE
+					NAMES 			lib${suitesparseComp} 	lib${suitesparseCompLC} lib${suitesparseCompUC}
+					lib${suitesparseComp}.dll 	lib${suitesparseCompLC}.dll lib${suitesparseCompUC}.dll
+					${suitesparseComp} 		${suitesparseCompLC} 	${suitesparseCompUC}
+					PATHS 			/opt/local/lib${SuiteSparse_SEARCH_LIB_POSTFIX}
+					/usr/lib${SuiteSparse_SEARCH_LIB_POSTFIX}
+					/usr/local/lib${SuiteSparse_SEARCH_LIB_POSTFIX}
+					${SuiteSparse_DIR}/lib${SuiteSparse_SEARCH_LIB_POSTFIX}
+					${SuiteSparse_DIR}/bin${SuiteSparse_SEARCH_LIB_POSTFIX}
+					${SuiteSparse_DIR}/bin
+					${${suitesparseCompUC}_DIR}/lib${SuiteSparse_SEARCH_LIB_POSTFIX}
+					${${suitesparseCompUC}_DIR}
+					)
+		else()
+			find_library(SuiteSparse_${suitesparseCompUC}_LIBRARY_RELEASE
+					NAMES 			lib${suitesparseComp} 	lib${suitesparseCompLC} lib${suitesparseCompUC}
+					${suitesparseComp} 		${suitesparseCompLC} 	${suitesparseCompUC}
+					PATHS 			/opt/local/lib${SuiteSparse_SEARCH_LIB_POSTFIX}
+					/usr/lib${SuiteSparse_SEARCH_LIB_POSTFIX}
+					/usr/local/lib${SuiteSparse_SEARCH_LIB_POSTFIX}
+					${SuiteSparse_DIR}/lib${SuiteSparse_SEARCH_LIB_POSTFIX}
+					${SuiteSparse_DIR}/bin${SuiteSparse_SEARCH_LIB_POSTFIX}
+					${SuiteSparse_DIR}/bin
+					${${suitesparseCompUC}_DIR}/lib${SuiteSparse_SEARCH_LIB_POSTFIX}
+					${${suitesparseCompUC}_DIR}
+					PATH_SUFFIXES	Release
+					)
+		endif()
+
 		find_library(SuiteSparse_${suitesparseCompUC}_LIBRARY_DEBUG 
 			NAMES 			${suitesparseComp}d		${suitesparseCompLC}d 		${suitesparseCompUC}d
 							lib${suitesparseComp}d 	lib${suitesparseCompLC}d 	lib${suitesparseCompUC}d

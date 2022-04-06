@@ -35,6 +35,17 @@ endif()
 set(HDF5_FIND_DEBUG ON)
 include(FindHDF5)
 find_package(HDF5 COMPONENTS C)
+if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    find_file(HDF5_LIBRARIES
+            NAMES 	libhdf5-0.dll libhdf.dll
+            PATHS 			/opt/local/lib${SuiteSparse_SEARCH_LIB_POSTFIX}
+            /usr/lib
+            /usr/local/lib
+            ${SuiteSparse_DIR}/lib
+            ${SuiteSparse_DIR}/bin
+            )
+endif()
+
 set(DEPENDENCIES ${DEPENDENCIES} ${HDF5_LIBRARIES})
 include_directories(${HDF5_INCLUDE_DIR})
 message("HDF5 include dir ${HDF5_INCLUDE_DIR}")
