@@ -211,13 +211,14 @@ typedef struct {
 char *GetSetupFileName(int nargs, char *args[]);
 void MinMaxArray( double * array, double scale, int size, char* text );
 
-typedef void (*BuildInitialTopography)(markers *topo_chain, params model,
-                                       scale scaling);
-typedef void (*SetParticles)(markers *particles, scale scaling, params model,
-                             mat_prop *materials);
-typedef void (*SetBCs)(grid *mesh, params *model, scale scaling,
-                       markers *particles, mat_prop *materials, surface *topo);
-int RunMDOODZ(char *inputFileName, BuildInitialTopography, SetParticles,
-              SetBCs);
+typedef void (*BuildInitialTopography_f)(markers *topo_chain, params model,
+                                         scale scaling);
+typedef void (*SetParticles_f)(markers *particles, scale scaling, params model,
+                               mat_prop *materials);
+typedef void (*SetBCs_f)(grid *mesh, params *model, scale scaling,
+                         markers *particles, mat_prop *materials,
+                         surface *topo);
+int RunMDOODZ(char *inputFileName, BuildInitialTopography_f, SetParticles_f,
+              SetBCs_f);
 
 #endif
