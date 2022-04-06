@@ -196,17 +196,18 @@ macro(SuiteSparse_FIND_COMPONENTS )
 		endif()
 
 		## try to find filepath lib name (looking for very important lib file)
-		find_library(SuiteSparse_${suitesparseCompUC}_LIBRARY_RELEASE 
+		find_file(SuiteSparse_${suitesparseCompUC}_LIBRARY_RELEASE
 			NAMES 			lib${suitesparseComp} 	lib${suitesparseCompLC} lib${suitesparseCompUC}
+							lib${suitesparseComp}.dll 	lib${suitesparseCompLC}.dll lib${suitesparseCompUC}.dll
 							${suitesparseComp} 		${suitesparseCompLC} 	${suitesparseCompUC}
 			PATHS 			/opt/local/lib${SuiteSparse_SEARCH_LIB_POSTFIX} 		
 							/usr/lib${SuiteSparse_SEARCH_LIB_POSTFIX}
 							/usr/local/lib${SuiteSparse_SEARCH_LIB_POSTFIX}
 							${SuiteSparse_DIR}/lib${SuiteSparse_SEARCH_LIB_POSTFIX}
 							${SuiteSparse_DIR}/bin${SuiteSparse_SEARCH_LIB_POSTFIX}
+							${SuiteSparse_DIR}/bin
 							${${suitesparseCompUC}_DIR}/lib${SuiteSparse_SEARCH_LIB_POSTFIX}
 							${${suitesparseCompUC}_DIR}
-			PATH_SUFFIXES	Release
 		)
 		find_library(SuiteSparse_${suitesparseCompUC}_LIBRARY_DEBUG 
 			NAMES 			${suitesparseComp}d		${suitesparseCompLC}d 		${suitesparseCompUC}d
