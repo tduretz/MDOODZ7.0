@@ -409,6 +409,7 @@ if(SuiteSparse_USE_LAPACK_BLAS)
 			${SuiteSparse_BLAS_DIR}/bin/${SuiteSparse_SEARCH_BIN_POSTFIX_2}
 			${SuiteSparse_BLAS_DIR}/bin/Release/${SuiteSparse_SEARCH_BIN_POSTFIX_1}
 			${SuiteSparse_BLAS_DIR}/bin/Debug/${SuiteSparse_SEARCH_BIN_POSTFIX_2}
+			${SuiteSparse_DIR}/bin
 			${ADDITIONAL_SEARCH_DIRS}
 			"$ENV{Path}"
 		)
