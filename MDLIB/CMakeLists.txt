@@ -30,4 +30,4 @@ set_target_properties(mdoodz PROPERTIES
 
 install(TARGETS mdoodz
         LIBRARY DESTINATION lib
-        PUBLIC_HEADER DESTINATION include/mdoodz)
+        PUBLIC_HEADER DESTINATION include)
