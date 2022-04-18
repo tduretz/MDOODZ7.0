@@ -4,36 +4,25 @@
 #include "stdlib.h"
 
 void BuildInitialTopography(markers *topo_chain, params model, scale scaling) {
-
-  int k;
-  double A = model.zmax / 2.0;
-  double s = model.zmax / 4.0;
-
-  for (k = 0; k < topo_chain->Nb_part; k++) {
+  const double A = model.zmax / 2.0;
+  const double s = model.zmax / 4.0;
+  for (int k = 0; k < topo_chain->Nb_part; k++) {
     topo_chain->z[k] =
         A * exp(-pow(topo_chain->x[k], 2) / 2.0 / s / s); // TopoLevel;
     topo_chain->phase[k] = 0;
   }
-
   printf("Topographic chain initialised with %d markers\n",
          topo_chain->Nb_part);
 }
 
-/*--------------------------------------------------------------------------------------------------------------------*/
-/*------------------------------------------------------ M-Doodz
- * -----------------------------------------------------*/
-/*--------------------------------------------------------------------------------------------------------------------*/
 void SetParticles(markers *particles, scale scaling, params model,
                   mat_prop *materials) {
-  int np;
-
-  double T_init = (model.user0 + zeroC) / scaling.T;
-  double radius = model.user1 / scaling.L;
-  double X, Z, xc = 0.0, zc = 0.0;
+  const double T_init = (model.user0 + zeroC) / scaling.T;
+  const double radius = model.user1 / scaling.L;
+  double xc = 0.0, zc = 0.0;
 
   // Loop on particles
-  for (np = 0; np < particles->Nb_part; np++) {
-
+  for (int np = 0; np < particles->Nb_part; np++) {
     // Standart initialisation of particles
     particles->Vx[np] = -1.0 * particles->x[np] *
                         model.EpsBG; // set initial particle velocity (unused)
@@ -44,11 +33,9 @@ void SetParticles(markers *particles, scale scaling, params model,
     particles->phi[np] = 0.0;        // zero porosity everywhere
     particles->rho[np] = 0;
     particles->T[np] = T_init;
-    X = particles->x[np] - xc;
-    Z = particles->z[np] - zc;
 
-    // ------------------------- //
-    // DRAW INCLUSION
+    const double X = particles->x[np] - xc;
+    const double Z = particles->z[np] - zc;
     if (X * X + Z * Z < radius * radius) {
       particles->phase[np] = 1;
     }
@@ -78,15 +65,10 @@ void SetParticles(markers *particles, scale scaling, params model,
 
 void SetBCs(grid *mesh, params *model, scale scaling, markers *particles,
             mat_prop *materials, surface *topo) {
-
-  int k, l, c;
-  double Lx = (double)(model->xmax - model->xmin);
-  double Lz = (double)(model->zmax - model->zmin);
-
-  int NX = mesh->Nx;
-  int NZ = mesh->Nz;
-  int NCX = NX - 1;
-  int NCZ = NZ - 1;
+  const double Lx = (double)(model->xmax - model->xmin);
+  const double Lz = (double)(model->zmax - model->zmin);
+  const int NCX = mesh->Nx - 1;
+  const int NCZ = mesh->Nz - 1;
 
   /* --------------------------------------------------------------------------------------------------------*/
   /* Set the BCs for Vx on all grid levels */
@@ -103,63 +85,50 @@ void SetBCs(grid *mesh, params *model, scale scaling, markers *particles,
   /* Type 30: not calculated (part of the "air") */
   /* --------------------------------------------------------------------------------------------------------*/
 
-  for (l = 0; l < mesh->Nz + 1; l++) {
-    for (k = 0; k < mesh->Nx; k++) {
-
-      c = k + l * (mesh->Nx);
-
+  for (int l = 0; l < mesh->Nz + 1; l++) {
+    for (int k = 0; k < mesh->Nx; k++) {
+      const int c = k + l * (mesh->Nx);
       if (mesh->BCu.type[c] != 30) {
-
         // Internal points:  -1
         mesh->BCu.type[c] = -1;
         mesh->BCu.val[c] = 0;
-
         if (model->shear_style == 0) {
-
           // Matching BC nodes WEST
           if (k == 0) {
             mesh->BCu.type[c] = 0;
             mesh->BCu.val[c] = -mesh->xg_coord[k] * model->EpsBG;
           }
-
           // Matching BC nodes EAST
           if (k == mesh->Nx - 1) {
             mesh->BCu.type[c] = 0;
             mesh->BCu.val[c] = -mesh->xg_coord[k] * model->EpsBG;
           }
-
           // Free slip SOUTH
           if (l == 0) {
             mesh->BCu.type[c] = 13;
             mesh->BCu.val[c] = 0;
           }
-
           // Free slip NORTH
           if (l == mesh->Nz) {
             mesh->BCu.type[c] = 13;
             mesh->BCu.val[c] = 0;
           }
-        }
-        if (model->shear_style == 1) {
-
+        } else if (model->shear_style == 1) {
           // Matching BC nodes WEST
           if (k == 0) {
             mesh->BCu.type[c] = -2;
             mesh->BCu.val[c] = 0.0 * model->EpsBG * Lx;
           }
-
           // Matching BC nodes EAST
           if (k == mesh->Nx - 1) {
             mesh->BCu.type[c] = -12;
             mesh->BCu.val[c] = -0.0 * model->EpsBG * Lx;
           }
-
           // Free slip S
           if (l == 0) { //&& (k>0 && k<NX-1) ) {
             mesh->BCu.type[c] = 11;
             mesh->BCu.val[c] = -1 * model->EpsBG * Lz;
           }
-
           // Free slip N
           if (l == mesh->Nz) { // && (k>0 && k<NX-1)) {
             mesh->BCu.type[c] = 11;
@@ -187,11 +156,9 @@ void SetBCs(grid *mesh, params *model, scale scaling, markers *particles,
   /* Type 30: not calculated (part of the "air") */
   /* --------------------------------------------------------------------------------------------------------*/
 
-  for (l = 0; l < mesh->Nz; l++) {
-    for (k = 0; k < mesh->Nx + 1; k++) {
-
-      c = k + l * (mesh->Nx + 1);
-
+  for (int l = 0; l < mesh->Nz; l++) {
+    for (int k = 0; k < mesh->Nx + 1; k++) {
+      const int c = k + l * (mesh->Nx + 1);
       if (mesh->BCv.type[c] != 30) {
 
         // Internal points:  -1
@@ -199,51 +166,42 @@ void SetBCs(grid *mesh, params *model, scale scaling, markers *particles,
         mesh->BCv.val[c] = 0;
 
         if (model->shear_style == 0) {
-
           // Matching BC nodes SOUTH
           if (l == 0) {
             mesh->BCv.type[c] = 0;
             mesh->BCv.val[c] = mesh->zg_coord[l] * model->EpsBG;
           }
-
           // Matching BC nodes NORTH
           if (l == mesh->Nz - 1) {
             mesh->BCv.type[c] = 0;
             mesh->BCv.val[c] = mesh->zg_coord[l] * model->EpsBG;
           }
-
           // Non-matching boundary WEST
           if (k == 0) {
             mesh->BCv.type[c] = 13;
             mesh->BCv.val[c] = 0;
           }
-
           // Non-matching boundary EAST
           if (k == mesh->Nx) {
             mesh->BCv.type[c] = 13;
             mesh->BCv.val[c] = 0;
           }
-        }
-
-        if (model->shear_style == 1) {
+        } else if (model->shear_style == 1) {
           // Matching BC nodes SOUTH
           if (l == 0) {
             mesh->BCv.type[c] = 0;
             mesh->BCv.val[c] = -0.0 * model->EpsBG * Lz;
           }
-
           // Matching BC nodes NORTH
           if (l == mesh->Nz - 1) {
             mesh->BCv.type[c] = 0;
             mesh->BCv.val[c] = 0.0 * model->EpsBG * Lz;
           }
-
           // Non-matching boundary points
           if (k == 0) {
             mesh->BCv.type[c] = -12;
             mesh->BCv.val[c] = 0;
           }
-
           // Non-matching boundary points
           if (k == mesh->Nx) {
             mesh->BCv.type[c] = -12;
@@ -262,9 +220,9 @@ void SetBCs(grid *mesh, params *model, scale scaling, markers *particles,
   /* Type 31: surface pressure (Dirichlet) */
   /* --------------------------------------------------------------------------------------------------------*/
 
-  for (l = 0; l < NCZ; l++) {
-    for (k = 0; k < NCX; k++) {
-      c = k + l * (NCX);
+  for (int l = 0; l < NCZ; l++) {
+    for (int k = 0; k < NCX; k++) {
+      int c = k + l * (NCX);
       if (mesh->BCt.type[c] != 30) {
         // Internal points:  -1
         mesh->BCp.type[c] = -1;
@@ -286,28 +244,20 @@ void SetBCs(grid *mesh, params *model, scale scaling, markers *particles,
 
   double Ttop = 273.15 / scaling.T;
 
-  NCX = NX - 1;
-  NCZ = NZ - 1;
-
-  for (l = 0; l < mesh->Nz - 1; l++) {
-    for (k = 0; k < mesh->Nx - 1; k++) {
-
-      c = k + l * (NCX);
-
+  for (int l = 0; l < mesh->Nz - 1; l++) {
+    for (int k = 0; k < mesh->Nx - 1; k++) {
+      const int c = k + l * (NCX);
       if (mesh->BCt.type[c] != 30) {
-
         // LEFT
         if (k == 0) {
           mesh->BCt.type[c] = 0;
           mesh->BCt.val[c] = mesh->T[c];
         }
-
         // RIGHT
         if (k == NCX - 1) {
           mesh->BCt.type[c] = 0;
           mesh->BCt.val[c] = mesh->T[c];
         }
-
         // BOT
         if (l == 0) {
           mesh->BCt.type[c] = 0;
@@ -318,9 +268,8 @@ void SetBCs(grid *mesh, params *model, scale scaling, markers *particles,
         if (l == NCZ - 1) {
           mesh->BCt.type[c] = 0;
           mesh->BCt.val[c] = mesh->T[c];
-        }
-        // FREE SURFACE
-        else {
+        } else {
+          // FREE SURFACE
           if ((mesh->BCt.type[c] == -1 || mesh->BCt.type[c] == 1 ||
                mesh->BCt.type[c] == 0) &&
               mesh->BCt.type[c + NCX] == 30) {
