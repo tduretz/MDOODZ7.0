@@ -89,50 +89,49 @@ void SetBCs(grid *mesh, params *model, scale scaling, markers *particles,
     for (int k = 0; k < mesh->Nx; k++) {
       const int c = k + l * (mesh->Nx);
       if (mesh->BCu.type[c] != 30) {
-        // Internal points:  -1
-        mesh->BCu.type[c] = -1;
-        mesh->BCu.val[c] = 0;
         if (model->shear_style == 0) {
-          // Matching BC nodes WEST
           if (k == 0) {
+            // Matching BC nodes WEST
             mesh->BCu.type[c] = 0;
             mesh->BCu.val[c] = -mesh->xg_coord[k] * model->EpsBG;
-          }
-          // Matching BC nodes EAST
-          if (k == mesh->Nx - 1) {
+          } else if (k == mesh->Nx - 1) {
+            // Matching BC nodes EAST
             mesh->BCu.type[c] = 0;
             mesh->BCu.val[c] = -mesh->xg_coord[k] * model->EpsBG;
-          }
-          // Free slip SOUTH
-          if (l == 0) {
+          } else if (l == 0) {
+            // Free slip SOUTH
             mesh->BCu.type[c] = 13;
             mesh->BCu.val[c] = 0;
-          }
-          // Free slip NORTH
-          if (l == mesh->Nz) {
+          } else if (l == mesh->Nz) {
+            // Free slip NORTH
             mesh->BCu.type[c] = 13;
+            mesh->BCu.val[c] = 0;
+          } else {
+            // Internal points:  -1
+            mesh->BCu.type[c] = -1;
             mesh->BCu.val[c] = 0;
           }
         } else if (model->shear_style == 1) {
-          // Matching BC nodes WEST
           if (k == 0) {
+            // Matching BC nodes WEST
             mesh->BCu.type[c] = -2;
             mesh->BCu.val[c] = 0.0 * model->EpsBG * Lx;
-          }
-          // Matching BC nodes EAST
-          if (k == mesh->Nx - 1) {
+          } else if (k == mesh->Nx - 1) {
+            // Matching BC nodes EAST
             mesh->BCu.type[c] = -12;
             mesh->BCu.val[c] = -0.0 * model->EpsBG * Lx;
-          }
-          // Free slip S
-          if (l == 0) { //&& (k>0 && k<NX-1) ) {
+          } else if (l == 0) {
+            // Free slip S
             mesh->BCu.type[c] = 11;
             mesh->BCu.val[c] = -1 * model->EpsBG * Lz;
-          }
-          // Free slip N
-          if (l == mesh->Nz) { // && (k>0 && k<NX-1)) {
+          } else if (l == mesh->Nz) {
+            // Free slip N
             mesh->BCu.type[c] = 11;
             mesh->BCu.val[c] = 1 * model->EpsBG * Lz;
+          } else {
+            // Internal points:  -1
+            mesh->BCu.type[c] = -1;
+            mesh->BCu.val[c] = 0;
           }
         }
       }
@@ -160,51 +159,48 @@ void SetBCs(grid *mesh, params *model, scale scaling, markers *particles,
     for (int k = 0; k < mesh->Nx + 1; k++) {
       const int c = k + l * (mesh->Nx + 1);
       if (mesh->BCv.type[c] != 30) {
-
-        // Internal points:  -1
-        mesh->BCv.type[c] = -1;
-        mesh->BCv.val[c] = 0;
-
         if (model->shear_style == 0) {
-          // Matching BC nodes SOUTH
           if (l == 0) {
+            // Matching BC nodes SOUTH
             mesh->BCv.type[c] = 0;
             mesh->BCv.val[c] = mesh->zg_coord[l] * model->EpsBG;
-          }
-          // Matching BC nodes NORTH
-          if (l == mesh->Nz - 1) {
+          } else if (l == mesh->Nz - 1) {
+            // Matching BC nodes NORTH
             mesh->BCv.type[c] = 0;
             mesh->BCv.val[c] = mesh->zg_coord[l] * model->EpsBG;
-          }
-          // Non-matching boundary WEST
-          if (k == 0) {
+          } else if (k == 0) {
+            // Non-matching boundary WEST
             mesh->BCv.type[c] = 13;
             mesh->BCv.val[c] = 0;
-          }
-          // Non-matching boundary EAST
-          if (k == mesh->Nx) {
+          } else if (k == mesh->Nx) {
+            // Non-matching boundary EAST
             mesh->BCv.type[c] = 13;
+            mesh->BCv.val[c] = 0;
+          } else {
+            // Internal points:  -1
+            mesh->BCv.type[c] = -1;
             mesh->BCv.val[c] = 0;
           }
         } else if (model->shear_style == 1) {
-          // Matching BC nodes SOUTH
           if (l == 0) {
+            // Matching BC nodes SOUTH
             mesh->BCv.type[c] = 0;
             mesh->BCv.val[c] = -0.0 * model->EpsBG * Lz;
-          }
-          // Matching BC nodes NORTH
-          if (l == mesh->Nz - 1) {
+          } else if (l == mesh->Nz - 1) {
+            // Matching BC nodes NORTH
             mesh->BCv.type[c] = 0;
             mesh->BCv.val[c] = 0.0 * model->EpsBG * Lz;
-          }
-          // Non-matching boundary points
-          if (k == 0) {
+          } else if (k == 0) {
+            // Non-matching boundary points
             mesh->BCv.type[c] = -12;
             mesh->BCv.val[c] = 0;
-          }
-          // Non-matching boundary points
-          if (k == mesh->Nx) {
+          } else if (k == mesh->Nx) {
+            // Non-matching boundary points
             mesh->BCv.type[c] = -12;
+            mesh->BCv.val[c] = 0;
+          } else {
+            // Internal points:  -1
+            mesh->BCv.type[c] = -1;
             mesh->BCv.val[c] = 0;
           }
         }
@@ -222,7 +218,7 @@ void SetBCs(grid *mesh, params *model, scale scaling, markers *particles,
 
   for (int l = 0; l < NCZ; l++) {
     for (int k = 0; k < NCX; k++) {
-      int c = k + l * (NCX);
+      const int c = k + l * (NCX);
       if (mesh->BCt.type[c] != 30) {
         // Internal points:  -1
         mesh->BCp.type[c] = -1;
@@ -242,40 +238,34 @@ void SetBCs(grid *mesh, params *model, scale scaling, markers *particles,
   /* Type 30: not calculated (part of the "air") */
   /* -------------------------------------------------------------------------------------------------------*/
 
-  double Ttop = 273.15 / scaling.T;
+  const double Ttop = 273.15 / scaling.T;
 
   for (int l = 0; l < mesh->Nz - 1; l++) {
     for (int k = 0; k < mesh->Nx - 1; k++) {
       const int c = k + l * (NCX);
       if (mesh->BCt.type[c] != 30) {
-        // LEFT
         if (k == 0) {
+          // LEFT
           mesh->BCt.type[c] = 0;
           mesh->BCt.val[c] = mesh->T[c];
-        }
-        // RIGHT
-        if (k == NCX - 1) {
+        } else if (k == NCX - 1) {
+          // RIGHT
           mesh->BCt.type[c] = 0;
           mesh->BCt.val[c] = mesh->T[c];
-        }
-        // BOT
-        if (l == 0) {
+        } else if (l == 0) {
+          // BOT
           mesh->BCt.type[c] = 0;
           mesh->BCt.val[c] = mesh->T[c];
-        }
-
-        // TOP
-        if (l == NCZ - 1) {
+        } else if (l == NCZ - 1) {
+          // TOP
           mesh->BCt.type[c] = 0;
           mesh->BCt.val[c] = mesh->T[c];
-        } else {
+        } else if ((mesh->BCt.type[c] == -1 || mesh->BCt.type[c] == 1 ||
+                    mesh->BCt.type[c] == 0) &&
+                   mesh->BCt.type[c + NCX] == 30) {
           // FREE SURFACE
-          if ((mesh->BCt.type[c] == -1 || mesh->BCt.type[c] == 1 ||
-               mesh->BCt.type[c] == 0) &&
-              mesh->BCt.type[c + NCX] == 30) {
-            mesh->BCt.type[c] = 1;
-            mesh->BCt.val[c] = Ttop;
-          }
+          mesh->BCt.type[c] = 1;
+          mesh->BCt.val[c] = Ttop;
         }
       }
     }
