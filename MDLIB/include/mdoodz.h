@@ -6,7 +6,29 @@
 #define PI    3.14159265359
 #define Rad_Earth 6370000
 
-// BC is a boundary condition structure for the mechanical solver
+
+/* --------------------------------------------------------------------------------------------------------*/
+/* Set the BCs for Vx on all grid levels                                                                   */
+/* Type  0: Dirichlet point that matches the physical boundary (Vx: left/right, Vz: bottom/top)            */
+/* Type 11: Dirichlet point that do not match the physical boundary (Vx: bottom/top, Vz: left/right)       */
+/* Type  2: Neumann point that do not match the physical boundary (Vx: bottom/top, Vz: left/right)         */
+/* Type 13: Neumann point that matches the physical boundary (Vx: bottom/top, Vz: left/right)              */
+/* Type -2: periodic in the x direction (matches the physical boundary)                                    */
+/* Type -1: not a BC point (tag for inner points)                                                          */
+/* Type 30: not calculated (part of the "air")                                                             */
+/* --------------------------------------------------------------------------------------------------------*/
+
+typedef enum {
+  BOUNDARY_DIRICHLET = 0,
+  NOT_BOUNDARY_DIRICHLET = 11,
+  NOT_BOUNDARY_NEUMANN = 2,
+  BOUNDARY_NEUMANN = 13,
+  NOT_BC = -1,
+  PERIODIC = -2,
+  NOT_CALCULATED = 30
+} BC_TYPE;
+
+
 typedef struct {
   char *type;
   double *val;
