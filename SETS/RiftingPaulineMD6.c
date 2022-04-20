@@ -1,3 +1,4 @@
+#include "stdbool.h"
 #include "math.h"
 #include "mdoodz.h"
 #include "stdio.h"
@@ -139,27 +140,6 @@ double GetBCpValue(int k, int l, int Nx, int Nz) {
   return 0;
 }
 
-char GetBCtType(int k, int l, int Nx, int Nz, char BCtType) {
-  if (k == 0) {
-    // WEST
-    return 0;
-  } else if (k == Nx - 1 - 1) {
-    // EAST
-    return 0;
-  } else if (l == 0) {
-    // SOUTH
-    return 0;
-  } else if (l == Nz - 1 - 1) {
-    // NORTH
-    return 0;
-  } else if ((BCtType == -1 || BCtType == 1 ||
-              BCtType == 0) &&
-             mesh->BCt.type[c + mesh->Nx - 1] == 30) {
-    // FREE SURFACE
-    return 1;
-  }
-}
-
 double GetBCtValue(int k, int l, int Nx, int Nz) {
   return 0;
 }
@@ -226,6 +206,10 @@ void SetBCs(grid *mesh, params *model, scale scaling, markers *particles,
     for (int k = 0; k < mesh->Nx + 1; k++) {
       const int c = k + l * (mesh->Nx + 1);
       if (mesh->BCv.type[c] != 30) {
+        const bool isWest = k == 0;
+        const bool isEast = k == mesh->Nx - 1 - 1;
+        const bool isSouth = k == 0;
+        const bool isNorth = k == 0;
         mesh->BCv.type[c] = GetBCType(k, l, mesh->Nx, mesh->Nz);
         mesh->BCv.val[c] =GetBCVal(k, l, mesh->Nx, mesh->Nz,
                                      mesh->zg_coord[k], model->EpsBG);
@@ -269,31 +253,32 @@ void SetBCs(grid *mesh, params *model, scale scaling, markers *particles,
   for (int l = 0; l < mesh->Nz - 1; l++) {
     for (int k = 0; k < mesh->Nx - 1; k++) {
       const int c = k + l * (mesh->Nx - 1);
+      const bool isFreeSurface =
+          (mesh->BCt.type[c] == -1 || mesh->BCt.type[c] == 1 ||
+           mesh->BCt.type[c] == 0) &&
+          mesh->BCt.type[c + mesh->Nx - 1] == 30;
+      const bool isWest = k == 0;
+      const bool isEast = k == mesh->Nx - 1 - 1;
+      const bool isSouth = k == 0;
+      const bool isNorth = k == 0;
       if (mesh->BCt.type[c] != 30) {
-        if (k == 0) {
-          // WEST
+        if (isWest) {
           mesh->BCt.type[c] = 0;
           mesh->BCt.typW[l] = 0;
           mesh->BCt.valW[l] = TW;
-        } else if (k == mesh->Nx - 1 - 1) {
-          // EAST
+        } else if (isEast) {
           mesh->BCt.type[c] = 0;
           mesh->BCt.typE[l] = 0;
           mesh->BCt.valE[l] = TE;
-        } else if (l == 0) {
-          // SOUTH
+        } else if (isSouth) {
           mesh->BCt.type[c] = 0;
           mesh->BCt.typS[k] = 1;
           mesh->BCt.valS[k] = mesh->T[c];
-        } else if (l == mesh->Nz - 1 - 1) {
-          // NORTH
+        } else if (isNorth) {
           mesh->BCt.type[c] = 0;
           mesh->BCt.typN[k] = 1;
           mesh->BCt.valN[k] = TN;
-        } else if (
-            (mesh->BCt.type[c] == -1 || mesh->BCt.type[c] == 1 || mesh->BCt.type[c] == 0)
-            && mesh->BCt.type[c + mesh->Nx - 1] == 30) {
-          // FREE SURFACE
+        } else if (isFreeSurface) {
           mesh->BCt.type[c] = 1;
           mesh->BCt.val[c] = TN;
         }

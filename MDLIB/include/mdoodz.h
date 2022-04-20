@@ -243,4 +243,13 @@ typedef void (*SetBCs_f)(grid *mesh, params *model, scale scaling,
 int RunMDOODZ(char *inputFileName, BuildInitialTopography_f, SetParticles_f,
               SetBCs_f);
 
+typedef struct mdoodz mdoodz;
+struct mdoodz {
+  char *inputFileName;
+  void *BuildInitialTopography_f;
+  void *SetParticles_f;
+  void *SetBCs_f;
+  void (*RunMDOODZ)(mdoodz);
+};
+
 #endif
