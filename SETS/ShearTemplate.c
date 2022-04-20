@@ -67,8 +67,6 @@ void SetBCs(grid *mesh, params *model, scale scaling, markers *particles,
             mat_prop *materials, surface *topo) {
   const double Lx = (double)(model->xmax - model->xmin);
   const double Lz = (double)(model->zmax - model->zmin);
-  const int NCX = mesh->Nx - 1;
-  const int NCZ = mesh->Nz - 1;
 
   /* --------------------------------------------------------------------------------------------------------*/
   /* Set the BCs for Vx on all grid levels */
@@ -207,6 +205,9 @@ void SetBCs(grid *mesh, params *model, scale scaling, markers *particles,
       }
     }
   }
+
+  const int NCX = mesh->Nx - 1;
+  const int NCZ = mesh->Nz - 1;
 
   /* --------------------------------------------------------------------------------------------------------*/
   /* Set the BCs for P on all grid levels */

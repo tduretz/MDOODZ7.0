@@ -1,11 +1,10 @@
 #include "math.h"
 #include "mdoodz.h"
 #include "stdio.h"
-#include "stdlib.h"
 
 void BuildInitialTopography(markers *topo_chain, params model, scale scaling) {
   const double TopoLevel = -0.0e3 / scaling.L;
-  const double h_pert = model.user3 / scaling.L;
+  const double h_pert = model.user3 / scaling.L; // perturbation amplitude
   for (int k = 0; k < topo_chain->Nb_part; k++) {
     topo_chain->z[k] = TopoLevel + h_pert * (3330.0 - 2800.0) / 2800.0 *
                                        cos(2 * M_PI * topo_chain->x[k] /
@@ -14,85 +13,73 @@ void BuildInitialTopography(markers *topo_chain, params model, scale scaling) {
   }
 }
 
+double GetTemperature(scale scaling, params model, double depth) {
+  const double HLit = model.user1 / scaling.L; // lithosphere thickness
+  const double TsurfScaled = zeroC / scaling.T;
+  const double HLitScaled = HLit / scaling.L;
+  const double TmantScaled = (1330.0 + zeroC) / scaling.T;
+  const double Tpart =
+      ((TmantScaled - TsurfScaled) / HLitScaled) * depth + TsurfScaled;
+  if (Tpart > TmantScaled) {
+    return TmantScaled;
+  } else {
+    return Tpart;
+  }
+}
+
+int GetPhase(scale scaling, params model, double depth) {
+  const double HLit = model.user1 / scaling.L;   // lithosphere thickness
+  const double HCrust = model.user2 / scaling.L; // crust thickness
+  const double h_pert = model.user3 / scaling.L; // perturbation amplitude
+  const double xmin = model.xmin;                // xmin
+  const double xmax = model.xmax;                // xmax
+  const double HLitScaled = HLit / scaling.L;
+  const double mohoDepth = h_pert * cos(2 * M_PI * depth / (xmax - xmin));
+
+  if (depth < -HLitScaled) {
+    // astheno. M. below base lithos
+    return 3;
+  }
+  if (depth > -HCrust - mohoDepth) {
+    // crust above the Moho
+    return 1;
+  }
+  if (model.user4 == 1) {
+    if (depth > -HCrust + 2.5e3 / scaling.L - mohoDepth &&
+        depth < -HCrust + 4.5e3 / scaling.L - mohoDepth) {
+      // marker between 2.5 and 3 km above the Moho
+      return 7;
+    } else if (depth > -HCrust + 7.0e3 / scaling.L - mohoDepth &&
+               depth < -HCrust + 9.0e3 / scaling.L - mohoDepth) {
+      // marker between 4.5 and 5 km above the Moho
+      return 8;
+    }
+  }
+  return 2;
+}
+
+double GetPorosity() { return 0.0; }
+
+double GetGrainSize(mat_prop *materials, scale scaling, params model,
+                    double depth) {
+  return materials->gs_ref[GetPhase(scaling, model, depth)];
+}
+
+double GetHorizontalStrainRate(double x, double EpsBG) { return -x * EpsBG; }
+
+double GetVerticalStrainRate(double z, double EpsBG) { return z * EpsBG; }
+
 void SetParticles(markers *particles, scale scaling, params model,
                   mat_prop *materials) {
-  const double HLit = model.user1 / scaling.L;        // lithosphere thickness
-  const double HCrust = model.user2 / scaling.L;      // crust thickness
-  const double h_pert = model.user3 / scaling.L;      // perturbation amplitude
-  const double Tsurf = 273.15 / scaling.T;            // surface temperature
-  const double Tmant = (1330.0 + 273.15) / scaling.T; // adiabatic mantle temperature
-  const double xmin = model.xmin;                     // xmin
-  const double xmax = model.xmax;                     // xmax
-
-  // Loop on particles
   for (int np = 0; np < particles->Nb_part; np++) {
-
-    // Standart initialisation of particles
-    particles->Vx[np] = -particles->x[np] *
-                        model.EpsBG; // set initial particle velocity (unused)
-    particles->Vz[np] = particles->z[np] *
-                        model.EpsBG; // set initial particle velocity (unused)
-    particles->phase[np] = 3;        // same phase number everywhere
-    particles->d[np] = materials->gs_ref[particles->phase[np]]; // Grain size
-    particles->phi[np] = 0.0; // zero porosity everywhere
-
-    //--------------------------//
-    // TEMPERATURE - linear geotherm --- Will be overriden
-    particles->T[np] = 0.0;
-    double Tpart = ((Tmant - Tsurf) / HLit) * (-particles->z[np]) + Tsurf;
-    if (Tpart > Tmant) {
-      Tpart = Tmant;
-    }
-    particles->T[np] = Tpart;
-
-    //--------------------------//
-    // Phases - lithosphere-asthenosphere
-    particles->phase[np] = 2; // lithos. M. everywhere
-    if (particles->z[np] < -HLit)
-      particles->phase[np] = 3; // astheno. M. below base lithos
-    // Moho_depth equation :  -h_pert*cos(2*pi*x_current/(xmax-xmin));
-    if (particles->z[np] >
-        -HCrust - h_pert * cos(2 * M_PI * particles->x[np] / (xmax - xmin)))
-      particles->phase[np] = 1; // crust above the Moho
-
-    if (model.user4 == 1) {
-      if (particles->z[np] >
-              -HCrust + 2.5e3 / scaling.L -
-                  h_pert * cos(2 * M_PI * particles->x[np] / (xmax - xmin)) &&
-          particles->z[np] <
-              -HCrust + 4.5e3 / scaling.L -
-                  h_pert * cos(2 * M_PI * particles->x[np] / (xmax - xmin)))
-        particles->phase[np] = 7; // marker between 2.5 and 3 km above the Moho
-
-      if (particles->z[np] >
-              -HCrust + 7.0e3 / scaling.L -
-                  h_pert * cos(2 * M_PI * particles->x[np] / (xmax - xmin)) &&
-          particles->z[np] <
-              -HCrust + 9.0e3 / scaling.L -
-                  h_pert * cos(2 * M_PI * particles->x[np] / (xmax - xmin)))
-        particles->phase[np] = 8; // marker between 4.5 and 5 km above the Moho
-    }
-
-    // if ( particles->z[np] > -HCrust                             )
-    // particles->phase[np] = 1; if ( particles->z[np] < -HCrust &&
-    // particles->z[np] > -HLit )  particles->phase[np] = 2; if (
-    // particles->z[np] < -HLit                               )
-    // particles->phase[np] = 3; if ( pow( particles->z[np] - z_seed, 2 ) + pow(
-    // particles->x[np] - x_seed, 2 ) < Rad*Rad )  { particles->phase[np] = 0;
-    // };
-
-    //--------------------------//
-    // SANITY CHECK
-    if (particles->phase[np] > model.Nb_phases) {
-      printf("Lazy bastard! Fix your particle phase ID! \n");
-      exit(144);
-    }
-    //--------------------------//
+    particles->Vx[np] = GetHorizontalStrainRate(particles->x[np], model.EpsBG);
+    particles->Vz[np] = GetVerticalStrainRate(particles->z[np], model.EpsBG);
+    particles->phi[np] = GetPorosity(); // zero porosity everywhere
+    particles->T[np] = GetTemperature(scaling, model, -particles->z[np]);
+    particles->phase[np] = GetPhase(scaling, model, -particles->z[np]);
+    particles->d[np] =
+        GetGrainSize(materials, scaling, model, -particles->z[np]);
   }
-
-  MinMaxArray(particles->Vx, scaling.V, particles->Nb_part, "Vxp init");
-  MinMaxArray(particles->Vz, scaling.V, particles->Nb_part, "Vzp init");
-  MinMaxArray(particles->T, scaling.T, particles->Nb_part, "Tp init");
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
@@ -103,66 +90,16 @@ void SetParticles(markers *particles, scale scaling, params model,
 // Set physical properties on the grid and boundary conditions
 void SetBCs(grid *mesh, params *model, scale scaling, markers *particles,
             mat_prop *materials, surface *topo) {
-
-  int kk, k, l, c, c1, np;
-  double *X, *Z, *XC, *ZC;
-  int NX, NZ, NCX, NCZ, NXVZ, NZVX;
-  double TN = 273.15 / scaling.T, TS = (1330. + 273.15) / scaling.T;
-  double TW = (1330. + 273.15) / scaling.T, TE = (1330. + 273.15) / scaling.T;
-  double Tbot, Tleft, Tright;
-
   // Set unresaonable conductivity in the mantle to generate and adiabatic
   // mantle as initial condition
-  int phase_ast = 3; // This has to be the ASTHENOSPHERE phase number
-  double k_crazy = 1000 * materials->k[phase_ast];
-
+  const int phase_ast = 3; // This has to be the ASTHENOSPHERE phase number
+  const double k_crazy = 1000 * materials->k[phase_ast];
   if (model->step == 0) {
     materials->k_eff[phase_ast] = k_crazy;
     printf("Running with crazy conductivity for the asthenosphere!!\n");
   } else {
     materials->k_eff[phase_ast] = materials->k[phase_ast];
     printf("Running with normal conductivity for the asthenosphere...\n");
-  }
-
-  // Mantle Impregnation => mantle phase change if Pressure < 1GPa & Temperature
-  // > 1050°C Loop on particles
-  //               for( np=0; np<particles->Nb_part; np++ ) {
-  //                                if (particles->z[np]>-50.0e3/scaling.L &&
-  //                                particles->P[np]<1.0e9/scaling.S &&
-  //                                particles->T[np]> 1323.0/scaling.T &&
-  //                                particles->phase[np]==2) {
-  //                                particles->phase[np] = 6; } else if
-  //                                (particles->z[np]>-50.0e3/scaling.L &&
-  //                                particles->P[np]<1.0e9/scaling.S &&
-  //                                particles->T[np]> 1323.0/scaling.T &&
-  //                                particles->phase[np]==3) {
-  //                                particles->phase[np] = 6; } else { ; }
-  //               }
-
-  // Some stuff...
-  NX = mesh->Nx;
-  NZ = mesh->Nz;
-  NCX = NX - 1;
-  NCZ = NZ - 1;
-  NXVZ = NX + 1;
-  NZVX = NZ + 1;
-
-  X = malloc(NX * sizeof(double));
-  Z = malloc(NZ * sizeof(double));
-  XC = malloc(NCX * sizeof(double));
-  ZC = malloc(NCZ * sizeof(double));
-
-  for (k = 0; k < NX; k++) {
-    X[k] = mesh->xg_coord[k];
-  }
-  for (k = 0; k < NCX; k++) {
-    XC[k] = mesh->xc_coord[k];
-  }
-  for (l = 0; l < NZ; l++) {
-    Z[l] = mesh->zg_coord[l];
-  }
-  for (l = 0; l < NCZ; l++) {
-    ZC[l] = mesh->zc_coord[l];
   }
 
   /* --------------------------------------------------------------------------------------------------------*/
@@ -180,45 +117,29 @@ void SetBCs(grid *mesh, params *model, scale scaling, markers *particles,
   /* Type 30: not calculated (part of the "air") */
   /* --------------------------------------------------------------------------------------------------------*/
 
-  NX = mesh->Nx;
-  NZ = mesh->Nz;
-  NCX = NX - 1;
-  NCZ = NZ - 1;
-  NXVZ = NX + 1;
-  NZVX = NZ + 1;
-
-  for (l = 0; l < mesh->Nz + 1; l++) {
-    for (k = 0; k < mesh->Nx; k++) {
-
-      c = k + l * (mesh->Nx);
-
+  for (int l = 0; l < mesh->Nz + 1; l++) {
+    for (int k = 0; k < mesh->Nx; k++) {
+      const int c = k + l * (mesh->Nx);
       if (mesh->BCu.type[c] != 30) {
-
-        // Internal points:  -1
-        mesh->BCu.type[c] = -1;
-        mesh->BCu.val[c] = 0;
-
-        // Matching BC nodes WEST
         if (k == 0) {
+          // Matching BC nodes WEST
           mesh->BCu.type[c] = 0;
           mesh->BCu.val[c] = -mesh->xg_coord[k] * model->EpsBG;
-        }
-
-        // Matching BC nodes EAST
-        if (k == mesh->Nx - 1) {
+        } else if (k == mesh->Nx - 1) {
+          // Matching BC nodes EAST
           mesh->BCu.type[c] = 0;
           mesh->BCu.val[c] = -mesh->xg_coord[k] * model->EpsBG;
-        }
-
-        // Free slip SOUTH
-        if (l == 0) {
+        } else if (l == 0) {
+          // Free slip SOUTH
           mesh->BCu.type[c] = 13;
           mesh->BCu.val[c] = 0;
-        }
-
-        // Free slip NORTH
-        if (l == mesh->Nz) {
+        } else if (l == mesh->Nz) {
+          // Free slip NORTH
           mesh->BCu.type[c] = 13;
+          mesh->BCu.val[c] = 0;
+        } else {
+          // Internal points:  -1
+          mesh->BCu.type[c] = -1;
           mesh->BCu.val[c] = 0;
         }
       }
@@ -242,45 +163,29 @@ void SetBCs(grid *mesh, params *model, scale scaling, markers *particles,
   /* Type 30: not calculated (part of the "air") */
   /* --------------------------------------------------------------------------------------------------------*/
 
-  NX = mesh->Nx;
-  NZ = mesh->Nz;
-  NCX = NX - 1;
-  NCZ = NZ - 1;
-  NXVZ = NX + 1;
-  NZVX = NZ + 1;
-
-  for (l = 0; l < mesh->Nz; l++) {
-    for (k = 0; k < mesh->Nx + 1; k++) {
-
-      c = k + l * (mesh->Nx + 1);
-
+  for (int l = 0; l < mesh->Nz; l++) {
+    for (int k = 0; k < mesh->Nx + 1; k++) {
+      const int c = k + l * (mesh->Nx + 1);
       if (mesh->BCv.type[c] != 30) {
-
-        // Internal points:  -1
-        mesh->BCv.type[c] = -1;
-        mesh->BCv.val[c] = 0;
-
-        // Matching BC nodes SOUTH
         if (l == 0) {
+          // Matching BC nodes SOUTH
           mesh->BCv.type[c] = 0;
           mesh->BCv.val[c] = mesh->zg_coord[l] * model->EpsBG;
-        }
-
-        // Matching BC nodes NORTH
-        if (l == mesh->Nz - 1) {
+        } else if (l == mesh->Nz - 1) {
+          // Matching BC nodes NORTH
           mesh->BCv.type[c] = 0;
           mesh->BCv.val[c] = mesh->zg_coord[l] * model->EpsBG;
-        }
-
-        // Non-matching boundary WEST
-        if ((k == 0)) {
+        } else if (k == 0) {
+          // Non-matching boundary WEST
           mesh->BCv.type[c] = 13;
           mesh->BCv.val[c] = 0;
-        }
-
-        // Non-matching boundary EAST
-        if ((k == mesh->Nx)) {
+        } else if (k == mesh->Nx) {
+          // Non-matching boundary EAST
           mesh->BCv.type[c] = 13;
+          mesh->BCv.val[c] = 0;
+        } else {
+          // Internal points:  -1
+          mesh->BCv.type[c] = -1;
           mesh->BCv.val[c] = 0;
         }
       }
@@ -295,26 +200,16 @@ void SetBCs(grid *mesh, params *model, scale scaling, markers *particles,
   /* Type 31: surface pressure (Dirichlet) */
   /* --------------------------------------------------------------------------------------------------------*/
 
-  NX = mesh->Nx;
-  NZ = mesh->Nz;
-  NCX = NX - 1;
-  NCZ = NZ - 1;
-  NXVZ = NX + 1;
-  NZVX = NZ + 1;
-
-  for (l = 0; l < NCZ; l++) {
-    for (k = 0; k < NCX; k++) {
-
-      c = k + l * (NCX);
-
+  for (int l = 0; l < mesh->Nz - 1; l++) {
+    for (int k = 0; k < mesh->Nx - 1; k++) {
+      const int c = k + l * (mesh->Nx - 1);
       if (mesh->BCt.type[c] != 30) {
-
-        // Internal points:  -1
-        mesh->BCp.type[c] = -1;
-        mesh->BCp.val[c] = 0;
-
-        if ((k == 0 || k == NCX - 1) && l == NCZ - 1) {
+        if ((k == 0 || k == mesh->Nx - 1 - 1) && l == mesh->Nz - 1 - 1) {
           mesh->BCp.type[c] = 0;
+          mesh->BCp.val[c] = 0;
+        } else {
+          // Internal points:  -1
+          mesh->BCp.type[c] = -1;
           mesh->BCp.val[c] = 0;
         }
       }
@@ -332,65 +227,44 @@ void SetBCs(grid *mesh, params *model, scale scaling, markers *particles,
   /* Type 30: not calculated (part of the "air") */
   /* -------------------------------------------------------------------------------------------------------*/
 
-  NX = mesh->Nx;
-  NZ = mesh->Nz;
-  NCX = NX - 1;
-  NCZ = NZ - 1;
-  NXVZ = NX + 1;
-  NZVX = NZ + 1;
+  const double TN = 273.15 / scaling.T;
+  const double TW = (1330. + 273.15) / scaling.T,
+               TE = (1330. + 273.15) / scaling.T;
 
-  for (l = 0; l < mesh->Nz - 1; l++) {
-    for (k = 0; k < mesh->Nx - 1; k++) {
-
-      c = k + l * (NCX);
-
+  for (int l = 0; l < mesh->Nz - 1; l++) {
+    for (int k = 0; k < mesh->Nx - 1; k++) {
+      const int c = k + l * (mesh->Nx - 1);
       if (mesh->BCt.type[c] != 30) {
-
-        // WEST
         if (k == 0) {
+          // WEST
           mesh->BCt.type[c] = 0;
           mesh->BCt.typW[l] = 0;
           mesh->BCt.valW[l] = TW;
-        }
-
-        // EAST
-        if (k == NCX - 1) {
+        } else if (k == mesh->Nx - 1 - 1) {
+          // EAST
           mesh->BCt.type[c] = 0;
           mesh->BCt.typE[l] = 0;
           mesh->BCt.valE[l] = TE;
-        }
-
-        // SOUTH
-        if (l == 0) {
+        } else if (l == 0) {
+          // SOUTH
           mesh->BCt.type[c] = 0;
           mesh->BCt.typS[k] = 1;
           mesh->BCt.valS[k] = mesh->T[c];
-        }
-
-        // NORTH
-        if (l == NCZ - 1) {
+        } else if (l == mesh->Nz - 1 - 1) {
+          // NORTH
           mesh->BCt.type[c] = 0;
           mesh->BCt.typN[k] = 1;
           mesh->BCt.valN[k] = TN;
-        }
-
-        // FREE SURFACE
-        else {
-          if ((mesh->BCt.type[c] == -1 || mesh->BCt.type[c] == 1 ||
-               mesh->BCt.type[c] == 0) &&
-              mesh->BCt.type[c + NCX] == 30) {
-            mesh->BCt.type[c] = 1;
-            mesh->BCt.val[c] = TN;
-          }
+        } else if ((mesh->BCt.type[c] == -1 || mesh->BCt.type[c] == 1 ||
+                    mesh->BCt.type[c] == 0) &&
+                   mesh->BCt.type[c + mesh->Nx - 1] == 30) {
+          // FREE SURFACE
+          mesh->BCt.type[c] = 1;
+          mesh->BCt.val[c] = TN;
         }
       }
     }
   }
-
-  free(X);
-  free(Z);
-  free(XC);
-  free(ZC);
   printf("Velocity and pressure were initialised\n");
   printf("Boundary conditions were set up\n");
 }
