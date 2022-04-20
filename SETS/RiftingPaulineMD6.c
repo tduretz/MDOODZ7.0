@@ -87,6 +87,83 @@ void SetParticles(markers *particles, scale scaling, params model,
  * -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
+
+double GetBCVal(int k, int l, int Nx, int Nz, double xg_coord, double EpsBG) {
+  if (k == 0) {
+    // Matching BC nodes WEST
+    return -xg_coord * EpsBG;
+  } else if (k == Nx - 1) {
+    // Matching BC nodes EAST
+    return -xg_coord * EpsBG;
+  } else if (l == 0) {
+    // Free slip SOUTH
+    return 0;
+  } else if (l == Nz) {
+    // Free slip NORTH
+    return 0;
+  } else {
+    // Internal points:  -1
+    return 0;
+  }
+}
+
+char GetBCType(int k, int l, int Nx, int Nz) {
+  if (k == 0) {
+    // Matching BC nodes WEST
+    return 0;
+  } else if (k == Nx - 1) {
+    // Matching BC nodes EAST
+    return 0;
+  } else if (l == 0) {
+    // Free slip SOUTH
+    return 13;
+  } else if (l == Nz) {
+    // Free slip NORTH
+    return 13;
+  } else {
+    // Internal points:  -1
+    return -1;
+  }
+}
+
+char GetBCpType(int k, int l, int Nx, int Nz) {
+  if ((k == 0 || k == Nx - 1 - 1) && l == Nz - 1 - 1) {
+    return 0;
+  } else {
+    // Internal points:  -1
+    return -1;
+  }
+}
+
+double GetBCpValue(int k, int l, int Nx, int Nz) {
+  return 0;
+}
+
+char GetBCtType(int k, int l, int Nx, int Nz, char BCtType) {
+  if (k == 0) {
+    // WEST
+    return 0;
+  } else if (k == Nx - 1 - 1) {
+    // EAST
+    return 0;
+  } else if (l == 0) {
+    // SOUTH
+    return 0;
+  } else if (l == Nz - 1 - 1) {
+    // NORTH
+    return 0;
+  } else if ((BCtType == -1 || BCtType == 1 ||
+              BCtType == 0) &&
+             mesh->BCt.type[c + mesh->Nx - 1] == 30) {
+    // FREE SURFACE
+    return 1;
+  }
+}
+
+double GetBCtValue(int k, int l, int Nx, int Nz) {
+  return 0;
+}
+
 // Set physical properties on the grid and boundary conditions
 void SetBCs(grid *mesh, params *model, scale scaling, markers *particles,
             mat_prop *materials, surface *topo) {
@@ -121,27 +198,9 @@ void SetBCs(grid *mesh, params *model, scale scaling, markers *particles,
     for (int k = 0; k < mesh->Nx; k++) {
       const int c = k + l * (mesh->Nx);
       if (mesh->BCu.type[c] != 30) {
-        if (k == 0) {
-          // Matching BC nodes WEST
-          mesh->BCu.type[c] = 0;
-          mesh->BCu.val[c] = -mesh->xg_coord[k] * model->EpsBG;
-        } else if (k == mesh->Nx - 1) {
-          // Matching BC nodes EAST
-          mesh->BCu.type[c] = 0;
-          mesh->BCu.val[c] = -mesh->xg_coord[k] * model->EpsBG;
-        } else if (l == 0) {
-          // Free slip SOUTH
-          mesh->BCu.type[c] = 13;
-          mesh->BCu.val[c] = 0;
-        } else if (l == mesh->Nz) {
-          // Free slip NORTH
-          mesh->BCu.type[c] = 13;
-          mesh->BCu.val[c] = 0;
-        } else {
-          // Internal points:  -1
-          mesh->BCu.type[c] = -1;
-          mesh->BCu.val[c] = 0;
-        }
+        mesh->BCu.type[c] = GetBCType(k, l, mesh->Nx, mesh->Nz);
+        mesh->BCu.val[c] = GetBCVal(k, l, mesh->Nx, mesh->Nz,
+                                     mesh->xg_coord[k], model->EpsBG);
       }
     }
   }
@@ -167,27 +226,9 @@ void SetBCs(grid *mesh, params *model, scale scaling, markers *particles,
     for (int k = 0; k < mesh->Nx + 1; k++) {
       const int c = k + l * (mesh->Nx + 1);
       if (mesh->BCv.type[c] != 30) {
-        if (l == 0) {
-          // Matching BC nodes SOUTH
-          mesh->BCv.type[c] = 0;
-          mesh->BCv.val[c] = mesh->zg_coord[l] * model->EpsBG;
-        } else if (l == mesh->Nz - 1) {
-          // Matching BC nodes NORTH
-          mesh->BCv.type[c] = 0;
-          mesh->BCv.val[c] = mesh->zg_coord[l] * model->EpsBG;
-        } else if (k == 0) {
-          // Non-matching boundary WEST
-          mesh->BCv.type[c] = 13;
-          mesh->BCv.val[c] = 0;
-        } else if (k == mesh->Nx) {
-          // Non-matching boundary EAST
-          mesh->BCv.type[c] = 13;
-          mesh->BCv.val[c] = 0;
-        } else {
-          // Internal points:  -1
-          mesh->BCv.type[c] = -1;
-          mesh->BCv.val[c] = 0;
-        }
+        mesh->BCv.type[c] = GetBCType(k, l, mesh->Nx, mesh->Nz);
+        mesh->BCv.val[c] =GetBCVal(k, l, mesh->Nx, mesh->Nz,
+                                     mesh->zg_coord[k], model->EpsBG);
       }
     }
   }
@@ -204,14 +245,8 @@ void SetBCs(grid *mesh, params *model, scale scaling, markers *particles,
     for (int k = 0; k < mesh->Nx - 1; k++) {
       const int c = k + l * (mesh->Nx - 1);
       if (mesh->BCt.type[c] != 30) {
-        if ((k == 0 || k == mesh->Nx - 1 - 1) && l == mesh->Nz - 1 - 1) {
-          mesh->BCp.type[c] = 0;
-          mesh->BCp.val[c] = 0;
-        } else {
-          // Internal points:  -1
-          mesh->BCp.type[c] = -1;
-          mesh->BCp.val[c] = 0;
-        }
+        mesh->BCp.type[c] = GetBCpType(k, l, mesh->Nx, mesh->Nz);
+        mesh->BCp.val[c] = GetBCpValue(k, l, mesh->Nx, mesh->Nz);
       }
     }
   }
@@ -255,9 +290,9 @@ void SetBCs(grid *mesh, params *model, scale scaling, markers *particles,
           mesh->BCt.type[c] = 0;
           mesh->BCt.typN[k] = 1;
           mesh->BCt.valN[k] = TN;
-        } else if ((mesh->BCt.type[c] == -1 || mesh->BCt.type[c] == 1 ||
-                    mesh->BCt.type[c] == 0) &&
-                   mesh->BCt.type[c + mesh->Nx - 1] == 30) {
+        } else if (
+            (mesh->BCt.type[c] == -1 || mesh->BCt.type[c] == 1 || mesh->BCt.type[c] == 0)
+            && mesh->BCt.type[c + mesh->Nx - 1] == 30) {
           // FREE SURFACE
           mesh->BCt.type[c] = 1;
           mesh->BCt.val[c] = TN;
