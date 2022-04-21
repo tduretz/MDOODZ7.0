@@ -41,7 +41,7 @@
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-void RunMDOODZ(struct MdoodzInstance *this) {
+void RunMDOODZ(MdoodzInstance *this) {
     int          istep, irestart, writer = 0, writer_step;
     char         *fin_name, *PartFileName;
     Nparams      Nmodel;
@@ -86,10 +86,6 @@ void RunMDOODZ(struct MdoodzInstance *this) {
     // Initialise grid coordinates
     SetGridCoordinates( &mesh, &this->model, this->model.Nx, this->model.Nz );
 
-    //    // Initial solution fields (Fine mesh)
-    //    SetBCs( &mesh, &this->model, this->scaling , &particles, &this->materials );
-    //    InitialiseSolutionFields( &mesh, &this->model );
-
     // Get grid indices
     GridIndices( &mesh );
 
@@ -126,7 +122,7 @@ void RunMDOODZ(struct MdoodzInstance *this) {
         PartInit( &particles, &this->model );
 
         // Initial grid tags
-        this->SetBCs( &mesh, &this->model, this->scaling , &particles, &this->materials, &topo);
+        SetBCs( this, &mesh);
         if ( this->model.free_surf == 1 ) {
 
             // Define the horizontal position of the surface marker chain
@@ -134,8 +130,8 @@ void RunMDOODZ(struct MdoodzInstance *this) {
             SetTopoChainHorizontalCoords( &topo_ini, &topo_chain_ini, this->model, mesh, this->scaling );
 
             // Define the vertical position of the surface marker chain
-            this->BuildInitialTopography( &topo_chain, this->model, this->scaling );
-            this->BuildInitialTopography( &topo_chain_ini, this->model, this->scaling );
+            BuildInitialTopography(this, &topo_chain );
+            BuildInitialTopography(this, &topo_chain_ini );
 
             // Project topography on vertices
             ProjectTopography( &topo, &topo_chain, this->model, mesh, this->scaling, mesh.xg_coord, 0 );
@@ -150,7 +146,7 @@ void RunMDOODZ(struct MdoodzInstance *this) {
         PutPartInBox( &particles, &mesh, this->model, topo, this->scaling );
 
         // Set phases on particles
-        this->SetParticles( &particles, this->scaling, this->model, &this->materials );
+        SetParticles( this, &particles);
 
         if ( this->model.free_surf == 1 ) CleanUpSurfaceParticles( &particles, &mesh, topo, this->scaling );
 
@@ -192,7 +188,7 @@ void RunMDOODZ(struct MdoodzInstance *this) {
             MinMaxArray( mesh.p_in,  this->scaling.S, (mesh.Nx-1)*(mesh.Nz-1), "       P" );
         }
         // Initial solution fields (Fine mesh)
-        this->SetBCs( &mesh, &this->model, this->scaling , &particles, &this->materials, &topo);
+        SetBCs( this, &mesh);
         InitialiseSolutionFields( &mesh, &this->model );
 
         MinMaxArray( mesh.u_in,  this->scaling.V, (mesh.Nx)*(mesh.Nz+1),   "Vx. grid" );
@@ -210,7 +206,7 @@ void RunMDOODZ(struct MdoodzInstance *this) {
         P2Mastah( &this->model, particles, this->materials.Cv,    &mesh, mesh.Cv, mesh.BCp.type,  0, 0, interp, cent, 1);
         P2Mastah( &this->model, particles, this->materials.Qr,    &mesh, mesh.Qr, mesh.BCp.type,  0, 0, interp, cent, 1);
 
-        this->SetBCs( &mesh, &this->model, this->scaling , &particles, &this->materials, &topo);
+        SetBCs( this, &mesh);
         if ( this->model.thermal_eq == 1 ) ThermalSteps( &mesh, this->model,  mesh.T,  mesh.dT,  mesh.rhs_t, mesh.T, &particles, this->model.cooling_time, this->scaling );
         if ( this->model.therm_pert == 1 ) SetThermalPert( &mesh, this->model, this->scaling );
         //            Interp_Grid2P_centroids ( particles, particles.T,    &mesh, mesh.T, mesh.xc_coord,  mesh.zc_coord,  mesh.Nx-1, mesh.Nz-1, mesh.BCt.type, &this->model );
@@ -584,7 +580,7 @@ void RunMDOODZ(struct MdoodzInstance *this) {
         if ( this->model.ismechanical == 1 ) {
 
             // Allocate and initialise solution and RHS vectors
-            this->SetBCs( &mesh, &this->model, this->scaling , &particles, &this->materials, &topo);
+            SetBCs( this, &mesh);
 
             // Reset fields and BC values if needed
             //        if ( this->model.ispureshear_ale == 1 ) InitialiseSolutionFields( &mesh, &this->model );
