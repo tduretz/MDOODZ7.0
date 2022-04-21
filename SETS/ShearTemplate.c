@@ -34,16 +34,26 @@ int SetPhase(MdoodzInstance *instance, Coordinates coordinates) {
 }
 
 double SetGrainSize(MdoodzInstance *instance, Coordinates coordinates) {
-  return 0;
+  return 0.0;
 }
 
 double SetPorosity(MdoodzInstance *instance, Coordinates coordinates) {
-  return 0;
+  return 0.0;
 }
 
 double SetDensity(MdoodzInstance *instance, Coordinates coordinates) {
   const double T_init = (instance->model.user0 + zeroC) / instance->scaling.T;
-  const int    phase  = SetPhase(instance, coordinates);
+  double       xc     = 0.0;
+  double       zc     = 0.0;
+  const double radius = instance->model.user1 / instance->scaling.L;
+  const double X      = coordinates.x - xc;
+  const double Z      = coordinates.z - zc;
+  int          phase;
+  if (X * X + Z * Z < radius * radius) {
+    phase = 1;
+  } else {
+    phase = 0;
+  }
   if (instance->model.eqn_state > 0) {
     return instance->materials.rho[phase] * (1 - instance->materials.alp[phase] * (T_init - instance->materials.T0[phase]));
   } else {
@@ -56,9 +66,8 @@ double SetTemperature(MdoodzInstance *instance, Coordinates coordinates) {
 }
 
 double SetXComponent(MdoodzInstance *instance, Coordinates coordinates) {
-  return (instance->model.user0 + zeroC) / instance->scaling.T;
+  return 0.0;
 }
-
 
 char SetBCVxType(MdoodzInstance *instance, POSITION position) {
   if (instance->model.shear_style == 0) {
@@ -82,12 +91,10 @@ char SetBCVxType(MdoodzInstance *instance, POSITION position) {
   }
 }
 
-double SetBCVxValue(MdoodzInstance *instance, POSITION position, Coordinates gridCoordinates) {
+double SetBCVxValue(MdoodzInstance *instance, POSITION position, Coordinates coordinates) {
   if (instance->model.shear_style == 0) {
-    if (position == LEFT) {
-      return -gridCoordinates.x * instance->model.EpsBG;
-    } else if (position == RIGHT) {
-      return -gridCoordinates.x * instance->model.EpsBG;
+    if (position == LEFT || position == RIGHT) {
+      return coordinates.x * instance->model.EpsBG;
     } else {
       return 0;
     }
@@ -106,9 +113,9 @@ double SetBCVxValue(MdoodzInstance *instance, POSITION position, Coordinates gri
 char SetBCVzType(MdoodzInstance *instance, POSITION position) {
   if (instance->model.shear_style == 0) {
     if (position == LEFT || position == RIGHT) {
-      return 0;
-    } else if (position == BOTTOM || position == TOP) {
       return 13;
+    } else if (position == BOTTOM || position == TOP) {
+      return 0;
     } else {
       return -1;
     }

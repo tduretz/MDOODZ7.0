@@ -1,5 +1,5 @@
-#include "mdoodz.h"
 #include "mdoodz-private.h"
+#include "mdoodz.h"
 #include "stdio.h"
 #include "stdlib.h"
 
