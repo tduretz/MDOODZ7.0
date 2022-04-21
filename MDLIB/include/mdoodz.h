@@ -157,12 +157,13 @@ typedef enum {
   FREE_SURFACE
 } POSITION;
 
-typedef char (*SetBCVxType_f)(MdoodzInstance *instance, POSITION position);
+typedef int (*SetBCVxType_f)(MdoodzInstance *instance, POSITION position);
+typedef int (*SetBCVzType_f)(MdoodzInstance *instance, POSITION position);
+typedef int (*SetBCPType_f)(MdoodzInstance *instance, POSITION position);
+typedef int (*SetBCTType_f)(MdoodzInstance *instance, POSITION position);
+
 typedef double (*SetBCVxValue_f)(MdoodzInstance *instance, POSITION position, Coordinates gridCoordinates);
-typedef char (*SetBCVzType_f)(MdoodzInstance *instance, POSITION position);
 typedef double (*SetBCVzValue_f)(MdoodzInstance *instance, POSITION position, Coordinates gridCoordinates);
-typedef char (*SetBCPType_f)(MdoodzInstance *instance, POSITION position);
-typedef char (*SetBCTType_f)(MdoodzInstance *instance, POSITION position);
 typedef double (*SetBCTValue_f)(MdoodzInstance *instance, POSITION position, double particleTemperature);
 
 typedef struct {

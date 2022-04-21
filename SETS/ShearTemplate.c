@@ -69,7 +69,7 @@ double SetXComponent(MdoodzInstance *instance, Coordinates coordinates) {
   return 0.0;
 }
 
-char SetBCVxType(MdoodzInstance *instance, POSITION position) {
+int SetBCVxType(MdoodzInstance *instance, POSITION position) {
   if (instance->model.shear_style == 0) {
     if (position == LEFT || position == RIGHT) {
       return 0;
@@ -110,7 +110,7 @@ double SetBCVxValue(MdoodzInstance *instance, POSITION position, Coordinates coo
   }
 }
 
-char SetBCVzType(MdoodzInstance *instance, POSITION position) {
+int SetBCVzType(MdoodzInstance *instance, POSITION position) {
   if (instance->model.shear_style == 0) {
     if (position == LEFT || position == RIGHT) {
       return 13;
@@ -147,11 +147,11 @@ double SetBCVzValue(MdoodzInstance *instance, POSITION position, Coordinates coo
   }
 }
 
-char SetBCPType(MdoodzInstance *instance, POSITION position) {
+int SetBCPType(MdoodzInstance *instance, POSITION position) {
   return -1;
 }
 
-char SetBCTType(MdoodzInstance *instance, POSITION position) {
+int SetBCTType(MdoodzInstance *instance, POSITION position) {
   return 0;
 }
 
