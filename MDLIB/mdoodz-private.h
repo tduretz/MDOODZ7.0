@@ -423,3 +423,8 @@ double ViscosityConcise( int , double, double, double, double, double, double, d
 double EvaluateDensity( int, double, double, double, params*, mat_prop* );
 void ComputeMeanQuantitesForTimeSeries( grid *mesh );
 void LogTimeSeries( grid*, params, scale );
+void MinMaxArray( double * array, double scale, int size, char* text );
+
+void BuildInitialTopography(MdoodzInstance *instance, markers *topo_chain);
+void SetParticles(MdoodzInstance *instance, markers *particles);
+void SetBCs(MdoodzInstance *instance, grid *mesh);

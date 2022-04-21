@@ -231,7 +231,8 @@ typedef struct {
 } surface;
 
 char *GetSetupFileName(int nargs, char *args[]);
-void MinMaxArray( double * array, double scale, int size, char* text );
+
+typedef struct MdoodzInstance MdoodzInstance;
 
 typedef void (*BuildInitialTopography_f)(markers *topo_chain, params model,
                                          scale scaling);
@@ -240,16 +241,24 @@ typedef void (*SetParticles_f)(markers *particles, scale scaling, params model,
 typedef void (*SetBCs_f)(grid *mesh, params *model, scale scaling,
                          markers *particles, mat_prop *materials,
                          surface *topo);
-int RunMDOODZ(char *inputFileName, BuildInitialTopography_f, SetParticles_f,
-              SetBCs_f);
+typedef int (*RunMDOODZ_f)(MdoodzInstance *this);
 
-typedef struct mdoodz mdoodz;
-struct mdoodz {
+
+struct MdoodzInstance {
   char *inputFileName;
-  void *BuildInitialTopography_f;
-  void *SetParticles_f;
-  void *SetBCs_f;
-  void (*RunMDOODZ)(mdoodz);
+  BuildInitialTopography_f BuildInitialTopography;
+  SetParticles_f SetParticles;
+  SetBCs_f SetBCs;
+
+  params model;
+  mat_prop materials;
+  scale scaling;
+
+  void (*RunMDOODZ)(MdoodzInstance *this);
 };
+
+
+
+MdoodzInstance NewMdoodzInstance();
 
 #endif

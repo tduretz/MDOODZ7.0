@@ -7,7 +7,7 @@ This version of MDOODZ is under construction, more testing will be progressively
 
 # Library usage
 
-MDOODZ Source Code stored in `MDLIB` directory and compiled as a separate library `libmdoodz` with the public include header `mdoodz.h`.
+MDOODZ Source Code stored in `MDLIB` directory and compiled as a separate library `libmdoodz` with the public include header `MdoodzInstance.h`.
 
 In order to use it in your program, you need a setup .txt file and implemented functions `BuildInitialTopography`, `SetParticles` and `SetBCs`. 
 They are passed to `RunMDOODZ` function as arguments. 
@@ -15,7 +15,7 @@ They are passed to `RunMDOODZ` function as arguments.
 Simplified example:
 
 ```code
-#include "mdoodz.h"
+#include "MdoodzInstance.h"
 
 void BuildInitialTopography(markers *topo_chain, params model, scale scaling) {
   // topography set up routine here
