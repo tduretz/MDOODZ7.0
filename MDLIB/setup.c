@@ -72,7 +72,7 @@ void SetBCs(MdoodzInstance *instance, grid *mesh) {
         }
         mesh->BCu.type[c]       = setBCs.SetBCVxType(instance, position);
         Coordinates coordinates = {
-                .x = mesh->xg_coord[l],
+                .x = mesh->xg_coord[k],
                 .z = mesh->zg_coord[l]};
         mesh->BCu.val[c] = setBCs.SetBCVxValue(instance, position, coordinates);
       }
@@ -114,7 +114,7 @@ void SetBCs(MdoodzInstance *instance, grid *mesh) {
         }
         mesh->BCv.type[c]       = setBCs.SetBCVzType(instance, position);
         Coordinates coordinates = {
-                .x = mesh->xg_coord[l],
+                .x = mesh->xg_coord[k],
                 .z = mesh->zg_coord[l]};
         mesh->BCv.val[c] = setBCs.SetBCVzValue(instance, position, coordinates);
       }

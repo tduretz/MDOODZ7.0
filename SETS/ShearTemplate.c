@@ -13,7 +13,7 @@ int SetSurfacePhase(MdoodzInstance *instance, double x_coord) {
 }
 
 double SetHorizontalStrainRate(MdoodzInstance *instance, Coordinates coordinates) {
-  return -1.0 * coordinates.x * instance->model.EpsBG;
+  return -coordinates.x * instance->model.EpsBG;
 }
 
 double SetVerticalStrainRate(MdoodzInstance *instance, Coordinates coordinates) {
@@ -94,7 +94,7 @@ char SetBCVxType(MdoodzInstance *instance, POSITION position) {
 double SetBCVxValue(MdoodzInstance *instance, POSITION position, Coordinates coordinates) {
   if (instance->model.shear_style == 0) {
     if (position == LEFT || position == RIGHT) {
-      return coordinates.x * instance->model.EpsBG;
+      return -coordinates.x * instance->model.EpsBG;
     } else {
       return 0;
     }
@@ -130,10 +130,10 @@ char SetBCVzType(MdoodzInstance *instance, POSITION position) {
   }
 }
 
-double SetBCVzValue(MdoodzInstance *instance, POSITION position, Coordinates gridCoordinates) {
+double SetBCVzValue(MdoodzInstance *instance, POSITION position, Coordinates coordinates) {
   if (instance->model.shear_style == 0) {
-    if (position == LEFT || position == RIGHT) {
-      return gridCoordinates.z * instance->model.EpsBG;
+    if (position == TOP || position == BOTTOM) {
+      return coordinates.z * instance->model.EpsBG;
     } else {
       return 0;
     }
