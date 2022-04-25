@@ -1,22 +1,11 @@
+#include "assert.h"
+#include "hdf5.h"
 #include "math.h"
 #include "mdoodz.h"
-#include "hdf5.h"
-#include "mdoodz.h"
-#include "assert.h"
 #include "stdio.h"
 #include "stdlib.h"
-#include "math.h"
 #define FILENAME "Output00001.gzip.h5"
 
-double SetSurfaceZCoord(MdoodzInstance *instance, double x_coord) {
-  const double A = instance->model.zmax / 2.0;
-  const double s = instance->model.zmax / 4.0;
-  return A * exp(-pow(x_coord, 2) / 2.0 / s / s);
-}
-
-int SetSurfacePhase(MdoodzInstance *instance, double x_coord) {
-  return 0;
-}
 
 double SetHorizontalVelocity(MdoodzInstance *instance, Coordinates coordinates) {
   return -coordinates.x * instance->model.EpsBG;
@@ -39,14 +28,6 @@ int SetPhase(MdoodzInstance *instance, Coordinates coordinates) {
   }
 }
 
-double SetGrainSize(MdoodzInstance *instance, Coordinates coordinates) {
-  return 0.0;
-}
-
-double SetPorosity(MdoodzInstance *instance, Coordinates coordinates) {
-  return 0.0;
-}
-
 double SetDensity(MdoodzInstance *instance, Coordinates coordinates) {
   const double T_init = (instance->model.user0 + zeroC) / instance->scaling.T;
   double       xc     = 0.0;
@@ -67,17 +48,9 @@ double SetDensity(MdoodzInstance *instance, Coordinates coordinates) {
   }
 }
 
-double SetTemperature(MdoodzInstance *instance, Coordinates coordinates) {
-  return (instance->model.user0 + zeroC) / instance->scaling.T;
-}
-
-double SetXComponent(MdoodzInstance *instance, Coordinates coordinates) {
-  return 0.0;
-}
-
 int SetBCVxType(MdoodzInstance *instance, POSITION position) {
   if (instance->model.shear_style == 0) {
-    if (position == LEFT || position == RIGHT) {
+    if (position == LEFT || position == RIGHT || position == TOPRIGHT || position == TOPLEFT || position == BOTTOMRIGHT || position == BOTTOMLEFT) {
       return 0;
     } else if (position == BOTTOM || position == TOP) {
       return 13;
@@ -85,9 +58,9 @@ int SetBCVxType(MdoodzInstance *instance, POSITION position) {
       return -1;
     }
   } else {
-    if (position == LEFT) {
+    if (position == LEFT || position == TOPLEFT || position == BOTTOMLEFT) {
       return -2;
-    } else if (position == RIGHT) {
+    } else if (position == RIGHT || position == TOPRIGHT || position == BOTTOMRIGHT) {
       return -12;
     } else if (position == BOTTOM || position == TOP) {
       return 11;
@@ -99,7 +72,7 @@ int SetBCVxType(MdoodzInstance *instance, POSITION position) {
 
 double SetBCVxValue(MdoodzInstance *instance, POSITION position, Coordinates coordinates) {
   if (instance->model.shear_style == 0) {
-    if (position == LEFT || position == RIGHT) {
+    if (position == LEFT || position == RIGHT || position == TOPRIGHT || position == TOPLEFT || position == BOTTOMRIGHT || position == BOTTOMLEFT) {
       return -coordinates.x * instance->model.EpsBG;
     } else {
       return 0;
@@ -118,7 +91,7 @@ double SetBCVxValue(MdoodzInstance *instance, POSITION position, Coordinates coo
 
 int SetBCVzType(MdoodzInstance *instance, POSITION position) {
   if (instance->model.shear_style == 0) {
-    if (position == LEFT || position == RIGHT) {
+    if (position == LEFT || position == RIGHT || position == TOPRIGHT || position == TOPLEFT || position == BOTTOMRIGHT || position == BOTTOMLEFT) {
       return 13;
     } else if (position == BOTTOM || position == TOP) {
       return 0;
@@ -138,14 +111,14 @@ int SetBCVzType(MdoodzInstance *instance, POSITION position) {
 
 double SetBCVzValue(MdoodzInstance *instance, POSITION position, Coordinates coordinates) {
   if (instance->model.shear_style == 0) {
-    if (position == TOP || position == BOTTOM) {
+    if (position == TOP || position == TOPRIGHT || position == TOPLEFT || position == BOTTOM || position == BOTTOMRIGHT || position == BOTTOMLEFT) {
       return coordinates.z * instance->model.EpsBG;
     } else {
       return 0;
     }
   } else {
     const double Lz = (double) (instance->model.zmax - instance->model.zmin);
-    if (position == LEFT || position == RIGHT) {
+    if (position == LEFT || position == RIGHT || position == TOPLEFT || position == BOTTOM || position == BOTTOMRIGHT || position == BOTTOMLEFT) {
       return 0.0 * instance->model.EpsBG * Lz;
     } else {
       return 0;
@@ -153,52 +126,24 @@ double SetBCVzValue(MdoodzInstance *instance, POSITION position, Coordinates coo
   }
 }
 
-int SetBCPType(MdoodzInstance *instance, POSITION position) {
-  return -1;
-}
-
-int SetBCTType(MdoodzInstance *instance, POSITION position) {
-  return 0;
-}
-
-double SetBCTValue(MdoodzInstance *instance, POSITION position, double particleTemperature) {
-  double surfaceTemperature = zeroC / instance->scaling.T;
-  if (position == FREE_SURFACE) {
-    return surfaceTemperature;
-  } else {
-    return 0;
-  }
-}
-
-int main(int nargs, char *args[]) {
-  MdoodzInstance instance         = NewMdoodzInstance();
-  instance.inputFileName          = GetSetupFileName(nargs, args);
-  instance.BuildInitialTopography = (BuildInitialTopography_ff){
-          .SetSurfacePhase  = SetSurfacePhase,
-          .SetSurfaceZCoord = SetSurfaceZCoord,
+int main() {
+  MdoodzInstance instance = NewMdoodzInstance();
+  instance.inputFileName  = "ShearTemplate.txt";
+  instance.SetParticles   = &(SetParticles_ff){
+            .SetPhase              = SetPhase,
+            .SetVerticalVelocity   = SetVerticalVelocity,
+            .SetHorizontalVelocity = SetHorizontalVelocity,
+            .SetDensity            = SetDensity,
   };
-  instance.SetParticles = (SetParticles_ff){
-          .SetPhase                = SetPhase,
-          .SetPorosity             = SetPorosity,
-          .SetGrainSize            = SetGrainSize,
-          .SetVerticalVelocity   = SetVerticalVelocity,
-          .SetHorizontalVelocity = SetHorizontalVelocity,
-          .SetDensity              = SetDensity,
-          .SetXComponent           = SetXComponent,
-          .SetTemperature          = SetTemperature,
-  };
-  instance.SetBCs = (SetBCs_ff){
+  instance.SetBCs = &(SetBCs_ff){
           .SetBCVxType  = SetBCVxType,
           .SetBCVxValue = SetBCVxValue,
           .SetBCVzType  = SetBCVzType,
           .SetBCVzValue = SetBCVzValue,
-          .SetBCPType   = SetBCPType,
-          .SetBCTType   = SetBCTType,
-          .SetBCTValue  = SetBCTValue,
   };
   instance.RunMDOODZ(&instance);
 
-  hid_t File = H5Fopen(FILENAME, H5F_ACC_RDONLY, H5P_DEFAULT);
+  hid_t File            = H5Fopen(FILENAME, H5F_ACC_RDONLY, H5P_DEFAULT);
   hid_t IterationsGroup = H5Gopen(File, "Iterations", H5P_DEFAULT);
   hid_t NumberStepsDataset =
           H5Dopen(IterationsGroup, "NumberSteps", H5P_DEFAULT);

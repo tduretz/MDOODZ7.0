@@ -93,14 +93,14 @@ int SetBCTTypeNew(MdoodzInstance *instance, POSITION position) {
 int main(int nargs, char *args[]) {
   MdoodzInstance instance         = NewMdoodzInstance();
   instance.inputFileName          = GetSetupFileName(nargs, args);
-  instance.BuildInitialTopography = (BuildInitialTopography_ff){
+  instance.BuildInitialTopography = &(BuildInitialTopography_ff){
           .SetSurfacePhase  = SetSurfacePhase,
           .SetSurfaceZCoord = SetSurfaceZCoord,
   };
-  instance.SetParticles = (SetParticles_ff){
+  instance.SetParticles = &(SetParticles_ff){
           .SetPhase = SetPhase,
   };
-  instance.SetBCs = (SetBCs_ff){
+  instance.SetBCs = &(SetBCs_ff){
           .SetBCVxType    = SetBCVxType,
           .SetBCVzType    = SetBCVzType,
           .SetBCPType     = SetBCPType,

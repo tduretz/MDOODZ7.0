@@ -22,14 +22,6 @@ int SetPhase(MdoodzInstance *instance, Coordinates coordinates) {
   }
 }
 
-double SetGrainSize(MdoodzInstance *instance, Coordinates coordinates) {
-  return 0.0;
-}
-
-double SetPorosity(MdoodzInstance *instance, Coordinates coordinates) {
-  return 0.0;
-}
-
 double SetDensity(MdoodzInstance *instance, Coordinates coordinates) {
   const double T_init = (instance->model.user0 + zeroC) / instance->scaling.T;
   double       xc     = 0.0;
@@ -48,14 +40,6 @@ double SetDensity(MdoodzInstance *instance, Coordinates coordinates) {
   } else {
     return instance->materials.rho[phase];
   }
-}
-
-double SetTemperature(MdoodzInstance *instance, Coordinates coordinates) {
-  return (instance->model.user0 + zeroC) / instance->scaling.T;
-}
-
-double SetXComponent(MdoodzInstance *instance, Coordinates coordinates) {
-  return 0.0;
 }
 
 int SetBCVxType(MdoodzInstance *instance, POSITION position) {
@@ -136,44 +120,20 @@ double SetBCVzValue(MdoodzInstance *instance, POSITION position, Coordinates coo
   }
 }
 
-int SetBCPType(MdoodzInstance *instance, POSITION position) {
-  return -1;
-}
-
-int SetBCTType(MdoodzInstance *instance, POSITION position) {
-  return 0;
-}
-
-double SetBCTValue(MdoodzInstance *instance, POSITION position, double particleTemperature) {
-  double surfaceTemperature = zeroC / instance->scaling.T;
-  if (position == FREE_SURFACE) {
-    return surfaceTemperature;
-  } else {
-    return 0;
-  }
-}
-
 int main(int nargs, char *args[]) {
   MdoodzInstance instance = NewMdoodzInstance();
   instance.inputFileName  = GetSetupFileName(nargs, args);
   instance.SetParticles   = &(SetParticles_ff){
             .SetPhase              = SetPhase,
-            .SetPorosity           = SetPorosity,
-            .SetGrainSize          = SetGrainSize,
             .SetVerticalVelocity   = SetVerticalVelocity,
             .SetHorizontalVelocity = SetHorizontalVelocity,
             .SetDensity            = SetDensity,
-            .SetXComponent         = SetXComponent,
-            .SetTemperature        = SetTemperature,
   };
   instance.SetBCs = &(SetBCs_ff){
           .SetBCVxType  = SetBCVxType,
           .SetBCVxValue = SetBCVxValue,
           .SetBCVzType  = SetBCVzType,
           .SetBCVzValue = SetBCVzValue,
-          .SetBCPType   = SetBCPType,
-          .SetBCTType   = SetBCTType,
-          .SetBCTValue  = SetBCTValue,
   };
   instance.RunMDOODZ(&instance);
 }
