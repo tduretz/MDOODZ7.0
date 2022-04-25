@@ -1,295 +1,180 @@
-#include "stdbool.h"
 #include "math.h"
 #include "mdoodz.h"
-#include "stdio.h"
+#include "stdbool.h"
 
-void BuildInitialTopography(markers *topo_chain, params model, scale scaling) {
-  const double TopoLevel = -0.0e3 / scaling.L;
-  const double h_pert = model.user3 / scaling.L; // perturbation amplitude
-  for (int k = 0; k < topo_chain->Nb_part; k++) {
-    topo_chain->z[k] = TopoLevel + h_pert * (3330.0 - 2800.0) / 2800.0 *
-                                       cos(2 * M_PI * topo_chain->x[k] /
-                                           (model.xmax - model.xmin));
-    topo_chain->phase[k] = 0;
-  }
+
+double SetSurfaceZCoord(MdoodzInstance *instance, double x_coord) {
+  const double TopoLevel = -0.0e3 / instance->scaling.L;
+  const double h_pert    = instance->model.user3 / instance->scaling.L;
+  return TopoLevel + h_pert * (3330.0 - 2800.0) / 2800.0 * cos(2 * M_PI * x_coord / (instance->model.xmax - instance->model.xmin));
 }
 
-double GetTemperature(scale scaling, params model, double depth) {
-  const double HLit = model.user1 / scaling.L; // lithosphere thickness
-  const double TsurfScaled = zeroC / scaling.T;
-  const double HLitScaled = HLit / scaling.L;
-  const double TmantScaled = (1330.0 + zeroC) / scaling.T;
-  const double Tpart =
-      ((TmantScaled - TsurfScaled) / HLitScaled) * depth + TsurfScaled;
-  if (Tpart > TmantScaled) {
-    return TmantScaled;
-  } else {
-    return Tpart;
-  }
-}
+int SetPhase(MdoodzInstance *instance, Coordinates coordinates) {
+  const double lithosphereThickness  = instance->model.user1 / instance->scaling.L;
+  const double crustThickness        = instance->model.user2 / instance->scaling.L;
+  const double perturbationAmplitude = instance->model.user3 / instance->scaling.L;
+  const double mohoLevel             = -crustThickness - perturbationAmplitude * cos(2 * M_PI * coordinates.x / (instance->model.xmax - instance->model.xmin));
+  const bool   isBelowLithosphere    = coordinates.z < -lithosphereThickness;
+  const bool   isAboveMoho           = coordinates.z > mohoLevel;
 
-int GetPhase(scale scaling, params model, double depth) {
-  const double HLit = model.user1 / scaling.L;   // lithosphere thickness
-  const double HCrust = model.user2 / scaling.L; // crust thickness
-  const double h_pert = model.user3 / scaling.L; // perturbation amplitude
-  const double xmin = model.xmin;                // xmin
-  const double xmax = model.xmax;                // xmax
-  const double HLitScaled = HLit / scaling.L;
-  const double mohoDepth = h_pert * cos(2 * M_PI * depth / (xmax - xmin));
-
-  if (depth < -HLitScaled) {
-    // astheno. M. below base lithos
-    return 3;
-  }
-  if (depth > -HCrust - mohoDepth) {
-    // crust above the Moho
-    return 1;
-  }
-  if (model.user4 == 1) {
-    if (depth > -HCrust + 2.5e3 / scaling.L - mohoDepth &&
-        depth < -HCrust + 4.5e3 / scaling.L - mohoDepth) {
-      // marker between 2.5 and 3 km above the Moho
+  if (instance->model.user4 && isAboveMoho) {
+    const bool is2500MAboveMoho = coordinates.z > mohoLevel + 2500 / instance->scaling.L;
+    const bool is4500MAboveMoho = coordinates.z > mohoLevel + 4500 / instance->scaling.L;
+    const bool is7000MAboveMoho = coordinates.z > mohoLevel + 7000 / instance->scaling.L;
+    const bool is9000MAboveMoho = coordinates.z > mohoLevel + 9000 / instance->scaling.L;
+    if (is2500MAboveMoho && !is4500MAboveMoho) {
       return 7;
-    } else if (depth > -HCrust + 7.0e3 / scaling.L - mohoDepth &&
-               depth < -HCrust + 9.0e3 / scaling.L - mohoDepth) {
-      // marker between 4.5 and 5 km above the Moho
+    } else if (is7000MAboveMoho && !is9000MAboveMoho) {
       return 8;
+    } else {
+      return 1;
     }
-  }
-  return 2;
-}
-
-double GetPorosity() { return 0.0; }
-
-double GetGrainSize(mat_prop *materials, scale scaling, params model,
-                    double depth) {
-  return materials->gs_ref[GetPhase(scaling, model, depth)];
-}
-
-double GetHorizontalStrainRate(double x, double EpsBG) { return -x * EpsBG; }
-
-double GetVerticalStrainRate(double z, double EpsBG) { return z * EpsBG; }
-
-void SetParticles(markers *particles, scale scaling, params model,
-                  mat_prop *materials) {
-  for (int np = 0; np < particles->Nb_part; np++) {
-    particles->Vx[np] = GetHorizontalStrainRate(particles->x[np], model.EpsBG);
-    particles->Vz[np] = GetVerticalStrainRate(particles->z[np], model.EpsBG);
-    particles->phi[np] = GetPorosity(); // zero porosity everywhere
-    particles->T[np] = GetTemperature(scaling, model, -particles->z[np]);
-    particles->phase[np] = GetPhase(scaling, model, -particles->z[np]);
-    particles->d[np] =
-        GetGrainSize(materials, scaling, model, -particles->z[np]);
+  } else if (isAboveMoho) {
+    return 1;
+  } else if (isBelowLithosphere) {
+    return 3;
+  } else {
+    return 2;
   }
 }
 
-/*--------------------------------------------------------------------------------------------------------------------*/
-/*------------------------------------------------------ M-Doodz
- * -----------------------------------------------------*/
-/*--------------------------------------------------------------------------------------------------------------------*/
+double SetTemperature(MdoodzInstance *instance, Coordinates coordinates) {
+  const double lithosphereThickness = instance->model.user1 / instance->scaling.L;// lithosphere thickness
+  const double surfaceTemperature   = 273.15 / instance->scaling.T;               // surface temperature
+  const double mantleTemperature    = (1330.0 + 273.15) / instance->scaling.T;    // adiabatic mantle temperature
+  const double particleTemperature  = ((mantleTemperature - surfaceTemperature) / lithosphereThickness) * (-coordinates.z) + surfaceTemperature;
+  if (particleTemperature > mantleTemperature) {
+    return mantleTemperature;
+  } else {
+    return particleTemperature;
+  }
+}
 
+double SetGrainSize(MdoodzInstance *instance, Coordinates coordinates) {
+  const int astenospherePhase = 3;
+  return instance->materials.gs_ref[astenospherePhase];
+}
 
-double GetBCVal(int k, int l, int Nx, int Nz, double xg_coord, double EpsBG) {
-  if (k == 0) {
-    // Matching BC nodes WEST
-    return -xg_coord * EpsBG;
-  } else if (k == Nx - 1) {
-    // Matching BC nodes EAST
-    return -xg_coord * EpsBG;
-  } else if (l == 0) {
-    // Free slip SOUTH
-    return 0;
-  } else if (l == Nz) {
-    // Free slip NORTH
+double SetHorizontalVelocity(MdoodzInstance *instance, Coordinates coordinates) {
+  return -coordinates.x * instance->model.EpsBG;
+}
+
+double SetVerticalVelocity(MdoodzInstance *instance, Coordinates coordinates) {
+  return coordinates.z * instance->model.EpsBG;
+}
+
+int SetBCVxType(MdoodzInstance *instance, POSITION position) {
+  if (position == TOP || position == BOTTOM || position == TOPLEFT || position == BOTTOMLEFT || position == TOPRIGHT || position == BOTTOMRIGHT) {
+    return 13;
+  } else if (position == LEFT || position == RIGHT) {
     return 0;
   } else {
-    // Internal points:  -1
-    return 0;
-  }
-}
-
-char GetBCType(int k, int l, int Nx, int Nz) {
-  if (k == 0) {
-    // Matching BC nodes WEST
-    return 0;
-  } else if (k == Nx - 1) {
-    // Matching BC nodes EAST
-    return 0;
-  } else if (l == 0) {
-    // Free slip SOUTH
-    return 13;
-  } else if (l == Nz) {
-    // Free slip NORTH
-    return 13;
-  } else {
-    // Internal points:  -1
     return -1;
   }
 }
 
-char GetBCpType(int k, int l, int Nx, int Nz) {
-  if ((k == 0 || k == Nx - 1 - 1) && l == Nz - 1 - 1) {
+double SetBCVxValue(MdoodzInstance *instance, POSITION position, Coordinates coordinates) {
+  if (position == LEFT || position == RIGHT) {
+    return -coordinates.x * instance->model.EpsBG;
+  } else {
+    return 0;
+  }
+}
+
+int SetBCVzType(MdoodzInstance *instance, POSITION position) {
+  if (position == LEFT || position == RIGHT || position == BOTTOMLEFT || position == BOTTOMRIGHT || position == TOPLEFT || position == TOPRIGHT) {
+    return 13;
+  } else if (position == BOTTOM || position == TOP) {
     return 0;
   } else {
-    // Internal points:  -1
     return -1;
   }
 }
 
-double GetBCpValue(int k, int l, int Nx, int Nz) {
-  return 0;
-}
-
-double GetBCtValue(int k, int l, int Nx, int Nz) {
-  return 0;
-}
-
-// Set physical properties on the grid and boundary conditions
-void SetBCs(grid *mesh, params *model, scale scaling, markers *particles,
-            mat_prop *materials, surface *topo) {
-  // Set unresaonable conductivity in the mantle to generate and adiabatic
-  // mantle as initial condition
-  const int phase_ast = 3; // This has to be the ASTHENOSPHERE phase number
-  const double k_crazy = 1000 * materials->k[phase_ast];
-  if (model->step == 0) {
-    materials->k_eff[phase_ast] = k_crazy;
-    printf("Running with crazy conductivity for the asthenosphere!!\n");
+double SetBCVzValue(MdoodzInstance *instance, POSITION position, Coordinates coordinates) {
+  if (position == TOP || position == BOTTOM || position == TOPLEFT || position == BOTTOMLEFT || position == TOPRIGHT || position == BOTTOMRIGHT) {
+    return coordinates.x * instance->model.EpsBG;
   } else {
-    materials->k_eff[phase_ast] = materials->k[phase_ast];
-    printf("Running with normal conductivity for the asthenosphere...\n");
+    return 0;
   }
+}
 
-  /* --------------------------------------------------------------------------------------------------------*/
-  /* Set the BCs for Vx on all grid levels */
-  /* Type  0: Dirichlet point that matches the physical boundary (Vx:
-   * left/right, Vz: bottom/top)            */
-  /* Type 11: Dirichlet point that do not match the physical boundary (Vx:
-   * bottom/top, Vz: left/right)       */
-  /* Type  2: Neumann point that do not match the physical boundary (Vx:
-   * bottom/top, Vz: left/right)         */
-  /* Type 13: Neumann point that matches the physical boundary (Vx: bottom/top,
-   * Vz: left/right)              */
-  /* Type -2: periodic in the x direction (matches the physical boundary) */
-  /* Type -1: not a BC point (tag for inner points) */
-  /* Type 30: not calculated (part of the "air") */
-  /* --------------------------------------------------------------------------------------------------------*/
-
-  for (int l = 0; l < mesh->Nz + 1; l++) {
-    for (int k = 0; k < mesh->Nx; k++) {
-      const int c = k + l * (mesh->Nx);
-      if (mesh->BCu.type[c] != 30) {
-        mesh->BCu.type[c] = GetBCType(k, l, mesh->Nx, mesh->Nz);
-        mesh->BCu.val[c] = GetBCVal(k, l, mesh->Nx, mesh->Nz,
-                                     mesh->xg_coord[k], model->EpsBG);
-      }
-    }
+int SetBCPType(MdoodzInstance *instance, POSITION position) {
+  if (position == TOPRIGHT || position == TOPLEFT) {
+    return 0;
+  } else {
+    return -1;
   }
+}
 
-  /* --------------------------------------------------------------------------------------------------------*/
-  /* Set the BCs for Vz on all grid levels */
-  /* Type  0: Dirichlet point that matches the physical boundary (Vx:
-   * left/right, Vz: bottom/top)            */
-  /* Type 11: Dirichlet point that do not match the physical boundary (Vx:
-   * bottom/top, Vz: left/right)       */
-  /* Type  2: Neumann point that do not match the physical boundary (Vx:
-   * bottom/top, Vz: left/right)         */
-  /* Type 13: Neumann point that matches the physical boundary (Vx: bottom/top,
-   * Vz: left/right)              */
-  /* Type -2: periodic in the x direction (does not match the physical boundary)
-   */
-  /* Type-10: useless point (set to zero) */
-  /* Type -1: not a BC point (tag for inner points) */
-  /* Type 30: not calculated (part of the "air") */
-  /* --------------------------------------------------------------------------------------------------------*/
-
-  for (int l = 0; l < mesh->Nz; l++) {
-    for (int k = 0; k < mesh->Nx + 1; k++) {
-      const int c = k + l * (mesh->Nx + 1);
-      if (mesh->BCv.type[c] != 30) {
-        const bool isWest = k == 0;
-        const bool isEast = k == mesh->Nx - 1 - 1;
-        const bool isSouth = k == 0;
-        const bool isNorth = k == 0;
-        mesh->BCv.type[c] = GetBCType(k, l, mesh->Nx, mesh->Nz);
-        mesh->BCv.val[c] =GetBCVal(k, l, mesh->Nx, mesh->Nz,
-                                     mesh->zg_coord[k], model->EpsBG);
-      }
-    }
+double SetBCTValue(MdoodzInstance *instance, POSITION position, double particleTemperature) {
+  double surfaceTemperature = zeroC / instance->scaling.T;
+  if (position == FREE_SURFACE) {
+    return surfaceTemperature;
+  } else {
+    return 0;
   }
+}
 
-  /* --------------------------------------------------------------------------------------------------------*/
-  /* Set the BCs for P on all grid levels */
-  /* Type  0: Dirichlet within the grid */
-  /* Type -1: not a BC point (tag for inner points) */
-  /* Type 30: not calculated (part of the "air") */
-  /* Type 31: surface pressure (Dirichlet) */
-  /* --------------------------------------------------------------------------------------------------------*/
-
-  for (int l = 0; l < mesh->Nz - 1; l++) {
-    for (int k = 0; k < mesh->Nx - 1; k++) {
-      const int c = k + l * (mesh->Nx - 1);
-      if (mesh->BCt.type[c] != 30) {
-        mesh->BCp.type[c] = GetBCpType(k, l, mesh->Nx, mesh->Nz);
-        mesh->BCp.val[c] = GetBCpValue(k, l, mesh->Nx, mesh->Nz);
-      }
-    }
+double SetBCTValueNew(MdoodzInstance *instance, POSITION position, double particleTemperature) {
+  double surfaceTemperature = zeroC / instance->scaling.T;
+  double mantleTemperature  = (1330. + zeroC) / instance->scaling.T;
+  if (position == BOTTOM || position == BOTTOMRIGHT || position == BOTTOMLEFT) {
+    return particleTemperature;
+  } else if (position == TOP || position == TOPRIGHT || position == TOPLEFT) {
+    return surfaceTemperature;
+  } else if (position == LEFT || position == RIGHT) {
+    return mantleTemperature;
+  } else {
+    return 0;
   }
+}
 
-  /* -------------------------------------------------------------------------------------------------------*/
-  /* Set the BCs for T on all grid levels */
-  /* Type  1: Dirichlet point that do not match the physical boundary (Vx:
-   * bottom/top, Vz: left/right)      */
-  /* Type  0: Neumann point that matches the physical boundary (Vx: bottom/top,
-   * Vz: left/right)             */
-  /* Type -2: periodic in the x direction (matches the physical boundary) */
-  /* Type -1: not a BC point (tag for inner points) */
-  /* Type 30: not calculated (part of the "air") */
-  /* -------------------------------------------------------------------------------------------------------*/
-
-  const double TN = 273.15 / scaling.T;
-  const double TW = (1330. + 273.15) / scaling.T,
-               TE = (1330. + 273.15) / scaling.T;
-
-  for (int l = 0; l < mesh->Nz - 1; l++) {
-    for (int k = 0; k < mesh->Nx - 1; k++) {
-      const int c = k + l * (mesh->Nx - 1);
-      const bool isFreeSurface =
-          (mesh->BCt.type[c] == -1 || mesh->BCt.type[c] == 1 ||
-           mesh->BCt.type[c] == 0) &&
-          mesh->BCt.type[c + mesh->Nx - 1] == 30;
-      const bool isWest = k == 0;
-      const bool isEast = k == mesh->Nx - 1 - 1;
-      const bool isSouth = k == 0;
-      const bool isNorth = k == 0;
-      if (mesh->BCt.type[c] != 30) {
-        if (isWest) {
-          mesh->BCt.type[c] = 0;
-          mesh->BCt.typW[l] = 0;
-          mesh->BCt.valW[l] = TW;
-        } else if (isEast) {
-          mesh->BCt.type[c] = 0;
-          mesh->BCt.typE[l] = 0;
-          mesh->BCt.valE[l] = TE;
-        } else if (isSouth) {
-          mesh->BCt.type[c] = 0;
-          mesh->BCt.typS[k] = 1;
-          mesh->BCt.valS[k] = mesh->T[c];
-        } else if (isNorth) {
-          mesh->BCt.type[c] = 0;
-          mesh->BCt.typN[k] = 1;
-          mesh->BCt.valN[k] = TN;
-        } else if (isFreeSurface) {
-          mesh->BCt.type[c] = 1;
-          mesh->BCt.val[c] = TN;
-        }
-      }
-    }
+int SetBCTType(MdoodzInstance *instance, POSITION position) {
+  if (position == FREE_SURFACE) {
+    return 1;
+  } else {
+    return 0;
   }
-  printf("Velocity and pressure were initialised\n");
-  printf("Boundary conditions were set up\n");
+}
+
+int SetBCTTypeNew(MdoodzInstance *instance, POSITION position) {
+  if (position == TOP || position == BOTTOM || position == TOPLEFT || position == BOTTOMLEFT || position == TOPRIGHT || position == BOTTOMRIGHT) {
+    return 1;
+  } else {
+    return 0;
+  }
 }
 
 int main(int nargs, char *args[]) {
-  char *setupFileName = GetSetupFileName(nargs, args);
-  RunMDOODZ(setupFileName, BuildInitialTopography, SetParticles, SetBCs);
+  MdoodzInstance instance         = NewMdoodzInstance();
+  instance.inputFileName          = GetSetupFileName(nargs, args);
+  instance.BuildInitialTopography = (BuildInitialTopography_ff){
+          .SetSurfaceZCoord = SetSurfaceZCoord,
+  };
+  instance.SetParticles = (SetParticles_ff){
+          .SetPhase              = SetPhase,
+          .SetTemperature        = SetTemperature,
+          .SetGrainSize          = SetGrainSize,
+          .SetHorizontalVelocity = SetHorizontalVelocity,
+          .SetVerticalVelocity   = SetVerticalVelocity,
+  };
+  instance.SetBCs = (SetBCs_ff){
+          .SetBCVxType    = SetBCVxType,
+          .SetBCVzType    = SetBCVzType,
+          .SetBCPType     = SetBCPType,
+          .SetBCTType     = SetBCTType,
+          .SetBCTTypeNew  = SetBCTTypeNew,
+          .SetBCTValue    = SetBCTValue,
+          .SetBCTValueNew = SetBCTValueNew,
+  };
+  int               astenospherePhases[1] = {3};
+  CrazyConductivity crazyConductivity     = {
+              .multiplier = 1000,
+              .nPhases    = 1,
+              .phases     = astenospherePhases,
+  };
+
+  instance.crazyConductivity = &crazyConductivity;
+  instance.RunMDOODZ(&instance);
 }

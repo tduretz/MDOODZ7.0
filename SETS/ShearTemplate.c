@@ -12,11 +12,11 @@ int SetSurfacePhase(MdoodzInstance *instance, double x_coord) {
   return 0;
 }
 
-double SetHorizontalStrainRate(MdoodzInstance *instance, Coordinates coordinates) {
+double SetHorizontalVelocity(MdoodzInstance *instance, Coordinates coordinates) {
   return -coordinates.x * instance->model.EpsBG;
 }
 
-double SetVerticalStrainRate(MdoodzInstance *instance, Coordinates coordinates) {
+double SetVerticalVelocity(MdoodzInstance *instance, Coordinates coordinates) {
   return coordinates.z * instance->model.EpsBG;
 }
 
@@ -159,8 +159,9 @@ double SetBCTValue(MdoodzInstance *instance, POSITION position, double particleT
   double surfaceTemperature = zeroC / instance->scaling.T;
   if (position == FREE_SURFACE) {
     return surfaceTemperature;
+  } else {
+    return 0;
   }
-  return particleTemperature;
 }
 
 int main(int nargs, char *args[]) {
@@ -174,8 +175,8 @@ int main(int nargs, char *args[]) {
           .SetPhase                = SetPhase,
           .SetPorosity             = SetPorosity,
           .SetGrainSize            = SetGrainSize,
-          .SetVerticalStrainRate   = SetVerticalStrainRate,
-          .SetHorizontalStrainRate = SetHorizontalStrainRate,
+          .SetVerticalVelocity   = SetVerticalVelocity,
+          .SetHorizontalVelocity = SetHorizontalVelocity,
           .SetDensity              = SetDensity,
           .SetXComponent           = SetXComponent,
           .SetTemperature          = SetTemperature,

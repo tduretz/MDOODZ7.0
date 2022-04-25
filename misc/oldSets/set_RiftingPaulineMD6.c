@@ -66,15 +66,23 @@ void SetParticles( markers *particles, scale scaling, params model, mat_prop *ma
         //--------------------------//
         // Phases - lithosphere-asthenosphere
         particles->phase[np] = 2;   //lithos. M. everywhere
-        if ( particles->z[np] < -HLit)  particles->phase[np] = 3; // astheno. M. below base lithos
+        if ( particles->z[np] < -HLit)  {
+          particles->phase[np] = 3; // astheno. M. below base lithos
+        }
         // Moho_depth equation :  -h_pert*cos(2*pi*x_current/(xmax-xmin));
-        if ( particles->z[np] > -HCrust-h_pert*cos(2*M_PI*particles->x[np]/(xmax-xmin))) particles->phase[np] = 1; // crust above the Moho
+        if ( particles->z[np] > -HCrust-h_pert*cos(2*M_PI*particles->x[np]/(xmax-xmin))) {
+          particles->phase[np] = 1; // crust above the Moho
+        }
      
         
         if ( model.user4 == 1 ) {
-            if ( particles->z[np] > -HCrust+2.5e3/scaling.L-h_pert*cos(2*M_PI*particles->x[np]/(xmax-xmin)) && particles->z[np] < -HCrust+4.5e3/scaling.L-h_pert*cos(2*M_PI*particles->x[np]/(xmax-xmin))) particles->phase[np] = 7; // marker between 2.5 and 3 km above the Moho
+            if ( particles->z[np] > -HCrust+2.5e3/scaling.L-h_pert*cos(2*M_PI*particles->x[np]/(xmax-xmin)) && particles->z[np] < -HCrust+4.5e3/scaling.L-h_pert*cos(2*M_PI*particles->x[np]/(xmax-xmin))) {
+              particles->phase[np] = 7; // marker between 2.5 and 3 km above the Moho
+            }
         
-            if ( particles->z[np] > -HCrust+7.0e3/scaling.L-h_pert*cos(2*M_PI*particles->x[np]/(xmax-xmin)) && particles->z[np] < -HCrust+9.0e3/scaling.L-h_pert*cos(2*M_PI*particles->x[np]/(xmax-xmin))) particles->phase[np] = 8; // marker between 4.5 and 5 km above the Moho
+            if ( particles->z[np] > -HCrust+7.0e3/scaling.L-h_pert*cos(2*M_PI*particles->x[np]/(xmax-xmin)) && particles->z[np] < -HCrust+9.0e3/scaling.L-h_pert*cos(2*M_PI*particles->x[np]/(xmax-xmin))) {
+              particles->phase[np] = 8; // marker between 4.5 and 5 km above the Moho
+            }
         }
         
         //if ( particles->z[np] > -HCrust                             )  particles->phase[np] = 1;

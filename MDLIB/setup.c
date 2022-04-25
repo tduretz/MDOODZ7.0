@@ -21,9 +21,10 @@ void SetParticles(MdoodzInstance *instance, markers *particles) {
     Coordinates coordinates = {
             .x = particles->x[np],
             .z = particles->z[np]};
-    particles->Vx[np]    = setParticles.SetHorizontalStrainRate(instance, coordinates);
-    particles->Vz[np]    = setParticles.SetVerticalStrainRate(instance, coordinates);
+    particles->Vx[np]    = setParticles.SetHorizontalVelocity(instance, coordinates);
+    particles->Vz[np]    = setParticles.SetVerticalVelocity(instance, coordinates);
     particles->phase[np] = setParticles.SetPhase(instance, coordinates);
+    particles->dual[np]  = setParticles.SetPhase(instance, coordinates);
     particles->d[np]     = setParticles.SetGrainSize(instance, coordinates);
     particles->phi[np]   = setParticles.SetPorosity(instance, coordinates);
     particles->rho[np]   = setParticles.SetDensity(instance, coordinates);
@@ -60,9 +61,21 @@ void SetBCs(MdoodzInstance *instance, grid *mesh) {
       if (mesh->BCu.type[c] != 30) {
         POSITION position;
         if (k == 0) {
-          position = LEFT;
+          if (l == mesh->Nz) {
+            position = TOPLEFT;
+          } else if (l == 0) {
+            position = BOTTOMLEFT;
+          } else {
+            position = LEFT;
+          }
         } else if (k == mesh->Nx - 1) {
-          position = RIGHT;
+          if (l == mesh->Nz) {
+            position = TOPRIGHT;
+          } else if (l == 0) {
+            position = BOTTOMRIGHT;
+          } else {
+            position = RIGHT;
+          }
         } else if (l == 0) {
           position = BOTTOM;
         } else if (l == mesh->Nz) {
@@ -70,7 +83,7 @@ void SetBCs(MdoodzInstance *instance, grid *mesh) {
         } else {
           position = INTERNAL;
         }
-        mesh->BCu.type[c]       = setBCs.SetBCVxType(instance, position);
+        mesh->BCu.type[c]       = (char) setBCs.SetBCVxType(instance, position);
         Coordinates coordinates = {
                 .x = mesh->xg_coord[k],
                 .z = mesh->zg_coord[l]};
@@ -101,18 +114,30 @@ void SetBCs(MdoodzInstance *instance, grid *mesh) {
       const int c = k + l * (mesh->Nx + 1);
       if (mesh->BCv.type[c] != 30) {
         POSITION position;
-        if (l == 0) {
+        if (k == 0) {
+          if (l == mesh->Nz - 1) {
+            position = TOPLEFT;
+          } else if (l == 0) {
+            position = BOTTOMLEFT;
+          } else {
+            position = LEFT;
+          }
+        } else if (k == mesh->Nx) {
+          if (l == mesh->Nz - 1) {
+            position = TOPRIGHT;
+          } else if (l == 0) {
+            position = BOTTOMRIGHT;
+          } else {
+            position = RIGHT;
+          }
+        } else if (l == 0) {
           position = BOTTOM;
         } else if (l == mesh->Nz - 1) {
           position = TOP;
-        } else if (k == 0) {
-          position = LEFT;
-        } else if (k == mesh->Nx) {
-          position = RIGHT;
         } else {
           position = INTERNAL;
         }
-        mesh->BCv.type[c]       = setBCs.SetBCVzType(instance, position);
+        mesh->BCv.type[c]       = (char) setBCs.SetBCVzType(instance, position);
         Coordinates coordinates = {
                 .x = mesh->xg_coord[k],
                 .z = mesh->zg_coord[l]};
@@ -137,9 +162,21 @@ void SetBCs(MdoodzInstance *instance, grid *mesh) {
       const int c = k + l * (NCX);
       POSITION  position;
       if (k == 0) {
-        position = LEFT;
+        if (l == NCZ - 1) {
+          position = TOPLEFT;
+        } else if (l == 0) {
+          position = BOTTOMLEFT;
+        } else {
+          position = LEFT;
+        }
       } else if (k == NCX - 1) {
-        position = RIGHT;
+        if (l == NCZ - 1) {
+          position = TOPRIGHT;
+        } else if (l == 0) {
+          position = BOTTOMRIGHT;
+        } else {
+          position = RIGHT;
+        }
       } else if (l == 0) {
         position = BOTTOM;
       } else if (l == NCZ - 1) {
@@ -150,7 +187,7 @@ void SetBCs(MdoodzInstance *instance, grid *mesh) {
         position = INTERNAL;
       }
       if (mesh->BCt.type[c] != 30) {
-        mesh->BCp.type[c] = setBCs.SetBCPType(instance, position);
+        mesh->BCp.type[c] = (char) setBCs.SetBCPType(instance, position);
         mesh->BCp.val[c]  = 0;
       }
     }
@@ -185,8 +222,16 @@ void SetBCs(MdoodzInstance *instance, grid *mesh) {
         position = INTERNAL;
       }
       if (mesh->BCt.type[c] != 30) {
-        mesh->BCt.type[c] = setBCs.SetBCTType(instance, position);
+        mesh->BCt.type[c] = (char) setBCs.SetBCTType(instance, position);
+        mesh->BCt.typE[c] = (char) setBCs.SetBCTTypeNew(instance, position);
+        mesh->BCt.typW[c] = (char) setBCs.SetBCTTypeNew(instance, position);
+        mesh->BCt.typN[c] = (char) setBCs.SetBCTTypeNew(instance, position);
+        mesh->BCt.typS[c] = (char) setBCs.SetBCTTypeNew(instance, position);
         mesh->BCt.val[c]  = setBCs.SetBCTValue(instance, position, mesh->T[c]);
+        mesh->BCt.valE[c] = setBCs.SetBCTValueNew(instance, position, mesh->T[c]);
+        mesh->BCt.valW[c] = setBCs.SetBCTValueNew(instance, position, mesh->T[c]);
+        mesh->BCt.valN[c] = setBCs.SetBCTValueNew(instance, position, mesh->T[c]);
+        mesh->BCt.valS[c] = setBCs.SetBCTValueNew(instance, position, mesh->T[c]);
       }
     }
   }

@@ -121,6 +121,15 @@ void RunMDOODZ(MdoodzInstance *this) {
         // Initialise particle fields
         PartInit( &particles, &this->model );
 
+        if (this->crazyConductivity) {
+          for (int n = 0; n < this->crazyConductivity->nPhases; n++) {
+            const int    phase           = this->crazyConductivity->phases[n];
+            const double k_crazy         = this->crazyConductivity->multiplier * this->materials.k[phase];
+            this->materials.k_eff[phase] = k_crazy;
+          }
+          printf("Running with crazy conductivity for the asthenosphere!!\n");
+        }
+
         // Initial grid tags
         SetBCs( this, &mesh);
         if ( this->model.free_surf == 1 ) {
@@ -578,6 +587,14 @@ void RunMDOODZ(MdoodzInstance *this) {
 //        exit(0);
 
         if ( this->model.ismechanical == 1 ) {
+
+          if (this->crazyConductivity) {
+            for (int n = 0; n < this->crazyConductivity->nPhases; n++) {
+              const int    phase           = this->crazyConductivity->phases[n];
+              this->materials.k_eff[phase] = this->materials.k[phase];
+            }
+            printf("Running with normal conductivity for the asthenosphere...\n");
+          }
 
             // Allocate and initialise solution and RHS vectors
             SetBCs( this, &mesh);
@@ -1237,7 +1254,8 @@ void RunMDOODZ(MdoodzInstance *this) {
 
 MdoodzInstance NewMdoodzInstance() {
   MdoodzInstance mdoodz = {
-    .RunMDOODZ = RunMDOODZ
+    .RunMDOODZ = RunMDOODZ,
+    .crazyConductivity = NULL
   };
   return mdoodz;
 }
