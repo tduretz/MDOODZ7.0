@@ -53,7 +53,7 @@ if (OMP)
     set(OpenMP_lgomp_LIBRARY "lgomp")
     find_package(OpenMP)
     set(DEPENDENCIES ${DEPENDENCIES} OpenMP::OpenMP_C)
-    set(CMAKE_C_FLAGS "-fopenmp -D _OMP_")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fopenmp -D _OMP_")
     message("Using OpenMP")
 endif()
 

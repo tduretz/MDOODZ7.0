@@ -128,24 +128,24 @@ typedef struct {
   SetSurfacePhase_f  SetSurfacePhase;
 } BuildInitialTopography_ff;
 
-typedef double (*SetHorizontalStrainRate_f)(MdoodzInstance *instance, Coordinates coordinates);
-typedef double (*SetVerticalStrainRate_f)(MdoodzInstance *instance, Coordinates coordinates);
-typedef int (*SetPhase_f)(MdoodzInstance *instance, Coordinates coordinates);
+typedef double (*SetHorizontalVelocity_f)(MdoodzInstance *instance, Coordinates coordinates);
+typedef double (*SetVerticalVelocity_f)(MdoodzInstance *instance, Coordinates coordinates);
 typedef double (*SetTemperature_f)(MdoodzInstance *instance, Coordinates coordinates);
 typedef double (*SetGrainSize_f)(MdoodzInstance *instance, Coordinates coordinates);
 typedef double (*SetPorosity_f)(MdoodzInstance *instance, Coordinates coordinates);
 typedef double (*SetDensity_f)(MdoodzInstance *instance, Coordinates coordinates);
 typedef double (*SetXComponent_f)(MdoodzInstance *instance, Coordinates coordinates);
+typedef int (*SetPhase_f)(MdoodzInstance *instance, Coordinates coordinates);
 
 typedef struct {
-  SetHorizontalStrainRate_f SetHorizontalVelocity;
-  SetVerticalStrainRate_f   SetVerticalVelocity;
-  SetPhase_f                SetPhase;
-  SetTemperature_f          SetTemperature;
-  SetGrainSize_f            SetGrainSize;
-  SetPorosity_f             SetPorosity;
-  SetDensity_f              SetDensity;
-  SetXComponent_f           SetXComponent;
+  SetHorizontalVelocity_f SetHorizontalVelocity;
+  SetVerticalVelocity_f   SetVerticalVelocity;
+  SetPhase_f              SetPhase;
+  SetTemperature_f        SetTemperature;
+  SetGrainSize_f          SetGrainSize;
+  SetPorosity_f           SetPorosity;
+  SetDensity_f            SetDensity;
+  SetXComponent_f         SetXComponent;
 } SetParticles_ff;
 
 typedef enum {
@@ -179,9 +179,10 @@ typedef struct {
   SetBCVzValue_f   SetBCVzValue;
   SetBCPType_f     SetBCPType;
   SetBCTType_f     SetBCTType;
-  SetBCTTypeNew_f  SetBCTTypeNew;
   SetBCTValue_f    SetBCTValue;
+
   SetBCTValueNew_f SetBCTValueNew;
+  SetBCTTypeNew_f  SetBCTTypeNew;
 } SetBCs_ff;
 
 typedef void (*RunMDOODZ_f)(MdoodzInstance *this);
@@ -193,18 +194,18 @@ typedef struct {
 } CrazyConductivity;
 
 struct MdoodzInstance {
-  char                     *inputFileName;
-  params                    model;
-  mat_prop                  materials;
-  scale                     scaling;
+  char                      *inputFileName;
+  params                     model;
+  mat_prop                   materials;
+  scale                      scaling;
 
-  BuildInitialTopography_ff BuildInitialTopography;
-  SetParticles_ff           SetParticles;
-  SetBCs_ff                 SetBCs;
+  BuildInitialTopography_ff *BuildInitialTopography;
+  SetParticles_ff           *SetParticles;
+  SetBCs_ff                 *SetBCs;
 
-  RunMDOODZ_f               RunMDOODZ;
+  RunMDOODZ_f                RunMDOODZ;
 
-  CrazyConductivity        *crazyConductivity;
+  CrazyConductivity         *crazyConductivity;
 };
 
 MdoodzInstance NewMdoodzInstance();

@@ -11,10 +11,10 @@ option(VALGRIND "Set this for enabling Valgrind for tests" OFF)
 
 if (OPT)
     message("Using optimization")
-    set(CMAKE_C_FLAGS "-O3 -ftree-vectorize -funroll-loops")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -ftree-vectorize -funroll-loops")
 else()
     message("Not using optimization")
-    set(CMAKE_C_FLAGS "-g -Wall -O0 -fno-inline -fno-omit-frame-pointer")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -Wall -O0 -fno-inline -fno-omit-frame-pointer")
 endif()
 
 include(Deps.cmake)

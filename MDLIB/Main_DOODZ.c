@@ -74,6 +74,7 @@ void RunMDOODZ(MdoodzInstance *this) {
 
     // Read input data
     ReadInputFile( fin_name, &istep, &irestart, &writer, &writer_step, &this->model, &this->scaling, &this->materials, &particles, &Nmodel);
+    CheckSetup(this);
     this->model.L0 = this->model.xmax - this->model.xmin; // Save initial length
 
     printf("*************************************\n");

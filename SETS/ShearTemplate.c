@@ -1,16 +1,5 @@
-#include "math.h"
 #include "mdoodz.h"
 
-
-double SetSurfaceZCoord(MdoodzInstance *instance, double x_coord) {
-  const double A = instance->model.zmax / 2.0;
-  const double s = instance->model.zmax / 4.0;
-  return A * exp(-pow(x_coord, 2) / 2.0 / s / s);
-}
-
-int SetSurfacePhase(MdoodzInstance *instance, double x_coord) {
-  return 0;
-}
 
 double SetHorizontalVelocity(MdoodzInstance *instance, Coordinates coordinates) {
   return -coordinates.x * instance->model.EpsBG;
@@ -165,23 +154,19 @@ double SetBCTValue(MdoodzInstance *instance, POSITION position, double particleT
 }
 
 int main(int nargs, char *args[]) {
-  MdoodzInstance instance         = NewMdoodzInstance();
-  instance.inputFileName          = GetSetupFileName(nargs, args);
-  instance.BuildInitialTopography = (BuildInitialTopography_ff){
-          .SetSurfacePhase  = SetSurfacePhase,
-          .SetSurfaceZCoord = SetSurfaceZCoord,
+  MdoodzInstance instance = NewMdoodzInstance();
+  instance.inputFileName  = GetSetupFileName(nargs, args);
+  instance.SetParticles   = &(SetParticles_ff){
+            .SetPhase              = SetPhase,
+            .SetPorosity           = SetPorosity,
+            .SetGrainSize          = SetGrainSize,
+            .SetVerticalVelocity   = SetVerticalVelocity,
+            .SetHorizontalVelocity = SetHorizontalVelocity,
+            .SetDensity            = SetDensity,
+            .SetXComponent         = SetXComponent,
+            .SetTemperature        = SetTemperature,
   };
-  instance.SetParticles = (SetParticles_ff){
-          .SetPhase                = SetPhase,
-          .SetPorosity             = SetPorosity,
-          .SetGrainSize            = SetGrainSize,
-          .SetVerticalVelocity   = SetVerticalVelocity,
-          .SetHorizontalVelocity = SetHorizontalVelocity,
-          .SetDensity              = SetDensity,
-          .SetXComponent           = SetXComponent,
-          .SetTemperature          = SetTemperature,
-  };
-  instance.SetBCs = (SetBCs_ff){
+  instance.SetBCs = &(SetBCs_ff){
           .SetBCVxType  = SetBCVxType,
           .SetBCVxValue = SetBCVxValue,
           .SetBCVzType  = SetBCVzType,

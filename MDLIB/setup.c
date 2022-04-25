@@ -4,8 +4,48 @@
 #include "stdlib.h"
 
 
+
+void CheckSetup(MdoodzInstance *instance) {
+  int   errorsCount  = 0;
+  char *errors[10]   = {};
+  int   warningsCount = 0;
+  char *warnings[10] = {};
+  if (instance->model.free_surf) {
+    if (!instance->BuildInitialTopography) {
+      errors[errorsCount] = "Free Surface mode is ON and BuildInitialTopography is not specified. Please set free_surf = 0 or specify BuildInitialTopography";
+      errorsCount++;
+    } else {
+      if (!instance->BuildInitialTopography->SetSurfaceZCoord) {
+        warnings[errorsCount] = "BuildInitialTopography.SetSurfaceZCoord is not specified. Flat surface will be generated";
+        warningsCount++;
+      }
+      if (!instance->BuildInitialTopography->SetSurfacePhase) {
+        warnings[errorsCount] = "BuildInitialTopography.SetSurfacePhase is not specified. Phase 0 will be used as surface material";
+        warningsCount++;
+      }
+    }
+  }
+
+  if (errorsCount) {
+    printf("\n\n*******************  YOU HAVE %d SETUP ERRORS  ********************\n", errorsCount);
+    for (int i = 0 ; i < errorsCount ; i++) {
+      printf("%d) %s\n", i+1, errors[i]);
+    }
+    printf("******************************************************************\n");
+    exit(144);
+  }
+
+  if (warningsCount) {
+    printf("\n\n******************  YOU HAVE %d SETUP WARNINGS  ******************\n", warningsCount);
+    for (int i = 0 ; i < warningsCount ; i++) {
+      printf("%d) %s\n", i+1, warnings[i]);
+    }
+    printf("******************************************************************\n");
+  }
+}
+
 void BuildInitialTopography(MdoodzInstance *instance, markers *topo_chain) {
-  BuildInitialTopography_ff buildInitialTopography = instance->BuildInitialTopography;
+  BuildInitialTopography_ff buildInitialTopography = *instance->BuildInitialTopography;
   for (int k = 0; k < topo_chain->Nb_part; k++) {
     const double x_coord = topo_chain->x[k];
     topo_chain->z[k]     = buildInitialTopography.SetSurfaceZCoord(instance, x_coord);
@@ -16,7 +56,7 @@ void BuildInitialTopography(MdoodzInstance *instance, markers *topo_chain) {
 }
 
 void SetParticles(MdoodzInstance *instance, markers *particles) {
-  SetParticles_ff setParticles = instance->SetParticles;
+  SetParticles_ff setParticles = *instance->SetParticles;
   for (int np = 0; np < particles->Nb_part; np++) {
     Coordinates coordinates = {
             .x = particles->x[np],
@@ -39,7 +79,7 @@ void SetParticles(MdoodzInstance *instance, markers *particles) {
 }
 
 void SetBCs(MdoodzInstance *instance, grid *mesh) {
-  SetBCs_ff setBCs = instance->SetBCs;
+  SetBCs_ff setBCs = *instance->SetBCs;
   /* --------------------------------------------------------------------------------------------------------*/
   /* Set the BCs for Vx on all grid levels */
   /* Type  0: Dirichlet point that matches the physical boundary (Vx:
@@ -223,15 +263,19 @@ void SetBCs(MdoodzInstance *instance, grid *mesh) {
       }
       if (mesh->BCt.type[c] != 30) {
         mesh->BCt.type[c] = (char) setBCs.SetBCTType(instance, position);
-        mesh->BCt.typE[c] = (char) setBCs.SetBCTTypeNew(instance, position);
-        mesh->BCt.typW[c] = (char) setBCs.SetBCTTypeNew(instance, position);
-        mesh->BCt.typN[c] = (char) setBCs.SetBCTTypeNew(instance, position);
-        mesh->BCt.typS[c] = (char) setBCs.SetBCTTypeNew(instance, position);
-        mesh->BCt.val[c]  = setBCs.SetBCTValue(instance, position, mesh->T[c]);
-        mesh->BCt.valE[c] = setBCs.SetBCTValueNew(instance, position, mesh->T[c]);
-        mesh->BCt.valW[c] = setBCs.SetBCTValueNew(instance, position, mesh->T[c]);
-        mesh->BCt.valN[c] = setBCs.SetBCTValueNew(instance, position, mesh->T[c]);
-        mesh->BCt.valS[c] = setBCs.SetBCTValueNew(instance, position, mesh->T[c]);
+        if (setBCs.SetBCTTypeNew) {
+          mesh->BCt.typE[c] = (char) setBCs.SetBCTTypeNew(instance, position);
+          mesh->BCt.typW[c] = (char) setBCs.SetBCTTypeNew(instance, position);
+          mesh->BCt.typN[c] = (char) setBCs.SetBCTTypeNew(instance, position);
+          mesh->BCt.typS[c] = (char) setBCs.SetBCTTypeNew(instance, position);
+        }
+        mesh->BCt.val[c] = setBCs.SetBCTValue(instance, position, mesh->T[c]);
+        if (setBCs.SetBCTValueNew) {
+          mesh->BCt.valE[c] = setBCs.SetBCTValueNew(instance, position, mesh->T[c]);
+          mesh->BCt.valW[c] = setBCs.SetBCTValueNew(instance, position, mesh->T[c]);
+          mesh->BCt.valN[c] = setBCs.SetBCTValueNew(instance, position, mesh->T[c]);
+          mesh->BCt.valS[c] = setBCs.SetBCTValueNew(instance, position, mesh->T[c]);
+        }
       }
     }
   }
