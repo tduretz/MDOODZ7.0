@@ -60,7 +60,7 @@ double SetXComponent(MdoodzInstance *instance, Coordinates coordinates) {
 
 int SetBCVxType(MdoodzInstance *instance, POSITION position) {
   if (instance->model.shear_style == 0) {
-    if (position == LEFT || position == RIGHT) {
+    if (position == LEFT || position == RIGHT || position == TOPRIGHT || position == TOPLEFT || position == BOTTOMRIGHT || position == BOTTOMLEFT) {
       return 0;
     } else if (position == BOTTOM || position == TOP) {
       return 13;
@@ -68,9 +68,9 @@ int SetBCVxType(MdoodzInstance *instance, POSITION position) {
       return -1;
     }
   } else {
-    if (position == LEFT) {
+    if (position == LEFT || position == TOPLEFT || position == BOTTOMLEFT) {
       return -2;
-    } else if (position == RIGHT) {
+    } else if (position == RIGHT || position == TOPRIGHT || position == BOTTOMRIGHT) {
       return -12;
     } else if (position == BOTTOM || position == TOP) {
       return 11;
@@ -82,7 +82,7 @@ int SetBCVxType(MdoodzInstance *instance, POSITION position) {
 
 double SetBCVxValue(MdoodzInstance *instance, POSITION position, Coordinates coordinates) {
   if (instance->model.shear_style == 0) {
-    if (position == LEFT || position == RIGHT) {
+    if (position == LEFT || position == RIGHT || position == TOPRIGHT || position == TOPLEFT || position == BOTTOMRIGHT || position == BOTTOMLEFT) {
       return -coordinates.x * instance->model.EpsBG;
     } else {
       return 0;
@@ -101,7 +101,7 @@ double SetBCVxValue(MdoodzInstance *instance, POSITION position, Coordinates coo
 
 int SetBCVzType(MdoodzInstance *instance, POSITION position) {
   if (instance->model.shear_style == 0) {
-    if (position == LEFT || position == RIGHT) {
+    if (position == LEFT || position == RIGHT || position == TOPRIGHT || position == TOPLEFT || position == BOTTOMRIGHT || position == BOTTOMLEFT) {
       return 13;
     } else if (position == BOTTOM || position == TOP) {
       return 0;
@@ -121,14 +121,14 @@ int SetBCVzType(MdoodzInstance *instance, POSITION position) {
 
 double SetBCVzValue(MdoodzInstance *instance, POSITION position, Coordinates coordinates) {
   if (instance->model.shear_style == 0) {
-    if (position == TOP || position == BOTTOM) {
+    if (position == TOP || position == TOPRIGHT || position == TOPLEFT || position == BOTTOM || position == BOTTOMRIGHT || position == BOTTOMLEFT) {
       return coordinates.z * instance->model.EpsBG;
     } else {
       return 0;
     }
   } else {
     const double Lz = (double) (instance->model.zmax - instance->model.zmin);
-    if (position == LEFT || position == RIGHT) {
+    if (position == LEFT || position == RIGHT || position == TOPLEFT || position == BOTTOM || position == BOTTOMRIGHT || position == BOTTOMLEFT) {
       return 0.0 * instance->model.EpsBG * Lz;
     } else {
       return 0;
