@@ -109,6 +109,24 @@ void ValidateSetup(MdoodzInstance *instance) {
     }
   }
 
+  if (instance->crazyConductivity) {
+    if (!instance->crazyConductivity->multiplier) {
+      errors[errorsCount] = "Parameter multiplier MUST be set for crazy conductivity";
+      errorsCount++;
+    }
+    if (!instance->crazyConductivity->phases) {
+      errors[errorsCount] = "Parameter phases MUST be set for crazy conductivity";
+      errorsCount++;
+    }
+    if (!instance->crazyConductivity->nPhases) {
+      errors[errorsCount] = "Parameter nPhases MUST be set for crazy conductivity";
+      errorsCount++;
+    } else if (instance->crazyConductivity->nPhases > instance->model.Nb_phases) {
+      errors[errorsCount] = "Asthenosphere phases for crazy conductivity is more than phases in a model. Please double check it";
+      errorsCount++;
+    }
+  }
+
   if (warningsCount) {
     printf("\n\n******************  YOU HAVE %d SETUP WARNINGS  ******************\n", warningsCount);
     for (int i = 0; i < warningsCount; i++) {
@@ -397,9 +415,21 @@ void SetBCs(MdoodzInstance *instance, grid *mesh) {
         const int c = k + l * (NCX);
         POSITION  position;
         if (k == 0) {
-          position = LEFT;
+          if (l == NCZ - 1) {
+            position = TOPLEFT;
+          } else if (l == 0) {
+            position = BOTTOMLEFT;
+          } else {
+            position = LEFT;
+          }
         } else if (k == NCX - 1) {
-          position = RIGHT;
+          if (l == NCZ - 1) {
+            position = TOPRIGHT;
+          } else if (l == 0) {
+            position = BOTTOMRIGHT;
+          } else {
+            position = RIGHT;
+          }
         } else if (l == 0) {
           position = BOTTOM;
         } else if (l == NCZ - 1) {
@@ -410,24 +440,23 @@ void SetBCs(MdoodzInstance *instance, grid *mesh) {
           position = INTERNAL;
         }
         if (mesh->BCt.type[c] != 30) {
-          Coordinates coordinates = {
-                  .x = mesh->xg_coord[k],
-                  .z = mesh->zg_coord[l]};
           mesh->BCt.type[c] = (char) setBCs.SetBCTType(instance, position);
+          mesh->BCt.val[c]  = setBCs.SetBCTValue(instance, position, mesh->T[c]);
           if (setBCs.SetBCTTypeNew) {
-            mesh->BCt.typE[c] = (char) setBCs.SetBCTTypeNew(instance, position);
-            mesh->BCt.typW[c] = (char) setBCs.SetBCTTypeNew(instance, position);
-            mesh->BCt.typN[c] = (char) setBCs.SetBCTTypeNew(instance, position);
-            mesh->BCt.typS[c] = (char) setBCs.SetBCTTypeNew(instance, position);
+            if (k == 0) {
+              mesh->BCt.typE[c] = (char) setBCs.SetBCTTypeNew(instance, position);
+              mesh->BCt.valE[c] = setBCs.SetBCTValueNew(instance, position, mesh->T[c]);
+            } else if (k == NCX - 1) {
+              mesh->BCt.typW[c] = (char) setBCs.SetBCTTypeNew(instance, position);
+              mesh->BCt.valW[c] = setBCs.SetBCTValueNew(instance, position, mesh->T[c]);
+            } else if (l == 0) {
+              mesh->BCt.typN[c] = (char) setBCs.SetBCTTypeNew(instance, position);
+              mesh->BCt.valN[c] = setBCs.SetBCTValueNew(instance, position, mesh->T[c]);
+            } else if (l == NCZ - 1) {
+              mesh->BCt.typS[c] = (char) setBCs.SetBCTTypeNew(instance, position);
+              mesh->BCt.valS[c] = setBCs.SetBCTValueNew(instance, position, mesh->T[c]);
+            }
           }
-          mesh->BCt.val[c] = setBCs.SetBCTValue(instance, position, mesh->T[c]);
-          if (setBCs.SetBCTValueNew) {
-            mesh->BCt.valE[c] = setBCs.SetBCTValueNew(instance, position, mesh->T[c]);
-            mesh->BCt.valW[c] = setBCs.SetBCTValueNew(instance, position, mesh->T[c]);
-            mesh->BCt.valN[c] = setBCs.SetBCTValueNew(instance, position, mesh->T[c]);
-            mesh->BCt.valS[c] = setBCs.SetBCTValueNew(instance, position, mesh->T[c]);
-          }
-          ValidateInternalPoint(position, mesh->BCt.type[c], coordinates, "SetBCTType");
         }
       }
     }

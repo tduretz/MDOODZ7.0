@@ -176,7 +176,6 @@ int main(int nargs, char *args[]) {
               .nPhases    = 1,
               .phases     = astenospherePhases,
   };
-
   instance.crazyConductivity = &crazyConductivity;
   instance.RunMDOODZ(&instance);
 }
