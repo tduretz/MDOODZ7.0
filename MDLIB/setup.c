@@ -246,7 +246,7 @@ void SetBCs(MdoodzInstance *instance, grid *mesh) {
       } else {
         position = INTERNAL;
       }
-      if (mesh->BCp.type[c] != 30) {
+      if (mesh->BCt.type[c] != 30) {
         if (setBCs.SetBCPType) {
           mesh->BCp.type[c] = (char) setBCs.SetBCPType(instance, position);
         } else {
