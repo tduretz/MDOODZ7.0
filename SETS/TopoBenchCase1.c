@@ -8,10 +8,6 @@ double SetSurfaceZCoord(MdoodzInstance *instance, double x_coord) {
   return -Amplitude * cos(2.0 * M_PI * x_coord / Wavelength);
 }
 
-int SetSurfacePhase(MdoodzInstance *instance, double x_coord) {
-  return 0;
-}
-
 int SetPhase(MdoodzInstance *instance, Coordinates coordinates) {
   double lithosphereBottomDepth = -100.0e3 / instance->scaling.L;
   if (coordinates.z > lithosphereBottomDepth) {
@@ -22,19 +18,19 @@ int SetPhase(MdoodzInstance *instance, Coordinates coordinates) {
 }
 
 int SetBCVxType(MdoodzInstance *instance, POSITION position) {
-  if (position == LEFT || position == RIGHT) {
-    return 0;
-  } else if (position == BOTTOM) {
+   if (position == BOTTOM || position == BOTTOMLEFT || position == BOTTOMRIGHT) {
     return 11;
-  } else if (position == TOP) {
+  } else if (position == TOP || position == TOPLEFT || position == TOPRIGHT) {
     return 13;
+  } else if (position == LEFT || position == RIGHT) {
+    return 0;
   } else {
     return -1;
   }
 }
 
 int SetBCVzType(MdoodzInstance *instance, POSITION position) {
-  if (position == LEFT || position == RIGHT) {
+  if (position == LEFT || position == RIGHT || position == BOTTOMLEFT || position == BOTTOMRIGHT || position == TOPLEFT || position == TOPRIGHT) {
     return 13;
   } else if (position == BOTTOM || position == TOP) {
     return 0;
@@ -51,50 +47,18 @@ int SetBCPType(MdoodzInstance *instance, POSITION position) {
   }
 }
 
-double SetBCTValue(MdoodzInstance *instance, POSITION position, double particleTemperature) {
-  double surfaceTemperature = zeroC / instance->scaling.T;
-  if (position == FREE_SURFACE) {
-    return surfaceTemperature;
-  } else {
-    return 0;
-  }
+double SetBCVxValue() {
+  return 0.0;
 }
 
-double SetBCTValueNew(MdoodzInstance *instance, POSITION position, double particleTemperature) {
-  double surfaceTemperature = zeroC / instance->scaling.T;
-  double mantleTemperature  = (1330. + zeroC) / instance->scaling.T;
-  if (position == BOTTOM || position == BOTTOMRIGHT || position == BOTTOMLEFT) {
-    return particleTemperature;
-  } else if (position == TOP || position == TOPRIGHT || position == TOPLEFT) {
-    return surfaceTemperature;
-  } else if (position == LEFT || position == RIGHT) {
-    return mantleTemperature;
-  } else {
-    return 0;
-  }
-}
-
-int SetBCTType(MdoodzInstance *instance, POSITION position) {
-  if (position == FREE_SURFACE) {
-    return 1;
-  } else {
-    return 0;
-  }
-}
-
-int SetBCTTypeNew(MdoodzInstance *instance, POSITION position) {
-  if (position == TOP || position == BOTTOM) {
-    return 1;
-  } else {
-    return 0;
-  }
+double SetBCVzValue() {
+  return 0.0;
 }
 
 int main(int nargs, char *args[]) {
   MdoodzInstance instance         = NewMdoodzInstance();
   instance.inputFileName          = GetSetupFileName(nargs, args);
   instance.BuildInitialTopography = &(BuildInitialTopography_ff){
-          .SetSurfacePhase  = SetSurfacePhase,
           .SetSurfaceZCoord = SetSurfaceZCoord,
   };
   instance.SetParticles = &(SetParticles_ff){
@@ -102,12 +66,10 @@ int main(int nargs, char *args[]) {
   };
   instance.SetBCs = &(SetBCs_ff){
           .SetBCVxType    = SetBCVxType,
+          .SetBCVxValue   = SetBCVxValue,
+          .SetBCVzValue   = SetBCVzValue,
           .SetBCVzType    = SetBCVzType,
           .SetBCPType     = SetBCPType,
-          .SetBCTType     = SetBCTType,
-          .SetBCTTypeNew  = SetBCTTypeNew,
-          .SetBCTValue    = SetBCTValue,
-          .SetBCTValueNew = SetBCTValueNew,
   };
   int               astenospherePhases[2] = {2, 4};
   CrazyConductivity crazyConductivity     = {
