@@ -301,19 +301,20 @@ void SetBCs(MdoodzInstance *instance, grid *mesh) {
         if (mesh->BCt.type[c] != 30) {
           mesh->BCt.type[c] = setBCs.SetBCTType(instance, position);
           mesh->BCt.val[c]  = setBCs.SetBCTValue(instance, position, mesh->T[c]);
+          // TODO change size of BCt array and phase out SetBCTTypeNew
           if (setBCs.SetBCTTypeNew) {
             if (k == 0) {
-              mesh->BCt.typW[c] = setBCs.SetBCTTypeNew(instance, position);
-              mesh->BCt.valW[c] = setBCs.SetBCTValueNew(instance, position, mesh->T[c]);
+              mesh->BCt.typW[l] = setBCs.SetBCTTypeNew(instance, position);
+              mesh->BCt.valW[l] = setBCs.SetBCTValueNew(instance, position, mesh->T[c]);
             } else if (k == NCX - 1) {
-              mesh->BCt.typE[c] = setBCs.SetBCTTypeNew(instance, position);
-              mesh->BCt.valE[c] = setBCs.SetBCTValueNew(instance, position, mesh->T[c]);
+              mesh->BCt.typE[l] = setBCs.SetBCTTypeNew(instance, position);
+              mesh->BCt.valE[l] = setBCs.SetBCTValueNew(instance, position, mesh->T[c]);
             } else if (l == 0) {
-              mesh->BCt.typS[c] = setBCs.SetBCTTypeNew(instance, position);
-              mesh->BCt.valS[c] = setBCs.SetBCTValueNew(instance, position, mesh->T[c]);
+              mesh->BCt.typS[k] = setBCs.SetBCTTypeNew(instance, position);
+              mesh->BCt.valS[k] = setBCs.SetBCTValueNew(instance, position, mesh->T[c]);
             } else if (l == NCZ - 1) {
-              mesh->BCt.typN[c] = setBCs.SetBCTTypeNew(instance, position);
-              mesh->BCt.valN[c] = setBCs.SetBCTValueNew(instance, position, mesh->T[c]);
+              mesh->BCt.typN[k] = setBCs.SetBCTTypeNew(instance, position);
+              mesh->BCt.valN[k] = setBCs.SetBCTValueNew(instance, position, mesh->T[c]);
             }
           }
         }
