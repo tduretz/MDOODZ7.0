@@ -303,17 +303,17 @@ void SetBCs(MdoodzInstance *instance, grid *mesh) {
           mesh->BCt.val[c]  = setBCs.SetBCTValue(instance, position, mesh->T[c]);
           if (setBCs.SetBCTTypeNew) {
             if (k == 0) {
-              mesh->BCt.typE[c] = (char) setBCs.SetBCTTypeNew(instance, position);
-              mesh->BCt.valE[c] = setBCs.SetBCTValueNew(instance, position, mesh->T[c]);
-            } else if (k == NCX - 1) {
               mesh->BCt.typW[c] = (char) setBCs.SetBCTTypeNew(instance, position);
               mesh->BCt.valW[c] = setBCs.SetBCTValueNew(instance, position, mesh->T[c]);
+            } else if (k == NCX - 1) {
+              mesh->BCt.typE[c] = (char) setBCs.SetBCTTypeNew(instance, position);
+              mesh->BCt.valE[c] = setBCs.SetBCTValueNew(instance, position, mesh->T[c]);
             } else if (l == 0) {
-              mesh->BCt.typN[c] = (char) setBCs.SetBCTTypeNew(instance, position);
-              mesh->BCt.valN[c] = setBCs.SetBCTValueNew(instance, position, mesh->T[c]);
-            } else if (l == NCZ - 1) {
               mesh->BCt.typS[c] = (char) setBCs.SetBCTTypeNew(instance, position);
               mesh->BCt.valS[c] = setBCs.SetBCTValueNew(instance, position, mesh->T[c]);
+            } else if (l == NCZ - 1) {
+              mesh->BCt.typN[c] = (char) setBCs.SetBCTTypeNew(instance, position);
+              mesh->BCt.valN[c] = setBCs.SetBCTValueNew(instance, position, mesh->T[c]);
             }
           }
         }
