@@ -17,7 +17,7 @@ int SetPhase(MdoodzInstance *instance, Coordinates coordinates) {
   }
 }
 
-int SetBCVxType(MdoodzInstance *instance, POSITION position) {
+char SetBCVxType(MdoodzInstance *instance, POSITION position) {
    if (position == BOTTOM || position == BOTTOMLEFT || position == BOTTOMRIGHT) {
     return 11;
   } else if (position == TOP || position == TOPLEFT || position == TOPRIGHT) {
@@ -29,7 +29,7 @@ int SetBCVxType(MdoodzInstance *instance, POSITION position) {
   }
 }
 
-int SetBCVzType(MdoodzInstance *instance, POSITION position) {
+char SetBCVzType(MdoodzInstance *instance, POSITION position) {
   if (position == LEFT || position == RIGHT || position == BOTTOMLEFT || position == BOTTOMRIGHT || position == TOPLEFT || position == TOPRIGHT) {
     return 13;
   } else if (position == BOTTOM || position == TOP) {
@@ -39,7 +39,7 @@ int SetBCVzType(MdoodzInstance *instance, POSITION position) {
   }
 }
 
-int SetBCPType(MdoodzInstance *instance, POSITION position) {
+char SetBCPType(MdoodzInstance *instance, POSITION position) {
   if (position == TOPRIGHT || position == TOPLEFT) {
     return 0;
   } else {

@@ -63,7 +63,7 @@ double SetVerticalVelocity(MdoodzInstance *instance, Coordinates coordinates) {
   return coordinates.z * instance->model.EpsBG;
 }
 
-int SetBCVxType(MdoodzInstance *instance, POSITION position) {
+char SetBCVxType(MdoodzInstance *instance, POSITION position) {
   if (position == TOP || position == BOTTOM || position == TOPLEFT || position == BOTTOMLEFT || position == TOPRIGHT || position == BOTTOMRIGHT) {
     return 13;
   } else if (position == LEFT || position == RIGHT) {
@@ -81,7 +81,7 @@ double SetBCVxValue(MdoodzInstance *instance, POSITION position, Coordinates coo
   }
 }
 
-int SetBCVzType(MdoodzInstance *instance, POSITION position) {
+char SetBCVzType(MdoodzInstance *instance, POSITION position) {
   if (position == LEFT || position == RIGHT || position == BOTTOMLEFT || position == BOTTOMRIGHT || position == TOPLEFT || position == TOPRIGHT) {
     return 13;
   } else if (position == BOTTOM || position == TOP) {
@@ -99,7 +99,7 @@ double SetBCVzValue(MdoodzInstance *instance, POSITION position, Coordinates coo
   }
 }
 
-int SetBCPType(MdoodzInstance *instance, POSITION position) {
+char SetBCPType(MdoodzInstance *instance, POSITION position) {
   if (position == TOPRIGHT || position == TOPLEFT) {
     return 0;
   } else {
@@ -130,7 +130,7 @@ double SetBCTValueNew(MdoodzInstance *instance, POSITION position, double partic
   }
 }
 
-int SetBCTType(MdoodzInstance *instance, POSITION position) {
+char SetBCTType(MdoodzInstance *instance, POSITION position) {
   if (position == FREE_SURFACE) {
     return 1;
   } else {
@@ -138,7 +138,7 @@ int SetBCTType(MdoodzInstance *instance, POSITION position) {
   }
 }
 
-int SetBCTTypeNew(MdoodzInstance *instance, POSITION position) {
+char SetBCTTypeNew(MdoodzInstance *instance, POSITION position) {
   if (position == TOP || position == BOTTOM || position == TOPLEFT || position == BOTTOMLEFT || position == TOPRIGHT || position == BOTTOMRIGHT) {
     return 1;
   } else {

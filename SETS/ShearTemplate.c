@@ -42,7 +42,7 @@ double SetDensity(MdoodzInstance *instance, Coordinates coordinates) {
   }
 }
 
-int SetBCVxType(MdoodzInstance *instance, POSITION position) {
+char SetBCVxType(MdoodzInstance *instance, POSITION position) {
   if (instance->model.shear_style == 0) {
     if (position == LEFT || position == RIGHT || position == TOPRIGHT || position == TOPLEFT || position == BOTTOMRIGHT || position == BOTTOMLEFT) {
       return 0;
@@ -83,7 +83,7 @@ double SetBCVxValue(MdoodzInstance *instance, POSITION position, Coordinates coo
   }
 }
 
-int SetBCVzType(MdoodzInstance *instance, POSITION position) {
+char SetBCVzType(MdoodzInstance *instance, POSITION position) {
   if (instance->model.shear_style == 0) {
     if (position == LEFT || position == RIGHT || position == TOPRIGHT || position == TOPLEFT || position == BOTTOMRIGHT || position == BOTTOMLEFT) {
       return 13;
