@@ -149,15 +149,15 @@ typedef struct {
 } SetParticles_ff;
 
 typedef enum {
-  TOPRIGHT,
-  TOPLEFT,
-  BOTTOMRIGHT,
-  BOTTOMLEFT,
+  NORTHEAST,
+  NORTHWEST,
+  SOUTHEAST,
+  SOUTHWEST,
   INTERNAL,
-  TOP,
-  BOTTOM,
-  LEFT,
-  RIGHT,
+  NORTH,
+  SOUTH,
+  WEST,
+  EAST,
   FREE_SURFACE
 } POSITION;
 

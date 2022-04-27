@@ -18,11 +18,11 @@ int SetPhase(MdoodzInstance *instance, Coordinates coordinates) {
 }
 
 char SetBCVxType(MdoodzInstance *instance, POSITION position) {
-   if (position == BOTTOM || position == BOTTOMLEFT || position == BOTTOMRIGHT) {
+   if (position == SOUTH || position == SOUTHWEST || position == SOUTHEAST) {
     return 11;
-  } else if (position == TOP || position == TOPLEFT || position == TOPRIGHT) {
+  } else if (position == NORTH || position == NORTHWEST || position == NORTHEAST) {
     return 13;
-  } else if (position == LEFT || position == RIGHT) {
+  } else if (position == WEST || position == EAST) {
     return 0;
   } else {
     return -1;
@@ -30,9 +30,9 @@ char SetBCVxType(MdoodzInstance *instance, POSITION position) {
 }
 
 char SetBCVzType(MdoodzInstance *instance, POSITION position) {
-  if (position == LEFT || position == RIGHT || position == BOTTOMLEFT || position == BOTTOMRIGHT || position == TOPLEFT || position == TOPRIGHT) {
+  if (position == WEST || position == EAST || position == SOUTHWEST || position == SOUTHEAST || position == NORTHWEST || position == NORTHEAST) {
     return 13;
-  } else if (position == BOTTOM || position == TOP) {
+  } else if (position == SOUTH || position == NORTH) {
     return 0;
   } else {
     return -1;
@@ -40,7 +40,7 @@ char SetBCVzType(MdoodzInstance *instance, POSITION position) {
 }
 
 char SetBCPType(MdoodzInstance *instance, POSITION position) {
-  if (position == TOPRIGHT || position == TOPLEFT) {
+  if (position == NORTHEAST || position == NORTHWEST) {
     return 0;
   } else {
     return -1;

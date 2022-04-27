@@ -64,9 +64,9 @@ double SetVerticalVelocity(MdoodzInstance *instance, Coordinates coordinates) {
 }
 
 char SetBCVxType(MdoodzInstance *instance, POSITION position) {
-  if (position == TOP || position == BOTTOM || position == TOPLEFT || position == BOTTOMLEFT || position == TOPRIGHT || position == BOTTOMRIGHT) {
+  if (position == NORTH || position == SOUTH || position == NORTHWEST || position == SOUTHWEST || position == NORTHEAST || position == SOUTHEAST) {
     return 13;
-  } else if (position == LEFT || position == RIGHT) {
+  } else if (position == WEST || position == EAST) {
     return 0;
   } else {
     return -1;
@@ -74,7 +74,7 @@ char SetBCVxType(MdoodzInstance *instance, POSITION position) {
 }
 
 double SetBCVxValue(MdoodzInstance *instance, POSITION position, Coordinates coordinates) {
-  if (position == LEFT || position == RIGHT) {
+  if (position == WEST || position == EAST) {
     return -coordinates.x * instance->model.EpsBG;
   } else {
     return 0;
@@ -82,9 +82,9 @@ double SetBCVxValue(MdoodzInstance *instance, POSITION position, Coordinates coo
 }
 
 char SetBCVzType(MdoodzInstance *instance, POSITION position) {
-  if (position == LEFT || position == RIGHT || position == BOTTOMLEFT || position == BOTTOMRIGHT || position == TOPLEFT || position == TOPRIGHT) {
+  if (position == WEST || position == EAST || position == SOUTHWEST || position == SOUTHEAST || position == NORTHWEST || position == NORTHEAST) {
     return 13;
-  } else if (position == BOTTOM || position == TOP) {
+  } else if (position == SOUTH || position == NORTH) {
     return 0;
   } else {
     return -1;
@@ -92,7 +92,7 @@ char SetBCVzType(MdoodzInstance *instance, POSITION position) {
 }
 
 double SetBCVzValue(MdoodzInstance *instance, POSITION position, Coordinates coordinates) {
-  if (position == TOP || position == BOTTOM || position == TOPLEFT || position == BOTTOMLEFT || position == TOPRIGHT || position == BOTTOMRIGHT) {
+  if (position == NORTH || position == SOUTH || position == NORTHWEST || position == SOUTHWEST || position == NORTHEAST || position == SOUTHEAST) {
     return coordinates.x * instance->model.EpsBG;
   } else {
     return 0;
@@ -100,7 +100,7 @@ double SetBCVzValue(MdoodzInstance *instance, POSITION position, Coordinates coo
 }
 
 char SetBCPType(MdoodzInstance *instance, POSITION position) {
-  if (position == TOPRIGHT || position == TOPLEFT) {
+  if (position == NORTHEAST || position == NORTHWEST) {
     return 0;
   } else {
     return -1;
@@ -119,11 +119,11 @@ double SetBCTValue(MdoodzInstance *instance, POSITION position, double particleT
 double SetBCTValueNew(MdoodzInstance *instance, POSITION position, double particleTemperature) {
   double surfaceTemperature = zeroC / instance->scaling.T;
   double mantleTemperature  = (1330. + zeroC) / instance->scaling.T;
-  if (position == BOTTOM || position == BOTTOMRIGHT || position == BOTTOMLEFT) {
+  if (position == SOUTH || position == SOUTHEAST || position == SOUTHWEST) {
     return particleTemperature;
-  } else if (position == TOP || position == TOPRIGHT || position == TOPLEFT) {
+  } else if (position == NORTH || position == NORTHEAST || position == NORTHWEST) {
     return surfaceTemperature;
-  } else if (position == LEFT || position == RIGHT) {
+  } else if (position == WEST || position == EAST) {
     return mantleTemperature;
   } else {
     return 0;
@@ -139,7 +139,7 @@ char SetBCTType(MdoodzInstance *instance, POSITION position) {
 }
 
 char SetBCTTypeNew(MdoodzInstance *instance, POSITION position) {
-  if (position == TOP || position == BOTTOM || position == TOPLEFT || position == BOTTOMLEFT || position == TOPRIGHT || position == BOTTOMRIGHT) {
+  if (position == NORTH || position == SOUTH || position == NORTHWEST || position == SOUTHWEST || position == NORTHEAST || position == SOUTHEAST) {
     return 1;
   } else {
     return 0;

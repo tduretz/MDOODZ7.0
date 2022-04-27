@@ -86,12 +86,12 @@ void ValidateInternalPoint(POSITION position, char bcType, Coordinates coordinat
   if (position == INTERNAL && bcType != -1) {
     printf("Internal point MUST be set as -1 but attempted to be set as %d. Please double check your SetBCs.%s setup\n", bcType, setupFunctionName);
     printf("Particle coordinates: X: %f, Z: %f \n", coordinates.x, coordinates.z);
-    printf("Make sure you haven't missed TOPRIGHT, TOPLEFT, BOTTOMRIGHT, BOTTOMLEFT positions");
+    printf("Make sure you haven't missed position NORTHEAST, NORTHWEST, SOUTHEAST, SOUTHWEST positions");
     exit(144);
   } else if (position != INTERNAL && bcType == -1) {
     printf("Point is not internal but has a -1 type. Please double check your SetBCs.%s setup\n", setupFunctionName);
     printf("Particle coordinates: X: %f, Z: %f \n", coordinates.x, coordinates.z);
-    printf("Make sure you haven't missed TOPRIGHT, TOPLEFT, BOTTOMRIGHT, BOTTOMLEFT positions");
+    printf("Make sure you haven't missed NORTHEAST, NORTHWEST, SOUTHEAST, SOUTHWEST positions");
     exit(144);
   }
 }
@@ -120,24 +120,24 @@ void SetBCs(MdoodzInstance *instance, grid *mesh) {
         POSITION position;
         if (k == 0) {
           if (l == mesh->Nz) {
-            position = TOPLEFT;
+            position = NORTHWEST;
           } else if (l == 0) {
-            position = BOTTOMLEFT;
+            position = SOUTHWEST;
           } else {
-            position = LEFT;
+            position = WEST;
           }
         } else if (k == mesh->Nx - 1) {
           if (l == mesh->Nz) {
-            position = TOPRIGHT;
+            position = NORTHEAST;
           } else if (l == 0) {
-            position = BOTTOMRIGHT;
+            position = SOUTHEAST;
           } else {
-            position = RIGHT;
+            position = EAST;
           }
         } else if (l == 0) {
-          position = BOTTOM;
+          position = SOUTH;
         } else if (l == mesh->Nz) {
-          position = TOP;
+          position = NORTH;
         } else {
           position = INTERNAL;
         }
@@ -175,24 +175,24 @@ void SetBCs(MdoodzInstance *instance, grid *mesh) {
         POSITION position;
         if (k == 0) {
           if (l == mesh->Nz - 1) {
-            position = TOPLEFT;
+            position = NORTHWEST;
           } else if (l == 0) {
-            position = BOTTOMLEFT;
+            position = SOUTHWEST;
           } else {
-            position = LEFT;
+            position = WEST;
           }
         } else if (k == mesh->Nx) {
           if (l == mesh->Nz - 1) {
-            position = TOPRIGHT;
+            position = NORTHEAST;
           } else if (l == 0) {
-            position = BOTTOMRIGHT;
+            position = SOUTHEAST;
           } else {
-            position = RIGHT;
+            position = EAST;
           }
         } else if (l == 0) {
-          position = BOTTOM;
+          position = SOUTH;
         } else if (l == mesh->Nz - 1) {
-          position = TOP;
+          position = NORTH;
         } else {
           position = INTERNAL;
         }
@@ -223,24 +223,24 @@ void SetBCs(MdoodzInstance *instance, grid *mesh) {
       POSITION  position;
       if (k == 0) {
         if (l == NCZ - 1) {
-          position = TOPLEFT;
+          position = NORTHWEST;
         } else if (l == 0) {
-          position = BOTTOMLEFT;
+          position = SOUTHWEST;
         } else {
-          position = LEFT;
+          position = WEST;
         }
       } else if (k == NCX - 1) {
         if (l == NCZ - 1) {
-          position = TOPRIGHT;
+          position = NORTHEAST;
         } else if (l == 0) {
-          position = BOTTOMRIGHT;
+          position = SOUTHEAST;
         } else {
-          position = RIGHT;
+          position = EAST;
         }
       } else if (l == 0) {
-        position = BOTTOM;
+        position = SOUTH;
       } else if (l == NCZ - 1) {
-        position = TOP;
+        position = NORTH;
       } else if ((mesh->BCp.type[c] == -1 || mesh->BCp.type[c] == 1 || mesh->BCp.type[c] == 0) && mesh->BCp.type[c + NCX] == 30) {
         position = FREE_SURFACE;
       } else {
@@ -275,24 +275,24 @@ void SetBCs(MdoodzInstance *instance, grid *mesh) {
         POSITION  position;
         if (k == 0) {
           if (l == NCZ - 1) {
-            position = TOPLEFT;
+            position = NORTHWEST;
           } else if (l == 0) {
-            position = BOTTOMLEFT;
+            position = SOUTHWEST;
           } else {
-            position = LEFT;
+            position = WEST;
           }
         } else if (k == NCX - 1) {
           if (l == NCZ - 1) {
-            position = TOPRIGHT;
+            position = NORTHEAST;
           } else if (l == 0) {
-            position = BOTTOMRIGHT;
+            position = SOUTHEAST;
           } else {
-            position = RIGHT;
+            position = EAST;
           }
         } else if (l == 0) {
-          position = BOTTOM;
+          position = SOUTH;
         } else if (l == NCZ - 1) {
-          position = TOP;
+          position = NORTH;
         } else if ((mesh->BCt.type[c] == -1 || mesh->BCt.type[c] == 1 || mesh->BCt.type[c] == 0) && mesh->BCt.type[c + NCX] == 30) {
           position = FREE_SURFACE;
         } else {
