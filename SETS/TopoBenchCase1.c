@@ -56,28 +56,26 @@ double SetBCVzValue() {
 }
 
 int main(int nargs, char *args[]) {
-  MdoodzInstance instance         = NewMdoodzInstance();
-  instance.inputFileName          = GetSetupFileName(nargs, args);
-  instance.BuildInitialTopography = &(BuildInitialTopography_ff){
-          .SetSurfaceZCoord = SetSurfaceZCoord,
-  };
-  instance.SetParticles = &(SetParticles_ff){
-          .SetPhase = SetPhase,
-  };
-  instance.SetBCs = &(SetBCs_ff){
-          .SetBCVxType    = SetBCVxType,
-          .SetBCVxValue   = SetBCVxValue,
-          .SetBCVzValue   = SetBCVzValue,
-          .SetBCVzType    = SetBCVzType,
-          .SetBCPType     = SetBCPType,
-  };
-  int               astenospherePhases[2] = {2, 4};
-  CrazyConductivity crazyConductivity     = {
-              .multiplier = 1000,
-              .nPhases    = 2,
-              .phases     = astenospherePhases,
-  };
-
-  instance.crazyConductivity = &crazyConductivity;
-  instance.RunMDOODZ(&instance);
+  int            astenospherePhases[2] = {2, 4};
+  MdoodzInstance instance              = {
+                       .inputFileName          = GetSetupFileName(nargs, args),
+                       .BuildInitialTopography = &(BuildInitialTopography_ff){
+                               .SetSurfaceZCoord = SetSurfaceZCoord,
+          },
+                       .SetParticles = &(SetParticles_ff){
+                               .SetPhase = SetPhase,
+          },
+                       .SetBCs = &(SetBCs_ff){
+                               .SetBCVxType  = SetBCVxType,
+                               .SetBCVxValue = SetBCVxValue,
+                               .SetBCVzValue = SetBCVzValue,
+                               .SetBCVzType  = SetBCVzType,
+                               .SetBCPType   = SetBCPType,
+          },
+                       .crazyConductivity = &(CrazyConductivity){
+                               .multiplier = 1000,
+                               .nPhases    = 2,
+                               .phases     = astenospherePhases,
+          }};
+  RunMDOODZ(&instance);
 }

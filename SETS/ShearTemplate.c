@@ -121,19 +121,20 @@ double SetBCVzValue(MdoodzInstance *instance, POSITION position, Coordinates coo
 }
 
 int main(int nargs, char *args[]) {
-  MdoodzInstance instance = NewMdoodzInstance();
-  instance.inputFileName  = GetSetupFileName(nargs, args);
-  instance.SetParticles   = &(SetParticles_ff){
-            .SetPhase              = SetPhase,
-            .SetVerticalVelocity   = SetVerticalVelocity,
-            .SetHorizontalVelocity = SetHorizontalVelocity,
-            .SetDensity            = SetDensity,
+  MdoodzInstance instance = {
+          .inputFileName = GetSetupFileName(nargs, args),
+          .SetParticles  = &(SetParticles_ff){
+                   .SetPhase              = SetPhase,
+                   .SetVerticalVelocity   = SetVerticalVelocity,
+                   .SetHorizontalVelocity = SetHorizontalVelocity,
+                   .SetDensity            = SetDensity,
+          },
+          .SetBCs = &(SetBCs_ff){
+                  .SetBCVxType  = SetBCVxType,
+                  .SetBCVxValue = SetBCVxValue,
+                  .SetBCVzType  = SetBCVzType,
+                  .SetBCVzValue = SetBCVzValue,
+          },
   };
-  instance.SetBCs = &(SetBCs_ff){
-          .SetBCVxType  = SetBCVxType,
-          .SetBCVxValue = SetBCVxValue,
-          .SetBCVzType  = SetBCVzType,
-          .SetBCVzValue = SetBCVzValue,
-  };
-  instance.RunMDOODZ(&instance);
+  RunMDOODZ(&instance);
 }

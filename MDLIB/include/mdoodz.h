@@ -203,11 +203,11 @@ struct MdoodzInstance {
   SetParticles_ff           *SetParticles;
   SetBCs_ff                 *SetBCs;
 
-  RunMDOODZ_f                RunMDOODZ;
+  RunMDOODZ_f               *RunMDOODZ;
 
   CrazyConductivity         *crazyConductivity;
 };
 
-MdoodzInstance NewMdoodzInstance();
+void RunMDOODZ(MdoodzInstance *instance);
 
 #endif

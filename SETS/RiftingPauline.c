@@ -147,35 +147,36 @@ char SetBCTTypeNew(MdoodzInstance *instance, POSITION position) {
 }
 
 int main(int nargs, char *args[]) {
-  MdoodzInstance instance         = NewMdoodzInstance();
-  instance.inputFileName          = GetSetupFileName(nargs, args);
-  instance.BuildInitialTopography = &(BuildInitialTopography_ff){
-          .SetSurfaceZCoord = SetSurfaceZCoord,
+  int            astenospherePhases[1] = {3};
+  MdoodzInstance instance              = {
+                       .inputFileName          = GetSetupFileName(nargs, args),
+                       .BuildInitialTopography = &(BuildInitialTopography_ff){
+                               .SetSurfaceZCoord = SetSurfaceZCoord,
+          },
+                       .SetParticles = &(SetParticles_ff){
+                               .SetPhase              = SetPhase,
+                               .SetTemperature        = SetTemperature,
+                               .SetGrainSize          = SetGrainSize,
+                               .SetHorizontalVelocity = SetHorizontalVelocity,
+                               .SetVerticalVelocity   = SetVerticalVelocity,
+          },
+                       .SetBCs = &(SetBCs_ff){
+                               .SetBCVxType    = SetBCVxType,
+                               .SetBCVzType    = SetBCVzType,
+                               .SetBCVxValue   = SetBCVxValue,
+                               .SetBCVzValue   = SetBCVzValue,
+                               .SetBCPType     = SetBCPType,
+                               .SetBCTType     = SetBCTType,
+                               .SetBCTTypeNew  = SetBCTTypeNew,
+                               .SetBCTValue    = SetBCTValue,
+                               .SetBCTValueNew = SetBCTValueNew,
+          },
+                       .crazyConductivity = &(CrazyConductivity){
+                               .multiplier = 1000,
+                               .nPhases    = 1,
+                               .phases     = astenospherePhases,
+          },
+
   };
-  instance.SetParticles = &(SetParticles_ff){
-          .SetPhase              = SetPhase,
-          .SetTemperature        = SetTemperature,
-          .SetGrainSize          = SetGrainSize,
-          .SetHorizontalVelocity = SetHorizontalVelocity,
-          .SetVerticalVelocity   = SetVerticalVelocity,
-  };
-  instance.SetBCs = &(SetBCs_ff){
-          .SetBCVxType    = SetBCVxType,
-          .SetBCVzType    = SetBCVzType,
-          .SetBCVxValue   = SetBCVxValue,
-          .SetBCVzValue   = SetBCVzValue,
-          .SetBCPType     = SetBCPType,
-          .SetBCTType     = SetBCTType,
-          .SetBCTTypeNew  = SetBCTTypeNew,
-          .SetBCTValue    = SetBCTValue,
-          .SetBCTValueNew = SetBCTValueNew,
-  };
-  int               astenospherePhases[1] = {3};
-  CrazyConductivity crazyConductivity     = {
-              .multiplier = 1000,
-              .nPhases    = 1,
-              .phases     = astenospherePhases,
-  };
-  instance.crazyConductivity = &crazyConductivity;
-  instance.RunMDOODZ(&instance);
+  RunMDOODZ(&instance);
 }

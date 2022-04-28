@@ -48,7 +48,7 @@ double SetDensity(MdoodzInstance *instance, Coordinates coordinates) {
   }
 }
 
-int SetBCVxType(MdoodzInstance *instance, POSITION position) {
+char SetBCVxType(MdoodzInstance *instance, POSITION position) {
   if (instance->model.shear_style == 0) {
     if (position == WEST || position == EAST || position == NORTHEAST || position == NORTHWEST || position == SOUTHEAST || position == SOUTHWEST) {
       return 0;
@@ -89,7 +89,7 @@ double SetBCVxValue(MdoodzInstance *instance, POSITION position, Coordinates coo
   }
 }
 
-int SetBCVzType(MdoodzInstance *instance, POSITION position) {
+char SetBCVzType(MdoodzInstance *instance, POSITION position) {
   if (instance->model.shear_style == 0) {
     if (position == WEST || position == EAST || position == NORTHEAST || position == NORTHWEST || position == SOUTHEAST || position == SOUTHWEST) {
       return 13;
@@ -127,21 +127,22 @@ double SetBCVzValue(MdoodzInstance *instance, POSITION position, Coordinates coo
 }
 
 int main() {
-  MdoodzInstance instance = NewMdoodzInstance();
-  instance.inputFileName  = "ShearTemplate.txt";
-  instance.SetParticles   = &(SetParticles_ff){
-            .SetPhase              = SetPhase,
-            .SetVerticalVelocity   = SetVerticalVelocity,
-            .SetHorizontalVelocity = SetHorizontalVelocity,
-            .SetDensity            = SetDensity,
+  MdoodzInstance instance = {
+          .inputFileName = "ShearTemplate.txt",
+          .SetParticles  = &(SetParticles_ff){
+                   .SetPhase              = SetPhase,
+                   .SetVerticalVelocity   = SetVerticalVelocity,
+                   .SetHorizontalVelocity = SetHorizontalVelocity,
+                   .SetDensity            = SetDensity,
+          },
+          .SetBCs = &(SetBCs_ff){
+                  .SetBCVxType  = SetBCVxType,
+                  .SetBCVxValue = SetBCVxValue,
+                  .SetBCVzType  = SetBCVzType,
+                  .SetBCVzValue = SetBCVzValue,
+          },
   };
-  instance.SetBCs = &(SetBCs_ff){
-          .SetBCVxType  = SetBCVxType,
-          .SetBCVxValue = SetBCVxValue,
-          .SetBCVzType  = SetBCVzType,
-          .SetBCVzValue = SetBCVzValue,
-  };
-  instance.RunMDOODZ(&instance);
+  RunMDOODZ(&instance);
 
   hid_t File            = H5Fopen(FILENAME, H5F_ACC_RDONLY, H5P_DEFAULT);
   hid_t IterationsGroup = H5Gopen(File, "Iterations", H5P_DEFAULT);

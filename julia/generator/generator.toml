@@ -3,4 +3,4 @@ library_name = "libmdoodz"
 output_file_path = "./MdoodzInstance.jl"
 module_name = "LibMdoodz"
 jll_pkg_name = "mdoodz_jll"
-export_symbol_prefixes = ["CX", "clang_"]
+export_symbol_prefixes = ["MDOODZ", "MD_"]
