@@ -39,9 +39,9 @@ int SetPhase(MdoodzInstance *instance, Coordinates coordinates) {
 }
 
 double SetTemperature(MdoodzInstance *instance, Coordinates coordinates) {
-  const double lithosphereThickness = instance->model.user1 / instance->scaling.L;// lithosphere thickness
-  const double surfaceTemperature   = 273.15 / instance->scaling.T;               // surface temperature
-  const double mantleTemperature    = (1330.0 + 273.15) / instance->scaling.T;    // adiabatic mantle temperature
+  const double lithosphereThickness = instance->model.user1 / instance->scaling.L;
+  const double surfaceTemperature   = 273.15 / instance->scaling.T;
+  const double mantleTemperature    = (1330.0 + 273.15) / instance->scaling.T;
   const double particleTemperature  = ((mantleTemperature - surfaceTemperature) / lithosphereThickness) * (-coordinates.z) + surfaceTemperature;
   if (particleTemperature > mantleTemperature) {
     return mantleTemperature;

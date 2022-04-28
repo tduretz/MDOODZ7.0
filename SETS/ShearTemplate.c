@@ -10,12 +10,8 @@ double SetVerticalVelocity(MdoodzInstance *instance, Coordinates coordinates) {
 }
 
 int SetPhase(MdoodzInstance *instance, Coordinates coordinates) {
-  double       xc     = 0.0;
-  double       zc     = 0.0;
   const double radius = instance->model.user1 / instance->scaling.L;
-  const double X      = coordinates.x - xc;
-  const double Z      = coordinates.z - zc;
-  if (X * X + Z * Z < radius * radius) {
+  if (coordinates.x * coordinates.x + coordinates.z * coordinates.z < radius * radius) {
     return 1;
   } else {
     return 0;
@@ -24,13 +20,9 @@ int SetPhase(MdoodzInstance *instance, Coordinates coordinates) {
 
 double SetDensity(MdoodzInstance *instance, Coordinates coordinates) {
   const double T_init = (instance->model.user0 + zeroC) / instance->scaling.T;
-  double       xc     = 0.0;
-  double       zc     = 0.0;
   const double radius = instance->model.user1 / instance->scaling.L;
-  const double X      = coordinates.x - xc;
-  const double Z      = coordinates.z - zc;
   int          phase;
-  if (X * X + Z * Z < radius * radius) {
+  if (coordinates.x * coordinates.x + coordinates.z * coordinates.z < radius * radius) {
     phase = 1;
   } else {
     phase = 0;
