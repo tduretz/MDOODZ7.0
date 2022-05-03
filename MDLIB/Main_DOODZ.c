@@ -158,6 +158,10 @@ void RunMDOODZ(MdoodzInstance *instance) {
         // Set phases on particles
         SetParticles(instance, &particles);
 
+        MinMaxArray(particles.Vx, instance->scaling.V, particles.Nb_part, "Vxp init" );
+        MinMaxArray(particles.Vz, instance->scaling.V, particles.Nb_part, "Vzp init" );
+        MinMaxArray(particles.T, instance->scaling.T, particles.Nb_part,  "Tp init" );
+
         if (instance->model.free_surf == 1 ) CleanUpSurfaceParticles( &particles, &mesh, topo, instance->scaling );
 
         // Create phase percentage arrays
@@ -196,6 +200,14 @@ void RunMDOODZ(MdoodzInstance *instance) {
             MinMaxArray( mesh.u_in, instance->scaling.V, (mesh.Nx)*(mesh.Nz+1),   "Vx. grid" );
             MinMaxArray( mesh.v_in, instance->scaling.V, (mesh.Nx+1)*(mesh.Nz),   "Vz. grid" );
             MinMaxArray( mesh.p_in, instance->scaling.S, (mesh.Nx-1)*(mesh.Nz-1), "       P" );
+        }
+        if (instance->crazyConductivity) {
+          for (int n = 0; n < instance->crazyConductivity->nPhases; n++) {
+            const int    phase           = instance->crazyConductivity->phases[n];
+            const double k_crazy         = instance->crazyConductivity->multiplier * instance->materials.k[phase];
+            instance->materials.k_eff[phase] = k_crazy;
+          }
+          printf("Running with crazy conductivity for the asthenosphere!!\n");
         }
         // Initial solution fields (Fine mesh)
         SetBCs(instance, &mesh);

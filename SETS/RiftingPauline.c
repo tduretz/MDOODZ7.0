@@ -93,7 +93,7 @@ char SetBCVzType(MdoodzInstance *instance, POSITION position) {
 
 double SetBCVzValue(MdoodzInstance *instance, POSITION position, Coordinates coordinates) {
   if (position == NORTH || position == SOUTH || position == NORTHWEST || position == SOUTHWEST || position == NORTHEAST || position == SOUTHEAST) {
-    return coordinates.x * instance->model.EpsBG;
+    return coordinates.z * instance->model.EpsBG;
   } else {
     return 0;
   }

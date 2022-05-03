@@ -185,8 +185,6 @@ typedef struct {
   SetBCTTypeNew_f  SetBCTTypeNew;
 } SetBCs_ff;
 
-typedef void (*RunMDOODZ_f)(MdoodzInstance *this);
-
 typedef struct {
   double multiplier;
   int   *phases;
@@ -202,8 +200,6 @@ struct MdoodzInstance {
   BuildInitialTopography_ff *BuildInitialTopography;
   SetParticles_ff           *SetParticles;
   SetBCs_ff                 *SetBCs;
-
-  RunMDOODZ_f               *RunMDOODZ;
 
   CrazyConductivity         *crazyConductivity;
 };
