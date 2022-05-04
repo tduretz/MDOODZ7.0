@@ -131,10 +131,10 @@ typedef struct {
 typedef double (*SetHorizontalVelocity_f)(MdoodzInstance *instance, Coordinates coordinates);
 typedef double (*SetVerticalVelocity_f)(MdoodzInstance *instance, Coordinates coordinates);
 typedef double (*SetTemperature_f)(MdoodzInstance *instance, Coordinates coordinates);
-typedef double (*SetGrainSize_f)(MdoodzInstance *instance, Coordinates coordinates);
-typedef double (*SetPorosity_f)(MdoodzInstance *instance, Coordinates coordinates);
-typedef double (*SetDensity_f)(MdoodzInstance *instance, Coordinates coordinates);
-typedef double (*SetXComponent_f)(MdoodzInstance *instance, Coordinates coordinates);
+typedef double (*SetGrainSize_f)(MdoodzInstance *instance, Coordinates coordinates, int phase);
+typedef double (*SetPorosity_f)(MdoodzInstance *instance, Coordinates coordinates, int phase);
+typedef double (*SetDensity_f)(MdoodzInstance *instance, Coordinates coordinates, int phase);
+typedef double (*SetXComponent_f)(MdoodzInstance *instance, Coordinates coordinates, int phase);
 typedef int (*SetPhase_f)(MdoodzInstance *instance, Coordinates coordinates);
 
 typedef struct {
@@ -169,8 +169,8 @@ typedef char (*SetBCTTypeNew_f)(MdoodzInstance *instance, POSITION position);
 
 typedef double (*SetBCVxValue_f)(MdoodzInstance *instance, POSITION position, Coordinates coordinates);
 typedef double (*SetBCVzValue_f)(MdoodzInstance *instance, POSITION position, Coordinates coordinates);
-typedef double (*SetBCTValue_f)(MdoodzInstance *instance, POSITION position, double particleTemperature);
-typedef double (*SetBCTValueNew_f)(MdoodzInstance *instance, POSITION position, double particleTemperature);
+typedef double (*SetBCTValue_f)(MdoodzInstance *instance, POSITION position, double gridTemperature);
+typedef double (*SetBCTValueNew_f)(MdoodzInstance *instance, POSITION position, double gridTemperature);
 
 typedef struct {
   SetBCVxType_f    SetBCVxType;

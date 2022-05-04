@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
-if (EXISTS ${PROJECT_SOURCE_DIR}/env.cmake)
-    include(env.cmake)
-endif()
+include(env.cmake OPTIONAL)
+
 set(CMAKE_C_COMPILER ${C_COMPILER})
 project(MDOODZ C)
 set(CMAKE_C_STANDARD 11)
