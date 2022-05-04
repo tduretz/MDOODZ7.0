@@ -1,19 +1,8 @@
 #include "assert.h"
 #include "hdf5.h"
-#include "math.h"
 #include "mdoodz.h"
-#include "stdio.h"
-#include "stdlib.h"
 #define FILENAME "Output00001.gzip.h5"
 
-
-double SetHorizontalVelocity(MdoodzInstance *instance, Coordinates coordinates) {
-  return -coordinates.x * instance->model.EpsBG;
-}
-
-double SetVerticalVelocity(MdoodzInstance *instance, Coordinates coordinates) {
-  return coordinates.z * instance->model.EpsBG;
-}
 
 int SetPhase(MdoodzInstance *instance, Coordinates coordinates) {
   double       xc     = 0.0;
@@ -28,19 +17,8 @@ int SetPhase(MdoodzInstance *instance, Coordinates coordinates) {
   }
 }
 
-double SetDensity(MdoodzInstance *instance, Coordinates coordinates) {
+double SetDensity(MdoodzInstance *instance, Coordinates coordinates, int phase) {
   const double T_init = (instance->model.user0 + zeroC) / instance->scaling.T;
-  double       xc     = 0.0;
-  double       zc     = 0.0;
-  const double radius = instance->model.user1 / instance->scaling.L;
-  const double X      = coordinates.x - xc;
-  const double Z      = coordinates.z - zc;
-  int          phase;
-  if (X * X + Z * Z < radius * radius) {
-    phase = 1;
-  } else {
-    phase = 0;
-  }
   if (instance->model.eqn_state > 0) {
     return instance->materials.rho[phase] * (1 - instance->materials.alp[phase] * (T_init - instance->materials.T0[phase]));
   } else {
@@ -131,8 +109,6 @@ int main() {
           .inputFileName = "ShearTemplate.txt",
           .SetParticles  = &(SetParticles_ff){
                    .SetPhase              = SetPhase,
-                   .SetVerticalVelocity   = SetVerticalVelocity,
-                   .SetHorizontalVelocity = SetHorizontalVelocity,
                    .SetDensity            = SetDensity,
           },
           .SetBCs = &(SetBCs_ff){
