@@ -13,7 +13,7 @@ with the public include header `mdoodz.h`.
 MDOODZ public interface includes a struct that stores input parameters and setup toolchains in a `MdoodzInstance` struct.
 To run the simulation `MdoodzInstance` must be passed to `RunMDOODZ(MdoodzInstance *instance)` function
 
-###Examples:
+### Examples:
 
 1) Minimal mechanical model: [ShearTemplate](SETS/ShearTemplate.c)
 2) A free surface model: [TopoBenchCase1](SETS/TopoBenchCase1.c)
