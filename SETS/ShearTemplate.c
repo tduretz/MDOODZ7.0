@@ -1,14 +1,6 @@
 #include "mdoodz.h"
 
 
-double SetHorizontalVelocity(MdoodzInstance *instance, Coordinates coordinates) {
-  return -coordinates.x * instance->model.EpsBG;
-}
-
-double SetVerticalVelocity(MdoodzInstance *instance, Coordinates coordinates) {
-  return coordinates.z * instance->model.EpsBG;
-}
-
 int SetPhase(MdoodzInstance *instance, Coordinates coordinates) {
   const double radius = instance->model.user1 / instance->scaling.L;
   if (coordinates.x * coordinates.x + coordinates.z * coordinates.z < radius * radius) {
@@ -117,8 +109,6 @@ int main(int nargs, char *args[]) {
           .inputFileName = GetSetupFileName(nargs, args),
           .SetParticles  = &(SetParticles_ff){
                    .SetPhase              = SetPhase,
-                   .SetVerticalVelocity   = SetVerticalVelocity,
-                   .SetHorizontalVelocity = SetHorizontalVelocity,
                    .SetDensity            = SetDensity,
           },
           .SetBCs = &(SetBCs_ff){

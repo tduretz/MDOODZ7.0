@@ -167,8 +167,8 @@ typedef char (*SetBCPType_f)(MdoodzInstance *instance, POSITION position);
 typedef char (*SetBCTType_f)(MdoodzInstance *instance, POSITION position);
 typedef char (*SetBCTTypeNew_f)(MdoodzInstance *instance, POSITION position);
 
-typedef double (*SetBCVxValue_f)(MdoodzInstance *instance, POSITION position, Coordinates gridCoordinates);
-typedef double (*SetBCVzValue_f)(MdoodzInstance *instance, POSITION position, Coordinates gridCoordinates);
+typedef double (*SetBCVxValue_f)(MdoodzInstance *instance, POSITION position, Coordinates coordinates);
+typedef double (*SetBCVzValue_f)(MdoodzInstance *instance, POSITION position, Coordinates coordinates);
 typedef double (*SetBCTValue_f)(MdoodzInstance *instance, POSITION position, double particleTemperature);
 typedef double (*SetBCTValueNew_f)(MdoodzInstance *instance, POSITION position, double particleTemperature);
 
