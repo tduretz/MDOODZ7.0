@@ -10,15 +10,8 @@ int SetPhase(MdoodzInstance *instance, Coordinates coordinates) {
   }
 }
 
-double SetDensity(MdoodzInstance *instance, Coordinates coordinates) {
+double SetDensity(MdoodzInstance *instance, Coordinates coordinates, int phase) {
   const double T_init = (instance->model.user0 + zeroC) / instance->scaling.T;
-  const double radius = instance->model.user1 / instance->scaling.L;
-  int          phase;
-  if (coordinates.x * coordinates.x + coordinates.z * coordinates.z < radius * radius) {
-    phase = 1;
-  } else {
-    phase = 0;
-  }
   if (instance->model.eqn_state > 0) {
     return instance->materials.rho[phase] * (1 - instance->materials.alp[phase] * (T_init - instance->materials.T0[phase]));
   } else {

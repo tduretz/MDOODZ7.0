@@ -36,6 +36,13 @@ void SetParticles(MdoodzInstance *instance, markers *particles) {
     Coordinates coordinates = {
             .x = particles->x[np],
             .z = particles->z[np]};
+    if (setParticles.SetPhase) {
+      particles->phase[np] = setParticles.SetPhase(instance, coordinates);
+      particles->dual[np]  = setParticles.SetPhase(instance, coordinates);
+    } else {
+      particles->phase[np] = 0;
+      particles->dual[np]  = 0;
+    }
     if (setParticles.SetHorizontalVelocity) {
       particles->Vx[np] = setParticles.SetHorizontalVelocity(instance, coordinates);
     } else {
@@ -46,37 +53,30 @@ void SetParticles(MdoodzInstance *instance, markers *particles) {
     } else {
       particles->Vz[np] = coordinates.z * instance->model.EpsBG;
     }
-    if (setParticles.SetPhase) {
-      particles->phase[np] = setParticles.SetPhase(instance, coordinates);
-      particles->dual[np]  = setParticles.SetPhase(instance, coordinates);
-    } else {
-      particles->phase[np] = 0;
-      particles->dual[np]  = 0;
-    }
     if (setParticles.SetGrainSize) {
-      particles->d[np] = setParticles.SetGrainSize(instance, coordinates);
+      particles->d[np] = setParticles.SetGrainSize(instance, coordinates, particles->phase[np]);
     } else {
       particles->d[np] = 0.0;
     }
     if (setParticles.SetPorosity) {
-      particles->phi[np] = setParticles.SetPorosity(instance, coordinates);
+      particles->phi[np] = setParticles.SetPorosity(instance, coordinates, particles->phase[np]);
     } else {
       particles->phi[np] = 0.0;
     }
     if (setParticles.SetDensity) {
-      particles->rho[np] = setParticles.SetDensity(instance, coordinates);
+      particles->rho[np] = setParticles.SetDensity(instance, coordinates, particles->phase[np]);
     } else {
       particles->rho[np] = instance->materials.rho[particles->phase[np]];
+    }
+    if (setParticles.SetXComponent) {
+      particles->X[np] = setParticles.SetXComponent(instance, coordinates, particles->phase[np]);
+    } else {
+      particles->X[np] = 0.0;
     }
     if (setParticles.SetTemperature) {
       particles->T[np] = setParticles.SetTemperature(instance, coordinates);
     } else {
       particles->T[np] = zeroC / instance->scaling.T;
-    }
-    if (setParticles.SetXComponent) {
-      particles->X[np] = setParticles.SetXComponent(instance, coordinates);
-    } else {
-      particles->X[np] = 0.0;
     }
     ValidatePhase(particles->phase[np], instance->model.Nb_phases);
   }
