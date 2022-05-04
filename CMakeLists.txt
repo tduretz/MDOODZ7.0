@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-include(env.cmake)
+include(env.cmake OPTIONAL)
 
 set(CMAKE_C_COMPILER ${C_COMPILER})
 project(MDOODZ C)
