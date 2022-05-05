@@ -8,9 +8,9 @@ This version of MDOODZ is under construction, more testing will be progressively
 # Library usage
 
 MDOODZ Source Code stored in `MDLIB` directory and compiled as a separate library `libmdoodz` 
-with the public interface header `mdoodz.h`.
+with the public interface `mdoodz.h`.
 
-The public interface includes a struct that stores input parameters and setup toolchains in a `MdoodzInstance` struct.
+The public interface includes a struct that stores input parameters and setup toolchains: `MdoodzInstance`.
 To run the simulation `MdoodzInstance` must be passed to `RunMDOODZ(MdoodzInstance *instance)` function
 
 ### Examples:
@@ -32,12 +32,12 @@ you could extract it with the `GetSetupFileName(nargs, args)` function on Unix s
 
 ## Setup toolchain
 
-Structures that aggregates pointers to the functions that will be used in a runtime as callback functions.
+Structures that aggregate pointers to the functions that will be used in a runtime as callback functions.
 Some of those functions must be implemented, but others if not implemented will give a default result
 
 ### BuildInitialTopography
 
-That struct aggregates pointers tp functions for setting up topography chain properties. 
+Aggregates pointers to functions for setting up topography chain properties. 
 Must have if `model.free_surf == 1`.
 
 - `SetSurfaceZCoord` describes an altitude in relation to the x coordinate. Default value is `1.0e3 / instance->scaling.L`:  flat surface will be generated
@@ -45,10 +45,8 @@ Must have if `model.free_surf == 1`.
 
 ### SetParticles
 
-That struct aggregates pointers to functions for setting up particle properties.
-Must have. 
-
-Coordinates struct aggregates `x` and `z` particle coordinates
+Aggregates pointers to functions for setting up particle properties.
+Must have.
 
 - `SetHorizontalVelocity` describes a particle Horizontal Velocity (Vx) in relation to coordinates. Default value is `-coordinates.x * instance->model.EpsBG`
 - `SetVerticalVelocity` describes a particle Vertical Velocity (Vz) in relation to coordinates. Default value is `coordinates.z * instance->model.EpsBG`
@@ -61,10 +59,8 @@ Coordinates struct aggregates `x` and `z` particle coordinates
 
 ## SetBCs
 
-That struct aggregates pointers to functions for setting up Boundary Conditions in a mesh grid.
+Aggregates pointers to functions for setting up Boundary Conditions in a mesh grid.
 Must have.
-
-POSITION refers to the mesh grid position of the point. Available values are `NORTH`, `SOUTH`, `EAST`, `WEST`, `NORTHWEST`, `SOUTHWEST`, `NORTHEAST`, `SOUTHEAST`, `INTERNAL` and `FREE_SURFACE`
 
 - `SetBCVxType` describes the type of the Vx point. Must be implemented
 - `SetBCVxValue` describes the value of the Vx point. Must be implemented
@@ -78,8 +74,8 @@ POSITION refers to the mesh grid position of the point. Available values are `NO
 
 ## Crazy conductivity
 
-If you with to add crazy conductivity of the asthenosphere to the initialisation step 
-there is a `crazyConductivity` that points to the struct that aggregates 
+If you wish to add crazy conductivity of the asthenosphere to the initialisation step 
+there is a `crazyConductivity` parameter that points to the struct that aggregates 
 - `phases` array of phases ids that crazy conductivity should be applied to
 - `nPhases` total number of phases
 - `multiplier` refers to the multiplier of the effective conductivity
