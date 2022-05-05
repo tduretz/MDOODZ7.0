@@ -1189,7 +1189,7 @@ void ReadInputFile( char* fin_name, int *istep, int *irestart, int *writer, int 
         materials->T0[k]   = (zeroC) / (scaling->T); // +20
         materials->P0[k]   = 1e5 / (scaling->S);
         // Read plasticity parameters
-        materials->plast[k]= ReadMatProps( fin, "plast",k,     0.0 );
+        materials->plast[k]= ReadMatProps( fin, "plast",k,     1.0 );
         materials->C[k]    = ReadMatProps( fin, "C",    k,   1.0e7 )  / scaling->S;
         materials->phi[k]  = ReadMatProps( fin, "phi",  k,    30.0 )  * M_PI/ 180.0;
         materials->psi[k]  = ReadMatProps( fin, "psi",  k,     0.0 )  * M_PI/ 180.0;

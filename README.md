@@ -7,35 +7,82 @@ This version of MDOODZ is under construction, more testing will be progressively
 
 # Library usage
 
-MDOODZ Source Code stored in `MDLIB` directory and compiled as a separate library with the public include header `mdoodz.h`.
+MDOODZ Source Code stored in `MDLIB` directory and compiled as a separate library `libmdoodz` 
+with the public interface header `mdoodz.h`.
 
-In order to use it in your program, you need a setup .txt file and implemented functions `BuildInitialTopography`, `SetParticles` and `SetBCs`. 
-They are passed to `RunMDOODZ` function as arguments. 
+The public interface includes a struct that stores input parameters and setup toolchains in a `MdoodzInstance` struct.
+To run the simulation `MdoodzInstance` must be passed to `RunMDOODZ(MdoodzInstance *instance)` function
 
-Simplified example:
+### Examples:
 
-```code
-#include "mdoodz.h"
+1) Minimal mechanical model: [ShearTemplate](SETS/ShearTemplate.c)
+2) A free surface model: [TopoBenchCase1](SETS/TopoBenchCase1.c)
+3) A free surface and thermal solution model: [RiftingPauline](SETS/RiftingPauline.c)
 
-void BuildInitialTopography(markers *topo_chain, params model, scale scaling) {
-  // topography set up routine here
-}
 
-void SetParticles(markers *particles, scale scaling, params model, mat_prop *materials) {
-  // particles set up routine here
-}
+## Input parameters
 
-void SetBCs(grid *mesh, params *model, scale scaling, markers *particles, mat_prop *materials, surface *topo) {
-  // Boundary conditions set up routine here
-}
+- `inputFileName` stores the name of the `.txt` file with input parameter key = value pairs
+- `model` aggregates general input parameters from `.txt` file
+- `materials` aggregates input parameters from `.txt` file concerning phase properties
+- `scale` aggregates input parameters from `.txt` file concerning scaling of units
 
-int main(int nargs, char *args[]) {
-  char *setupFileName = GetSetupFileName(nargs, args);
-  RunMDOODZ(setupFileName, BuildInitialTopography, SetParticles, SetBCs);
-}
-```
+If your `.txt` file shares the same name as executable, 
+you could extract it with the `GetSetupFileName(nargs, args)` function on Unix systems
 
-More examples you could find in `SETS` directory such as `ShearTemplate` or `TopoBenchCase1`.
+## Setup toolchain
+
+Structures that aggregates pointers to the functions that will be used in a runtime as callback functions.
+Some of those functions must be implemented, but others if not implemented will give a default result
+
+### BuildInitialTopography
+
+That struct aggregates pointers tp functions for setting up topography chain properties. 
+Must have if `model.free_surf == 1`.
+
+- `SetSurfaceZCoord` describes an altitude in relation to the x coordinate. Default value is `1.0e3 / instance->scaling.L`:  flat surface will be generated
+- `SetSurfacePhase` describes a topography chain particle phase id in relation to the x coordinate. Default phase `0`
+
+### SetParticles
+
+That struct aggregates pointers to functions for setting up particle properties.
+Must have. 
+
+Coordinates struct aggregates `x` and `z` particle coordinates
+
+- `SetHorizontalVelocity` describes a particle Horizontal Velocity (Vx) in relation to coordinates. Default value is `-coordinates.x * instance->model.EpsBG`
+- `SetVerticalVelocity` describes a particle Vertical Velocity (Vz) in relation to coordinates. Default value is `coordinates.z * instance->model.EpsBG`
+- `SetPhase` describes a particle phase id in relation to coordinates. Default value is `0`: model will be homogeneous
+- `SetTemperature` describes a particle temperature in relation to coordinates. Default value is `273.15 / instance->scaling.T`: model is 0°C
+- `SetGrainSize` describes a particle grain size in relation to coordinates. Default value is `0.0`
+- `SetPorosity` describes a particle grain porosity in relation to coordinates. Default value is `0.0`
+- `SetDensity` describes a particle grain density in relation to coordinates. Default value is set according to the particle phase 
+- `SetXComponent` describes a particle X component value in relation to coordinates. Default value is `0.0`
+
+## SetBCs
+
+That struct aggregates pointers to functions for setting up Boundary Conditions in a mesh grid.
+Must have.
+
+POSITION refers to the mesh grid position of the point. Available values are `NORTH`, `SOUTH`, `EAST`, `WEST`, `NORTHWEST`, `SOUTHWEST`, `NORTHEAST`, `SOUTHEAST`, `INTERNAL` and `FREE_SURFACE`
+
+- `SetBCVxType` describes the type of the Vx point. Must be implemented
+- `SetBCVxValue` describes the value of the Vx point. Must be implemented
+- `SetBCVzType` describes the type of the Vz point. Must be implemented
+- `SetBCVzValue` describes the value of the Vz point. Must be implemented
+- `SetBCPType` describes the type of the Pressure Boundary conditions point. Default one is `-1`
+- `SetBCTType` describes the Temperature Boundary type. Must be implemented if `model.isthermal == 1`
+- `SetBCTValue` describes the Temperature Boundary value. Must be implemented if `model.isthermal == 1`
+- `SetBCTValueNew` describes the Temperature Boundary value on 1d boundary array. Must be implemented if `model.isthermal == 1`. Will be deprecated
+- `SetBCTTypeNew` describes the Temperature Boundary type on 1d boundary array. Must be implemented if `model.isthermal == 1`. Will be deprecated
+
+## Crazy conductivity
+
+If you with to add crazy conductivity of the asthenosphere to the initialisation step 
+there is a `crazyConductivity` that points to the struct that aggregates 
+- `phases` array of phases ids that crazy conductivity should be applied to
+- `nPhases` total number of phases
+- `multiplier` refers to the multiplier of the effective conductivity
 
 # CMake usage
 
@@ -43,8 +90,11 @@ Project is ready to be built in CMake
 
 ## Prequisites and setup
 
-In order to build MDOODZ with CMake you have to install **cmake 3.16** or newer version.
+In order to build MDOODZ with CMake you have to install `cmake 3.16` or newer version.
 `blas`, `zlib` and `lapack`  libraries are CMake compatible and does not require any additional setup other than installing them with your package manager:
+
+If you want to use your fixed environmental variables, set them up in a `env.cmake` file. Just copy `env.cmake.example` 
+without `example` suffix.
 
 ```bash
 sudo apt-get install libblas-dev liblapack-dev zlib1g-dev libhdf5-serial-dev
@@ -78,7 +128,8 @@ set(C_COMPILER gcc)
 ### Add your set to the CMake
 
 1) In a `SETS` directory you need to create executable `YourSetName.c` file and the `YourSetName.txt` setup file. Both files should have a same name.
-2) In `SETS/CMakeLists.txt` file add a line with the command `add_set(YourSetName)`
+2) In `SETS/CMakeLists.txt` file add a line with the command `add_set(YourSetName)` and it will be built as executable by default. 
+3) Alternatively you could build your set with specifying it as a command line argument. Examples are given below 
 
 
 ### Build and run
@@ -90,13 +141,13 @@ Makefile related to cmake is located in a root directory
 To build library, tests and executables with OpenMP and in optimised mode:
 
 ```bash
-make build
+make build SET=RiftingPaulnie
 ```
 
 To explicitly set OPT (optimisation) and OMP (OpenMP). If not stated, it's OFF by default
 
 ```bash
-make build-dev OMP=ON OPT=ON
+make build-dev OMP=ON OPT=ON SET=RiftingPaulnie
 ```
 
 Build files will be located at the `cmake-build/` directory.

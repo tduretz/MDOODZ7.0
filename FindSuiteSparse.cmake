@@ -196,17 +196,37 @@ macro(SuiteSparse_FIND_COMPONENTS )
 		endif()
 
 		## try to find filepath lib name (looking for very important lib file)
-		find_library(SuiteSparse_${suitesparseCompUC}_LIBRARY_RELEASE 
-			NAMES 			lib${suitesparseComp} 	lib${suitesparseCompLC} lib${suitesparseCompUC}
-							${suitesparseComp} 		${suitesparseCompLC} 	${suitesparseCompUC}
-			PATHS 			/opt/local/lib${SuiteSparse_SEARCH_LIB_POSTFIX} 		
-							/usr/lib${SuiteSparse_SEARCH_LIB_POSTFIX}
-							/usr/local/lib${SuiteSparse_SEARCH_LIB_POSTFIX}
-							${SuiteSparse_DIR}/lib${SuiteSparse_SEARCH_LIB_POSTFIX}
-							${${suitesparseCompUC}_DIR}/lib${SuiteSparse_SEARCH_LIB_POSTFIX}
-							${${suitesparseCompUC}_DIR}
-			PATH_SUFFIXES	Release
-		)
+		message("CMAKE_SYSTEM_NAME = ${CMAKE_SYSTEM_NAME}")
+
+		if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
+			find_file(SuiteSparse_${suitesparseCompUC}_LIBRARY_RELEASE
+					NAMES 			lib${suitesparseComp} 	lib${suitesparseCompLC} lib${suitesparseCompUC}
+						lib${suitesparseComp}.dll 	lib${suitesparseCompLC}.dll lib${suitesparseCompUC}.dll
+						${suitesparseComp} 		${suitesparseCompLC} 	${suitesparseCompUC}
+					PATHS
+						/opt/local/lib${SuiteSparse_SEARCH_LIB_POSTFIX}
+						/usr/lib${SuiteSparse_SEARCH_LIB_POSTFIX}
+						/usr/local/lib${SuiteSparse_SEARCH_LIB_POSTFIX}
+						${SuiteSparse_DIR}/lib${SuiteSparse_SEARCH_LIB_POSTFIX}
+						${SuiteSparse_DIR}/bin${SuiteSparse_SEARCH_LIB_POSTFIX}
+						${SuiteSparse_DIR}/bin
+						${${suitesparseCompUC}_DIR}/lib${SuiteSparse_SEARCH_LIB_POSTFIX}
+						${${suitesparseCompUC}_DIR}
+					)
+		else()
+			find_library(SuiteSparse_${suitesparseCompUC}_LIBRARY_RELEASE
+					NAMES 			lib${suitesparseComp} 	lib${suitesparseCompLC} lib${suitesparseCompUC}
+					${suitesparseComp} 		${suitesparseCompLC} 	${suitesparseCompUC}
+					PATHS 			/opt/local/lib${SuiteSparse_SEARCH_LIB_POSTFIX}
+					/usr/lib${SuiteSparse_SEARCH_LIB_POSTFIX}
+					/usr/local/lib${SuiteSparse_SEARCH_LIB_POSTFIX}
+					${SuiteSparse_DIR}/lib${SuiteSparse_SEARCH_LIB_POSTFIX}
+					${${suitesparseCompUC}_DIR}/lib${SuiteSparse_SEARCH_LIB_POSTFIX}
+					${${suitesparseCompUC}_DIR}
+					PATH_SUFFIXES	Release
+					)
+		endif()
+
 		find_library(SuiteSparse_${suitesparseCompUC}_LIBRARY_DEBUG 
 			NAMES 			${suitesparseComp}d		${suitesparseCompLC}d 		${suitesparseCompUC}d
 							lib${suitesparseComp}d 	lib${suitesparseCompLC}d 	lib${suitesparseCompUC}d
@@ -214,6 +234,7 @@ macro(SuiteSparse_FIND_COMPONENTS )
 							/usr/lib${SuiteSparse_SEARCH_LIB_POSTFIX}
 							/usr/local/lib${SuiteSparse_SEARCH_LIB_POSTFIX}
 							${SuiteSparse_DIR}/lib${SuiteSparse_SEARCH_LIB_POSTFIX}
+							${SuiteSparse_DIR}/bin${SuiteSparse_SEARCH_LIB_POSTFIX}
 							${${suitesparseCompUC}_DIR}/lib${SuiteSparse_SEARCH_LIB_POSTFIX}
 							${${suitesparseCompUC}_DIR}
 			PATH_SUFFIXES	Debug
@@ -299,7 +320,7 @@ endmacro()
 
 ## Default behavior if user don't use the COMPONENTS flag in find_package(SuiteSparse ...) command
 if(NOT SuiteSparse_FIND_COMPONENTS)
-	list(APPEND SuiteSparse_FIND_COMPONENTS AMD CAMD CCOLAMD COLAMD CHOLMOD SPQR LDL BTF KLU CXSPARSE UMFPACK)  ## suitesparse and metis are not searched by default (special case)
+	list(APPEND SuiteSparse_FIND_COMPONENTS AMD CAMD CCOLAMD COLAMD CHOLMOD BTF CXSPARSE UMFPACK)  ## suitesparse and metis are not searched by default (special case)
 endif()
 
 SuiteSparse_FIND_COMPONENTS()
@@ -310,6 +331,7 @@ if(SuiteSparse_USE_LAPACK_BLAS)
 	## set additional search dirs
 	set(ADDITIONAL_SEARCH_DIRS 
 		${SuiteSparse_DIR}/lib${SuiteSparse_SEARCH_LIB_POSTFIX}
+		${SuiteSparse_DIR}/bin${SuiteSparse_SEARCH_LIB_POSTFIX}
 		${SuiteSparse_DIR}/lapack_windows/lib${SuiteSparse_SEARCH_LIB_POSTFIX}
 		${SuiteSparse_DIR}/lapack_windows/x${SuiteSparse_SEARCH_LIB_POSTFIX}
 		${SuiteSparse_DIR}/blas_windows/lib${SuiteSparse_SEARCH_LIB_POSTFIX}
@@ -406,6 +428,7 @@ if(SuiteSparse_USE_LAPACK_BLAS)
 			${SuiteSparse_BLAS_DIR}/bin/${SuiteSparse_SEARCH_BIN_POSTFIX_2}
 			${SuiteSparse_BLAS_DIR}/bin/Release/${SuiteSparse_SEARCH_BIN_POSTFIX_1}
 			${SuiteSparse_BLAS_DIR}/bin/Debug/${SuiteSparse_SEARCH_BIN_POSTFIX_2}
+			${SuiteSparse_DIR}/bin
 			${ADDITIONAL_SEARCH_DIRS}
 			"$ENV{Path}"
 		)
