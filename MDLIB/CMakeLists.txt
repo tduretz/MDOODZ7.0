@@ -1,4 +1,4 @@
-add_library(MDLIB
+add_library(mdoodz SHARED
         AdvectionRoutines.c
         BC.c
         ChemicalRoutines.c
@@ -22,6 +22,12 @@ add_library(MDLIB
         StokesAssemblyDecoupled.c
         StokesRoutines.c
         ThermalRoutines.c
-        ThermalSolver.c)
-target_link_libraries(MDLIB ${DEPENDENCIES})
-target_include_directories(MDLIB PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+        ThermalSolver.c setup.c)
+target_link_libraries(mdoodz ${DEPENDENCIES})
+target_include_directories(mdoodz PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+set_target_properties(mdoodz PROPERTIES
+        PUBLIC_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/include/mdoodz.h)
+
+install(TARGETS mdoodz
+        LIBRARY DESTINATION lib
+        PUBLIC_HEADER DESTINATION include)

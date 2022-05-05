@@ -1,21 +1,21 @@
 cmake_minimum_required(VERSION 3.16)
-include(env.cmake)
+include(env.cmake OPTIONAL)
+
 set(CMAKE_C_COMPILER ${C_COMPILER})
 project(MDOODZ C)
 set(CMAKE_C_STANDARD 11)
 
-
+option(JULIA "Set this for enabling Julia BinaryBuilder mode" OFF)
 option(OMP "Set this for using OpenMP" OFF)
 option(OPT "Set this for using optimisation" OFF)
 option(VALGRIND "Set this for enabling Valgrind for tests" OFF)
 
-
 if (OPT)
     message("Using optimization")
-    set(CMAKE_C_FLAGS "-O3 -ftree-vectorize -funroll-loops")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -ftree-vectorize -funroll-loops")
 else()
     message("Not using optimization")
-    set(CMAKE_C_FLAGS "-g -Wall -O0 -fno-inline -fno-omit-frame-pointer")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -Wall -O0 -fno-inline -fno-omit-frame-pointer")
 endif()
 
 include(Deps.cmake)
