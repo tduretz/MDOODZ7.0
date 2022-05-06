@@ -43,7 +43,7 @@ abs_tol_div  = 1e-8
 rel_tol_div  = 1e-8
 
 /**** NON-LINEAR SOLVER ****/
-Newton      = 10 
+Newton      = 1 
 line_search = 1
 nit_max     = 100
 rel_tol_KSP = 1e-4

@@ -412,7 +412,8 @@ void LoadBreakpointParticles( markers *particles, grid* mesh, markers *topo_chai
             particles->dszzd[k]    /= scaling.S;
             particles->dsxz[k]     /= scaling.S;
         }
-   
+
+        particles->d[k]      /= scaling.L;
         particles->divth[k]  /= scaling.E;
         particles->T[k]      /= scaling.T;
 
