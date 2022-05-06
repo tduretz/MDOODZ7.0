@@ -40,8 +40,9 @@ Some of those functions must be implemented, but others if not implemented will 
 That struct aggregates pointers tp functions for setting up topography chain properties. 
 Must have if `model.free_surf == 1`.
 
-- `SetSurfaceZCoord(MdoodzInstance *instance, double x_coord)` describes an altitude in relation to the x coordinate. Default value is `1.0e3 / instance->scaling.L`:  flat surface will be generated
-- `SetSurfacePhase(MdoodzInstance *instance, double x_coord)` describes a topography chain particle phase id in relation to the x coordinate. Default phase `0`
+
+- `SetSurfaceZCoord` describes an altitude in relation to the x coordinate. Default value is `1.0e3 / instance->scaling.L`:  flat surface will be generated
+- `SetSurfacePhase` describes a topography chain particle phase id in relation to the x coordinate. Default phase `0`
 
 ### SetParticles
 
@@ -50,14 +51,15 @@ Must have.
 
 Coordinates struct aggregates `x` and `z` particle coordinates
 
-- `SetHorizontalVelocity(MdoodzInstance *instance, Coordinates coordinates)` describes a particle Horizontal Velocity (Vx) in relation to coordinates. Default value is `-coordinates.x * instance->model.EpsBG`
-- `SetVerticalVelocity(MdoodzInstance *instance, Coordinates coordinates)` describes a particle Vertical Velocity (Vz) in relation to coordinates. Default value is `coordinates.z * instance->model.EpsBG`
-- `SetPhase(MdoodzInstance *instance, Coordinates coordinates)` describes a particle phase id in relation to coordinates. Default value is `0`: model will be homogeneous
-- `SetTemperature(MdoodzInstance *instance, Coordinates coordinates)` describes a particle temperature in relation to coordinates. Default value is `273.15 / instance->scaling.T`: model is 0°C
-- `SetGrainSize(MdoodzInstance *instance, Coordinates coordinates)` describes a particle grain size in relation to coordinates. Default value is `0.0`
-- `SetPorosity(MdoodzInstance *instance, Coordinates coordinates)` describes a particle grain porosity in relation to coordinates. Default value is `0.0`
-- `SetDensity(MdoodzInstance *instance, Coordinates coordinates)` describes a particle grain density in relation to coordinates. Default value is set according to the particle phase 
-- `SetXComponent(MdoodzInstance *instance, Coordinates coordinates)` describes a particle X component value in relation to coordinates. Default value is `0.0`
+
+- `SetHorizontalVelocity` describes a particle Horizontal Velocity (Vx) in relation to coordinates. Default value is `-coordinates.x * instance->model.EpsBG`
+- `SetVerticalVelocity` describes a particle Vertical Velocity (Vz) in relation to coordinates. Default value is `coordinates.z * instance->model.EpsBG`
+- `SetPhase` describes a particle phase id in relation to coordinates. Default value is `0`: model will be homogeneous
+- `SetTemperature` describes a particle temperature in relation to coordinates. Default value is `273.15 / instance->scaling.T`: model is 0°C
+- `SetGrainSize` describes a particle grain size in relation to coordinates. Default value is `0.0`
+- `SetPorosity` describes a particle grain porosity in relation to coordinates. Default value is `0.0`
+- `SetDensity` describes a particle grain density in relation to coordinates. Default value is set according to the particle phase 
+- `SetXComponent` describes a particle X component value in relation to coordinates. Default value is `0.0`
 
 ## SetBCs
 
@@ -66,15 +68,16 @@ Must have.
 
 POSITION refers to the mesh grid position of the point. Available values are `NORTH`, `SOUTH`, `EAST`, `WEST`, `NORTHWEST`, `SOUTHWEST`, `NORTHEAST`, `SOUTHEAST`, `INTERNAL` and `FREE_SURFACE`
 
-- `SetBCVxType(MdoodzInstance *instance, POSITION position)` describes the type of the Vx point. Must be implemented
-- `SetBCVxValue(MdoodzInstance *instance, POSITION position, Coordinates coordinates)` describes the value of the Vx point. Must be implemented
-- `SetBCVzType(MdoodzInstance *instance, POSITION position)` describes the type of the Vz point. Must be implemented
-- `SetBCVzValue(MdoodzInstance *instance, POSITION position, Coordinates coordinates)` describes the value of the Vz point. Must be implemented
-- `SetBCPType(MdoodzInstance *instance, POSITION position)` describes the type of the Pressure Boundary conditions point. Default one is `-1`
-- `SetBCTType(MdoodzInstance *instance, POSITION position)` describes the Temperature Boundary type. Must be implemented if `model.isthermal == 1`
-- `SetBCTValue(MdoodzInstance *instance, POSITION position, double particleTemperature)` describes the Temperature Boundary value. Must be implemented if `model.isthermal == 1`
-- `SetBCTValueNew(MdoodzInstance *instance, POSITION position, double particleTemperature)` describes the Temperature Boundary value on 1d boundary array. Must be implemented if `model.isthermal == 1`. Will be deprecated
-- `SetBCTTypeNew(MdoodzInstance *instance, POSITION position)` describes the Temperature Boundary type on 1d boundary array. Must be implemented if `model.isthermal == 1`. Will be deprecated
+
+- `SetBCVxType` describes the type of the Vx point. Must be implemented
+- `SetBCVxValue` describes the value of the Vx point. Must be implemented
+- `SetBCVzType` describes the type of the Vz point. Must be implemented
+- `SetBCVzValue` describes the value of the Vz point. Must be implemented
+- `SetBCPType` describes the type of the Pressure Boundary conditions point. Default one is `-1`
+- `SetBCTType` describes the Temperature Boundary type. Must be implemented if `model.isthermal == 1`
+- `SetBCTValue` describes the Temperature Boundary value. Must be implemented if `model.isthermal == 1`
+- `SetBCTValueNew` describes the Temperature Boundary value on 1d boundary array. Must be implemented if `model.isthermal == 1`. Will be deprecated
+- `SetBCTTypeNew` describes the Temperature Boundary type on 1d boundary array. Must be implemented if `model.isthermal == 1`. Will be deprecated
 
 ## Crazy conductivity
 
