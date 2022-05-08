@@ -26,6 +26,7 @@ typedef struct {
   double n_exp;
   double eta_cst;
   double eta_el;
+
   int    elastic;
   int    peierls;
   int    dislocation;
