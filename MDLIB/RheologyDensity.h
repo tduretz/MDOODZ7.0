@@ -6,6 +6,8 @@ typedef struct {
   double *d1;
 } LocalIterationMutables;
 
+
+// TODO organize it into subsections
 typedef struct {
   double Eii;
   double f_ani;

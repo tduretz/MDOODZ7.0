@@ -97,14 +97,13 @@ void LocalIterationViscoElasticGrainSize(LocalIterationMutables mutables, LocalI
   double       eta_ve = *mutables.eta;
   double       d_ve   = *mutables.d1;
   for (int it = 0; it < nitmax; it++) {
-
-    double       Eii_cst = 0, Eii_pwl = 0, Eii_gbs = 0, Eii_exp = 0, Eii_lin = 0;
     // Function evaluation at current effective viscosity
-    const double Tii = 2.0 * params.f_ani * eta_ve * params.Eii;
+    const double Tii     = 2.0 * params.f_ani * eta_ve * params.Eii;
+    double       Eii_cst = 0, Eii_pwl = 0, Eii_gbs = 0, Eii_exp = 0, Eii_lin = 0;
     if (params.constant) Eii_cst = Tii / params.f_ani / 2.0 / params.eta_cst;
     if (params.dislocation) Eii_pwl = params.C_pwl * pow(Tii, params.n_pwl);
     if (params.gbs) Eii_gbs = params.C_gbs * pow(Tii, params.n_gbs);
-    if (params.peierls) Eii_exp = params.C_exp * pow(Tii, params.ST + params.n_exp);                         // Peierls - power law
+    if (params.peierls) Eii_exp = params.C_exp * pow(Tii, params.ST + params.n_exp);                 // Peierls - power law
     if (params.diffusion) Eii_lin = params.C_lin * pow(Tii, params.n_lin) * pow(d_ve, -params.m_lin);// !!! gs - dependence !!!
     const double Eii_vis  = Eii_pwl + Eii_exp + Eii_lin + Eii_gbs + Eii_cst;
 
@@ -130,8 +129,8 @@ void LocalIterationViscoElasticGrainSize(LocalIterationMutables mutables, LocalI
     if (params.dislocation) dr_eta_deta += -(Eii_pwl) *params.n_pwl / eta_ve;
     if (params.constant) dr_eta_deta += -params.Eii / params.eta_cst;
     const double dr_eta_dd = Eii_lin * params.m_lin / (d_ve);
-    const double dr_d_deta = -2.0 * params.Eii * (Eii_pwl) *d_it * eta_ve * params.f_ani * params.lam * params.pg * (-0.5 * params.Ag * params.cg * params.gam * params.n_pwl / (params.Eii * (Eii_pwl) *pow(eta_ve, 2) * params.f_ani * params.lam * params.pg) - 0.5 * params.Ag * params.cg * params.gam / (params.Eii * (Eii_pwl) *pow(eta_ve, 2) * params.f_ani * params.lam * params.pg)) / (params.Ag * params.cg * params.gam * (params.pg + 1.0));
     const double dr_d_dd   = 1.0;
+    const double dr_d_deta = -2.0 * params.Eii * (Eii_pwl) *d_it * eta_ve * params.f_ani * params.lam * params.pg * (-0.5 * params.Ag * params.cg * params.gam * params.n_pwl / (params.Eii * (Eii_pwl) *pow(eta_ve, 2) * params.f_ani * params.lam * params.pg) - 0.5 * params.Ag * params.cg * params.gam / (params.Eii * (Eii_pwl) *pow(eta_ve, 2) * params.f_ani * params.lam * params.pg)) / (params.Ag * params.cg * params.gam * (params.pg + 1.0));
 
     // Inverse of the Jacobian
     const double det       = dr_eta_deta * dr_d_dd - dr_eta_dd * dr_d_deta;// determinant
@@ -297,7 +296,6 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
   double Exx_lin = 0.0, Ezz_lin = 0.0, Exz_lin = 0.0, Exx_exp = 0.0, Ezz_exp = 0.0, Exz_exp = 0.0, Exx_gbs = 0.0, Ezz_gbs = 0.0, Exz_gbs = 0.0, Exx_cst = 0.0, Ezz_cst = 0.0, Exz_cst = 0.0;
   double Exx_pl = 0.0, Exx_pwl = 0.0, Ezz_pl = 0.0, Ezz_pwl = 0.0, Exz_pl = 0.0, Exz_pwl = 0.0;
   int    gs = materials->gs[phase];
-  double Kg = materials->Kpzm[phase], Qg = materials->Qpzm[phase];
   double Qkin = materials->Qkin[phase], Skin = materials->Skin[phase], kkin = materials->kkin[phase], Vkin, dG = -1.0, rho_eq, rho0;
 
   double eta_vp0 = materials->eta_vp[phase], n_vp = materials->n_vp[phase], eta_vp = materials->eta_vp[phase];
@@ -501,56 +499,53 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
 
   //  printf("%2.2e %2.2e %2.2e %2.2e %2.2e %2.2e\n", eta_el*scaling->eta, eta_cst*scaling->eta, eta_pwl*scaling->eta, eta_lin*scaling->eta, eta_lo*scaling->eta, eta_up*scaling->eta);
 
-  LocalIterationMutables mutables = {
-          .eta = &eta_ve,
-          .d1  = d1,
-  };
+  double Kg = materials->Kpzm[phase], Qg = materials->Qpzm[phase];
+  const double Ag = Kg * exp(-Qg / R / T);
   LocalIterationParams params = {
           .Eii         = Eii,
-          .Ag          = Kg * exp(-Qg / R / T),
+          .Ag          = Ag,
           .gam         = materials->Gpzm[phase],
           .lam         = materials->Lpzm[phase],
           .cg          = materials->cpzm[phase],
           .pg          = materials->ppzm[phase],
           .f_ani       = f_ani,
-            .C_pwl       = C_pwl,
-            .n_pwl       = n_pwl,
-            .C_lin       = C_lin,
-            .n_lin       = n_lin,
-            .m_lin       = m_lin,
-            .ST          = ST,
-            .n_exp       = n_exp,
+          .C_pwl       = C_pwl,
+          .n_pwl       = n_pwl,
+          .C_lin       = C_lin,
+          .n_lin       = n_lin,
+          .m_lin       = m_lin,
+          .ST          = ST,
+          .n_exp       = n_exp,
 
 
-            .elastic     = elastic,
-            .eta_el      = eta_el,
+          .elastic     = elastic,
+          .eta_el      = eta_el,
 
-            .peierls     = peierls,
-            .C_exp       = C_exp,
+          .peierls     = peierls,
+          .C_exp       = C_exp,
 
-            .dislocation = dislocation,
+          .dislocation = dislocation,
 
-            .diffusion   = diffusion,
+          .diffusion   = diffusion,
 
-            .constant    = constant,
-            .eta_cst     = eta_cst,
+          .constant    = constant,
+          .eta_cst     = eta_cst,
 
-            .gbs         = gbs,
-            .d           = d,
-            .n_gbs       = n_gbs,
-    };
-    if (gs) {
-      LocalIterationViscoElasticGrainSize(mutables, params);
-    } else {
-      LocalIterationViscoElastic(mutables, params);
-    }
+          .gbs         = gbs,
+          .d           = d,
+          .n_gbs       = n_gbs};
+  if (gs) {
+    LocalIterationViscoElasticGrainSize((LocalIterationMutables){.eta = &eta_ve, .d1 = d1}, params);
+  } else {
+    LocalIterationViscoElastic((LocalIterationMutables){.eta = &eta_ve}, params);
+  }
 
   // Recalculate stress components
-  Tii                  = 2.0*eta_ve*f_ani*Eii;
+  Tii = 2.0 * eta_ve * f_ani * Eii;
 
   //------------------------------------------------------------------------//
 
-  if ( plastic==1 ) {
+  if (plastic == 1) {
     // Check yield stress
     F_trial = Tii - Tyield;
 
