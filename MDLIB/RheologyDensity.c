@@ -87,7 +87,7 @@ void LocalIterationViscoElastic(LocalIterationMutables mutables, LocalIterationP
     }
 
     // Analytical derivative of function
-    double dfdeta = 0.0;
+    double dfdeta = 0.0; // Partial derivative of residual function with regard to the solution
     if (params.elastic) dfdeta += -params.Eii / params.eta_el;
     if (params.peierls) dfdeta += -Eii_exp * (params.ST + params.n_exp) / eta_ve;
     if (params.diffusion) dfdeta += -Eii_lin * params.n_lin / eta_ve;
@@ -592,10 +592,9 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
 
       // if (F_trial>0) printf("%2.2e %2.2e %2.2e %2.2e %2.2e\n", F_trial*scaling->S, C*scaling->S, cos_fric, P*scaling->S, sin_fric);
 
-      double Tiic;
-      double Pc_chk;
 
       // Select appropriate dilation angle for tensile domain, see SimpleYields.m
+      double Pc_chk;
       if (tens == 1) {
         eta_vp  = eta_vp0 * pow(Eii, 1.0 / n_vp - 1);
         Pc_chk  = -(C * cos_fric) / (-Tii / P + sin_fric);
@@ -612,6 +611,7 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
         F_trial0 = F_trial;
 
         // Return mapping --> find plastic multiplier rate (gdot)
+        double Tiic;
         for (int it = 0; it < nitmax; it++) {
 
           dQdP = -sin_dil;
