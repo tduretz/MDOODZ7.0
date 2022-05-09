@@ -45,6 +45,7 @@
 
 void LocalIterationViscoElastic(LocalIterationMutables mutables, LocalIterationParams params) {
   const int    nitmax             = 20;
+  const int    nitwarn            = 10;
   const double maxAllowedResidual = 1.0e-11;
   double       eta_ve             = *mutables.eta;
   double       d_ve               = *mutables.d1;
@@ -78,7 +79,7 @@ void LocalIterationViscoElastic(LocalIterationMutables mutables, LocalIterationP
     const double r_eta_ve = params.Eii - params.elastic * Tii / params.f_ani / (2.0 * params.eta_el) - Eii_vis;
     const double res_eta  = fabs(r_eta_ve / params.Eii);
     if (res_eta < maxAllowedResidual / 100) {
-      if (it > 10) printf("L.I. Warnung: more that 10 local iterations, there might be a problem...\n");
+      if (it > nitwarn) printf("L.I. Warnung: more that %i local iterations, there might be a problem...\n", nitwarn);
       break;
     } else if (it == nitmax - 1) {
       printf("Visco-Elastic iterations failed!\n");
@@ -97,6 +98,7 @@ void LocalIterationViscoElastic(LocalIterationMutables mutables, LocalIterationP
     eta_ve -= r_eta_ve / dfdeta;
   }
   *mutables.eta = eta_ve;
+  *mutables.d1  = d_ve;
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
@@ -105,6 +107,7 @@ void LocalIterationViscoElastic(LocalIterationMutables mutables, LocalIterationP
 
 void LocalIterationViscoElasticGrainSize(LocalIterationMutables mutables, LocalIterationParams params) {
   const int    nitmax             = 20;
+  const int    nitwarn            = 15;
   const double maxAllowedResidual = 1.0e-11;
   double       eta_ve             = *mutables.eta;
   double       d_ve               = *mutables.d1;
@@ -147,7 +150,7 @@ void LocalIterationViscoElasticGrainSize(LocalIterationMutables mutables, LocalI
     const double r_d      = d_ve - d_it;
     const double res_d    = fabs(r_d);
     if (res_eta < maxAllowedResidual / 100 && res_d < maxAllowedResidual / 100) {
-      if (it > 15) { printf("L.I. GSE Warnung: more that 15 local iterations, there might be a problem...\n"); }
+      if (it > nitwarn) printf("L.I. GSE Warnung: more that %i local iterations, there might be a problem...\n", nitwarn);
       break;
     } else if (it == nitmax - 1) {
       printf("Visco-Elastic iterations failed!\n");
@@ -329,7 +332,7 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
   double gamma = materials->Gexp[phase], ST, n_exp = materials->nexp[phase];
   double Exx_lin = 0.0, Ezz_lin = 0.0, Exz_lin = 0.0, Exx_exp = 0.0, Ezz_exp = 0.0, Exz_exp = 0.0, Exx_gbs = 0.0, Ezz_gbs = 0.0, Exz_gbs = 0.0, Exx_cst = 0.0, Ezz_cst = 0.0, Exz_cst = 0.0;
   double Exx_pl = 0.0, Exx_pwl = 0.0, Ezz_pl = 0.0, Ezz_pwl = 0.0, Exz_pl = 0.0, Exz_pwl = 0.0;
-  double pg = materials->ppzm[phase], Kg = materials->Kpzm[phase], Qg = materials->Qpzm[phase], cg = materials->cpzm[phase];
+  double pg = materials->ppzm[phase], Kg = materials->Kpzm[phase], Qg = materials->Qpzm[phase];
   double Qkin = materials->Qkin[phase], Skin = materials->Skin[phase], kkin = materials->kkin[phase], Vkin, dG = -1.0, rho_eq, rho0;
 
   double eta_vp0 = materials->eta_vp[phase], n_vp = materials->n_vp[phase], eta_vp = materials->eta_vp[phase];
@@ -543,16 +546,14 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
             .Ag          = Kg * exp(-Qg / R / T),
             .gam         = materials->Gpzm[phase],
             .lam         = materials->Lpzm[phase],
-            .cg          = cg,
-            .pg          = pg,
+            .cg          = materials->cpzm[phase],
+            .pg          = materials->ppzm[phase],
             .f_ani       = f_ani,
             .C_pwl       = C_pwl,
             .n_pwl       = n_pwl,
-            .n_gbs       = n_gbs,
             .C_lin       = C_lin,
             .n_lin       = n_lin,
             .m_lin       = m_lin,
-            .C_exp       = C_exp,
             .ST          = ST,
             .n_exp       = n_exp,
 
@@ -561,6 +562,7 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
             .eta_el      = eta_el,
 
             .peierls     = peierls,
+            .C_exp       = C_exp,
 
             .dislocation = dislocation,
 
@@ -570,7 +572,9 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
             .eta_cst     = eta_cst,
 
             .gbs         = gbs,
-            .d           = d,};
+            .d           = d,
+            .n_gbs       = n_gbs,
+    };
     if (gs) {
       LocalIterationViscoElasticGrainSize(mutables, params);
     } else {
