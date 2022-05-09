@@ -17,7 +17,7 @@ T   = 400
 /**** SPACE-TIME ****/
 Nx   = 101
 Nz   = 151
-Nt   = 140
+Nt   = 1
 xmin = -0.25
 zmin = -0.55
 xmax =  0.25

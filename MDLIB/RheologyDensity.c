@@ -727,6 +727,7 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
         //    for ( l=0; l<Ncz; l++ ) {
         //        for ( k=0; k<Ncx; k++ ) {
 
+// printf("average = %d\n", average);
         k      = mesh->kp[k1];
         l      = mesh->lp[k1];
         c0     = k  + l*(Ncx);
