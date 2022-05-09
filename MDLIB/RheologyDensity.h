@@ -4,6 +4,7 @@
 typedef struct {
   double *eta;
   double *d1;
+  double *Eii_cst, *Eii_pwl, *Eii_gbs, *Eii_exp, *Eii_lin;
 } LocalIterationMutables;
 
 typedef struct {

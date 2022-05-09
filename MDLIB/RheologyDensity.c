@@ -49,8 +49,8 @@ void LocalIterationViscoElastic(LocalIterationMutables mutables, LocalIterationP
   const double maxAllowedResidual = 1.0e-11;
   double       eta_ve             = *mutables.eta;
   double       d_ve               = *mutables.d1;
+  double       Eii_cst, Eii_pwl, Eii_gbs, Eii_exp, Eii_lin;
   for (int it = 0; it < nitmax; it++) {
-    double       Eii_cst, Eii_pwl, Eii_gbs, Eii_exp, Eii_lin;
     // Function evaluation at current effective viscosity
     double       Eii_vis = 0.0;
     const double Tii     = 2.0 * params.f_ani * eta_ve * params.Eii;
@@ -99,6 +99,11 @@ void LocalIterationViscoElastic(LocalIterationMutables mutables, LocalIterationP
   }
   *mutables.eta = eta_ve;
   *mutables.d1  = d_ve;
+  if (params.constant) *mutables.Eii_cst = Eii_cst;
+  if (params.dislocation) *mutables.Eii_pwl = Eii_pwl;
+  if (params.diffusion) *mutables.Eii_lin = Eii_lin;
+  if (params.peierls) *mutables.Eii_exp = Eii_exp;
+  if (params.gbs) *mutables.Eii_gbs = Eii_gbs;
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
@@ -111,8 +116,9 @@ void LocalIterationViscoElasticGrainSize(LocalIterationMutables mutables, LocalI
   const double maxAllowedResidual = 1.0e-11;
   double       eta_ve             = *mutables.eta;
   double       d_ve               = *mutables.d1;
+  double       Eii_cst, Eii_pwl, Eii_gbs, Eii_exp, Eii_lin;
   for (int it = 0; it < nitmax; it++) {
-    double       Eii_cst, Eii_pwl, Eii_gbs, Eii_exp, Eii_lin;
+
     // Function evaluation at current effective viscosity
     double       Eii_vis = 0.0;
     const double Tii     = 2.0 * params.f_ani * eta_ve * params.Eii;
@@ -186,6 +192,11 @@ void LocalIterationViscoElasticGrainSize(LocalIterationMutables mutables, LocalI
   }
   *mutables.eta = eta_ve;
   *mutables.d1  = d_ve;
+  if (params.constant) *mutables.Eii_cst = Eii_cst;
+  if (params.dislocation) *mutables.Eii_pwl = Eii_pwl;
+  if (params.diffusion) *mutables.Eii_lin = Eii_lin;
+  if (params.peierls) *mutables.Eii_exp = Eii_exp;
+  if (params.gbs) *mutables.Eii_gbs = Eii_gbs;
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
@@ -540,6 +551,11 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
     LocalIterationMutables mutables = {
             .eta = &eta_ve,
             .d1  = d1,
+            .Eii_cst = Eii_cst,
+            .Eii_pwl = Eii_pwl,
+            .Eii_lin = Eii_lin,
+            .Eii_exp = Eii_exp,
+            .Eii_gbs = Eii_gbs,
     };
     LocalIterationParams params = {
             .Eii         = Eii,
