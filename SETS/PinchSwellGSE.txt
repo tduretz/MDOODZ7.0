@@ -1,5 +1,5 @@
 /**** RESTART ****/
-istep = 00200
+istep =00140
 irestart = 0
 
 /**** OUTPUT FILES ****/
@@ -8,32 +8,26 @@ writer_step = 10
 writer_markers = 0
 writer_debug = 0
 
-/**** INPUT FILE FOR PARTICLES ****/
-input_file = setup_r501x501_fsp40.bin
-
-/**** MULTIGRID SWITCH ****/ 
-MMG = 0
-
 /**** SCALES ****/
 eta = 1e21
 L   = 5e0
-V   = 1e-10
+V   = 1e-13
 T   = 400
- 
+
 /**** SPACE-TIME ****/
 Nx   = 101
 Nz   = 151
-Nt   = 00
+Nt   = 140
 xmin = -0.25
 zmin = -0.55
 xmax =  0.25
 zmax =  0.55
 dt   = 1e11
 Courant = 0.50
-penalty = 1e14
-abs_tol_div = 1e-27
+penalty = 1e5
 eta_avg = 0
 cpc     = 1
+GNUplot_residuals = 0
 
 /**** SWITCHES ****/
 ismechanical    = 1
@@ -84,7 +78,7 @@ expv = 0             / peierls creep
 eta0 = 1e20
 npwl = 0
 Qpwl = 0
-gsref = 1e-5
+gs_ref = 1e-5
 
 ID   = 1
 rho  = 2700 / matrix
@@ -106,7 +100,7 @@ expv = 0             / peierls creep
 eta0 = 1e22
 npwl = 0
 Qpwl = 0
-gsref = 1e-3
+gs_ref = 1e-3
 gs    = 10
 
 /**** PARTICLES ****/
@@ -114,41 +108,12 @@ Nx_part  = 4
 Nz_part  = 4
 min_part_cell = 16
 
-/**** PICARD ITERATIONS ****/
-nit_max = 1
-tol_u   = 5e-9
-tol_p   = 5e-9
-mineta  = 1e17
-maxeta  = 5e22
-
-/**** DIRECT SOLVER SETTINGS ****/
-direct_iter = 31
-pivot_pert  = 9
-
-/**** MULTIGRID SETTINGS ****/
-n_level     = 1
-nit_out_max = 100
-tol_u       = 2e-6
-tol_p       = 2e-6
-coarsen     = 0               0/coarsen homogeneously                       1/control the coarser resolution (semi-coarsening)
-Nx_min      = 10
-Nz_min      = 10
-
-/**** Smoothers ****/
-urlx  = 0.9
-vrlx  = 0.9
-prlx  = 0.35
-ucoef = 1.0
-vcoef = 1.0
-pcoef = 1.0
-smoother = 0             0/smooth proportionally to resolution            1/fixed number of smoothing cycles           
-SmoothElse     = 10               /smoothing cycles per level
-SmoothCoarse  = 1000        /smoothing cycles on corser level
-
-/**** Viscosity continuation ****/
-eta_min   = 1.0e4
-eta_max   = 1.0e11
-eta_n_stp = 5
-eta_cyc   = 3
-eta_nnn   = 0
-
+/**** NON-LINEAR SOLVER ****/
+Newton      = 1
+line_search = 1
+nit_max     = 10
+rel_tol_KSP = 1e-4
+abs_tol_u   = 1e-10
+abs_tol_u   = 1e-10
+rel_tol_p   = 1e-10
+rel_tol_p   = 1e-10
