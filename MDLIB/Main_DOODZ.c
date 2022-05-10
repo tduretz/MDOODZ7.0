@@ -157,6 +157,7 @@ void RunMDOODZ(MdoodzInstance *instance) {
 
         // Set phases on particles
         SetParticles(instance, &particles);
+        PlotPhases(instance, &particles);
 
         MinMaxArray(particles.Vx, instance->scaling.V, particles.Nb_part, "Vxp init" );
         MinMaxArray(particles.Vz, instance->scaling.V, particles.Nb_part, "Vzp init" );
@@ -870,19 +871,7 @@ void RunMDOODZ(MdoodzInstance *instance) {
 
             // plot residuals
             if (instance->model.GNUplot_residuals == 1 ) { // && instance->model.step % writer_step == 0
-
-                printf("DOING GNU PLOTTING!\n");
-
-                int NumCommands = 3;
-                char *GNUplotCommands[] = {"set title \"Non-linear residuals\"", "set style line 1 lc rgb '#0060ad' lt 1 lw 2 pt 7 pi -1 ps 1.5", "set pointintervalbox 3"};
-                for (i=0; i<NumCommands; i++) fprintf(GNUplotPipe, "%s \n", GNUplotCommands[i]); //Send commands to gnuplot one by one.
-
-                fprintf(GNUplotPipe, "plot '-' with linespoints linestyle 1\n");
-                for (i=0; i< Nmodel.nit+1; i++) {
-                    fprintf(GNUplotPipe, "%lf %lf \n", (double)i, log10(Nmodel.rx_rel[i])); //Write the data to a temporary file
-                }
-                fprintf(GNUplotPipe, "e\n");
-                fflush(GNUplotPipe);
+              PlotResiduals(Nmodel, GNUplotPipe);
             }
 
         }
