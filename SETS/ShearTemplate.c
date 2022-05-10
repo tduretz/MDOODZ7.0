@@ -29,12 +29,12 @@ char SetBCVxType(MdoodzInstance *instance, POSITION position) {
       return -1;
     }
   } else {
-    if (position == WEST || position == NORTHWEST || position == SOUTHWEST) {
-      return -2;
-    } else if (position == EAST || position == NORTHEAST || position == SOUTHEAST) {
-      return -12;
-    } else if (position == SOUTH || position == NORTH) {
+    if (position == SOUTH || position == NORTH || position == NORTHWEST || position == SOUTHWEST || position == NORTHEAST || position == SOUTHEAST) {
       return 11;
+    } else if (position == EAST ) {
+      return -12;
+    } else if (position == WEST) {
+      return -2;
     } else {
       return -1;
     }
@@ -50,9 +50,9 @@ double SetBCVxValue(MdoodzInstance *instance, POSITION position, Coordinates coo
     }
   } else {
     const double Lz = (double) (instance->model.zmax - instance->model.zmin);
-    if (position == SOUTH) {
+    if (position == SOUTH || position == SOUTHEAST || position == SOUTHWEST) {
       return -instance->model.EpsBG * Lz;
-    } else if (position == NORTH) {
+    } else if (position == NORTH || position == NORTHEAST || position == NORTHWEST) {
       return instance->model.EpsBG * Lz;
     } else {
       return 0;
@@ -70,10 +70,10 @@ char SetBCVzType(MdoodzInstance *instance, POSITION position) {
       return -1;
     }
   } else {
-    if (position == WEST || position == EAST) {
-      return 0;
-    } else if (position == SOUTH || position == NORTH) {
+    if (position == EAST || position == WEST || position == NORTHEAST || position == NORTHWEST || position == SOUTHEAST || position == SOUTHWEST ) {
       return -12;
+    } else if (position == SOUTH || position == NORTH) {
+      return 0;
     } else {
       return -1;
     }
@@ -88,12 +88,7 @@ double SetBCVzValue(MdoodzInstance *instance, POSITION position, Coordinates coo
       return 0;
     }
   } else {
-    const double Lz = (double) (instance->model.zmax - instance->model.zmin);
-    if (position == WEST || position == EAST || position == NORTHWEST || position == SOUTH || position == SOUTHEAST || position == SOUTHWEST) {
-      return 0.0 * instance->model.EpsBG * Lz;
-    } else {
-      return 0;
-    }
+    return 0;
   }
 }
 

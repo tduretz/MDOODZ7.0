@@ -65,7 +65,7 @@ advection         = 0
 GNUplot_residuals = 0
 
 /**** SETUP-DEPENDANT ****/
-shear_style     = 0
+shear_style     = 1
 isperiodic_x    = 0
 ispureshear_ALE = 1
 EpsBG           = 1
