@@ -149,10 +149,8 @@ void Xjacobian_InnerNodesDecoupled3( SparseMat *Stokes, SparseMat *StokesA, Spar
         if (mesh->BCp.type[iPrW] == -1) inW = 1.0;
         if (mesh->BCp.type[iPrE] == -1) inE = 1.0;
         
-        //        if (mesh->BCg.type[ixyS] != 30 && mesh->BCu.type[iVxS] != 13) inS = 1.0; // !!!!!!!!!!!!
-        //        if (mesh->BCg.type[ixyN] != 30 && mesh->BCu.type[iVxN] != 13) inN = 1.0;
-        if (mesh->BCu.type[iVxS] != 30 && mesh->BCu.type[iVxS] != 13 )  inS  = 1.0;
-        if (mesh->BCu.type[iVxN] != 30 && mesh->BCu.type[iVxN] != 13 )  inN  = 1.0;
+        if (mesh->BCu.type[iVxS] != 30 && mesh->BCu.type[iVxS] != 13 && mesh->BCu.type[iVxS] != 11 )  inS  = 1.0;
+        if (mesh->BCu.type[iVxN] != 30 && mesh->BCu.type[iVxN] != 13 && mesh->BCu.type[iVxN] != 11 )  inN  = 1.0;
 
          // X-tra
         double wE=0.0, wW=0.0, wS=0.0, wN = 0.0;
@@ -529,8 +527,8 @@ void Zjacobian_InnerNodesDecoupled3( SparseMat *Stokes, SparseMat *StokesA, Spar
 
         if (mesh->BCp.type[iPrS] == -1) inS = 1.0;
         if (mesh->BCp.type[iPrN] == -1) inN = 1.0;
-        if ( mesh->BCv.type[iVzW] != 30 && mesh->BCv.type[iVzW] != 13 ) inW  = 1.0;
-        if ( mesh->BCv.type[iVzE] != 30 && mesh->BCv.type[iVzE] != 13 ) inE  = 1.0;
+        if ( mesh->BCv.type[iVzW] != 30 && mesh->BCv.type[iVzW] != 13  && mesh->BCv.type[iVzW] != 11) inW  = 1.0;
+        if ( mesh->BCv.type[iVzE] != 30 && mesh->BCv.type[iVzE] != 13  && mesh->BCv.type[iVzE] != 11) inE  = 1.0;
 
         // XTRA
         double inSWc=0.0,inSEc=0.0,inNWc=0.0,inNEc=0.0;
@@ -951,8 +949,8 @@ void Xmomentum_InnerNodesDecoupled( SparseMat *Stokes, SparseMat *StokesA, Spars
     if (mesh->BCp.type[iPrE] == -1) inE = 1.0;
     
     double inS=0.0, inN = 0.0;
-    if (mesh->BCg.type[ixyS] != 30 && mesh->BCu.type[iVxS] != 13) inS = 1.0;
-    if (mesh->BCg.type[ixyN] != 30 && mesh->BCu.type[iVxN] != 13) inN = 1.0; 
+    if (mesh->BCg.type[ixyS] != 30 && mesh->BCu.type[iVxS] != 13 && mesh->BCu.type[iVxS] != 11) inS = 1.0;
+    if (mesh->BCg.type[ixyN] != 30 && mesh->BCu.type[iVxN] != 13 && mesh->BCu.type[iVxN] != 11) inN = 1.0; 
 
     // Simpler
     uW = (1.0/3.0)*D11W*inW*(comp*oop - 3)/pow(dx, 2);
@@ -1379,8 +1377,8 @@ void Zmomentum_InnerNodesDecoupled( SparseMat *Stokes, SparseMat *StokesA, Spars
     if (mesh->BCp.type[iPrN] == -1) inN = 1.0;
     
     double inW=0.0, inE = 0.0;
-    if (mesh->BCg.type[ixyW] != 30 && mesh->BCv.type[iVzW] != 13) inW = 1.0;
-    if (mesh->BCg.type[ixyE] != 30 && mesh->BCv.type[iVzE] != 13) inE = 1.0; 
+    if (mesh->BCg.type[ixyW] != 30 && mesh->BCv.type[iVzW] != 13 && mesh->BCv.type[iVzW] != 11) inW = 1.0;
+    if (mesh->BCg.type[ixyE] != 30 && mesh->BCv.type[iVzE] != 13 && mesh->BCv.type[iVzE] != 11) inE = 1.0; 
 
     // Simpler
     vW = -D33W*inW/pow(dx, 2);
