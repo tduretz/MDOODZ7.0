@@ -4,45 +4,29 @@
 
 
 void PlotPhases(MdoodzInstance *instance, markers *particles) {
-  char *txtFileName = "phases.txt";
-  const int cellParticles = particles->Nx_part * particles->Nz_part;
-  const double resolution = 2;
+  const char *txtFileName = "phases.dat";
+
+  const int Nx_part = particles->Nx_part;
+  const int Nz_part = particles->Nz_part;
+  const int Nb_part = particles->Nb_part;
 
   FILE *fp = fopen(txtFileName, "w");
-  int particlesCount = 0;
-  double xParticlesSum = 0.0;
-  double zParticlesSum = 0.0;
-  double phaseSum = 0.0;
-  for (int np = 0; np < particles->Nb_part; np++) {
-    particlesCount++;
-    if (particlesCount < cellParticles * resolution) {
-      const double x = particles->x[np];
-      const double z = particles->z[np];
-      const int phase = particles->phase[np];
-
-      xParticlesSum += x;
-      zParticlesSum += z;
-      phaseSum += (double) phase;
-    } else {
-      const double x = xParticlesSum / (double) particlesCount;
-      const double z = zParticlesSum / (double) particlesCount;
-      const double phase = phaseSum / (double) particlesCount;
-      fprintf(fp, "%f\t%f\t%f\n", x, z, phase);
-      particlesCount = 0;
-      xParticlesSum = 0.0;
-      zParticlesSum = 0.0;
-      phaseSum = 0.0;
-      continue;
-    }
+  for (int np = 0; np < Nb_part; np += Nx_part * Nz_part) {
+    const double x = particles->x[np];
+    const double z = particles->z[np];
+    const int phase = particles->phase[np];
+    fprintf(fp, "%f\t%f\t%i\n", x, z, phase);
   }
   fclose(fp);
 
   FILE *GNUplotPipe = popen ("gnuplot -persistent", "w");
-  fprintf(GNUplotPipe, "load 'inferno.pal'\n");
-  fprintf(GNUplotPipe, "set xrange[%f:%f]\n", instance->model.xmin, instance->model.xmax);
-  fprintf(GNUplotPipe, "set yrange[%f:%f]\n", instance->model.zmin, instance->model.zmax);
-  fprintf(GNUplotPipe, "plot '%s' with image\n", txtFileName);
+  fprintf(GNUplotPipe, "set view map'\n");
+  fprintf(GNUplotPipe, "set dgrid3d\n");
+  fprintf(GNUplotPipe, "set palette maxcolors %i\n", instance->model.Nb_phases);
+  fprintf(GNUplotPipe, "set pm3d interpolate 4,4\n");
+  fprintf(GNUplotPipe, "splot '%s' with pm3d\n", txtFileName);
   fflush(GNUplotPipe);
+  exit(0);
 }
 
 
