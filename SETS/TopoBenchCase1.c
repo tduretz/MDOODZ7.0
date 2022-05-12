@@ -17,42 +17,40 @@ int SetPhase(MdoodzInstance *instance, Coordinates coordinates) {
   }
 }
 
-char SetBCVxType(MdoodzInstance *instance, POSITION position) {
-   if (position == SOUTH || position == SOUTHWEST || position == SOUTHEAST) {
-    return 11;
-  } else if (position == NORTH || position == NORTHWEST || position == NORTHEAST) {
-    return 13;
-  } else if (position == WEST || position == EAST) {
-    return 0;
+BC SetBCVx(MdoodzInstance *instance, POSITION position, Coordinates coordinates) {
+  BC bc = {.value = 0.0};
+  if (position == S || position == SW || position == SE) {
+    bc.type = 11;
+  } else if (position == N || position == NW || position == NE) {
+    bc.type = 13;
+  } else if (position == W || position == E) {
+    bc.type = 0;
   } else {
-    return -1;
+    bc.type = -1;
   }
+  return bc;
 }
 
-char SetBCVzType(MdoodzInstance *instance, POSITION position) {
-  if (position == WEST || position == EAST || position == SOUTHWEST || position == SOUTHEAST || position == NORTHWEST || position == NORTHEAST) {
-    return 13;
-  } else if (position == SOUTH || position == NORTH) {
-    return 0;
+BC SetBCVz(MdoodzInstance *instance, POSITION position, Coordinates coordinates) {
+  BC bc = {.value = 0.0};
+  if (position == W || position == E || position == SW || position == SE || position == NW || position == NE) {
+    bc.type = 13;
+  } else if (position == S || position == N) {
+    bc.type = 0;
   } else {
-    return -1;
+    bc.type = -1;
   }
+  return bc;
 }
 
-char SetBCPType(MdoodzInstance *instance, POSITION position) {
-  if (position == NORTHEAST || position == NORTHWEST) {
-    return 0;
+BC SetBCP(MdoodzInstance *instance, POSITION position, Coordinates coordinates) {
+  BC bc = {.value = 0.0};
+  if (position == NE || position == NW) {
+    bc.type = 0;
   } else {
-    return -1;
+    bc.type = -1;
   }
-}
-
-double SetBCVxValue() {
-  return 0.0;
-}
-
-double SetBCVzValue() {
-  return 0.0;
+  return bc;
 }
 
 int main(int nargs, char *args[]) {
@@ -66,11 +64,9 @@ int main(int nargs, char *args[]) {
                                .SetPhase = SetPhase,
           },
                        .SetBCs = &(SetBCs_ff){
-                               .SetBCVxType  = SetBCVxType,
-                               .SetBCVxValue = SetBCVxValue,
-                               .SetBCVzValue = SetBCVzValue,
-                               .SetBCVzType  = SetBCVzType,
-                               .SetBCPType   = SetBCPType,
+                               .SetBCVx = SetBCVx,
+                               .SetBCVz = SetBCVz,
+                               .SetBCP  = SetBCP,
           },
                        .crazyConductivity = &(CrazyConductivity){
                                .multiplier = 1000,

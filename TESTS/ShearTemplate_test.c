@@ -28,19 +28,19 @@ double SetDensity(MdoodzInstance *instance, Coordinates coordinates, int phase) 
 
 char SetBCVxType(MdoodzInstance *instance, POSITION position) {
   if (instance->model.shear_style == 0) {
-    if (position == WEST || position == EAST || position == NORTHEAST || position == NORTHWEST || position == SOUTHEAST || position == SOUTHWEST) {
+    if (position == W || position == E || position == NE || position == NW || position == SE || position == SW) {
       return 0;
-    } else if (position == SOUTH || position == NORTH) {
+    } else if (position == S || position == N) {
       return 13;
     } else {
       return -1;
     }
   } else {
-    if (position == WEST || position == NORTHWEST || position == SOUTHWEST) {
+    if (position == W || position == NW || position == SW) {
       return -2;
-    } else if (position == EAST || position == NORTHEAST || position == SOUTHEAST) {
+    } else if (position == E || position == NE || position == SE) {
       return -12;
-    } else if (position == SOUTH || position == NORTH) {
+    } else if (position == S || position == N) {
       return 11;
     } else {
       return -1;
@@ -50,16 +50,16 @@ char SetBCVxType(MdoodzInstance *instance, POSITION position) {
 
 double SetBCVxValue(MdoodzInstance *instance, POSITION position, Coordinates coordinates) {
   if (instance->model.shear_style == 0) {
-    if (position == WEST || position == EAST || position == NORTHEAST || position == NORTHWEST || position == SOUTHEAST || position == SOUTHWEST) {
+    if (position == W || position == E || position == NE || position == NW || position == SE || position == SW) {
       return -coordinates.x * instance->model.EpsBG;
     } else {
       return 0;
     }
   } else {
     const double Lz = (double) (instance->model.zmax - instance->model.zmin);
-    if (position == SOUTH) {
+    if (position == S) {
       return -instance->model.EpsBG * Lz;
-    } else if (position == NORTH) {
+    } else if (position == N) {
       return instance->model.EpsBG * Lz;
     } else {
       return 0;
@@ -69,17 +69,17 @@ double SetBCVxValue(MdoodzInstance *instance, POSITION position, Coordinates coo
 
 char SetBCVzType(MdoodzInstance *instance, POSITION position) {
   if (instance->model.shear_style == 0) {
-    if (position == WEST || position == EAST || position == NORTHEAST || position == NORTHWEST || position == SOUTHEAST || position == SOUTHWEST) {
+    if (position == W || position == E || position == NE || position == NW || position == SE || position == SW) {
       return 13;
-    } else if (position == SOUTH || position == NORTH) {
+    } else if (position == S || position == N) {
       return 0;
     } else {
       return -1;
     }
   } else {
-    if (position == WEST || position == EAST) {
+    if (position == W || position == E) {
       return 0;
-    } else if (position == SOUTH || position == NORTH) {
+    } else if (position == S || position == N) {
       return -12;
     } else {
       return -1;
@@ -89,14 +89,14 @@ char SetBCVzType(MdoodzInstance *instance, POSITION position) {
 
 double SetBCVzValue(MdoodzInstance *instance, POSITION position, Coordinates coordinates) {
   if (instance->model.shear_style == 0) {
-    if (position == NORTH || position == NORTHEAST || position == NORTHWEST || position == SOUTH || position == SOUTHEAST || position == SOUTHWEST) {
+    if (position == N || position == NE || position == NW || position == S || position == SE || position == SW) {
       return coordinates.z * instance->model.EpsBG;
     } else {
       return 0;
     }
   } else {
     const double Lz = (double) (instance->model.zmax - instance->model.zmin);
-    if (position == WEST || position == EAST || position == NORTHWEST || position == SOUTH || position == SOUTHEAST || position == SOUTHWEST) {
+    if (position == W || position == E || position == NW || position == S || position == SE || position == SW) {
       return 0.0 * instance->model.EpsBG * Lz;
     } else {
       return 0;

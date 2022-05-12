@@ -1,26 +1,25 @@
-#include "mdoodz.h"
 #include "math.h"
+#include "mdoodz.h"
 
 int SetPhase(MdoodzInstance *instance, Coordinates coordinates) {
-    const double A          = 2e-3/instance->scaling.L;
-    const double layer_bot0 =-5e-2/instance->scaling.L;
-    const double layer_top0 = 5e-2/instance->scaling.L;
-    const double Lx         = (instance->model.xmax - instance->model.xmin);
-    const double layer_top  = layer_top0 - A*cos(coordinates.x*2.0*M_PI/Lx);
-    const double layer_bot  = layer_bot0 + A*cos(coordinates.x*2.0*M_PI/Lx);
-    if (coordinates.z>layer_bot && coordinates.z<layer_top) {
-        return 1;
-    } 
-    else {
-        return 0;
+  const double A          = 2e-3 / instance->scaling.L;
+  const double layer_bot0 = -5e-2 / instance->scaling.L;
+  const double layer_top0 = 5e-2 / instance->scaling.L;
+  const double Lx         = (instance->model.xmax - instance->model.xmin);
+  const double layer_top  = layer_top0 - A * cos(coordinates.x * 2.0 * M_PI / Lx);
+  const double layer_bot  = layer_bot0 + A * cos(coordinates.x * 2.0 * M_PI / Lx);
+  if (coordinates.z > layer_bot && coordinates.z < layer_top) {
+    return 1;
+  } else {
+    return 0;
   }
 }
 double SetGrainSize(MdoodzInstance *instance, Coordinates coordinates, int phase) {
   return instance->materials.gs_ref[phase];
 }
 
-double SetDensity(MdoodzInstance *instance, Coordinates coordinates, int phase) {  // phase
-    return instance->materials.rho[phase];
+double SetDensity(MdoodzInstance *instance, Coordinates coordinates, int phase) {// phase
+  return instance->materials.rho[phase];
 }
 
 double SetTemperature(MdoodzInstance *instance, Coordinates coordinates) {
@@ -28,66 +27,49 @@ double SetTemperature(MdoodzInstance *instance, Coordinates coordinates) {
   return T;
 }
 
-char SetBCVxType(MdoodzInstance *instance, POSITION position) {
+BC SetBCVx(MdoodzInstance *instance, POSITION position, Coordinates coordinates) {
+  BC bc;
   if (instance->model.shear_style == 0) {
-    if (position == WEST || position == EAST || position == NORTHEAST || position == NORTHWEST || position == SOUTHEAST || position == SOUTHWEST) {
-      return 0;
-    } else if (position == SOUTH || position == NORTH) {
-      return 13;
+    if (position == W || position == E || position == NE || position == NW || position == SE || position == SW) {
+      bc.value = -coordinates.x * instance->model.EpsBG;
+      bc.type  = 0;
+    } else if (position == S || position == N) {
+      bc.value = 0;
+      bc.type  = 13;
     } else {
-      return -1;
+      bc.value = 0;
+      bc.type  = -1;
     }
   }
+  return bc;
 }
 
-double SetBCVxValue(MdoodzInstance *instance, POSITION position, Coordinates coordinates) {
+BC SetBCVz(MdoodzInstance *instance, POSITION position, Coordinates coordinates) {
+  BC bc;
   if (instance->model.shear_style == 0) {
-    if (position == WEST || position == EAST || position == NORTHEAST || position == NORTHWEST || position == SOUTHEAST || position == SOUTHWEST) {
-      return -coordinates.x * instance->model.EpsBG;
+    if (position == W || position == E || position == NE || position == NW || position == SE || position == SW) {
+      bc.value = coordinates.z * instance->model.EpsBG;
+      bc.type  = 13;
+    } else if (position == S || position == N) {
+      bc.value = 0.0;
+      bc.type  = 0;
     } else {
-      return 0;
+      bc.value = 0.0;
+      bc.type  = -1;
     }
   }
-}
-
-char SetBCVzType(MdoodzInstance *instance, POSITION position) {
-  if (instance->model.shear_style == 0) {
-    if (position == WEST || position == EAST || position == NORTHEAST || position == NORTHWEST || position == SOUTHEAST || position == SOUTHWEST) {
-      return 13;
-    } else if (position == SOUTH || position == NORTH) {
-      return 0;
-    } else {
-      return -1;
-    }
-  } 
-}
-
-double SetBCVzValue(MdoodzInstance *instance, POSITION position, Coordinates coordinates) {
-  if (instance->model.shear_style == 0) {
-    if (position == NORTH || position == NORTHEAST || position == NORTHWEST || position == SOUTH || position == SOUTHEAST || position == SOUTHWEST) {
-      return coordinates.z * instance->model.EpsBG;
-    } else {
-      return 0;
-    }
-  }
+  return bc;
 }
 
 //----------------------------- THERMAL BC -----------------------------//
 
-char SetBCTType(MdoodzInstance *instance, POSITION position) {
-    return 0;
+
+BC SetBCT(MdoodzInstance *instance, POSITION position, Coordinates coordinates, double gridTemperature) {
+  return (BC){.value = gridTemperature, .type = 0};
 }
 
-char SetBCTTypeNew(MdoodzInstance *instance, POSITION position) {
-    return 0;
-}
-
-double SetBCTValue(MdoodzInstance *instance, POSITION position, double gridTemperature) {
-    return gridTemperature;
-}
-
-double SetBCTValueNew(MdoodzInstance *instance, POSITION position, double gridTemperature) {
-    return gridTemperature;
+BC SetBCTNew(MdoodzInstance *instance, POSITION position, Coordinates coordinates, double gridTemperature) {
+  return (BC){.value = gridTemperature, .type = 0};
 }
 
 //----------------------------- MAIN -----------------------------//
@@ -96,20 +78,16 @@ int main(int nargs, char *args[]) {
   MdoodzInstance instance = {
           .inputFileName = GetSetupFileName(nargs, args),
           .SetParticles  = &(SetParticles_ff){
-                   .SetPhase              = SetPhase,
-                   .SetDensity            = SetDensity,
-                   .SetGrainSize          = SetGrainSize,
-                   .SetTemperature        = SetTemperature,
+                   .SetPhase       = SetPhase,
+                   .SetDensity     = SetDensity,
+                   .SetGrainSize   = SetGrainSize,
+                   .SetTemperature = SetTemperature,
           },
           .SetBCs = &(SetBCs_ff){
-                  .SetBCVxType  = SetBCVxType,
-                  .SetBCVxValue = SetBCVxValue,
-                  .SetBCVzType  = SetBCVzType,
-                  .SetBCVzValue = SetBCVzValue,
-                  .SetBCTType   = SetBCTType,
-                  .SetBCTValue  = SetBCTValue,
-                  .SetBCTTypeNew   = SetBCTTypeNew,
-                  .SetBCTValueNew  = SetBCTValueNew,
+                  .SetBCVz   = SetBCVz,
+                  .SetBCVx   = SetBCVx,
+                  .SetBCT    = SetBCT,
+                  .SetBCTNew = SetBCTNew,
           },
   };
   RunMDOODZ(&instance);

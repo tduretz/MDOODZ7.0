@@ -149,40 +149,35 @@ typedef struct {
 } SetParticles_ff;
 
 typedef enum {
-  NORTHEAST,
-  NORTHWEST,
-  SOUTHEAST,
-  SOUTHWEST,
+  NE,
+  NW,
+  SE,
+  SW,
   INTERNAL,
-  NORTH,
-  SOUTH,
-  WEST,
-  EAST,
+  N,
+  S,
+  W,
+  E,
   FREE_SURFACE
 } POSITION;
 
-typedef char (*SetBCVxType_f)(MdoodzInstance *instance, POSITION position);
-typedef char (*SetBCVzType_f)(MdoodzInstance *instance, POSITION position);
-typedef char (*SetBCPType_f)(MdoodzInstance *instance, POSITION position);
-typedef char (*SetBCTType_f)(MdoodzInstance *instance, POSITION position);
-typedef char (*SetBCTTypeNew_f)(MdoodzInstance *instance, POSITION position);
+typedef struct {
+  double value;
+  char   type;
+} BC;
 
-typedef double (*SetBCVxValue_f)(MdoodzInstance *instance, POSITION position, Coordinates coordinates);
-typedef double (*SetBCVzValue_f)(MdoodzInstance *instance, POSITION position, Coordinates coordinates);
-typedef double (*SetBCTValue_f)(MdoodzInstance *instance, POSITION position, double gridTemperature);
-typedef double (*SetBCTValueNew_f)(MdoodzInstance *instance, POSITION position, double gridTemperature);
+typedef BC (*SetBCVx_f)(MdoodzInstance *instance, POSITION position, Coordinates coordinates);
+typedef BC (*SetBCVz_f)(MdoodzInstance *instance, POSITION position, Coordinates coordinates);
+typedef BC (*SetBCP_f)(MdoodzInstance *instance, POSITION position, Coordinates coordinates);
+typedef BC (*SetBCT_f)(MdoodzInstance *instance, POSITION position, Coordinates coordinates, double gridTemperature);
+typedef BC (*SetBCTNew_f)(MdoodzInstance *instance, POSITION position, Coordinates coordinates, double gridTemperature);
 
 typedef struct {
-  SetBCVxType_f    SetBCVxType;
-  SetBCVxValue_f   SetBCVxValue;
-  SetBCVzType_f    SetBCVzType;
-  SetBCVzValue_f   SetBCVzValue;
-  SetBCPType_f     SetBCPType;
-  SetBCTType_f     SetBCTType;
-  SetBCTValue_f    SetBCTValue;
-
-  SetBCTValueNew_f SetBCTValueNew;
-  SetBCTTypeNew_f  SetBCTTypeNew;
+  SetBCVx_f   SetBCVx;
+  SetBCVz_f   SetBCVz;
+  SetBCT_f    SetBCT;
+  SetBCP_f    SetBCP;
+  SetBCTNew_f SetBCTNew;
 } SetBCs_ff;
 
 typedef struct {
