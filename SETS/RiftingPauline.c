@@ -50,7 +50,7 @@ double SetTemperature(MdoodzInstance *instance, Coordinates coordinates) {
   }
 }
 
-double SetGrainSize(MdoodzInstance *instance, Coordinates coordinates, int phase) {
+double SetGrainSize(MdoodzInstance *instance, Coordinates coordinates) {
   const int astenospherePhase = 3;
   return instance->materials.gs_ref[astenospherePhase];
 }
@@ -107,7 +107,7 @@ char SetBCPType(MdoodzInstance *instance, POSITION position) {
   }
 }
 
-double SetBCTValue(MdoodzInstance *instance, POSITION position, double gridTemperature) {
+double SetBCTValue(MdoodzInstance *instance, POSITION position, double particleTemperature) {
   double surfaceTemperature = zeroC / instance->scaling.T;
   if (position == FREE_SURFACE) {
     return surfaceTemperature;
@@ -116,11 +116,11 @@ double SetBCTValue(MdoodzInstance *instance, POSITION position, double gridTempe
   }
 }
 
-double SetBCTValueNew(MdoodzInstance *instance, POSITION position, double gridTemperature) {
+double SetBCTValueNew(MdoodzInstance *instance, POSITION position, double particleTemperature) {
   double surfaceTemperature = zeroC / instance->scaling.T;
   double mantleTemperature  = (1330. + zeroC) / instance->scaling.T;
   if (position == SOUTH || position == SOUTHEAST || position == SOUTHWEST) {
-    return gridTemperature;
+    return particleTemperature;
   } else if (position == NORTH || position == NORTHEAST || position == NORTHWEST) {
     return surfaceTemperature;
   } else if (position == WEST || position == EAST) {

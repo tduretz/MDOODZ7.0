@@ -812,12 +812,23 @@ void ReadDataGSE( mat_prop* mat, params* model, int k, int number, scale* scalin
             success      = 0;
             break;
             
+        case 9 :
+            printf("MODIFIED - Low lambda: Calcite paleowattmeter - Austin & Evans (2002); Covey-Crump (1997):\n");
+            mat->ppzm[k] = 3.0;
+            mat->Kpzm[k] = 2.5e9* pow(10.0,-6.0*mat->ppzm[k]) / (pow(scaling->L, mat->ppzm[k]) / scaling->t);
+            mat->Qpzm[k] = 175.0e3                            / scaling->J;
+            mat->Gpzm[k] = 1.0                                / (scaling->J * pow(scaling->L, -2.0) );
+            mat->cpzm[k] = M_PI;
+            mat->Lpzm[k] = 0.01;
+            success      = 1;
+            break;
+
         case 10 :
             printf("Calcite paleowattmeter - Austin & Evans (2002); Covey-Crump (1997):\n");
             mat->ppzm[k] = 3.0;
             mat->Kpzm[k] = 2.5e9* pow(10.0,-6.0*mat->ppzm[k]) / (pow(scaling->L, mat->ppzm[k]) / scaling->t);
             mat->Qpzm[k] = 175.0e3                            / scaling->J;
-            mat->Gpzm[k] = 1                                  / (scaling->J * pow(scaling->L, -2.0) );
+            mat->Gpzm[k] = 1.0                                / (scaling->J * pow(scaling->L, -2.0) );
             mat->cpzm[k] = M_PI;
             mat->Lpzm[k] = 0.1;
             success      = 1;

@@ -282,6 +282,7 @@ void RunMDOODZ(MdoodzInstance *instance) {
         InitialiseGrainSizeParticles( &particles, &instance->materials );
         P2Mastah( &instance->model, particles, particles.d,     &mesh, mesh.d_n , mesh.BCp.type,  1, 0, interp, cent, instance->model.itp_stencil);
         ArrayEqualArray( mesh.d0_n, mesh.d_n,  (mesh.Nx-1)*(mesh.Nz-1) );
+        MinMaxArrayTag( mesh.d_n, instance->scaling.L,   (mesh.Nx-1)*(mesh.Nz-1), "d         ", mesh.BCp.type );
 
         printf("*************************************\n");
         printf("******** Initialize density *********\n");
@@ -545,6 +546,8 @@ void RunMDOODZ(MdoodzInstance *instance) {
 
         // Min/Max interpolated fields
         if (instance->model.noisy == 1 ) {
+            MinMaxArrayTag( mesh.d0_n, instance->scaling.L,   (mesh.Nx-1)*(mesh.Nz-1), "d0        ", mesh.BCp.type );
+            MinMaxArrayTag( mesh.d_n, instance->scaling.L,   (mesh.Nx-1)*(mesh.Nz-1), "d         ", mesh.BCp.type );
             MinMaxArray(particles.sxxd, instance->scaling.S, particles.Nb_part, "sxxd part  ");
             MinMaxArray(particles.T, instance->scaling.T,   particles.Nb_part, "T part    ");
             MinMaxArrayTag( mesh.p0_n, instance->scaling.S,    (mesh.Nx-1)*(mesh.Nz-1),   "p0_n",   mesh.BCp.type );

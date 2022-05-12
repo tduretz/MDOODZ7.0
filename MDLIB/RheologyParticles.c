@@ -42,15 +42,12 @@
 /*--------------------------------------------------------------------------------------------------------------------*/
 
 void InitialiseGrainSizeParticles( markers* particles, mat_prop *materials ){
-    
-    int phase;
-#pragma omp parallel for shared( particles, materials ) private(phase)
+    // Set initial particle grain size
+#pragma omp parallel for shared( particles, materials )
     for( int k=0; k<particles->Nb_part; k++ ) {
-        
-        phase           = particles->phase[k];
-        if ( phase != -1) particles->d[k] = materials->gs_ref[phase];
+        const int phase = particles->phase[k];
+        if (phase != -1) particles->d[k] = materials->gs_ref[phase];
     }
-    
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
@@ -58,7 +55,7 @@ void InitialiseGrainSizeParticles( markers* particles, mat_prop *materials ){
 /*--------------------------------------------------------------------------------------------------------------------*/
 
 // Old deviatoric stress field and pressure
-void  OldDeviatoricStressesPressure( grid* mesh, markers* particles, scale scaling, params* model ) {
+void OldDeviatoricStressesPressure( grid* mesh, markers* particles, scale scaling, params* model ) {
     
     int k, l, c0, c1, c2, Nx, Nz, Ncx, Ncz, k1;
     double *sxx0,  *syy0, *szz0, *sxz0;
@@ -881,32 +878,41 @@ void UpdateParticleX( grid* mesh, scale scaling, params model, markers* particle
 
 void UpdateParticleGrainSize( grid* mesh, scale scaling, params model, markers* particles, mat_prop* materials ) {
     
-    DoodzFP *d_inc_mark, *d_inc_grid;
-    int Nx, Nz, Ncx, Ncz, k;
-    Nx = mesh->Nx; Ncx = Nx-1;
-    Nz = mesh->Nz; Ncz = Nz-1;
+//     DoodzFP *d_inc_mark, *d_inc_grid;
+//     int Nx, Nz, Ncx, Ncz, k;
+    const int Nx = mesh->Nx; //Ncx = Nx-1;
+    const int Nz = mesh->Nz; //Ncz = Nz-1;
     
-    d_inc_mark = DoodzCalloc(particles->Nb_part, sizeof(DoodzFP));
-    d_inc_grid = DoodzCalloc(Ncx*Ncz, sizeof(DoodzFP));
+//     d_inc_mark = DoodzCalloc(particles->Nb_part, sizeof(DoodzFP));
+//     d_inc_grid = DoodzCalloc(Ncx*Ncz, sizeof(DoodzFP));
     
-    for (k=0;k<Ncx*Ncz;k++) {
-        d_inc_grid[k] =0.0;
-        if (mesh->BCp.type[k] != 30 && mesh->BCp.type[k] != 31) d_inc_grid[k] = mesh->d_n[k] - mesh->d0_n[k];
-    }
+//     for (k=0;k<Ncx*Ncz;k++) {
+//         d_inc_grid[k] =0.0;
+//         if (mesh->BCp.type[k] != 30 && mesh->BCp.type[k] != 31) d_inc_grid[k] = mesh->d_n[k] - mesh->d0_n[k];
+//     }
     
+//     // Interp increments to particles
+//     Interp_Grid2P_centroids2( *particles, d_inc_mark, mesh, d_inc_grid, mesh->xvz_coord,  mesh->zvx_coord, Nx-1, Nz-1, mesh->BCt.type, &model  );
+
+//     MinMaxArrayPart( particles->d, scaling.L, particles->Nb_part, "d on markers", particles->phase ) ;
+
+//     // Increment grain size on particles
+//     ArrayPlusArray( particles->d, d_inc_mark, particles->Nb_part );
+
+//     MinMaxArrayPart( particles->d, scaling.L, particles->Nb_part, "d on markers", particles->phase ) ;
+
+
+// #pragma omp parallel for shared ( particles )
+//     for (k=0;k<particles->Nb_part;k++) {
+//         if (particles->d[k]<1.0e-16) particles->d[k] = 1.0e-16;
+//     }
+    
+//     DoodzFree(d_inc_mark);
+//     DoodzFree(d_inc_grid);
+
     // Interp increments to particles
-    Interp_Grid2P_centroids2( *particles, d_inc_mark, mesh, d_inc_grid, mesh->xvz_coord,  mesh->zvx_coord, Nx-1, Nz-1, mesh->BCt.type, &model  );
-    
-    // Increment grain size on particles
-    ArrayPlusArray( particles->d, d_inc_mark, particles->Nb_part );
-    
-#pragma omp parallel for shared ( particles )
-    for (k=0;k<particles->Nb_part;k++) {
-        if (particles->d[k]<1.0e-16) particles->d[k] = 1.0e-16;
-    }
-    
-    DoodzFree(d_inc_mark);
-    DoodzFree(d_inc_grid);
+    Interp_Grid2P_centroids2( *particles, particles->d, mesh, mesh->d_n, mesh->xvz_coord,  mesh->zvx_coord, Nx-1, Nz-1, mesh->BCt.type, &model  );
+
     
 }
 

@@ -40,6 +40,7 @@ Some of those functions must be implemented, but others if not implemented will 
 Aggregates pointers to functions for setting up topography chain properties. 
 Must have if `model.free_surf == 1`.
 
+
 - `SetSurfaceZCoord` describes an altitude in relation to the x coordinate. Default value is `1.0e3 / instance->scaling.L`:  flat surface will be generated
 - `SetSurfacePhase` describes a topography chain particle phase id in relation to the x coordinate. Default phase `0`
 
@@ -47,6 +48,7 @@ Must have if `model.free_surf == 1`.
 
 Aggregates pointers to functions for setting up particle properties.
 Must have.
+
 
 - `SetHorizontalVelocity` describes a particle Horizontal Velocity (Vx) in relation to coordinates. Default value is `-coordinates.x * instance->model.EpsBG`
 - `SetVerticalVelocity` describes a particle Vertical Velocity (Vz) in relation to coordinates. Default value is `coordinates.z * instance->model.EpsBG`
