@@ -19,8 +19,8 @@ double SetDensity(MdoodzInstance *instance, Coordinates coordinates, int phase) 
   }
 }
 
-BC SetBCVx(MdoodzInstance *instance, POSITION position, Coordinates coordinates) {
-  BC bc;
+SetBC SetBCVx(MdoodzInstance *instance, POSITION position, Coordinates coordinates) {
+  SetBC bc;
   if (instance->model.shear_style == 0) {
     if (position == W || position == E || position == NE || position == NW || position == SE || position == SW) {
       bc.value = -coordinates.x * instance->model.EpsBG;
@@ -54,8 +54,8 @@ BC SetBCVx(MdoodzInstance *instance, POSITION position, Coordinates coordinates)
   return bc;
 }
 
-BC SetBCVz(MdoodzInstance *instance, POSITION position, Coordinates coordinates) {
-  BC bc;
+SetBC SetBCVz(MdoodzInstance *instance, POSITION position, Coordinates coordinates) {
+  SetBC bc;
   if (instance->model.shear_style == 0) {
     if (position == W || position == E || position == NE || position == NW || position == SE || position == SW) {
       bc.value = coordinates.z * instance->model.EpsBG;
@@ -69,13 +69,13 @@ BC SetBCVz(MdoodzInstance *instance, POSITION position, Coordinates coordinates)
     }
   } else {
     if (position == E || position == W || position == NE || position == NW || position == SE || position == SW) {
-      bc.value - 0.0;
+      bc.value = 0.0;
       bc.type = -12;
     } else if (position == S || position == N) {
-      bc.value - 0.0;
+      bc.value = 0.0;
       bc.type = 0;
     } else {
-      bc.value - 0.0;
+      bc.value = 0.0;
       bc.type = -1;
     }
   }

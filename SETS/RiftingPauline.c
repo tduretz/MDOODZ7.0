@@ -63,8 +63,8 @@ double SetVerticalVelocity(MdoodzInstance *instance, Coordinates coordinates) {
   return coordinates.z * instance->model.EpsBG;
 }
 
-BC SetBCVx(MdoodzInstance *instance, POSITION position, Coordinates coordinates) {
-  BC bc;
+SetBC SetBCVx(MdoodzInstance *instance, POSITION position, Coordinates coordinates) {
+  SetBC bc;
   if (position == N || position == S || position == NW || position == SW || position == NE || position == SE) {
     bc.value = 0;
     bc.type  = 13;
@@ -79,8 +79,8 @@ BC SetBCVx(MdoodzInstance *instance, POSITION position, Coordinates coordinates)
 }
 
 
-BC SetBCVz(MdoodzInstance *instance, POSITION position, Coordinates coordinates) {
-  BC bc;
+SetBC SetBCVz(MdoodzInstance *instance, POSITION position, Coordinates coordinates) {
+  SetBC bc;
   if (position == W || position == E) {
     bc.value = 0;
     bc.type  = 13;
@@ -97,18 +97,17 @@ BC SetBCVz(MdoodzInstance *instance, POSITION position, Coordinates coordinates)
   return bc;
 }
 
-BC SetBCP(MdoodzInstance *instance, POSITION position, Coordinates coordinates) {
-  BC bc = {.value = 0};
+char SetBCPType(MdoodzInstance *instance, POSITION position) {
+  SetBC bc = {.value = 0};
   if (position == NE || position == NW) {
-    bc.type = 0;
+    return 0;
   } else {
-    bc.type = -1;
+    return -1;
   }
-  return bc;
 }
 
-BC SetBCT(MdoodzInstance *instance, POSITION position, Coordinates coordinates, double particleTemperature) {
-  BC     bc;
+SetBC SetBCT(MdoodzInstance *instance, POSITION position, double particleTemperature) {
+  SetBC     bc;
   double surfaceTemperature = zeroC / instance->scaling.T;
   if (position == FREE_SURFACE) {
     bc.value = surfaceTemperature;
@@ -121,8 +120,8 @@ BC SetBCT(MdoodzInstance *instance, POSITION position, Coordinates coordinates, 
 }
 
 
-BC SetBCTNew(MdoodzInstance *instance, POSITION position, Coordinates coordinates, double particleTemperature) {
-  BC     bc;
+SetBC SetBCTNew(MdoodzInstance *instance, POSITION position, double particleTemperature) {
+  SetBC     bc;
   double surfaceTemperature = zeroC / instance->scaling.T;
   double mantleTemperature  = (1330. + zeroC) / instance->scaling.T;
   if (position == S || position == SE || position == SW) {
@@ -158,7 +157,7 @@ int main(int nargs, char *args[]) {
                        .SetBCs = &(SetBCs_ff){
                                .SetBCVx   = SetBCVx,
                                .SetBCVz   = SetBCVz,
-                               .SetBCP    = SetBCP,
+                               .SetBCPType    = SetBCPType,
                                .SetBCT    = SetBCT,
                                .SetBCTNew = SetBCTNew,
           },

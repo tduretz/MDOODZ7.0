@@ -35,7 +35,7 @@ typedef struct {
   int    ncont;
   double Courant, mineta, maxeta;
   // Particles
-  int initial_noise, initial_part;
+  int    initial_noise, initial_part;
   // Linear solver
   int    decoupled_solve, lsolver, diag_scaling, pc_type;
   double penalty, abs_tol_div, rel_tol_div, auto_penalty, compressible,
@@ -52,29 +52,29 @@ typedef struct {
   double therm_pert_x0, therm_pert_z0, therm_pert_dT, therm_pert_rad,
           cooling_time;
   // For rheological database...
-  int    force_act_vol_ast;
-  double act_vol_dis_ast, act_vol_dif_ast;
+  int      force_act_vol_ast;
+  double   act_vol_dis_ast, act_vol_dif_ast;
   // Phase diagrams
   int      isPD, num_PD, *PDMnT, *PDMnP, *PD1DnP;
   double **PDMrho, *PDMTmin, *PDMTmax, *PDMPmin, *PDMPmax;
   double **PD1Drho, *PD1Dmin, *PD1Dmax;
   // Kinetics
-  int     kin_nP, kin_nT;
-  double *kin_dG, kin_Tmin, kin_Tmax, kin_Pmin, kin_Pmax;
+  int      kin_nP, kin_nT;
+  double  *kin_dG, kin_Tmin, kin_Tmax, kin_Pmin, kin_Pmax;
   // Visualisation
-  int rec_T_P_x_z, delete_breakpoints, GNUplot_residuals;
+  int      rec_T_P_x_z, delete_breakpoints, GNUplot_residuals;
   // Boundary conditions type
-  int BC_setup_type, shear_style, polar;
-  int StressRotation, StressUpdate, DirectNeighbour;
+  int      BC_setup_type, shear_style, polar;
+  int      StressRotation, StressUpdate, DirectNeighbour;
   // For diffused rheological constrasts
-  int    diffuse_X, diffuse_avg;
-  double diffusion_length;
+  int      diffuse_X, diffuse_avg;
+  double   diffusion_length;
   // For Pips
-  int ProgReac, NoReturn, VolChangeReac, Plith_trick, UnsplitDiffReac, kinetics;
+  int      ProgReac, NoReturn, VolChangeReac, Plith_trick, UnsplitDiffReac, kinetics;
   // Anisotropy
-  int aniso, aniso_fstrain, oop, noise_bg;
-  int eqn_state;
-  int residual_form;
+  int      aniso, aniso_fstrain, oop, noise_bg;
+  int      eqn_state;
+  int      residual_form;
 } params;
 
 // Stucture scale contains scaling parameters
@@ -111,7 +111,7 @@ typedef struct {
   double aniso_factor[20], aniso_angle[20];
 } mat_prop;
 
-char *GetSetupFileName(int nargs, char *args[]);
+char                         *GetSetupFileName(int nargs, char *args[]);
 
 typedef struct MdoodzInstance MdoodzInstance;
 
@@ -164,20 +164,20 @@ typedef enum {
 typedef struct {
   double value;
   char   type;
-} BC;
+} SetBC;
 
-typedef BC (*SetBCVx_f)(MdoodzInstance *instance, POSITION position, Coordinates coordinates);
-typedef BC (*SetBCVz_f)(MdoodzInstance *instance, POSITION position, Coordinates coordinates);
-typedef BC (*SetBCP_f)(MdoodzInstance *instance, POSITION position, Coordinates coordinates);
-typedef BC (*SetBCT_f)(MdoodzInstance *instance, POSITION position, Coordinates coordinates, double gridTemperature);
-typedef BC (*SetBCTNew_f)(MdoodzInstance *instance, POSITION position, Coordinates coordinates, double gridTemperature);
+typedef SetBC (*SetBCVx_f)(MdoodzInstance *instance, POSITION position, Coordinates coordinates);
+typedef SetBC (*SetBCVz_f)(MdoodzInstance *instance, POSITION position, Coordinates coordinates);
+typedef SetBC (*SetBCT_f)(MdoodzInstance *instance, POSITION position, double gridTemperature);
+typedef SetBC (*SetBCTNew_f)(MdoodzInstance *instance, POSITION position, double gridTemperature);
+typedef char (*SetBCPType_f)(MdoodzInstance *instance, POSITION position);
 
 typedef struct {
-  SetBCVx_f   SetBCVx;
-  SetBCVz_f   SetBCVz;
-  SetBCT_f    SetBCT;
-  SetBCP_f    SetBCP;
-  SetBCTNew_f SetBCTNew;
+  SetBCVx_f    SetBCVx;
+  SetBCVz_f    SetBCVz;
+  SetBCT_f     SetBCT;
+  SetBCPType_f SetBCPType;
+  SetBCTNew_f  SetBCTNew;
 } SetBCs_ff;
 
 typedef struct {

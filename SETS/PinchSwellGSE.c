@@ -27,49 +27,45 @@ double SetTemperature(MdoodzInstance *instance, Coordinates coordinates) {
   return T;
 }
 
-BC SetBCVx(MdoodzInstance *instance, POSITION position, Coordinates coordinates) {
-  BC bc;
-  if (instance->model.shear_style == 0) {
-    if (position == W || position == E || position == NE || position == NW || position == SE || position == SW) {
-      bc.value = -coordinates.x * instance->model.EpsBG;
-      bc.type  = 0;
-    } else if (position == S || position == N) {
-      bc.value = 0;
-      bc.type  = 13;
-    } else {
-      bc.value = 0;
-      bc.type  = -1;
-    }
+SetBC SetBCVx(MdoodzInstance *instance, POSITION position, Coordinates coordinates) {
+  SetBC bc;
+  if (position == W || position == E || position == NE || position == NW || position == SE || position == SW) {
+    bc.value = -coordinates.x * instance->model.EpsBG;
+    bc.type  = 0;
+  } else if (position == S || position == N) {
+    bc.value = 0;
+    bc.type  = 13;
+  } else {
+    bc.value = 0;
+    bc.type  = -1;
   }
   return bc;
 }
 
-BC SetBCVz(MdoodzInstance *instance, POSITION position, Coordinates coordinates) {
-  BC bc;
-  if (instance->model.shear_style == 0) {
-    if (position == W || position == E || position == NE || position == NW || position == SE || position == SW) {
-      bc.value = coordinates.z * instance->model.EpsBG;
-      bc.type  = 13;
-    } else if (position == S || position == N) {
-      bc.value = 0.0;
-      bc.type  = 0;
-    } else {
-      bc.value = 0.0;
-      bc.type  = -1;
-    }
+SetBC SetBCVz(MdoodzInstance *instance, POSITION position, Coordinates coordinates) {
+  SetBC bc;
+  if (position == W || position == E || position == NE || position == NW || position == SE || position == SW) {
+    bc.value = coordinates.z * instance->model.EpsBG;
+    bc.type  = 13;
+  } else if (position == S || position == N) {
+    bc.value = 0.0;
+    bc.type  = 0;
+  } else {
+    bc.value = 0.0;
+    bc.type  = -1;
   }
   return bc;
 }
 
-//----------------------------- THERMAL BC -----------------------------//
+//----------------------------- THERMAL SetBC -----------------------------//
 
 
-BC SetBCT(MdoodzInstance *instance, POSITION position, Coordinates coordinates, double gridTemperature) {
-  return (BC){.value = gridTemperature, .type = 0};
+SetBC SetBCT(MdoodzInstance *instance, POSITION position, double gridTemperature) {
+  return (SetBC){.value = gridTemperature, .type = 0};
 }
 
-BC SetBCTNew(MdoodzInstance *instance, POSITION position, Coordinates coordinates, double gridTemperature) {
-  return (BC){.value = gridTemperature, .type = 0};
+SetBC SetBCTNew(MdoodzInstance *instance, POSITION position, double gridTemperature) {
+  return (SetBC){.value = gridTemperature, .type = 0};
 }
 
 //----------------------------- MAIN -----------------------------//

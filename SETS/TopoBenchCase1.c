@@ -17,8 +17,8 @@ int SetPhase(MdoodzInstance *instance, Coordinates coordinates) {
   }
 }
 
-BC SetBCVx(MdoodzInstance *instance, POSITION position, Coordinates coordinates) {
-  BC bc = {.value = 0.0};
+SetBC SetBCVx(MdoodzInstance *instance, POSITION position, Coordinates coordinates) {
+  SetBC bc = {.value = 0.0};
   if (position == S || position == SW || position == SE) {
     bc.type = 11;
   } else if (position == N || position == NW || position == NE) {
@@ -31,8 +31,8 @@ BC SetBCVx(MdoodzInstance *instance, POSITION position, Coordinates coordinates)
   return bc;
 }
 
-BC SetBCVz(MdoodzInstance *instance, POSITION position, Coordinates coordinates) {
-  BC bc = {.value = 0.0};
+SetBC SetBCVz(MdoodzInstance *instance, POSITION position, Coordinates coordinates) {
+  SetBC bc = {.value = 0.0};
   if (position == W || position == E || position == SW || position == SE || position == NW || position == NE) {
     bc.type = 13;
   } else if (position == S || position == N) {
@@ -43,14 +43,12 @@ BC SetBCVz(MdoodzInstance *instance, POSITION position, Coordinates coordinates)
   return bc;
 }
 
-BC SetBCP(MdoodzInstance *instance, POSITION position, Coordinates coordinates) {
-  BC bc = {.value = 0.0};
+char SetBCPType(MdoodzInstance *instance, POSITION position) {
   if (position == NE || position == NW) {
-    bc.type = 0;
+    return 0;
   } else {
-    bc.type = -1;
+    return -1;
   }
-  return bc;
 }
 
 int main(int nargs, char *args[]) {
@@ -64,9 +62,9 @@ int main(int nargs, char *args[]) {
                                .SetPhase = SetPhase,
           },
                        .SetBCs = &(SetBCs_ff){
-                               .SetBCVx = SetBCVx,
-                               .SetBCVz = SetBCVz,
-                               .SetBCP  = SetBCP,
+                               .SetBCVx    = SetBCVx,
+                               .SetBCVz    = SetBCVz,
+                               .SetBCPType = SetBCPType,
           },
                        .crazyConductivity = &(CrazyConductivity){
                                .multiplier = 1000,

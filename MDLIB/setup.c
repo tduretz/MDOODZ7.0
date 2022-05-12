@@ -144,7 +144,7 @@ void SetBCs(MdoodzInstance *instance, grid *mesh) {
         Coordinates coordinates = {
                 .x = mesh->xg_coord[k],
                 .z = mesh->zvx_coord[l]};
-        BC bc             = setBCs.SetBCVx(instance, position, coordinates);
+        SetBC bc          = setBCs.SetBCVx(instance, position, coordinates);
         mesh->BCu.type[c] = bc.type;
         mesh->BCu.val[c]  = bc.value;
         ValidateInternalPoint(position, bc.type, coordinates, "SetBCVxType");
@@ -197,11 +197,12 @@ void SetBCs(MdoodzInstance *instance, grid *mesh) {
         } else {
           position = INTERNAL;
         }
-        mesh->BCv.type[c]       = setBCs.SetBCVzType(instance, position);
         Coordinates coordinates = {
                 .x = mesh->xvz_coord[k],
                 .z = mesh->zg_coord[l]};
-        mesh->BCv.val[c] = setBCs.SetBCVzValue(instance, position, coordinates);
+        SetBC bc          = setBCs.SetBCVz(instance, position, coordinates);
+        mesh->BCv.type[c] = bc.type;
+        mesh->BCv.val[c]  = bc.value;
         ValidateInternalPoint(position, mesh->BCv.type[c], coordinates, "SetBCVzType");
       }
     }
@@ -300,22 +301,26 @@ void SetBCs(MdoodzInstance *instance, grid *mesh) {
           position = INTERNAL;
         }
         if (mesh->BCt.type[c] != 30) {
-          mesh->BCt.type[c] = setBCs.SetBCTType(instance, position);
-          mesh->BCt.val[c]  = setBCs.SetBCTValue(instance, position, mesh->T[c]);
-          // TODO change size of BCt array and phase out SetBCTTypeNew
-          if (setBCs.SetBCTTypeNew) {
+          if (setBCs.SetBCT) {
+            SetBC bc          = setBCs.SetBCT(instance, position, mesh->T[c]);
+            mesh->BCt.type[c] = bc.type;
+            mesh->BCt.val[c]  = bc.value;
+          }
+          // TODO change size of BCt array and phase out SetBCTNew
+          if (setBCs.SetBCTNew) {
+            SetBC bc = setBCs.SetBCTNew(instance, position, mesh->T[c]);
             if (k == 0) {
-              mesh->BCt.typW[l] = setBCs.SetBCTTypeNew(instance, position);
-              mesh->BCt.valW[l] = setBCs.SetBCTValueNew(instance, position, mesh->T[c]);
+              mesh->BCt.typW[l] = bc.type;
+              mesh->BCt.valW[l] = bc.value;
             } else if (k == NCX - 1) {
-              mesh->BCt.typE[l] = setBCs.SetBCTTypeNew(instance, position);
-              mesh->BCt.valE[l] = setBCs.SetBCTValueNew(instance, position, mesh->T[c]);
+              mesh->BCt.typE[l] = bc.type;
+              mesh->BCt.valE[l] = bc.value;
             } else if (l == 0) {
-              mesh->BCt.typS[k] = setBCs.SetBCTTypeNew(instance, position);
-              mesh->BCt.valS[k] = setBCs.SetBCTValueNew(instance, position, mesh->T[c]);
+              mesh->BCt.typS[k] = bc.type;
+              mesh->BCt.valS[k] = bc.value;
             } else if (l == NCZ - 1) {
-              mesh->BCt.typN[k] = setBCs.SetBCTTypeNew(instance, position);
-              mesh->BCt.valN[k] = setBCs.SetBCTValueNew(instance, position, mesh->T[c]);
+              mesh->BCt.typN[k] = bc.type;
+              mesh->BCt.valN[k] = bc.value;
             }
           }
         }
@@ -390,43 +395,25 @@ void ValidateSetup(MdoodzInstance *instance) {
     errors[errorsCount] = "SetBCs MUST be specified. Please set SetBCs";
     errorsCount++;
   } else {
-    if (!instance->SetBCs->SetBCVxType) {
-      errors[errorsCount] = "SetBCs.SetBCVxType MUST be specified";
+    if (!instance->SetBCs->SetBCVx) {
+      errors[errorsCount] = "SetBCs.SetBCVx MUST be specified";
       errorsCount++;
     }
-    if (!instance->SetBCs->SetBCVxValue) {
-      errors[errorsCount] = "SetBCs.SetBCVxValue MUST be specified";
-      errorsCount++;
-    }
-    if (!instance->SetBCs->SetBCVzType) {
+    if (!instance->SetBCs->SetBCVz) {
       errors[errorsCount] = "SetBCs.SetBCVzType MUST be specified";
       errorsCount++;
     }
-    if (!instance->SetBCs->SetBCVzValue) {
-      errors[errorsCount] = "SetBCs.SetBCVzValue MUST be specified";
-      errorsCount++;
-    }
-
     if (!instance->SetBCs->SetBCPType) {
       warnings[warningsCount] = "SetBCs.SetBCPType is not specified. BCP type will be set to -1";
       warningsCount++;
     }
-
     if (instance->model.isthermal) {
-      if (!instance->SetBCs->SetBCTTypeNew) {
-        errors[errorsCount] = "SetBCs.SetBCTTypeNew MUST be specified for Thermal model. Please set isthermal = 0 or specify SetBCTTypeNew";
+      if (!instance->SetBCs->SetBCTNew) {
+        errors[errorsCount] = "SetBCs.SetBCTNew MUST be specified for Thermal model. Please set isthermal = 0 or specify SetBCTTypeNew";
         errorsCount++;
       }
-      if (!instance->SetBCs->SetBCTValueNew) {
-        errors[errorsCount] = "SetBCs.SetBCTTypeNew MUST be specified for Thermal model. Please set isthermal = 0 or specify SetBCTValueNew";
-        errorsCount++;
-      }
-      if (!instance->SetBCs->SetBCTType) {
-        errors[errorsCount] = "SetBCs.SetBCTType MUST be specified for Thermal model. Please set isthermal = 0 or specify SetBCTType (will be deprecated)";
-        errorsCount++;
-      }
-      if (!instance->SetBCs->SetBCTValue) {
-        errors[errorsCount] = "SetBCs.SetBCTValue MUST be specified for Thermal model. Please set isthermal = 0 or specify SetBCTValue (will be deprecated)";
+      if (!instance->SetBCs->SetBCT) {
+        errors[errorsCount] = "SetBCs.SetBCT MUST be specified for Thermal model. Please set isthermal = 0 or specify SetBCTType (will be deprecated)";
         errorsCount++;
       }
     }

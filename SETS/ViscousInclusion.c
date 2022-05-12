@@ -82,8 +82,8 @@ double SetDensity(MdoodzInstance *instance, Coordinates coordinates, int phase) 
   return instance->materials.rho[phase];
 }
 
-BC SetBCVx(MdoodzInstance *instance, POSITION position, Coordinates coord) {
-  BC           bc;
+SetBC SetBCVx(MdoodzInstance *instance, POSITION position, Coordinates coord) {
+  SetBC           bc;
   const double radius = instance->model.user1 / instance->scaling.L;
   const double mm     = 1.0;
   const double mc     = 1e3;
@@ -140,8 +140,8 @@ BC SetBCVx(MdoodzInstance *instance, POSITION position, Coordinates coord) {
   return bc;
 }
 
-BC SetBCVz(MdoodzInstance *instance, POSITION position, Coordinates coord) {
-  BC           bc;
+SetBC SetBCVz(MdoodzInstance *instance, POSITION position, Coordinates coord) {
+  SetBC           bc;
   const double radius = instance->model.user1 / instance->scaling.L;
   const double mm     = 1.0;
   const double mc     = 1e3;
