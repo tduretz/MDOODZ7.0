@@ -18,26 +18,33 @@ int SetPhase(MdoodzInstance *instance, Coordinates coordinates) {
 }
 
 SetBC SetBCVx(MdoodzInstance *instance, POSITION position, Coordinates coordinates) {
-  SetBC bc = {.value = 0.0};
+  SetBC bc;
   if (position == S || position == SW || position == SE) {
+    bc.value = 0.0;
     bc.type = 11;
   } else if (position == N || position == NW || position == NE) {
+    bc.value = 0.0;
     bc.type = 13;
   } else if (position == W || position == E) {
+    bc.value = 0.0;
     bc.type = 0;
   } else {
+    bc.value = 0.0;
     bc.type = -1;
   }
   return bc;
 }
 
 SetBC SetBCVz(MdoodzInstance *instance, POSITION position, Coordinates coordinates) {
-  SetBC bc = {.value = 0.0};
+  SetBC bc;
   if (position == W || position == E || position == SW || position == SE || position == NW || position == NE) {
+    bc.value = 0.0;
     bc.type = 13;
   } else if (position == S || position == N) {
+    bc.value = 0.0;
     bc.type = 0;
   } else {
+    bc.value = 0.0;
     bc.type = -1;
   }
   return bc;
