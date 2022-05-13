@@ -459,7 +459,7 @@ void SetBCs( grid *mesh, params *model, scale scaling, markers* particles, mat_p
                     }
                     
                     // Free slip SOUTH
-                    if (l==0  ) {
+                    if (l==0 ) {
                         mesh->BCu.type[c] = 13;
                         mesh->BCu.val[c]  =  0;
                     }
