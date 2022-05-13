@@ -24,63 +24,30 @@ double SetDensity(MdoodzInstance *instance, Coordinates coordinates, int phase) 
 
 SetBC SetBCVx(MdoodzInstance *instance, POSITION position, Coordinates coordinates) {
   SetBC bc;
-  if (instance->model.shear_style == 0) {
-    if (position == S || position == N || position == NE || position == NW || position == SE || position == SW) {
-      bc.value = 0.0;
-      bc.type  = 13;
-    } else if (position == W || position == E) {
-      bc.value = -coordinates.x * instance->model.EpsBG;
-      bc.type  = 0;
-    } else {
-      bc.value = 0.0;
-      bc.type  = -1;
-    }
+  if (position == S || position == N || position == NE || position == NW || position == SE || position == SW) {
+    bc.value = 0.0;
+    bc.type  = 13;
+  } else if (position == W || position == E) {
+    bc.value = -coordinates.x * instance->model.EpsBG;
+    bc.type  = 0;
   } else {
-    const double Lz = (double) (instance->model.zmax - instance->model.zmin);
-    if (position == S || position == SE || position == SW) {
-      bc.value = -instance->model.EpsBG * Lz;
-      bc.type  = 11;
-    } else if (position == N || position == NE || position == NW) {
-      bc.value = -instance->model.EpsBG * Lz;
-      bc.type  = 11;
-    } else if (position == E) {
-      bc.value = 0.0;
-      bc.type  = -12;
-    } else if (position == W) {
-      bc.value = 0.0;
-      bc.type  = -2;
-    } else {
-      bc.value = 0.0;
-      bc.type  = -1;
-    }
+    bc.value = 0.0;
+    bc.type  = -1;
   }
   return bc;
 }
 
 SetBC SetBCVz(MdoodzInstance *instance, POSITION position, Coordinates coordinates) {
   SetBC bc;
-  if (instance->model.shear_style == 0) {
-    if (position == W || position == E || position == NE || position == NW || position == SE || position == SW) {
-      bc.value = 0.0;
-      bc.type  = 13;
-    } else if (position == S || position == N) {
-      bc.value = coordinates.z * instance->model.EpsBG;
-      bc.type  = 0;
-    } else {
-      bc.value = 0.0;
-      bc.type  = -1;
-    }
+  if (position == W || position == E || position == NE || position == NW || position == SE || position == SW) {
+    bc.value = 0.0;
+    bc.type  = 13;
+  } else if (position == S || position == N) {
+    bc.value = coordinates.z * instance->model.EpsBG;
+    bc.type  = 0;
   } else {
-    if (position == E || position == W || position == NE || position == NW || position == SE || position == SW) {
-      bc.value = 0.0;
-      bc.type  = -12;
-    } else if (position == S || position == N) {
-      bc.value = 0.0;
-      bc.type  = 0;
-    } else {
-      bc.value = 0.0;
-      bc.type  = -1;
-    }
+    bc.value = 0.0;
+    bc.type  = -1;
   }
   return bc;
 }
