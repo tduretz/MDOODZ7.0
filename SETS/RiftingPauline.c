@@ -81,11 +81,8 @@ SetBC SetBCVx(MdoodzInstance *instance, POSITION position, Coordinates coordinat
 
 SetBC SetBCVz(MdoodzInstance *instance, POSITION position, Coordinates coordinates) {
   SetBC bc;
-  if (position == W || position == E) {
+  if (position == W || position == E || position == SW || position == SE || position == NW || position == NE) {
     bc.value = 0;
-    bc.type  = 13;
-  } else if (position == SW || position == SE || position == NW || position == NE) {
-    bc.value = coordinates.z * instance->model.EpsBG;
     bc.type  = 13;
   } else if (position == S || position == N) {
     bc.value = coordinates.z * instance->model.EpsBG;
@@ -98,7 +95,6 @@ SetBC SetBCVz(MdoodzInstance *instance, POSITION position, Coordinates coordinat
 }
 
 char SetBCPType(MdoodzInstance *instance, POSITION position) {
-  SetBC bc = {.value = 0};
   if (position == NE || position == NW) {
     return 0;
   } else {

@@ -38,7 +38,7 @@ SetBC SetBCVx(MdoodzInstance *instance, POSITION position, Coordinates coordinat
       bc.value = -instance->model.EpsBG * Lz;
       bc.type  = 11;
     } else if (position == N || position == NE || position == NW) {
-      bc.value = -instance->model.EpsBG * Lz;
+      bc.value = instance->model.EpsBG * Lz;
       bc.type  = 11;
     } else if (position == E) {
       bc.value = 0.0;
