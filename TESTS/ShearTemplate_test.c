@@ -5,12 +5,8 @@
 
 
 int SetPhase(MdoodzInstance *instance, Coordinates coordinates) {
-  double       xc     = 0.0;
-  double       zc     = 0.0;
   const double radius = instance->model.user1 / instance->scaling.L;
-  const double X      = coordinates.x - xc;
-  const double Z      = coordinates.z - zc;
-  if (X * X + Z * Z < radius * radius) {
+  if (coordinates.x * coordinates.x + coordinates.z * coordinates.z < radius * radius) {
     return 1;
   } else {
     return 0;
@@ -26,82 +22,67 @@ double SetDensity(MdoodzInstance *instance, Coordinates coordinates, int phase) 
   }
 }
 
-char SetBCVxType(MdoodzInstance *instance, POSITION position) {
+SetBC SetBCVx(MdoodzInstance *instance, POSITION position, Coordinates coordinates) {
+  SetBC bc;
   if (instance->model.shear_style == 0) {
-    if (position == W || position == E || position == NE || position == NW || position == SE || position == SW) {
-      return 0;
-    } else if (position == S || position == N) {
-      return 13;
+    if (position == S || position == N || position == NE || position == NW || position == SE || position == SW) {
+      bc.value = 0.0;
+      bc.type  = 13;
+    } else if (position == W || position == E) {
+      bc.value = -coordinates.x * instance->model.EpsBG;
+      bc.type  = 0;
     } else {
-      return -1;
-    }
-  } else {
-    if (position == W || position == NW || position == SW) {
-      return -2;
-    } else if (position == E || position == NE || position == SE) {
-      return -12;
-    } else if (position == S || position == N) {
-      return 11;
-    } else {
-      return -1;
-    }
-  }
-}
-
-double SetBCVxValue(MdoodzInstance *instance, POSITION position, Coordinates coordinates) {
-  if (instance->model.shear_style == 0) {
-    if (position == W || position == E || position == NE || position == NW || position == SE || position == SW) {
-      return -coordinates.x * instance->model.EpsBG;
-    } else {
-      return 0;
+      bc.value = 0.0;
+      bc.type  = -1;
     }
   } else {
     const double Lz = (double) (instance->model.zmax - instance->model.zmin);
-    if (position == S) {
-      return -instance->model.EpsBG * Lz;
-    } else if (position == N) {
-      return instance->model.EpsBG * Lz;
+    if (position == S || position == SE || position == SW) {
+      bc.value = -instance->model.EpsBG * Lz;
+      bc.type  = 11;
+    } else if (position == N || position == NE || position == NW) {
+      bc.value = -instance->model.EpsBG * Lz;
+      bc.type  = 11;
+    } else if (position == E) {
+      bc.value = 0.0;
+      bc.type  = -12;
+    } else if (position == W) {
+      bc.value = 0.0;
+      bc.type  = -2;
     } else {
-      return 0;
+      bc.value = 0.0;
+      bc.type  = -1;
     }
   }
+  return bc;
 }
 
-char SetBCVzType(MdoodzInstance *instance, POSITION position) {
+SetBC SetBCVz(MdoodzInstance *instance, POSITION position, Coordinates coordinates) {
+  SetBC bc;
   if (instance->model.shear_style == 0) {
     if (position == W || position == E || position == NE || position == NW || position == SE || position == SW) {
-      return 13;
+      bc.value = 0.0;
+      bc.type  = 13;
     } else if (position == S || position == N) {
-      return 0;
+      bc.value = coordinates.z * instance->model.EpsBG;
+      bc.type  = 0;
     } else {
-      return -1;
+      bc.value = 0.0;
+      bc.type  = -1;
     }
   } else {
-    if (position == W || position == E) {
-      return 0;
+    if (position == E || position == W || position == NE || position == NW || position == SE || position == SW) {
+      bc.value = 0.0;
+      bc.type  = -12;
     } else if (position == S || position == N) {
-      return -12;
+      bc.value = 0.0;
+      bc.type  = 0;
     } else {
-      return -1;
+      bc.value = 0.0;
+      bc.type  = -1;
     }
   }
-}
-
-double SetBCVzValue(MdoodzInstance *instance, POSITION position, Coordinates coordinates) {
-  if (instance->model.shear_style == 0) {
-    if (position == N || position == NE || position == NW || position == S || position == SE || position == SW) {
-      return coordinates.z * instance->model.EpsBG;
-    } else {
-      return 0;
-    }
-  } else {
-    const double Lz = (double) (instance->model.zmax - instance->model.zmin);
-    if (position == W || position == E || position == NW || position == S || position == SE || position == SW) {
-      return 0.0 * instance->model.EpsBG * Lz;
-    } else {
-      return 0;
-    }
-  }
+  return bc;
 }
 
 int main() {
@@ -112,10 +93,8 @@ int main() {
                    .SetDensity            = SetDensity,
           },
           .SetBCs = &(SetBCs_ff){
-                  .SetBCVxType  = SetBCVxType,
-                  .SetBCVxValue = SetBCVxValue,
-                  .SetBCVzType  = SetBCVzType,
-                  .SetBCVzValue = SetBCVzValue,
+                  .SetBCVx = SetBCVx,
+                  .SetBCVz = SetBCVz,
           },
   };
   RunMDOODZ(&instance);
