@@ -253,7 +253,6 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
         
     int    cent=1, vert=0, prop=1, interp=0;
     int    res_fact = 1;
-    int    nxviz, nzviz, nxviz_hr, nzviz_hr;
     float *Cxviz, *Czviz, *Cxviz_hr, *Czviz_hr, *Cxtopo, *Cztopo, *Cheight, *Ctopovx, *Ctopovz, *Ctopovx_mark, *Ctopovz_mark;
     double *P_total;
     float  *Ccohesion, *Cfriction;
@@ -412,21 +411,21 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
     DoubleToFloat( mesh->xvz_coord, Cxvz_coord, model.Nx+1 );
     ScaleBack( Cxvz_coord, scaling.L, model.Nx+1 );
 
-    Cxviz = DoodzMalloc( sizeof(float)*nxviz);
-    DoubleToFloat( vizGrid.xviz, Cxviz, nxviz );
-    ScaleBack( Cxviz, scaling.L, nxviz );
+    Cxviz = DoodzMalloc( sizeof(float)*vizGrid.nx);
+    DoubleToFloat( vizGrid.x, Cxviz, vizGrid.nx );
+    ScaleBack( Cxviz, scaling.L, vizGrid.nx );
 
-    Czviz = DoodzMalloc( sizeof(float)*nzviz);
-    DoubleToFloat( vizGrid.zviz, Czviz, nzviz );
-    ScaleBack( Czviz, scaling.L, nzviz );
+    Czviz = DoodzMalloc( sizeof(float)*vizGrid.nz);
+    DoubleToFloat( vizGrid.z, Czviz, vizGrid.nz );
+    ScaleBack( Czviz, scaling.L, vizGrid.nz );
 
-    Cxviz_hr = DoodzMalloc( sizeof(float)*nxviz_hr);
-    DoubleToFloat( vizGrid.xviz, Cxviz_hr, nxviz_hr );
-    ScaleBack( Cxviz_hr, scaling.L, nxviz_hr );
+    Cxviz_hr = DoodzMalloc( sizeof(float)*vizGridHr.nx);
+    DoubleToFloat( vizGridHr.x, Cxviz_hr, vizGridHr.nx );
+    ScaleBack( Cxviz_hr, scaling.L, vizGridHr.nx );
 
-    Czviz_hr = DoodzMalloc( sizeof(float)*nzviz_hr);
-    DoubleToFloat( vizGrid.zviz, Czviz_hr, nzviz_hr );
-    ScaleBack( Czviz_hr, scaling.L, nzviz_hr );
+    Czviz_hr = DoodzMalloc( sizeof(float)*vizGridHr.nz);
+    DoubleToFloat( vizGridHr.z, Czviz_hr, vizGridHr.nz );
+    ScaleBack( Czviz_hr, scaling.L, vizGridHr.nz );
 
     // Total strain
     strain  = DoodzCalloc((model.Nx-1)*(model.Nz-1), sizeof(double));
@@ -670,12 +669,12 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
     AddFieldToGroup( FileName, "Model", "zvx_coord", 'f', model.Nz+1,  Czvx_coord, 1 );
 
     // Visualisation grid
-    AddFieldToGroup( FileName, "VizGrid", "xviz"    , 'f', nxviz, Cxviz,     1 );
-    AddFieldToGroup( FileName, "VizGrid", "zviz"    , 'f', nzviz, Czviz,     1 );
-    AddFieldToGroup( FileName, "VizGrid", "xviz_hr" , 'f', nxviz_hr, Cxviz_hr,  1 );
-    AddFieldToGroup( FileName, "VizGrid", "zviz_hr" , 'f', nzviz_hr, Czviz_hr,  1 );
-    AddFieldToGroup( FileName, "VizGrid", "compo"   , 'c', (nxviz-1)*(nzviz-1), vizGrid.nodeField,    1 );
-    AddFieldToGroup( FileName, "VizGrid", "compo_hr", 'c', (nxviz_hr-1)*(nzviz_hr-1), vizGridHr.nodeField,    1 );
+    AddFieldToGroup( FileName, "VizGrid", "xviz"    , 'f', vizGrid.nx, Cxviz,     1 );
+    AddFieldToGroup( FileName, "VizGrid", "zviz"    , 'f', vizGrid.nz, Czviz,     1 );
+    AddFieldToGroup( FileName, "VizGrid", "xviz_hr" , 'f', vizGridHr.nx, Cxviz_hr,  1 );
+    AddFieldToGroup( FileName, "VizGrid", "zviz_hr" , 'f', vizGridHr.nz, Czviz_hr,  1 );
+    AddFieldToGroup( FileName, "VizGrid", "compo"   , 'c', (vizGrid.nx-1)*(vizGrid.nz-1), vizGrid.nodeField,    1 );
+    AddFieldToGroup( FileName, "VizGrid", "compo_hr", 'c', (vizGridHr.nx-1)*(vizGridHr.nz-1), vizGridHr.nodeField,    1 );
 
     // Add casted grid fields
     AddFieldToGroup( FileName, "Vertices", "rho_s", 'f', model.Nx*model.Nz,         Crho_s, 1 );

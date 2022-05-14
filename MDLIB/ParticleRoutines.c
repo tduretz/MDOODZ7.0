@@ -3065,12 +3065,12 @@ VizGrid Interp_Phase2VizGrid(markers *particles, grid *mesh, params model, int r
     }
   }
   DoodzFree(Wm);
-  return (VizGrid){.nodeField = nodeField, .xviz = X_vect, .zviz = Z_vect};
+  return (VizGrid){.nodeField = nodeField, .x = X_vect, .z = Z_vect, .nx = Nx, .nz = Nz};
 }
 
 void FreeVizGrid(VizGrid vizGrid) {
-  DoodzFree(vizGrid.zviz);
-  DoodzFree(vizGrid.xviz);
+  DoodzFree(vizGrid.z);
+  DoodzFree(vizGrid.x);
   DoodzFree(vizGrid.nodeField);
 }
 

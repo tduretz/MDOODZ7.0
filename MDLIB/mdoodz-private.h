@@ -272,8 +272,10 @@ void            Interp_Grid2P_strain(markers, DoodzFP *, grid *, double *, doubl
 //void FreeP2Mesh( grid* );
 typedef struct {
   char   *nodeField;
-  double *xviz;
-  double *zviz;
+  double *x;
+  double *z;
+  int     nx;
+  int     nz;
 } VizGrid;
 
 VizGrid         Interp_Phase2VizGrid(markers *particles, grid *mesh, params model, int res_fact);
