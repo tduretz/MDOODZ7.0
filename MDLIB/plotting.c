@@ -22,8 +22,7 @@ void PlotPhases(MdoodzInstance *instance, markers *particles) {
   FILE *GNUplotPipe = popen ("gnuplot -persistent", "w");
   fprintf(GNUplotPipe, "set view map'\n");
   fprintf(GNUplotPipe, "set dgrid3d\n");
-  fprintf(GNUplotPipe, "set palette maxcolors %i\n", instance->model.Nb_phases);
-  fprintf(GNUplotPipe, "set pm3d interpolate 4,4\n");
+  fprintf(GNUplotPipe, "set pm3d interpolate 8,8\n");
   fprintf(GNUplotPipe, "splot '%s' with pm3d\n", txtFileName);
   fflush(GNUplotPipe);
   exit(0);

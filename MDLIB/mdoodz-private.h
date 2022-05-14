@@ -270,7 +270,14 @@ void            Interp_P2C(markers, DoodzFP *, grid *, double *, double *, doubl
 void            Interp_Grid2P(markers, DoodzFP *, grid *, double *, double *, double *, int, int, char *);
 void            Interp_Grid2P_strain(markers, DoodzFP *, grid *, double *, double *, double *, int, int, char *);
 //void FreeP2Mesh( grid* );
-void            Interp_Phase2VizGrid(markers, int *, grid *, char *, double *, double *, int, int, params, surface);
+typedef struct {
+  char   *nodeField;
+  double *xviz;
+  double *zviz;
+} VizGrid;
+
+VizGrid         Interp_Phase2VizGrid(markers *particles, grid *mesh, params model, int res_fact);
+void            FreeVizGrid(VizGrid vizGrid);
 void            ParticleInflowCheck(markers *, grid *, params, surface, int);
 void            P2Mastah(params *, markers, DoodzFP *, grid *, double *, char *, int, int, int, int, int);
 //

@@ -254,7 +254,6 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
     int    cent=1, vert=0, prop=1, interp=0;
     int    res_fact = 1;
     int    nxviz, nzviz, nxviz_hr, nzviz_hr;
-    char  *compo, *compo_hr;
     float *Cxviz, *Czviz, *Cxviz_hr, *Czviz_hr, *Cxtopo, *Cztopo, *Cheight, *Ctopovx, *Ctopovz, *Ctopovx_mark, *Ctopovz_mark;
     double *P_total;
     float  *Ccohesion, *Cfriction;
@@ -268,34 +267,9 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
 
     // ---------------------------------------------------------
     // Genrate phase map with normal resolution
-    res_fact = 1;
-    nxviz = res_fact*(mesh->Nx-1) + 1;
-    nzviz = res_fact*(mesh->Nz-1) + 1;
-    double xviz[nxviz], zviz[nzviz];
-    // Define visual grid
-    xviz[0] = mesh->xg_coord[0];
-    zviz[0] = mesh->zg_coord[0];
-    for (k=1; k<nxviz; k++) xviz[k] = xviz[k-1] + mesh->dx/res_fact;
-    for (k=1; k<nzviz; k++) zviz[k] = zviz[k-1] + mesh->dz/res_fact;
-    compo  = DoodzMalloc( sizeof(char)*(nxviz-1)*(nzviz-1));
-    // Closest point interpolation: marker phase --> visual nodes
-    Interp_Phase2VizGrid ( *particles, particles->dual, mesh, compo, xviz, zviz, nxviz, nzviz, model, *topo );
 
-    // ---------------------------------------------------------
-    // Genrate phase map with double resolution
-    res_fact = 2;
-    nxviz_hr = res_fact*(mesh->Nx-1) + 1;
-    nzviz_hr = res_fact*(mesh->Nz-1) + 1;
-    double xviz_hr[nxviz_hr], zviz_hr[nzviz_hr];
-    // Define visual grid
-    xviz_hr[0] = mesh->xg_coord[0];
-    zviz_hr[0] = mesh->zg_coord[0];
-    for (k=1; k<nxviz_hr; k++) xviz_hr[k] = xviz_hr[k-1] + mesh->dx/res_fact;
-    for (k=1; k<nzviz_hr; k++) zviz_hr[k] = zviz_hr[k-1] + mesh->dz/res_fact;
-    
-    compo_hr  = DoodzMalloc( sizeof(char)*(nxviz_hr-1)*(nzviz_hr-1));
-    // Closest point interpolation: marker phase --> visual nodes
-    Interp_Phase2VizGrid ( *particles, particles->dual, mesh, compo_hr, xviz_hr, zviz_hr, nxviz_hr, nzviz_hr, model, *topo );
+    VizGrid vizGrid = Interp_Phase2VizGrid (particles, mesh, model, 1);
+    VizGrid vizGridHr = Interp_Phase2VizGrid (particles, mesh, model, 2);
     // ---------------------------------------------------------
     // Smooth rheological contrasts
     if (model.diffuse_X) P2Mastah( &model, *particles, particles->X,     mesh, mesh->X_n,   mesh->BCp.type,  1, 0, interp, cent, model.itp_stencil);
@@ -439,19 +413,19 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
     ScaleBack( Cxvz_coord, scaling.L, model.Nx+1 );
 
     Cxviz = DoodzMalloc( sizeof(float)*nxviz);
-    DoubleToFloat( xviz, Cxviz, nxviz );
+    DoubleToFloat( vizGrid.xviz, Cxviz, nxviz );
     ScaleBack( Cxviz, scaling.L, nxviz );
 
     Czviz = DoodzMalloc( sizeof(float)*nzviz);
-    DoubleToFloat( zviz, Czviz, nzviz );
+    DoubleToFloat( vizGrid.zviz, Czviz, nzviz );
     ScaleBack( Czviz, scaling.L, nzviz );
 
     Cxviz_hr = DoodzMalloc( sizeof(float)*nxviz_hr);
-    DoubleToFloat( xviz_hr, Cxviz_hr, nxviz_hr );
+    DoubleToFloat( vizGrid.xviz, Cxviz_hr, nxviz_hr );
     ScaleBack( Cxviz_hr, scaling.L, nxviz_hr );
 
     Czviz_hr = DoodzMalloc( sizeof(float)*nzviz_hr);
-    DoubleToFloat( zviz_hr, Czviz_hr, nzviz_hr );
+    DoubleToFloat( vizGrid.zviz, Czviz_hr, nzviz_hr );
     ScaleBack( Czviz_hr, scaling.L, nzviz_hr );
 
     // Total strain
@@ -700,8 +674,8 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
     AddFieldToGroup( FileName, "VizGrid", "zviz"    , 'f', nzviz, Czviz,     1 );
     AddFieldToGroup( FileName, "VizGrid", "xviz_hr" , 'f', nxviz_hr, Cxviz_hr,  1 );
     AddFieldToGroup( FileName, "VizGrid", "zviz_hr" , 'f', nzviz_hr, Czviz_hr,  1 );
-    AddFieldToGroup( FileName, "VizGrid", "compo"   , 'c', (nxviz-1)*(nzviz-1), compo,    1 );
-    AddFieldToGroup( FileName, "VizGrid", "compo_hr", 'c', (nxviz_hr-1)*(nzviz_hr-1), compo_hr,    1 );
+    AddFieldToGroup( FileName, "VizGrid", "compo"   , 'c', (nxviz-1)*(nzviz-1), vizGrid.nodeField,    1 );
+    AddFieldToGroup( FileName, "VizGrid", "compo_hr", 'c', (nxviz_hr-1)*(nzviz_hr-1), vizGridHr.nodeField,    1 );
 
     // Add casted grid fields
     AddFieldToGroup( FileName, "Vertices", "rho_s", 'f', model.Nx*model.Nz,         Crho_s, 1 );
@@ -862,8 +836,8 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
     DoodzFree( Cfriction );
     DoodzFree( Ccohesion );
 
-    DoodzFree( compo    );
-    DoodzFree( compo_hr );
+    FreeVizGrid(vizGrid);
+    FreeVizGrid(vizGridHr);
 
     if ( model.fstrain == 1 ) {
         DoodzFree( Fxx  );

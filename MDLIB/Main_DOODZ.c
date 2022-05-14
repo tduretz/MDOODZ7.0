@@ -157,7 +157,7 @@ void RunMDOODZ(MdoodzInstance *instance) {
 
         // Set phases on particles
         SetParticles(instance, &particles);
-        PlotPhases(instance, &particles);
+        //PlotPhases(instance, &particles);
 
         MinMaxArray(particles.Vx, instance->scaling.V, particles.Nb_part, "Vxp init" );
         MinMaxArray(particles.Vz, instance->scaling.V, particles.Nb_part, "Vzp init" );

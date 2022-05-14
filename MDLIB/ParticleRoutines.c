@@ -522,10 +522,10 @@ double Vertices2Particle( markers* particles, double* NodeField, double* X_vect,
         
 
 //
-//        val =  (1.0-dxm/dx)* (1.0-dzm/dz) * NodeField[iSW];
-//        val += (dxm/dx)    * (1.0-dzm/dz) * NodeField[iSE];
-//        val += (1.0-dxm/dx)* (dzm/dz)     * NodeField[iNW];
-//        val += (dxm/dx)    * (dzm/dz)     * NodeField[iNE];
+//        val =  (1.0-dxm/dx)* (1.0-dzm/dz) * nodeField[iSW];
+//        val += (dxm/dx)    * (1.0-dzm/dz) * nodeField[iSE];
+//        val += (1.0-dxm/dx)* (dzm/dz)     * nodeField[iNW];
+//        val += (dxm/dx)    * (dzm/dz)     * nodeField[iNE];
 //
 //        sumW += (1.0-dxm/dx)* (1.0-dzm/dz);
 //        sumW += (dxm/dx)* (1.0-dzm/dz);
@@ -1903,7 +1903,7 @@ firstprivate ( dx, dz, Nb_part, Nx, Nz, X_vect, Z_vect  ) //schedule( static )
 #pragma omp parallel for shared ( mesh, NodeField, BMWM, WM, Nx, Nz ) private( i )  firstprivate ( itp_type )  schedule( static )
     for (i=0;i<Nx*Nz;i++) {
 
-        //        NodeField[i] = 0.0;
+        //        nodeField[i] = 0.0;
 
         if (WM[i]<1e-30 || mesh->BCg.type[i]==30) {
         }
@@ -2059,16 +2059,16 @@ firstprivate ( mat_prop, dx, dz, Nb_part, Nx, Nz, mesh, flag, itp_type )  //sche
 #pragma omp parallel for shared ( NodeField, BMWM, WM, Nx, Nz ) private( i ) firstprivate ( itp_type ) schedule( static )
     for (i=0;i<Nx*Nz;i++) {
 
-        //        NodeField[i] = 0.0;
+        //        nodeField[i] = 0.0;
 
         if ( fabs(WM[i])<1e-30  || (mesh->BCp.type[i]==30 || mesh->BCp.type[i]==31) ) { //|| mesh->BCp.type[0][i]==0
-            //            NodeField[i] = 0.0;
+            //            nodeField[i] = 0.0;
             //printf("WARNING: Need to seed more particles for interpolation (zero weights) P2C\n");
         }
         else {
 
             NodeField[i] = BMWM[i]/WM[i];
-            //            printf("%lf %lf %lf\n",  NodeField[i]*400, BMWM[i], WM[i]);
+            //            printf("%lf %lf %lf\n",  nodeField[i]*400, BMWM[i], WM[i]);
             if (itp_type==1) {
                 NodeField[i] =  1.0 / NodeField[i];
             }
@@ -2095,7 +2095,7 @@ firstprivate ( mat_prop, dx, dz, Nb_part, Nx, Nz, mesh, flag, itp_type )  //sche
 /*--------------------------------------------------------------------------------------------------------------------*/
 
 //// Particles to reference nodes
-//void Interp_P2G( markers particles, DoodzFP* mat_prop, grid *mesh, double* NodeField, double* X_vect, double* Z_vect, int Nx, int Nz, double xmin, double zmin, int flag, int itp_type, params* model, char* BC  ) {
+//void Interp_P2G( markers particles, DoodzFP* mat_prop, grid *mesh, double* nodeField, double* X_vect, double* Z_vect, int Nx, int Nz, double xmin, double zmin, int flag, int itp_type, params* model, char* BC  ) {
 //
 //    // flag     == 0 --> interpolate from material properties structure
 //    // flag     == 1 --> interpolate straight from the particle arrays
@@ -2198,25 +2198,25 @@ firstprivate ( mat_prop, dx, dz, Nb_part, Nx, Nz, mesh, flag, itp_type )  //sche
 //    // Get interpolated value on nodes
 //    //--------------------------------------------------------------
 //
-//#pragma omp parallel for shared ( NodeField, BMWM, WM, Nx, Nz, BC ) private( i ) firstprivate ( itp_type ) schedule( static )
+//#pragma omp parallel for shared ( nodeField, BMWM, WM, Nx, Nz, BC ) private( i ) firstprivate ( itp_type ) schedule( static )
 //    for (i=0;i<Nx*Nz;i++) {
 //
-//        NodeField[i] = 0.0;
+//        nodeField[i] = 0.0;
 //
 //        if ( fabs(WM[i])<1e-30  || BC[i]==30 || BC[i]==31 ) { //|| mesh->BCp.type[0][i]==0
-//            NodeField[i] = 0.0;
+//            nodeField[i] = 0.0;
 //            //            printf("out in the air!\n")'
 //            //printf("WARNING: Need to seed more particles for interpolation (zero weights) P2C\n");
 //        }
 //        else {
 //
-//            NodeField[i] = BMWM[i]/WM[i];
-//            //            printf("%lf %lf %lf\n",  NodeField[i]*400, BMWM[i], WM[i]);
+//            nodeField[i] = BMWM[i]/WM[i];
+//            //            printf("%lf %lf %lf\n",  nodeField[i]*400, BMWM[i], WM[i]);
 //            if (itp_type==1) {
-//                NodeField[i] =  1.0 / NodeField[i];
+//                nodeField[i] =  1.0 / nodeField[i];
 //            }
 //            if (itp_type==2) {
-//                NodeField[i] =  exp(NodeField[i]);
+//                nodeField[i] =  exp(nodeField[i]);
 //            }
 //        }
 //    }
@@ -2227,8 +2227,8 @@ firstprivate ( mat_prop, dx, dz, Nb_part, Nx, Nz, mesh, flag, itp_type )  //sche
 //    if (model->isperiodic_x==1 && (model->Nx-Nx==0) ) {
 //        for( l=0; l<Nz; l++) {
 //            c1 = l*Nx + Nx-1;
-//            av = 0.5*(NodeField[c1] + NodeField[l*Nx]);
-//            NodeField[c1] = av; NodeField[l*Nx] = av;
+//            av = 0.5*(nodeField[c1] + nodeField[l*Nx]);
+//            nodeField[c1] = av; nodeField[l*Nx] = av;
 //        }
 //    }
 //
@@ -2364,11 +2364,11 @@ firstprivate ( dx, dz, Nb_part, Nx, Nz ) //schedule( dynamic )
 #pragma omp parallel for shared ( NodeField, BMWM, WM, Nx, Nz ) private( i ) schedule( static )
     for (i=0;i<Nx*Nz;i++) {
 
-        //        NodeField[i] = 0.0;
+        //        nodeField[i] = 0.0;
 
         if (WM[i]<1e-30 || BCflag[i]==30) {
             //printf("WARNING: Need to seed more particles for interpolation (zero weights) : Wm = %2.2e BmWm = %2.2e i=%d\n", WM[k], BMWM[k], i);
-            //            NodeField[i] = 0;
+            //            nodeField[i] = 0;
         }
         else{
             NodeField[i] = BMWM[i]/WM[i];
@@ -2586,20 +2586,20 @@ private ( k, dxm, dzm, j_part, i_part, distance, iSW, iNW, iSE, iNE, sumW, Xp ) 
 //            if(sumW<0.5) {
 //                printf("New\n");
 //                if (tag[iSW]!=30 && tag[iSW]!=31) {
-//                    printf("SW %2.2e %2.2e\n", (1.0-dxm/dx)* (1.0-dzm/dz), NodeField[iSW]);
+//                    printf("SW %2.2e %2.2e\n", (1.0-dxm/dx)* (1.0-dzm/dz), nodeField[iSW]);
 //                    printf("%2.2e %2.2e\n", (1.0-dxm/dx), (1.0-dzm/dz));
 //                    inSW = 1;
 //                }
 //                if (tag[iSE]!=30 && tag[iSE]!=31) {
-//                    printf("SE %2.2e %2.2e\n", (dxm/dx)  * (1.0-dzm/dz)  , NodeField[iSE]);
+//                    printf("SE %2.2e %2.2e\n", (dxm/dx)  * (1.0-dzm/dz)  , nodeField[iSE]);
 //                    inSE = 1;
 //                }
 //                if (tag[iNW]!=30 && tag[iNW]!=31) {
-//                    printf("NW %2.2e %2.2e\n", (1.0-dxm/dx)* (dzm/dz)    , NodeField[iNW]);
+//                    printf("NW %2.2e %2.2e\n", (1.0-dxm/dx)* (dzm/dz)    , nodeField[iNW]);
 //                    inNW = 1;
 //                }
 //                if (tag[iNE]!=30 && tag[iNE]!=31) {
-//                    printf("NE %2.2e %2.2e\n", (dxm/dx)  * (dzm/dz)    , NodeField[iNE]);
+//                    printf("NE %2.2e %2.2e\n", (dxm/dx)  * (dzm/dz)    , nodeField[iNE]);
 //                    inNE = 1;
 //                }
 //                printf("%lf %d %d %d %d\n", sumW, inSW, inSE, inNE, inNE);
@@ -2835,20 +2835,20 @@ private ( k, dxm, dzm, j_part, i_part, distance, iSW, iNW, iSE, iNE, sumW, Xp, i
             }
 
 //            if (tag[iSW]!=30 && tag[iSW]!=31) {
-//                PartField[k] +=  (1.0-dxm/dx)* (1.0-dzm/dz) * NodeField[iSW];
+//                PartField[k] +=  (1.0-dxm/dx)* (1.0-dzm/dz) * nodeField[iSW];
 //                sumW += (1.0-dxm/dx)* (1.0-dzm/dz);
 //
 //            }
 //            if (tag[iSE]!=30 && tag[iSE]!=31) {
-//                PartField[k] += (dxm/dx)  * (1.0-dzm/dz)  * NodeField[iSE];
+//                PartField[k] += (dxm/dx)  * (1.0-dzm/dz)  * nodeField[iSE];
 //                sumW += (dxm/dx)* (1.0-dzm/dz);
 //            }
 //            if (tag[iNW]!=30 && tag[iNW]!=31) {
-//                PartField[k] += (1.0-dxm/dx)* (dzm/dz)    * NodeField[iNW];
+//                PartField[k] += (1.0-dxm/dx)* (dzm/dz)    * nodeField[iNW];
 //                sumW += (1.0-dxm/dx)* (dzm/dz);
 //            }
 //            if (tag[iNE]!=30 && tag[iNE]!=31) {
-//                PartField[k] += (dxm/dx)  * (dzm/dz)    * NodeField[iNE];
+//                PartField[k] += (dxm/dx)  * (dzm/dz)    * nodeField[iNE];
 //                sumW += (dxm/dx)* (dzm/dz);
 //            }
 
@@ -3002,99 +3002,76 @@ private ( k, dxm, dzm, j_part, i_part, distance, iSW, iNW, iSE, iNE, sumW ) // s
 /*--------------------------------------------------------------------------------------------------------------------*/
 
 // Particles to reference nodes
-void Interp_Phase2VizGrid ( markers particles, int* PartField, grid *mesh, char* NodeField, double* X_vect, double* Z_vect, int Nxg, int Nzg, params model, surface topo ) {
-
-    int     k, i_part, j_part, Nb_part, Nx=Nxg-1, Nz=Nzg-1, ncx=mesh->Nx-1, ncz=mesh->Nz-1, ic, jc, flag;
-    double  dx, dz, dxm, dzm, *Wm, distance;
-    Nb_part=particles.Nb_part;
-    dx=X_vect[1]-X_vect[0];
-    dz=Z_vect[1]-Z_vect[0];
-
-    double dx_std = model.dx;
-    double dz_std = model.dz;
-
-    double xmin = mesh->xg_coord[0] + dx_std/2.0;
-
-
-    Wm   = DoodzCalloc (Nx*Nz,sizeof(double));    // allocate storage for the array
-
-    //--------------------------------------------------------------
-    // Compute Wm and BmWm
-    //--------------------------------------------------------------
-
-    // Set default values to -1
-    for (k=0;k<Nz*Nx;k++) {
-        NodeField[k] = -1;
+VizGrid Interp_Phase2VizGrid(markers *particles, grid *mesh, params model, int res_fact) {
+  const int Nxg    = res_fact * (mesh->Nx - 1) + 1;
+  const int Nzg    = res_fact * (mesh->Nz - 1) + 1;
+  double   *X_vect = DoodzMalloc(sizeof(double) * Nxg);
+  double   *Z_vect = DoodzMalloc(sizeof(double) * Nzg);
+  X_vect[0]        = mesh->xg_coord[0];
+  Z_vect[0]        = mesh->zg_coord[0];
+  for (int k = 1; k < Nxg; k++) X_vect[k] = X_vect[k - 1] + mesh->dx / res_fact;
+  for (int k = 1; k < Nzg; k++) Z_vect[k] = Z_vect[k - 1] + mesh->dz / res_fact;
+  int    Nx = Nxg - 1, Nz = Nzg - 1;
+  char  *nodeField = DoodzMalloc(sizeof(char) * Nx * Nz);
+  for (int k = 0; k < Nz * Nx; k++) nodeField[k] = -1;
+  const double dx = X_vect[1] - X_vect[0];
+  const double dz = Z_vect[1] - Z_vect[0];
+  double *Wm = DoodzCalloc(Nx * Nz, sizeof(double));
+  for (int k = 0; k < particles->Nb_part; k++) {
+    if (particles->phase[k] == -1) {
+      continue;
+    }
+    const double col_distance = (particles->x[k] - (mesh->xg_coord[0] + 0.5 * dx));
+    int          j_part       = ceil((col_distance / dx) + 0.5) - 1;
+    if (j_part < 0) {
+      j_part = 0;
+    } else if (j_part > Nx - 1) {
+      j_part = Nx - 1;
     }
 
-    // Get the column:
-    distance         = (particles.x[k] - xmin);
-    ic               = ceil((distance/dx_std)+0.5) - 1;
-    if (ic<0)     ic = 0;
-    if (ic>ncx-1) ic = ncx-1;
-
-    // Compute topography
-//    if ( model.free_surf == 1 ) h = topo.b[ic] + topo.a[ic]*particles.x[k];
-
-    for (k=0;k<Nb_part;k++) {
-
-        // Filter out particles that are inactive (out of the box)
-        if ( particles.phase[k] != -1  ) { //&& particles.z[k] < h
-
-            // Get the column:
-            distance = ( particles.x[k] - (mesh->xg_coord[0]+0.5*dx) );
-            j_part   = ceil( (distance/dx) + 0.5) - 1;
-
-            if (j_part<0)    j_part = 0;
-            if (j_part>Nx-1) j_part = Nx-1;
-
-            // Get the line:
-            distance = ( particles.z[k] - (mesh->zg_coord[0]+0.5*dz) );
-            i_part   = ceil( (distance/dz) + 0.5) - 1;
-
-            if (i_part<0)    i_part = 0;
-            if (i_part>Nz-1) i_part = Nz-1;
-
-            dxm = fabs(0.5*(X_vect[j_part]  + X_vect[j_part+1]) - particles.x[k]);
-            dzm = fabs(0.5*(Z_vect[i_part+1]+ Z_vect[i_part])   - particles.z[k]);
-
-
-
-            // Find index of the particle with regard to the computation grid
-            // Then we can find the flag of the cell and figure out in we are below the free surface or not
-            // x index
-            distance         = particles.x[k] - mesh->xc_coord[0];
-            ic               = ceil((distance/dx_std)+0.5) -1;
-            if (ic<0)     ic = 0;
-            if (ic>ncx-1) ic = ncx-1;
-
-            // z index
-            distance         = particles.z[k] - mesh->zc_coord[0];
-            jc               = ceil((distance/dz_std)+0.5) -1;
-            if (jc<0)     jc = 0;
-            if (jc>ncz-1) jc = ncz-1;
-
-            flag = mesh->BCp.type[ic+jc*(ncx)];
-
-//            printf("ic %d jc %d \n", ic, jc);
-//            if (flag==30 || flag==31) printf("OKAY\n");
-
-
-            if ( (flag != 30 && flag != 31) && (1.0-(dxm/dx))*(1.0-(dzm/dz)) >  Wm[j_part+i_part*(Nx)] ) {
-                Wm[j_part+i_part*(Nx)]   = (1.0-(dxm/dx))*(1.0-(dzm/dz)) ;
-
-                NodeField[j_part+i_part*(Nx)] = (char)PartField[k];
-
-//                // Update cell is flag indicate below free surface
-//                if (flag != 30 && flag != 31) NodeField[j_part+i_part*(Nx)] = (char)PartField[k];
-//                else NodeField[j_part+i_part*(Nx)] = -1;
-//
-//                if (flag == 30 || flag == 31) NodeField[j_part+i_part*(Nx)] = -1;
-            }
-
-        }
+    const double row_distance = (particles->z[k] - (mesh->zg_coord[0] + 0.5 * dz));
+    int          i_part       = ceil((row_distance / dz) + 0.5) - 1;
+    if (i_part < 0) {
+      i_part = 0;
+    } else if (i_part > Nz - 1) {
+      i_part = Nz - 1;
     }
-    DoodzFree(Wm);
+
+    const double x_distance = particles->x[k] - mesh->xc_coord[0];
+    const int    ncx        = mesh->Nx - 1;
+    int          ic         = ceil((x_distance / model.dx) + 0.5) - 1;
+    if (ic < 0) {
+      ic = 0;
+    } else if (ic > ncx - 1) {
+      ic = ncx - 1;
+    }
+
+    const double z_distance = particles->z[k] - mesh->zc_coord[0];
+    const int    ncz        = mesh->Nz - 1;
+    int          jc         = ceil((z_distance / model.dz) + 0.5) - 1;
+    ;
+    if (jc < 0) {
+      jc = 0;
+    } else if (jc > ncz - 1) {
+      jc = ncz - 1;
+    }
+
+    const char   flag = mesh->BCp.type[ic + jc * (ncx)];
+    const double dxm  = fabs(0.5 * (X_vect[j_part] + X_vect[j_part + 1]) - particles->x[k]);
+    const double dzm  = fabs(0.5 * (Z_vect[i_part + 1] + Z_vect[i_part]) - particles->z[k]);
+    if ((flag != 30 && flag != 31) && (1.0 - (dxm / dx)) * (1.0 - (dzm / dz)) > Wm[j_part + i_part * (Nx)]) {
+      Wm[j_part + i_part * (Nx)]        = (1.0 - (dxm / dx)) * (1.0 - (dzm / dz));
+      nodeField[j_part + i_part * (Nx)] = (char) particles->dual[k];
+    }
+  }
+  DoodzFree(Wm);
+  return (VizGrid){.nodeField = nodeField, .xviz = X_vect, .zviz = Z_vect};
+}
+
+void FreeVizGrid(VizGrid vizGrid) {
+  DoodzFree(vizGrid.zviz);
+  DoodzFree(vizGrid.xviz);
+  DoodzFree(vizGrid.nodeField);
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
