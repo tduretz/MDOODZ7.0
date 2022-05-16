@@ -2,7 +2,6 @@
 #include <Eigen/Core>
 #include <iostream>
 #include <cstdio>
-#include <filesystem>
 
 namespace fs = std::filesystem;
 

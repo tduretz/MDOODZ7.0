@@ -1,7 +1,7 @@
-#include "mdoodz.h"
+#include "visual-tests.h"
 
 
-int SetPhase(MdoodzInstance *instance, Coordinates coordinates) {
+int SetPhase2(MdoodzInstance *instance, Coordinates coordinates) {
   const double radius = instance->model.user1 / instance->scaling.L;
   if (coordinates.x * coordinates.x + coordinates.z * coordinates.z < radius * radius) {
     return 1;
@@ -10,7 +10,7 @@ int SetPhase(MdoodzInstance *instance, Coordinates coordinates) {
   }
 }
 
-double SetDensity(MdoodzInstance *instance, Coordinates coordinates, int phase) {
+double SetDensity2(MdoodzInstance *instance, Coordinates coordinates, int phase) {
   const double T_init = (instance->model.user0 + zeroC) / instance->scaling.T;
   if (instance->model.eqn_state > 0) {
     return instance->materials.rho[phase] * (1 - instance->materials.alp[phase] * (T_init - instance->materials.T0[phase]));
@@ -19,7 +19,7 @@ double SetDensity(MdoodzInstance *instance, Coordinates coordinates, int phase) 
   }
 }
 
-SetBC SetBCVx(MdoodzInstance *instance, POSITION position, Coordinates coordinates) {
+SetBC SetBCVx2(MdoodzInstance *instance, POSITION position, Coordinates coordinates) {
   SetBC bc;
   if (instance->model.shear_style == 0) {
     if (position == S || position == N || position == NE || position == NW || position == SE || position == SW) {
@@ -54,7 +54,7 @@ SetBC SetBCVx(MdoodzInstance *instance, POSITION position, Coordinates coordinat
   return bc;
 }
 
-SetBC SetBCVz(MdoodzInstance *instance, POSITION position, Coordinates coordinates) {
+SetBC SetBCVz2(MdoodzInstance *instance, POSITION position, Coordinates coordinates) {
   SetBC bc;
   if (instance->model.shear_style == 0) {
     if (position == W || position == E || position == NE || position == NW || position == SE || position == SW) {
@@ -92,12 +92,12 @@ MdoodzInstance CreateShearTemplateInstance(int shear_style) {
   return (MdoodzInstance){
           .inputFileName = inputFileName,
           .SetParticles  = &(SetParticles_ff){
-                   .SetPhase   = SetPhase,
-                   .SetDensity = SetDensity,
+                   .SetPhase   = SetPhase2,
+                   .SetDensity = SetDensity2,
           },
           .SetBCs = &(SetBCs_ff){
-                  .SetBCVx = SetBCVx,
-                  .SetBCVz = SetBCVz,
+                  .SetBCVx = SetBCVx2,
+                  .SetBCVz = SetBCVz2,
           },
   };
 }

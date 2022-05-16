@@ -1,6 +1,6 @@
 #include "math.h"
-#include "mdoodz.h"
 #include "stdbool.h"
+#include "visual-tests.h"
 
 
 double SetSurfaceZCoord(MdoodzInstance *instance, double x_coord) {

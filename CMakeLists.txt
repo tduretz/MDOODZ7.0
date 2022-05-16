@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.16)
 include(env.cmake OPTIONAL)
 
 set(CMAKE_C_COMPILER ${C_COMPILER})
-project(MDOODZ C)
+project(MDOODZ C CXX)
 set(CMAKE_C_STANDARD 11)
 
 option(JULIA "Set this for enabling Julia BinaryBuilder mode" OFF)
@@ -23,4 +23,4 @@ add_subdirectory(MDLIB)
 add_subdirectory(SETS)
 enable_testing()
 add_subdirectory(TESTS)
-
+add_subdirectory(VISUAL_TESTS)

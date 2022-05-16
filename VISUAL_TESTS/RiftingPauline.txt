@@ -5,7 +5,7 @@ irestart = 0
 
 /**** OUTPUT FILES ****/
 writer = 1
-writer_step = 10
+writer_step = 50
 writer_markers = 0
 writer_debug   = 0 
 
