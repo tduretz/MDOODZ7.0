@@ -65,15 +65,32 @@ void ApplyBC( grid* mesh, params* model ) {
         }
     }
 
+// for( j=0; j<nz+1; j++) {
+//     for( i=0; i<nx; i++) {
+//         printf("%03d ", i+j*(nx));
+//     }
+// printf("\n");
+// }
+
+// for( j=0; j<nz+1; j++) {
+//     for( i=0; i<nx; i++) {
+//         printf("%d ", mesh->BCu.type[i+j*(nx)]);
+//     }
+// printf("\n");
+// }
+
+
     // Vx Dirichlet
     for( i=0; i<nx; i++) {
         // South
-        if ( mesh->BCu.type[i] == 11 ) {
-            mesh->u_in[i] = 2.0*mesh->BCu.val[i] - mesh->u_in[i+nx];
+        const int iS = i;
+        if ( mesh->BCu.type[iS] == 11 ) {
+            mesh->u_in[iS] = mesh->BCu.val[iS] - mesh->u_in[iS+nx]; // factor 2 should be already included
         }
         // North
-        if ( mesh->BCu.type[i + (nzvx-1)*nx] == 11 ) {
-            mesh->u_in[i + (nzvx-1)*nx] = 2.0*mesh->BCu.val[i + (nzvx-1)*nx] - mesh->u_in[i + (nzvx-2)*nx];
+        const int iN = i + (nzvx-1)*nx;
+        if ( mesh->BCu.type[iN] == 11 ) {
+            mesh->u_in[iN] = mesh->BCu.val[iN] - mesh->u_in[iN-nx];
         }
     }
 
@@ -93,11 +110,11 @@ void ApplyBC( grid* mesh, params* model ) {
     for( j=0; j<nz; j++) {
         // West
         if ( mesh->BCv.type[j*nxvz] == 11 ) {
-            mesh->v_in[j*nxvz] = 2.0*mesh->BCv.val[j*nxvz] - mesh->v_in[j*nxvz + 1];
+            mesh->v_in[j*nxvz] = mesh->BCv.val[j*nxvz] - mesh->v_in[j*nxvz + 1];
         }
         // East
         if ( mesh->BCv.type[j*nxvz+(nxvz-1)] == 11 ) {
-            mesh->v_in[j*nxvz + (nxvz-1)] = 2.0*mesh->BCv.val[j*nxvz+(nxvz-1)] - mesh->v_in[j*nxvz + (nxvz-1) -1];
+            mesh->v_in[j*nxvz + (nxvz-1)] = mesh->BCv.val[j*nxvz+(nxvz-1)] - mesh->v_in[j*nxvz + (nxvz-1) -1];
         }
     }
 
@@ -120,8 +137,11 @@ void ApplyBC( grid* mesh, params* model ) {
         }
     }
 
+
+
+
     //    printf("Vx\n");
-    //    Print2DArrayDouble( mesh->u_in, nx, nzvx, 1.0 );
+       Print2DArrayDouble( mesh->u_in, nx, nzvx, 1.0 );
     //    printf("Vz\n");
     //    Print2DArrayDouble( mesh->v_in, nxvz, nz, 1.0 );
     //    printf("p\n");
@@ -190,13 +210,15 @@ void ExtractSolutions2( SparseMat *Stokes, grid* mesh, params* model, double* dx
 
     double eps = 1e-13;
 
-// Test relaxed u-v-p solutions
-#pragma omp parallel for shared( mesh, dx, Stokes ) private( cc ) firstprivate( alpha, nzvx, nx )
-for( cc=0; cc<nzvx*nx; cc++) {
-    if ( mesh->BCu.type[cc] != 30 && mesh->BCu.type[cc] != 0 && mesh->BCu.type[cc] != 11 && mesh->BCu.type[cc] != 13 && mesh->BCu.type[cc] != -12 ) {
-        mesh->u_in[cc] = mesh->u_in[cc] + alpha*dx[Stokes->eqn_u[cc]];
+    // Print2DArrayInt( Stokes->eqn_u, nx, nzvx, 1.0 );
+
+    // Test relaxed u-v-p solutions
+    #pragma omp parallel for shared( mesh, dx, Stokes ) private( cc ) firstprivate( alpha, nzvx, nx )
+    for( cc=0; cc<nzvx*nx; cc++) {
+        if ( mesh->BCu.type[cc] != 30 && mesh->BCu.type[cc] != 0 && mesh->BCu.type[cc] != 11 && mesh->BCu.type[cc] != 13 && mesh->BCu.type[cc] != -12 ) {
+            mesh->u_in[cc] = mesh->u_in[cc] + alpha*dx[Stokes->eqn_u[cc]];
+        }
     }
-}
 
     // Periodic
     for( cc=0; cc<nzvx; cc++) {
@@ -206,27 +228,22 @@ for( cc=0; cc<nzvx*nx; cc++) {
         }
     }
 
-#pragma omp parallel for shared( mesh, dx, Stokes ) private( cc ) firstprivate( alpha, nz, nxvz )
-for( cc=0; cc<nz*nxvz; cc++) {
-    if ( mesh->BCv.type[cc] != 30 && mesh->BCv.type[cc] != 0 && mesh->BCv.type[cc] != 11 && mesh->BCv.type[cc] != 13 && mesh->BCv.type[cc] != -12 ) {
-        mesh->v_in[cc] = mesh->v_in[cc] + alpha*dx[Stokes->eqn_v[cc]];
+    #pragma omp parallel for shared( mesh, dx, Stokes ) private( cc ) firstprivate( alpha, nz, nxvz )
+    for( cc=0; cc<nz*nxvz; cc++) {
+        if ( mesh->BCv.type[cc] != 30 && mesh->BCv.type[cc] != 0 && mesh->BCv.type[cc] != 11 && mesh->BCv.type[cc] != 13 && mesh->BCv.type[cc] != -12 ) {
+            mesh->v_in[cc] = mesh->v_in[cc] + alpha*dx[Stokes->eqn_v[cc]];
+        }
     }
-}
 
-#pragma omp parallel for shared( mesh, dx, Stokes ) private( cc ) firstprivate( alpha, ncx, ncz )
-for( cc=0; cc<ncz*ncx; cc++) {
-
-//    mesh->p_in[cc] = 0.0;
-//    mesh->dp[cc]   = 0.0;
-    if ( mesh->BCp.type[cc] != 30 && mesh->BCp.type[cc] != 0  && mesh->BCp.type[cc] != 31 ) {
-        mesh->p_in[cc] =  mesh->p_in[cc] + alpha*dx[Stokes->eqn_p[cc]];
-//        mesh->p_in[cc]  = mesh->p_trial[cc] + alpha*dx[Stokes->eqn_p[cc]];
-//        mesh->dp[cc]    = alpha*dx[Stokes->eqn_p[cc]];
+    #pragma omp parallel for shared( mesh, dx, Stokes ) private( cc ) firstprivate( alpha, ncx, ncz )
+    for( cc=0; cc<ncz*ncx; cc++) {
+        if ( mesh->BCp.type[cc] != 30 && mesh->BCp.type[cc] != 0  && mesh->BCp.type[cc] != 31 ) {
+            mesh->p_in[cc] =  mesh->p_in[cc] + alpha*dx[Stokes->eqn_p[cc]];
+        }
     }
-}
 
-// Apply Bc to Vx and Vz
-ApplyBC( mesh, model );
+    // Apply Bc to Vx and Vz
+    ApplyBC( mesh, model );
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
@@ -865,7 +882,6 @@ void EvaluateStokesResidualDecoupled( SparseMat *Stokes, SparseMat *StokesA, Spa
             resz                          += StokesA->F[Stokes->eqn_v[cc]]*StokesA->F[Stokes->eqn_v[cc]];
             mesh->rv[cc]                   = StokesA->F[Stokes->eqn_v[cc]];
             StokesA->F[Stokes->eqn_v[cc]] *= StokesA->d[Stokes->eqn_v[cc]]; // Need to scale the residual here for Defect Correction formulation (F is the RHS)
-//            printf("%2.2e %d\n", StokesA->F[Stokes->eqn_v[cc]], mesh->BCv.type[cc]);
         }
     }
     Nmodel->resz = resz;

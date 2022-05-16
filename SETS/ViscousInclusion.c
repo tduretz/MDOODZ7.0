@@ -83,9 +83,9 @@ double SetDensity(MdoodzInstance *instance, Coordinates coordinates, int phase) 
 
 char SetBCVxType(MdoodzInstance *instance, POSITION position) {
   if (instance->model.shear_style == 0) {
-    if (position == SOUTH || position == NORTH || position == NORTHWEST || position == SOUTHWEST || position == NORTHEAST || position == SOUTHEAST) {
-      return 11;
-    } else if (position == WEST || position == EAST) {
+    if (position == SOUTH) return 11;
+    if (position == NORTH) return 13;
+    if (position == WEST || position == EAST || position == NORTHWEST || position == SOUTHWEST || position == NORTHEAST || position == SOUTHEAST) {
       return 0;
     }
     else {
@@ -110,22 +110,23 @@ double SetBCVxValue(MdoodzInstance *instance, POSITION position, Coordinates coo
   const double mc     = 1e3;
   double       Vx, Vz, P, eta, sxx, szz, x, z;
   if (instance->model.shear_style == 0) {
-    if (position == WEST || position == EAST ) {
+    if (position == WEST || position == EAST || position == SOUTHEAST || position == SOUTHWEST || position == NORTHEAST || position == NORTHWEST) {
       x = coord.x;
       z = coord.z;
       eval_anal_Dani(&Vx, &Vz, &P, &eta, &sxx, &szz, x, z, 1, radius, mm, mc);
+      Vx = -coord.x * instance->model.EpsBG;
       return Vx;
-    } else if (position == SOUTH || position == SOUTHEAST || position == SOUTHWEST) {;
+    } else if (position == SOUTH) {;
       x = coord.x;
       z = coord.z + instance->model.dx / 2.0; // make sure it lives on the boundary
       double       Vx, Vz, P, eta, sxx, szz;
       eval_anal_Dani(&Vx, &Vz, &P, &eta, &sxx, &szz, x, z, 1, radius, mm, mc);
-      return Vx;
-    } else if (position == NORTH || position == NORTHEAST || position == NORTHWEST ) {
+      return 0.0; // 2*Vx;
+    } else if (position == NORTH) {
       x = coord.x;
       z = coord.z - instance->model.dx / 2.0; // make sure it lives on the boundary
       eval_anal_Dani(&Vx, &Vz, &P, &eta, &sxx, &szz, x, z, 1, radius, mm, mc);
-      return Vx;
+      return 0.0; // 2*Vx;
     } else {
       return 0.0;
     }
@@ -143,9 +144,9 @@ double SetBCVxValue(MdoodzInstance *instance, POSITION position, Coordinates coo
 
 char SetBCVzType(MdoodzInstance *instance, POSITION position) {
   if (instance->model.shear_style == 0) {
-    if (position == WEST || position == EAST || position == NORTHEAST || position == NORTHWEST || position == SOUTHEAST || position == SOUTHWEST) {
-      return 11;
-    } else if (position == SOUTH || position == NORTH) {
+    if (position == WEST || position == EAST ) {
+      return 13;
+    } else if (position == SOUTH || position == NORTH || position == NORTHEAST || position == NORTHWEST || position == SOUTHEAST || position == SOUTHWEST) {
       return 0;
     } else {
       return -1;
@@ -172,19 +173,20 @@ double SetBCVzValue(MdoodzInstance *instance, POSITION position, Coordinates coo
       x = coord.x;
       z = coord.z;
       eval_anal_Dani(&Vx, &Vz, &P, &eta, &sxx, &szz, x, z, 1, radius, mm, mc);
+      Vz =  coord.z * instance->model.EpsBG;
       return Vz;
     } 
     if (position == WEST) {
       x = coord.x + instance->model.dx/2.0;
       z = coord.z;
       eval_anal_Dani(&Vx, &Vz, &P, &eta, &sxx, &szz, x, z, 1, radius, mm, mc);
-      return Vz;
+      return 2*Vz;
     }
     if (position == EAST) {
       x = coord.x + instance->model.dx/2.0;
       z = coord.z;
       eval_anal_Dani(&Vx, &Vz, &P, &eta, &sxx, &szz, x, z, 1, radius, mm, mc);
-      return Vz;
+      return 2*Vz;
     }
     else {
       return 0;

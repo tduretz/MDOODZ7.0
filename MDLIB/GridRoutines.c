@@ -359,13 +359,10 @@ void InitialiseSolutionFields( grid *mesh, params *model ) {
                 if (model->step==0) {
                     
                     // Initial velocity field (zero or pure shear)
-                    if (model->EpsBG == 0) mesh->u_in[c]  = 0.0;
-                    // Pure shear
-                    else mesh->u_in[c]  = -mesh->xg_coord[k]*(model->EpsBG - model->DivBG/3.0);
-//                    if (model->isperiodic_x == 1) mesh->u_in[c] = 2.0*mesh->zvx_coord[l]*model->EpsBG; // Simple shear
-//                    if (model->isperiodic_x == 1) mesh->u_in[c] = 2.0*(mesh->zvx_coord[l]-model->zmin)*model->EpsBG; // Simple shear
-                    if (model->isperiodic_x == 1) mesh->u_in[c] = 2.0*(mesh->zvx_coord[l])*model->EpsBG + mesh->xg_coord[k]*model->DivBG/3.0; // Simple shear
-//                    printf("%2.2e\n", mesh->u_in[c] );
+                    // if (model->EpsBG == 0) mesh->u_in[c]  = 0.0;
+                    // // Pure shear
+                    // else mesh->u_in[c]  = -mesh->xg_coord[k]*(model->EpsBG - model->DivBG/3.0);
+                    // if (model->isperiodic_x == 1) mesh->u_in[c] = 2.0*(mesh->zvx_coord[l])*model->EpsBG + mesh->xg_coord[k]*model->DivBG/3.0; // Simple shear
                 }
                 // Force Dirichlets
                 if (mesh->BCu.type[c] == 0) mesh->u_in[c]  = mesh->BCu.val[c];

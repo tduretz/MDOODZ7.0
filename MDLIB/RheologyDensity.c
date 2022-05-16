@@ -1162,7 +1162,7 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
     }
   }
   // printf("Txz:\n");
-  // Print2DArrayDouble( mesh->sxz,  mesh->Nx, mesh->Nz, scaling->S );
+  //  Print2DArrayDouble( mesh->sxz,  mesh->Nx, mesh->Nz, scaling->S );
 
 }
 
@@ -1847,12 +1847,13 @@ void StrainRateComponents( grid* mesh, scale scaling, params* model ) {
     l  = mesh->ln[k1];
     c1 = k  + l*(Nx);
     c2 = k  + l*(Nx+1);
-    mesh->exz[c1] = 0.0;
 
     if ( mesh->BCg.type[c1] != 30 ) {
       //            if (mesh->BCu.type[c1] != 30 && mesh->BCu.type[c1+Nx] != 30) mesh->exz[c1] +=  0.5 * (mesh->u_in[c1+Nx] - mesh->u_in[c1])/dz;
       //            if (mesh->BCv.type[c2] != 30 && mesh->BCv.type[c2+1]  != 30) mesh->exz[c1] +=  0.5 * (mesh->v_in[c2+1]  - mesh->v_in[c2])/dx;
-      mesh->exz[c1] =  0.5 * (mesh->u_in[c1+Nx] - mesh->u_in[c1])/dz + 0.5 * (mesh->v_in[c2+1]  - mesh->v_in[c2])/dx;
+      const double dvxdz = (mesh->u_in[c1+Nx] - mesh->u_in[c1])/dz;
+      const double dvzdx = (mesh->v_in[c2+1]  - mesh->v_in[c2])/dx;
+      mesh->exz[c1] =  0.5 * (dvxdz + dvzdx);
     }
   }
 
