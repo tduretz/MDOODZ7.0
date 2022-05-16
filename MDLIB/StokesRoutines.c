@@ -141,7 +141,7 @@ void ApplyBC( grid* mesh, params* model ) {
 
 
     //    printf("Vx\n");
-       Print2DArrayDouble( mesh->u_in, nx, nzvx, 1.0 );
+    //    Print2DArrayDouble( mesh->u_in, nx, nzvx, 1.0 );
     //    printf("Vz\n");
     //    Print2DArrayDouble( mesh->v_in, nxvz, nz, 1.0 );
     //    printf("p\n");

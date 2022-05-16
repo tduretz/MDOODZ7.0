@@ -335,8 +335,8 @@ void InitialiseSolutionFields( grid *mesh, params *model ) {
     int k, l, c;
     double eps = 1e-13; // perturbation to avoid zero pressure that results in Nan d(eta)dP in numerical differentiation
 	
-    nx  = mesh->Nx;
-    nz  = mesh->Nz;
+    nx   = mesh->Nx;
+    nz   = mesh->Nz;
     nxvz = nx+1;
     nzvx = nz+1;
     ncx  = nx-1;
@@ -352,17 +352,13 @@ void InitialiseSolutionFields( grid *mesh, params *model ) {
 //            if (mesh->BCu.type[c] == 0) mesh->u_in[c]  = mesh->BCu.val[c];
             
             if ( mesh->BCu.type[c] == 30 )  mesh->u_in[c]  = 0.0;
-            
-            
-            if ( mesh->BCu.type[c] != 30 ) {
-                
+            else {        
                 if (model->step==0) {
-                    
                     // Initial velocity field (zero or pure shear)
-                    // if (model->EpsBG == 0) mesh->u_in[c]  = 0.0;
-                    // // Pure shear
-                    // else mesh->u_in[c]  = -mesh->xg_coord[k]*(model->EpsBG - model->DivBG/3.0);
-                    // if (model->isperiodic_x == 1) mesh->u_in[c] = 2.0*(mesh->zvx_coord[l])*model->EpsBG + mesh->xg_coord[k]*model->DivBG/3.0; // Simple shear
+                    if (model->EpsBG == 0) mesh->u_in[c]  = 0.0;
+                    // Pure shear
+                    else mesh->u_in[c]  = -mesh->xg_coord[k]*(model->EpsBG - model->DivBG/3.0);
+                    if (model->isperiodic_x == 1) mesh->u_in[c] = 2.0*(mesh->zvx_coord[l])*model->EpsBG + mesh->xg_coord[k]*model->DivBG/3.0; // Simple shear
                 }
                 // Force Dirichlets
                 if (mesh->BCu.type[c] == 0) mesh->u_in[c]  = mesh->BCu.val[c];
@@ -371,14 +367,14 @@ void InitialiseSolutionFields( grid *mesh, params *model ) {
         }
     }
 	
+    // Initial velocity field Vz
     for( l=0; l<nz; l++) {
         for( k=0; k<nxvz; k++) {
             
             c = k + l*nxvz;
             
             if ( mesh->BCv.type[c] == 30 )  mesh->v_in[c]  = 0.0;
-            
-            if ( mesh->BCv.type[c] != 30 ) {
+            else {
                 if (model->step==0) {
                     // Initial velocity field (zero or pure shear)
                     if (model->EpsBG == 0) mesh->v_in[c]  = 0.0;
@@ -392,25 +388,21 @@ void InitialiseSolutionFields( grid *mesh, params *model ) {
         }
     }
     
+    // Initial pressure field
     for( l=0; l<ncz; l++) {
         for( k=0; k<ncx; k++) {
-            
-            c = k + l*ncx;
-            
-//            mesh->p_in[c]  = 0.0;
-            
+            c = k + l*ncx;               
             if ( mesh->BCp.type[c] == 30 ||  mesh->BCp.type[c] == 31 ) mesh->p_in[c]  = 0.0;
-            
-            if ( mesh->BCp.type[c] != 30 ||  mesh->BCp.type[c] != 31) {
+            if ( mesh->BCp.type[c] != 30 ||  mesh->BCp.type[c] != 31 ) {
                 if (model->step==0) {
-                    // Initial pressure field
                     mesh->p_in[c]  = 0.0 + model->PrBG;
                 }
             }
-            
         }
     }
-    
+
+    // Very important step: Set BC's here!!!!!!!
+    ApplyBC( mesh, model ); 
     printf("Velocity field was set to background pure shear\n");
 }
 
