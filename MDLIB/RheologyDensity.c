@@ -1162,7 +1162,11 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
     }
   }
   // printf("Txz:\n");
+<<<<<<< HEAD
   //  Print2DArrayDouble( mesh->sxz,  mesh->Nx, mesh->Nz, scaling->S );
+=======
+  // Print2DArrayDouble( mesh->sxz,  mesh->Nx, mesh->Nz, scaling->S );
+>>>>>>> main
 
 }
 

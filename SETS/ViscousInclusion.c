@@ -1,5 +1,9 @@
 #include "complex.h"
 #include "mdoodz.h"
+<<<<<<< HEAD
+=======
+#include "math.h"
+>>>>>>> main
 
 //---------------------------------------------//
 void eval_anal_Dani(double *vx, double *vz, double *p, double *eta, double *sxx, double *syy, double x, double z, int ps, double rc, double mm, double mc) {
@@ -81,6 +85,7 @@ double SetDensity(MdoodzInstance *instance, Coordinates coordinates, int phase) 
   return instance->materials.rho[phase];
 }
 
+<<<<<<< HEAD
 char SetBCVxType(MdoodzInstance *instance, POSITION position) {
   if (instance->model.shear_style == 0) {
     if (position == SOUTH || position == SOUTHWEST || position == SOUTHEAST) return 11;
@@ -105,11 +110,16 @@ char SetBCVxType(MdoodzInstance *instance, POSITION position) {
 }
 
 double SetBCVxValue(MdoodzInstance *instance, POSITION position, Coordinates coord) {
+=======
+SetBC SetBCVx(MdoodzInstance *instance, POSITION position, Coordinates coord) {
+  SetBC           bc;
+>>>>>>> main
   const double radius = instance->model.user1 / instance->scaling.L;
   const double mm     = 1.0;
   const double mc     = 1e3;
   double       Vx, Vz, P, eta, sxx, szz, x, z;
   if (instance->model.shear_style == 0) {
+<<<<<<< HEAD
     if (position == WEST || position == EAST) {
       x = coord.x;
       z = coord.z;
@@ -164,11 +174,67 @@ char SetBCVzType(MdoodzInstance *instance, POSITION position) {
 }
 
 double SetBCVzValue(MdoodzInstance *instance, POSITION position, Coordinates coord) {
+=======
+    if (position == W || position == E) {
+      x = coord.x;
+      z = coord.z;
+      eval_anal_Dani(&Vx, &Vz, &P, &eta, &sxx, &szz, x, z, 1, radius, mm, mc);
+      bc.value = Vx;
+    } else if (position == S || position == SE || position == SW) {
+      x = coord.x;
+      z = coord.z + instance->model.dx / 2.0;// make sure it lives on the boundary
+      eval_anal_Dani(&Vx, &Vz, &P, &eta, &sxx, &szz, x, z, 1, radius, mm, mc);
+      bc.value = Vx;
+    } else if (position == N || position == NE || position == NW) {
+      x = coord.x;
+      z = coord.z - instance->model.dx / 2.0;// make sure it lives on the boundary
+      eval_anal_Dani(&Vx, &Vz, &P, &eta, &sxx, &szz, x, z, 1, radius, mm, mc);
+      bc.value = Vx;
+    } else {
+      bc.value = 0.0;
+    }
+  } else {
+    const double Lz = (double) (instance->model.zmax - instance->model.zmin);
+    if (position == S) {
+      bc.value = -instance->model.EpsBG * Lz;
+    } else if (position == N) {
+      bc.value = instance->model.EpsBG * Lz;
+    } else {
+      bc.value = 0;
+    }
+  }
+
+  if (instance->model.shear_style == 0) {
+    if (position == S || position == N || position == NW || position == SW || position == NE || position == SE) {
+      bc.type = 11;
+    } else if (position == W || position == E) {
+      bc.type = 0;
+    } else {
+      bc.type = -1;
+    }
+  } else {
+    if (position == W || position == NW || position == SW) {
+      bc.type = -2;
+    } else if (position == E || position == NE || position == SE) {
+      bc.type = -12;
+    } else if (position == S || position == N) {
+      bc.type = 11;
+    } else {
+      bc.type = -1;
+    }
+  }
+  return bc;
+}
+
+SetBC SetBCVz(MdoodzInstance *instance, POSITION position, Coordinates coord) {
+  SetBC           bc;
+>>>>>>> main
   const double radius = instance->model.user1 / instance->scaling.L;
   const double mm     = 1.0;
   const double mc     = 1e3;
   double       Vx, Vz, P, eta, sxx, szz, x, z;
   if (instance->model.shear_style == 0) {
+<<<<<<< HEAD
     if (position == NORTH || position == SOUTH ) {
       x = coord.x;
       z = coord.z;
@@ -199,6 +265,55 @@ double SetBCVzValue(MdoodzInstance *instance, POSITION position, Coordinates coo
       return 0;
     }
   }
+=======
+    if (position == N || position == NE || position == NW || position == S || position == SE || position == SW) {
+      x = coord.x;
+      z = coord.z;
+      eval_anal_Dani(&Vx, &Vz, &P, &eta, &sxx, &szz, x, z, 1, radius, mm, mc);
+      bc.value = Vz;
+    }
+    if (position == W) {
+      x = coord.x + instance->model.dx / 2.0;
+      z = coord.z;
+      eval_anal_Dani(&Vx, &Vz, &P, &eta, &sxx, &szz, x, z, 1, radius, mm, mc);
+      bc.value = Vz;
+    }
+    if (position == E) {
+      x = coord.x + instance->model.dx / 2.0;
+      z = coord.z;
+      eval_anal_Dani(&Vx, &Vz, &P, &eta, &sxx, &szz, x, z, 1, radius, mm, mc);
+      bc.value = Vz;
+    } else {
+      bc.value = 0.0;
+    }
+  } else {
+    const double Lz = (double) (instance->model.zmax - instance->model.zmin);
+    if (position == W || position == E || position == NW || position == S || position == SE || position == SW) {
+      bc.value = 0.0 * instance->model.EpsBG * Lz;
+    } else {
+      bc.value = 0.0;
+    }
+  }
+
+  if (instance->model.shear_style == 0) {
+    if (position == W || position == E || position == NE || position == NW || position == SE || position == SW) {
+      bc.type = 11;
+    } else if (position == S || position == N) {
+      bc.type = 0;
+    } else {
+      bc.type - 1;
+    }
+  } else {
+    if (position == W || position == E) {
+      bc.type = 0;
+    } else if (position == S || position == N) {
+      bc.type = -12;
+    } else {
+      bc.type = -1;
+    }
+  }
+  return bc;
+>>>>>>> main
 }
 
 int main(int nargs, char *args[]) {
@@ -209,10 +324,15 @@ int main(int nargs, char *args[]) {
                    .SetDensity = SetDensity,
           },
           .SetBCs = &(SetBCs_ff){
+<<<<<<< HEAD
                   .SetBCVxType  = SetBCVxType,
                   .SetBCVxValue = SetBCVxValue,
                   .SetBCVzType  = SetBCVzType,
                   .SetBCVzValue = SetBCVzValue,
+=======
+                  .SetBCVx = SetBCVx,
+                  .SetBCVz = SetBCVz,
+>>>>>>> main
           },
   };
   RunMDOODZ(&instance);

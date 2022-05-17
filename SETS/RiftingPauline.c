@@ -63,87 +63,77 @@ double SetVerticalVelocity(MdoodzInstance *instance, Coordinates coordinates) {
   return coordinates.z * instance->model.EpsBG;
 }
 
-char SetBCVxType(MdoodzInstance *instance, POSITION position) {
-  if (position == NORTH || position == SOUTH || position == NORTHWEST || position == SOUTHWEST || position == NORTHEAST || position == SOUTHEAST) {
-    return 13;
-  } else if (position == WEST || position == EAST) {
-    return 0;
+SetBC SetBCVx(MdoodzInstance *instance, POSITION position, Coordinates coordinates) {
+  SetBC bc;
+  if (position == N || position == S || position == NW || position == SW || position == NE || position == SE) {
+    bc.value = 0;
+    bc.type  = 13;
+  } else if (position == W || position == E) {
+    bc.value = -coordinates.x * instance->model.EpsBG;
+    bc.type  = 0;
   } else {
-    return -1;
+    bc.value = 0;
+    bc.type  = -1;
   }
+  return bc;
 }
 
-double SetBCVxValue(MdoodzInstance *instance, POSITION position, Coordinates coordinates) {
-  if (position == WEST || position == EAST) {
-    return -coordinates.x * instance->model.EpsBG;
-  } else {
-    return 0;
-  }
-}
 
-char SetBCVzType(MdoodzInstance *instance, POSITION position) {
-  if (position == WEST || position == EAST || position == SOUTHWEST || position == SOUTHEAST || position == NORTHWEST || position == NORTHEAST) {
-    return 13;
-  } else if (position == SOUTH || position == NORTH) {
-    return 0;
+SetBC SetBCVz(MdoodzInstance *instance, POSITION position, Coordinates coordinates) {
+  SetBC bc;
+  if (position == W || position == E || position == SW || position == SE || position == NW || position == NE) {
+    bc.value = 0;
+    bc.type  = 13;
+  } else if (position == S || position == N) {
+    bc.value = coordinates.z * instance->model.EpsBG;
+    bc.type  = 0;
   } else {
-    return -1;
+    bc.value = 0;
+    bc.type  = -1;
   }
-}
-
-double SetBCVzValue(MdoodzInstance *instance, POSITION position, Coordinates coordinates) {
-  if (position == NORTH || position == SOUTH || position == NORTHWEST || position == SOUTHWEST || position == NORTHEAST || position == SOUTHEAST) {
-    return coordinates.z * instance->model.EpsBG;
-  } else {
-    return 0;
-  }
+  return bc;
 }
 
 char SetBCPType(MdoodzInstance *instance, POSITION position) {
-  if (position == NORTHEAST || position == NORTHWEST) {
+  if (position == NE || position == NW) {
     return 0;
   } else {
     return -1;
   }
 }
 
-double SetBCTValue(MdoodzInstance *instance, POSITION position, double particleTemperature) {
+SetBC SetBCT(MdoodzInstance *instance, POSITION position, double particleTemperature) {
+  SetBC     bc;
   double surfaceTemperature = zeroC / instance->scaling.T;
   if (position == FREE_SURFACE) {
-    return surfaceTemperature;
+    bc.value = surfaceTemperature;
+    bc.type  = 1;
   } else {
-    return 0;
+    bc.value = 0.0;
+    bc.type  = 0;
   }
+  return bc;
 }
 
-double SetBCTValueNew(MdoodzInstance *instance, POSITION position, double particleTemperature) {
+
+SetBC SetBCTNew(MdoodzInstance *instance, POSITION position, double particleTemperature) {
+  SetBC     bc;
   double surfaceTemperature = zeroC / instance->scaling.T;
   double mantleTemperature  = (1330. + zeroC) / instance->scaling.T;
-  if (position == SOUTH || position == SOUTHEAST || position == SOUTHWEST) {
-    return particleTemperature;
-  } else if (position == NORTH || position == NORTHEAST || position == NORTHWEST) {
-    return surfaceTemperature;
-  } else if (position == WEST || position == EAST) {
-    return mantleTemperature;
+  if (position == S || position == SE || position == SW) {
+    bc.value = particleTemperature;
+    bc.type  = 1;
+  } else if (position == N || position == NE || position == NW) {
+    bc.value = surfaceTemperature;
+    bc.type  = 1;
+  } else if (position == W || position == E) {
+    bc.value = mantleTemperature;
+    bc.type  = 0;
   } else {
-    return 0;
+    bc.value = 0;
+    bc.type  = 0;
   }
-}
-
-char SetBCTType(MdoodzInstance *instance, POSITION position) {
-  if (position == FREE_SURFACE) {
-    return 1;
-  } else {
-    return 0;
-  }
-}
-
-char SetBCTTypeNew(MdoodzInstance *instance, POSITION position) {
-  if (position == NORTH || position == SOUTH || position == NORTHWEST || position == SOUTHWEST || position == NORTHEAST || position == SOUTHEAST) {
-    return 1;
-  } else {
-    return 0;
-  }
+  return bc;
 }
 
 int main(int nargs, char *args[]) {
@@ -161,15 +151,11 @@ int main(int nargs, char *args[]) {
                                .SetVerticalVelocity   = SetVerticalVelocity,
           },
                        .SetBCs = &(SetBCs_ff){
-                               .SetBCVxType    = SetBCVxType,
-                               .SetBCVzType    = SetBCVzType,
-                               .SetBCVxValue   = SetBCVxValue,
-                               .SetBCVzValue   = SetBCVzValue,
-                               .SetBCPType     = SetBCPType,
-                               .SetBCTType     = SetBCTType,
-                               .SetBCTTypeNew  = SetBCTTypeNew,
-                               .SetBCTValue    = SetBCTValue,
-                               .SetBCTValueNew = SetBCTValueNew,
+                               .SetBCVx   = SetBCVx,
+                               .SetBCVz   = SetBCVz,
+                               .SetBCPType    = SetBCPType,
+                               .SetBCT    = SetBCT,
+                               .SetBCTNew = SetBCTNew,
           },
                        .crazyConductivity = &(CrazyConductivity){
                                .multiplier = 1000,
