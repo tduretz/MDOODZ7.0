@@ -93,48 +93,47 @@ SetBC SetBCVx(MdoodzInstance *instance, POSITION position, Coordinates coord) {
       x = coord.x;
       z = coord.z;
       eval_anal_Dani(&Vx, &Vz, &P, &eta, &sxx, &szz, x, z, 1, radius, mm, mc);
+      bc.type  = 0;
       bc.value = Vx;
     } else if (position == S || position == SE || position == SW) {
       x = coord.x;
       z = coord.z + instance->model.dx / 2.0;// make sure it lives on the boundary
       eval_anal_Dani(&Vx, &Vz, &P, &eta, &sxx, &szz, x, z, 1, radius, mm, mc);
-      bc.value = Vx;
+      bc.type  = 11;
+      bc.value = 2.0*Vx;
     } else if (position == N || position == NE || position == NW) {
       x = coord.x;
       z = coord.z - instance->model.dx / 2.0;// make sure it lives on the boundary
       eval_anal_Dani(&Vx, &Vz, &P, &eta, &sxx, &szz, x, z, 1, radius, mm, mc);
-      bc.value = Vx;
+      bc.type  = 11;
+      bc.value = 2.0*Vx;
     } else {
+      bc.type  = -1;
       bc.value = 0.0;
     }
   } else {
     const double Lz = (double) (instance->model.zmax - instance->model.zmin);
-    if (position == S) {
-      bc.value = -instance->model.EpsBG * Lz;
-    } else if (position == N) {
-      bc.value = instance->model.EpsBG * Lz;
+    if (position == S || position == SE || position == SW) {
+      x = coord.x;
+      z = coord.z + instance->model.dx / 2.0;// make sure it lives on the boundary
+      eval_anal_Dani(&Vx, &Vz, &P, &eta, &sxx, &szz, x, z, 1, radius, mm, mc);
+      bc.type  = 11;
+      bc.value = 2.0*Vx;
+    } else if (position == N || position == NE || position == NW) {
+      x = coord.x;
+      z = coord.z - instance->model.dx / 2.0;// make sure it lives on the boundary
+      eval_anal_Dani(&Vx, &Vz, &P, &eta, &sxx, &szz, x, z, 1, radius, mm, mc);
+      bc.type  = 11;
+      bc.value = 2.0*Vx;
+    } else if (position == E) {
+      bc.value = 0.0;
+      bc.type  = -12;
+    } else if (position == W) {
+      bc.value = 0.0;
+      bc.type  = -2;
     } else {
-      bc.value = 0;
-    }
-  }
-
-  if (instance->model.shear_style == 0) {
-    if (position == S || position == N || position == NW || position == SW || position == NE || position == SE) {
-      bc.type = 11;
-    } else if (position == W || position == E) {
-      bc.type = 0;
-    } else {
-      bc.type = -1;
-    }
-  } else {
-    if (position == W || position == NW || position == SW) {
-      bc.type = -2;
-    } else if (position == E || position == NE || position == SE) {
-      bc.type = -12;
-    } else if (position == S || position == N) {
-      bc.type = 11;
-    } else {
-      bc.type = -1;
+      bc.value = 0.0;
+      bc.type  = -1;
     }
   }
   return bc;
@@ -151,45 +150,36 @@ SetBC SetBCVz(MdoodzInstance *instance, POSITION position, Coordinates coord) {
       x = coord.x;
       z = coord.z;
       eval_anal_Dani(&Vx, &Vz, &P, &eta, &sxx, &szz, x, z, 1, radius, mm, mc);
+      bc.type  = 0;
       bc.value = Vz;
     }
-    if (position == W) {
+    else if (position == W) {
       x = coord.x + instance->model.dx / 2.0;
       z = coord.z;
       eval_anal_Dani(&Vx, &Vz, &P, &eta, &sxx, &szz, x, z, 1, radius, mm, mc);
-      bc.value = Vz;
+      bc.type  = 11;
+      bc.value = 2.0*Vz;
     }
-    if (position == E) {
+    else if (position == E) {
       x = coord.x + instance->model.dx / 2.0;
       z = coord.z;
       eval_anal_Dani(&Vx, &Vz, &P, &eta, &sxx, &szz, x, z, 1, radius, mm, mc);
-      bc.value = Vz;
+      bc.type  = 11;
+      bc.value = 2.0*Vz;
     } else {
+      bc.type  = -1;
       bc.value = 0.0;
     }
-  } else {
-    const double Lz = (double) (instance->model.zmax - instance->model.zmin);
-    if (position == W || position == E || position == NW || position == S || position == SE || position == SW) {
-      bc.value = 0.0 * instance->model.EpsBG * Lz;
-    } else {
+  } 
+  else {
+    if (position == E || position == W || position == NE || position == NW || position == SE || position == SW) {
       bc.value = 0.0;
-    }
-  }
-
-  if (instance->model.shear_style == 0) {
-    if (position == W || position == E || position == NE || position == NW || position == SE || position == SW) {
-      bc.type = 11;
-    } else if (position == S || position == N) {
-      bc.type = 0;
-    } else {
-      bc.type - 1;
-    }
-  } else {
-    if (position == W || position == E) {
-      bc.type = 0;
-    } else if (position == S || position == N) {
       bc.type = -12;
+    } else if (position == S || position == N) {
+      bc.value = 0.0;
+      bc.type = 0;
     } else {
+      bc.value = 0.0;
       bc.type = -1;
     }
   }
