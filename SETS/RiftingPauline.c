@@ -50,7 +50,7 @@ double SetTemperature(MdoodzInstance *instance, Coordinates coordinates) {
   }
 }
 
-double SetGrainSize(MdoodzInstance *instance, Coordinates coordinates, int phase) {
+double SetGrainSize(MdoodzInstance *instance, Coordinates coordinates) {
   const int astenospherePhase = 3;
   return instance->materials.gs_ref[astenospherePhase];
 }
