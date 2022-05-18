@@ -59,7 +59,6 @@ char SetBCPType(MdoodzInstance *instance, POSITION position) {
 }
 
 int main(int nargs, char *args[]) {
-  int            astenospherePhases[2] = {2, 4};
   MdoodzInstance instance              = {
                        .inputFileName          = GetSetupFileName(nargs, args),
                        .BuildInitialTopography = &(BuildInitialTopography_ff){
@@ -73,10 +72,6 @@ int main(int nargs, char *args[]) {
                                .SetBCVz    = SetBCVz,
                                .SetBCPType = SetBCPType,
           },
-                       .crazyConductivity = &(CrazyConductivity){
-                               .multiplier = 1000,
-                               .nPhases    = 2,
-                               .phases     = astenospherePhases,
-          }};
+  };
   RunMDOODZ(&instance);
 }
