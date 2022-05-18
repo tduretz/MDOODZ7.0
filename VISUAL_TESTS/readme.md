@@ -11,7 +11,7 @@ For Ubuntu it can be installed with
 sudo apt install libeigen3-dev
 ```
 
-To run the visualisation you will need to build the CMAKE project with the 
+To run the visualisation you will need to build the CMake project with the 
 VIS=ON and run the executable `./visualtests-out/visualtests` or simply use the makefile command:
 
 ```bash 
