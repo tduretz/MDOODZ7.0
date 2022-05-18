@@ -1,0 +1,127 @@
+**** RESTART ****/
+istep =00001
+irestart = 0
+
+/**** OUTPUT FILES ****/
+writer = 1
+writer_step = 1
+writer_markers = 0
+writer_debug   = 0
+
+/**** SCALES ****/
+eta = 1e20
+L   = 1e4
+V   = 1e-9
+T   = 100
+ 
+/**** SPACE-TIME ****/
+Nx          = 101
+Nz          = 51
+Nt          = 6    / 6 steps ~ 5% strain as in Fig 2. Panel B 
+xmin        = -35e3
+xmax        =  35e3
+zmin        = -0e3
+zmax        =  40e3
+dt          = 1.2623e+11
+Courant     = 0.5
+dt_constant = 0
+RK          = 4
+
+/**** SWITCHES ****/
+ismechanical    = 1
+isperiodic_x    = 0
+ispureshear_ALE = 1
+isinertial      = 0
+iselastic       = 0
+isthermal       = 1
+line_search     = 1
+free_surf       = 0
+free_surf_stab  = 0
+eqn_state       = 0
+thermal_eq      = 0
+subgrid_diff    = 0
+shear_heat      = 1
+adiab_heat      = 0
+isPl_soft       = 0
+surf_processes  = 0
+shear_style     = 0 / 0:pure shear --- 1: simple shear
+
+/**** LINEAR SOLVER ****/
+lsolver      = 0
+penalty      = 1e6
+diag_scaling = 0
+
+/**** NON-LINEAR ITERATIONS ****/
+Newton  = 1
+nit_max = 10
+tol_u   = 5e-8
+tol_p   = 5e-8
+mineta  = 1e-6
+maxeta  = 1e26
+ 
+/**** SETUP DEPENDANT ****/
+EpsBG           = 5e-14 /Background strain rate
+PrBG            = 0     
+user0           = 400 / background T
+user1           = 3e3 / radius of perturbation
+user2           = 0
+user3           = 0
+user4           = 0
+user5           = 0
+user6           = 0
+
+/**** GRAVITY ****/
+gx = 0.0000
+gz = 0.0000
+
+/**** PHASE PROPERTIES ****/
+Nb_phases = 2
+
+/**** PHASE 1 ****/
+ID   = 0
+rho  = 2700.00 / matrix
+mu   = 1e10
+Cv   = 1050
+k    = 2.5
+Qr   = 0
+plast = 0
+C    = 1e90
+phi  = 30
+Slim = 500e9
+alp  = 10.0e-6
+bet  = 1e-11
+drho = 0
+cstv = 0             / constant visc law
+pwlv = -12            / disloc. creep
+linv = 0             / diff. creep
+gbsv = 0             / grain boundary sliding
+expv = 0             / peierls creep
+gsel = 0             / grain size evo.
+eta0 = 1e22
+npwl = 1
+Qpwl = 0
+tpwl = 5
+
+/**** PHASE 2 ****/
+ID   = 1
+rho  = 2700.00 / inclusion
+mu   = 1e10
+Cv   = 1050
+k    = 2.5
+Qr   = 0
+plast = 0
+C    = 1e90
+phi  = 30
+Slim = 500e9
+alp  = 10.0e-6
+bet  = 1e-11
+drho = 0
+cstv = 0             / constant visc law
+pwlv = -10            / disloc. creep
+linv = 0             / diff. creep
+gbsv = 0             / grain boundary sliding
+expv = 0             / peierls creep
+gsel = 0             / grain size evo.
+eta0 = 1e22
+npwl = 1
+Qpwl = 0
