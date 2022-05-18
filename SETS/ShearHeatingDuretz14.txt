@@ -15,13 +15,13 @@ V   = 1e-9
 T   = 100
  
 /**** SPACE-TIME ****/
-Nx          = 201
-Nz          = 101
-Nt          = 20
-xmin        = -30e3
-zmin        = -15e3
-xmax        =  30e3
-zmax        =  15e3
+Nx          = 101
+Nz          = 51
+Nt          = 3    / 3 steps ~ 5% strain as in Fig 2. Panel B 
+xmin        = -35e3
+xmax        =  35e3
+zmin        = -0e3
+zmax        =  40e3
 dt          = 1.2623e+11
 Courant     = 0.5
 dt_constant = 0
@@ -44,11 +44,11 @@ shear_heat      = 1
 adiab_heat      = 0
 isPl_soft       = 0
 surf_processes  = 0
-shear_style     = 0 /0:pure shear --- 1: simple shear
+shear_style     = 0 / 0:pure shear --- 1: simple shear
 
 /**** LINEAR SOLVER ****/
 lsolver      = 0
-penalty      = 1e5
+penalty      = 1e6
 diag_scaling = 0
 
 /**** NON-LINEAR ITERATIONS ****/
@@ -60,12 +60,11 @@ mineta  = 1e-6
 maxeta  = 1e26
  
 /**** SETUP DEPENDANT ****/
-EpsBG           = 2e-14 /Background strain rate
-PrBG            = 0
-surf_diff       = 0
-user0           = 400
-user1           = 2e3 /radius
-user2           = 1 /1:layer 
+EpsBG           = 5e-14 /Background strain rate
+PrBG            = 0     
+user0           = 400 / background T
+user1           = 3e3 / radius of perturbation
+user2           = 0
 user3           = 0
 user4           = 0
 user5           = 0

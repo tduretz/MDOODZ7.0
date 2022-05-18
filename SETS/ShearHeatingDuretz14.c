@@ -87,32 +87,26 @@ SetBC SetBCVz(MdoodzInstance *instance, POSITION position, Coordinates coordinat
 
 SetBC SetBCT(MdoodzInstance *instance, POSITION position, double particleTemperature) {
   SetBC     bc;
-  if (position == FREE_SURFACE) {
-    bc.value = 0.0;
+  if (position == W || position == E || position == S || position == N || position == SE || position == SW || position == NE || position == NW) {
     bc.type  = 0;
+    bc.value = 0.0;
   } else {
+    bc.type  = -1;
     bc.value = 0.0;
-    bc.type  = 0;
-  }
+  } 
   return bc;
 }
 
 
 SetBC SetBCTNew(MdoodzInstance *instance, POSITION position, double particleTemperature) {
   SetBC     bc;
-  if (position == S || position == SE || position == SW) {
-    bc.value = 0;
+  if (position == W || position == E || position == S || position == N || position == SE || position == SW || position == NE || position == NW) {
     bc.type  = 0;
-  } else if (position == N || position == NE || position == NW) {
-    bc.value = 0;
-    bc.type  = 0;
-  } else if (position == W || position == E) {
-    bc.value = 0;
-    bc.type  = 0;
+    bc.value = 0.0;
   } else {
-    bc.value = 0;
-    bc.type  = 0;
-  }
+    bc.type  = -1;
+    bc.value = 0.0;
+  } 
   return bc;
 }
 
