@@ -381,15 +381,33 @@ void RunTestCases() {
   RenameTopoBenchCaseFiles();
 }
 
-void updateReadmeTimestamp() {
-  std::ifstream input("ream");
-  for (std::string line; getline(input, line);) {
+std::string currentDateTime() {
+  time_t    now = time(0);
+  struct tm tstruct;
+  char      buf[80];
+  tstruct = *localtime(&now);
+  strftime(buf, sizeof(buf), "%Y-%m-%d.%X", &tstruct);
 
+  return buf;
+}
+
+void UpdateReadmeTimestamp() {
+  std::ifstream input("../VISUAL_TESTS/readme.md");
+  std::ofstream myfile;
+  myfile.open("readme.md");
+  for (std::string line; getline(input, line);) {
+    if (line.find("Last update date") != std::string::npos) {
+      line = "Last update date: ";
+      line.append(currentDateTime());
+    }
+    myfile << line << std::endl;
   }
+  myfile.close();
+  fs::copy("readme.md", "../VISUAL_TESTS/readme.md", fs::copy_options::update_existing);
 }
 
 int main() {
-  // RunTestCases();
+  RunTestCases();
   PlotRiftingPauline();
   PlotRiftingPaulineReference();
   PlotTopoBenchCase1();
@@ -397,4 +415,5 @@ int main() {
   PlotShearTemplate();
   PlotShearTemplate1Reference();
   PlotShearTemplate1();
+  UpdateReadmeTimestamp();
 }
