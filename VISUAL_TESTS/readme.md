@@ -1,16 +1,36 @@
 # Visual Tests
 
-Last update date: 2022-05-18.16:26:46
+Last run date: 2022-05-18.17:25:44
 
-## RiftingPauline
+<hr>
+
+## Usage 
+
+Visual tests module is developed with the C++17 and requires Eigen3 package:
+
+For Ubuntu it can be installed with 
+```
+sudo apt install libeigen3-dev
+```
+
+To run the visualisation you will need to build the CMAKE project with the 
+VIS=ON and run the executable `./visualtests-out/visualtests` or simply use the makefile command:
+
+```bash 
+make build-dev VIS=ON run-vis 
+```
+
+<hr>
+
+### RiftingPauline
 
 <div style="display: flex;">
     <div style="margin: 20px;">
-        <h2>Result</h2>
+        <h3>Result</h3>
         <img src="img/RiftingPauline.png"/>
     </div>
     <div style="margin: 20px;">
-        <h2>Reference</h2>
+        <h3>Reference</h3>
         <img src="img/RiftingPaulineReference.png"/>
     </div>
 </div>
@@ -19,11 +39,11 @@ Last update date: 2022-05-18.16:26:46
 
 <div style="display: flex;">
     <div style="margin: 20px;">
-        <h2>Result</h2>
+        <h3>Result</h3>
         <img src="img/ShearTemplate.png"/>
     </div>
     <div style="margin: 20px;">
-        <h2>Reference</h2>
+        <h3>Reference</h3>
         <img src="img/ShearTemplateReference.png"/>
     </div>
 </div>
@@ -32,11 +52,11 @@ Last update date: 2022-05-18.16:26:46
 
 <div style="display: flex;">
     <div style="margin: 20px;">
-        <h2>Result</h2>
+        <h3>Result</h3>
         <img src="img/ShearTemplate1.png"/>
     </div>
     <div style="margin: 20px;">
-        <h2>Reference</h2>
+        <h3>Reference</h3>
         <img src="img/ShearTemplate1Reference.png"/>
     </div>
 </div>
