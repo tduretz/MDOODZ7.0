@@ -22,42 +22,23 @@ make build-dev VIS=ON run-vis
 
 ### RiftingPauline
 
-<div style="display: flex;">
-    <div style="margin: 20px; width: 450px;">
-        <h3>Result</h3>
-        <img src="img/RiftingPauline.png"/>
-    </div>
-    <div style="margin: 20px; width: 450px">
-        <h3>Reference</h3>
-        <img src="img/RiftingPaulineReference.png"/>
-    </div>
-</div>
+| Result  | Reference                   |
+| ------------- |-----------------------------|
+| ![](img/RiftingPauline.png)  | ![](img/RiftingPauline.png) |
+
 
 ### ShearTemplate
 
-<div style="display: flex;">
-    <div style="margin: 20px; width: 450px;">
-        <h3>Result</h3>
-        <img src="img/ShearTemplate.png"/>
-    </div>
-    <div style="margin: 20px; width: 450px;">
-        <h3>Reference</h3>
-        <img src="img/ShearTemplateReference.png"/>
-    </div>
-</div>
+| Result  | Reference                   |
+| ------------- |-----------------------------|
+| ![](img/ShearTemplate.png)  | ![](img/ShearTemplateReference.png) |
+
 
 ### ShearTemplate with shear_style = 1
 
-<div style="display: flex;">
-    <div style="margin: 20px; width: 450px">
-        <h3>Result</h3>
-        <img src="img/ShearTemplate1.png"/>
-    </div>
-    <div style="margin: 20px; width: 450px">
-        <h3>Reference</h3>
-        <img src="img/ShearTemplate1Reference.png"/>
-    </div>
-</div>
+| Result  | Reference                   |
+| ------------- |-----------------------------|
+| ![](img/ShearTemplate1.png)  | ![](img/ShearTemplate1Reference.png) |
 
 ### TopoBenchCase1 Result with Analytical solution
 
