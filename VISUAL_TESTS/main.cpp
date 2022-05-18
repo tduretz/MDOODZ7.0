@@ -1,8 +1,13 @@
 extern "C" {
 #include "mdoodz.h"
 }
-#include "iostream"
-#include "math.h"
+#include <cstdio>
+#include <iostream>
+#include <cmath>
+#include "visual-tests.h"
+#include <fstream>
+
+namespace fs = std::filesystem;
 
 
 double RPSetSurfaceZCoord(MdoodzInstance *instance, double x_coord) {
@@ -139,8 +144,8 @@ SetBC RPSetBCTNew(MdoodzInstance *instance, POSITION position, double particleTe
 }
 
 MdoodzInstance CreateRiftingPaulineInstance() {
-  int* astenospherePhases = (int*) malloc(sizeof(int));
-  astenospherePhases[0] = {3};
+  int *astenospherePhases = (int *) malloc(sizeof(int));
+  astenospherePhases[0]   = {3};
   return (MdoodzInstance){
           .inputFileName          = "RiftingPauline.txt",
           .BuildInitialTopography = new BuildInitialTopography_ff{
@@ -347,8 +352,21 @@ MdoodzInstance CreateShearTemplateInstance(int shear_style) {
   };
 }
 
+void RenameTopoBenchCaseFiles() {
+  std::rename("Output00000.gzip.h5", "TopoBenchCase00000.gzip.h5");
+  std::rename("Output00010.gzip.h5", "TopoBenchCase00010.gzip.h5");
+  std::rename("Output00020.gzip.h5", "TopoBenchCase00020.gzip.h5");
+  std::rename("Output00030.gzip.h5", "TopoBenchCase00030.gzip.h5");
+  std::rename("Output00040.gzip.h5", "TopoBenchCase00040.gzip.h5");
+  std::rename("Output00050.gzip.h5", "TopoBenchCase00050.gzip.h5");
+  std::rename("Output00060.gzip.h5", "TopoBenchCase00060.gzip.h5");
+  std::rename("Output00070.gzip.h5", "TopoBenchCase00070.gzip.h5");
+  std::rename("Output00080.gzip.h5", "TopoBenchCase00080.gzip.h5");
+  std::rename("Output00090.gzip.h5", "TopoBenchCase00090.gzip.h5");
+  std::rename("Output00100.gzip.h5", "TopoBenchCase00100.gzip.h5");
+}
 
-int main() {
+void RunTestCases() {
   MdoodzInstance riftingPauline = CreateRiftingPaulineInstance();
   RunMDOODZ(&riftingPauline);
   std::rename("Output00050.gzip.h5", "RiftingPauline50.gzip.h5");
@@ -358,4 +376,25 @@ int main() {
   MdoodzInstance shearTemplate1 = CreateShearTemplateInstance(1);
   RunMDOODZ(&shearTemplate1);
   std::rename("Output00005.gzip.h5", "ShearTemplate1.gzip.h5");
+  MdoodzInstance topoBenchCase1 = CreateTopoBenchCase1Instance();
+  RunMDOODZ(&topoBenchCase1);
+  RenameTopoBenchCaseFiles();
+}
+
+void updateReadmeTimestamp() {
+  std::ifstream input("ream");
+  for (std::string line; getline(input, line);) {
+
+  }
+}
+
+int main() {
+  // RunTestCases();
+  PlotRiftingPauline();
+  PlotRiftingPaulineReference();
+  PlotTopoBenchCase1();
+  PlotShearTemplateReference();
+  PlotShearTemplate();
+  PlotShearTemplate1Reference();
+  PlotShearTemplate1();
 }

@@ -11,15 +11,15 @@ eta = 1e+22
 L   = 10e4
 V   = 1.0e-8
 T   = 1e+02
- 
+
 /**** SPACE ****/
 Nx      = 50
 Nz      = 100
-Nt      = 250
+Nt      = 100
 xmin    = -1400.000000e3
 xmax    =    00.000000e3
 zmin    =  -700.000000e3
-zmax    =    50.000000e3 
+zmax    =    50.000000e3
 
 /**** TIME ****/
 dt_constant = 1
@@ -44,13 +44,15 @@ Nb_phases = 2
 /**** Phase 0 ****/
 ID            = 0 / Mantle
 density_model = 0
-rho           = 3300.00 
+rho           = 3300.00
 cstv          = 1
 eta0          = 1e21
+plast         = 0
 
 /**** Phase 1 ****/
 ID            = 1 / Lithosphere
-density_model = 0 
-rho           = 3300.00  
+density_model = 0
+rho           = 3300.00
 cstv          = 1
 eta0          = 1e23
+plast         = 0
