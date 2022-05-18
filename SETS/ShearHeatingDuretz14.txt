@@ -17,11 +17,11 @@ T   = 100
 /**** SPACE-TIME ****/
 Nx          = 101
 Nz          = 51
-Nt          = 6    / 6 steps ~ 5% strain as in Fig 2. Panel B 
+Nt          = 5    / 5 steps ~ 5% strain as in Fig 2. Panel B 
 xmin        = -35e3
 xmax        =  35e3
 zmin        = -0e3
-zmax        =  40e3
+zmax        =  30e3
 dt          = 1.2623e+11
 Courant     = 0.5
 dt_constant = 0
