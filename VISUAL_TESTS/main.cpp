@@ -1,13 +1,14 @@
 extern "C" {
 #include "mdoodz.h"
 }
-#include <cstdio>
-#include <iostream>
-#include <cmath>
 #include "visual-tests.h"
+#include <cmath>
+#include <cstdio>
 #include <fstream>
+#include <iostream>
 
-namespace fs = std::filesystem;
+using namespace std;
+namespace fs = filesystem;
 
 
 double RPSetSurfaceZCoord(MdoodzInstance *instance, double x_coord) {
@@ -353,35 +354,35 @@ MdoodzInstance CreateShearTemplateInstance(int shear_style) {
 }
 
 void RenameTopoBenchCaseFiles() {
-  std::rename("Output00000.gzip.h5", "TopoBenchCase00000.gzip.h5");
-  std::rename("Output00010.gzip.h5", "TopoBenchCase00010.gzip.h5");
-  std::rename("Output00020.gzip.h5", "TopoBenchCase00020.gzip.h5");
-  std::rename("Output00030.gzip.h5", "TopoBenchCase00030.gzip.h5");
-  std::rename("Output00040.gzip.h5", "TopoBenchCase00040.gzip.h5");
-  std::rename("Output00050.gzip.h5", "TopoBenchCase00050.gzip.h5");
-  std::rename("Output00060.gzip.h5", "TopoBenchCase00060.gzip.h5");
-  std::rename("Output00070.gzip.h5", "TopoBenchCase00070.gzip.h5");
-  std::rename("Output00080.gzip.h5", "TopoBenchCase00080.gzip.h5");
-  std::rename("Output00090.gzip.h5", "TopoBenchCase00090.gzip.h5");
-  std::rename("Output00100.gzip.h5", "TopoBenchCase00100.gzip.h5");
+  rename("Output00000.gzip.h5", "TopoBenchCase00000.gzip.h5");
+  rename("Output00010.gzip.h5", "TopoBenchCase00010.gzip.h5");
+  rename("Output00020.gzip.h5", "TopoBenchCase00020.gzip.h5");
+  rename("Output00030.gzip.h5", "TopoBenchCase00030.gzip.h5");
+  rename("Output00040.gzip.h5", "TopoBenchCase00040.gzip.h5");
+  rename("Output00050.gzip.h5", "TopoBenchCase00050.gzip.h5");
+  rename("Output00060.gzip.h5", "TopoBenchCase00060.gzip.h5");
+  rename("Output00070.gzip.h5", "TopoBenchCase00070.gzip.h5");
+  rename("Output00080.gzip.h5", "TopoBenchCase00080.gzip.h5");
+  rename("Output00090.gzip.h5", "TopoBenchCase00090.gzip.h5");
+  rename("Output00100.gzip.h5", "TopoBenchCase00100.gzip.h5");
 }
 
 void RunTestCases() {
   MdoodzInstance riftingPauline = CreateRiftingPaulineInstance();
   RunMDOODZ(&riftingPauline);
-  std::rename("Output00050.gzip.h5", "RiftingPauline50.gzip.h5");
+  rename("Output00050.gzip.h5", "RiftingPauline50.gzip.h5");
   MdoodzInstance shearTemplate = CreateShearTemplateInstance(0);
   RunMDOODZ(&shearTemplate);
-  std::rename("Output00005.gzip.h5", "ShearTemplate.gzip.h5");
+  rename("Output00005.gzip.h5", "ShearTemplate.gzip.h5");
   MdoodzInstance shearTemplate1 = CreateShearTemplateInstance(1);
   RunMDOODZ(&shearTemplate1);
-  std::rename("Output00005.gzip.h5", "ShearTemplate1.gzip.h5");
+  rename("Output00005.gzip.h5", "ShearTemplate1.gzip.h5");
   MdoodzInstance topoBenchCase1 = CreateTopoBenchCase1Instance();
   RunMDOODZ(&topoBenchCase1);
   RenameTopoBenchCaseFiles();
 }
 
-std::string currentDateTime() {
+string currentDateTime() {
   time_t    now = time(0);
   struct tm tstruct;
   char      buf[80];
@@ -392,15 +393,15 @@ std::string currentDateTime() {
 }
 
 void UpdateReadmeTimestamp() {
-  std::ifstream input("../VISUAL_TESTS/readme.md");
-  std::ofstream myfile;
+  ifstream input("../VISUAL_TESTS/readme.md");
+  ofstream myfile;
   myfile.open("readme.md");
-  for (std::string line; getline(input, line);) {
-    if (line.find("Last update date") != std::string::npos) {
+  for (string line; getline(input, line);) {
+    if (line.find("Last update date") != string::npos) {
       line = "Last update date: ";
       line.append(currentDateTime());
     }
-    myfile << line << std::endl;
+    myfile << line << endl;
   }
   myfile.close();
   fs::copy("readme.md", "../VISUAL_TESTS/readme.md", fs::copy_options::update_existing);

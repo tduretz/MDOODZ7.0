@@ -3,6 +3,8 @@ unset table
 unset key
 set xrange [-150000:150000]
 set yrange [-180000:10000]
+set ylabel "z (m)"
+set xlabel "y (m)"
 set size ratio -1
 
 if (!exists("filename")) filename='../VISUAL_TESTS/img/RiftingPauline.png'

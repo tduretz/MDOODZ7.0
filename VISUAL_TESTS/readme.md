@@ -1,18 +1,46 @@
 # Visual Tests
 
-Last update date: 2022-05-18.15:01:24
+Last update date: 2022-05-18.16:26:46
 
-## RiftingPauline Result | Reference
-<div><img style="width: 40%" src="img/RiftingPauline.png"/> <img style="width: 40%" src="img/RiftingPaulineReference.png"/></div>
+## RiftingPauline
 
-## ShearTemplate Result | Reference
+<div style="display: flex;">
+    <div style="margin: 20px;">
+        <h2>Result</h2>
+        <img src="img/RiftingPauline.png"/>
+    </div>
+    <div style="margin: 20px;">
+        <h2>Reference</h2>
+        <img src="img/RiftingPaulineReference.png"/>
+    </div>
+</div>
 
-<div><img style="width: 40%" src="img/ShearTemplate.png"/> <img style="width: 40%" src="img/ShearTemplateReference.png"/></div>
+## ShearTemplate
 
-## ShearTemplate1 Result | Reference
+<div style="display: flex;">
+    <div style="margin: 20px;">
+        <h2>Result</h2>
+        <img src="img/ShearTemplate.png"/>
+    </div>
+    <div style="margin: 20px;">
+        <h2>Reference</h2>
+        <img src="img/ShearTemplateReference.png"/>
+    </div>
+</div>
 
-<div><img style="width: 40%" src="img/ShearTemplate1.png"/> <img style="width: 40%" src="img/ShearTemplate1Reference.png"/></div>
+## ShearTemplate with shear_style = 1
 
-## TopoBenchCase1 Result | Analytical solution
+<div style="display: flex;">
+    <div style="margin: 20px;">
+        <h2>Result</h2>
+        <img src="img/ShearTemplate1.png"/>
+    </div>
+    <div style="margin: 20px;">
+        <h2>Reference</h2>
+        <img src="img/ShearTemplate1Reference.png"/>
+    </div>
+</div>
 
-<img src="img/TopoBenchCase1.png"/>
+## TopoBenchCase1 Result with Analytical solution
+
+<img style="width: 80%" src="img/TopoBenchCase1.png"/>

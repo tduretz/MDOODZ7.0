@@ -4,6 +4,9 @@ unset surface
 set cntrparam levels incr 0,1,4
 set xrange [-0.5:0.5]
 set yrange [-0.5:0.5]
+set ylabel "z (m)"
+set xlabel "y (m)"
+set title 'P map + Tii contour'
 set dgrid3d 100,100,1
 set table $COUNTOUR
 splot data u 1:2:4
