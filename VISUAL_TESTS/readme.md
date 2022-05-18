@@ -2,8 +2,6 @@
 
 Last run date: 2022-05-18.17:25:44
 
-<hr>
-
 ## Usage 
 
 Visual tests module is developed with the C++17 and requires Eigen3 package:
@@ -25,11 +23,11 @@ make build-dev VIS=ON run-vis
 ### RiftingPauline
 
 <div style="display: flex;">
-    <div style="margin: 20px; width: 35%;">
+    <div style="margin: 20px; width: 450px;">
         <h3>Result</h3>
         <img src="img/RiftingPauline.png"/>
     </div>
-    <div style="margin: 20px; width: 35%;">
+    <div style="margin: 20px; width: 450px">
         <h3>Reference</h3>
         <img src="img/RiftingPaulineReference.png"/>
     </div>
@@ -38,11 +36,11 @@ make build-dev VIS=ON run-vis
 ### ShearTemplate
 
 <div style="display: flex;">
-    <div style="margin: 20px; width: 35%;">
+    <div style="margin: 20px; width: 450px;">
         <h3>Result</h3>
         <img src="img/ShearTemplate.png"/>
     </div>
-    <div style="margin: 20px; width: 35%;">
+    <div style="margin: 20px; width: 450px;">
         <h3>Reference</h3>
         <img src="img/ShearTemplateReference.png"/>
     </div>
@@ -51,11 +49,11 @@ make build-dev VIS=ON run-vis
 ### ShearTemplate with shear_style = 1
 
 <div style="display: flex;">
-    <div style="margin: 20px; width: 35%">
+    <div style="margin: 20px; width: 450px">
         <h3>Result</h3>
         <img src="img/ShearTemplate1.png"/>
     </div>
-    <div style="margin: 20px; width: 35%">
+    <div style="margin: 20px; width: 450px">
         <h3>Reference</h3>
         <img src="img/ShearTemplate1Reference.png"/>
     </div>
