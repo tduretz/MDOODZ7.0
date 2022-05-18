@@ -47,6 +47,7 @@ density_model = 0
 rho           = 3300.00 
 cstv          = 1
 eta0          = 1e21
+plast         = 0
 
 /**** Phase 1 ****/
 ID            = 1 / Lithosphere
@@ -54,3 +55,4 @@ density_model = 0
 rho           = 3300.00  
 cstv          = 1
 eta0          = 1e23
+plast         = 0
