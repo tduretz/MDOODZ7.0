@@ -8,5 +8,7 @@ void PlotShearTemplateReference();
 void PlotShearTemplate();
 void PlotShearTemplate1Reference();
 void PlotShearTemplate1();
+void PlotShearHeatingDuretz14Reference();
+void PlotShearHeatingDuretz14();
 
 #endif

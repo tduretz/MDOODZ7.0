@@ -40,6 +40,13 @@ make build-dev VIS=ON run-vis
 | ------------- |-----------------------------|
 | ![](img/ShearTemplate1.png)  | ![](img/ShearTemplate1Reference.png) |
 
+### ShearHeatingDuretz14
+
+| Result  | Reference                   |
+| ------------- |-----------------------------|
+| ![](img/ShearHeatingDuretz14.png)  | ![](img/ShearHeatingDuretz14Reference.png) |
+
+
 ### TopoBenchCase1 Result with Analytical solution
 
 <img style="width: 75%" src="img/TopoBenchCase1.png"/>
