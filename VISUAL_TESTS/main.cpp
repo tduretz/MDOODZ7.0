@@ -527,8 +527,8 @@ void UpdateReadmeTimestamp() {
   ofstream myfile;
   myfile.open("readme.md");
   for (string line; getline(input, line);) {
-    if (line.find("Last update date") != string::npos) {
-      line = "Last update date: ";
+    if (line.find("Last run date") != string::npos) {
+      line = "Last run date: ";
       line.append(currentDateTime());
     }
     myfile << line << endl;
