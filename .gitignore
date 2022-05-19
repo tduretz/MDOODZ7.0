@@ -5,3 +5,4 @@ cmake-exec**/
 deps/
 .DS_Store
 env.cmake
+visualtests-out

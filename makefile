@@ -4,8 +4,11 @@ run-tests:
 run:
 	cd cmake-exec/$(SET) && ./$(SET)
 
+run-vis:
+	cd visualtests-out && ./visualtests
+
 build-dev:
-	cmake -B ./cmake-build -DOPT=$(OPT) -DOMP=$(OMP) -DSET=$(SET) && cmake --build ./cmake-build
+	cmake -B ./cmake-build -DOPT=$(OPT) -DOMP=$(OMP) -DVIS=$(VIS) -DSET=$(SET) && cmake --build ./cmake-build
 
 build:
 	cmake -DOPT=ON -DOMP=ON -B ./cmake-build -DSET=$(SET) && cmake --build ./cmake-build

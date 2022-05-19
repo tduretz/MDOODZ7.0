@@ -3,7 +3,7 @@
 Welcome to MDOODZ7.0 public repository!
 This version of MDOODZ is under construction, more testing will be progressively added...
 
-![](/images/Compression_Symmetric.gif)
+[Visual Test Results](/VISUAL_TESTS/readme.md)
 
 # Library usage
 
@@ -64,15 +64,11 @@ Must have.
 Aggregates pointers to functions for setting up Boundary Conditions in a mesh grid.
 Must have.
 
-- `SetBCVxType` describes the type of the Vx point. Must be implemented
-- `SetBCVxValue` describes the value of the Vx point. Must be implemented
-- `SetBCVzType` describes the type of the Vz point. Must be implemented
-- `SetBCVzValue` describes the value of the Vz point. Must be implemented
+- `SetBCVx` describes the type and value of the Vx point. Must be implemented
+- `SetBCVz` describes the type and value of the Vz point. Must be implemented
 - `SetBCPType` describes the type of the Pressure Boundary conditions point. Default one is `-1`
-- `SetBCTType` describes the Temperature Boundary type. Must be implemented if `model.isthermal == 1`
-- `SetBCTValue` describes the Temperature Boundary value. Must be implemented if `model.isthermal == 1`
-- `SetBCTValueNew` describes the Temperature Boundary value on 1d boundary array. Must be implemented if `model.isthermal == 1`. Will be deprecated
-- `SetBCTTypeNew` describes the Temperature Boundary type on 1d boundary array. Must be implemented if `model.isthermal == 1`. Will be deprecated
+- `SetBCT` describes the Temperature Boundary type and value. Must be implemented if `model.isthermal == 1`
+- `SetBCTNew` describes the Temperature Boundary type and value on 1d boundary array. Must be implemented if `model.isthermal == 1`. Will be deprecated
 
 ## Crazy conductivity
 

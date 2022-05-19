@@ -22,7 +22,9 @@ add_library(mdoodz SHARED
         StokesAssemblyDecoupled.c
         StokesRoutines.c
         ThermalRoutines.c
-        ThermalSolver.c setup.c RheologyDensity.h)
+        ThermalSolver.c
+        setup.c
+        RheologyDensity.h)
 target_link_libraries(mdoodz ${DEPENDENCIES})
 target_include_directories(mdoodz PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 set_target_properties(mdoodz PROPERTIES
