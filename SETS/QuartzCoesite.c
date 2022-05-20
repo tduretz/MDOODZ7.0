@@ -1,99 +1,93 @@
+#include "math.h"
 #include "mdoodz.h"
+#include "stdio.h"
+#include "stdlib.h"
 
 
-SetBC SetBCVx(MdoodzInput *input, POSITION position, Coordinates coordinates) {
-  SetBC bc;
-  if (input->model.shear_style == 0) {
-    if (position == S || position == N || position == NE || position == NW || position == SE || position == SW) {
-      bc.value = 0.0;
-      bc.type  = 13;
-    } else if (position == W || position == E) {
-      bc.value = -coordinates.x * input->model.EpsBG;
-      bc.type  = 0;
-    } else {
-      bc.value = 0.0;
-      bc.type  = -1;
-    }
-  } else {
-    const double Lz = (double) (input->model.zmax - input->model.zmin);
-    if (position == S || position == SE || position == SW) {
-      bc.value = -input->model.EpsBG * Lz;
-      bc.type  = 11;
-    } else if (position == N || position == NE || position == NW) {
-      bc.value = input->model.EpsBG * Lz;
-      bc.type  = 11;
-    } else if (position == E) {
-      bc.value = 0.0;
-      bc.type  = -12;
-    } else if (position == W) {
-      bc.value = 0.0;
-      bc.type  = -2;
-    } else {
-      bc.value = 0.0;
-      bc.type  = -1;
-    }
+char *ReadGeometryFile(char *inputFile, int nb_elems) {
+  char *ph_hr = malloc((nb_elems) * sizeof(char));
+  FILE *fid   = fopen(inputFile, "rb");
+  if (!fid) {
+    fprintf(stderr, "\nUnable to open file %s. I will exit here ... \n", inputFile);
+    exit(2);
   }
-  return bc;
+  fread(ph_hr, sizeof(char), nb_elems, fid);
+  fclose(fid);
+  return ph_hr;
 }
 
-SetBC SetBCVz(MdoodzInput *input, POSITION position, Coordinates coordinates) {
-  SetBC bc;
-  if (input->model.shear_style == 0) {
-    if (position == W || position == E || position == NE || position == NW || position == SE || position == SW) {
-      bc.value = 0.0;
-      bc.type  = 13;
-    } else if (position == S || position == N) {
-      bc.value = coordinates.z * input->model.EpsBG;
-      bc.type  = 0;
-    } else {
-      bc.value = 0.0;
-      bc.type  = -1;
-    }
-  } else {
-    if (position == E || position == W || position == NE || position == NW || position == SE || position == SW) {
-      bc.value = 0.0;
-      bc.type = -12;
-    } else if (position == S || position == N) {
-      bc.value = 0.0;
-      bc.type = 0;
-    } else {
-      bc.value = 0.0;
-      bc.type = -1;
-    }
+void MutateInput(MdoodzInput *input) {
+  if (input->model.user1 == 1) {
+    printf("Phase map be drawn in a SetParticles\n");
+    return;
+  } else if (input->model.user1 == 2) {
+    char *fileName = input->model.input_file;
+    printf("Phase map will be built based on %s\n", fileName);
+    const int nx       = 1921;
+    const int nz       = 1921;
+    const int nb_elems = nx * nz;
+    input->geometry    = malloc(sizeof(Geometry));
+    input->geometry[0] = (Geometry){
+            .nx       = nx,
+            .nz       = nz,
+            .nb_elems = nb_elems,
+            .ph_hr    = ReadGeometryFile(fileName, nb_elems),
+    };
   }
-  return bc;
 }
 
-SetBC SetBCTNew(MdoodzInput *instance, POSITION position, double particleTemperature) {
-  SetBC     bc;
-  double surfaceTemperature = zeroC / instance->scaling.T;
-  double mantleTemperature  = (1330. + zeroC) / instance->scaling.T;
-  if (position == S || position == SE || position == SW) {
-    bc.value = particleTemperature;
-    bc.type  = 1;
-  } else if (position == N || position == NE || position == NW) {
-    bc.value = surfaceTemperature;
-    bc.type  = 1;
-  } else if (position == W || position == E) {
-    bc.value = mantleTemperature;
-    bc.type  = 0;
+int SetPhase(MdoodzInput *input, Coordinates coordinates) {
+  if (input->geometry) {
+    srand(69);
+    const int nx    = input->geometry->nx;
+    const int nz    = input->geometry->nz;
+    // ------------------------- //
+    // Locate markers in the image files
+    // Find index of minimum/west temperature node
+    double    dx_hr = (input->model.xmax - input->model.xmin) / nx;
+    double    dz_hr = (input->model.zmax - input->model.zmin) / nz;
+    double    dstx  = (coordinates.x - input->model.xmin);
+    int       ix    = (int) ceil(dstx / dx_hr) - 1;
+    // Find index of minimum/west pressure node
+    double    dstz  = (coordinates.z - input->model.zmin);
+    int       iz    = (int) ceil(dstz / dz_hr) - 1;
+    // Attribute phase
+    if (ix < 0) {
+      printf("sauceisse!!!\n");
+      exit(1);
+    }
+    if (iz < 0) {
+      printf("puréee!!!\n");
+      exit(1);
+    }
+    if (ix + iz * (input->geometry->nx) > input->geometry->nb_elems) {
+      printf("puréee!!!\n");
+      exit(1);
+    }
+    return (int) input->geometry->ph_hr[ix + iz * nx];
   } else {
-    bc.value = 0;
-    bc.type  = 0;
+    const double radius = input->model.user2 / input->scaling.L;
+    const double theta  = -30.0 * M_PI / 180.0;
+    const double Xn     = coordinates.x * cos(theta) - coordinates.z * sin(theta);
+    const double Zn     = coordinates.x * sin(theta) + coordinates.z * cos(theta);
+    if (pow(Xn / radius * 2.0, 2) + pow(Zn / radius / 2.0, 2) - 1 < 0) {
+      return 1;
+    } else {
+      return 0;
+    }
   }
-  return bc;
 }
 
 int main() {
   MdoodzSetup setup = {
-          .SetParticles  = &(SetParticles_ff){
-                  .SetPhase              = SetPhase,
-                  .SetDensity            = SetDensity,
+          .SetParticles = &(SetParticles_ff){
+                  .SetPhase = SetPhase,
           },
           .SetBCs = &(SetBCs_ff){
-                  .SetBCVx = SetBCVx,
-                  .SetBCVz = SetBCVz,
+                  .SetBCVx = SetPureOrSimpleShearBCVx,
+                  .SetBCVz = SetPureOrSimpleShearBCVz,
           },
+          .MutateInput = MutateInput,
   };
-  RunMDOODZ("ShearTemplate.txt", &setup);
+  RunMDOODZ("QuartzCoesite.txt", &setup);
 }

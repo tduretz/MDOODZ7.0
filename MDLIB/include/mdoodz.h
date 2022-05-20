@@ -189,7 +189,14 @@ typedef struct {
 } CrazyConductivity;
 
 
-typedef void (MutateInput_f)(MdoodzInput *input);
+typedef struct {
+  int   nx;
+  int   nz;
+  int   nb_elems;
+  char *ph_hr;
+} Geometry;
+
+typedef void(MutateInput_f)(MdoodzInput *input);
 
 struct MdoodzSetup {
   BuildInitialTopography_ff *BuildInitialTopography;
@@ -204,6 +211,7 @@ struct MdoodzInput {
   mat_prop           materials;
   scale              scaling;
   CrazyConductivity *crazyConductivity;
+  Geometry          *geometry;
 };
 
 void  RunMDOODZ(char *inputFileName, MdoodzSetup *setup);

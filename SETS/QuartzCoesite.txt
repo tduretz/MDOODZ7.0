@@ -1,9 +1,9 @@
 /**** RESTART ****/
 istep = 00500
-irestart = 1
+irestart = 0
 
 /**** INPUT FILE ****/
-input_file = GarnetCoesite.bin /indicates the name in the input file for geometry
+input_file = QuartzCoesite.bin /indicates the name in the input file for geometry
 
 /**** OUTPUT FILES ****/
 writer          = 1
