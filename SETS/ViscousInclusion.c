@@ -69,7 +69,7 @@ void eval_anal_Dani(double *vx, double *vz, double *p, double *eta, double *sxx,
 }
 //---------------------------------------------//
 
-int SetPhase(MdoodzInstance *instance, Coordinates coordinates) {
+int SetPhase(MdoodzInput *instance, Coordinates coordinates) {
   const double radius = instance->model.user1 / instance->scaling.L;
   if (coordinates.x * coordinates.x + coordinates.z * coordinates.z < radius * radius) {
     return 1;
@@ -78,11 +78,11 @@ int SetPhase(MdoodzInstance *instance, Coordinates coordinates) {
   }
 }
 
-double SetDensity(MdoodzInstance *instance, Coordinates coordinates, int phase) {
+double SetDensity(MdoodzInput *instance, Coordinates coordinates, int phase) {
   return instance->materials.rho[phase];
 }
 
-SetBC SetBCVx(MdoodzInstance *instance, POSITION position, Coordinates coord) {
+SetBC SetBCVx(MdoodzInput *instance, POSITION position, Coordinates coord) {
   SetBC           bc;
   const double radius = instance->model.user1 / instance->scaling.L;
   const double mm     = 1.0;
@@ -139,7 +139,7 @@ SetBC SetBCVx(MdoodzInstance *instance, POSITION position, Coordinates coord) {
   return bc;
 }
 
-SetBC SetBCVz(MdoodzInstance *instance, POSITION position, Coordinates coord) {
+SetBC SetBCVz(MdoodzInput *instance, POSITION position, Coordinates coord) {
   SetBC           bc;
   const double radius = instance->model.user1 / instance->scaling.L;
   const double mm     = 1.0;
@@ -186,17 +186,16 @@ SetBC SetBCVz(MdoodzInstance *instance, POSITION position, Coordinates coord) {
   return bc;
 }
 
-int main(int nargs, char *args[]) {
-  MdoodzInstance instance = {
-          .inputFileName = GetSetupFileName(nargs, args),
-          .SetParticles  = &(SetParticles_ff){
-                   .SetPhase   = SetPhase,
-                   .SetDensity = SetDensity,
+int main() {
+  MdoodzSetup instance = {
+          .SetParticles = &(SetParticles_ff){
+                  .SetPhase   = SetPhase,
+                  .SetDensity = SetDensity,
           },
           .SetBCs = &(SetBCs_ff){
                   .SetBCVx = SetBCVx,
                   .SetBCVz = SetBCVz,
           },
   };
-  RunMDOODZ(&instance);
+  RunMDOODZ("ViscousInclusion.txt", &instance);
 }

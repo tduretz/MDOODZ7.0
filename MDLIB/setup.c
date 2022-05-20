@@ -4,8 +4,7 @@
 #include "stdlib.h"
 
 
-void BuildInitialTopography(MdoodzInstance *instance, markers *topo_chain) {
-  BuildInitialTopography_ff buildInitialTopography = *instance->BuildInitialTopography;
+void BuildInitialTopography(BuildInitialTopography_ff buildInitialTopography, MdoodzInput *instance, markers *topo_chain) {
   for (int k = 0; k < topo_chain->Nb_part; k++) {
     const double x_coord = topo_chain->x[k];
     if (buildInitialTopography.SetSurfaceZCoord) {
@@ -30,8 +29,7 @@ void ValidatePhase(int phaseId, int phasesCount) {
   }
 }
 
-void SetParticles(MdoodzInstance *instance, markers *particles) {
-  SetParticles_ff setParticles = *instance->SetParticles;
+void SetParticles(SetParticles_ff setParticles, MdoodzInput *instance, markers *particles) {
   for (int np = 0; np < particles->Nb_part; np++) {
     Coordinates coordinates = {
             .x = particles->x[np],
@@ -96,8 +94,7 @@ void ValidateInternalPoint(POSITION position, char bcType, Coordinates coordinat
   }
 }
 
-void SetBCs(MdoodzInstance *instance, grid *mesh) {
-  SetBCs_ff setBCs = *instance->SetBCs;
+void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
   /* --------------------------------------------------------------------------------------------------------*/
   /* Set the BCs for Vx on all grid levels */
   /* Type  0: Dirichlet point that matches the physical boundary (Vx:
@@ -332,87 +329,87 @@ void SetBCs(MdoodzInstance *instance, grid *mesh) {
   printf("Boundary conditions were set up\n");
 }
 
-void ValidateSetup(MdoodzInstance *instance) {
+void ValidateSetup(MdoodzSetup *setup, MdoodzInput *instance) {
   int   errorsCount   = 0;
   char *errors[10]    = {};
   int   warningsCount = 0;
   char *warnings[10]  = {};
   if (instance->model.free_surf) {
-    if (!instance->BuildInitialTopography) {
+    if (!setup->BuildInitialTopography) {
       errors[errorsCount] = "If Free Surface mode is ON and BuildInitialTopography MUST be specified. Please set free_surf = 0 or set BuildInitialTopography";
       errorsCount++;
     } else {
-      if (!instance->BuildInitialTopography->SetSurfaceZCoord) {
+      if (!setup->BuildInitialTopography->SetSurfaceZCoord) {
         warnings[warningsCount] = "BuildInitialTopography.SetSurfaceZCoord is not specified. Flat surface will be generated";
         warningsCount++;
       }
-      if (!instance->BuildInitialTopography->SetSurfacePhase) {
+      if (!setup->BuildInitialTopography->SetSurfacePhase) {
         warnings[warningsCount] = "BuildInitialTopography.SetSurfacePhase is not specified. Phase 0 will be used as surface material";
         warningsCount++;
       }
     }
   }
 
-  if (!instance->SetParticles) {
+  if (!setup->SetParticles) {
     errors[errorsCount] = "SetParticles MUST be specified. Please set SetParticles";
     errorsCount++;
   } else {
-    if (!instance->SetParticles->SetHorizontalVelocity) {
+    if (!setup->SetParticles->SetHorizontalVelocity) {
       warnings[warningsCount] = "SetParticles.SetHorizontalVelocity is not specified. Horizontal velocity will be (-x * EpsBG)";
       warningsCount++;
     }
-    if (!instance->SetParticles->SetVerticalVelocity) {
+    if (!setup->SetParticles->SetVerticalVelocity) {
       warnings[warningsCount] = "SetParticles.SetVerticalVelocity is not specified. Horizontal velocity will be (z * EpsBG)";
       warningsCount++;
     }
-    if (!instance->SetParticles->SetPhase) {
+    if (!setup->SetParticles->SetPhase) {
       warnings[warningsCount] = "SetParticles.SetPhase is not specified. Model will be homogeneous with phase 0";
       warningsCount++;
     }
-    if (!instance->SetParticles->SetTemperature) {
+    if (!setup->SetParticles->SetTemperature) {
       warnings[warningsCount] = "SetParticles.SetTemperature is not specified. Temperature will be set to 0°C";
       warningsCount++;
     }
-    if (!instance->SetParticles->SetGrainSize) {
+    if (!setup->SetParticles->SetGrainSize) {
       warnings[warningsCount] = "SetParticles.SetGrainSize is not specified. Grain size will be set to 0.0";
       warningsCount++;
     }
-    if (!instance->SetParticles->SetPorosity) {
+    if (!setup->SetParticles->SetPorosity) {
       warnings[warningsCount] = "SetParticles.SetPorosity is not specified. Porosity will be set to 0.0";
       warningsCount++;
     }
-    if (!instance->SetParticles->SetDensity) {
+    if (!setup->SetParticles->SetDensity) {
       warnings[warningsCount] = "SetParticles.SetDensity is not specified. Density will be set according to the particle phase";
       warningsCount++;
     }
-    if (!instance->SetParticles->SetXComponent) {
+    if (!setup->SetParticles->SetXComponent) {
       warnings[warningsCount] = "SetParticles.SetXComponent is not specified. XComponent will be set to 0.0";
       warningsCount++;
     }
   }
 
-  if (!instance->SetBCs) {
+  if (!setup->SetBCs) {
     errors[errorsCount] = "SetBCs MUST be specified. Please set SetBCs";
     errorsCount++;
   } else {
-    if (!instance->SetBCs->SetBCVx) {
+    if (!setup->SetBCs->SetBCVx) {
       errors[errorsCount] = "SetBCs.SetBCVx MUST be specified";
       errorsCount++;
     }
-    if (!instance->SetBCs->SetBCVz) {
+    if (!setup->SetBCs->SetBCVz) {
       errors[errorsCount] = "SetBCs.SetBCVzType MUST be specified";
       errorsCount++;
     }
-    if (!instance->SetBCs->SetBCPType) {
+    if (!setup->SetBCs->SetBCPType) {
       warnings[warningsCount] = "SetBCs.SetBCPType is not specified. BCP type will be set to -1";
       warningsCount++;
     }
     if (instance->model.isthermal) {
-      if (!instance->SetBCs->SetBCTNew) {
+      if (!setup->SetBCs->SetBCTNew) {
         errors[errorsCount] = "SetBCs.SetBCTNew MUST be specified for Thermal model. Please set isthermal = 0 or specify SetBCTTypeNew";
         errorsCount++;
       }
-      if (!instance->SetBCs->SetBCT) {
+      if (!setup->SetBCs->SetBCT) {
         errors[errorsCount] = "SetBCs.SetBCT MUST be specified for Thermal model. Please set isthermal = 0 or specify SetBCTType (will be deprecated)";
         errorsCount++;
       }
@@ -433,6 +430,7 @@ void ValidateSetup(MdoodzInstance *instance) {
       errorsCount++;
     } else if (instance->crazyConductivity->nPhases > instance->model.Nb_phases) {
       errors[errorsCount] = "Asthenosphere phases for crazy conductivity is more than phases in a model. Please double check it";
+      printf("phases: %i, %i", instance->crazyConductivity->nPhases, instance->model.Nb_phases);
       errorsCount++;
     }
   }

@@ -75,6 +75,7 @@ typedef struct {
   int      aniso, aniso_fstrain, oop, noise_bg;
   int      eqn_state;
   int      residual_form;
+  int      irestart, istep;
 } params;
 
 // Stucture scale contains scaling parameters
@@ -113,29 +114,30 @@ typedef struct {
 
 char                         *GetSetupFileName(int nargs, char *args[]);
 
-typedef struct MdoodzInstance MdoodzInstance;
+typedef struct MdoodzSetup    MdoodzSetup;
+typedef struct MdoodzInput    MdoodzInput;
 
 typedef struct {
   double x;
   double z;
 } Coordinates;
 
-typedef double (*SetSurfaceZCoord_f)(MdoodzInstance *instance, double x_coord);
-typedef int (*SetSurfacePhase_f)(MdoodzInstance *instance, double x_coord);
+typedef double (*SetSurfaceZCoord_f)(MdoodzInput *input, double x_coord);
+typedef int (*SetSurfacePhase_f)(MdoodzInput *input, double x_coord);
 
 typedef struct {
   SetSurfaceZCoord_f SetSurfaceZCoord;
   SetSurfacePhase_f  SetSurfacePhase;
 } BuildInitialTopography_ff;
 
-typedef double (*SetHorizontalVelocity_f)(MdoodzInstance *instance, Coordinates coordinates);
-typedef double (*SetVerticalVelocity_f)(MdoodzInstance *instance, Coordinates coordinates);
-typedef double (*SetTemperature_f)(MdoodzInstance *instance, Coordinates coordinates);
-typedef double (*SetGrainSize_f)(MdoodzInstance *instance, Coordinates coordinates, int phase);
-typedef double (*SetPorosity_f)(MdoodzInstance *instance, Coordinates coordinates, int phase);
-typedef double (*SetDensity_f)(MdoodzInstance *instance, Coordinates coordinates, int phase);
-typedef double (*SetXComponent_f)(MdoodzInstance *instance, Coordinates coordinates, int phase);
-typedef int (*SetPhase_f)(MdoodzInstance *instance, Coordinates coordinates);
+typedef double (*SetHorizontalVelocity_f)(MdoodzInput *input, Coordinates coordinates);
+typedef double (*SetVerticalVelocity_f)(MdoodzInput *input, Coordinates coordinates);
+typedef double (*SetTemperature_f)(MdoodzInput *input, Coordinates coordinates);
+typedef double (*SetGrainSize_f)(MdoodzInput *input, Coordinates coordinates, int phase);
+typedef double (*SetPorosity_f)(MdoodzInput *input, Coordinates coordinates, int phase);
+typedef double (*SetDensity_f)(MdoodzInput *input, Coordinates coordinates, int phase);
+typedef double (*SetXComponent_f)(MdoodzInput *input, Coordinates coordinates, int phase);
+typedef int (*SetPhase_f)(MdoodzInput *input, Coordinates coordinates);
 
 typedef struct {
   SetHorizontalVelocity_f SetHorizontalVelocity;
@@ -166,11 +168,11 @@ typedef struct {
   char   type;
 } SetBC;
 
-typedef SetBC (*SetBCVx_f)(MdoodzInstance *instance, POSITION position, Coordinates coordinates);
-typedef SetBC (*SetBCVz_f)(MdoodzInstance *instance, POSITION position, Coordinates coordinates);
-typedef SetBC (*SetBCT_f)(MdoodzInstance *instance, POSITION position, double gridTemperature);
-typedef SetBC (*SetBCTNew_f)(MdoodzInstance *instance, POSITION position, double gridTemperature);
-typedef char (*SetBCPType_f)(MdoodzInstance *instance, POSITION position);
+typedef SetBC (*SetBCVx_f)(MdoodzInput *input, POSITION position, Coordinates coordinates);
+typedef SetBC (*SetBCVz_f)(MdoodzInput *input, POSITION position, Coordinates coordinates);
+typedef SetBC (*SetBCT_f)(MdoodzInput *input, POSITION position, double gridTemperature);
+typedef SetBC (*SetBCTNew_f)(MdoodzInput *input, POSITION position, double gridTemperature);
+typedef char (*SetBCPType_f)(MdoodzInput *input, POSITION position);
 
 typedef struct {
   SetBCVx_f    SetBCVx;
@@ -186,19 +188,24 @@ typedef struct {
   int    nPhases;
 } CrazyConductivity;
 
-struct MdoodzInstance {
-  char                      *inputFileName;
-  params                     model;
-  mat_prop                   materials;
-  scale                      scaling;
 
+typedef void (MutateInput_f)(MdoodzInput *input);
+
+struct MdoodzSetup {
   BuildInitialTopography_ff *BuildInitialTopography;
   SetParticles_ff           *SetParticles;
   SetBCs_ff                 *SetBCs;
-
-  CrazyConductivity         *crazyConductivity;
+  MutateInput_f             *MutateInput;
 };
 
-void RunMDOODZ(MdoodzInstance *instance);
+struct MdoodzInput {
+  char              *inputFileName;
+  params             model;
+  mat_prop           materials;
+  scale              scaling;
+  CrazyConductivity *crazyConductivity;
+};
+
+void RunMDOODZ(char *inputFileName, MdoodzSetup *setup);
 
 #endif

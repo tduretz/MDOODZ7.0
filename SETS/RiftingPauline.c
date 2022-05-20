@@ -3,13 +3,13 @@
 #include "stdbool.h"
 
 
-double SetSurfaceZCoord(MdoodzInstance *instance, double x_coord) {
+double SetSurfaceZCoord(MdoodzInput *instance, double x_coord) {
   const double TopoLevel = -0.0e3 / instance->scaling.L;
   const double h_pert    = instance->model.user3 / instance->scaling.L;
   return TopoLevel + h_pert * (3330.0 - 2800.0) / 2800.0 * cos(2 * M_PI * x_coord / (instance->model.xmax - instance->model.xmin));
 }
 
-int SetPhase(MdoodzInstance *instance, Coordinates coordinates) {
+int SetPhase(MdoodzInput *instance, Coordinates coordinates) {
   const double lithosphereThickness  = instance->model.user1 / instance->scaling.L;
   const double crustThickness        = instance->model.user2 / instance->scaling.L;
   const double perturbationAmplitude = instance->model.user3 / instance->scaling.L;
@@ -38,7 +38,7 @@ int SetPhase(MdoodzInstance *instance, Coordinates coordinates) {
   }
 }
 
-double SetTemperature(MdoodzInstance *instance, Coordinates coordinates) {
+double SetTemperature(MdoodzInput *instance, Coordinates coordinates) {
   const double lithosphereThickness = instance->model.user1 / instance->scaling.L;
   const double surfaceTemperature   = 273.15 / instance->scaling.T;
   const double mantleTemperature    = (1330.0 + 273.15) / instance->scaling.T;
@@ -50,20 +50,20 @@ double SetTemperature(MdoodzInstance *instance, Coordinates coordinates) {
   }
 }
 
-double SetGrainSize(MdoodzInstance *instance, Coordinates coordinates, int phase) {
-  const int astenospherePhase = 3;
-  return instance->materials.gs_ref[astenospherePhase];
+double SetGrainSize(MdoodzInput *instance, Coordinates coordinates, int phase) {
+  const int asthenospherePhase = 3;
+  return instance->materials.gs_ref[asthenospherePhase];
 }
 
-double SetHorizontalVelocity(MdoodzInstance *instance, Coordinates coordinates) {
+double SetHorizontalVelocity(MdoodzInput *instance, Coordinates coordinates) {
   return -coordinates.x * instance->model.EpsBG;
 }
 
-double SetVerticalVelocity(MdoodzInstance *instance, Coordinates coordinates) {
+double SetVerticalVelocity(MdoodzInput *instance, Coordinates coordinates) {
   return coordinates.z * instance->model.EpsBG;
 }
 
-SetBC SetBCVx(MdoodzInstance *instance, POSITION position, Coordinates coordinates) {
+SetBC SetBCVx(MdoodzInput *instance, POSITION position, Coordinates coordinates) {
   SetBC bc;
   if (position == N || position == S || position == NW || position == SW || position == NE || position == SE) {
     bc.value = 0;
@@ -79,7 +79,7 @@ SetBC SetBCVx(MdoodzInstance *instance, POSITION position, Coordinates coordinat
 }
 
 
-SetBC SetBCVz(MdoodzInstance *instance, POSITION position, Coordinates coordinates) {
+SetBC SetBCVz(MdoodzInput *instance, POSITION position, Coordinates coordinates) {
   SetBC bc;
   if (position == W || position == E || position == SW || position == SE || position == NW || position == NE) {
     bc.value = 0;
@@ -94,7 +94,7 @@ SetBC SetBCVz(MdoodzInstance *instance, POSITION position, Coordinates coordinat
   return bc;
 }
 
-char SetBCPType(MdoodzInstance *instance, POSITION position) {
+char SetBCPType(MdoodzInput *instance, POSITION position) {
   if (position == NE || position == NW) {
     return 0;
   } else {
@@ -102,7 +102,7 @@ char SetBCPType(MdoodzInstance *instance, POSITION position) {
   }
 }
 
-SetBC SetBCT(MdoodzInstance *instance, POSITION position, double particleTemperature) {
+SetBC SetBCT(MdoodzInput *instance, POSITION position, double particleTemperature) {
   SetBC     bc;
   double surfaceTemperature = zeroC / instance->scaling.T;
   if (position == FREE_SURFACE) {
@@ -116,7 +116,7 @@ SetBC SetBCT(MdoodzInstance *instance, POSITION position, double particleTempera
 }
 
 
-SetBC SetBCTNew(MdoodzInstance *instance, POSITION position, double particleTemperature) {
+SetBC SetBCTNew(MdoodzInput *instance, POSITION position, double particleTemperature) {
   SetBC     bc;
   double surfaceTemperature = zeroC / instance->scaling.T;
   double mantleTemperature  = (1330. + zeroC) / instance->scaling.T;
@@ -136,33 +136,36 @@ SetBC SetBCTNew(MdoodzInstance *instance, POSITION position, double particleTemp
   return bc;
 }
 
-int main(int nargs, char *args[]) {
-  int            astenospherePhases[1] = {3};
-  MdoodzInstance instance              = {
-                       .inputFileName          = GetSetupFileName(nargs, args),
-                       .BuildInitialTopography = &(BuildInitialTopography_ff){
-                               .SetSurfaceZCoord = SetSurfaceZCoord,
+void MutateInput(MdoodzInput *instance) {
+  int asthenospherePhases[1]   = {3};
+  instance->crazyConductivity = &(CrazyConductivity){
+          .multiplier = 1000,
+          .nPhases    = 1,
+          .phases     = asthenospherePhases,
+  };
+}
+
+int main() {
+  MdoodzSetup setup = {
+          .BuildInitialTopography = &(BuildInitialTopography_ff){
+                  .SetSurfaceZCoord = SetSurfaceZCoord,
           },
-                       .SetParticles = &(SetParticles_ff){
-                               .SetPhase              = SetPhase,
-                               .SetTemperature        = SetTemperature,
-                               .SetGrainSize          = SetGrainSize,
-                               .SetHorizontalVelocity = SetHorizontalVelocity,
-                               .SetVerticalVelocity   = SetVerticalVelocity,
+          .SetParticles = &(SetParticles_ff){
+                  .SetPhase              = SetPhase,
+                  .SetTemperature        = SetTemperature,
+                  .SetGrainSize          = SetGrainSize,
+                  .SetHorizontalVelocity = SetHorizontalVelocity,
+                  .SetVerticalVelocity   = SetVerticalVelocity,
           },
-                       .SetBCs = &(SetBCs_ff){
-                               .SetBCVx   = SetBCVx,
-                               .SetBCVz   = SetBCVz,
-                               .SetBCPType    = SetBCPType,
-                               .SetBCT    = SetBCT,
-                               .SetBCTNew = SetBCTNew,
+          .SetBCs = &(SetBCs_ff){
+                  .SetBCVx    = SetBCVx,
+                  .SetBCVz    = SetBCVz,
+                  .SetBCPType = SetBCPType,
+                  .SetBCT     = SetBCT,
+                  .SetBCTNew  = SetBCTNew,
           },
-                       .crazyConductivity = &(CrazyConductivity){
-                               .multiplier = 1000,
-                               .nPhases    = 1,
-                               .phases     = astenospherePhases,
-          },
+          .MutateInput = MutateInput,
 
   };
-  RunMDOODZ(&instance);
+  RunMDOODZ("RiftingPauline.txt", &setup);
 }

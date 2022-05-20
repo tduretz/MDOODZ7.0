@@ -2,14 +2,14 @@
 #include "mdoodz.h"
 
 
-double SetSurfaceZCoord(MdoodzInstance *instance, double x_coord) {
-  double Amplitude  = 7e3 / instance->scaling.L;
-  double Wavelength = 2800e3 / instance->scaling.L;
+double SetSurfaceZCoord(MdoodzInput *input, double x_coord) {
+  double Amplitude  = 7e3 / input->scaling.L;
+  double Wavelength = 2800e3 / input->scaling.L;
   return -Amplitude * cos(2.0 * M_PI * x_coord / Wavelength);
 }
 
-int SetPhase(MdoodzInstance *instance, Coordinates coordinates) {
-  double lithosphereBottomDepth = -100.0e3 / instance->scaling.L;
+int SetPhase(MdoodzInput *input, Coordinates coordinates) {
+  double lithosphereBottomDepth = -100.0e3 / input->scaling.L;
   if (coordinates.z > lithosphereBottomDepth) {
     return 1;
   } else {
@@ -17,7 +17,7 @@ int SetPhase(MdoodzInstance *instance, Coordinates coordinates) {
   }
 }
 
-SetBC SetBCVx(MdoodzInstance *instance, POSITION position, Coordinates coordinates) {
+SetBC SetBCVx(MdoodzInput *input, POSITION position, Coordinates coordinates) {
   SetBC bc;
   if (position == S || position == SW || position == SE) {
     bc.value = 0.0;
@@ -35,7 +35,7 @@ SetBC SetBCVx(MdoodzInstance *instance, POSITION position, Coordinates coordinat
   return bc;
 }
 
-SetBC SetBCVz(MdoodzInstance *instance, POSITION position, Coordinates coordinates) {
+SetBC SetBCVz(MdoodzInput *input, POSITION position, Coordinates coordinates) {
   SetBC bc;
   if (position == W || position == E || position == SW || position == SE || position == NW || position == NE) {
     bc.value = 0.0;
@@ -50,7 +50,7 @@ SetBC SetBCVz(MdoodzInstance *instance, POSITION position, Coordinates coordinat
   return bc;
 }
 
-char SetBCPType(MdoodzInstance *instance, POSITION position) {
+char SetBCPType(MdoodzInput *input, POSITION position) {
   if (position == NE || position == NW) {
     return 0;
   } else {
@@ -58,20 +58,19 @@ char SetBCPType(MdoodzInstance *instance, POSITION position) {
   }
 }
 
-int main(int nargs, char *args[]) {
-  MdoodzInstance instance              = {
-                       .inputFileName          = GetSetupFileName(nargs, args),
-                       .BuildInitialTopography = &(BuildInitialTopography_ff){
-                               .SetSurfaceZCoord = SetSurfaceZCoord,
+int main() {
+  MdoodzSetup setup = {
+          .BuildInitialTopography = &(BuildInitialTopography_ff){
+                  .SetSurfaceZCoord = SetSurfaceZCoord,
           },
-                       .SetParticles = &(SetParticles_ff){
-                               .SetPhase = SetPhase,
+          .SetParticles = &(SetParticles_ff){
+                  .SetPhase = SetPhase,
           },
-                       .SetBCs = &(SetBCs_ff){
-                               .SetBCVx    = SetBCVx,
-                               .SetBCVz    = SetBCVz,
-                               .SetBCPType = SetBCPType,
+          .SetBCs = &(SetBCs_ff){
+                  .SetBCVx    = SetBCVx,
+                  .SetBCVz    = SetBCVz,
+                  .SetBCPType = SetBCPType,
           },
   };
-  RunMDOODZ(&instance);
+  RunMDOODZ("TopoBenchCase1.txt", &setup);
 }

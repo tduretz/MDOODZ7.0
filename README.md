@@ -10,8 +10,8 @@ This version of MDOODZ is under construction, more testing will be progressively
 MDOODZ Source Code stored in `MDLIB` directory and compiled as a separate library `libmdoodz` 
 with the public interface `mdoodz.h`.
 
-The public interface includes a struct that stores input parameters and setup toolchains: `MdoodzInstance`.
-To run the simulation `MdoodzInstance` must be passed to `RunMDOODZ(MdoodzInstance *instance)` function
+The public interface includes a struct that stores input parameters and setup toolchains: `MdoodzInput`.
+To run the simulation `MdoodzInput` must be passed to `RunMDOODZ(MdoodzInput *input)` function
 
 ### Examples:
 
@@ -41,7 +41,7 @@ Aggregates pointers to functions for setting up topography chain properties.
 Must have if `model.free_surf == 1`.
 
 
-- `SetSurfaceZCoord` describes an altitude in relation to the x coordinate. Default value is `1.0e3 / instance->scaling.L`:  flat surface will be generated
+- `SetSurfaceZCoord` describes an altitude in relation to the x coordinate. Default value is `1.0e3 / input->scaling.L`:  flat surface will be generated
 - `SetSurfacePhase` describes a topography chain particle phase id in relation to the x coordinate. Default phase `0`
 
 ### SetParticles
@@ -50,10 +50,10 @@ Aggregates pointers to functions for setting up particle properties.
 Must have.
 
 
-- `SetHorizontalVelocity` describes a particle Horizontal Velocity (Vx) in relation to coordinates. Default value is `-coordinates.x * instance->model.EpsBG`
-- `SetVerticalVelocity` describes a particle Vertical Velocity (Vz) in relation to coordinates. Default value is `coordinates.z * instance->model.EpsBG`
+- `SetHorizontalVelocity` describes a particle Horizontal Velocity (Vx) in relation to coordinates. Default value is `-coordinates.x * input->model.EpsBG`
+- `SetVerticalVelocity` describes a particle Vertical Velocity (Vz) in relation to coordinates. Default value is `coordinates.z * input->model.EpsBG`
 - `SetPhase` describes a particle phase id in relation to coordinates. Default value is `0`: model will be homogeneous
-- `SetTemperature` describes a particle temperature in relation to coordinates. Default value is `273.15 / instance->scaling.T`: model is 0°C
+- `SetTemperature` describes a particle temperature in relation to coordinates. Default value is `273.15 / input->scaling.T`: model is 0°C
 - `SetGrainSize` describes a particle grain size in relation to coordinates. Default value is `0.0`
 - `SetPorosity` describes a particle grain porosity in relation to coordinates. Default value is `0.0`
 - `SetDensity` describes a particle grain density in relation to coordinates. Default value is set according to the particle phase 
