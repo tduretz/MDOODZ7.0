@@ -452,3 +452,89 @@ void ValidateSetup(MdoodzSetup *setup, MdoodzInput *instance) {
     exit(144);
   }
 }
+
+
+// TEMPLATES
+
+SetBC SetPureShearBCVx(MdoodzInput *input, POSITION position, Coordinates coordinates) {
+  SetBC bc;
+  if (position == N || position == S || position == NW || position == SW || position == NE || position == SE) {
+    bc.value = 0;
+    bc.type  = 13;
+  } else if (position == W || position == E) {
+    bc.value = -coordinates.x * input->model.EpsBG;
+    bc.type  = 0;
+  } else {
+    bc.value = 0.0;
+    bc.type  = -1;
+  }
+  return bc;
+}
+
+SetBC SetSimpleShearBCVx(MdoodzInput *input, POSITION position, Coordinates coordinates) {
+  SetBC        bc;
+  const double Lz = (double) (input->model.zmax - input->model.zmin);
+  if (position == S || position == SE || position == SW) {
+    bc.value = -input->model.EpsBG * Lz;
+    bc.type  = 11;
+  } else if (position == N || position == NE || position == NW) {
+    bc.value = input->model.EpsBG * Lz;
+    bc.type  = 11;
+  } else if (position == E) {
+    bc.value = 0.0;
+    bc.type  = -12;
+  } else if (position == W) {
+    bc.value = 0.0;
+    bc.type  = -2;
+  } else {
+    bc.value = 0.0;
+    bc.type  = -1;
+  }
+  return bc;
+}
+
+SetBC SetPureOrSimpleShearBCVx(MdoodzInput *input, POSITION position, Coordinates coordinates) {
+  if (input->model.shear_style) {
+    return SetPureShearBCVx(input, position, coordinates);
+  } else {
+    return SetSimpleShearBCVx(input, position, coordinates);
+  }
+}
+
+SetBC SetPureShearBCVz(MdoodzInput *input, POSITION position, Coordinates coordinates) {
+  SetBC bc;
+  if (position == W || position == E || position == SW || position == SE || position == NW || position == NE) {
+    bc.value = 0;
+    bc.type  = 13;
+  } else if (position == S || position == N) {
+    bc.value = coordinates.z * input->model.EpsBG;
+    bc.type  = 0;
+  } else {
+    bc.value = 0;
+    bc.type  = -1;
+  }
+  return bc;
+}
+
+SetBC SetSimpleShearBCVz(MdoodzInput *input, POSITION position, Coordinates coordinates) {
+  SetBC bc;
+  if (position == E || position == W || position == NE || position == NW || position == SE || position == SW) {
+    bc.value = 0.0;
+    bc.type  = -12;
+  } else if (position == S || position == N) {
+    bc.value = 0.0;
+    bc.type  = 0;
+  } else {
+    bc.value = 0.0;
+    bc.type  = -1;
+  }
+  return bc;
+}
+
+SetBC SetPureOrSimpleShearBCVz(MdoodzInput *input, POSITION position, Coordinates coordinates) {
+  if (input->model.shear_style) {
+    return SetPureShearBCVz(input, position, coordinates);
+  } else {
+    return SetSimpleShearBCVz(input, position, coordinates);
+  }
+}

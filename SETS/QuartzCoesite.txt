@@ -1,0 +1,192 @@
+/**** RESTART ****/
+istep = 00500
+irestart = 1
+
+/**** INPUT FILE ****/
+input_file = GarnetCoesite.bin /indicates the name in the input file for geometry
+
+/**** OUTPUT FILES ****/
+writer          = 1
+writer_step     = 10
+writer_markers  = 0
+writer_debug    = 0
+writer_energies = 0
+delete_breakpoints = 1
+
+/**** SCALES ****/
+eta = 1e22
+L   = 1e-3
+V   = 1e-18
+T   = 600
+
+/**** SPACE-TIME ****/
+Nx      = 151
+Nz      = 151
+Nt      = 500
+xmin    = -2.500000e-3
+zmin    = -2.500000e-3
+xmax    =  2.500000e-3
+zmax    =  2.500000e-3
+dt      = 6.250e+09
+dt_constant  = 1
+Courant      = 0.3
+penalty      = 1e5
+safe_mode    = 1
+
+/**** SWITCHES ****/
+ismechanical    = 1
+dt_constant     = 0
+RK              = 4
+isperiodic_x    = 0
+ispureshear_ALE = 1
+isinertial      = 0
+isthermal       = 0
+line_search     = 1
+free_surf       = 0
+free_surf_stab  = 0
+thermal_eq      = 0
+subgrid_diff    = 1
+shear_heat      = 1
+adiab_heat      = 0
+fstrain         = 1
+advection       = 1
+GNUplot_residuals = 0
+kinetics          = 1 
+
+/**** SETUP DEPENDANT ****/
+eta_avg         = 0
+VolChangeReac   = 1
+noise_bg        = 1     / noise beau-gosse
+oop             = 1     / non zeros total Eyy
+compressible    = 1
+shear_style     = 0
+iselastic       = 1
+EpsBG           = 1e-25
+DivBG           = 1e-14
+PrBG            = 3.45e9  / pressure [Pa]
+TBG             = 973.15  / temperature [K]
+user0           = 1       / 0: fix T=TBG, 1: use T=(1/a)*ln(P/b)
+user1           = 2       / 2: fancy set up --- 1: simple inclusion --- 0: homogeneous
+user2           = 0.5e-3  / inclusion radius [m]
+user3           = 1.02e-2     / fit coefficient a for T=(1/a)*ln(P/b) 
+user4           = 2.523e-3 / fit coefficient b for T=(1/a)*ln(P/b) 
+
+/**** GRAVITY ****/
+gx = 0.0000
+gz = 0.000
+
+/**** MAT PROPERTIES ****/
+Nb_phases = 3
+
+/**** PHASE 0 ****/
+ID   = 0
+rho  = 3295.00 / matrix --- omphacite
+mu   = 6e10
+Cv   = 1050
+k    = 2.5
+Qr   = 0
+C    = 1e7
+phi  = 35
+psi  = 10
+Slim = 500e9
+alp  = 10.0e-6
+bet  = 1.4286e-11
+drho = 0
+cstv = 0             / constant visc law
+pwlv = 21            / disloc. creep
+linv = 0             / diff. creep
+gbsv = 0             / grain boundary sliding
+expv = 0             / peierls creep
+gsel = 0             / grain size evo.
+eta0 = 1e22
+npwl = 1
+Qpwl = 0
+eta_vp = 5e19
+n_vp   = 1.0
+density_model = 3
+
+/**** PHASE 1 ****/
+ID   = 1
+rho  = 3577.00 / inclusion 1 - garnet
+mu   = 9e10
+Cv   = 1050
+k    = 2.5
+Qr   = 0
+C    = 1e6
+phi  = 35
+psi  = 0
+Slim = 500e9
+alp  = 10.0e-6
+bet  = 5.8824e-12
+drho = 0
+cstv = 0             / constant visc law
+pwlv = 20            / disloc. creep
+linv = 0             / diff. creep
+gbsv = 0             / grain boundary sliding
+expv = 0             / peierls creep
+gsel = 0             / grain size evo.
+eta0 = 1e20
+npwl = 1
+Qpwl = 0
+eta_vp = 5e19
+n_vp   = 1.0
+density_model = 3
+
+/**** PHASE 2 ****/
+ID   = 2
+rho  = 2700.00 / inclusion
+mu   = 6e10
+Cv   = 1050
+k    = 2.5
+Qr   = 0
+C    = 1e7
+phi  = 35
+psi  = 10
+Slim = 500e9
+alp  = 10.0e-6
+bet  = 1e-10
+drho = 0
+cstv = 0             / constant visc law
+pwlv = 27            / disloc. creep
+linv = 0             / diff. creep
+gbsv = 0             / grain boundary sliding
+expv = 0             / peierls creep
+gsel = 0             / grain size evo.
+eta0 = 1e20
+npwl = 1
+Qpwl = 0
+eta_vp = 5e18
+n_vp   = 1.0
+density_model = 2
+kin           = 9  / include kinetics law from Mosenfelder
+phase_diagram = 9
+
+/**** DEFMAPS ****/
+nT    =    51      / Temperature resolution []
+nE    =    51      / Strain rate resolution []
+nd    =    2        / Grain size resolution []
+Tmin  =    240      / Temperature minimum [°C]
+Tmax  =    2000     / Temperature maximum [°C]
+Emin  =    -50      / Strain rate minimum log_10 [1/s]
+Emax  =    5        / Strain rate maximum log_10 [1/s]
+dmin  =    -7       / Grain size minimum log_10 [m]
+dmax  =    -2       / Grain size maximum log_10 [m]
+Pn    =  1e9        / Pressure [Pa]
+
+/**** PARTICLES ****/
+Nx_part  = 4
+Nz_part  = 4
+min_part_cell = 16
+
+/**** NON-LINEAR ITERATIONS ****/
+Newton        = 1
+Picard2Newton = 1
+Pic2NewtCond  = 1e-1
+nit_max  = 101
+rel_tol_KSP = 1e-4
+abs_tol_u   = 1e-11
+abs_tol_p   = 1e-11
+abs_tol_div = 1e-9
+rel_tol_div = 1e-9
+mineta  = 1e17
+maxeta  = 1e25

@@ -63,37 +63,6 @@ double SetVerticalVelocity(MdoodzInput *instance, Coordinates coordinates) {
   return coordinates.z * instance->model.EpsBG;
 }
 
-SetBC SetBCVx(MdoodzInput *instance, POSITION position, Coordinates coordinates) {
-  SetBC bc;
-  if (position == N || position == S || position == NW || position == SW || position == NE || position == SE) {
-    bc.value = 0;
-    bc.type  = 13;
-  } else if (position == W || position == E) {
-    bc.value = -coordinates.x * instance->model.EpsBG;
-    bc.type  = 0;
-  } else {
-    bc.value = 0;
-    bc.type  = -1;
-  }
-  return bc;
-}
-
-
-SetBC SetBCVz(MdoodzInput *instance, POSITION position, Coordinates coordinates) {
-  SetBC bc;
-  if (position == W || position == E || position == SW || position == SE || position == NW || position == NE) {
-    bc.value = 0;
-    bc.type  = 13;
-  } else if (position == S || position == N) {
-    bc.value = coordinates.z * instance->model.EpsBG;
-    bc.type  = 0;
-  } else {
-    bc.value = 0;
-    bc.type  = -1;
-  }
-  return bc;
-}
-
 char SetBCPType(MdoodzInput *instance, POSITION position) {
   if (position == NE || position == NW) {
     return 0;
@@ -158,8 +127,8 @@ int main() {
                   .SetVerticalVelocity   = SetVerticalVelocity,
           },
           .SetBCs = &(SetBCs_ff){
-                  .SetBCVx    = SetBCVx,
-                  .SetBCVz    = SetBCVz,
+                  .SetBCVx    = SetPureShearBCVx,
+                  .SetBCVz    = SetPureShearBCVz,
                   .SetBCPType = SetBCPType,
                   .SetBCT     = SetBCT,
                   .SetBCTNew  = SetBCTNew,

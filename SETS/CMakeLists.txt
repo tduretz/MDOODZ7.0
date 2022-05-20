@@ -9,5 +9,6 @@ else()
     add_set(ShearTemplate)
     add_set(RiftingPauline)
     add_set(TopoBenchCase1)
+    add_set(QuartzCoesite)
 endif()
 

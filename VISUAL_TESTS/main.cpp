@@ -71,37 +71,6 @@ double RPSetVerticalVelocity(MdoodzInput *instance, Coordinates coordinates) {
   return coordinates.z * instance->model.EpsBG;
 }
 
-SetBC RPSetBCVx(MdoodzInput *instance, POSITION position, Coordinates coordinates) {
-  SetBC bc;
-  if (position == N || position == S || position == NW || position == SW || position == NE || position == SE) {
-    bc.value = 0;
-    bc.type  = 13;
-  } else if (position == W || position == E) {
-    bc.value = -coordinates.x * instance->model.EpsBG;
-    bc.type  = 0;
-  } else {
-    bc.value = 0;
-    bc.type  = -1;
-  }
-  return bc;
-}
-
-
-SetBC RPSetBCVz(MdoodzInput *instance, POSITION position, Coordinates coordinates) {
-  SetBC bc;
-  if (position == W || position == E || position == SW || position == SE || position == NW || position == NE) {
-    bc.value = 0;
-    bc.type  = 13;
-  } else if (position == S || position == N) {
-    bc.value = coordinates.z * instance->model.EpsBG;
-    bc.type  = 0;
-  } else {
-    bc.value = 0;
-    bc.type  = -1;
-  }
-  return bc;
-}
-
 char RPSetBCPType(MdoodzInput *instance, POSITION position) {
   if (position == NE || position == NW) {
     return 0;
@@ -122,7 +91,6 @@ SetBC RPSetBCT(MdoodzInput *instance, POSITION position, double particleTemperat
   }
   return bc;
 }
-
 
 SetBC RPSetBCTNew(MdoodzInput *instance, POSITION position, double particleTemperature) {
   SetBC  bc;
@@ -167,8 +135,8 @@ MdoodzSetup CreateRiftingPaulineInstance() {
                   .SetGrainSize          = RPSetGrainSize,
           },
           .SetBCs = new SetBCs_ff{
-                  .SetBCVx    = RPSetBCVx,
-                  .SetBCVz    = RPSetBCVz,
+                  .SetBCVx    = SetPureShearBCVx,
+                  .SetBCVz    = SetPureShearBCVz,
                   .SetBCT     = RPSetBCT,
                   .SetBCPType = RPSetBCPType,
                   .SetBCTNew  = RPSetBCTNew,
@@ -266,69 +234,6 @@ double STSetDensity(MdoodzInput *instance, Coordinates coordinates, int phase) {
   }
 }
 
-SetBC STSetBCVx(MdoodzInput *instance, POSITION position, Coordinates coordinates) {
-  SetBC bc;
-  if (instance->model.shear_style == 0) {
-    if (position == S || position == N || position == NE || position == NW || position == SE || position == SW) {
-      bc.value = 0.0;
-      bc.type  = 13;
-    } else if (position == W || position == E) {
-      bc.value = -coordinates.x * instance->model.EpsBG;
-      bc.type  = 0;
-    } else {
-      bc.value = 0.0;
-      bc.type  = -1;
-    }
-  } else {
-    const double Lz = (double) (instance->model.zmax - instance->model.zmin);
-    if (position == S || position == SE || position == SW) {
-      bc.value = -instance->model.EpsBG * Lz;
-      bc.type  = 11;
-    } else if (position == N || position == NE || position == NW) {
-      bc.value = instance->model.EpsBG * Lz;
-      bc.type  = 11;
-    } else if (position == E) {
-      bc.value = 0.0;
-      bc.type  = -12;
-    } else if (position == W) {
-      bc.value = 0.0;
-      bc.type  = -2;
-    } else {
-      bc.value = 0.0;
-      bc.type  = -1;
-    }
-  }
-  return bc;
-}
-
-SetBC STSetBCVz(MdoodzInput *instance, POSITION position, Coordinates coordinates) {
-  SetBC bc;
-  if (instance->model.shear_style == 0) {
-    if (position == W || position == E || position == NE || position == NW || position == SE || position == SW) {
-      bc.value = 0.0;
-      bc.type  = 13;
-    } else if (position == S || position == N) {
-      bc.value = coordinates.z * instance->model.EpsBG;
-      bc.type  = 0;
-    } else {
-      bc.value = 0.0;
-      bc.type  = -1;
-    }
-  } else {
-    if (position == E || position == W || position == NE || position == NW || position == SE || position == SW) {
-      bc.value = 0.0;
-      bc.type  = -12;
-    } else if (position == S || position == N) {
-      bc.value = 0.0;
-      bc.type  = 0;
-    } else {
-      bc.value = 0.0;
-      bc.type  = -1;
-    }
-  }
-  return bc;
-}
-
 MdoodzSetup CreateShearTemplateInstance() {
   return (MdoodzSetup){
           .SetParticles = new SetParticles_ff{
@@ -336,8 +241,8 @@ MdoodzSetup CreateShearTemplateInstance() {
                   .SetDensity = STSetDensity,
           },
           .SetBCs = new SetBCs_ff{
-                  .SetBCVx = STSetBCVx,
-                  .SetBCVz = STSetBCVz,
+                  .SetBCVx = SetPureOrSimpleShearBCVx,
+                  .SetBCVz = SetPureOrSimpleShearBCVz,
           },
   };
 }
@@ -378,69 +283,6 @@ double SHD14SetDensity(MdoodzInput *instance, Coordinates coordinates, int phase
   }
 }
 
-SetBC SHD14SetBCVx(MdoodzInput *instance, POSITION position, Coordinates coordinates) {
-  SetBC bc;
-  if (instance->model.shear_style == 0) {
-    if (position == S || position == N || position == NE || position == NW || position == SE || position == SW) {
-      bc.value = 0.0;
-      bc.type  = 13;
-    } else if (position == W || position == E) {
-      bc.value = -coordinates.x * instance->model.EpsBG;
-      bc.type  = 0;
-    } else {
-      bc.value = 0.0;
-      bc.type  = -1;
-    }
-  } else {
-    const double Lz = (double) (instance->model.zmax - instance->model.zmin);
-    if (position == S || position == SE || position == SW) {
-      bc.value = -instance->model.EpsBG * Lz;
-      bc.type  = 11;
-    } else if (position == N || position == NE || position == NW) {
-      bc.value = instance->model.EpsBG * Lz;
-      bc.type  = 11;
-    } else if (position == E) {
-      bc.value = 0.0;
-      bc.type  = -12;
-    } else if (position == W) {
-      bc.value = 0.0;
-      bc.type  = -2;
-    } else {
-      bc.value = 0.0;
-      bc.type  = -1;
-    }
-  }
-  return bc;
-}
-
-SetBC SHD14SetBCVz(MdoodzInput *instance, POSITION position, Coordinates coordinates) {
-  SetBC bc;
-  if (instance->model.shear_style == 0) {
-    if (position == W || position == E || position == NE || position == NW || position == SE || position == SW) {
-      bc.value = 0.0;
-      bc.type  = 13;
-    } else if (position == S || position == N) {
-      bc.value = coordinates.z * instance->model.EpsBG;
-      bc.type  = 0;
-    } else {
-      bc.value = 0.0;
-      bc.type  = -1;
-    }
-  } else {
-    if (position == E || position == W || position == NE || position == NW || position == SE || position == SW) {
-      bc.value = 0.0;
-      bc.type  = -12;
-    } else if (position == S || position == N) {
-      bc.value = 0.0;
-      bc.type  = 0;
-    } else {
-      bc.value = 0.0;
-      bc.type  = -1;
-    }
-  }
-  return bc;
-}
-
 SetBC SHD14SetBCT(MdoodzInput *instance, POSITION position, double particleTemperature) {
   SetBC bc;
   if (position == W || position == E || position == S || position == N || position == SE || position == SW || position == NE || position == NW) {
@@ -474,8 +316,8 @@ MdoodzSetup CreateShearHeatingDuretz14Instance() {
                   .SetDensity     = SHD14SetDensity,
           },
           .SetBCs = new SetBCs_ff{
-                  .SetBCVx   = SHD14SetBCVx,
-                  .SetBCVz   = SHD14SetBCVz,
+                  .SetBCVx   = SetPureOrSimpleShearBCVx,
+                  .SetBCVz   = SetPureOrSimpleShearBCVz,
                   .SetBCT    = SHD14SetBCT,
                   .SetBCTNew = SHD14SetBCTNew,
           },

@@ -206,6 +206,15 @@ struct MdoodzInput {
   CrazyConductivity *crazyConductivity;
 };
 
-void RunMDOODZ(char *inputFileName, MdoodzSetup *setup);
+void  RunMDOODZ(char *inputFileName, MdoodzSetup *setup);
+
+// Setup templates
+
+SetBC SetPureShearBCVx(MdoodzInput *input, POSITION position, Coordinates coordinates);
+SetBC SetPureShearBCVz(MdoodzInput *input, POSITION position, Coordinates coordinates);
+SetBC SetSimpleShearBCVx(MdoodzInput *input, POSITION position, Coordinates coordinates);
+SetBC SetSimpleShearBCVz(MdoodzInput *input, POSITION position, Coordinates coordinates);
+SetBC SetPureOrSimpleShearBCVx(MdoodzInput *input, POSITION position, Coordinates coordinates);
+SetBC SetPureOrSimpleShearBCVz(MdoodzInput *input, POSITION position, Coordinates coordinates);
 
 #endif

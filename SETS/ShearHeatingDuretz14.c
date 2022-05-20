@@ -22,69 +22,6 @@ double SetDensity(MdoodzInput *input, Coordinates coordinates, int phase) {
   }
 }
 
-SetBC SetBCVx(MdoodzInput *input, POSITION position, Coordinates coordinates) {
-  SetBC bc;
-  if (input->model.shear_style == 0) {
-    if (position == S || position == N || position == NE || position == NW || position == SE || position == SW) {
-      bc.value = 0.0;
-      bc.type  = 13;
-    } else if (position == W || position == E) {
-      bc.value = -coordinates.x * input->model.EpsBG;
-      bc.type  = 0;
-    } else {
-      bc.value = 0.0;
-      bc.type  = -1;
-    }
-  } else {
-    const double Lz = (double) (input->model.zmax - input->model.zmin);
-    if (position == S || position == SE || position == SW) {
-      bc.value = -input->model.EpsBG * Lz;
-      bc.type  = 11;
-    } else if (position == N || position == NE || position == NW) {
-      bc.value = input->model.EpsBG * Lz;
-      bc.type  = 11;
-    } else if (position == E) {
-      bc.value = 0.0;
-      bc.type  = -12;
-    } else if (position == W) {
-      bc.value = 0.0;
-      bc.type  = -2;
-    } else {
-      bc.value = 0.0;
-      bc.type  = -1;
-    }
-  }
-  return bc;
-}
-
-SetBC SetBCVz(MdoodzInput *input, POSITION position, Coordinates coordinates) {
-  SetBC bc;
-  if (input->model.shear_style == 0) {
-    if (position == W || position == E || position == NE || position == NW || position == SE || position == SW) {
-      bc.value = 0.0;
-      bc.type  = 13;
-    } else if (position == S || position == N) {
-      bc.value = coordinates.z * input->model.EpsBG;
-      bc.type  = 0;
-    } else {
-      bc.value = 0.0;
-      bc.type  = -1;
-    }
-  } else {
-    if (position == E || position == W || position == NE || position == NW || position == SE || position == SW) {
-      bc.value = 0.0;
-      bc.type = -12;
-    } else if (position == S || position == N) {
-      bc.value = 0.0;
-      bc.type = 0;
-    } else {
-      bc.value = 0.0;
-      bc.type = -1;
-    }
-  }
-  return bc;
-}
-
 SetBC SetBCT(MdoodzInput *input, POSITION position, double particleTemperature) {
   SetBC     bc;
   if (position == W || position == E || position == S || position == N || position == SE || position == SW || position == NE || position == NW) {
@@ -118,8 +55,8 @@ int main() {
                   .SetTemperature = SetTemperature,
           },
           .SetBCs = &(SetBCs_ff){
-                  .SetBCVx   = SetBCVx,
-                  .SetBCVz   = SetBCVz,
+                  .SetBCVx   = SetPureOrSimpleShearBCVx,
+                  .SetBCVz   = SetPureOrSimpleShearBCVz,
                   .SetBCT    = SetBCT,
                   .SetBCTNew = SetBCTNew,
           },
