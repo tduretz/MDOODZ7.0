@@ -53,18 +53,17 @@ SetBC SetBCVz(MdoodzInput *instance, POSITION position, Coordinates coordinates)
 }
 
 int main() {
-  MdoodzInput instance = {
-          .inputFileName = "ShearTemplate.txt",
-          .SetParticles  = &(SetParticles_ff){
-                   .SetPhase              = SetPhase,
-                   .SetDensity            = SetDensity,
+  MdoodzSetup instance = {
+          .SetParticles = &(SetParticles_ff){
+                  .SetPhase   = SetPhase,
+                  .SetDensity = SetDensity,
           },
           .SetBCs = &(SetBCs_ff){
                   .SetBCVx = SetBCVx,
                   .SetBCVz = SetBCVz,
           },
   };
-  RunMDOODZ(&instance);
+  RunMDOODZ("ShearTemplate.txt", &instance);
 
   hid_t File            = H5Fopen(FILENAME, H5F_ACC_RDONLY, H5P_DEFAULT);
   hid_t IterationsGroup = H5Gopen(File, "Iterations", H5P_DEFAULT);
