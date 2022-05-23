@@ -15,9 +15,11 @@ To run the simulation `MdoodzInput` must be passed to `RunMDOODZ(MdoodzInput *in
 
 ### Examples:
 
-1) Minimal mechanical model: [ShearTemplate](SETS/ShearTemplate.c)
+1) Simple or Pure Shear: [ShearTemplate](SETS/ShearTemplate.c)
 2) A free surface model: [TopoBenchCase1](SETS/TopoBenchCase1.c)
 3) A free surface and thermal solution model: [RiftingPauline](SETS/RiftingPauline.c)
+4) Grain size evolution model: [PinchSwellGSE](SETS/PinchSwellGSE.c)
+5) Quartz-Coesite inclusion density change in Garnet: [QuartzCoesite](SETS/QuartzCoesite.c)
 
 
 ## Input parameters
@@ -26,6 +28,21 @@ To run the simulation `MdoodzInput` must be passed to `RunMDOODZ(MdoodzInput *in
 - `model` aggregates general input parameters from `.txt` file
 - `materials` aggregates input parameters from `.txt` file concerning phase properties
 - `scale` aggregates input parameters from `.txt` file concerning scaling of units
+- `crazyConductivity` contains parameters for the crazy conductivity of the asthenosphere for the initialisation step
+
+### Import files
+
+Import files are the external files that are processed by MDOODZ and contains information
+such as phase transition diagrams or particle geometry. Described by `import_files_dir` and `import_file`
+
+
+### Crazy conductivity
+
+If you wish to add crazy conductivity of the asthenosphere to the initialisation step
+there is a `crazyConductivity` parameter that points to the struct that aggregates
+- `phases` array of phases ids that crazy conductivity should be applied to
+- `nPhases` total number of phases
+- `multiplier` refers to the multiplier of the effective conductivity
 
 If your `.txt` file shares the same name as executable, 
 you could extract it with the `GetSetupFileName(nargs, args)` function on Unix systems
@@ -58,6 +75,8 @@ Must have.
 - `SetPorosity` describes a particle grain porosity in relation to coordinates. Default value is `0.0`
 - `SetDensity` describes a particle grain density in relation to coordinates. Default value is set according to the particle phase 
 - `SetXComponent` describes a particle X component value in relation to coordinates. Default value is `0.0`
+- `SetPressure` describes a particle pressure value in relation to coordinates. Default value is `0.0`
+- `SetNoise` describes a noise property value in relation to coordinates. Default value is `0.0`
 
 ## SetBCs
 
@@ -69,14 +88,6 @@ Must have.
 - `SetBCPType` describes the type of the Pressure Boundary conditions point. Default one is `-1`
 - `SetBCT` describes the Temperature Boundary type and value. Must be implemented if `model.isthermal == 1`
 - `SetBCTNew` describes the Temperature Boundary type and value on 1d boundary array. Must be implemented if `model.isthermal == 1`. Will be deprecated
-
-## Crazy conductivity
-
-If you wish to add crazy conductivity of the asthenosphere to the initialisation step 
-there is a `crazyConductivity` parameter that points to the struct that aggregates 
-- `phases` array of phases ids that crazy conductivity should be applied to
-- `nPhases` total number of phases
-- `multiplier` refers to the multiplier of the effective conductivity
 
 # CMake usage
 

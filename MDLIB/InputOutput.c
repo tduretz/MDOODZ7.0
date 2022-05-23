@@ -1035,8 +1035,8 @@ Input ReadInputFile( char *fileName ) {
     model.write_debug     = ReadInt2( fin, "writer_debug",    0 );
 
     // Input
-    model.input_files_dir = ReadChar( fin, "input_files_dir", "../../misc/PHASE_DIAGRAMS/");
-    model.input_file      = ReadChar( fin, "input_file", "blah.bin");
+    model.import_files_dir    = ReadChar( fin, "import_files_dir", "../../IMPORT/");
+    model.import_file         = ReadChar( fin, "import_file", "blah.bin");
 
     // Read scales for non-dimensionalisation
     scale scaling             = (scale){

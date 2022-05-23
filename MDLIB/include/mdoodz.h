@@ -30,8 +30,8 @@ typedef struct {
           surf_ised2, MantleID, topografix, Reseed, SmoothSoftening;
   double EpsBG, DivBG, user0, user1, user2, user3, user4, user5, user6, user7,
           user8;
-  char  *input_file;
-  char  *input_files_dir;
+  char  *import_file;
+  char  *import_files_dir;
   int    Nb_phases;
   int    ncont;
   double Courant, mineta, maxeta;

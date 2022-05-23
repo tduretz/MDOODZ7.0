@@ -1227,7 +1227,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
     GridFree( &mesh, &input.model );
 
     // Free char*'s
-    free(input.model.input_file);
+    free(input.model.import_file);
 
     NmodelFree(Nmodel);
 

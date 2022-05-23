@@ -3,7 +3,7 @@ istep = 00500
 irestart = 0
 
 /**** INPUT FILE ****/
-input_file = QuartzCoesite.bin /indicates the name in the input file for geometry
+import_file = QuartzCoesite.bin /indicates the name in the input file for geometry
 
 /**** OUTPUT FILES ****/
 writer          = 1
