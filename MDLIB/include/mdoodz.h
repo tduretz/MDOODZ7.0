@@ -31,6 +31,7 @@ typedef struct {
   double EpsBG, DivBG, user0, user1, user2, user3, user4, user5, user6, user7,
           user8;
   char  *input_file;
+  char  *input_files_dir;
   int    Nb_phases;
   int    ncont;
   double Courant, mineta, maxeta;
@@ -76,6 +77,7 @@ typedef struct {
   int      eqn_state;
   int      residual_form;
   int      irestart, istep;
+  int      writer, writerStep;
 } params;
 
 // Stucture scale contains scaling parameters
@@ -133,16 +135,20 @@ typedef struct {
 typedef double (*SetHorizontalVelocity_f)(MdoodzInput *input, Coordinates coordinates);
 typedef double (*SetVerticalVelocity_f)(MdoodzInput *input, Coordinates coordinates);
 typedef double (*SetTemperature_f)(MdoodzInput *input, Coordinates coordinates);
+typedef int (*SetPhase_f)(MdoodzInput *input, Coordinates coordinates);
 typedef double (*SetGrainSize_f)(MdoodzInput *input, Coordinates coordinates, int phase);
 typedef double (*SetPorosity_f)(MdoodzInput *input, Coordinates coordinates, int phase);
 typedef double (*SetDensity_f)(MdoodzInput *input, Coordinates coordinates, int phase);
 typedef double (*SetXComponent_f)(MdoodzInput *input, Coordinates coordinates, int phase);
-typedef int (*SetPhase_f)(MdoodzInput *input, Coordinates coordinates);
+typedef double (*SetPressure_f)(MdoodzInput *input, Coordinates coordinates, int phase);
+typedef double (*SetNoise_f)(MdoodzInput *input, Coordinates coordinates, int phase);
 
 typedef struct {
   SetHorizontalVelocity_f SetHorizontalVelocity;
   SetVerticalVelocity_f   SetVerticalVelocity;
   SetPhase_f              SetPhase;
+  SetPressure_f           SetPressure;
+  SetNoise_f              SetNoise;
   SetTemperature_f        SetTemperature;
   SetGrainSize_f          SetGrainSize;
   SetPorosity_f           SetPorosity;

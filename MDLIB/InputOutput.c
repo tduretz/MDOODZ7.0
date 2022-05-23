@@ -1029,16 +1029,13 @@ Input ReadInputFile( char *fileName ) {
     }
 
     // Output
-    int writer                = ReadInt2( fin, "writer",          0 );
-    if (writer<0 || writer>1) {
-        printf("'writer' should be set to 1 or 0\n Exiting...\n");
-        exit(1);
-    }
-    int writer_step           = ReadInt2( fin, "writer_step",     1 );
+    model.writer          = ReadInt2( fin, "writer",          0 );
+    model.writerStep      = ReadInt2( fin, "writer_step",     1 );
     model.write_markers   = ReadInt2( fin, "writer_markers",  0 );
     model.write_debug     = ReadInt2( fin, "writer_debug",    0 );
 
     // Input
+    model.input_files_dir = ReadChar( fin, "input_files_dir", "../../misc/PHASE_DIAGRAMS/");
     model.input_file      = ReadChar( fin, "input_file", "blah.bin");
 
     // Read scales for non-dimensionalisation

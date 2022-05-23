@@ -95,8 +95,6 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
     if (input.model.free_surf == 1 ) AllocateMarkerChain( &topo_ini, &topo_chain_ini, input.model );
 
     // Set new particle distribution
-
-    int          istep, irestart, writer = 0, writer_step;
     int cent=1, vert=0, prop=1, interp=0, vxnodes=-1, vznodes=-2;
     if ( input.model.irestart == 0 ) {
 
@@ -362,7 +360,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         printf("*************************************\n");
 
         // Write initial output
-        if ( writer == 1 ) {
+        if ( input.model.writer == 1 ) {
             WriteOutputHDF5( &mesh, &particles, &topo, &topo_chain, input.model, Nmodel, "Output", input.materials, input.scaling );
             if (input.model.write_markers == 1 ) WriteOutputHDF5Particles( &mesh, &particles, &topo, &topo_chain, &topo_ini, &topo_chain_ini, input.model, "Particles", input.materials, input.scaling );
         }
@@ -377,7 +375,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
     }
     else {
         // Which step do we restart from (BreakpointXXXX.dat)
-        input.model.step = istep;
+        input.model.step = input.model.istep;
         printf("Restarting from step number %05d...\n", input.model.step);
         LoadBreakpointParticles( &particles, &mesh, &topo_chain, &topo_chain_ini, &input.model, &topo, &topo_ini, input.scaling  );
         SetGridCoordinates( &mesh, &input.model, input.model.Nx, input.model.Nz ); // Overwrite previous grid
@@ -1176,7 +1174,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         //------------------------------------------------------------------------------------------------------------------------------//
 
         // Write output data
-        if ( writer == 1 && input.model.step % writer_step == 0 ) {
+        if ( input.model.writer == 1 && input.model.step % input.model.writerStep == 0 ) {
 
             printf("*************************************\n");
             printf("********* Write output files ********\n");
@@ -1184,9 +1182,9 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
             // Breakpoint file
             t_omp = (double)omp_get_wtime();
-            if (input.model.delete_breakpoints == 1 ) DeletePreviousBreakpoint(input.model.step, writer_step  );
+            if (input.model.delete_breakpoints == 1 ) DeletePreviousBreakpoint(input.model.step, input.model.writerStep  );
             MakeBreakpointParticles( &particles, &mesh, &topo_chain, &topo_chain_ini, input.model, &topo, &topo_ini, input.scaling );
-            UpdateInputFile( input.inputFileName, input.model.step);
+            UpdateInputFile( inputFileName, input.model.step);
             printf("** Time for Breakpoint file write = %lf sec\n", (double)((double)omp_get_wtime() - t_omp));
 
             // Visualisation file

@@ -76,6 +76,16 @@ void SetParticles(SetParticles_ff setParticles, MdoodzInput *instance, markers *
     } else {
       particles->T[np] = zeroC / instance->scaling.T;
     }
+    if (setParticles.SetPressure) {
+      particles->P[np] = setParticles.SetPressure(instance, coordinates, particles->phase[np]);
+    } else {
+      particles->P[np] = 0.0;
+    }
+    if (setParticles.SetNoise) {
+      particles->noise[np] = setParticles.SetNoise(instance, coordinates, particles->phase[np]);
+    } else {
+      particles->noise[np] = 0.0;
+    }
     ValidatePhase(particles->phase[np], instance->model.Nb_phases);
   }
 }
@@ -386,6 +396,14 @@ void ValidateSetup(MdoodzSetup *setup, MdoodzInput *instance) {
       warnings[warningsCount] = "SetParticles.SetXComponent is not specified. XComponent will be set to 0.0";
       warningsCount++;
     }
+    if (!setup->SetParticles->SetNoise) {
+      warnings[warningsCount] = "SetParticles.SetNoise is not specified. SetNoise will be set to 0.0";
+      warningsCount++;
+    }
+    if (!setup->SetParticles->SetPressure) {
+      warnings[warningsCount] = "SetParticles.SetPressure is not specified. SetPressure will be set to 0.0";
+      warningsCount++;
+    }
   }
 
   if (!setup->SetBCs) {
@@ -495,9 +513,9 @@ SetBC SetSimpleShearBCVx(MdoodzInput *input, POSITION position, Coordinates coor
 
 SetBC SetPureOrSimpleShearBCVx(MdoodzInput *input, POSITION position, Coordinates coordinates) {
   if (input->model.shear_style) {
-    return SetPureShearBCVx(input, position, coordinates);
-  } else {
     return SetSimpleShearBCVx(input, position, coordinates);
+  } else {
+    return SetPureShearBCVx(input, position, coordinates);
   }
 }
 
@@ -533,8 +551,8 @@ SetBC SetSimpleShearBCVz(MdoodzInput *input, POSITION position, Coordinates coor
 
 SetBC SetPureOrSimpleShearBCVz(MdoodzInput *input, POSITION position, Coordinates coordinates) {
   if (input->model.shear_style) {
-    return SetPureShearBCVz(input, position, coordinates);
-  } else {
     return SetSimpleShearBCVz(input, position, coordinates);
+  } else {
+    return SetPureShearBCVz(input, position, coordinates);
   }
 }

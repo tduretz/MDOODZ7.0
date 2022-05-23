@@ -64,8 +64,8 @@ Must have.
 Aggregates pointers to functions for setting up Boundary Conditions in a mesh grid.
 Must have.
 
-- `SetBCVx` describes the type and value of the Vx point. Must be implemented
-- `SetBCVz` describes the type and value of the Vz point. Must be implemented
+- `SetBCVx` describes the type and value of the Vx point. Must be implemented. Pre-made functions from mdoodz library can be used: `SetPureShearBCVx`, `SetSimpleShearBCVx`, `SetPureOrSimpleShearBCVx` (depends on `shear_style` input parameter)
+- `SetBCVz` describes the type and value of the Vz point. Must be implemented. Pre-made functions from mdoodz library can be used: `SetPureShearBCVz`, `SetSimpleShearBCVz`, `SetPureOrSimpleShearBCVz` (depends on `shear_style` input parameter)
 - `SetBCPType` describes the type of the Pressure Boundary conditions point. Default one is `-1`
 - `SetBCT` describes the Temperature Boundary type and value. Must be implemented if `model.isthermal == 1`
 - `SetBCTNew` describes the Temperature Boundary type and value on 1d boundary array. Must be implemented if `model.isthermal == 1`. Will be deprecated

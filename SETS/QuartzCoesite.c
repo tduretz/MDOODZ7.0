@@ -22,6 +22,8 @@ void MutateInput(MdoodzInput *input) {
     return;
   } else if (input->model.user1 == 2) {
     char *fileName = input->model.input_file;
+    char inputFilePath[255];
+    sprintf(inputFilePath, "%s%s", input->model.input_files_dir, input->model.input_file);
     printf("Phase map will be built based on %s\n", fileName);
     const int nx       = 1921;
     const int nz       = 1921;
@@ -31,14 +33,13 @@ void MutateInput(MdoodzInput *input) {
             .nx       = nx,
             .nz       = nz,
             .nb_elems = nb_elems,
-            .ph_hr    = ReadGeometryFile(fileName, nb_elems),
+            .ph_hr    = ReadGeometryFile(inputFilePath, nb_elems),
     };
   }
 }
 
 int SetPhase(MdoodzInput *input, Coordinates coordinates) {
   if (input->geometry) {
-    srand(69);
     const int nx    = input->geometry->nx;
     const int nz    = input->geometry->nz;
     // ------------------------- //
@@ -78,10 +79,21 @@ int SetPhase(MdoodzInput *input, Coordinates coordinates) {
   }
 }
 
+double SetNoise(MdoodzInput *input, Coordinates coordinates, int phase) {
+  srand(69);
+  return ((double) rand() / (double) RAND_MAX) - 0.5;
+}
+
+double SetPressure(MdoodzInput *input, Coordinates coordinates, int phase) {
+  return input->model.PrBG;
+}
+
 int main() {
   MdoodzSetup setup = {
           .SetParticles = &(SetParticles_ff){
-                  .SetPhase = SetPhase,
+                  .SetPhase    = SetPhase,
+                  .SetNoise    = SetNoise,
+                  .SetPressure = SetPressure,
           },
           .SetBCs = &(SetBCs_ff){
                   .SetBCVx = SetPureOrSimpleShearBCVx,
