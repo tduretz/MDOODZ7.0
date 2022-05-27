@@ -3,7 +3,7 @@ istep = 00500
 irestart = 0
 
 /**** INPUT FILE ****/
-import_file = QuartzCoesite.bin /indicates the name in the input file for geometry
+import_file = GarnetCoesite.bin /indicates the name in the input file for geometry
 
 /**** OUTPUT FILES ****/
 writer          = 1
@@ -22,7 +22,7 @@ T   = 600
 /**** SPACE-TIME ****/
 Nx      = 151
 Nz      = 151
-Nt      = 500
+Nt      = 1500
 xmin    = -2.500000e-3
 zmin    = -2.500000e-3
 xmax    =  2.500000e-3

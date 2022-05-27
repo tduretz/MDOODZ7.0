@@ -1035,7 +1035,7 @@ Input ReadInputFile( char *fileName ) {
     model.write_debug     = ReadInt2( fin, "writer_debug",    0 );
 
     // Input
-    model.import_files_dir    = ReadChar( fin, "import_files_dir", "../../IMPORT/");
+    model.import_files_dir    = ReadChar( fin, "import_files_dir", "../../IMPORT");
     model.import_file         = ReadChar( fin, "import_file", "blah.bin");
 
     // Read scales for non-dimensionalisation

@@ -23,7 +23,7 @@ void MutateInput(MdoodzInput *input) {
   } else if (input->model.user1 == 2) {
     char *fileName = input->model.import_file;
     char inputFilePath[255];
-    sprintf(inputFilePath, "%s%s", input->model.import_files_dir, input->model.import_file);
+    sprintf(inputFilePath, "%s/%s", input->model.import_files_dir, input->model.import_file);
     printf("Phase map will be built based on %s\n", fileName);
     const int nx       = 1921;
     const int nz       = 1921;
