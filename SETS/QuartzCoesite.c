@@ -22,7 +22,7 @@ void MutateInput(MdoodzInput *input) {
     return;
   } else if (input->model.user1 == 2) {
     char *fileName = input->model.import_file;
-    char inputFilePath[255];
+    char  inputFilePath[255];
     sprintf(inputFilePath, "%s/%s", input->model.import_files_dir, input->model.import_file);
     printf("Phase map will be built based on %s\n", fileName);
     const int nx       = 1921;
@@ -79,6 +79,18 @@ int SetPhase(MdoodzInput *input, Coordinates coordinates) {
   }
 }
 
+double SetTemperature(MdoodzInput *input, Coordinates coordinates) {
+  int thermal_evolution = (int) input->model.user0;
+  if (thermal_evolution) {
+    // TODO extract mesh->p_in[0]
+    // double a = input->model.user3, b = input->model.user4, Tfix = input->model.TBG;
+    // return (log(mesh->p_in[0] * input->scaling.S / 1e9 / b) / a + zeroC) / input->scaling.T;
+    return 0.0;
+  } else {
+    return input->model.TBG;
+  }
+}
+
 double SetNoise(MdoodzInput *input, Coordinates coordinates, int phase) {
   srand(69);
   return ((double) rand() / (double) RAND_MAX) - 0.5;
@@ -91,9 +103,10 @@ double SetPressure(MdoodzInput *input, Coordinates coordinates, int phase) {
 int main() {
   MdoodzSetup setup = {
           .SetParticles = &(SetParticles_ff){
-                  .SetPhase    = SetPhase,
-                  .SetNoise    = SetNoise,
-                  .SetPressure = SetPressure,
+                  .SetPhase       = SetPhase,
+                  .SetNoise       = SetNoise,
+                  .SetPressure    = SetPressure,
+                  .SetTemperature = SetTemperature,
           },
           .SetBCs = &(SetBCs_ff){
                   .SetBCVx = SetPureOrSimpleShearBCVx,

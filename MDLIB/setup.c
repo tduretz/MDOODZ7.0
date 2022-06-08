@@ -266,69 +266,68 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
     }
   }
 
-  if (instance->model.isthermal) {
-    /* -------------------------------------------------------------------------------------------------------*/
-    /* Set the BCs for T on all grid levels */
-    /* Type  1: Dirichlet point that do not match the physical boundary (Vx:
-   * bottom/top, Vz: left/right)      */
-    /* Type  0: Neumann point that matches the physical boundary (Vx: bottom/top,
-   * Vz: left/right)             */
-    /* Type -2: periodic in the x direction (matches the physical boundary) */
-    /* Type -1: not a BC point (tag for inner points) */
-    /* Type 30: not calculated (part of the "air") */
-    /* -------------------------------------------------------------------------------------------------------*/
 
-    for (int l = 0; l < NCZ; l++) {
-      for (int k = 0; k < NCX; k++) {
-        const int c = k + l * (NCX);
-        POSITION  position;
-        if (k == 0) {
-          if (l == NCZ - 1) {
-            position = NW;
-          } else if (l == 0) {
-            position = SW;
-          } else {
-            position = W;
-          }
-        } else if (k == NCX - 1) {
-          if (l == NCZ - 1) {
-            position = NE;
-          } else if (l == 0) {
-            position = SE;
-          } else {
-            position = E;
-          }
+  /* -------------------------------------------------------------------------------------------------------*/
+  /* Set the BCs for T on all grid levels */
+  /* Type  1: Dirichlet point that do not match the physical boundary (Vx:
+   * bottom/top, Vz: left/right)      */
+  /* Type  0: Neumann point that matches the physical boundary (Vx: bottom/top,
+   * Vz: left/right)             */
+  /* Type -2: periodic in the x direction (matches the physical boundary) */
+  /* Type -1: not a BC point (tag for inner points) */
+  /* Type 30: not calculated (part of the "air") */
+  /* -------------------------------------------------------------------------------------------------------*/
+
+  for (int l = 0; l < NCZ; l++) {
+    for (int k = 0; k < NCX; k++) {
+      const int c = k + l * (NCX);
+      POSITION  position;
+      if (k == 0) {
+        if (l == NCZ - 1) {
+          position = NW;
         } else if (l == 0) {
-          position = S;
-        } else if (l == NCZ - 1) {
-          position = N;
-        } else if ((mesh->BCt.type[c] == -1 || mesh->BCt.type[c] == 1 || mesh->BCt.type[c] == 0) && mesh->BCt.type[c + NCX] == 30) {
-          position = FREE_SURFACE;
+          position = SW;
         } else {
-          position = INTERNAL;
+          position = W;
         }
-        if (mesh->BCt.type[c] != 30) {
-          if (setBCs.SetBCT) {
-            SetBC bc          = setBCs.SetBCT(instance, position, mesh->T[c]);
-            mesh->BCt.type[c] = bc.type;
-            mesh->BCt.val[c]  = bc.value;
-          }
-          // TODO change size of BCt array and phase out SetBCTNew
-          if (setBCs.SetBCTNew) {
-            SetBC bc = setBCs.SetBCTNew(instance, position, mesh->T[c]);
-            if (k == 0) {
-              mesh->BCt.typW[l] = bc.type;
-              mesh->BCt.valW[l] = bc.value;
-            } else if (k == NCX - 1) {
-              mesh->BCt.typE[l] = bc.type;
-              mesh->BCt.valE[l] = bc.value;
-            } else if (l == 0) {
-              mesh->BCt.typS[k] = bc.type;
-              mesh->BCt.valS[k] = bc.value;
-            } else if (l == NCZ - 1) {
-              mesh->BCt.typN[k] = bc.type;
-              mesh->BCt.valN[k] = bc.value;
-            }
+      } else if (k == NCX - 1) {
+        if (l == NCZ - 1) {
+          position = NE;
+        } else if (l == 0) {
+          position = SE;
+        } else {
+          position = E;
+        }
+      } else if (l == 0) {
+        position = S;
+      } else if (l == NCZ - 1) {
+        position = N;
+      } else if ((mesh->BCt.type[c] == -1 || mesh->BCt.type[c] == 1 || mesh->BCt.type[c] == 0) && mesh->BCt.type[c + NCX] == 30) {
+        position = FREE_SURFACE;
+      } else {
+        position = INTERNAL;
+      }
+      if (mesh->BCt.type[c] != 30) {
+        if (setBCs.SetBCT) {
+          SetBC bc          = setBCs.SetBCT(instance, position, mesh->T[c]);
+          mesh->BCt.type[c] = bc.type;
+          mesh->BCt.val[c]  = bc.value;
+        }
+        // TODO change size of BCt array and phase out SetBCTNew
+        if (setBCs.SetBCTNew) {
+          SetBC bc = setBCs.SetBCTNew(instance, position, mesh->T[c]);
+          if (k == 0) {
+            mesh->BCt.typW[l] = bc.type;
+            mesh->BCt.valW[l] = bc.value;
+          } else if (k == NCX - 1) {
+            mesh->BCt.typE[l] = bc.type;
+            mesh->BCt.valE[l] = bc.value;
+          } else if (l == 0) {
+            mesh->BCt.typS[k] = bc.type;
+            mesh->BCt.valS[k] = bc.value;
+          } else if (l == NCZ - 1) {
+            mesh->BCt.typN[k] = bc.type;
+            mesh->BCt.valN[k] = bc.value;
           }
         }
       }
