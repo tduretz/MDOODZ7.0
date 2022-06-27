@@ -5,9 +5,9 @@ irestart = 0
 
 /**** OUTPUT FILES ****/
 writer = 1
-writer_step = 10
+writer_step = 1
 writer_markers = 0
-writer_debug   = 0 
+writer_debug   = 0
 
 /**** INPUT FILE FOR PARTICLES ****/
 input_file = setup_r501x501_fsp40.bin
@@ -17,15 +17,15 @@ eta = 1.e+22      /viscosity
 L   = 30.e4       /length
 V   = 1.5e-8     /velocity
 T   = 1.e+02      /temperature
- 
+
 /**** SPACE-TIME ****/
-Nx      = 2000 // 300/600 = 0.5 km horizontal resolution
-Nz      = 1600 // 200/800 = 0.25 km vertical resolution
-Nt      = 50
+Nx      = 200 // 300/600 = 0.5 km horizontal resolution
+Nz      = 160 // 200/800 = 0.25 km vertical resolution
+Nt      = 1
 xmin    = -150.000000e3
 zmin    = -110.000000e3
 xmax    =  150.000000e3
-zmax    = 10.000000e3 
+zmax    = 10.000000e3
 dt      = 1.2623e+11
 Courant = 0.5
 penalty = 1e2
@@ -53,7 +53,7 @@ adiab_heat      = 0
 surf_remesh     = 1
 surf_processes  = 1 /0 = none; 1 = diffusion only; 2 = fills instantaneously the basin up to the base level;  3 = diffusion + source term
 surf_diff       = 5.0e-6 /topography diffusion coefficient
-surf_ised1      = 4 /sediment phase indices 
+surf_ised1      = 4 /sediment phase indices
 surf_ised2      = 5
 surf_sedirate   = 0.0 / sediementation rate [m/s]:3.1688e-12 <-> 0.01 cm/yr
 surf_baselev    = 0.0e3 / base level for sedimentation
@@ -76,7 +76,7 @@ gx = 0.0000
 gz = -9.81
 
 /**** PHASE PROPERTIES ****/
-Nb_phases = 9 
+Nb_phases = 9
 
 ID   = 0       / Seed
 rho  = 2700.00 / ref. density
@@ -171,9 +171,9 @@ ID   = 5
 rho  = 2300.00 / sediments
 mu   = 1e10
 Cv   = 1050
-k    = 2   
+k    = 2
 Qr   = 0.5e-6
-C    = 1e7 
+C    = 1e7
 phi  = 30
 Slim = 500e9
 alp  = 10.0e-6

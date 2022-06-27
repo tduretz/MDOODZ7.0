@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as mpl
 
 # file = h5py.File('/Users/romankulakov/CLionProjects/MDOODZ7/cmake-build-debug/Output00000.gzip.h5', 'r')
-file   = h5py.File('/Users/romankulakov/CLionProjects/MDOODZ7/cmake-exec/QuartzCoesite/Output00500.gzip.h5', 'r')
+file   = h5py.File('/Users/romankulakov/CLionProjects/MDOODZ7/cmake-exec/MLPS_Ellipses/Output00001.gzip.h5', 'r')
 phases = file['/VizGrid/compo_hr']
 xv_ph  = file['/VizGrid/xviz_hr']
 zv_ph  = file['/VizGrid/zviz_hr']
