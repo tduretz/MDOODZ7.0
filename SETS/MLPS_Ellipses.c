@@ -1,6 +1,5 @@
 #include "math.h"
 #include "mdoodz.h"
-#include "stdbool.h"
 #include "stdlib.h"
 
 
@@ -29,7 +28,7 @@ int SetPhase(MdoodzInput *input, Coordinates coordinates) {
 
 double SetTemperature(MdoodzInput *input, Coordinates coordinates) {
   const double T0    = 273.15 / input->scaling.T;
-  const double TmaxW = (1250 + 273.15) / input->scaling.T + input->model.Tinit;
+  const double TmaxW = (1250 + 273.15) / input->scaling.T;
   const double HLit  = 70e3 / input->scaling.L;
   const double Htot  = 2 * HLit;
   return ((TmaxW - T0) / Htot) * (-coordinates.z - 0e3 / input->scaling.L) + T0;
@@ -41,14 +40,6 @@ double SetDensity(MdoodzInput *input, Coordinates coordinates, int phase) {
     return input->materials.rho[phase] * (1 -  input->materials.alp[phase] * (TPart - input->materials.T0[phase]) );
   } else {
     return input->materials.rho[phase];
-  }
-}
-
-char SetBCPType(MdoodzInput *instance, POSITION position) {
-  if (position == NE || position == NW) {
-    return 0;
-  } else {
-    return -1;
   }
 }
 
@@ -86,31 +77,33 @@ SetBC SetBCTNew(MdoodzInput *instance, POSITION position, double particleTempera
   return bc;
 }
 
-void MutateInput(MdoodzInput *instance) {
-  int asthenospherePhases[1]  = {3};
-  instance->crazyConductivity = &(CrazyConductivity){
-          .multiplier = 1000,
-          .nPhases    = 1,
-          .phases     = asthenospherePhases,
-  };
-}
 
+// B. Petri et al. / Earth and Planetary Science Letters 512 (2019) 147–162
 int main() {
   MdoodzSetup setup = {
           .SetParticles = &(SetParticles_ff){
+                  // The continental crust is initially 30 km thick and is modeled with a visco-plastic layer of moderate strength (anorthite flow law; Rybacki and Dresen, 2004)
+                  // and includes embedded elliptical bod- ies of relatively weaker (4 × 67 km ellipses; wet quartzite; Kirby, 1983)
+                  // and stronger rheologies (4–7 × 42–77 km ellipses; Maryland diabase; Mackwell et al., 1998)
+                  // The upper subcontinental mantle is initially 40 km thick and is modeled using a visco-plastic layer dominated by dry olivine (Carter and Tsenn, 1987)
+                  // and incorporates weaker lens-shaped bodies dominated by wet olivine (3 × 61 km ellipses; Carter and Tsenn, 1987)
+                  // The lower subcontinental mantle is modeled using a purely viscous layer dominated by a wet olivine rheology.
                   .SetPhase       = SetPhase,
+                  // The initial thermal field is that of an equilibrium field that includes radiogenic heat production
+                  // in the continental crust and exhibits 500–550 ◦ C at the Moho.
                   .SetTemperature = SetTemperature,
                   .SetDensity     = SetDensity,
           },
           .SetBCs = &(SetBCs_ff){
+                  // Extension is applied by prescribing horizontal velocities at the lateral model boundaries (left, right, bottom),
+                  // satisfying a constant bulk extension rate of 10−15 s−1.
                   .SetBCVx    = SetPureShearBCVx,
                   .SetBCVz    = SetPureShearBCVz,
-                  .SetBCPType = SetBCPType,
+                  // the top and bottom boundaries are characterized by a constant temperature (0 and 1330◦C, respectively).
+                  // Zero heat flow boundary conditions are prescribed at the lateral sides of the model;
                   .SetBCT     = SetBCT,
                   .SetBCTNew  = SetBCTNew,
           },
-          .MutateInput = MutateInput,
-
   };
   RunMDOODZ("RiftingPauline.txt", &setup);
 }

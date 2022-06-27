@@ -19,15 +19,15 @@ V   = 1.5e-8     /velocity
 T   = 1.e+02      /temperature
  
 /**** SPACE-TIME ****/
-Nx      = 150 // 300/600 = 0.5 km horizontal resolution 
-Nz      = 100 // 200/800 = 0.25 km vertical resolution
+Nx      = 2000 // 300/600 = 0.5 km horizontal resolution
+Nz      = 1600 // 200/800 = 0.25 km vertical resolution
 Nt      = 50
 xmin    = -150.000000e3
-zmin    = -200.000000e3
+zmin    = -110.000000e3
 xmax    =  150.000000e3
 zmax    = 10.000000e3 
 dt      = 1.2623e+11
-Courant = 0.45
+Courant = 0.5
 penalty = 1e2
 eta_avg = 0
 itp_stencil = 1
@@ -44,7 +44,7 @@ isthermal       = 1
 isPl_soft       = 0
 line_search     = 1
 free_surf       = 1
-free_surf_stab  = 1
+free_surf_stab  = 0
 eqn_state       = 1
 thermal_eq      = 1
 subgrid_diff    = 2
