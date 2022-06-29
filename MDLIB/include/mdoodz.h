@@ -237,8 +237,9 @@ typedef struct {
   double centreZ;
   double radiusX;
   double radiusZ;
+  double angle;
 } Ellipse;
 
-bool IsEllipse(Coordinates coordinates, Ellipse ellipse, double scalingL);
+bool IsEllipseCoordinates(Coordinates coordinates, Ellipse ellipse, double scalingL);
 
 #endif

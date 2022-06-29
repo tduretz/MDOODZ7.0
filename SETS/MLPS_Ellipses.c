@@ -19,13 +19,11 @@ int SetPhase(MdoodzInput *input, Coordinates coordinates) {
             .radiusX = 67e3,
             .centreX = 75e3,
             .centreZ = 10e3,
+            .angle   = 0,
     };
-    if (IsEllipse(coordinates, ellipse, input->scaling.L)) {
+    if (IsEllipseCoordinates(coordinates, ellipse, input->scaling.L)) {
       return 4;
     }
-    /*
-     *
-     */
     return 0;
   } else if (coordinates.z > -HCrust - HMantle) {
     return 1;

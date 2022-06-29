@@ -557,12 +557,13 @@ SetBC SetPureOrSimpleShearBCVz(MdoodzInput *input, POSITION position, Coordinate
   }
 }
 
-bool IsEllipse(Coordinates coordinates, Ellipse ellipse, double scalingL) {
-  const double radius = 1e4 / scalingL;
-  const double theta  = 90 * M_PI / 180.0;
+bool IsEllipseCoordinates(Coordinates coordinates, Ellipse ellipse, double scalingL) {
+  const double theta  = ellipse.angle * M_PI / 180.0;
+  const double radiusX = (ellipse.radiusX / 2) / scalingL;
+  const double radiusZ = (ellipse.radiusZ / 2) / scalingL;
   const double Xn     = (coordinates.x + ellipse.centreX / scalingL) * cos(theta) - (coordinates.z + ellipse.centreZ / scalingL) * sin(theta);
   const double Zn     = (coordinates.x + ellipse.centreX / scalingL) * sin(theta) + (coordinates.z + ellipse.centreZ / scalingL) * cos(theta);
-  if (pow(Xn / radius * 2.0, 2) + pow(Zn / radius / 2.0, 2) - 1 < 0) {
+  if (pow(Xn / radiusX, 2) + pow(Zn / radiusZ, 2) - 1 < 0) {
     // and stronger rheologies (4–7 × 42–77 km ellipses; Maryland diabase; Mackwell et al., 1998)
     return true;
   } else {
