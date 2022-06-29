@@ -2,6 +2,7 @@
 #include "mdoodz.h"
 #include "stdio.h"
 #include "stdlib.h"
+#include "stdbool.h"
 
 
 void BuildInitialTopography(BuildInitialTopography_ff buildInitialTopography, MdoodzInput *instance, markers *topo_chain) {
@@ -553,5 +554,27 @@ SetBC SetPureOrSimpleShearBCVz(MdoodzInput *input, POSITION position, Coordinate
     return SetSimpleShearBCVz(input, position, coordinates);
   } else {
     return SetPureShearBCVz(input, position, coordinates);
+  }
+}
+
+bool IsEllipse(Coordinates coordinates, Ellipse ellipse, double scalingL) {
+  const double radius = 1e4 / scalingL;
+  const double theta  = 90 * M_PI / 180.0;
+  const double Xn     = (coordinates.x + 0.1) * cos(theta) - coordinates.z * sin(theta);
+  const double Zn     = (coordinates.x + 0.1) * sin(theta) + coordinates.z * cos(theta);
+  if (pow(Xn / radius * 2.0, 2) + pow(Zn / radius / 2.0, 2) - 1 < 0) {
+    // and stronger rheologies (4–7 × 42–77 km ellipses; Maryland diabase; Mackwell et al., 1998)
+    return 4;
+  }
+}
+
+bool IsEllipse2(Coordinates coordinates, Ellipse ellipse, double scalingL) {
+  const double theta = 90 * M_PI / 180.0;
+  const double Xn    = (coordinates.x + ellipse.centreX / scalingL) * cos(theta) - (coordinates.z + ellipse.centreZ / scalingL) * sin(theta);
+  const double Zn    = (coordinates.x + ellipse.centreX / scalingL) * sin(theta) + (coordinates.z + ellipse.centreZ / scalingL) * cos(theta);
+  if (pow(Xn / (ellipse.radiusX / scalingL), 2) + pow(Zn / (ellipse.radiusZ / scalingL), 2) - 1 < 0) {
+    return true;
+  } else {
+    return false;
   }
 }

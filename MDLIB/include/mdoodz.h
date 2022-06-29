@@ -5,6 +5,7 @@
 #define Rg        8.314510
 #define PI        3.14159265359
 #define Rad_Earth 6370000
+#include "stdbool.h"
 
 // address Williams comments
 typedef enum { ARITHMETIC = 0,
@@ -230,5 +231,14 @@ SetBC SetSimpleShearBCVx(MdoodzInput *input, POSITION position, Coordinates coor
 SetBC SetSimpleShearBCVz(MdoodzInput *input, POSITION position, Coordinates coordinates);
 SetBC SetPureOrSimpleShearBCVx(MdoodzInput *input, POSITION position, Coordinates coordinates);
 SetBC SetPureOrSimpleShearBCVz(MdoodzInput *input, POSITION position, Coordinates coordinates);
+
+typedef struct {
+  double centreX;
+  double centreZ;
+  double radiusX;
+  double radiusZ;
+} Ellipse;
+
+bool IsEllipse(Coordinates coordinates, Ellipse ellipse, double scalingL);
 
 #endif
