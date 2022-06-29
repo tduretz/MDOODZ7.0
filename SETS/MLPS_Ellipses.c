@@ -14,24 +14,17 @@ int SetPhase(MdoodzInput *input, Coordinates coordinates) {
   // The continental crust is initially 30 km thick and is modeled with a visco-plastic layer of moderate strength (anorthite flow law; Rybacki and Dresen, 2004)
   if (coordinates.z > -HCrust) {
     // and includes embedded elliptical bodies of relatively weaker (4 × 67 km ellipses; wet quartzite; Kirby, 1983)
-    const double radius = 1e4 / input->scaling.L;
-    const double theta  = 90 * M_PI / 180.0;
-    const double Xn     = (coordinates.x + 0.1) * cos(theta) - coordinates.z * sin(theta);
-    const double Zn     = (coordinates.x + 0.1) * sin(theta) + coordinates.z * cos(theta);
-    if (pow(Xn / radius * 2.0, 2) + pow(Zn / radius / 2.0, 2) - 1 < 0) {
-      // and stronger rheologies (4–7 × 42–77 km ellipses; Maryland diabase; Mackwell et al., 1998)
+    Ellipse ellipse = {
+            .radiusZ = 4e3,
+            .radiusX = 67e3,
+            .centreX = 75e3,
+            .centreZ = 10e3,
+    };
+    if (IsEllipse(coordinates, ellipse, input->scaling.L)) {
       return 4;
     }
     /*
-     * Ellipse ellipse = {
-        .radiusZ = 4e3,
-        .radiusX = 67e3,
-              .centreX = 75e3,
-              .centreZ = 10e3,
-        };
-        if (IsEllipse(coordinates, ellipse, input->scaling.L)) {
-        return 4;
-        }
+     *
      */
     return 0;
   } else if (coordinates.z > -HCrust - HMantle) {
