@@ -1,33 +1,78 @@
-#include "math.h"
 #include "mdoodz.h"
-#include "stdlib.h"
 
+static Ellipse GetWetOlivineEllipse(double centreX, double centreZ) {
+  return (Ellipse) {
+          .radiusZ = 3e3,
+          .radiusX = 61e3,
+          .centreX = centreX,
+          .centreZ = centreZ,
+          .angle   = 0,
+  };
+}
+
+static Ellipse GetWetQuartziteEllipse(double centreX, double centreZ) {
+  return (Ellipse) {
+          .radiusZ = 4e3,
+          .radiusX = 67e3,
+          .centreX = centreX,
+          .centreZ = centreZ,
+          .angle   = 0,
+  };
+}
 
 int SetPhase(MdoodzInput *input, Coordinates coordinates) {
-  // The upper subcontinental mantle is initially 40 km thick and is modeled using a visco-plastic layer dominated by dry olivine (Carter and Tsenn, 1987)
-  // and incorporates weaker lens-shaped bodies dominated by wet olivine (3 × 61 km ellipses; Carter and Tsenn, 1987)
-  // The lower subcontinental mantle is modeled using a purely viscous layer dominated by a wet olivine rheology.
-  const double HCrust   = 30e3 / input->scaling.L;
-  const double HMantle  = 40e3 / input->scaling.L;
-
-
+  const double HCrust  = 30e3 / input->scaling.L;
+  const double HMantle = 40e3 / input->scaling.L;
   // The continental crust is initially 30 km thick and is modeled with a visco-plastic layer of moderate strength (anorthite flow law; Rybacki and Dresen, 2004)
   if (coordinates.z > -HCrust) {
-    // and includes embedded elliptical bodies of relatively weaker (4 × 67 km ellipses; wet quartzite; Kirby, 1983)
-    Ellipse ellipse = {
-            .radiusZ = 4e3,
-            .radiusX = 67e3,
-            .centreX = 75e3,
-            .centreZ = 10e3,
-            .angle   = 0,
-    };
-    if (IsEllipseCoordinates(coordinates, ellipse, input->scaling.L)) {
+    if (IsEllipseCoordinates(coordinates, GetWetQuartziteEllipse(-50e3, -8e3), input->scaling.L)
+        || IsEllipseCoordinates(coordinates, GetWetQuartziteEllipse(25e3, -7e3), input->scaling.L)
+        || IsEllipseCoordinates(coordinates, GetWetQuartziteEllipse(-25e3, -18e3), input->scaling.L)
+        || IsEllipseCoordinates(coordinates, GetWetQuartziteEllipse(48e3, -17e3), input->scaling.L)) {
+      // and includes embedded elliptical bodies of relatively weaker (4 × 67 km ellipses; wet quartzite; Kirby, 1983)
       return 4;
+    }
+    // and stronger rheologies (4–7 × 42–77 km ellipses; Maryland diabase
+    Ellipse diabase1 = (Ellipse){
+            .angle   = 0,
+            .radiusX = 42e3,
+            .radiusZ = 6e3,
+            .centreX = -16e3,
+            .centreZ = -13e3,
+    };
+    Ellipse diabase2 = (Ellipse){
+            .angle   = 0,
+            .radiusX = 50e3,
+            .radiusZ = 4e3,
+            .centreX = -40e3,
+            .centreZ = -25e3,
+    };
+    Ellipse diabase3 = (Ellipse){
+            .angle   = 0,
+            .radiusX = 77e3,
+            .radiusZ = 7e3,
+            .centreX = 35e3,
+            .centreZ = -24e3,
+    };
+    if (IsEllipseCoordinates(coordinates, diabase1, input->scaling.L)
+        || IsEllipseCoordinates(coordinates, diabase2, input->scaling.L)
+        || IsEllipseCoordinates(coordinates, diabase3, input->scaling.L)) {
+      return 6;
     }
     return 0;
   } else if (coordinates.z > -HCrust - HMantle) {
+    // The upper subcontinental mantle is initially 40 km thick and is modeled using a visco-plastic layer dominated by dry olivine (Carter and Tsenn, 1987)
+    // and incorporates weaker lens-shaped bodies dominated by wet olivine (3 × 61 km ellipses; Carter and Tsenn, 1987)
+    if (IsEllipseCoordinates(coordinates, GetWetOlivineEllipse(-10e3, -37e3), input->scaling.L)
+        || IsEllipseCoordinates(coordinates, GetWetOlivineEllipse(-55e3, -42e3), input->scaling.L)
+        || IsEllipseCoordinates(coordinates, GetWetOlivineEllipse(32e3, -42e3), input->scaling.L)
+        || IsEllipseCoordinates(coordinates, GetWetOlivineEllipse(-5e3, -47e3), input->scaling.L)
+        || IsEllipseCoordinates(coordinates, GetWetOlivineEllipse(-28e3, -55e3), input->scaling.L)) {
+      return 5;
+    }
     return 1;
   } else {
+    // The lower subcontinental mantle is modeled using a purely viscous layer dominated by a wet olivine rheology.
     return 2;
   }
 }

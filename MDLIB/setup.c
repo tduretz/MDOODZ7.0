@@ -561,21 +561,9 @@ bool IsEllipseCoordinates(Coordinates coordinates, Ellipse ellipse, double scali
   const double theta  = ellipse.angle * M_PI / 180.0;
   const double radiusX = (ellipse.radiusX / 2) / scalingL;
   const double radiusZ = (ellipse.radiusZ / 2) / scalingL;
-  const double Xn     = (coordinates.x + ellipse.centreX / scalingL) * cos(theta) - (coordinates.z + ellipse.centreZ / scalingL) * sin(theta);
-  const double Zn     = (coordinates.x + ellipse.centreX / scalingL) * sin(theta) + (coordinates.z + ellipse.centreZ / scalingL) * cos(theta);
+  const double Xn     = (coordinates.x - ellipse.centreX / scalingL) * cos(theta) - (coordinates.z + ellipse.centreZ / scalingL) * sin(theta);
+  const double Zn     = (coordinates.x + ellipse.centreX / scalingL) * sin(theta) + (coordinates.z - ellipse.centreZ / scalingL) * cos(theta);
   if (pow(Xn / radiusX, 2) + pow(Zn / radiusZ, 2) - 1 < 0) {
-    // and stronger rheologies (4–7 × 42–77 km ellipses; Maryland diabase; Mackwell et al., 1998)
-    return true;
-  } else {
-    return false;
-  }
-}
-
-bool IsEllipse2(Coordinates coordinates, Ellipse ellipse, double scalingL) {
-  const double theta = 90 * M_PI / 180.0;
-  const double Xn    = (coordinates.x + ellipse.centreX / scalingL) * cos(theta) - (coordinates.z + ellipse.centreZ / scalingL) * sin(theta);
-  const double Zn    = (coordinates.x + ellipse.centreX / scalingL) * sin(theta) + (coordinates.z + ellipse.centreZ / scalingL) * cos(theta);
-  if (pow(Xn / (ellipse.radiusX / scalingL), 2) + pow(Zn / (ellipse.radiusZ / scalingL), 2) - 1 < 0) {
     return true;
   } else {
     return false;
