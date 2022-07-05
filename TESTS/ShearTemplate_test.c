@@ -4,7 +4,7 @@
 #define FILENAME "Output00001.gzip.h5"
 
 
-int SetPhase(MdoodzInstance *instance, Coordinates coordinates) {
+int SetPhase(MdoodzInput *instance, Coordinates coordinates) {
   const double radius = instance->model.user1 / instance->scaling.L;
   if (coordinates.x * coordinates.x + coordinates.z * coordinates.z < radius * radius) {
     return 1;
@@ -13,7 +13,7 @@ int SetPhase(MdoodzInstance *instance, Coordinates coordinates) {
   }
 }
 
-double SetDensity(MdoodzInstance *instance, Coordinates coordinates, int phase) {
+double SetDensity(MdoodzInput *instance, Coordinates coordinates, int phase) {
   const double T_init = (instance->model.user0 + zeroC) / instance->scaling.T;
   if (instance->model.eqn_state > 0) {
     return instance->materials.rho[phase] * (1 - instance->materials.alp[phase] * (T_init - instance->materials.T0[phase]));
@@ -22,7 +22,7 @@ double SetDensity(MdoodzInstance *instance, Coordinates coordinates, int phase) 
   }
 }
 
-SetBC SetBCVx(MdoodzInstance *instance, POSITION position, Coordinates coordinates) {
+SetBC SetBCVx(MdoodzInput *instance, POSITION position, Coordinates coordinates) {
   SetBC bc;
   if (position == S || position == N || position == NE || position == NW || position == SE || position == SW) {
     bc.value = 0.0;
@@ -37,7 +37,7 @@ SetBC SetBCVx(MdoodzInstance *instance, POSITION position, Coordinates coordinat
   return bc;
 }
 
-SetBC SetBCVz(MdoodzInstance *instance, POSITION position, Coordinates coordinates) {
+SetBC SetBCVz(MdoodzInput *instance, POSITION position, Coordinates coordinates) {
   SetBC bc;
   if (position == W || position == E || position == NE || position == NW || position == SE || position == SW) {
     bc.value = 0.0;
@@ -53,18 +53,17 @@ SetBC SetBCVz(MdoodzInstance *instance, POSITION position, Coordinates coordinat
 }
 
 int main() {
-  MdoodzInstance instance = {
-          .inputFileName = "ShearTemplate.txt",
-          .SetParticles  = &(SetParticles_ff){
-                   .SetPhase              = SetPhase,
-                   .SetDensity            = SetDensity,
+  MdoodzSetup instance = {
+          .SetParticles = &(SetParticles_ff){
+                  .SetPhase   = SetPhase,
+                  .SetDensity = SetDensity,
           },
           .SetBCs = &(SetBCs_ff){
                   .SetBCVx = SetBCVx,
                   .SetBCVz = SetBCVz,
           },
   };
-  RunMDOODZ(&instance);
+  RunMDOODZ("ShearTemplate.txt", &instance);
 
   hid_t File            = H5Fopen(FILENAME, H5F_ACC_RDONLY, H5P_DEFAULT);
   hid_t IterationsGroup = H5Gopen(File, "Iterations", H5P_DEFAULT);

@@ -2,8 +2,8 @@ import h5py as h5py
 import numpy as np
 import matplotlib.pyplot as mpl
 
-file = h5py.File('/Users/romankulakov/CLionProjects/MDOODZ7/cmake-exec/PinchSwellGSE/Output00140.gzip.h5', 'r')
-P    = file['Centers/d']
+file = h5py.File('/Users/romankulakov/CLionProjects/MDOODZ7/cmake-exec/QuartzCoesite/Output00000.gzip.h5', 'r')
+P    = file['Centers/P']
 xc   = file['/Model/xc_coord']
 zc   = file['/Model/zc_coord']
 data = file['/Model/Params']
