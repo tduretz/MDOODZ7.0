@@ -5,6 +5,7 @@
 #define Rg        8.314510
 #define PI        3.14159265359
 #define Rad_Earth 6370000
+#include "stdbool.h"
 
 // address Williams comments
 typedef enum { ARITHMETIC = 0,
@@ -30,7 +31,8 @@ typedef struct {
           surf_ised2, MantleID, topografix, Reseed, SmoothSoftening;
   double EpsBG, DivBG, user0, user1, user2, user3, user4, user5, user6, user7,
           user8;
-  char  *input_file;
+  char  *import_file;
+  char  *import_files_dir;
   int    Nb_phases;
   int    ncont;
   double Courant, mineta, maxeta;
@@ -75,6 +77,8 @@ typedef struct {
   int      aniso, aniso_fstrain, oop, noise_bg;
   int      eqn_state;
   int      residual_form;
+  int      irestart, istep;
+  int      writer, writerStep;
 } params;
 
 // Stucture scale contains scaling parameters
@@ -113,34 +117,39 @@ typedef struct {
 
 char                         *GetSetupFileName(int nargs, char *args[]);
 
-typedef struct MdoodzInstance MdoodzInstance;
+typedef struct MdoodzSetup    MdoodzSetup;
+typedef struct MdoodzInput    MdoodzInput;
 
 typedef struct {
   double x;
   double z;
 } Coordinates;
 
-typedef double (*SetSurfaceZCoord_f)(MdoodzInstance *instance, double x_coord);
-typedef int (*SetSurfacePhase_f)(MdoodzInstance *instance, double x_coord);
+typedef double (*SetSurfaceZCoord_f)(MdoodzInput *input, double x_coord);
+typedef int (*SetSurfacePhase_f)(MdoodzInput *input, double x_coord);
 
 typedef struct {
   SetSurfaceZCoord_f SetSurfaceZCoord;
   SetSurfacePhase_f  SetSurfacePhase;
 } BuildInitialTopography_ff;
 
-typedef double (*SetHorizontalVelocity_f)(MdoodzInstance *instance, Coordinates coordinates);
-typedef double (*SetVerticalVelocity_f)(MdoodzInstance *instance, Coordinates coordinates);
-typedef double (*SetTemperature_f)(MdoodzInstance *instance, Coordinates coordinates);
-typedef double (*SetGrainSize_f)(MdoodzInstance *instance, Coordinates coordinates, int phase);
-typedef double (*SetPorosity_f)(MdoodzInstance *instance, Coordinates coordinates, int phase);
-typedef double (*SetDensity_f)(MdoodzInstance *instance, Coordinates coordinates, int phase);
-typedef double (*SetXComponent_f)(MdoodzInstance *instance, Coordinates coordinates, int phase);
-typedef int (*SetPhase_f)(MdoodzInstance *instance, Coordinates coordinates);
+typedef double (*SetHorizontalVelocity_f)(MdoodzInput *input, Coordinates coordinates);
+typedef double (*SetVerticalVelocity_f)(MdoodzInput *input, Coordinates coordinates);
+typedef double (*SetTemperature_f)(MdoodzInput *input, Coordinates coordinates);
+typedef int (*SetPhase_f)(MdoodzInput *input, Coordinates coordinates);
+typedef double (*SetGrainSize_f)(MdoodzInput *input, Coordinates coordinates, int phase);
+typedef double (*SetPorosity_f)(MdoodzInput *input, Coordinates coordinates, int phase);
+typedef double (*SetDensity_f)(MdoodzInput *input, Coordinates coordinates, int phase);
+typedef double (*SetXComponent_f)(MdoodzInput *input, Coordinates coordinates, int phase);
+typedef double (*SetPressure_f)(MdoodzInput *input, Coordinates coordinates, int phase);
+typedef double (*SetNoise_f)(MdoodzInput *input, Coordinates coordinates, int phase);
 
 typedef struct {
   SetHorizontalVelocity_f SetHorizontalVelocity;
   SetVerticalVelocity_f   SetVerticalVelocity;
   SetPhase_f              SetPhase;
+  SetPressure_f           SetPressure;
+  SetNoise_f              SetNoise;
   SetTemperature_f        SetTemperature;
   SetGrainSize_f          SetGrainSize;
   SetPorosity_f           SetPorosity;
@@ -166,11 +175,11 @@ typedef struct {
   char   type;
 } SetBC;
 
-typedef SetBC (*SetBCVx_f)(MdoodzInstance *instance, POSITION position, Coordinates coordinates);
-typedef SetBC (*SetBCVz_f)(MdoodzInstance *instance, POSITION position, Coordinates coordinates);
-typedef SetBC (*SetBCT_f)(MdoodzInstance *instance, POSITION position, double gridTemperature);
-typedef SetBC (*SetBCTNew_f)(MdoodzInstance *instance, POSITION position, double gridTemperature);
-typedef char (*SetBCPType_f)(MdoodzInstance *instance, POSITION position);
+typedef SetBC (*SetBCVx_f)(MdoodzInput *input, POSITION position, Coordinates coordinates);
+typedef SetBC (*SetBCVz_f)(MdoodzInput *input, POSITION position, Coordinates coordinates);
+typedef SetBC (*SetBCT_f)(MdoodzInput *input, POSITION position, double gridTemperature);
+typedef SetBC (*SetBCTNew_f)(MdoodzInput *input, POSITION position, double gridTemperature);
+typedef char (*SetBCPType_f)(MdoodzInput *input, POSITION position);
 
 typedef struct {
   SetBCVx_f    SetBCVx;
@@ -186,19 +195,60 @@ typedef struct {
   int    nPhases;
 } CrazyConductivity;
 
-struct MdoodzInstance {
-  char                      *inputFileName;
-  params                     model;
-  mat_prop                   materials;
-  scale                      scaling;
 
+typedef struct {
+  int   nx;
+  int   nz;
+  int   nb_elems;
+  char *ph_hr;
+} Geometry;
+
+typedef void(MutateInput_f)(MdoodzInput *input);
+
+struct MdoodzSetup {
   BuildInitialTopography_ff *BuildInitialTopography;
   SetParticles_ff           *SetParticles;
   SetBCs_ff                 *SetBCs;
-
-  CrazyConductivity         *crazyConductivity;
+  MutateInput_f             *MutateInput;
 };
 
-void RunMDOODZ(MdoodzInstance *instance);
+struct MdoodzInput {
+  char              *inputFileName;
+  params             model;
+  mat_prop           materials;
+  scale              scaling;
+  CrazyConductivity *crazyConductivity;
+  Geometry          *geometry;
+};
+
+void  RunMDOODZ(char *inputFileName, MdoodzSetup *setup);
+
+// Setup templates
+
+SetBC SetPureShearBCVx(MdoodzInput *input, POSITION position, Coordinates coordinates);
+SetBC SetPureShearBCVz(MdoodzInput *input, POSITION position, Coordinates coordinates);
+SetBC SetSimpleShearBCVx(MdoodzInput *input, POSITION position, Coordinates coordinates);
+SetBC SetSimpleShearBCVz(MdoodzInput *input, POSITION position, Coordinates coordinates);
+SetBC SetPureOrSimpleShearBCVx(MdoodzInput *input, POSITION position, Coordinates coordinates);
+SetBC SetPureOrSimpleShearBCVz(MdoodzInput *input, POSITION position, Coordinates coordinates);
+
+typedef struct {
+  double centreX;
+  double centreZ;
+  double radiusX;
+  double radiusZ;
+  double angle;
+} Ellipse;
+
+typedef struct {
+  double centreX;
+  double centreZ;
+  double sizeX;
+  double sizeZ;
+  double angle;
+} Rectangle;
+
+bool IsEllipseCoordinates(Coordinates coordinates, Ellipse ellipse, double scalingL);
+bool IsRectangleCoordinates(Coordinates coordinates, Rectangle rectangle, double scalingL);
 
 #endif

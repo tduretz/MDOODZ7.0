@@ -9,5 +9,8 @@ else()
     add_set(ShearTemplate)
     add_set(RiftingPauline)
     add_set(TopoBenchCase1)
+    add_set(QuartzCoesite) # not yet finished
+    add_set(MLPS_Ellipses) # not yet finished
+    add_set(CollisionZone) # not yet finished
 endif()
 

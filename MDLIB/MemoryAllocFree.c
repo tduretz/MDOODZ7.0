@@ -179,76 +179,76 @@ void SFree( SparseMat *Mat ) {
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-void PartAlloc( markers *particles, params* model  ) {
+markers PartAlloc(ParticlesInput particlesInput, params *model) {
+  markers particles = (markers){
+          .Nx_part       = particlesInput.Nx_part,
+          .Nz_part       = particlesInput.Nz_part,
+          .min_part_cell = particlesInput.min_part_cell,
+          .Nb_part       = particlesInput.Nb_part,
+          .Nb_part_max   = particlesInput.Nb_part_max,
+  };
+  // Allocate particle arrays
+  particles.x          = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
+  particles.z          = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
+  particles.Vx         = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
+  particles.Vz         = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
+  particles.P          = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
+  particles.sxxd       = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
+  particles.szzd       = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
+  particles.sxz        = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
+  particles.dsxxd      = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
+  particles.dszzd      = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
+  particles.dsxz       = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
+  particles.syy        = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
+  particles.dsyy       = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
 
-    // Allocate particle arrays
-    particles->x          = DoodzCalloc( particles->Nb_part_max,sizeof(DoodzFP));
-    particles->z          = DoodzCalloc( particles->Nb_part_max,sizeof(DoodzFP));
-    particles->Vx         = DoodzCalloc( particles->Nb_part_max,sizeof(DoodzFP));
-    particles->Vz         = DoodzCalloc( particles->Nb_part_max,sizeof(DoodzFP));
-    particles->P          = DoodzCalloc( particles->Nb_part_max,sizeof(DoodzFP));
-    particles->sxxd       = DoodzCalloc( particles->Nb_part_max,sizeof(DoodzFP));
-    particles->szzd       = DoodzCalloc( particles->Nb_part_max,sizeof(DoodzFP));
-    particles->sxz        = DoodzCalloc( particles->Nb_part_max,sizeof(DoodzFP));
-    particles->dsxxd      = DoodzCalloc( particles->Nb_part_max,sizeof(DoodzFP));
-    particles->dszzd      = DoodzCalloc( particles->Nb_part_max,sizeof(DoodzFP));
-    particles->dsxz       = DoodzCalloc( particles->Nb_part_max,sizeof(DoodzFP));
-    particles->syy        = DoodzCalloc( particles->Nb_part_max,sizeof(DoodzFP));
-    particles->dsyy        = DoodzCalloc( particles->Nb_part_max,sizeof(DoodzFP));
+  particles.phase      = DoodzCalloc(particles.Nb_part_max, sizeof(int));
+  particles.generation = DoodzCalloc(particles.Nb_part_max, sizeof(int));
+  particles.dual       = DoodzCalloc(particles.Nb_part_max, sizeof(int));
+  particles.progress   = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
 
-    particles->phase      = DoodzCalloc( particles->Nb_part_max,sizeof(int));
-    particles->generation = DoodzCalloc( particles->Nb_part_max,sizeof(int));
-    particles->dual       = DoodzCalloc( particles->Nb_part_max,sizeof(int));
-    particles->progress   = DoodzCalloc( particles->Nb_part_max,sizeof(DoodzFP));
-
-    particles->divth      = DoodzCalloc( particles->Nb_part_max,sizeof(DoodzFP));
-    particles->T          = DoodzCalloc( particles->Nb_part_max,sizeof(DoodzFP));
-    particles->d          = DoodzCalloc( particles->Nb_part_max,sizeof(DoodzFP));
-    particles->phi        = DoodzCalloc( particles->Nb_part_max,sizeof(DoodzFP));
-    particles->X          = DoodzCalloc( particles->Nb_part_max,sizeof(DoodzFP));
-    particles->noise      = DoodzCalloc( particles->Nb_part_max,sizeof(DoodzFP));
-        particles->rho      = DoodzCalloc( particles->Nb_part_max,sizeof(DoodzFP));
+  particles.divth      = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
+  particles.T          = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
+  particles.d          = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
+  particles.phi        = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
+  particles.X          = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
+  particles.noise      = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
+  particles.rho        = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
 
 
-    particles->strain     = DoodzCalloc( particles->Nb_part_max,sizeof(DoodzFP));
-    particles->strain_el  = DoodzCalloc( particles->Nb_part_max,sizeof(DoodzFP));
-    particles->strain_pl  = DoodzCalloc( particles->Nb_part_max,sizeof(DoodzFP));
-    particles->strain_pwl = DoodzCalloc( particles->Nb_part_max,sizeof(DoodzFP));
-    particles->strain_exp = DoodzCalloc( particles->Nb_part_max,sizeof(DoodzFP));
-    particles->strain_lin = DoodzCalloc( particles->Nb_part_max,sizeof(DoodzFP));
-    particles->strain_gbs = DoodzCalloc( particles->Nb_part_max,sizeof(DoodzFP));
+  particles.strain     = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
+  particles.strain_el  = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
+  particles.strain_pl  = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
+  particles.strain_pwl = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
+  particles.strain_exp = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
+  particles.strain_lin = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
+  particles.strain_gbs = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
 
-    particles->intag      = DoodzCalloc( particles->Nb_part_max,sizeof(int));
+  particles.intag      = DoodzCalloc(particles.Nb_part_max, sizeof(int));
 
-    if (model->fstrain == 1) {
-        particles->Fxx        = DoodzCalloc( particles->Nb_part_max,sizeof(DoodzFP));
-        particles->Fxz        = DoodzCalloc( particles->Nb_part_max,sizeof(DoodzFP));
-        particles->Fzx        = DoodzCalloc( particles->Nb_part_max,sizeof(DoodzFP));
-        particles->Fzz        = DoodzCalloc( particles->Nb_part_max,sizeof(DoodzFP));
-        Initialise1DArrayDouble (particles->Fxx,  particles->Nb_part_max, 1.0 );
-        Initialise1DArrayDouble (particles->Fzz,  particles->Nb_part_max, 1.0 );
-    }
+  if (model->fstrain == 1) {
+    particles.Fxx = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
+    particles.Fxz = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
+    particles.Fzx = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
+    particles.Fzz = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
+    Initialise1DArrayDouble(particles.Fxx, particles.Nb_part_max, 1.0);
+    Initialise1DArrayDouble(particles.Fzz, particles.Nb_part_max, 1.0);
+  }
 
-    if (model->rec_T_P_x_z == 1) {
-        particles->T0        = DoodzCalloc( particles->Nb_part_max,sizeof(DoodzFP));
-        particles->P0        = DoodzCalloc( particles->Nb_part_max,sizeof(DoodzFP));
-        particles->z0        = DoodzCalloc( particles->Nb_part_max,sizeof(DoodzFP));
-        particles->x0        = DoodzCalloc( particles->Nb_part_max,sizeof(DoodzFP));
-        particles->Tmax      = DoodzCalloc( particles->Nb_part_max,sizeof(DoodzFP));
-        particles->Pmax      = DoodzCalloc( particles->Nb_part_max,sizeof(DoodzFP));
-    }
+  if (model->rec_T_P_x_z == 1) {
+    particles.T0   = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
+    particles.P0   = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
+    particles.z0   = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
+    particles.x0   = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
+    particles.Tmax = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
+    particles.Pmax = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
+  }
 
-    if (model->aniso == 1) {
-        particles->nx        = DoodzCalloc( particles->Nb_part_max,sizeof(DoodzFP));
-        particles->nz        = DoodzCalloc( particles->Nb_part_max,sizeof(DoodzFP));
-    }
-    
-//    particles->ddivth = DoodzCalloc( particles->Nb_part_max,sizeof(DoodzFP));
-//    particles->dT     = DoodzCalloc( particles->Nb_part_max,sizeof(DoodzFP));
-//    particles->dP     = DoodzCalloc( particles->Nb_part_max,sizeof(DoodzFP));
-//    particles->dd     = DoodzCalloc( particles->Nb_part_max,sizeof(DoodzFP));
-//    particles->dX     = DoodzCalloc( particles->Nb_part_max,sizeof(DoodzFP));
-//    particles->dphi   = DoodzCalloc( particles->Nb_part_max,sizeof(DoodzFP));
+  if (model->aniso == 1) {
+    particles.nx = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
+    particles.nz = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
+  }
+  return particles;
 }
 
 
@@ -330,344 +330,349 @@ void PartFree( markers *particles, params* model ) {
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-void GridAlloc ( grid* mesh, params* model ) {
+grid GridAlloc(params *model) {
+  grid mesh = (grid){
+          .Work     = 0.0,
+          .Uthermal = 0.0,
+          .Uelastic = 0.0,
+          .Nx       = model->Nx,
+          .Nz       = model->Nz,
+  };
 
-    // Allocate all grid-based arrays
+  int Nx   = model->Nx;
+  int Nz   = model->Nz;
+  int NxVz = Nx + 1;
+  int NzVx = Nz + 1;
 
-    int k, Nx, Nz, NxVz, NzVx;
+  printf("Allocation of grid arrays !\n");
 
-    Nx       = model->Nx;
-    Nz       = model->Nz;
-    mesh->Nx = model->Nx;
-    mesh->Nz = model->Nz;
-    NxVz     = Nx + 1;
-    NzVx     = Nz + 1;
+  mesh.FreeSurfW_s  = (double *) DoodzCalloc(Nx * Nz, sizeof(double));
+  mesh.FreeSurfW_n  = (double *) DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
 
-    printf("Allocation of grid arrays !\n");
-    
-    mesh->FreeSurfW_s = (double*) DoodzCalloc(  mesh->Nx   * mesh->Nz    ,sizeof(double));
-    mesh->FreeSurfW_n = (double*) DoodzCalloc( (mesh->Nx-1)*(mesh->Nz-1) ,sizeof(double));
+  mesh.xg_coord     = (double *) DoodzCalloc(Nx, sizeof(double));
+  mesh.zg_coord     = (double *) DoodzCalloc(Nz, sizeof(double));
+  mesh.xg_coord_ext = (double *) DoodzCalloc((Nx + 2), sizeof(double));
+  mesh.zg_coord_ext = (double *) DoodzCalloc((Nz + 2), sizeof(double));
+  mesh.xg_coord0    = (double *) DoodzCalloc(Nx, sizeof(double));
+  mesh.zg_coord0    = (double *) DoodzCalloc(Nz, sizeof(double));
+  mesh.xc_coord     = (double *) DoodzCalloc((Nx - 1), sizeof(double));
+  mesh.zc_coord     = (double *) DoodzCalloc((Nz - 1), sizeof(double));
+  mesh.xvz_coord    = (double *) DoodzCalloc((NxVz), sizeof(double));
+  mesh.zvx_coord    = (double *) DoodzCalloc((NzVx), sizeof(double));
 
-    mesh->xg_coord  = (double*) DoodzCalloc( mesh->Nx ,sizeof(double));
-    mesh->zg_coord  = (double*) DoodzCalloc( mesh->Nz ,sizeof(double));
-    mesh->xg_coord_ext  = (double*) DoodzCalloc( (mesh->Nx+2) ,sizeof(double));
-    mesh->zg_coord_ext  = (double*) DoodzCalloc( (mesh->Nz+2) ,sizeof(double));
-    mesh->xg_coord0 = (double*) DoodzCalloc( mesh->Nx ,sizeof(double));
-    mesh->zg_coord0 = (double*) DoodzCalloc( mesh->Nz ,sizeof(double));
-    mesh->xc_coord  = (double*) DoodzCalloc( (mesh->Nx-1) ,sizeof(double));
-    mesh->zc_coord  = (double*) DoodzCalloc( (mesh->Nz-1) ,sizeof(double));
-    mesh->xvz_coord = (double*) DoodzCalloc( (mesh->Nx+1) ,sizeof(double));
-    mesh->zvx_coord = (double*) DoodzCalloc( (mesh->Nz+1) ,sizeof(double));
+  mesh.eta_s        = (double *) DoodzCalloc(Nx * Nz, sizeof(double));
+  mesh.eta_n        = (double *) DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  mesh.rho_s        = (double *) DoodzCalloc(Nx * Nz, sizeof(double));
+  mesh.rho_n        = (double *) DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  mesh.rho0_n       = (double *) DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
 
-    mesh->eta_s     = (double*) DoodzCalloc(  mesh->Nx   * mesh->Nz    ,sizeof(double));
-    mesh->eta_n     = (double*) DoodzCalloc( (mesh->Nx-1)*(mesh->Nz-1) ,sizeof(double));
-    mesh->rho_s     = (double*) DoodzCalloc(  mesh->Nx   * mesh->Nz    ,sizeof(double));
-    mesh->rho_n     = (double*) DoodzCalloc( (mesh->Nx-1)*(mesh->Nz-1) ,sizeof(double));
-    mesh->rho0_n    = (double*) DoodzCalloc( (mesh->Nx-1)*(mesh->Nz-1) ,sizeof(double));
+  mesh.u            = (double *) DoodzCalloc((Nx) * (NzVx), sizeof(double));
+  mesh.ru           = (double *) DoodzCalloc((Nx) * (NzVx), sizeof(double));
+  mesh.rhs_u        = (double *) DoodzCalloc((Nx) * (NzVx), sizeof(double));
+  mesh.gx           = (double *) DoodzCalloc((Nx) * (NzVx), sizeof(double));
+  mesh.v            = (double *) DoodzCalloc((NxVz) * (Nz), sizeof(double));
+  mesh.rv           = (double *) DoodzCalloc((NxVz) * (Nz), sizeof(double));
+  mesh.rhs_v        = (double *) DoodzCalloc((NxVz) * (Nz), sizeof(double));
+  mesh.gz           = (double *) DoodzCalloc((NxVz) * (Nz), sizeof(double));
+  mesh.p            = (double *) DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  mesh.rp           = (double *) DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  mesh.rhs_p        = (double *) DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
 
-    mesh->u     = (double*) DoodzCalloc( (mesh->Nx)  *(mesh->Nz+1) ,sizeof(double));
-    mesh->ru    = (double*) DoodzCalloc( (mesh->Nx)  *(mesh->Nz+1) ,sizeof(double));
-    mesh->rhs_u = (double*) DoodzCalloc( (mesh->Nx)  *(mesh->Nz+1) ,sizeof(double));
-    mesh->gx    = (double*) DoodzCalloc( (mesh->Nx)  *(mesh->Nz+1) ,sizeof(double));
-    mesh->v     = (double*) DoodzCalloc( (mesh->Nx+1)*(mesh->Nz)   ,sizeof(double));
-    mesh->rv    = (double*) DoodzCalloc( (mesh->Nx+1)*(mesh->Nz)   ,sizeof(double));
-    mesh->rhs_v = (double*) DoodzCalloc( (mesh->Nx+1)*(mesh->Nz)   ,sizeof(double));
-    mesh->gz    = (double*) DoodzCalloc( (mesh->Nx+1)*(mesh->Nz)   ,sizeof(double));
-    mesh->p     = (double*) DoodzCalloc( (mesh->Nx-1)*(mesh->Nz-1) ,sizeof(double));
-    mesh->rp    = (double*) DoodzCalloc( (mesh->Nx-1)*(mesh->Nz-1) ,sizeof(double));
-    mesh->rhs_p = (double*) DoodzCalloc( (mesh->Nx-1)*(mesh->Nz-1) ,sizeof(double));
+  mesh.BCu.type     = (char *) DoodzCalloc((Nx) * (NzVx), sizeof(char));
+  mesh.BCv.type     = (char *) DoodzCalloc((NxVz) * (Nz), sizeof(char));
+  mesh.BCp.type     = (char *) DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(char));
+  mesh.BCp_exp.type = (char *) DoodzCalloc((NxVz) * (NzVx), sizeof(char));
+  Initialise1DArrayChar(mesh.BCp_exp.type, (NxVz) * (NzVx), -1);
+  mesh.BCu.val      = (double *) DoodzCalloc((Nx) * (NzVx), sizeof(double));
+  mesh.BCv.val      = (double *) DoodzCalloc((NxVz) * (Nz), sizeof(double));
+  mesh.BCp.val      = (double *) DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  mesh.BCp_exp.val  = (double *) DoodzCalloc((NxVz) * (NzVx), sizeof(double));
 
-    mesh->BCu.type     = (char*)   DoodzCalloc( (mesh->Nx)  *(mesh->Nz+1)   ,sizeof(char));
-    mesh->BCv.type     = (char*)   DoodzCalloc( (mesh->Nx+1)*(mesh->Nz)     ,sizeof(char));
-    mesh->BCp.type     = (char*)   DoodzCalloc( (mesh->Nx-1)*(mesh->Nz-1)   ,sizeof(char));
-    mesh->BCp_exp.type = (char*)   DoodzCalloc( (mesh->Nx+1)*(mesh->Nz+1)   ,sizeof(char));
-    Initialise1DArrayChar(   mesh->BCp_exp.type, (mesh->Nx+1)*(mesh->Nz+1), -1  );
-    mesh->BCu.val      = (double*) DoodzCalloc( (mesh->Nx)  *(mesh->Nz+1) ,sizeof(double));
-    mesh->BCv.val      = (double*) DoodzCalloc( (mesh->Nx+1)*(mesh->Nz)   ,sizeof(double));
-    mesh->BCp.val      = (double*) DoodzCalloc( (mesh->Nx-1)*(mesh->Nz-1) ,sizeof(double));
-    mesh->BCp_exp.val  = (double*) DoodzCalloc( (mesh->Nx+1)*(mesh->Nz+1) ,sizeof(double));
+  //-------------------------------------------------------------------------------------------------//
 
-    //-------------------------------------------------------------------------------------------------//
+  // Allocate 2D array : phase percentage per cell center
+  mesh.phase_perc_n = (double **) DoodzCalloc(model->Nb_phases, sizeof(double *));
+  for (int k = 0; k < model->Nb_phases; k++) {
+    mesh.phase_perc_n[k] = (double *) DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  }
 
-    // Allocate 2D array : phase percentage per cell center 
-    mesh->phase_perc_n = (double**) DoodzCalloc( model->Nb_phases,sizeof(double*));
-    for ( k=0; k<model->Nb_phases; k++ ) {
-        mesh->phase_perc_n[k] = (double*) DoodzCalloc( (mesh->Nx-1)*(mesh->Nz-1), sizeof(double));
-    }
+  // Allocate 2D array : phase percentage per cell vertices
+  mesh.phase_perc_s = (double **) DoodzCalloc(model->Nb_phases, sizeof(double *));
+  for (int k = 0; k < model->Nb_phases; k++) {
+    mesh.phase_perc_s[k] = (double *) DoodzCalloc((Nx) * (Nz), sizeof(double));
+  }
 
-    // Allocate 2D array : phase percentage per cell vertices 
-    mesh->phase_perc_s = (double**) DoodzCalloc( model->Nb_phases,sizeof(double*));
-    for ( k=0; k<model->Nb_phases; k++ ) {
-        mesh->phase_perc_s[k] = (double*) DoodzCalloc( (mesh->Nx)*(mesh->Nz), sizeof(double));
-    }
+  // Allocate 2D array : phase viscosity per cell center
+  mesh.phase_eta_n = (double **) DoodzCalloc(model->Nb_phases, sizeof(double *));
+  for (int k = 0; k < model->Nb_phases; k++) {
+    mesh.phase_eta_n[k] = (double *) DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  }
 
-    // Allocate 2D array : phase viscosity per cell center 
-    mesh->phase_eta_n = (double**) DoodzCalloc( model->Nb_phases,sizeof(double*));
-    for ( k=0; k<model->Nb_phases; k++ ) {
-        mesh->phase_eta_n[k] = (double*) DoodzCalloc( (mesh->Nx-1)*(mesh->Nz-1), sizeof(double));
-    }
+  // Allocate 2D array : phase viscosity per cell vertices
+  mesh.phase_eta_s = (double **) DoodzCalloc(model->Nb_phases, sizeof(double *));
+  for (int k = 0; k < model->Nb_phases; k++) {
+    mesh.phase_eta_s[k] = (double *) DoodzCalloc((Nx) * (Nz), sizeof(double));
+  }
 
-    // Allocate 2D array : phase viscosity per cell vertices
-    mesh->phase_eta_s = (double**) DoodzCalloc( model->Nb_phases,sizeof(double*));
-    for ( k=0; k<model->Nb_phases; k++ ) {
-        mesh->phase_eta_s[k] = (double*) DoodzCalloc( (mesh->Nx)*(mesh->Nz), sizeof(double));
-    }
+  //--------------------------------------------------//
 
-    //--------------------------------------------------//
+  // Roger's
+  mesh.roger_x       = DoodzCalloc(Nx * (Nz + 1), sizeof(double));
+  mesh.roger_z       = DoodzCalloc((Nx + 1) * Nz, sizeof(double));
+  mesh.div_u         = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  mesh.div_u_s       = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double));
+  mesh.div_u_el      = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  mesh.div_u_pl      = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  mesh.div_u_r       = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  mesh.Qrho          = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
 
-    // Roger's
-    mesh->roger_x    = DoodzCalloc (Nx*(Nz+1),sizeof(double));
-    mesh->roger_z    = DoodzCalloc ((Nx+1)*Nz,sizeof(double));
-    mesh->div_u      = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    mesh->div_u_s    = DoodzCalloc ((Nx-0)*(Nz-0),sizeof(double));
-    mesh->div_u_el   = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    mesh->div_u_pl   = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    mesh->div_u_r    = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    mesh->Qrho       = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
+  // Solution arrays
+  mesh.u_in          = DoodzCalloc(Nx * NzVx, sizeof(double));
+  mesh.v_in          = DoodzCalloc(NxVz * Nz, sizeof(double));
+  mesh.p_in          = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  mesh.p_corr        = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
 
-    // Solution arrays
-    mesh->u_in       = DoodzCalloc (Nx*NzVx,sizeof(double));
-    mesh->v_in       = DoodzCalloc (NxVz*Nz,sizeof(double));
-    mesh->p_in       = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    mesh->p_corr    = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
+  mesh.u_start       = DoodzCalloc(Nx * NzVx, sizeof(double));
+  mesh.v_start       = DoodzCalloc(NxVz * Nz, sizeof(double));
+  mesh.p_start       = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
 
-    mesh->u_start    = DoodzCalloc (Nx*NzVx,sizeof(double));
-    mesh->v_start    = DoodzCalloc (NxVz*Nz,sizeof(double));
-    mesh->p_start    = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
+  // Derived quantities
+  mesh.sxxd          = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  mesh.szzd          = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  mesh.sxz           = DoodzCalloc((Nx) * (Nz), sizeof(double));
+  mesh.exxd          = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  mesh.ezzd          = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  mesh.exz           = DoodzCalloc((Nx) * (Nz), sizeof(double));
 
-    // Derived quantities
-    mesh->sxxd       = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    mesh->szzd       = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    mesh->sxz        = DoodzCalloc ((Nx)*(Nz),sizeof(double));
-    mesh->exxd       = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    mesh->ezzd       = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    mesh->exz        = DoodzCalloc ((Nx)*(Nz),sizeof(double));
+  // Right-hand side viscoelastic coefficient
+  mesh.mu_s          = DoodzCalloc((Nx) * (Nz), sizeof(double));
+  mesh.mu_n          = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  mesh.VE_s          = DoodzCalloc((Nx) * (Nz), sizeof(double));
+  mesh.VE_n          = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
 
-    // Right-hand side viscoelastic coefficient
-    mesh->mu_s   = DoodzCalloc ((Nx)*(Nz),sizeof(double));
-    mesh->mu_n   = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    mesh->VE_s   = DoodzCalloc ((Nx)*(Nz),sizeof(double));
-    mesh->VE_n   = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
+  mesh.sxxd0         = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  mesh.szzd0         = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  mesh.sxz0          = DoodzCalloc((Nx) * (Nz), sizeof(double));
+  mesh.sxxd0_s       = DoodzCalloc((Nx) * (Nz), sizeof(double));
+  mesh.szzd0_s       = DoodzCalloc((Nx) * (Nz), sizeof(double));
+  mesh.sxz0_n        = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
 
-    mesh->sxxd0  = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    mesh->szzd0  = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    mesh->sxz0   = DoodzCalloc ((Nx)*(Nz),sizeof(double));
-    mesh->sxxd0_s= DoodzCalloc ((Nx)*(Nz),sizeof(double));
-    mesh->szzd0_s= DoodzCalloc ((Nx)*(Nz),sizeof(double));
-    mesh->sxz0_n = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
+  mesh.exxd_s        = DoodzCalloc((Nx) * (Nz), sizeof(double));
+  mesh.ezzd_s        = DoodzCalloc((Nx) * (Nz), sizeof(double));
+  mesh.exz_n         = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  mesh.sxz_n         = DoodzCalloc((Nx) * (Nz), sizeof(double));
 
-    mesh->exxd_s= DoodzCalloc ((Nx)*(Nz),sizeof(double));
-    mesh->ezzd_s= DoodzCalloc ((Nx)*(Nz),sizeof(double));
-    mesh->exz_n = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    mesh->sxz_n = DoodzCalloc ((Nx)*(Nz),sizeof(double));
+  mesh.u_adv         = DoodzCalloc(Nx * NzVx, sizeof(double));
+  mesh.v_adv         = DoodzCalloc(NxVz * Nz, sizeof(double));
 
-    mesh->u_adv  = DoodzCalloc (Nx*NzVx,sizeof(double));
-    mesh->v_adv  = DoodzCalloc (NxVz*Nz,sizeof(double));
+  mesh.eta_phys_n    = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  mesh.eta_phys_s    = DoodzCalloc((Nx) * (Nz), sizeof(double));
 
-    mesh->eta_phys_n = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    mesh->eta_phys_s = DoodzCalloc ((Nx)*(Nz),sizeof(double));
+  mesh.strain_n      = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  mesh.strain_s      = DoodzCalloc((Nx) * (Nz), sizeof(double));
 
-    mesh->strain_n   = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    mesh->strain_s   = DoodzCalloc ((Nx)*(Nz),sizeof(double));
+  // Energy equation
+  mesh.Cv            = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  mesh.kx            = DoodzCalloc(Nx * NzVx, sizeof(double));
+  mesh.kz            = DoodzCalloc(NxVz * Nz, sizeof(double));
+  mesh.kc_x          = DoodzCalloc(Nx * NzVx, sizeof(double));
+  mesh.kc_z          = DoodzCalloc(NxVz * Nz, sizeof(double));
+  mesh.Qr            = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  mesh.rhs_t         = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  mesh.BCt.type      = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(char));
+  mesh.BCt.typW      = DoodzCalloc((Nz - 1), sizeof(char));
+  mesh.BCt.typE      = DoodzCalloc((Nz - 1), sizeof(char));
+  mesh.BCt.typS      = DoodzCalloc((Nx - 1), sizeof(char));
+  mesh.BCt.typN      = DoodzCalloc((Nx - 1), sizeof(char));
+  mesh.BCt.val       = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  mesh.BCt.valW      = DoodzCalloc((Nz - 1), sizeof(double));
+  mesh.BCt.valE      = DoodzCalloc((Nz - 1), sizeof(double));
+  mesh.BCt.valS      = DoodzCalloc((Nx - 1), sizeof(double));
+  mesh.BCt.valN      = DoodzCalloc((Nx - 1), sizeof(double));
+  mesh.Wdiss         = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  mesh.Wel           = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  mesh.Wtot          = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
 
-    // Energy equation
-    mesh->Cv       = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    mesh->kx       = DoodzCalloc (Nx*NzVx,sizeof(double));
-    mesh->kz       = DoodzCalloc (NxVz*Nz,sizeof(double));
-    mesh->kc_x     = DoodzCalloc (Nx*NzVx,sizeof(double));
-    mesh->kc_z     = DoodzCalloc (NxVz*Nz,sizeof(double));
-    mesh->Qr       = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    mesh->rhs_t    = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    mesh->BCt.type = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(char));
-    mesh->BCt.typW = DoodzCalloc ((Nz-1),sizeof(char));
-    mesh->BCt.typE = DoodzCalloc ((Nz-1),sizeof(char));
-    mesh->BCt.typS = DoodzCalloc ((Nx-1),sizeof(char));
-    mesh->BCt.typN = DoodzCalloc ((Nx-1),sizeof(char));
-    mesh->BCt.val  = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    mesh->BCt.valW = DoodzCalloc ((Nz-1),sizeof(double));
-    mesh->BCt.valE = DoodzCalloc ((Nz-1),sizeof(double));
-    mesh->BCt.valS = DoodzCalloc ((Nx-1),sizeof(double));
-    mesh->BCt.valN = DoodzCalloc ((Nx-1),sizeof(double));
-    mesh->Wdiss    = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    mesh->Wel      = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    mesh->Wtot     = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    
-    // Chemical diffusion
-    mesh->BCc.type = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(char));
-    mesh->BCc.typW = DoodzCalloc ((Nz-1),sizeof(char));
-    mesh->BCc.typE = DoodzCalloc ((Nz-1),sizeof(char));
-    mesh->BCc.typS = DoodzCalloc ((Nx-1),sizeof(char));
-    mesh->BCc.typN = DoodzCalloc ((Nx-1),sizeof(char));
-    mesh->BCc.val  = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    mesh->BCc.valW = DoodzCalloc ((Nz-1),sizeof(double));
-    mesh->BCc.valE = DoodzCalloc ((Nz-1),sizeof(double));
-    mesh->BCc.valS = DoodzCalloc ((Nx-1),sizeof(double));
-    mesh->BCc.valN = DoodzCalloc ((Nx-1),sizeof(double));
+  // Chemical diffusion
+  mesh.BCc.type      = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(char));
+  mesh.BCc.typW      = DoodzCalloc((Nz - 1), sizeof(char));
+  mesh.BCc.typE      = DoodzCalloc((Nz - 1), sizeof(char));
+  mesh.BCc.typS      = DoodzCalloc((Nx - 1), sizeof(char));
+  mesh.BCc.typN      = DoodzCalloc((Nx - 1), sizeof(char));
+  mesh.BCc.val       = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  mesh.BCc.valW      = DoodzCalloc((Nz - 1), sizeof(double));
+  mesh.BCc.valE      = DoodzCalloc((Nz - 1), sizeof(double));
+  mesh.BCc.valS      = DoodzCalloc((Nx - 1), sizeof(double));
+  mesh.BCc.valN      = DoodzCalloc((Nx - 1), sizeof(double));
 
-    // Grid tagging (free surf)
-    mesh->BCg.type = DoodzCalloc ((Nx)*(Nz),sizeof(char));
-    mesh->BCg.val  = DoodzCalloc ((Nx)*(Nz),sizeof(double));
+  // Grid tagging (free surf)
+  mesh.BCg.type      = DoodzCalloc((Nx) * (Nz), sizeof(char));
+  mesh.BCg.val       = DoodzCalloc((Nx) * (Nz), sizeof(double));
 
-    // Volumetric deformation
-    mesh->p_lith   = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    mesh->p_lith0  = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    mesh->dp       = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    mesh->alp      = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    mesh->bet_n    = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    mesh->bet_s    = DoodzCalloc ((Nx-0)*(Nz-0),sizeof(double));
+  // Volumetric deformation
+  mesh.p_lith        = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  mesh.p_lith0       = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  mesh.dp            = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  mesh.alp           = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  mesh.bet_n         = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  mesh.bet_s         = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double));
 
-    // Grid indices
-    mesh->kvx       = DoodzCalloc (Nx*NzVx,sizeof(int));
-    mesh->lvx       = DoodzCalloc (Nx*NzVx,sizeof(int));
-    mesh->kvz       = DoodzCalloc (NxVz*Nz,sizeof(int));
-    mesh->lvz       = DoodzCalloc (NxVz*Nz,sizeof(int));
-    mesh->kp        = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(int));
-    mesh->lp        = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(int));
-    mesh->kn        = DoodzCalloc ((Nx)*(Nz),sizeof(int));
-    mesh->ln        = DoodzCalloc ((Nx)*(Nz),sizeof(int));
+  // Grid indices
+  mesh.kvx           = DoodzCalloc(Nx * NzVx, sizeof(int));
+  mesh.lvx           = DoodzCalloc(Nx * NzVx, sizeof(int));
+  mesh.kvz           = DoodzCalloc(NxVz * Nz, sizeof(int));
+  mesh.lvz           = DoodzCalloc(NxVz * Nz, sizeof(int));
+  mesh.kp            = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(int));
+  mesh.lp            = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(int));
+  mesh.kn            = DoodzCalloc((Nx) * (Nz), sizeof(int));
+  mesh.ln            = DoodzCalloc((Nx) * (Nz), sizeof(int));
 
-    // Array containing the number of particles in each cell
-    mesh->nb_part_cell = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(int));
-    mesh->nb_part_vert = DoodzCalloc ((Nx)*(Nz),sizeof(int));
+  // Array containing the number of particles in each cell
+  mesh.nb_part_cell  = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(int));
+  mesh.nb_part_vert  = DoodzCalloc((Nx) * (Nz), sizeof(int));
 
-    // Inertia : keep density on velocity points and velocity increments
-    //    mesh->rhoVx  = DoodzMalloc (Nx*NzVx*sizeof(double));
-    //    mesh->rhoVz  = DoodzMalloc (NxVz*Nz*sizeof(double));
-    mesh->VzVx   = DoodzCalloc (Nx*NzVx,sizeof(double));
-    mesh->VxVz   = DoodzCalloc (NxVz*Nz,sizeof(double));
+  // Inertia : keep density on velocity points and velocity increments
+  //    mesh.rhoVx  = DoodzMalloc (Nx*NzVx*sizeof(double));
+  //    mesh.rhoVz  = DoodzMalloc (NxVz*Nz*sizeof(double));
+  mesh.VzVx          = DoodzCalloc(Nx * NzVx, sizeof(double));
+  mesh.VxVz          = DoodzCalloc(NxVz * Nz, sizeof(double));
 
-    // Time-series
-    mesh->Uthermal_time   = DoodzCalloc (model->Nt+1,sizeof(double)); // +1 to include step 000
-    mesh->Uelastic_time   = DoodzCalloc (model->Nt+1,sizeof(double));
-    mesh->Work_time       = DoodzCalloc (model->Nt+1,sizeof(double));
-    mesh->Time_time       = DoodzCalloc (model->Nt+1,sizeof(double));
-    mesh->Short_time      = DoodzCalloc (model->Nt+1,sizeof(double));
-    mesh->P_mean_time     = DoodzCalloc (model->Nt+1,sizeof(double));
-    mesh->T_mean_time     = DoodzCalloc (model->Nt+1,sizeof(double));
-    mesh->Tii_mean_time   = DoodzCalloc (model->Nt+1,sizeof(double));
-    mesh->Eii_mean_time   = DoodzCalloc (model->Nt+1,sizeof(double));
+  // Time-series
+  mesh.Uthermal_time = DoodzCalloc(model->Nt + 1, sizeof(double));// +1 to include step 000
+  mesh.Uelastic_time = DoodzCalloc(model->Nt + 1, sizeof(double));
+  mesh.Work_time     = DoodzCalloc(model->Nt + 1, sizeof(double));
+  mesh.Time_time     = DoodzCalloc(model->Nt + 1, sizeof(double));
+  mesh.Short_time    = DoodzCalloc(model->Nt + 1, sizeof(double));
+  mesh.P_mean_time   = DoodzCalloc(model->Nt + 1, sizeof(double));
+  mesh.T_mean_time   = DoodzCalloc(model->Nt + 1, sizeof(double));
+  mesh.Tii_mean_time = DoodzCalloc(model->Nt + 1, sizeof(double));
+  mesh.Eii_mean_time = DoodzCalloc(model->Nt + 1, sizeof(double));
 
-    mesh->T          = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    mesh->T0_n       = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    mesh->divth0_n   = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    mesh->dT         = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    mesh->eII_el     = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    mesh->exx_el     = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    mesh->ezz_el     = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    mesh->exz_el     = DoodzCalloc ((Nx-0)*(Nz-0),sizeof(double));
-    mesh->exx_diss   = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    mesh->ezz_diss   = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    mesh->exz_diss   = DoodzCalloc ((Nx-0)*(Nz-0),sizeof(double));
-    mesh->exz_n_el   = DoodzCalloc ((Nx-0)*(Nz-0),sizeof(double));
-    mesh->exz_n_diss = DoodzCalloc ((Nx-0)*(Nz-0),sizeof(double));
+  mesh.T             = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  mesh.T0_n          = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  mesh.divth0_n      = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  mesh.dT            = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  mesh.eII_el        = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  mesh.exx_el        = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  mesh.ezz_el        = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  mesh.exz_el        = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double));
+  mesh.exx_diss      = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  mesh.ezz_diss      = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  mesh.exz_diss      = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double));
+  mesh.exz_n_el      = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double));
+  mesh.exz_n_diss    = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double));
+  mesh.comp_cells    = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  mesh.eII_pl        = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  mesh.eII_pwl       = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  mesh.eII_exp       = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  mesh.eII_lin       = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  mesh.eII_gbs       = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  mesh.eII_cst       = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
 
-    mesh->comp_cells = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
+  mesh.d_n           = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  mesh.d0_n          = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  mesh.phi_n         = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  mesh.phi0_n        = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
 
-    // To remove
-//    mesh->exx_pl     = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-//    mesh->exz_pl     = DoodzCalloc ((Nx-0)*(Nz-0),sizeof(double));
-//    mesh->exx_pwl_n  = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-//    mesh->exz_pwl_n  = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-//    mesh->A2_pwl_n   = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-//    mesh->exx_pwl_s  = DoodzCalloc ((Nx)*(Nz),sizeof(double));
-//    mesh->exz_pwl_s  = DoodzCalloc ((Nx)*(Nz),sizeof(double));
-//    mesh->eII_pwl_s  = DoodzCalloc ((Nx)*(Nz),sizeof(double));
-//    mesh->A2_pwl_s   = DoodzCalloc ((Nx)*(Nz),sizeof(double));
-//    mesh->eii_s      = DoodzCalloc ((Nx)*(Nz),sizeof(double));
-//    mesh->eii_n      = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-//    mesh->tii0_s     = DoodzCalloc ((Nx)*(Nz),sizeof(double));
-//    mesh->tii0_n     = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-//    mesh->exz_n_pl   = DoodzCalloc ((Nx-0)*(Nz-0),sizeof(double));
+  mesh.cell_min_z    = DoodzCalloc((Nz - 1), sizeof(double));
+  mesh.cell_max_z    = DoodzCalloc((Nz - 1), sizeof(double));
+  mesh.vert_min_z    = DoodzCalloc((Nz - 0), sizeof(double));
+  mesh.vert_max_z    = DoodzCalloc((Nz - 0), sizeof(double));
 
-    mesh->eII_pl     = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-//    mesh->eII_pl_s   = DoodzCalloc ((Nx-0)*(Nz-0),sizeof(double));
-    mesh->eII_pwl    = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    mesh->eII_exp    = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    mesh->eII_lin    = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    mesh->eII_gbs    = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    mesh->eII_cst    = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
+  // New arrays for plastic strain softening
+  mesh.C_s           = DoodzCalloc((Nx) * (Nz), sizeof(double));
+  mesh.fric_s        = DoodzCalloc((Nx) * (Nz), sizeof(double));
+  mesh.dil_s         = DoodzCalloc((Nx) * (Nz), sizeof(double));
+  mesh.C_n           = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  mesh.fric_n        = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  mesh.dil_n         = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
 
-    mesh->d_n     = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    mesh->d0_n    = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    mesh->phi_n   = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    mesh->phi0_n  = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
+  // For Newton iterations
+  mesh.D11_n         = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  mesh.D12_n         = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  mesh.D13_n         = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  mesh.D14_n         = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
 
-    mesh->cell_min_z = DoodzCalloc( (Nz-1), sizeof(double));
-    mesh->cell_max_z = DoodzCalloc( (Nz-1), sizeof(double));
-    mesh->vert_min_z = DoodzCalloc( (Nz-0), sizeof(double));
-    mesh->vert_max_z = DoodzCalloc( (Nz-0), sizeof(double));
+  mesh.D21_n         = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  mesh.D22_n         = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  mesh.D23_n         = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  mesh.D24_n         = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
 
-    // New arrays for plastic strain softening
-    mesh->C_s        = DoodzCalloc ((Nx)*(Nz),sizeof(double));
-    mesh->fric_s     = DoodzCalloc ((Nx)*(Nz),sizeof(double));
-    mesh->dil_s      = DoodzCalloc ((Nx)*(Nz),sizeof(double));
-    mesh->C_n        = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    mesh->fric_n     = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    mesh->dil_n      = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
+  mesh.D31_s         = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double));
+  mesh.D32_s         = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double));
+  mesh.D33_s         = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double));
+  mesh.D34_s         = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double));
 
-    // For Newton iterations
-    mesh->D11_n     = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    mesh->D12_n     = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    mesh->D13_n     = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    mesh->D14_n     = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
+  mesh.drhodp_n      = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
 
-    mesh->D21_n     = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    mesh->D22_n     = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    mesh->D23_n     = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    mesh->D24_n     = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
+  mesh.detadexx_n    = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  mesh.detadezz_n    = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  mesh.detadgxz_n    = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  mesh.detadp_n      = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
 
-    mesh->D31_s     = DoodzCalloc ((Nx-0)*(Nz-0),sizeof(double));
-    mesh->D32_s     = DoodzCalloc ((Nx-0)*(Nz-0),sizeof(double));
-    mesh->D33_s     = DoodzCalloc ((Nx-0)*(Nz-0),sizeof(double));
-    mesh->D34_s     = DoodzCalloc ((Nx-0)*(Nz-0),sizeof(double));
+  mesh.ddivpdexx_n   = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  mesh.ddivpdezz_n   = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  mesh.ddivpdgxz_n   = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  mesh.ddivpdp_n     = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
 
-    mesh->drhodp_n  = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    
-    mesh->detadexx_n  = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    mesh->detadezz_n  = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    mesh->detadgxz_n  = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    mesh->detadp_n    = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    
-    mesh->ddivpdexx_n  = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    mesh->ddivpdezz_n  = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    mesh->ddivpdgxz_n  = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    mesh->ddivpdp_n    = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
+  mesh.detadexx_s    = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double));
+  mesh.detadezz_s    = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double));
+  mesh.detadgxz_s    = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double));
+  mesh.detadp_s      = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double));
 
-    mesh->detadexx_s  = DoodzCalloc ((Nx-0)*(Nz-0),sizeof(double));
-    mesh->detadezz_s  = DoodzCalloc ((Nx-0)*(Nz-0),sizeof(double));
-    mesh->detadgxz_s  = DoodzCalloc ((Nx-0)*(Nz-0),sizeof(double));
-    mesh->detadp_s    = DoodzCalloc ((Nx-0)*(Nz-0),sizeof(double));
+  mesh.d0_s          = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double));
+  mesh.phi0_s        = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double));
+  mesh.T_s           = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double));
+  mesh.P_s           = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double));
 
-    mesh->d0_s   = DoodzCalloc ((Nx-0)*(Nz-0),sizeof(double));
-    mesh->phi0_s = DoodzCalloc ((Nx-0)*(Nz-0),sizeof(double));
-    mesh->T_s    = DoodzCalloc ((Nx-0)*(Nz-0),sizeof(double));
-    mesh->P_s    = DoodzCalloc ((Nx-0)*(Nz-0),sizeof(double));
+  if (model->aniso == 1) mesh.d1_n = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  if (model->aniso == 1) mesh.d1_s = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double));
+  if (model->aniso == 1) mesh.d2_n = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  if (model->aniso == 1) mesh.d2_s = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double));
+  if (model->aniso == 1) mesh.FS_AR_n = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  if (model->aniso == 1) mesh.FS_AR_s = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double));
+  if (model->aniso == 1) Initialise1DArrayDouble(mesh.FS_AR_n, (Nx - 1) * (Nz - 1), 1.0);
+  if (model->aniso == 1) Initialise1DArrayDouble(mesh.FS_AR_s, (Nx - 0) * (Nz - 0), 1.0);
+  if (model->aniso == 1) mesh.aniso_factor_n = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  if (model->aniso == 1) mesh.aniso_factor_s = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double));
+  // Compressibility
+  mesh.p0_n    = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  mesh.p0_s    = DoodzCalloc((Nx) * (Nz), sizeof(double));
+  // Reaction
+  mesh.X0_n    = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  mesh.X_n     = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  mesh.noise_n = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  mesh.X0_s    = DoodzCalloc((Nx) * (Nz), sizeof(double));
+  mesh.X_s     = DoodzCalloc((Nx) * (Nz), sizeof(double));
+  mesh.noise_s = DoodzCalloc((Nx) * (Nz), sizeof(double));
+  // Viscoplasticity
+  mesh.OverS_n = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
 
-    if ( model->aniso == 1 ) mesh->d1_n    = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    if ( model->aniso == 1 ) mesh->d1_s    = DoodzCalloc ((Nx-0)*(Nz-0),sizeof(double));
-    if ( model->aniso == 1 ) mesh->d2_n    = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    if ( model->aniso == 1 ) mesh->d2_s    = DoodzCalloc ((Nx-0)*(Nz-0),sizeof(double));
-    if ( model->aniso == 1 ) mesh->FS_AR_n = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    if ( model->aniso == 1 ) mesh->FS_AR_s = DoodzCalloc ((Nx-0)*(Nz-0),sizeof(double));
-    if ( model->aniso == 1 ) Initialise1DArrayDouble (mesh->FS_AR_n,  (Nx-1)*(Nz-1), 1.0 );
-    if ( model->aniso == 1 ) Initialise1DArrayDouble (mesh->FS_AR_s,  (Nx-0)*(Nz-0), 1.0 );
-    if ( model->aniso == 1 ) mesh->aniso_factor_n = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    if ( model->aniso == 1 ) mesh->aniso_factor_s = DoodzCalloc ((Nx-0)*(Nz-0),sizeof(double));
-    // Compressibility
-    mesh->p0_n       = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    mesh->p0_s       = DoodzCalloc ((Nx)*(Nz),sizeof(double));
-    // Reaction
-    mesh->X0_n       = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    mesh->X_n        = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    mesh->noise_n    = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    mesh->X0_s       = DoodzCalloc ((Nx)*(Nz),sizeof(double));
-    mesh->X_s        = DoodzCalloc ((Nx)*(Nz),sizeof(double));
-    mesh->noise_s    = DoodzCalloc ((Nx)*(Nz),sizeof(double));
-    // Viscoplasticity
-    mesh->OverS_n    = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
+  printf("Memory succesfully allocated : \nDiantre, que c'est bon!\n");
+  return mesh;
+}
 
-    printf("Memory succesfully allocated : \nDiantre, que c'est bon!\n");
 
+Nparams NmodelAlloc(Nparams Nmodel) {
+  Nmodel.nit             = 0;
+  Nmodel.rx_abs          = DoodzCalloc(Nmodel.nit_max + 1, sizeof(double));
+  Nmodel.rx_rel          = DoodzCalloc(Nmodel.nit_max + 1, sizeof(double));
+  Nmodel.rz_abs          = DoodzCalloc(Nmodel.nit_max + 1, sizeof(double));
+  Nmodel.rz_rel          = DoodzCalloc(Nmodel.nit_max + 1, sizeof(double));
+  Nmodel.rp_abs          = DoodzCalloc(Nmodel.nit_max + 1, sizeof(double));
+  Nmodel.rp_rel          = DoodzCalloc(Nmodel.nit_max + 1, sizeof(double));
+  Nmodel.LogIsNewtonStep = DoodzCalloc(Nmodel.nit_max + 1, sizeof(int));
+  return Nmodel;
+}
+
+void NmodelFree(Nparams Nmodel) {
+  DoodzFree( Nmodel.rx_abs );
+  DoodzFree( Nmodel.rz_abs );
+  DoodzFree( Nmodel.rp_abs );
+  DoodzFree( Nmodel.rx_rel );
+  DoodzFree( Nmodel.rz_rel );
+  DoodzFree( Nmodel.rp_rel );
+  DoodzFree( Nmodel.LogIsNewtonStep );
 }
 
 
@@ -675,11 +680,11 @@ void GridAlloc ( grid* mesh, params* model ) {
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-void GridFree( grid* mesh, params* model ) {
+void GridFree(grid *mesh, params *model) {
 
-    // Free all grid-based arrays
+  // Free all grid-based arrays
 
-    int k;
+  int k;
     
     DoodzFree(mesh->FreeSurfW_s);
     DoodzFree(mesh->FreeSurfW_n);

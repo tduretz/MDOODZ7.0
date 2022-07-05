@@ -1,7 +1,7 @@
 #include "math.h"
 #include "mdoodz.h"
 
-int SetPhase(MdoodzInstance *instance, Coordinates coordinates) {
+int SetPhase(MdoodzInput *instance, Coordinates coordinates) {
   const double A          = 2e-3 / instance->scaling.L;
   const double layer_bot0 = -5e-2 / instance->scaling.L;
   const double layer_top0 = 5e-2 / instance->scaling.L;
@@ -14,20 +14,20 @@ int SetPhase(MdoodzInstance *instance, Coordinates coordinates) {
     return 0;
   }
 }
-double SetGrainSize(MdoodzInstance *instance, Coordinates coordinates, int phase) {
+double SetGrainSize(MdoodzInput *instance, Coordinates coordinates, int phase) {
   return instance->materials.gs_ref[phase];
 }
 
-double SetDensity(MdoodzInstance *instance, Coordinates coordinates, int phase) {// phase
+double SetDensity(MdoodzInput *instance, Coordinates coordinates, int phase) {// phase
   return instance->materials.rho[phase];
 }
 
-double SetTemperature(MdoodzInstance *instance, Coordinates coordinates) {
+double SetTemperature(MdoodzInput *instance, Coordinates coordinates) {
   const double T = (instance->model.user0 + zeroC) / instance->scaling.T;
   return T;
 }
 
-SetBC SetBCVx(MdoodzInstance *instance, POSITION position, Coordinates coordinates) {
+SetBC SetBCVx(MdoodzInput *instance, POSITION position, Coordinates coordinates) {
   SetBC bc;
   if (position == W || position == E || position == NE || position == NW || position == SE || position == SW) {
     bc.value = -coordinates.x * instance->model.EpsBG;
@@ -42,7 +42,7 @@ SetBC SetBCVx(MdoodzInstance *instance, POSITION position, Coordinates coordinat
   return bc;
 }
 
-SetBC SetBCVz(MdoodzInstance *instance, POSITION position, Coordinates coordinates) {
+SetBC SetBCVz(MdoodzInput *instance, POSITION position, Coordinates coordinates) {
   SetBC bc;
   if (position == NE || position == NW || position == SE || position == SW) {
     bc.value = coordinates.z * instance->model.EpsBG;
@@ -63,19 +63,18 @@ SetBC SetBCVz(MdoodzInstance *instance, POSITION position, Coordinates coordinat
 //----------------------------- THERMAL SetBC -----------------------------//
 
 
-SetBC SetBCT(MdoodzInstance *instance, POSITION position, double gridTemperature) {
+SetBC SetBCT(MdoodzInput *instance, POSITION position, double gridTemperature) {
   return (SetBC){.value = gridTemperature, .type = 0};
 }
 
-SetBC SetBCTNew(MdoodzInstance *instance, POSITION position, double gridTemperature) {
+SetBC SetBCTNew(MdoodzInput *instance, POSITION position, double gridTemperature) {
   return (SetBC){.value = gridTemperature, .type = 0};
 }
 
 //----------------------------- MAIN -----------------------------//
 
-int main(int nargs, char *args[]) {
-  MdoodzInstance instance = {
-          .inputFileName = GetSetupFileName(nargs, args),
+int main() {
+  MdoodzSetup setup = {
           .SetParticles  = &(SetParticles_ff){
                    .SetPhase       = SetPhase,
                    .SetDensity     = SetDensity,
@@ -89,5 +88,5 @@ int main(int nargs, char *args[]) {
                   .SetBCTNew = SetBCTNew,
           },
   };
-  RunMDOODZ(&instance);
+  RunMDOODZ( "PinchSwellGSE.txt", &setup);
 }
