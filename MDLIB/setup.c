@@ -1,8 +1,8 @@
 #include "mdoodz-private.h"
 #include "mdoodz.h"
+#include "stdbool.h"
 #include "stdio.h"
 #include "stdlib.h"
-#include "stdbool.h"
 
 
 void BuildInitialTopography(BuildInitialTopography_ff buildInitialTopography, MdoodzInput *instance, markers *topo_chain) {
@@ -558,12 +558,25 @@ SetBC SetPureOrSimpleShearBCVz(MdoodzInput *input, POSITION position, Coordinate
 }
 
 bool IsEllipseCoordinates(Coordinates coordinates, Ellipse ellipse, double scalingL) {
-  const double theta  = ellipse.angle * M_PI / 180.0;
+  const double theta   = ellipse.angle * M_PI / 180.0;
   const double radiusX = (ellipse.radiusX / 2) / scalingL;
   const double radiusZ = (ellipse.radiusZ / 2) / scalingL;
-  const double Xn     = (coordinates.x - ellipse.centreX / scalingL) * cos(theta) - (coordinates.z + ellipse.centreZ / scalingL) * sin(theta);
-  const double Zn     = (coordinates.x + ellipse.centreX / scalingL) * sin(theta) + (coordinates.z - ellipse.centreZ / scalingL) * cos(theta);
+  const double Xn      = (coordinates.x - ellipse.centreX / scalingL) * cos(theta) - (coordinates.z + ellipse.centreZ / scalingL) * sin(theta);
+  const double Zn      = (coordinates.x + ellipse.centreX / scalingL) * sin(theta) + (coordinates.z - ellipse.centreZ / scalingL) * cos(theta);
   if (pow(Xn / radiusX, 2) + pow(Zn / radiusZ, 2) - 1 < 0) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+bool IsRectangleCoordinates(Coordinates coordinates, Rectangle rectangle, double scalingL) {
+  const double wX = coordinates.x * cos(rectangle.angle) - coordinates.z * sin(rectangle.angle);
+  const double wZ = coordinates.x * sin(rectangle.angle) + coordinates.z * cos(rectangle.angle);
+  if (wX >= (rectangle.centreX / scalingL - (rectangle.sizeX / 2) / scalingL)
+      && wX <= (rectangle.centreX / scalingL + (rectangle.sizeX / 2) / scalingL)
+      && wZ >= (rectangle.centreZ / scalingL - (rectangle.sizeZ / 2) / scalingL)
+      && wZ <= (rectangle.centreZ / scalingL + (rectangle.sizeZ / 2) / scalingL)) {
     return true;
   } else {
     return false;

@@ -240,6 +240,15 @@ typedef struct {
   double angle;
 } Ellipse;
 
+typedef struct {
+  double centreX;
+  double centreZ;
+  double sizeX;
+  double sizeZ;
+  double angle;
+} Rectangle;
+
 bool IsEllipseCoordinates(Coordinates coordinates, Ellipse ellipse, double scalingL);
+bool IsRectangleCoordinates(Coordinates coordinates, Rectangle rectangle, double scalingL);
 
 #endif
