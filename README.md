@@ -146,13 +146,13 @@ Makefile related to cmake is located in a root directory
 To build library, tests and executables with OpenMP and in optimised mode:
 
 ```bash
-make build SET=RiftingPaulnie
+make build SET=RiftingPauline
 ```
 
 To explicitly set OPT (optimisation) and OMP (OpenMP). If not stated, it's OFF by default
 
 ```bash
-make build-dev OMP=ON OPT=ON SET=RiftingPaulnie
+make build-dev OMP=ON OPT=ON SET=RiftingPauline
 ```
 
 Build files will be located at the `cmake-build/` directory.
