@@ -1414,7 +1414,7 @@ Input ReadInputFile( char *fileName ) {
         model.PDMTmax[pid]       = 2273.0/scaling.T;        // Maximum temperature        (MANTLE) [K]
         model.PDMPmin[pid]       = 100e6/scaling.S;         // Minimum pressure           (MANTLE) [Pa]
         model.PDMPmax[pid]       = 15e9 /scaling.S;         // Maximum pressure           (MANTLE) [Pa]
-        model.PDMrho[pid]        = ReadBin( "PHASE_DIAGRAMS/Hawaiian_Pyrolite_rho_bin.dat", model.PDMnT[pid], model.PDMnP[pid], scaling.rho);
+        model.PDMrho[pid]        = ReadBin( model.import_files_dir, "Hawaiian_Pyrolite_rho_bin.dat", model.PDMnT[pid], model.PDMnP[pid], scaling.rho);
 
         /**** PHASE DIAGRAMS #01 - Mantle (Jenadi_stx_HR.dat)  ****/
         pid                       = 1;         // Kaus & Connolly, 2005: Effect of mineral phase transitions on sedimentary basin subsidence and uplift
@@ -1428,7 +1428,7 @@ Input ReadInputFile( char *fileName ) {
         model.PDMTmax[pid]       = 2273.0/scaling.T;        // Maximum temperature        (MANTLE) [K]
         model.PDMPmin[pid]       = 1e5/scaling.S;         // Minimum pressure           (MANTLE) [Pa]
         model.PDMPmax[pid]       = 25e9 /scaling.S;         // Maximum pressure           (MANTLE) [Pa]
-        model.PDMrho[pid]        = ReadBin( "PHASE_DIAGRAMS/Hawaiian_Pyrolite_HR_rho_bin.dat", model.PDMnT[pid], model.PDMnP[pid], scaling.rho);
+        model.PDMrho[pid]        = ReadBin( model.import_files_dir, "Hawaiian_Pyrolite_HR_rho_bin.dat", model.PDMnT[pid], model.PDMnP[pid], scaling.rho);
 
         /**** PHASE DIAGRAMS #02 - Basalt (MORB_L.dat)  ****/
         pid                       = 2;  // Water saturated MORB - Bulk composition taken from Schmidt & Poli 1998 EPSL (Table 1)
@@ -1442,7 +1442,7 @@ Input ReadInputFile( char *fileName ) {
         model.PDMTmax[pid]       = 1273.0/scaling.T;        // Maximum temperature        (MANTLE) [K]
         model.PDMPmin[pid]       = 100e6/scaling.S;         // Minimum pressure           (MANTLE) [Pa]
         model.PDMPmax[pid]       = 5.1e9 /scaling.S;        // Maximum pressure           (MANTLE) [Pa]
-        model.PDMrho[pid]        = ReadBin( "PHASE_DIAGRAMS/MORB_H2Osat_rho_bin.dat", model.PDMnT[pid], model.PDMnP[pid], scaling.rho);
+        model.PDMrho[pid]        = ReadBin(model.import_files_dir, "MORB_H2Osat_rho_bin.dat", model.PDMnT[pid], model.PDMnP[pid], scaling.rho);
 
         /**** PHASE DIAGRAMS #03 - Andesite (Andesite.dat)  ****/
         pid                       = 3;  // Andesite
@@ -1456,7 +1456,7 @@ Input ReadInputFile( char *fileName ) {
         model.PDMTmax[pid]       = 1373.0/scaling.T;        // Maximum temperature        (MANTLE) [K]
         model.PDMPmin[pid]       = 10.13e6/scaling.S;         // Minimum pressure           (MANTLE) [Pa]
         model.PDMPmax[pid]       = 5.5816e9 /scaling.S;        // Maximum pressure           (MANTLE) [Pa]
-        model.PDMrho[pid]        = ReadBin( "PHASE_DIAGRAMS/Andesite.dat", model.PDMnT[pid], model.PDMnP[pid], scaling.rho);
+        model.PDMrho[pid]        = ReadBin(model.import_files_dir, "Andesite.dat", model.PDMnT[pid], model.PDMnP[pid], scaling.rho);
 
         /**** PHASE DIAGRAMS #04 - Hydrated Peridotite (Hydrated_Pdt.dat)  ****/
         pid                       = 4;  // Hydrated peridotite
@@ -1470,7 +1470,7 @@ Input ReadInputFile( char *fileName ) {
         model.PDMTmax[pid]       = 1373.0/scaling.T;        // Maximum temperature        (MANTLE) [K]
         model.PDMPmin[pid]       = 10.13e6/scaling.S;         // Minimum pressure           (MANTLE) [Pa]
         model.PDMPmax[pid]       = 5.5816e9 /scaling.S;        // Maximum pressure           (MANTLE) [Pa]
-        model.PDMrho[pid]        = ReadBin( "PHASE_DIAGRAMS/Hydrated_Pdt.dat", model.PDMnT[pid], model.PDMnP[pid], scaling.rho);
+        model.PDMrho[pid]        = ReadBin(model.import_files_dir, "Hydrated_Pdt.dat", model.PDMnT[pid], model.PDMnP[pid], scaling.rho);
 
         /**** PHASE DIAGRAMS #05 - MORB (MORB.dat)  ****/
         pid                       = 5;  // MORB
@@ -1484,7 +1484,7 @@ Input ReadInputFile( char *fileName ) {
         model.PDMTmax[pid]       = 1373.0/scaling.T;        // Maximum temperature        (MANTLE) [K]
         model.PDMPmin[pid]       = 10.13e6/scaling.S;         // Minimum pressure           (MANTLE) [Pa]
         model.PDMPmax[pid]       = 5.5816e9 /scaling.S;        // Maximum pressure           (MANTLE) [Pa]
-        model.PDMrho[pid]        = ReadBin( "PHASE_DIAGRAMS/MORB.dat", model.PDMnT[pid], model.PDMnP[pid], scaling.rho);
+        model.PDMrho[pid]        = ReadBin(model.import_files_dir, "MORB.dat", model.PDMnT[pid], model.PDMnP[pid], scaling.rho);
 
         /**** PHASE DIAGRAMS #06 - Pelite (Pelite.dat)  ****/
         pid                       = 6;  // Pelite
@@ -1498,7 +1498,7 @@ Input ReadInputFile( char *fileName ) {
         model.PDMTmax[pid]       = 1373.0/scaling.T;        // Maximum temperature        (MANTLE) [K]
         model.PDMPmin[pid]       = 10.13e6/scaling.S;         // Minimum pressure           (MANTLE) [Pa]
         model.PDMPmax[pid]       = 5.5816e9 /scaling.S;        // Maximum pressure           (MANTLE) [Pa]
-        model.PDMrho[pid]        = ReadBin( "PHASE_DIAGRAMS/Pelite.dat", model.PDMnT[pid], model.PDMnP[pid], scaling.rho);
+        model.PDMrho[pid]        = ReadBin(model.import_files_dir, "Pelite.dat", model.PDMnT[pid], model.PDMnP[pid], scaling.rho);
 
         /**** PHASE DIAGRAMS #07 - Rhyolite (Rhyolite.dat)  ****/
         pid                       = 7;  // Rhyolite
@@ -1512,7 +1512,7 @@ Input ReadInputFile( char *fileName ) {
         model.PDMTmax[pid]       = 1373.0/scaling.T;        // Maximum temperature        (MANTLE) [K]
         model.PDMPmin[pid]       = 10.13e6/scaling.S;         // Minimum pressure           (MANTLE) [Pa]
         model.PDMPmax[pid]       = 5.5816e9 /scaling.S;        // Maximum pressure           (MANTLE) [Pa]
-        model.PDMrho[pid]        = ReadBin( "PHASE_DIAGRAMS/Rhyolite.dat", model.PDMnT[pid], model.PDMnP[pid], scaling.rho);
+        model.PDMrho[pid]        = ReadBin(model.import_files_dir, "Rhyolite.dat", model.PDMnT[pid], model.PDMnP[pid], scaling.rho);
 
         /**** PHASE DIAGRAMS #08 - Serpentinite (Serpentinite.dat)  ****/
         pid                       = 8;  // Serpentinite
@@ -1526,7 +1526,7 @@ Input ReadInputFile( char *fileName ) {
         model.PDMTmax[pid]       = 1373.0/scaling.T;        // Maximum temperature        (MANTLE) [K]
         model.PDMPmin[pid]       = 10.13e6/scaling.S;         // Minimum pressure           (MANTLE) [Pa]
         model.PDMPmax[pid]       = 5.5816e9 /scaling.S;        // Maximum pressure           (MANTLE) [Pa]
-        model.PDMrho[pid]        = ReadBin( "PHASE_DIAGRAMS/Serpentinite.dat", model.PDMnT[pid], model.PDMnP[pid], scaling.rho);
+        model.PDMrho[pid]        = ReadBin(model.import_files_dir, "Serpentinite.dat", model.PDMnT[pid], model.PDMnP[pid], scaling.rho);
 
         /**** PHASE DIAGRAMS #09 - Si02 (Si02.dat)  ****/
         pid                       = 9;  // Si02
@@ -1540,7 +1540,7 @@ Input ReadInputFile( char *fileName ) {
         model.PDMTmax[pid]       = (800+273)/scaling.T;          // Maximum temperature        (MANTLE) [K]
         model.PDMPmin[pid]       = (0.0090/10*1e9)/scaling.S;    // Minimum pressure           (MANTLE) [Pa]
         model.PDMPmax[pid]       = (49.9890/10*1e9)/scaling.S;   // Maximum pressure           (MANTLE) [Pa]
-        model.PDMrho[pid]        = ReadBin( "PHASE_DIAGRAMS/SiO2_nsm010.dat", model.PDMnT[pid], model.PDMnP[pid], scaling.rho);
+        model.PDMrho[pid]        = ReadBin(model.import_files_dir, "SiO2_nsm010.dat", model.PDMnT[pid], model.PDMnP[pid], scaling.rho);
     }
 
     //------------------------------------------------------------------------------------------------------------------------------//
@@ -1558,7 +1558,7 @@ Input ReadInputFile( char *fileName ) {
         model.kin_Tmax      = (800+273)/scaling.T;         // Maximum temperature        (MANTLE) [K]
         model.kin_Pmin      = (0.0090/10*1e9)/scaling.S;   // Minimum pressure           (MANTLE) [Pa]
         model.kin_Pmax      = (49.9890/10*1e9)/scaling.S;  // Maximum pressure           (MANTLE) [Pa]
-        model.kin_dG        = ReadBin( "PHASE_DIAGRAMS/dG_QuartzCoesite.dat", model.kin_nT, model.kin_nP, scaling.J);
+        model.kin_dG        = ReadBin(model.import_files_dir, "dG_QuartzCoesite.dat", model.kin_nT, model.kin_nP, scaling.J);
     }
 
     //------------------------------------------------------------------------------------------------------------------------------//
@@ -1656,9 +1656,9 @@ void ScaleMe( scale* scale) {
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-double* ReadBin( char A_name[], int nx, int ny, double scale ){
+double* ReadBin(char importDir[], char A_name[], int nx, int ny, double scale ){
     double *A;
-    char* bname; size_t nb_elems = nx*ny; FILE* fid; asprintf(&bname, "%s", A_name);
+    char* bname; size_t nb_elems = nx*ny; FILE* fid; asprintf(&bname, "%s/%s", importDir, A_name);
 
     A = malloc((nb_elems)*sizeof(double));
     fid=fopen(bname, "rb"); // Open file
