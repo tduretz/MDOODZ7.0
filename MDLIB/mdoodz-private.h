@@ -210,8 +210,7 @@ double          ReadMatProps(FILE *, char[], int, double);
 //double  ReadDou21( FILE*, char[], double );
 char           *ReadChar(FILE *, char[], char[]);
 char           *ReadPhaseDiagram(FILE *, char FieldName[]);
-double         *ReadBin(char[], int, int, double);
-//void    WriteBin(double*, int, const char[]);
+double         *ReadBin(char importDir[], char A_name[], int nx, int ny, double scale);
 
 // Allocation
 grid            GridAlloc(params *model);
