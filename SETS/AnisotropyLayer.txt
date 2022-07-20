@@ -1,0 +1,245 @@
+/**** Original name: Pauline_marylDiabCC_dryOlM ****/
+/**** RESTART ****/
+istep = 00000050
+irestart = 0
+
+/**** OUTPUT FILES ****/
+writer = 1
+writer_step = 10
+writer_markers = 0
+writer_debug   = 0
+
+/**** INPUT FILE FOR PARTICLES ****/
+input_file = setup_r501x501_fsp40.bin
+
+/**** SCALES ****/ Scaling parameters for
+eta = 1.e+22      /viscosity
+L   = 30.e4       /length
+V   = 1.5e-8     /velocity
+T   = 1.e+02      /temperature
+
+/**** SPACE-TIME ****/
+Nx      = 101 // 300/600 = 0.5 km horizontal resolution
+Nz      = 101 // 200/800 = 0.25 km vertical resolution
+Nt      = 50
+xmin    = -170.000000e3
+zmin    = -170.000000e3
+xmax    = 170.000000e3
+zmax    = 170.000000e3
+dt      = 2.2623e+11
+Courant = 0.45
+penalty = 1e2
+eta_avg = 0
+itp_stencil = 1
+
+/**** SWITCHES ****/
+ismechanical    = 1
+dt_constant     = 0
+RK              = 4
+isperiodic_x    = 0
+ispureshear_ALE = 1  /1: box stretched at constant strain rate; -1 box of constant size
+isinertial      = 0
+iselastic       = 1
+isthermal       = 0
+isPl_soft       = 0
+line_search     = 1
+aniso           = 1
+
+/**** SETUP DEPENDANT ****/
+EpsBG           = 1.056e-15 /Background strain rate [s-1] => extension rate = 1 cm/yr
+
+/**** GRAVITY ****/
+gx = 0.0000
+gz = 0.0
+
+/**** PHASE PROPERTIES ****/
+Nb_phases = 9
+
+ID   = 0       / Seed
+rho  = 2700.00 / ref. density
+alp  = 32.0e-6 / thermal expansivity
+bet  = 1e-11   / compressibility
+mu   = 1e10    / shear modulus
+Cv   = 1050    / heat capacity
+k    = 2       / thermal conductivity
+Qr   = 1e-6    / radiogenic heat production
+C    = 1e7     / cohesion
+phi  = 30      / friction angle
+cstv = 1       / constant viscosity
+pwlv = 0      / power law viscosity -> database flow_laws.c
+linv = 0       / linear viscous viscosity -> database flow_laws.c
+gbsv = 0       / grain boundary sliding viscosity -> database flow_laws.c
+expv = 0       / Pierls viscosity -> database flow_laws.c
+aniso_angle  = 45
+aniso_factor = 10
+
+ID   = 1
+rho  = 2800.00 / Crust - Maryland Diabase
+mu   = 1.0e10
+Cv   = 1050.0
+k    = 2.5
+Qr   = 1.0e-6
+C    = 1.0e7
+phi  = 30.0
+Slim = 500.0e9
+alp  = 32.0e-6
+bet  = 1.5e-11
+cstv = 1
+pwlv = 11
+linv = 0
+gbsv = 0
+expv = 0
+
+ID   = 2
+rho  = 3330.00 / lithospheric mantle - Dry Olivine
+alp  = 32.0e-6
+bet  = 1.5e-11
+mu   = 1.0e10
+Cv   = 1050.0
+k    = 3.0
+Qr   = 0.0
+C    = 1.0e7
+phi  = 30.0
+Slim = 500.0e9
+cstv = 0
+pwlv = 40
+linv = 40
+gbsv = 0
+expv = 40
+
+ID   = 3
+rho  = 3330.00 / asthenosphere (same as 2)
+alp  = 32.0e-6
+bet  = 1.5e-11
+mu   = 1.0e10
+Cv   = 1050.0
+k    = 3.0
+Qr   = 0.0
+C    = 1.0e7
+phi  = 30.0
+Slim = 500.0e9
+cstv = 0
+pwlv = 40
+linv = 40
+gbsv = 0
+expv = 40
+
+ID   = 4
+rho  = 2300.00 / sediments
+mu   = 1e10
+Cv   = 1050
+k    = 2
+Qr   = 0.5e-6
+C    = 1e7
+phi  = 30
+Slim = 500e9
+alp  = 10.0e-6
+bet  = 1e-11
+drho = 0
+cstv = 0
+pwlv = 13
+linv = 0
+gbsv = 0
+expv = 0
+gsel = 0
+eta0 = 0
+npwl = 0
+Qpwl = 0
+
+ID   = 5
+rho  = 2300.00 / sediments
+mu   = 1e10
+Cv   = 1050
+k    = 2
+Qr   = 0.5e-6
+C    = 1e7
+phi  = 30
+Slim = 500e9
+alp  = 10.0e-6
+bet  = 1e-11
+drho = 0
+cstv = 0
+pwlv = 13
+linv = 0
+gbsv = 0
+expv = 0
+gsel = 0
+eta0 = 0
+npwl = 0
+Qpwl = 0
+
+ID   = 6
+rho  = 3200.00 / impregnated asthenosphere (less dense and more conductive than 3)
+alp  = 32.0e-6
+bet  = 1.5e-11
+mu   = 1.0e10
+Cv   = 1050.0
+k    = 30.0
+Qr   = 0.0
+C    = 1.0e7
+phi  = 30.0
+Slim = 500.0e9
+cstv = 0
+pwlv = 40
+linv = 40
+gbsv = 0
+expv = 40
+
+ID   = 7
+rho  = 2800.00 / Crust - Dry Quartz
+mu   = 1.0e10
+Cv   = 1050.0
+k    = 2.5
+Qr   = 1.0e-6
+C    = 1.0e7
+phi  = 30.0
+Slim = 500.0e9
+alp  = 32.0e-6
+bet  = 1.5e-11
+cstv = 0
+pwlv = 27
+linv = 0
+gbsv = 0
+expv = 0
+
+ID   = 8
+rho  = 2800.00 / Crust - Dry Quartz
+mu   = 1.0e10
+Cv   = 1050.0
+k    = 2.5
+Qr   = 1.0e-6
+C    = 1.0e7
+phi  = 30.0
+Slim = 500.0e9
+alp  = 32.0e-6
+bet  = 1.5e-11
+cstv = 0
+pwlv = 27
+linv = 0
+gbsv = 0
+expv = 0
+
+/**** DEFMAPS ****/
+nT    =    200      / Temperature resolution []
+nE    =    200      / Strain rate resolution []
+nd    =    6        / Grain size resolution []
+Tmin  =    127.0      / Temperature minimum [°C]
+Tmax  =    1827.0     / Temperature maximum [°C]
+Emin  =    -50      / Strain rate minimum log_10 [1/s]
+Emax  =    5        / Strain rate maximum log_10 [1/s]
+dmin  =    -7       / Grain size minimum log_10 [m]
+dmax  =    -2       / Grain size maximum log_10 [m]
+Pn    =  1.0e9        / Pressure [Pa]
+
+/**** PARTICLES ****/
+Nx_part  = 4
+Nz_part  = 4
+min_part_cell = 16
+
+/**** PICARD ITERATIONS ****/
+Newton  = 0
+nit_max = 1 // for high resolution use from 10 to 20
+tol_u   = 5.0e-8
+tol_p   = 5.0e-8
+mineta  = 5.0e18
+maxeta  = 1.0e25
