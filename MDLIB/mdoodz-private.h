@@ -289,6 +289,7 @@ void            Interp_Grid2P_strain(markers, DoodzFP *, grid *, double *, doubl
 //void FreeP2Mesh( grid* );
 void            Interp_Phase2VizGrid(markers, int *, grid *, char *, double *, double *, int, int, params, surface);
 void            ParticleInflowCheck(markers *, grid *, params, surface, int);
+void            P2Mastah(params *, markers, DoodzFP *, grid *, double *, char *, int, int, int, int, int);
 //
 //// Stokes
 //void ResidualCalc2( grid*OutputSparseMatrix *, params, int, double*, double*, double*, double*, double*, double*, int, scale );

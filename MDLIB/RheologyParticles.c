@@ -28,7 +28,6 @@
 #include "math.h"
 #include "time.h"
 #include "mdoodz-private.h"
-#include "ParticleRoutines.h"
 
 #ifdef _OMP_
 #include "omp.h"
@@ -71,11 +70,11 @@ void OldDeviatoricStressesPressure( grid* mesh, markers* particles, scale scalin
     syy0 = DoodzCalloc(Ncx*Ncz, sizeof(DoodzFP));
     szz0 = DoodzCalloc(Ncx*Ncz, sizeof(DoodzFP));
     sxz0 = DoodzCalloc(Ncx*Ncz, sizeof(DoodzFP));
-
-    Interpolate(model, *particles, particles->sxxd, mesh, sxx0, mesh->BCp.type, 1, 0, interp, cent);
-    Interpolate(model, *particles, particles->szzd, mesh, szz0, mesh->BCp.type, 1, 0, interp, cent);
-    Interpolate(model, *particles, particles->syy, mesh, syy0, mesh->BCp.type, 1, 0, interp, cent);
-    Interpolate(model, *particles, particles->sxz, mesh, mesh->sxz0, mesh->BCg.type, 1, 0, interp, vert);
+    
+    P2Mastah( model, *particles, particles->sxxd,    mesh, sxx0,   mesh->BCp.type,  1, 0, interp, cent, model->itp_stencil);
+    P2Mastah( model, *particles, particles->szzd,    mesh, szz0,   mesh->BCp.type,  1, 0, interp, cent, model->itp_stencil);
+    P2Mastah( model, *particles, particles->syy,     mesh, syy0,   mesh->BCp.type,  1, 0, interp, cent, model->itp_stencil);
+    P2Mastah( model, *particles, particles->sxz,     mesh, mesh->sxz0,   mesh->BCg.type,  1, 0, interp, vert, model->itp_stencil);
     
 #pragma omp parallel for shared( mesh, sxx0, syy0, szz0 ) private( k, k1, l, c0, c1, c2 ) firstprivate( Nx, Ncx, Ncz )
     for ( k1=0; k1<Ncx*Ncz; k1++ ) {
@@ -655,9 +654,9 @@ void FiniteStrainAspectRatio ( grid *mesh, scale scaling, params model, markers 
         // aspect ratio
         FS_AR[k] = e1/e2;
     }
-
-    Interpolate(&model, *particles, FS_AR, mesh, mesh->FS_AR_n, mesh->BCp.type, 1, 0, interp, cent);
-    Interpolate(&model, *particles, FS_AR, mesh, mesh->FS_AR_s, mesh->BCg.type, 1, 0, interp, vert);
+    
+    P2Mastah( &model, *particles, FS_AR, mesh, mesh->FS_AR_n,   mesh->BCp.type,  1, 0, interp, cent, model.itp_stencil);
+    P2Mastah( &model, *particles, FS_AR, mesh, mesh->FS_AR_s,   mesh->BCg.type,  1, 0, interp, vert, model.itp_stencil);
     
     DoodzFree(FS_AR);
     
@@ -966,7 +965,7 @@ void UpdateParticleEnergy( grid* mesh, scale scaling, params model, markers* par
         }
         
         // Subgrid temperature increments markers --> grid
-        Interpolate(&model, *particles, dTms, mesh, dTgs, mesh->BCp.type, 1, 0, interp, cent);
+        P2Mastah( &model, *particles, dTms,     mesh, dTgs,   mesh->BCp.type,  1, 0, interp, cent, 1);
         
         // Remaining temperature increments on the grid
 #pragma omp parallel for shared(mesh, dTgs, dTgr) private(c0) firstprivate(Ncx,Ncz)
@@ -1082,7 +1081,7 @@ void UpdateParticlePressure( grid* mesh, scale scaling, params model, markers* p
         }
         
         // Subgrid temperature increments markers --> grid
-        Interpolate(&model, *particles, dPms, mesh, dPgs, mesh->BCp.type, 1, 0, interp, cent);
+        P2Mastah( &model, *particles, dPms,     mesh, dPgs,   mesh->BCp.type,  1, 0, interp, cent, 1);
         
         // Remaining temperature increments on the grid
 #pragma omp parallel for shared(mesh, dPgs, dPgr) private(c0) firstprivate(Ncx,Ncz)
@@ -1331,9 +1330,9 @@ firstprivate( model, dt )
             }
             
             // Subgrid stress increments markers --> grid
-            Interpolate(model, *particles, dtxxms, mesh, dtxxgs, mesh->BCp.type, 1, 0, interp, cent);
-            Interpolate(model, *particles, dtzzms, mesh, dtzzgs, mesh->BCp.type, 1, 0, interp, cent);
-            Interpolate(model, *particles, dtxzms, mesh, dtxzgs, mesh->BCg.type, 1, 0, interp, vert);
+            P2Mastah( model, *particles, dtxxms,     mesh, dtxxgs,   mesh->BCp.type,  1, 0, interp, cent, model->itp_stencil);
+            P2Mastah( model, *particles, dtzzms,     mesh, dtzzgs,   mesh->BCp.type,  1, 0, interp, cent, model->itp_stencil);
+            P2Mastah( model, *particles, dtxzms,     mesh, dtxzgs,   mesh->BCg.type,  1, 0, interp, vert, model->itp_stencil);
             
             // Remaining stress increments on the grid
 #pragma omp parallel for shared(mesh,dtxxgs,dtxxgr,dtzzgs,dtzzgr) private(c0) firstprivate(Ncx,Ncz)

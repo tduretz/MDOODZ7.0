@@ -24,8 +24,7 @@ add_library(mdoodz SHARED
         ThermalRoutines.c
         ThermalSolver.c
         setup.c
-        RheologyDensity.h
-        ParticleRoutines.h)
+        RheologyDensity.h)
 target_link_libraries(mdoodz ${DEPENDENCIES})
 target_include_directories(mdoodz PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 set_target_properties(mdoodz PROPERTIES
