@@ -12,5 +12,6 @@ else()
     add_set(QuartzCoesite) # not yet finished
     add_set(MLPS_Ellipses) # not yet finished
     add_set(CollisionZone) # not yet finished
+    add_set(RiftingAnisotropy)
 endif()
 

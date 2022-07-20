@@ -25,6 +25,7 @@
 #include "math.h"
 #include "time.h"
 #include "mdoodz-private.h"
+#include "ParticleRoutines.h"
 
 #ifdef _OMP_
 #include "omp.h"
@@ -520,8 +521,8 @@ void DefineInitialTimestep( params *model, grid *mesh, markers particles, mat_pr
 // Define initial timestep is elasticity is turned on
 if ( model->iselastic == 1 && model->dt_constant != 1 ) {
 
-    P2Mastah( model, particles, materials.mu,     mesh, mesh->mu_n,   mesh->BCp.type,  0, 0, interp, cent, model->itp_stencil );
-    P2Mastah( model, particles, materials.mu,     mesh, mesh->mu_s,   mesh->BCg.type,  0, 0, interp, vert, model->itp_stencil );
+  Interpolate(model->Nb_phases, particles, materials.mu, mesh, mesh->mu_n, mesh->BCp.type, 0, 0, interp, cent);
+    Interpolate(model->Nb_phases, particles, materials.mu, mesh, mesh->mu_s, mesh->BCg.type, 0, 0, interp, vert);
 
     for ( k=0; k<mesh->Nx*mesh->Nz; k++) {
 

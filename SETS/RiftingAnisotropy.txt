@@ -1,16 +1,13 @@
 /**** Original name: Pauline_marylDiabCC_dryOlM ****/
 /**** RESTART ****/
-istep = 00000050
+istep = 00000020
 irestart = 0
 
 /**** OUTPUT FILES ****/
 writer = 1
-writer_step = 1
+writer_step = 5
 writer_markers = 0
 writer_debug   = 0
-
-/**** INPUT FILE FOR PARTICLES ****/
-input_file = setup_r501x501_fsp40.bin
 
 /**** SCALES ****/ Scaling parameters for
 eta = 1.e+22      /viscosity
@@ -21,7 +18,7 @@ T   = 1.e+02      /temperature
 /**** SPACE-TIME ****/
 Nx      = 200 // 300/600 = 0.5 km horizontal resolution
 Nz      = 160 // 200/800 = 0.25 km vertical resolution
-Nt      = 1
+Nt      = 150
 xmin    = -150.000000e3
 zmin    = -110.000000e3
 xmax    =  150.000000e3
@@ -78,11 +75,6 @@ gz = -9.81
 /**** PHASE PROPERTIES ****/
 Nb_phases = 9
 
-// linear plasticity
-// constant viscousity at the start
-// output intencity of anisotropy
-
-
 ID   = 0       / Seed
 rho  = 2700.00 / ref. density
 alp  = 32.0e-6 / thermal expansivity
@@ -93,11 +85,14 @@ k    = 2       / thermal conductivity
 Qr   = 1e-6    / radiogenic heat production
 C    = 1e7     / cohesion
 phi  = 30      / friction angle
-cstv = 0       / constant viscosity USE THIS
-pwlv = 19      / power law viscosity -> database flow_laws.c
+cstv = 1       / constant viscosity
+pwlv = 0      / power law viscosity -> database flow_laws.c
 linv = 0       / linear viscous viscosity -> database flow_laws.c
 gbsv = 0       / grain boundary sliding viscosity -> database flow_laws.c
 expv = 0       / Pierls viscosity -> database flow_laws.c
+aniso        = 1
+aniso_angle  = 45
+aniso_factor = 10
 
 ID   = 1
 rho  = 2800.00 / Crust - Maryland Diabase
@@ -110,11 +105,14 @@ phi  = 30.0
 Slim = 500.0e9
 alp  = 32.0e-6
 bet  = 1.5e-11
-cstv = 0
-pwlv = 11
+cstv = 1
+pwlv = 0
 linv = 0
 gbsv = 0
 expv = 0
+aniso        = 1
+aniso_angle  = 20
+aniso_factor = 10
 
 ID   = 2
 rho  = 3330.00 / lithospheric mantle - Dry Olivine
@@ -127,11 +125,14 @@ Qr   = 0.0
 C    = 1.0e7
 phi  = 30.0
 Slim = 500.0e9
-cstv = 0
-pwlv = 40
+cstv = 1
+pwlv = 0
 linv = 40
 gbsv = 0
 expv = 40
+aniso        = 1
+aniso_angle  = 60
+aniso_factor = 10
 
 ID   = 3
 rho  = 3330.00 / asthenosphere (same as 2)

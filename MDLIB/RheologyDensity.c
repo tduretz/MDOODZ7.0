@@ -30,6 +30,7 @@
 #include "time.h"
 #include "mdoodz-private.h"
 #include "RheologyDensity.h"
+#include "ParticleRoutines.h"
 
 #ifdef _OMP_
 #include "omp.h"
@@ -1532,7 +1533,7 @@ void CohesionFrictionDilationGrid( grid* mesh, markers* particles, mat_prop mate
 
   // Plastic strain
   strain_pl  = DoodzCalloc((model.Nx-1)*(model.Nz-1), sizeof(double));
-  P2Mastah( &model, *particles,  particles->strain_pl,     mesh, strain_pl,   mesh->BCp.type,  1, 0, interp, cent, model.itp_stencil);
+  Interpolate( &model, *particles,  particles->strain_pl,     mesh, strain_pl,   mesh->BCp.type,  1, 0, interp, cent);
 
   // Calculate cell centers cohesion and friction
 #pragma omp parallel for shared( mesh, strain_pl ) private( p, c0 ) firstprivate( model, materials, average, style, Ncx, Ncz )
