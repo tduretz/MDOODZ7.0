@@ -434,25 +434,6 @@ void ValidateSetup(MdoodzSetup *setup, MdoodzInput *instance) {
     }
   }
 
-  if (instance->crazyConductivity) {
-    if (!instance->crazyConductivity->multiplier) {
-      errors[errorsCount] = "Parameter multiplier MUST be set for crazy conductivity";
-      errorsCount++;
-    }
-    if (!instance->crazyConductivity->phases) {
-      errors[errorsCount] = "Parameter phases MUST be set for crazy conductivity";
-      errorsCount++;
-    }
-    if (!instance->crazyConductivity->nPhases) {
-      errors[errorsCount] = "Parameter nPhases MUST be set for crazy conductivity";
-      errorsCount++;
-    } else if (instance->crazyConductivity->nPhases > instance->model.Nb_phases) {
-      errors[errorsCount] = "Asthenosphere phases for crazy conductivity is more than phases in a model. Please double check it";
-      printf("phases: %i, %i", instance->crazyConductivity->nPhases, instance->model.Nb_phases);
-      errorsCount++;
-    }
-  }
-
   if (warningsCount) {
     printf("\n\n******************  YOU HAVE %d SETUP WARNINGS  ******************\n", warningsCount);
     for (int i = 0; i < warningsCount; i++) {

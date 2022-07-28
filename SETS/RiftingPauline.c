@@ -1,6 +1,7 @@
 #include "math.h"
 #include "mdoodz.h"
 #include "stdbool.h"
+#include "stdlib.h"
 
 
 double SetSurfaceZCoord(MdoodzInput *instance, double x_coord) {
@@ -105,13 +106,14 @@ SetBC SetBCTNew(MdoodzInput *instance, POSITION position, double particleTempera
   return bc;
 }
 
-void MutateInput(MdoodzInput *instance) {
-  int asthenospherePhases[1]   = {3};
-  instance->crazyConductivity = &(CrazyConductivity){
-          .multiplier = 1000,
-          .nPhases    = 1,
-          .phases     = asthenospherePhases,
-  };
+void MutateInput(MdoodzInput *input) {
+  int               *asthenospherePhases = (int *) malloc(sizeof(int));
+  CrazyConductivity *crazyConductivity   = (CrazyConductivity *) malloc(sizeof(CrazyConductivity));
+  asthenospherePhases[0]                 = 3;
+  crazyConductivity->phases              = asthenospherePhases;
+  crazyConductivity->nPhases             = 1;
+  crazyConductivity->multiplier          = 1000;
+  input->crazyConductivity               = crazyConductivity;
 }
 
 int main() {
