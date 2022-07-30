@@ -78,7 +78,8 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
     // Initialise data for logs of iterations
     Nparams Nmodel = NmodelAlloc(inputFile.Nmodel);
 
-    input.model.Newton = input.model.aniso  == 1;
+    //input.model.Newton = input.model.aniso  == 1; // this statement is incorrect, Newton should also work for isotropic case
+    if (input.model.aniso  == 1) input.model.Newton = 1;
     int IsNewtonStep = input.model.Newton == 1;
 
     printf("*************************************\n");
