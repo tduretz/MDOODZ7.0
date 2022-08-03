@@ -115,7 +115,7 @@ typedef struct {
   double *phi0_s, *d0_s, *T_s, *P_s;
   // For anisotropy
   double *FS_AR_n, *FS_AR_s, *aniso_factor_n, *aniso_factor_s;
-  double *d1_n, *d2_n, *d1_s, *d2_s;
+  double *d1_n, *d2_n, *d1_s, *d2_s, *angle_n, *angle_s;
 
   double *cell_min_z, *cell_max_z, *vert_min_z, *vert_max_z;
   double *dil_n, *dil_s, *fric_n, *fric_s, *C_n, *C_s;
@@ -547,7 +547,7 @@ void            ChemicalDirectSolve(grid *, params, markers *, mat_prop *, doubl
 void            InitialiseGrainSizeParticles(markers *, mat_prop *);
 
 void            ViscosityDerivatives(grid *, mat_prop *, params *, Nparams, scale *);
-double          ViscosityConcise(int, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, mat_prop *, params *, scale *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double, double, double, double, double, double, double *, double *, double *, double *, double, double, double *, double *, double *, int, int);
+double          ViscosityConcise(int, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, mat_prop *, params *, scale *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double, double, double, double, double, double, double *, double *, double *, double *, double, double, double *, double *, double *, int, int);
 double          EvaluateDensity(int, double, double, double, params *, mat_prop *);
 void            ComputeMeanQuantitesForTimeSeries(grid *mesh);
 void            LogTimeSeries(grid *, params, scale);

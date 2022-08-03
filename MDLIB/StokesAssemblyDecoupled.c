@@ -157,10 +157,6 @@ void Xjacobian_InnerNodesDecoupled3( SparseMat *Stokes, SparseMat *StokesA, Spar
         double D32S = mesh->D32_s[ixyS];
         double D33S = mesh->D33_s[ixyS];
         double D34S = mesh->D34_s[ixyS];
-
-        // scale RHS
-        StokesA->b[eqn] *= celvol;
-        StokesB->b[eqn] *= celvol;
     
         double inE=0.0, inW=0.0, inS=0.0, inN = 0.0, inSv = 0.0, inNv = 0.0;
         if (mesh->BCp.type[iPrW] == -1) inW = 1.0;
@@ -220,7 +216,8 @@ void Xjacobian_InnerNodesDecoupled3( SparseMat *Stokes, SparseMat *StokesA, Spar
         pSW = 0.25*D34S*inS/dz;
         pSE = 0.25*D34S*inS/dz;
         pNW = -0.25*D34N*inN/dz;
-
+        pNE = -0.25*D34N*inN/dz;
+    
         // Stabilisation with density gradients
         if ( stab==1 ) {
             double drhodx  = (mesh->rho_n[c2+1] - mesh->rho_n[c2])*one_dx;
@@ -230,8 +227,6 @@ void Xjacobian_InnerNodesDecoupled3( SparseMat *Stokes, SparseMat *StokesA, Spar
             uC += uC_corr;
         }
 
-        pNE = -0.25*D34N*inN/dz;
-        
         // Add contribution from non-conforming Dirichlets
         if ( mesh->BCu.type[iVxS]   == 11 ) uC  -=  uS ;
         if ( mesh->BCu.type[iVxN]   == 11 ) uC  -=  uN ;
@@ -245,6 +240,10 @@ void Xjacobian_InnerNodesDecoupled3( SparseMat *Stokes, SparseMat *StokesA, Spar
         if ( mesh->BCv.type[iVzSEE] == 11 ) vSE -= vSEE;
 
         if ( Assemble == 1 ) {
+            
+        // scale RHS
+        StokesA->b[eqn] *= celvol;
+        StokesB->b[eqn] *= celvol;
 
         //--------------------
         // dsxx/dx - normal stencil
@@ -622,12 +621,12 @@ void Zjacobian_InnerNodesDecoupled3( SparseMat *Stokes, SparseMat *StokesA, Spar
         if ( mesh->BCu.type[iVxNNE] == 11 ) uNE -= uNNE;
         if ( mesh->BCu.type[iVxSSW] == 11 ) uSW -= uSSW;
         if ( mesh->BCu.type[iVxSSE] == 11 ) uSE -= uSSE;
-        
-        StokesA->b[eqn] *= celvol;
-        StokesB->b[eqn] *= celvol;
 
         if ( Assemble == 1 ) {
 
+        // scale RHS
+        StokesA->b[eqn] *= celvol;
+        StokesB->b[eqn] *= celvol;
         //--------------------
         
         // uSSW (Newton)
