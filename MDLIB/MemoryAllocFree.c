@@ -629,6 +629,8 @@ grid GridAlloc(params *model) {
   if (model->aniso == 1) mesh.d1_s = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double));
   if (model->aniso == 1) mesh.d2_n = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
   if (model->aniso == 1) mesh.d2_s = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double));
+  if (model->aniso == 1) mesh.angle_n = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  if (model->aniso == 1) mesh.angle_s = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double));
   if (model->aniso == 1) mesh.FS_AR_n = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
   if (model->aniso == 1) mesh.FS_AR_s = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double));
   if (model->aniso == 1) Initialise1DArrayDouble(mesh.FS_AR_n, (Nx - 1) * (Nz - 1), 1.0);
@@ -964,6 +966,8 @@ void GridFree(grid *mesh, params *model) {
     if ( model->aniso == 1 ) DoodzFree(mesh->d1_s);
     if ( model->aniso == 1 ) DoodzFree(mesh->d2_n);
     if ( model->aniso == 1 ) DoodzFree(mesh->d2_s);
+    if ( model->aniso == 1 ) DoodzFree(mesh->angle_n);
+    if ( model->aniso == 1 ) DoodzFree(mesh->angle_s);
     if ( model->aniso == 1 ) DoodzFree(mesh->FS_AR_n);
     if ( model->aniso == 1 ) DoodzFree(mesh->FS_AR_s);
     if ( model->aniso == 1 ) DoodzFree(mesh->aniso_factor_n);

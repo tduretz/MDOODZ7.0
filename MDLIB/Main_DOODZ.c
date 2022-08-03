@@ -79,7 +79,8 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
     Nparams Nmodel = NmodelAlloc(inputFile.Nmodel);
 
     //input.model.Newton = input.model.aniso  == 1; // this statement is incorrect, Newton should also work for isotropic case
-    if (input.model.aniso  == 1) input.model.Newton = 1;
+    int IsFullNewton = input.model.Newton == 1;
+    if (input.model.aniso  == 1) input.model.Newton = 1; // activate Newton context is anisotropy is activated
     int IsNewtonStep = input.model.Newton == 1;
 
     printf("*************************************\n");
@@ -294,10 +295,12 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
         if (input.model.aniso == 1 ) {
             InitialiseDirectorVector ( &mesh, &particles, &input.model, &input.materials );
-            P2Mastah( &input.model, particles, NULL, &mesh, mesh.d1_n , mesh.BCp.type, -1, 0, interp, cent, input.model.itp_stencil);
-            P2Mastah( &input.model, particles, NULL, &mesh, mesh.d2_n , mesh.BCp.type, -2, 0, interp, cent, input.model.itp_stencil);
-            P2Mastah( &input.model, particles, NULL, &mesh, mesh.d1_s , mesh.BCg.type, -1, 0, interp, vert, input.model.itp_stencil);
-            P2Mastah( &input.model, particles, NULL, &mesh, mesh.d2_s , mesh.BCg.type, -2, 0, interp, vert, input.model.itp_stencil);
+            P2Mastah( &input.model, particles, NULL, &mesh, mesh.d1_n,    mesh.BCp.type, -1, 0, interp, cent, input.model.itp_stencil);
+            P2Mastah( &input.model, particles, NULL, &mesh, mesh.d2_n,    mesh.BCp.type, -2, 0, interp, cent, input.model.itp_stencil);
+            P2Mastah( &input.model, particles, NULL, &mesh, mesh.angle_n, mesh.BCp.type, -3, 0, interp, cent, input.model.itp_stencil);
+            P2Mastah( &input.model, particles, NULL, &mesh, mesh.d1_s,    mesh.BCg.type, -1, 0, interp, vert, input.model.itp_stencil);
+            P2Mastah( &input.model, particles, NULL, &mesh, mesh.d2_s,    mesh.BCg.type, -2, 0, interp, vert, input.model.itp_stencil);
+            P2Mastah( &input.model, particles, NULL, &mesh, mesh.angle_s, mesh.BCg.type, -3, 0, interp, vert, input.model.itp_stencil);
             FiniteStrainAspectRatio ( &mesh, input.scaling, input.model, &particles );
             P2Mastah( &input.model, particles, input.materials.aniso_factor,     &mesh, mesh.aniso_factor_n , mesh.BCp.type,  0, 0, interp, cent, input.model.itp_stencil);
             P2Mastah( &input.model, particles, input.materials.aniso_factor,     &mesh, mesh.aniso_factor_s , mesh.BCg.type,  0, 0, interp, vert, input.model.itp_stencil);
@@ -488,10 +491,12 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
         // Director vector
         if (input.model.aniso == 1 ) {
-            P2Mastah( &input.model, particles, NULL, &mesh, mesh.d1_n , mesh.BCp.type, -1, 0, interp, cent, input.model.itp_stencil);
-            P2Mastah( &input.model, particles, NULL, &mesh, mesh.d2_n , mesh.BCp.type, -2, 0, interp, cent, input.model.itp_stencil);
-            P2Mastah( &input.model, particles, NULL, &mesh, mesh.d1_s , mesh.BCg.type, -1, 0, interp, vert, input.model.itp_stencil);
-            P2Mastah( &input.model, particles, NULL, &mesh, mesh.d2_s , mesh.BCg.type, -2, 0, interp, vert, input.model.itp_stencil);
+            P2Mastah( &input.model, particles, NULL, &mesh, mesh.d1_n,    mesh.BCp.type, -1, 0, interp, cent, input.model.itp_stencil);
+            P2Mastah( &input.model, particles, NULL, &mesh, mesh.d2_n,    mesh.BCp.type, -2, 0, interp, cent, input.model.itp_stencil);
+            P2Mastah( &input.model, particles, NULL, &mesh, mesh.angle_n, mesh.BCp.type, -3, 0, interp, cent, input.model.itp_stencil);
+            P2Mastah( &input.model, particles, NULL, &mesh, mesh.d1_s,    mesh.BCg.type, -1, 0, interp, vert, input.model.itp_stencil);
+            P2Mastah( &input.model, particles, NULL, &mesh, mesh.d2_s,    mesh.BCg.type, -2, 0, interp, vert, input.model.itp_stencil);
+            P2Mastah( &input.model, particles, NULL, &mesh, mesh.angle_s, mesh.BCg.type, -3, 0, interp, vert, input.model.itp_stencil);
             FiniteStrainAspectRatio ( &mesh, input.scaling, input.model, &particles );
             P2Mastah( &input.model, particles, input.materials.aniso_factor,     &mesh, mesh.aniso_factor_n , mesh.BCp.type,  0, 0, interp, cent, input.model.itp_stencil);
             P2Mastah( &input.model, particles, input.materials.aniso_factor,     &mesh, mesh.aniso_factor_s , mesh.BCg.type,  0, 0, interp, vert, input.model.itp_stencil);
@@ -568,10 +573,14 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                 MinMaxArrayTag( mesh.phase_perc_s[p],    1.0, (mesh.Nx-0)*(mesh.Nz-0), "ph_s      ", mesh.BCg.type );
             }
 
-            if  (input.model.aniso == 1 ) MinMaxArrayTag( mesh.FS_AR_n,  1.0,   (mesh.Nx-1)*(mesh.Nz-1), "FS_AR_n", mesh.BCp.type );
-            if  (input.model.aniso == 1 ) MinMaxArrayTag( mesh.FS_AR_s,  1.0,   (mesh.Nx)*(mesh.Nz),     "FS_AR_s", mesh.BCg.type );
-            if  (input.model.aniso == 1 ) MinMaxArrayTag( mesh.aniso_factor_n,  1.0,   (mesh.Nx-1)*(mesh.Nz-1), "aniso_factor_n", mesh.BCp.type );
-            if  (input.model.aniso == 1 ) MinMaxArrayTag( mesh.aniso_factor_s,  1.0,   (mesh.Nx)*(mesh.Nz),     "aniso_factor_s", mesh.BCg.type );
+            if ( input.model.aniso == 1 ) {
+                MinMaxArrayTag( mesh.FS_AR_n,  1.0,   (mesh.Nx-1)*(mesh.Nz-1), "FS_AR_n", mesh.BCp.type );
+                MinMaxArrayTag( mesh.FS_AR_s,  1.0,   (mesh.Nx)*(mesh.Nz),     "FS_AR_s", mesh.BCg.type );
+                MinMaxArrayTag( mesh.aniso_factor_n,  1.0,   (mesh.Nx-1)*(mesh.Nz-1), "aniso_factor_n", mesh.BCp.type );
+                MinMaxArrayTag( mesh.aniso_factor_s,  1.0,   (mesh.Nx)*(mesh.Nz),     "aniso_factor_s", mesh.BCg.type );
+                MinMaxArrayTag( mesh.angle_n,  180/M_PI,   (mesh.Nx-1)*(mesh.Nz-1), "angle_n", mesh.BCp.type );
+                MinMaxArrayTag( mesh.angle_s,  180/M_PI,   (mesh.Nx)*(mesh.Nz),     "angle_s", mesh.BCg.type );
+            }
         }
 
         printf("** Time for particles interpolations I = %lf sec\n",  (double)((double)omp_get_wtime() - t_omp) );
@@ -632,11 +641,11 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             //------------------------------------------------------------------------------------------------------------------------------//
 
             // Non-linear iteration cycle
-            Nmodel.nit       = 0;
-            input.model.nit        = 0;
-            Nmodel.stagnated = 0;
-            int nstag            = 0;
-            int IsJacobianUsed    = 0;
+            Nmodel.nit         = 0;
+            input.model.nit    = 0;
+            Nmodel.stagnated   = 0;
+            int nstag          = 0;
+            int IsJacobianUsed = 0;
 
             ArrayEqualArray( mesh.p_start,    mesh.p_in,      (mesh.Nx-1)*(mesh.Nz-1) );
             ArrayEqualArray( mesh.u_start,    mesh.u_in,      (mesh.Nx)  *(mesh.Nz+1) );
@@ -724,8 +733,8 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
                 // Build discrete system of equations - Jacobian
                 ViscosityDerivatives( &mesh, &input.materials, &input.model, Nmodel, &input.scaling );
-                if (input.model.Newton == 1 && Nmodel.nit > 0 ) RheologicalOperators( &mesh, &input.model, &input.scaling, 1 );
-                if ( IsJacobianUsed == 1 )                  BuildJacobianOperatorDecoupled( &mesh, input.model, 0, mesh.p_corr, mesh.p_in, mesh.u_in, mesh.v_in,  &Jacob,  &JacobA,  &JacobB,  &JacobC,   &JacobD, 1 );
+                if ( IsFullNewton   == 1 && Nmodel.nit > 0 ) RheologicalOperators( &mesh, &input.model, &input.scaling, 1 );
+                if ( IsJacobianUsed == 1 )                   BuildJacobianOperatorDecoupled( &mesh, input.model, 0, mesh.p_corr, mesh.p_in, mesh.u_in, mesh.v_in,  &Jacob,  &JacobA,  &JacobB,  &JacobC,   &JacobD, 1 );
 
                 // IsNanArray2DFP(mesh.eta_n, (mesh.Nx-1)*(mesh.Nz-1));
                 // IsInfArray2DFP(mesh.eta_n, (mesh.Nx-1)*(mesh.Nz-1));

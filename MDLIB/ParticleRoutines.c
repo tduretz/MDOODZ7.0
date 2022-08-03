@@ -3230,6 +3230,7 @@ void P2Mastah ( params *model, markers particles, DoodzFP* mat_prop, grid *mesh,
     // flag == 1 --> interpolate straight from the particle arrays
     // flag ==-1 --> specific for anisotropy (see Anisotropy_v2.ipynb)
     // flag ==-2 --> specific for anisotropy (see Anisotropy_v2.ipynb)
+    // flag ==-3 --> specific for anisotropy: angle
     // avg  == 0 --> arithmetic distance-weighted average
     // avg  == 1 --> harmonic distance-weighted average
     // avg  == 2 --> geometric distance-weighted average
@@ -3356,6 +3357,10 @@ void P2Mastah ( params *model, markers particles, DoodzFP* mat_prop, grid *mesh,
                             
                         case -2: // Anisotropy: Anisotropy_v2.ipynb
                             mark_val = particles.nx[k]*particles.nz[k]*(-pow(particles.nx[k], 2.0) + pow(particles.nz[k], 2.0));
+                            break;
+
+                        case -3: // Anisotropy: angl
+                            mark_val = acos(particles.nx[k]);
                             break;
                             
                         default:
