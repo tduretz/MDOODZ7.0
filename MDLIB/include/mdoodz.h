@@ -14,6 +14,7 @@ typedef enum { ARITHMETIC = 0,
 
 // params contains the model parameters
 typedef struct {
+  char  *description;
   double xmin, zmin, xmax, zmax, time, dx, dz, dt, dt0, dt_start, dt_max, L0,
           dt_min;
   double  xmin0, zmin0, xmax0, zmax0;
@@ -203,13 +204,25 @@ typedef struct {
   char *ph_hr;
 } Geometry;
 
-typedef void(MutateInput_f)(MdoodzInput *input);
+typedef struct {
+  int param1;
+  int param2;
+  double param3;
+  double param4;
+  int param5;
+  int param6;
+  double param7;
+  double param8;
+} MutateInputParams;
+
+typedef void(MutateInput_f)(MdoodzInput *input, MutateInputParams *mutateInputParams);
 
 struct MdoodzSetup {
   BuildInitialTopography_ff *BuildInitialTopography;
   SetParticles_ff           *SetParticles;
   SetBCs_ff                 *SetBCs;
   MutateInput_f             *MutateInput;
+  MutateInputParams         *mutateInputParams;
 };
 
 struct MdoodzInput {
