@@ -169,7 +169,7 @@ int main() {
           .MutateInput = AddCrazyConductivity,
   };
   RunMDOODZ("RiftingPaulineAniso.txt", &setup);
-  rename("Output00020.gzip.h5", "RiftingPaulineIsotropic.h5");
+  rename("Output00100.gzip.h5", "RiftingPaulineIsotropic.h5");
 
   MutateInputParams *mutateInputParams     = (MutateInputParams *) malloc(sizeof(MutateInputParams));
 
