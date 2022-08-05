@@ -14,7 +14,7 @@ typedef enum { ARITHMETIC = 0,
 
 // params contains the model parameters
 typedef struct {
-  char  *description;
+  char   description[500];
   double xmin, zmin, xmax, zmax, time, dx, dz, dt, dt0, dt_start, dt_max, L0,
           dt_min;
   double  xmin0, zmin0, xmax0, zmax0;

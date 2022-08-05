@@ -662,7 +662,7 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
     AddGroupToHDF5( FileName, "Iterations");
     AddGroupToHDF5( FileName, "TimeSeries" );
 
-    AddFieldToGroup( FileName, "Model", "Description"   , 'c', 256 * sizeof(char),  model.description, 1 );
+    AddFieldToGroup( FileName, "Model", "Description"   , 'c', 500 * sizeof(char),  model.description, 1 );
 
     // Model Parameters
     A[0] = (double)(model.time) * scaling.t;
