@@ -124,20 +124,12 @@ void AddAnisotropy(MdoodzInput *input, MutateInputParams *mutateInputParams) {
   input->model.fstrain                            = 1;
   const int crustalPhase                          = 1;
   input->materials.cstv[crustalPhase]             = mutateInputParams->param1;
-  if (input->materials.cstv[crustalPhase]) {
-    input->materials.pwlv[crustalPhase]           = 0;
-  } else {
-    input->materials.pwlv[crustalPhase]           = 11;
-  }
+  input->materials.pwlv[crustalPhase]             = mutateInputParams->param2;
   input->materials.aniso_factor[crustalPhase]     = mutateInputParams->param3;
   input->materials.aniso_angle[crustalPhase]      = mutateInputParams->param4;
   const int upperMantlePhase                      = 2;
   input->materials.cstv[upperMantlePhase]         = mutateInputParams->param5;
-  if (input->materials.cstv[upperMantlePhase]) {
-    input->materials.pwlv[upperMantlePhase]           = 0;
-  } else {
-    input->materials.pwlv[upperMantlePhase]           = 11;
-  }
+  input->materials.pwlv[upperMantlePhase]         = mutateInputParams->param6;
   input->materials.aniso_factor[upperMantlePhase] = mutateInputParams->param7;
   input->materials.aniso_angle[upperMantlePhase]  = mutateInputParams->param8;
   
@@ -170,6 +162,8 @@ int main() {
 
   MutateInputParams *mutateInputParams     = (MutateInputParams *) malloc(sizeof(MutateInputParams));
 
+  /*
+   * test 1
   int                crustCstvs[2]         = {1, 0};
   double             crustAnisoFactors[2]  = {2.0, 4.0};
   double             crustAnisoAngles[2]   = {25.0, 45.0};
@@ -199,6 +193,37 @@ int main() {
               i++;
             }
           }
+        }
+      }
+    }
+  }
+  */
+
+  int                crustPwlws[3]         = {1, 3, 6};
+  double             crustAnisoFactors[3]  = {1.0, 3.0, 6.0};
+  double             mantleAnisoFactors[3] = {1.0, 3.0, 6.0};
+  int                mantlePwlws[3]        = {1, 3, 6};
+
+  int                i                     = 0;
+  for (int crustPwlw = 0; crustPwlw < 3; crustPwlw++) {
+    for (int crustAnisoFactor = 0; crustAnisoFactor < 3; crustAnisoFactor++) {
+      for (int mantlePwlw = 0; mantlePwlw < 3; mantlePwlw++) {
+        for (int mantleAnisoFactor = 0; mantleAnisoFactor < 3; mantleAnisoFactor++) {
+          mutateInputParams->param1 = 0;
+          mutateInputParams->param2 = crustPwlws[crustPwlw];
+          mutateInputParams->param3 = crustAnisoFactors[crustAnisoFactor];
+          mutateInputParams->param4 = 45;
+          mutateInputParams->param5 = 0;
+          mutateInputParams->param6 = mantlePwlws[mantlePwlw];
+          mutateInputParams->param7 = mantleAnisoFactors[mantleAnisoFactor];
+          mutateInputParams->param8 = 45;
+          setup.mutateInputParams   = mutateInputParams;
+          setup.MutateInput         = AddAnisotropy;
+          RunMDOODZ("RiftingPaulineAniso.txt", &setup);
+          char outputName[256];
+          snprintf(outputName, sizeof(outputName), "RiftingPauline_%i.h5", i);
+          rename("Output00100.gzip.h5", outputName);
+          i++;
         }
       }
     }
