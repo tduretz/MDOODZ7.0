@@ -205,14 +205,14 @@ typedef struct {
 } Geometry;
 
 typedef struct {
-  int param1;
-  int param2;
-  double param3;
-  double param4;
-  int param5;
-  int param6;
-  double param7;
-  double param8;
+  double double1;
+  double double2;
+  double double3;
+  double double4;
+  int int1;
+  int int2;
+  int int3;
+  int int4;
 } MutateInputParams;
 
 typedef void(MutateInput_f)(MdoodzInput *input, MutateInputParams *mutateInputParams);
