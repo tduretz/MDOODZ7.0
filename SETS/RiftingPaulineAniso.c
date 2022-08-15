@@ -131,7 +131,7 @@ void AddAnisotropy(MdoodzInput *input, MutateInputParams *mutateInputParams) {
   input->materials.aniso_factor[upperMantlePhase] = mutateInputParams->double3;
   input->materials.aniso_angle[upperMantlePhase]  = mutateInputParams->double4;
 
-  snprintf(input->model.description, sizeof(input->model.description), "Nt: %i, CrustalPhase: {cstv: %i, pwlv: %i, aniso_factor: %f, aniso_angle: %f}, UpperMantlePhase: {cstv: %i, pwlv: %i, aniso_factor: %f, aniso_angle: %f}}", input->model.Nt, mutateInputParams->param1, mutateInputParams->param2, mutateInputParams->param3, mutateInputParams->param4, mutateInputParams->param5, mutateInputParams->param6, mutateInputParams->param7, mutateInputParams->param8);
+  snprintf(input->model.description, sizeof(input->model.description), "Nt: %i, CrustalPhase: {cstv: %i, aniso_factor: %f, aniso_angle: %f}, UpperMantlePhase: {cstv: %i, aniso_factor: %f, aniso_angle: %f}}", input->model.Nt, mutateInputParams->int1, mutateInputParams->double1, mutateInputParams->double2, mutateInputParams->int2, mutateInputParams->double1, mutateInputParams->double2);
 }
 
 int main() {
