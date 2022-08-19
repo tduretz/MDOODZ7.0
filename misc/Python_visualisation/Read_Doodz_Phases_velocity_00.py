@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as mpl
 import os
 
-dir_path = '/Users/romankulakov/CLionProjects/cpplots/cmake-build-debug/hdf5/RiftingAniso2/RiftingPaulineAniso/'
+dir_path = '/Users/romankulakov/CLionProjects/cpplots/cmake-build-debug/hdf5/case5/'
 
 directory = os.fsencode(dir_path)
 
@@ -56,6 +56,6 @@ for file in os.listdir(directory):
     mpl.colorbar()
     mpl.tight_layout()
     mpl.quiver(xc2[::stp,::stp], zc2[::stp,::stp], Vxc[::stp, ::stp].transpose(), Vzc[::stp, ::stp].transpose())
-    mpl.title('P map')
+    mpl.title('Phase map')
     mpl.savefig(f'{filename}_vel.png')
 
