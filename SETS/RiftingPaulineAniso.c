@@ -29,11 +29,17 @@ int SetPhase(MdoodzInput *instance, Coordinates coordinates) {
       return 7;
     } else if (is7000MAboveMoho && !is9000MAboveMoho) {
       return 8;
-    } else {
+    } else if (coordinates.x < 0) {
       return 1;
+    } else {
+      return 9;
     }
   } else if (isAboveMoho) {
-    return 1;
+    if (coordinates.x < 0) {
+      return 1;
+    } else {
+      return 9;
+    }
   } else if (isBelowLithosphere) {
     return 3;
   } else {
@@ -125,11 +131,11 @@ void AddAnisotropy(MdoodzInput *input, MutateInputParams *mutateInputParams) {
   const int crustalPhase                          = 1;
   input->materials.aniso_factor[crustalPhase]     = mutateInputParams->double1;
   input->materials.aniso_angle[crustalPhase]      = mutateInputParams->double2;
-  const int crustalPhase2                         = 2;
+  const int crustalPhase2                         = 9;
   input->materials.aniso_factor[crustalPhase2]    = mutateInputParams->double3;
   input->materials.aniso_angle[crustalPhase2]     = mutateInputParams->double4;
 
-  snprintf(input->model.description, sizeof(input->model.description), "CrustalPhase: {aniso_factor: %f, aniso_angle: %f}, UpperMantlePhase: {aniso_factor: %f, aniso_angle: %f}}", mutateInputParams->double1, mutateInputParams->double2, mutateInputParams->double3, mutateInputParams->double4);
+  snprintf(input->model.description, sizeof(input->model.description), "CrustalPhase: {cstv: %i, aniso_factor: %f, aniso_angle: %f}, UpperMantlePhase: {cstv: %i, aniso_factor: %f, aniso_angle: %f}}", mutateInputParams->int1, mutateInputParams->double1, mutateInputParams->double2, mutateInputParams->int2, mutateInputParams->double3, mutateInputParams->double4);
   printf("%s", input->model.description);
 }
 
@@ -159,97 +165,15 @@ int main() {
 
   MutateInputParams *mutateInputParams     = (MutateInputParams *) malloc(sizeof(MutateInputParams));
 
-
-
   mutateInputParams->double1 = 1;
-  mutateInputParams->double2 = 25;
-  mutateInputParams->double3 = 1;
-  mutateInputParams->double4 = 25;
+  mutateInputParams->double2 = 90;
+  mutateInputParams->double3 = 6;
+  mutateInputParams->double4 = 10;
   setup.mutateInputParams    = mutateInputParams;
   setup.MutateInput          = AddAnisotropy;
   RunMDOODZ("RiftingPaulineAniso.txt", &setup);
   char outputName[256];
   snprintf(outputName, sizeof(outputName), "RiftingPauline_%i.h5", 0);
-  rename("Output00100.gzip.h5", outputName);
-
-  mutateInputParams->double1 = 3;
-  mutateInputParams->double2 = 25;
-  mutateInputParams->double3 = 1;
-  mutateInputParams->double4 = 25;
-  setup.mutateInputParams    = mutateInputParams;
-  setup.MutateInput          = AddAnisotropy;
-  RunMDOODZ("RiftingPaulineAniso.txt", &setup);
-  snprintf(outputName, sizeof(outputName), "RiftingPauline_%i.h5", 1);
-  rename("Output00100.gzip.h5", outputName);
-
-  mutateInputParams->double1 = 6;
-  mutateInputParams->double2 = 25;
-  mutateInputParams->double3 = 1;
-  mutateInputParams->double4 = 25;
-  setup.mutateInputParams    = mutateInputParams;
-  setup.MutateInput          = AddAnisotropy;
-  RunMDOODZ("RiftingPaulineAniso.txt", &setup);
-  snprintf(outputName, sizeof(outputName), "RiftingPauline_%i.h5", 2);
-  rename("Output00100.gzip.h5", outputName);
-
-  mutateInputParams->double1 = 6;
-  mutateInputParams->double2 = 25;
-  mutateInputParams->double3 = 3;
-  mutateInputParams->double4 = 10;
-  setup.mutateInputParams    = mutateInputParams;
-  setup.MutateInput          = AddAnisotropy;
-  RunMDOODZ("RiftingPaulineAniso.txt", &setup);
-  snprintf(outputName, sizeof(outputName), "RiftingPauline_%i.h5", 3);
-  rename("Output00100.gzip.h5", outputName);
-
-  mutateInputParams->double1 = 6;
-  mutateInputParams->double2 = 25;
-  mutateInputParams->double3 = 6;
-  mutateInputParams->double4 = 10;
-  setup.mutateInputParams    = mutateInputParams;
-  setup.MutateInput          = AddAnisotropy;
-  RunMDOODZ("RiftingPaulineAniso.txt", &setup);
-  snprintf(outputName, sizeof(outputName), "RiftingPauline_%i.h5", 4);
-  rename("Output00100.gzip.h5", outputName);
-
-  mutateInputParams->double1 = 1;
-  mutateInputParams->double2 = 25;
-  mutateInputParams->double3 = 6;
-  mutateInputParams->double4 = 10;
-  setup.mutateInputParams    = mutateInputParams;
-  setup.MutateInput          = AddAnisotropy;
-  RunMDOODZ("RiftingPaulineAniso.txt", &setup);
-  snprintf(outputName, sizeof(outputName), "RiftingPauline_%i.h5", 5);
-  rename("Output00100.gzip.h5", outputName);
-
-  mutateInputParams->double1 = 1;
-  mutateInputParams->double2 = 25;
-  mutateInputParams->double3 = 6;
-  mutateInputParams->double4 = 45;
-  setup.mutateInputParams    = mutateInputParams;
-  setup.MutateInput          = AddAnisotropy;
-  RunMDOODZ("RiftingPaulineAniso.txt", &setup);
-  snprintf(outputName, sizeof(outputName), "RiftingPauline_%i.h5", 6);
-  rename("Output00100.gzip.h5", outputName);
-
-  mutateInputParams->double1 = 1;
-  mutateInputParams->double2 = 25;
-  mutateInputParams->double3 = 6;
-  mutateInputParams->double4 = 90;
-  setup.mutateInputParams    = mutateInputParams;
-  setup.MutateInput          = AddAnisotropy;
-  RunMDOODZ("RiftingPaulineAniso.txt", &setup);
-  snprintf(outputName, sizeof(outputName), "RiftingPauline_%i.h5", 7);
-  rename("Output00100.gzip.h5", outputName);
-
-  mutateInputParams->double1 = 1;
-  mutateInputParams->double2 = 25;
-  mutateInputParams->double3 = 3;
-  mutateInputParams->double4 = 90;
-  setup.mutateInputParams    = mutateInputParams;
-  setup.MutateInput          = AddAnisotropy;
-  RunMDOODZ("RiftingPaulineAniso.txt", &setup);
-  snprintf(outputName, sizeof(outputName), "RiftingPauline_%i.h5", 8);
   rename("Output00100.gzip.h5", outputName);
 
   free(mutateInputParams);

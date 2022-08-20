@@ -14,5 +14,6 @@ else()
     add_set(CollisionZone) # not yet finished
     add_set(AnisotropyLayer)
     add_set(RiftingPaulineAniso)
+    add_set(SimpleShearAnisoHomo)
 endif()
 

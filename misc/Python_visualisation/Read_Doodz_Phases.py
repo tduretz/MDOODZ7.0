@@ -2,7 +2,7 @@ import h5py as h5py
 import numpy as np
 import matplotlib.pyplot as mpl
 
-file   = h5py.File('/Users/romankulakov/CLionProjects/MDOODZ7/cmake-exec/RiftingPaulineAniso/Output00020.gzip.h5', 'r')
+file   = h5py.File('/Users/romankulakov/CLionProjects/MDOODZ7/cmake-exec/SimpleShearAnisoHomo/Output00000.gzip.h5', 'r')
 phases = file['/VizGrid/compo_hr']
 xv_ph  = file['/VizGrid/xviz_hr']
 zv_ph  = file['/VizGrid/zviz_hr']

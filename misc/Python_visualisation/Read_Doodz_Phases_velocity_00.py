@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as mpl
 import os
 
-dir_path = '/Users/romankulakov/CLionProjects/cpplots/cmake-build-debug/hdf5/case5/'
+dir_path = '/Users/romankulakov/CLionProjects/MDOODZ7/cmake-exec/RiftingPaulineAniso/'
 
 directory = os.fsencode(dir_path)
 
