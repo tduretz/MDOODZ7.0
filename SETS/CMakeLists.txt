@@ -15,5 +15,6 @@ else()
     add_set(AnisotropyLayer)
     add_set(RiftingPaulineAniso)
     add_set(SimpleShearAnisoHomo)
+    add_set(ShearInclusionAniso)
 endif()
 

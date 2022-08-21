@@ -1,9 +1,4 @@
 #include "mdoodz.h"
-#include "math.h"
-
-bool IsInCircle(Coordinates coordinates, double rad) {
-  return pow(coordinates.x, 2) + pow(coordinates.z, 2) < pow(rad, 2);
-}
 
 bool IsInHorizontalZones(double zCoord, double H) {
   if (zCoord > 1.0 * H / 6.0 && zCoord < 2.0 * H / 6.0) {
@@ -30,10 +25,16 @@ bool IsInVerticalZones(double xCoord, double H) {
 }
 
 int SetPhase(MdoodzInput *input, Coordinates coordinates) {
-  double H    = (input->model.zmax - input->model.zmin);
-  double rad = 0.2337 / input->scaling.L;
-
-  if (IsInCircle(coordinates, rad)) {
+  const double  H      = (input->model.zmax - input->model.zmin);
+  const double  rad    = 0.2337 * 2;
+  const Ellipse circle = (Ellipse){
+          .angle   = 0,
+          .radiusX = rad,
+          .radiusZ = rad,
+          .centreX = 0.0,
+          .centreZ = 0.0,
+  };
+  if (IsEllipseCoordinates(coordinates, circle, input->scaling.L)) {
     if ((coordinates.x < 0 && coordinates.z < 0) || (coordinates.x > 0 && coordinates.z > 0)) {
       return 1;
     } else {

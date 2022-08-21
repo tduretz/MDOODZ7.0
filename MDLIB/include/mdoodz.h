@@ -138,6 +138,7 @@ typedef double (*SetHorizontalVelocity_f)(MdoodzInput *input, Coordinates coordi
 typedef double (*SetVerticalVelocity_f)(MdoodzInput *input, Coordinates coordinates);
 typedef double (*SetTemperature_f)(MdoodzInput *input, Coordinates coordinates);
 typedef int (*SetPhase_f)(MdoodzInput *input, Coordinates coordinates);
+typedef int (*SetDual_f)(MdoodzInput *input, Coordinates coordinates, int phase);
 typedef double (*SetGrainSize_f)(MdoodzInput *input, Coordinates coordinates, int phase);
 typedef double (*SetPorosity_f)(MdoodzInput *input, Coordinates coordinates, int phase);
 typedef double (*SetDensity_f)(MdoodzInput *input, Coordinates coordinates, int phase);
@@ -149,6 +150,7 @@ typedef struct {
   SetHorizontalVelocity_f SetHorizontalVelocity;
   SetVerticalVelocity_f   SetVerticalVelocity;
   SetPhase_f              SetPhase;
+  SetDual_f               SetDual;
   SetPressure_f           SetPressure;
   SetNoise_f              SetNoise;
   SetTemperature_f        SetTemperature;
