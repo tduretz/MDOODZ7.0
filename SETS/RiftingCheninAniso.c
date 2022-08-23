@@ -160,9 +160,10 @@ int main() {
           },
           .MutateInput = AddCrazyConductivity,
   };
-  //RunMDOODZ("RiftingPaulineAniso.txt", &setup);
-  //rename("Output00100.gzip.h5", "RiftingPaulineIsotropic.h5");
+  RunMDOODZ("RiftingCheninAniso.txt", &setup);
+  rename("Output00100.gzip.h5", "RiftingCheninIsotropic.h5");
 
+  /*
   MutateInputParams *mutateInputParams     = (MutateInputParams *) malloc(sizeof(MutateInputParams));
 
   mutateInputParams->double1 = 1;
@@ -171,10 +172,11 @@ int main() {
   mutateInputParams->double4 = 10;
   setup.mutateInputParams    = mutateInputParams;
   setup.MutateInput          = AddAnisotropy;
-  RunMDOODZ("RiftingPaulineAniso.txt", &setup);
+  RunMDOODZ("RiftingCheninAniso.txt", &setup);
   char outputName[256];
-  snprintf(outputName, sizeof(outputName), "RiftingPauline_%i.h5", 0);
+  snprintf(outputName, sizeof(outputName), "RiftingChenin_%i.h5", 0);
   rename("Output00100.gzip.h5", outputName);
 
   free(mutateInputParams);
+  */
 }

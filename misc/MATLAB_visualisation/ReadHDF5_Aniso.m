@@ -10,17 +10,7 @@ DEBUG = 0;
 
 MarkSize=1e0 ;
 
-path = '/Users/tduretz/REPO_GIT/MDOODZ6.0/SOURCE/Compression/'
-% path = '/Users/tduretz/REPO_GIT/TEST/SOURCE/'
-path = '/Users/tduretz/REPO_GIT/MDOODZ6.0/SOURCE/Shear_periodic_VEVP/'
-path = '/Users/tduretz/REPO_GIT/MDOODZ6.0/SOURCE/ShearInclusionFiniteStrain/'
-path = '/Users/tduretz/REPO_GIT/MDOODZ6.0/SOURCE/ShearInclusionAnisoFactor10/'
-path = '/Users/tduretz/REPO_GIT/MDOODZ6.0/SOURCE/ShearInclusionFiniteStrain/'
-path = '/Users/imac/REPO_GIT/MDOODZ6.0/SOURCE/'
-% path = '/Users/tduretz/REPO_GIT/MDOODZ6.0/RUNS/SubInit_Cart_MR/'
-% path = '/Users/tduretz/REPO_GIT/MDOODZ6.0/RUNS/Pauline_600x800_6its/'
-% path = '/Users/tduretz/REPO_GIT/MDOODZ6.0/RUNS/Pauline_200x300_Eulerian_markers/'
-% path = '/Users/tduretz/REPO_GIT/MDOODZ6.0/RUNS/SubInit_Cart_MR_InflowCheck0/'
+path = '/Users/romankulakov/CLionProjects/MDOODZ7/cmake-exec/SimpleShearAnisoHomo/'
 
 cd(path)
 
@@ -36,7 +26,7 @@ stress_evol     = 1;
 director_vector = 1;
 fstrain         = 1;
 
-data_Stefan     = 1;
+data_Stefan     = 0;
 
 if data_Stefan==1
     Stefan = load('../MATLAB_examples/StefanFiniteStrainAnisotropyTest')

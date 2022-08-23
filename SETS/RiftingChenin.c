@@ -138,5 +138,5 @@ int main() {
           .MutateInput = AddCrazyConductivity,
 
   };
-  RunMDOODZ("RiftingPauline.txt", &setup);
+  RunMDOODZ("RiftingChenin.txt", &setup);
 }
