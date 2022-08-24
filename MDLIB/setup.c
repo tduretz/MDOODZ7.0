@@ -37,10 +37,14 @@ void SetParticles(SetParticles_ff setParticles, MdoodzInput *instance, markers *
             .z = particles->z[np]};
     if (setParticles.SetPhase) {
       particles->phase[np] = setParticles.SetPhase(instance, coordinates);
-      particles->dual[np]  = setParticles.SetPhase(instance, coordinates);
     } else {
       particles->phase[np] = 0;
       particles->dual[np]  = 0;
+    }
+    if (setParticles.SetDual) {
+      particles->dual[np] = setParticles.SetPhase(instance, coordinates);
+    } else {
+      particles->dual[np] = particles->phase[np];
     }
     if (setParticles.SetHorizontalVelocity) {
       particles->Vx[np] = setParticles.SetHorizontalVelocity(instance, coordinates);
@@ -376,6 +380,10 @@ void ValidateSetup(MdoodzSetup *setup, MdoodzInput *instance) {
       warnings[warningsCount] = "SetParticles.SetPhase is not specified. Model will be homogeneous with phase 0";
       warningsCount++;
     }
+    if (!setup->SetParticles->SetDual) {
+      warnings[warningsCount] = "SetParticles.SetDual is not specified. Phase value will be set";
+      warningsCount++;
+    }
     if (!setup->SetParticles->SetTemperature) {
       warnings[warningsCount] = "SetParticles.SetTemperature is not specified. Temperature will be set to 0°C";
       warningsCount++;
@@ -554,10 +562,7 @@ bool IsEllipseCoordinates(Coordinates coordinates, Ellipse ellipse, double scali
 bool IsRectangleCoordinates(Coordinates coordinates, Rectangle rectangle, double scalingL) {
   const double wX = coordinates.x * cos(rectangle.angle) - coordinates.z * sin(rectangle.angle);
   const double wZ = coordinates.x * sin(rectangle.angle) + coordinates.z * cos(rectangle.angle);
-  if (wX >= (rectangle.centreX / scalingL - (rectangle.sizeX / 2) / scalingL)
-      && wX <= (rectangle.centreX / scalingL + (rectangle.sizeX / 2) / scalingL)
-      && wZ >= (rectangle.centreZ / scalingL - (rectangle.sizeZ / 2) / scalingL)
-      && wZ <= (rectangle.centreZ / scalingL + (rectangle.sizeZ / 2) / scalingL)) {
+  if (wX >= (rectangle.centreX / scalingL - (rectangle.sizeX / 2) / scalingL) && wX <= (rectangle.centreX / scalingL + (rectangle.sizeX / 2) / scalingL) && wZ >= (rectangle.centreZ / scalingL - (rectangle.sizeZ / 2) / scalingL) && wZ <= (rectangle.centreZ / scalingL + (rectangle.sizeZ / 2) / scalingL)) {
     return true;
   } else {
     return false;

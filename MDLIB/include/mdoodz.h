@@ -14,6 +14,7 @@ typedef enum { ARITHMETIC = 0,
 
 // params contains the model parameters
 typedef struct {
+  char   description[500];
   double xmin, zmin, xmax, zmax, time, dx, dz, dt, dt0, dt_start, dt_max, L0,
           dt_min;
   double  xmin0, zmin0, xmax0, zmax0;
@@ -137,6 +138,7 @@ typedef double (*SetHorizontalVelocity_f)(MdoodzInput *input, Coordinates coordi
 typedef double (*SetVerticalVelocity_f)(MdoodzInput *input, Coordinates coordinates);
 typedef double (*SetTemperature_f)(MdoodzInput *input, Coordinates coordinates);
 typedef int (*SetPhase_f)(MdoodzInput *input, Coordinates coordinates);
+typedef int (*SetDual_f)(MdoodzInput *input, Coordinates coordinates, int phase);
 typedef double (*SetGrainSize_f)(MdoodzInput *input, Coordinates coordinates, int phase);
 typedef double (*SetPorosity_f)(MdoodzInput *input, Coordinates coordinates, int phase);
 typedef double (*SetDensity_f)(MdoodzInput *input, Coordinates coordinates, int phase);
@@ -148,6 +150,7 @@ typedef struct {
   SetHorizontalVelocity_f SetHorizontalVelocity;
   SetVerticalVelocity_f   SetVerticalVelocity;
   SetPhase_f              SetPhase;
+  SetDual_f               SetDual;
   SetPressure_f           SetPressure;
   SetNoise_f              SetNoise;
   SetTemperature_f        SetTemperature;
@@ -203,13 +206,25 @@ typedef struct {
   char *ph_hr;
 } Geometry;
 
-typedef void(MutateInput_f)(MdoodzInput *input);
+typedef struct {
+  double double1;
+  double double2;
+  double double3;
+  double double4;
+  int int1;
+  int int2;
+  int int3;
+  int int4;
+} MutateInputParams;
+
+typedef void(MutateInput_f)(MdoodzInput *input, MutateInputParams *mutateInputParams);
 
 struct MdoodzSetup {
   BuildInitialTopography_ff *BuildInitialTopography;
   SetParticles_ff           *SetParticles;
   SetBCs_ff                 *SetBCs;
   MutateInput_f             *MutateInput;
+  MutateInputParams         *mutateInputParams;
 };
 
 struct MdoodzInput {
