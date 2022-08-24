@@ -46,20 +46,13 @@ endif
 
 #---------------------------------------------------#
 # Rules
+FILES = Main_DOODZ.o FD_Jacobian.o  RheologyParticles.o ChemicalRoutines.o ParticleReseeding.o Solvers.o Routines_BEN.o StokesRoutines.o StokesAssemblyCoupled.o StokesAssemblyDecoupled.o AdvectionRoutines.o RheologyDensity.o HDF5Output.o SparseTools.o ThermalRoutines.o ThermalSolver.o ParticleRoutines.o free_surf.o FlowLaws.o MemoryAllocFree.o InputOutput.o MiscFunctions.o GridRoutines.o setup.o $(MODEL_PATH)/$(MODEL).o 
+
+
 all: Doodzi_$(MODEL) 
+Doodzi_$(MODEL): ${FILES}
 	cp $(MODEL_PATH)/$(MODEL).txt . 
-
-
-FILES = Main_DOODZ.o FD_Jacobian.o  RheologyParticles.o ChemicalRoutines.o ParticleReseeding.o Solvers.o Routines_BEN.o StokesRoutines.o StokesAssemblyCoupled.o StokesAssemblyDecoupled.o AdvectionRoutines.o RheologyDensity.o HDF5Output.o SparseTools.o ThermalRoutines.o ThermalSolver.o ParticleRoutines.o free_surf.o FlowLaws.o MemoryAllocFree.o InputOutput.o MiscFunctions.o GridRoutines.o setup.o
-ifeq ($(NEW_INPUT),yes)
-        FILES += BC.o
-        Doodzi_$(MODEL): ${FILES}
-	$(CC) ${FILES} -o MDoodz6.0 ${LIBS}
-else
-	FILES += ./$(MODEL_PATH)/$(MODEL).o
-        Doodzi_$(MODEL): ${FILES}
 	$(CC) ${FILES} -o $(MODEL) ${LIBS}
-endif
 
 clean:
 	rm -rf *o ./$(MODEL_PATH)/*.o $(MODEL) 
