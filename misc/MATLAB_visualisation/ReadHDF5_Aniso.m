@@ -23,13 +23,13 @@ iend   = 50;
 % what do you want to plot:
 %--------------------------------------------------
 stress_evol     = 1;
-director_vector = 1;
-fstrain         = 1;
+director_vector = 0;
+fstrain         = 0;
 
-data_Stefan     = 0;
+data_Stefan     = 1;
 
 if data_Stefan==1
-    Stefan = load('../MATLAB_examples/StefanFiniteStrainAnisotropyTest')
+    Stefan = load('/Users/romankulakov/CLionProjects/MDOODZ7/misc/MATLAB_examples/StefanFiniteStrainAnisotropyTest/StefanFiniteStrainAnisotropyTest.mat')
     Stefan.Tauxy = [Stefan.Tauxy(1) Stefan.Tauxy];
     Stefan.Nx    = [Stefan.Nx(1) Stefan.Nx];
     Stefan.Ny    = [Stefan.Ny(1) Stefan.Ny];

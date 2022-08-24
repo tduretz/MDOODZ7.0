@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as mpl
 import os
 
-dir_path = '/Users/romankulakov/CLionProjects/MDOODZ7/cmake-exec/ShearInclusionAniso/'
+dir_path = '/Users/romankulakov/CLionProjects/cpplots/cmake-build-debug/hdf5/CheninAniso3/'
 
 directory = os.fsencode(dir_path)
 
@@ -29,11 +29,11 @@ for file in os.listdir(directory):
     Ncz = Nz-1
 
     # Reshape arrays
-    nxc  = np.reshape(nx, (Ncz, Ncx)).transpose()
+    nxc  =  np.reshape(nz, (Ncz, Ncx)).transpose()
     # nxc nullify values if they < 0.1
-    nxc[nxc < 0.1] = 0.0
-    nzc  = np.reshape(nz, (Ncz, Ncx)).transpose()
-    nzc[nzc > 0.9] = 0.0
+    # nxc[nxc < 0.1] = 0.0
+    nzc  = np.reshape(nx, (Ncz, Ncx)).transpose()
+    # nzc[nzc > 0.9] = 0.0
     # nxc nullify values if they > 0.9
 
     # Create 2D centroid mesh
@@ -52,12 +52,11 @@ for file in os.listdir(directory):
 
     mpl.clf()
     mpl.figure()
-    # mpl.rcParams['figure.figsize'] = 8, 4
-    mpl.pcolor(xc, zc, P.transpose())
-    mpl.set_cmap('jet')
-    mpl.colorbar()
+    mpl.rcParams['figure.figsize'] = 8, 4
     mpl.tight_layout()
-    # mpl.quiver(xc2[::stp,::stp], zc2[::stp,::stp], nxc[::stp, ::stp].transpose(), nzc[::stp, ::stp].transpose())
+    mpl.quiver(xc2[::stp,::stp], zc2[::stp,::stp], nxc[::stp, ::stp].transpose(), nzc[::stp, ::stp].transpose(), headwidth=1.,
+               headaxislength=1.,
+               headlength=1.,)
     mpl.title('Pressure map and aniso director')
-    mpl.savefig(f'{filename}_vel.png')
+    mpl.savefig(f'{filename}_vel.png', transparent=True)
 

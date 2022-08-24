@@ -2,7 +2,7 @@ import h5py as h5py
 import numpy as np
 import matplotlib.pyplot as mpl
 
-file = h5py.File('/Users/romankulakov/CLionProjects/MDOODZ7/cmake-exec/QuartzCoesite/Output00000.gzip.h5', 'r')
+file = h5py.File('/Users/romankulakov/CLionProjects/MDOODZ7/cmake-exec/VEP_Duretz18/Output00100.gzip.h5', 'r')
 P    = file['Centers/P']
 xc   = file['/Model/xc_coord']
 zc   = file['/Model/zc_coord']

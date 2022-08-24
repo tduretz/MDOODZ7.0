@@ -16,5 +16,6 @@ else()
     add_set(RiftingCheninAniso)
     add_set(SimpleShearAnisoHomo)
     add_set(ShearInclusionAniso)
+    add_set(VEP_Duretz18)
 endif()
 
