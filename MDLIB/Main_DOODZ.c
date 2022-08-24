@@ -901,7 +901,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         }
         // THIS IS ACTIVATED JUST FOR TOPO.VX IN OUTPUT FILE
 
-        if (input.model.StressUpdate==1) TotalStresses( &mesh, &particles, input.scaling, &input.model );
+        // if (input.model.StressUpdate==1) TotalStresses( &mesh, &particles, input.scaling, &input.model );
 
         // Update stresses on markers
         if (input.model.StressUpdate==0) UpdateParticleStress(  &mesh, &particles, &input.model, &input.materials, &input.scaling );
@@ -922,7 +922,6 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
         // Update phi on the particles
         UpdateParticlePhi( &mesh, input.scaling, input.model, &particles, &input.materials );
-
 
         //------------------------------------------------------------------------------------------------------------------------------//
 
@@ -1145,11 +1144,6 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                     CleanUpSurfaceParticles( &particles, &mesh, topo, input.scaling );
                     CellFlagging( &mesh, input.model, topo, input.scaling );
                 }
-
-                //                for (int iphase=0; iphase<input.model.Nb_phases; iphase++) {
-                //                CheckSym( mesh.phase_perc_n[iphase], 1.0, mesh.Nx-1, mesh.Nz-1, "perc_n" );
-                //                CheckSym( mesh.phase_perc_s[iphase], 1.0, mesh.Nx-0, mesh.Nz-0, "perc_s" );
-                //                }
             }
             input.model.dt = dt_solve;
         }
@@ -1209,9 +1203,6 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         printf("** Total timestep calculation time = %lf sec\n", (double)((double)omp_get_wtime() - t_omp_step) );
         printf("** Model time = %2.2e sec\n", input.model.time* input.scaling.t );
         printf("** Current dt = %2.2e sec, Old dt = %2.2e sec\n", input.model.dt* input.scaling.t, input.model.dt0* input.scaling.t );
-
-        // if (Np0 - particles.Nb_part != 0) exit (1);
-
 
     }
 

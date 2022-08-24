@@ -3359,7 +3359,7 @@ void P2Mastah ( params *model, markers particles, DoodzFP* mat_prop, grid *mesh,
                             mark_val = particles.nx[k]*particles.nz[k]*(-pow(particles.nx[k], 2.0) + pow(particles.nz[k], 2.0));
                             break;
 
-                        case -3: // Anisotropy: angl
+                        case -3: // Anisotropy: angle
                             mark_val = acos(particles.nx[k]);
                             break;
                             

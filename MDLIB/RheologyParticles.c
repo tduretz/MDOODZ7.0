@@ -122,10 +122,10 @@ void TotalStresses( grid* mesh, markers* particles, scale scaling, params* model
     dszz = DoodzCalloc(Ncx*Ncz, sizeof(DoodzFP));
     dsxz = DoodzCalloc(Nx *Nz , sizeof(DoodzFP));
     
-    mdsxx = DoodzCalloc(particles->Nb_part,sizeof(DoodzFP));
-    mdsyy = DoodzCalloc(particles->Nb_part,sizeof(DoodzFP));
-    mdszz = DoodzCalloc(particles->Nb_part,sizeof(DoodzFP));
-    mdsxz = DoodzCalloc(particles->Nb_part,sizeof(DoodzFP));
+    mdsxx = DoodzCalloc(particles->Nb_part, sizeof(DoodzFP));
+    mdsyy = DoodzCalloc(particles->Nb_part, sizeof(DoodzFP));
+    mdszz = DoodzCalloc(particles->Nb_part, sizeof(DoodzFP));
+    mdsxz = DoodzCalloc(particles->Nb_part, sizeof(DoodzFP));
     
 #pragma omp parallel for shared( mesh, dsxx, dsyy, dszz ) private( k, k1, l, c0, c1, c2, sxx, syy, szz, tyy, tyy0, sxx0, syy0, szz0  ) firstprivate( Nx, Ncx, Ncz )
     for ( k1=0; k1<Ncx*Ncz; k1++ ) {
@@ -1144,21 +1144,21 @@ void UpdateParticleStress( grid* mesh, markers* particles, params* model, mat_pr
     dz = model->dz;
     dt = model->dt;
     
-    om_s   = DoodzCalloc ((Nx-0)*(Nz-0),sizeof(double));
-    om_n   = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
+    om_s   = DoodzCalloc ((Nx-0)*(Nz-0), sizeof(double));
+    om_n   = DoodzCalloc ((Nx-1)*(Nz-1), sizeof(double));
     
-    txz_n   = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    txx_s   = DoodzCalloc ((Nx-0)*(Nz-0),sizeof(double));
-    tzz_s   = DoodzCalloc ((Nx-0)*(Nz-0),sizeof(double));
+    txz_n   = DoodzCalloc ((Nx-1)*(Nz-1), sizeof(double));
+    txx_s   = DoodzCalloc ((Nx-0)*(Nz-0), sizeof(double));
+    tzz_s   = DoodzCalloc ((Nx-0)*(Nz-0), sizeof(double));
     
-    dudx_n = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    dvdz_n = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    dudz_s = DoodzCalloc ((Nx-0)*(Nz-0),sizeof(double));
-    dvdx_s = DoodzCalloc ((Nx-0)*(Nz-0),sizeof(double));
-    dudz_n = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    dvdx_n = DoodzCalloc ((Nx-1)*(Nz-1),sizeof(double));
-    dudx_s = DoodzCalloc ((Nx-0)*(Nz-0),sizeof(double));
-    dvdz_s = DoodzCalloc ((Nx-0)*(Nz-0),sizeof(double));
+    dudx_n = DoodzCalloc ((Nx-1)*(Nz-1), sizeof(double));
+    dvdz_n = DoodzCalloc ((Nx-1)*(Nz-1), sizeof(double));
+    dudz_s = DoodzCalloc ((Nx-0)*(Nz-0), sizeof(double));
+    dvdx_s = DoodzCalloc ((Nx-0)*(Nz-0), sizeof(double));
+    dudz_n = DoodzCalloc ((Nx-1)*(Nz-1), sizeof(double));
+    dvdx_n = DoodzCalloc ((Nx-1)*(Nz-1), sizeof(double));
+    dudx_s = DoodzCalloc ((Nx-0)*(Nz-0), sizeof(double));
+    dvdz_s = DoodzCalloc ((Nx-0)*(Nz-0), sizeof(double));
     
 #pragma omp parallel for shared ( mesh, om_s, dudz_s, dvdx_s ) \
 private ( k, l, k1, c1, c3 )                                   \
@@ -1198,40 +1198,44 @@ firstprivate( model )
     InterpCentroidsToVerticesDouble( mesh->szzd, tzz_s, mesh, model );
     InterpVerticesToCentroidsDouble( txz_n, mesh->sxz, mesh, model );
     InterpVerticesToCentroidsDouble( om_n, om_s, mesh, model );
+
+    // // Rotate stress only if elasticity is activated 
+    if ( model->iselastic==1 ) {
     
 #pragma omp parallel for shared ( mesh, dudz_n, dvdx_n, dudx_n, dvdz_n, om_n ) \
-private ( k1, txx, tzz, txz, angle)                     \
-firstprivate( model, dt )
-    for ( k1=0; k1<(Nx-1)*(Nz-1); k1++ ) {
-        
-        txx   = mesh->sxxd[k1];
-        tzz   = mesh->szzd[k1];
-        txz   = txz_n[k1];
-        if (model->StressRotation==1) { // Jaumann rate
-            angle = dt*om_n[k1];
-            mesh->sxxd[k1] = (txx*cos(angle) - txz*sin(angle))*cos(angle) - (txz*cos(angle) - tzz*sin(angle))*sin(angle);
-            mesh->szzd[k1] = (txx*sin(angle) + txz*cos(angle))*sin(angle) + (txz*sin(angle) + tzz*cos(angle))*cos(angle);
+    private ( k1, txx, tzz, txz, angle)                     \
+    firstprivate( model, dt )
+        for ( k1=0; k1<(Nx-1)*(Nz-1); k1++ ) {
+            
+            txx   = mesh->sxxd[k1];
+            tzz   = mesh->szzd[k1];
+            txz   = txz_n[k1];
+            if (model->StressRotation==1) { // Jaumann rate
+                angle = dt*om_n[k1];
+                mesh->sxxd[k1] = (txx*cos(angle) - txz*sin(angle))*cos(angle) - (txz*cos(angle) - tzz*sin(angle))*sin(angle);
+                mesh->szzd[k1] = (txx*sin(angle) + txz*cos(angle))*sin(angle) + (txz*sin(angle) + tzz*cos(angle))*cos(angle);
+            }
+            if (model->StressRotation==2) { // Upper convected rate
+                mesh->sxxd[k1] = mesh->sxxd[k1] - dt * mesh->VE_n[k1] * ( -2.0*txx*dudx_n[k1] - 2.0*txz*dudz_n[k1]);
+                mesh->szzd[k1] = mesh->szzd[k1] - dt * mesh->VE_n[k1] * ( -2.0*tzz*dvdz_n[k1] - 2.0*txz*dvdx_n[k1]);
+            }        
         }
-        if (model->StressRotation==2) { // Upper convected rate
-            mesh->sxxd[k1] = mesh->sxxd[k1] - dt * mesh->VE_n[k1] * ( -2.0*txx*dudx_n[k1] - 2.0*txz*dudz_n[k1]);
-            mesh->szzd[k1] = mesh->szzd[k1] - dt * mesh->VE_n[k1] * ( -2.0*tzz*dvdz_n[k1] - 2.0*txz*dvdx_n[k1]);
-        }        
-    }
-    
+            
 #pragma omp parallel for shared ( mesh, dudz_s, dvdx_s, dudx_s, dvdz_s, om_s ) \
-private ( k1, txx, tzz, txz, angle )                     \
-firstprivate( model, dt )
-    for ( k1=0; k1<(Nx-0)*(Nz-0); k1++ ) {
-        
-        txx   = txx_s[k1];
-        tzz   = tzz_s[k1];
-        txz   = mesh->sxz[k1];
-        if (model->StressRotation==1) { // Jaumann rate
-            angle = dt*om_s[k1];
-            mesh->sxz[k1] = (txx*cos(angle) - txz*sin(angle))*sin(angle) + (txz*cos(angle) - tzz*sin(angle))*cos(angle);
-        }
-        if (model->StressRotation==2) { // Upper convected rate
-            mesh->sxz[k1] = mesh->sxz[k1] - dt * mesh->VE_s[k1] * (      txx*dudz_s[k1] -     txx*dvdx_s[k1] - txz*(dudx_s[k1]+ dvdz_s[k1]) );
+    private ( k1, txx, tzz, txz, angle )                     \
+    firstprivate( model, dt )
+        for ( k1=0; k1<(Nx-0)*(Nz-0); k1++ ) {
+            
+            txx   = txx_s[k1];
+            tzz   = tzz_s[k1];
+            txz   = mesh->sxz[k1];
+            if (model->StressRotation==1) { // Jaumann rate
+                angle = dt*om_s[k1];
+                mesh->sxz[k1] = (txx*cos(angle) - txz*sin(angle))*sin(angle) + (txz*cos(angle) - tzz*sin(angle))*cos(angle);
+            }
+            if (model->StressRotation==2) { // Upper convected rate
+                mesh->sxz[k1] = mesh->sxz[k1] - dt * mesh->VE_s[k1] * (      txx*dudz_s[k1] -     txx*dvdx_s[k1] - txz*(dudx_s[k1]+ dvdz_s[k1]) );
+            }
         }
     }
     
@@ -1383,12 +1387,12 @@ firstprivate( model, dt )
         printf("No subgrid diffusion for stress tensor component update\n");
         
         // Alloc
-        dsxxd  = DoodzCalloc((Nx-1)*(Nz-1),sizeof(double));
-        dszzd  = DoodzCalloc((Nx-1)*(Nz-1),sizeof(double));
-        dsxz   = DoodzCalloc((Nx)*(Nz),sizeof(double));
-        mdsxxd = DoodzCalloc(particles->Nb_part,sizeof(DoodzFP));
-        mdszzd = DoodzCalloc(particles->Nb_part,sizeof(DoodzFP));
-        mdsxz  = DoodzCalloc(particles->Nb_part,sizeof(DoodzFP));
+        dsxxd  = DoodzCalloc((Nx-1)*(Nz-1), sizeof(double));
+        dszzd  = DoodzCalloc((Nx-1)*(Nz-1), sizeof(double));
+        dsxz   = DoodzCalloc((Nx)*(Nz), sizeof(double));
+        mdsxxd = DoodzCalloc(particles->Nb_part, sizeof(DoodzFP));
+        mdszzd = DoodzCalloc(particles->Nb_part, sizeof(DoodzFP));
+        mdsxz  = DoodzCalloc(particles->Nb_part, sizeof(DoodzFP));
         
         // Cell: normal stress change
         for (k=0; k<Nx-1; k++) {

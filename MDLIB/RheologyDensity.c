@@ -591,8 +591,6 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
         Tiic    = Tii - eta_ve*gdot*f_ani;
         Tiic    = Tiimin;
         Pc      = P;
-        // printf("Aie, tension! %2.2e, %2.2e\n", F_trial, Tiic - Tiimin);
-        // exit(1);
       }
 
       *Pcorr  = Pc;
@@ -1145,6 +1143,7 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
       // }
       // if ( model->residual_form == 1 ) mesh->sxz[c1] = 2.0*mesh->eta_s[c1]*Gxz;
       mesh->sxz[c1] = 2.0*mesh->eta_s[c1]*Gxz;
+      // if (c1<5) printf("%2.2e\n", mesh->sxz[c1]/2.0/mesh->exz[c1]);
       // mesh->sxz[c1] = 2.0*mesh->eta_s[c1]*(mesh->exz[c1]    + mesh->sxz0[c1]   /etae/2.0);
 
       // if (l==0 || k==0 || l==Nz-1 || k==Nx-1) mesh->sxz[c1] = 0.0;
