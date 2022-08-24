@@ -1,4 +1,5 @@
 # MDOODZ 6.0 makefile
+SHELL := /bin/bash
 
 # Compiler
 CC = /usr/local/Cellar/gcc/11.2.0_3/bin/gcc-11
@@ -45,10 +46,11 @@ endif
 
 #---------------------------------------------------#
 # Rules
-all: Doodzi_$(MODEL)
+all: Doodzi_$(MODEL) 
+	cp $(MODEL_PATH)/$(MODEL).txt . 
+
 
 FILES = Main_DOODZ.o FD_Jacobian.o  RheologyParticles.o ChemicalRoutines.o ParticleReseeding.o Solvers.o Routines_BEN.o StokesRoutines.o StokesAssemblyCoupled.o StokesAssemblyDecoupled.o AdvectionRoutines.o RheologyDensity.o HDF5Output.o SparseTools.o ThermalRoutines.o ThermalSolver.o ParticleRoutines.o free_surf.o FlowLaws.o MemoryAllocFree.o InputOutput.o MiscFunctions.o GridRoutines.o setup.o
-
 ifeq ($(NEW_INPUT),yes)
         FILES += BC.o
         Doodzi_$(MODEL): ${FILES}
