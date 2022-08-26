@@ -1,6 +1,6 @@
 /**** Original name: Pauline_marylDiabCC_dryOlM ****/
 /**** RESTART ****/
-istep = 00000050
+istep = 00000160
 irestart = 0
 
 /**** OUTPUT FILES ****/
@@ -42,7 +42,6 @@ isinertial      = 0
 iselastic       = 1
 isthermal       = 1
 isPl_soft       = 0
-line_search     = 1
 free_surf       = 1
 free_surf_stab  = 1
 eqn_state       = 1
@@ -55,10 +54,11 @@ surf_processes  = 1 /0 = none; 1 = diffusion only; 2 = fills instantaneously the
 surf_diff       = 5.0e-6 /topography diffusion coefficient
 surf_ised1      = 4 /sediment phase indices 
 surf_ised2      = 5
-surf_sedirate   = 0.0 / sediementation rate [m/s]:3.1688e-12 <-> 0.01 cm/yr
+surf_sedirate   = 0.0 / sedimentation rate [m/s]:3.1688e-12 <-> 0.01 cm/yr
 surf_baselev    = 0.0e3 / base level for sedimentation
 rec_T_P_x_z     = 1 / initial P and T field record
 polar           = 0
+aniso           = 0
 
 /**** SETUP DEPENDANT ****/
 EpsBG           = -1.056e-15 /Background strain rate [s-1] => extension rate = 1 cm/yr
@@ -110,6 +110,8 @@ pwlv = 11
 linv = 0
 gbsv = 0
 expv = 0
+aniso_factor = 1.0
+aniso_angle  = 45
 
 ID   = 2
 rho  = 3330.00 / lithospheric mantle - Dry Olivine
@@ -222,6 +224,8 @@ pwlv = 27
 linv = 0
 gbsv = 0
 expv = 0
+niso_factor = 1.0
+aniso_angle  = 45
 
 ID   = 8
 rho  = 2800.00 / Crust - Dry Quartz
@@ -239,6 +243,8 @@ pwlv = 27
 linv = 0
 gbsv = 0
 expv = 0
+niso_factor = 1.0
+aniso_angle  = 45
 
 /**** DEFMAPS ****/
 nT    =    200      / Temperature resolution []
@@ -257,10 +263,11 @@ Nx_part  = 4
 Nz_part  = 4
 min_part_cell = 16
 
-/**** PICARD ITERATIONS ****/
-Newton  = 0
-nit_max = 1 // for high resolution use from 10 to 20
-tol_u   = 5.0e-8
-tol_p   = 5.0e-8
-mineta  = 5.0e18
-maxeta  = 1.0e25
+/**** NON-LINEAR ITERATIONS ****/
+Newton      = 0
+nit_max     = 1 // for high resolution use from 10 to 20
+line_search = 0
+abs_tol_u   = 5.0e-8
+abs_tol_p   = 5.0e-8
+mineta      = 5.0e18
+maxeta      = 1.0e25

@@ -266,6 +266,11 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
         P_total[k] = mesh->p_in[k];//(mesh->p_in[k] -  mesh->p0_n[k]);
     }
 
+    // int N= 5;//(mesh->Nx-0)*(mesh->Nz-0);
+    // for (int c1=0; c1<N; c1++) {
+    //      printf("eta = %2.2e\n", mesh->sxz[c1]/2.0/mesh->exz[c1]);
+    // }
+
     // ---------------------------------------------------------
     // Genrate phase map with normal resolution
     res_fact = 1;
