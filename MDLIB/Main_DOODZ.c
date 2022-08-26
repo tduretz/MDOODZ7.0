@@ -227,6 +227,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         printf("*************************************\n");
 
         // Compute dev. strain rate tensor components
+        ApplyBC( &mesh, &input.model );
         StrainRateComponents( &mesh, input.scaling, &input.model );
 
         for (int iter=0; iter<10; iter++) {
@@ -901,7 +902,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         }
         // THIS IS ACTIVATED JUST FOR TOPO.VX IN OUTPUT FILE
 
-        // if (input.model.StressUpdate==1) TotalStresses( &mesh, &particles, input.scaling, &input.model );
+        if (input.model.StressUpdate==1) TotalStresses( &mesh, &particles, input.scaling, &input.model );
 
         // Update stresses on markers
         if (input.model.StressUpdate==0) UpdateParticleStress(  &mesh, &particles, &input.model, &input.materials, &input.scaling );

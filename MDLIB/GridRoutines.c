@@ -361,7 +361,7 @@ void InitialiseSolutionFields( grid *mesh, params *model ) {
                     if (model->isperiodic_x == 1) mesh->u_in[c] = 2.0*(mesh->zvx_coord[l])*model->EpsBG + mesh->xg_coord[k]*model->DivBG/3.0; // Simple shear
                 }
                 // Force Dirichlets
-                if (mesh->BCu.type[c] == 0) mesh->u_in[c]  = mesh->BCu.val[c];
+                if (mesh->BCu.type[c] == 0) mesh->u_in[c]  = mesh->BCu.val[c]; 
             }
     
         }

@@ -52,12 +52,12 @@ void LocalIterationViscoElastic(LocalIterationMutables mutables, LocalIterationP
     // Function evaluation at current effective viscosity
     const double Tii     = 2.0 * params.f_ani * eta_ve * params.Eii;
     double       Eii_cst = 0, Eii_pwl = 0, Eii_gbs = 0, Eii_exp = 0, Eii_lin = 0;
-    if (params.constant) Eii_cst = Tii / params.f_ani / 2.0 / params.eta_cst;
+    if (params.constant)    Eii_cst = Tii / params.f_ani / 2.0 / params.eta_cst;
     if (params.dislocation) Eii_pwl = params.C_pwl * pow(Tii, params.n_pwl);
-    if (params.gbs) Eii_gbs = params.C_gbs * pow(Tii, params.n_gbs);
-    if (params.peierls) Eii_exp = params.C_exp * pow(Tii, params.ST + params.n_exp);                     // Peierls - power law
-    if (params.diffusion) Eii_lin = params.C_lin * pow(Tii, params.n_lin) * pow(params.d, -params.m_lin);// !!! gs - dependence !!!
-    const double Eii_vis  = Eii_pwl + Eii_exp + Eii_lin + Eii_gbs + Eii_cst;
+    if (params.gbs)         Eii_gbs = params.C_gbs * pow(Tii, params.n_gbs);
+    if (params.peierls)     Eii_exp = params.C_exp * pow(Tii, params.ST + params.n_exp);                     // Peierls - power law
+    if (params.diffusion)   Eii_lin = params.C_lin * pow(Tii, params.n_lin) * pow(params.d, -params.m_lin); // !!! gs - dependence !!!
+    const double            Eii_vis = Eii_pwl + Eii_exp + Eii_lin + Eii_gbs + Eii_cst;
 
     // Residual check
     const double r_eta_ve = params.Eii - params.elastic * Tii / params.f_ani / (2.0 * params.eta_el) - Eii_vis;
@@ -72,11 +72,11 @@ void LocalIterationViscoElastic(LocalIterationMutables mutables, LocalIterationP
 
     // Analytical derivative of function
     double dfdeta = 0.0;
-    if (params.elastic) dfdeta += -params.Eii / params.eta_el;
-    if (params.peierls) dfdeta += -(Eii_exp) * (params.ST + params.n_exp) / eta_ve;
-    if (params.diffusion) dfdeta += -(Eii_lin) *params.n_lin / eta_ve;
+    if (params.elastic)     dfdeta += -params.Eii / params.eta_el;
+    if (params.peierls)     dfdeta += -(Eii_exp) * (params.ST + params.n_exp) / eta_ve;
+    if (params.diffusion)   dfdeta += -(Eii_lin) *params.n_lin / eta_ve;
     if (params.dislocation) dfdeta += -(Eii_pwl) *params.n_pwl / eta_ve;
-    if (params.constant) dfdeta += -params.Eii / params.eta_cst;
+    if (params.constant)    dfdeta += -params.Eii / params.eta_cst;
 
     // Update viscosity
     eta_ve -= r_eta_ve / dfdeta;
@@ -100,12 +100,12 @@ void LocalIterationViscoElasticGrainSize(LocalIterationMutables mutables, LocalI
     // Function evaluation at current effective viscosity
     const double Tii     = 2.0 * params.f_ani * eta_ve * params.Eii;
     double       Eii_cst = 0, Eii_pwl = 0, Eii_gbs = 0, Eii_exp = 0, Eii_lin = 0;
-    if (params.constant) Eii_cst = Tii / params.f_ani / 2.0 / params.eta_cst;
+    if (params.constant)    Eii_cst = Tii / params.f_ani / 2.0 / params.eta_cst;
     if (params.dislocation) Eii_pwl = params.C_pwl * pow(Tii, params.n_pwl);
-    if (params.gbs) Eii_gbs = params.C_gbs * pow(Tii, params.n_gbs);
-    if (params.peierls) Eii_exp = params.C_exp * pow(Tii, params.ST + params.n_exp);                 // Peierls - power law
-    if (params.diffusion) Eii_lin = params.C_lin * pow(Tii, params.n_lin) * pow(d_ve, -params.m_lin);// !!! gs - dependence !!!
-    const double Eii_vis  = Eii_pwl + Eii_exp + Eii_lin + Eii_gbs + Eii_cst;
+    if (params.gbs)         Eii_gbs = params.C_gbs * pow(Tii, params.n_gbs);
+    if (params.peierls)     Eii_exp = params.C_exp * pow(Tii, params.ST + params.n_exp);                 // Peierls - power law
+    if (params.diffusion)   Eii_lin = params.C_lin * pow(Tii, params.n_lin) * pow(d_ve, -params.m_lin);// !!! gs - dependence !!!
+    const double            Eii_vis  = Eii_pwl + Eii_exp + Eii_lin + Eii_gbs + Eii_cst;
 
     // Residual check
     const double r_eta_ve = params.Eii - params.elastic * Tii / params.f_ani / (2.0 * params.eta_el) - Eii_vis;
@@ -123,11 +123,11 @@ void LocalIterationViscoElasticGrainSize(LocalIterationMutables mutables, LocalI
 
     // Analytical derivative of function
     double dr_eta_deta = 0.0;
-    if (params.elastic) dr_eta_deta += -params.Eii / params.eta_el;
-    if (params.peierls) dr_eta_deta += -(Eii_exp) * (params.ST + params.n_exp) / eta_ve;
-    if (params.diffusion) dr_eta_deta += -(Eii_lin) *params.n_lin / eta_ve;
+    if (params.elastic)     dr_eta_deta += -params.Eii / params.eta_el;
+    if (params.peierls)     dr_eta_deta += -(Eii_exp) * (params.ST + params.n_exp) / eta_ve;
+    if (params.diffusion)   dr_eta_deta += -(Eii_lin) *params.n_lin / eta_ve;
     if (params.dislocation) dr_eta_deta += -(Eii_pwl) *params.n_pwl / eta_ve;
-    if (params.constant) dr_eta_deta += -params.Eii / params.eta_cst;
+    if (params.constant)    dr_eta_deta += -params.Eii / params.eta_cst;
     const double dr_eta_dd = Eii_lin * params.m_lin / (d_ve);
     const double dr_d_dd   = 1.0;
     const double dr_d_deta = -2.0 * params.Eii * (Eii_pwl) *d_it * eta_ve * params.f_ani * params.lam * params.pg * (-0.5 * params.Ag * params.cg * params.gam * params.n_pwl / (params.Eii * (Eii_pwl) *pow(eta_ve, 2) * params.f_ani * params.lam * params.pg) - 0.5 * params.Ag * params.cg * params.gam / (params.Eii * (Eii_pwl) *pow(eta_ve, 2) * params.f_ani * params.lam * params.pg)) / (params.Ag * params.cg * params.gam * (params.pg + 1.0));
