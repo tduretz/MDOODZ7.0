@@ -112,7 +112,7 @@ SetBC RPSetBCTNew(MdoodzInput *instance, POSITION position, double particleTempe
   return bc;
 }
 
-void RPMutateInput(MdoodzInput *instance) {
+void RPMutateInput(MdoodzInput *instance, MutateInputParams *params) {
   int *astenospherePhases     = (int *) malloc(sizeof(int));
   astenospherePhases[0]       = {3};
   instance->crazyConductivity = new CrazyConductivity{
