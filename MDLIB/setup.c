@@ -37,10 +37,14 @@ void SetParticles(SetParticles_ff setParticles, MdoodzInput *instance, markers *
             .z = particles->z[np]};
     if (setParticles.SetPhase) {
       particles->phase[np] = setParticles.SetPhase(instance, coordinates);
-      particles->dual[np]  = setParticles.SetPhase(instance, coordinates);
     } else {
       particles->phase[np] = 0;
       particles->dual[np]  = 0;
+    }
+    if (setParticles.SetDual) {
+      particles->dual[np] = setParticles.SetPhase(instance, coordinates);
+    } else {
+      particles->dual[np] = particles->phase[np];
     }
     if (setParticles.SetHorizontalVelocity) {
       particles->Vx[np] = setParticles.SetHorizontalVelocity(instance, coordinates);
@@ -155,6 +159,7 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
         SetBC bc          = setBCs.SetBCVx(instance, position, coordinates);
         mesh->BCu.type[c] = bc.type;
         mesh->BCu.val[c]  = bc.value;
+        if (bc.type==11) mesh->BCu.val[c] = 2.0*bc.value;
         ValidateInternalPoint(position, bc.type, coordinates, "SetBCVxType");
       }
     }
@@ -211,6 +216,7 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
         SetBC bc          = setBCs.SetBCVz(instance, position, coordinates);
         mesh->BCv.type[c] = bc.type;
         mesh->BCv.val[c]  = bc.value;
+        if (bc.type==11) mesh->BCu.val[c] = 2.0*bc.value;
         ValidateInternalPoint(position, mesh->BCv.type[c], coordinates, "SetBCVzType");
       }
     }
@@ -376,6 +382,10 @@ void ValidateSetup(MdoodzSetup *setup, MdoodzInput *instance) {
       warnings[warningsCount] = "SetParticles.SetPhase is not specified. Model will be homogeneous with phase 0";
       warningsCount++;
     }
+    if (!setup->SetParticles->SetDual) {
+      warnings[warningsCount] = "SetParticles.SetDual is not specified. Phase value will be set";
+      warningsCount++;
+    }
     if (!setup->SetParticles->SetTemperature) {
       warnings[warningsCount] = "SetParticles.SetTemperature is not specified. Temperature will be set to 0°C";
       warningsCount++;
@@ -431,25 +441,6 @@ void ValidateSetup(MdoodzSetup *setup, MdoodzInput *instance) {
         errors[errorsCount] = "SetBCs.SetBCT MUST be specified for Thermal model. Please set isthermal = 0 or specify SetBCTType (will be deprecated)";
         errorsCount++;
       }
-    }
-  }
-
-  if (instance->crazyConductivity) {
-    if (!instance->crazyConductivity->multiplier) {
-      errors[errorsCount] = "Parameter multiplier MUST be set for crazy conductivity";
-      errorsCount++;
-    }
-    if (!instance->crazyConductivity->phases) {
-      errors[errorsCount] = "Parameter phases MUST be set for crazy conductivity";
-      errorsCount++;
-    }
-    if (!instance->crazyConductivity->nPhases) {
-      errors[errorsCount] = "Parameter nPhases MUST be set for crazy conductivity";
-      errorsCount++;
-    } else if (instance->crazyConductivity->nPhases > instance->model.Nb_phases) {
-      errors[errorsCount] = "Asthenosphere phases for crazy conductivity is more than phases in a model. Please double check it";
-      printf("phases: %i, %i", instance->crazyConductivity->nPhases, instance->model.Nb_phases);
-      errorsCount++;
     }
   }
 
@@ -573,10 +564,7 @@ bool IsEllipseCoordinates(Coordinates coordinates, Ellipse ellipse, double scali
 bool IsRectangleCoordinates(Coordinates coordinates, Rectangle rectangle, double scalingL) {
   const double wX = coordinates.x * cos(rectangle.angle) - coordinates.z * sin(rectangle.angle);
   const double wZ = coordinates.x * sin(rectangle.angle) + coordinates.z * cos(rectangle.angle);
-  if (wX >= (rectangle.centreX / scalingL - (rectangle.sizeX / 2) / scalingL)
-      && wX <= (rectangle.centreX / scalingL + (rectangle.sizeX / 2) / scalingL)
-      && wZ >= (rectangle.centreZ / scalingL - (rectangle.sizeZ / 2) / scalingL)
-      && wZ <= (rectangle.centreZ / scalingL + (rectangle.sizeZ / 2) / scalingL)) {
+  if (wX >= (rectangle.centreX / scalingL - (rectangle.sizeX / 2) / scalingL) && wX <= (rectangle.centreX / scalingL + (rectangle.sizeX / 2) / scalingL) && wZ >= (rectangle.centreZ / scalingL - (rectangle.sizeZ / 2) / scalingL) && wZ <= (rectangle.centreZ / scalingL + (rectangle.sizeZ / 2) / scalingL)) {
     return true;
   } else {
     return false;

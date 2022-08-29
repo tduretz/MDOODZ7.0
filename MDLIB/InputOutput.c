@@ -1020,8 +1020,10 @@ Input ReadInputFile( char *fileName ) {
         exit(1);
     }
 
+    snprintf(model.description, sizeof(model.description), "%s", ReadChar( fin, "description", "no description"));
+
     // Simulation start/restart from Breakpoint
-    model.istep                 = ReadInt2( fin, "istep", 0 );
+    model.istep              = ReadInt2( fin, "istep", 0 );
     model.irestart           = ReadInt2( fin, "irestart", 0 );
 
     if ( model.istep == 0 ) {

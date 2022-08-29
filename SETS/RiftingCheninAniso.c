@@ -1,6 +1,9 @@
 #include "math.h"
 #include "mdoodz.h"
 #include "stdbool.h"
+#include "stdio.h"
+#include "stdlib.h"
+#include "string.h"
 
 
 double SetSurfaceZCoord(MdoodzInput *instance, double x_coord) {
@@ -26,11 +29,17 @@ int SetPhase(MdoodzInput *instance, Coordinates coordinates) {
       return 7;
     } else if (is7000MAboveMoho && !is9000MAboveMoho) {
       return 8;
-    } else {
+    } else if (coordinates.x < 0) {
       return 1;
+    } else {
+      return 9;
     }
   } else if (isAboveMoho) {
-    return 1;
+    if (coordinates.x < 0) {
+      return 1;
+    } else {
+      return 9;
+    }
   } else if (isBelowLithosphere) {
     return 3;
   } else {
@@ -72,7 +81,7 @@ char SetBCPType(MdoodzInput *instance, POSITION position) {
 }
 
 SetBC SetBCT(MdoodzInput *instance, POSITION position, double particleTemperature) {
-  SetBC     bc;
+  SetBC  bc;
   double surfaceTemperature = zeroC / instance->scaling.T;
   if (position == FREE_SURFACE) {
     bc.value = surfaceTemperature;
@@ -86,7 +95,7 @@ SetBC SetBCT(MdoodzInput *instance, POSITION position, double particleTemperatur
 
 
 SetBC SetBCTNew(MdoodzInput *instance, POSITION position, double particleTemperature) {
-  SetBC     bc;
+  SetBC  bc;
   double surfaceTemperature = zeroC / instance->scaling.T;
   double mantleTemperature  = (1330. + zeroC) / instance->scaling.T;
   if (position == S || position == SE || position == SW) {
@@ -105,13 +114,29 @@ SetBC SetBCTNew(MdoodzInput *instance, POSITION position, double particleTempera
   return bc;
 }
 
-void MutateInput(MdoodzInput *instance) {
-  int asthenospherePhases[1]   = {3};
-  instance->crazyConductivity = &(CrazyConductivity){
-          .multiplier = 1000,
-          .nPhases    = 1,
-          .phases     = asthenospherePhases,
-  };
+void AddCrazyConductivity(MdoodzInput *input) {
+  int               *asthenospherePhases = (int *) malloc(sizeof(int));
+  CrazyConductivity *crazyConductivity   = (CrazyConductivity *) malloc(sizeof(CrazyConductivity));
+  asthenospherePhases[0]                 = 3;
+  crazyConductivity->phases              = asthenospherePhases;
+  crazyConductivity->nPhases             = 1;
+  crazyConductivity->multiplier          = 1000;
+  input->crazyConductivity               = crazyConductivity;
+}
+
+void AddAnisotropy(MdoodzInput *input, MutateInputParams *mutateInputParams) {
+  AddCrazyConductivity(input);
+  input->model.aniso                              = 1;
+  input->model.fstrain                            = 1;
+  const int crustalPhase                          = 1;
+  input->materials.aniso_factor[crustalPhase]     = mutateInputParams->double1;
+  input->materials.aniso_angle[crustalPhase]      = mutateInputParams->double2;
+  const int crustalPhase2                         = 9;
+  input->materials.aniso_factor[crustalPhase2]    = mutateInputParams->double3;
+  input->materials.aniso_angle[crustalPhase2]     = mutateInputParams->double4;
+
+  snprintf(input->model.description, sizeof(input->model.description), "CrustalPhase: {cstv: %i, aniso_factor: %f, aniso_angle: %f}, UpperMantlePhase: {cstv: %i, aniso_factor: %f, aniso_angle: %f}}", mutateInputParams->int1, mutateInputParams->double1, mutateInputParams->double2, mutateInputParams->int2, mutateInputParams->double3, mutateInputParams->double4);
+  printf("%s", input->model.description);
 }
 
 int main() {
@@ -133,8 +158,25 @@ int main() {
                   .SetBCT     = SetBCT,
                   .SetBCTNew  = SetBCTNew,
           },
-          .MutateInput = MutateInput,
-
+          .MutateInput = AddCrazyConductivity,
   };
-  RunMDOODZ("RiftingPauline.txt", &setup);
+  RunMDOODZ("RiftingCheninAniso.txt", &setup);
+  rename("Output00100.gzip.h5", "RiftingCheninIsotropic.h5");
+
+  /*
+  MutateInputParams *mutateInputParams     = (MutateInputParams *) malloc(sizeof(MutateInputParams));
+
+  mutateInputParams->double1 = 1;
+  mutateInputParams->double2 = 90;
+  mutateInputParams->double3 = 6;
+  mutateInputParams->double4 = 10;
+  setup.mutateInputParams    = mutateInputParams;
+  setup.MutateInput          = AddAnisotropy;
+  RunMDOODZ("RiftingCheninAniso.txt", &setup);
+  char outputName[256];
+  snprintf(outputName, sizeof(outputName), "RiftingChenin_%i.h5", 0);
+  rename("Output00100.gzip.h5", outputName);
+
+  free(mutateInputParams);
+  */
 }

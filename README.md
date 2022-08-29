@@ -17,7 +17,7 @@ To run the simulation `MdoodzInput` must be passed to `RunMDOODZ(MdoodzInput *in
 
 1) Simple or Pure Shear: [ShearTemplate](SETS/ShearTemplate.c)
 2) A free surface model: [TopoBenchCase1](SETS/TopoBenchCase1.c)
-3) A free surface and thermal solution model: [RiftingPauline](SETS/RiftingPauline.c)
+3) A free surface and thermal solution model: [RiftingPauline](SETS/RiftingChenin.c)
 4) Grain size evolution model: [PinchSwellGSE](SETS/PinchSwellGSE.c)
 5) Quartz-Coesite inclusion density change in Garnet: [QuartzCoesite](SETS/QuartzCoesite.c)
 
