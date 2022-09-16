@@ -736,7 +736,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                 ViscosityDerivatives( &mesh, &input.materials, &input.model, Nmodel, &input.scaling );
                 if ( IsFullNewton   == 1 && Nmodel.nit > 0 ) RheologicalOperators( &mesh, &input.model, &input.scaling, 1 );
                 if ( IsJacobianUsed == 1 )                   BuildJacobianOperatorDecoupled( &mesh, input.model, 0, mesh.p_corr, mesh.p_in, mesh.u_in, mesh.v_in,  &Jacob,  &JacobA,  &JacobB,  &JacobC,   &JacobD, 1 );
-
+                
                 // IsNanArray2DFP(mesh.eta_n, (mesh.Nx-1)*(mesh.Nz-1));
                 // IsInfArray2DFP(mesh.eta_n, (mesh.Nx-1)*(mesh.Nz-1));
 
@@ -748,17 +748,21 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                 //                MinMaxArrayTag( mesh.detadexx_s,      input.scaling.eta, (mesh.Nx)*(mesh.Nz),     "detadexx_s     ", mesh.BCg.type );
                 //                MinMaxArrayTag( mesh.detadezz_s,      input.scaling.eta, (mesh.Nx)*(mesh.Nz),     "detadezz_s     ", mesh.BCg.type );
                 //                MinMaxArrayTag( mesh.detadgxz_s,      input.scaling.eta, (mesh.Nx)*(mesh.Nz),     "detadgxz_s     ", mesh.BCg.type );
-                //                MinMaxArrayTag( mesh.D11_n,      input.scaling.eta, (mesh.Nx-1)*(mesh.Nz-1),     "D21_n     ", mesh.BCg.type );
-                //                MinMaxArrayTag( mesh.D12_n,      input.scaling.eta, (mesh.Nx-1)*(mesh.Nz-1),     "D22_n     ", mesh.BCg.type );
-                //                MinMaxArrayTag( mesh.D13_n,      input.scaling.eta, (mesh.Nx-1)*(mesh.Nz-1),     "D23_n     ", mesh.BCg.type );
-                //                MinMaxArrayTag( mesh.D14_n,      input.scaling.eta, (mesh.Nx-1)*(mesh.Nz-1),     "D24_n     ", mesh.BCg.type );
-                //                MinMaxArrayTag( mesh.D31_s,      input.scaling.eta, (mesh.Nx)*(mesh.Nz),     "D31_s     ", mesh.BCg.type );
-                //                MinMaxArrayTag( mesh.D32_s,      input.scaling.eta, (mesh.Nx)*(mesh.Nz),     "D32_s     ", mesh.BCg.type );
-                //                MinMaxArrayTag( mesh.D33_s,      input.scaling.eta, (mesh.Nx)*(mesh.Nz),     "D33_s     ", mesh.BCg.type );
-                //                MinMaxArrayTag( mesh.D34_s,      input.scaling.eta, (mesh.Nx)*(mesh.Nz),     "D34_s     ", mesh.BCg.type );
+                // MinMaxArrayTag( mesh.D11_n,      input.scaling.eta, (mesh.Nx-1)*(mesh.Nz-1),     "D11_n     ", mesh.BCp.type );
+                // MinMaxArrayTag( mesh.D12_n,      input.scaling.eta, (mesh.Nx-1)*(mesh.Nz-1),     "D12_n     ", mesh.BCp.type );
+                // MinMaxArrayTag( mesh.D13_n,      input.scaling.eta, (mesh.Nx-1)*(mesh.Nz-1),     "D13_n     ", mesh.BCp.type );
+                // MinMaxArrayTag( mesh.D14_n,      input.scaling.eta, (mesh.Nx-1)*(mesh.Nz-1),     "D14_n     ", mesh.BCp.type );
+                // MinMaxArrayTag( mesh.D21_n,      input.scaling.eta, (mesh.Nx-1)*(mesh.Nz-1),     "D21_n     ", mesh.BCp.type );
+                // MinMaxArrayTag( mesh.D22_n,      input.scaling.eta, (mesh.Nx-1)*(mesh.Nz-1),     "D22_n     ", mesh.BCp.type );
+                // MinMaxArrayTag( mesh.D23_n,      input.scaling.eta, (mesh.Nx-1)*(mesh.Nz-1),     "D23_n     ", mesh.BCp.type );
+                // MinMaxArrayTag( mesh.D24_n,      input.scaling.eta, (mesh.Nx-1)*(mesh.Nz-1),     "D24_n     ", mesh.BCp.type );
+                // MinMaxArrayTag( mesh.D31_s,      input.scaling.eta, (mesh.Nx-0)*(mesh.Nz-0),     "D31_s     ", mesh.BCg.type );
+                // MinMaxArrayTag( mesh.D32_s,      input.scaling.eta, (mesh.Nx-0)*(mesh.Nz-0),     "D32_s     ", mesh.BCg.type );
+                // MinMaxArrayTag( mesh.D33_s,      input.scaling.eta, (mesh.Nx-0)*(mesh.Nz-0),     "D33_s     ", mesh.BCg.type );
+                // MinMaxArrayTag( mesh.D34_s,      input.scaling.eta, (mesh.Nx-0)*(mesh.Nz-0),     "D34_s     ", mesh.BCg.type );
 
                 // Diagonal input.scaling
-                if (input.model.diag_scaling ) {
+                if ( input.model.diag_scaling ) {
                     if (input.model.Newton          == 0 )  ExtractDiagonalScale( &StokesA, &StokesB, &StokesC, &StokesD );
                     if (input.model.Newton          == 1 )  ExtractDiagonalScale( &JacobA,  &JacobB,  &JacobC,   &JacobD );
                     if (input.model.Newton          == 1 )  ArrayEqualArray(StokesA.d, JacobA.d, StokesA.neq);
@@ -797,7 +801,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                 t_omp = (double)omp_get_wtime();
                 if (input.model.decoupled_solve == 0 ) SolveStokesDefect( &Stokes, &CholmodSolver, &Nmodel, &mesh, &input.model, &particles, &topo_chain, &topo, input.materials, input.scaling );
                 if (input.model.decoupled_solve == 1 ) {
-
+                    
                     if ( IsJacobianUsed==1 ) SolveStokesDefectDecoupled( &StokesA, &StokesB, &StokesC, &StokesD, &Stokes, &CholmodSolver, &Nmodel, &mesh, &input.model, &particles, &topo_chain, &topo, input.materials, input.scaling,  &JacobA,  &JacobB,  &JacobC );
                     else                     SolveStokesDefectDecoupled( &StokesA, &StokesB, &StokesC, &StokesD, &Stokes, &CholmodSolver, &Nmodel, &mesh, &input.model, &particles, &topo_chain, &topo, input.materials, input.scaling, &StokesA, &StokesB, &StokesC );
 

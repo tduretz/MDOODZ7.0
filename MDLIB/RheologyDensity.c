@@ -1188,13 +1188,13 @@ void RheologicalOperators( grid* mesh, params* model, scale* scaling, int Jacobi
   //---------------------------------------------------------------------------------------------------------//
   if ( Jacobian==0 ) {
 
-    //        printf("Computing isotropic/anisotropic viscosity tensor\n");
+    // printf("Computing isotropic/anisotropic viscosity tensor\n");
 
     // Loop on cell centers
-#pragma omp parallel for shared( mesh ) private ( nx, nz, ani, d0, d1, etae )  firstprivate ( model )
+#pragma omp parallel for shared( mesh ) private ( ani, d0, d1 )  firstprivate ( model )
     for (k=0; k<Ncx*Ncz; k++) {
 
-      if ( mesh->BCp.type[k] != 30 && mesh->BCp.type[k] != 31) {
+      if ( mesh->BCp.type[k] != 30 && mesh->BCp.type[k] != 31 ) {
         //----------------------------------------------------------//
         if ( model->aniso == 0 ) {
           ani = 0.0; d0   = 0.0; d1   = 0.0;
@@ -1227,7 +1227,7 @@ void RheologicalOperators( grid* mesh, params* model, scale* scaling, int Jacobi
       }
     }
     // Loop on cell vertices
-#pragma omp parallel for shared( mesh )  private ( nx, nz, ani, d0, d1, etae ) firstprivate ( model )
+#pragma omp parallel for shared( mesh )  private ( ani, d0, d1 ) firstprivate ( model )
     for (k=0; k<Nx*Nz; k++) {
 
       if ( mesh->BCg.type[k] != 30 ) {
@@ -1263,15 +1263,15 @@ void RheologicalOperators( grid* mesh, params* model, scale* scaling, int Jacobi
   if ( Jacobian==1 ) {
 
     // Loop on cell centers
-#pragma omp parallel for shared( mesh ) private ( nx, nz, ani, d0, d1, etae, K, Da11, Da12, Da13, Da22, Da23, Da33, iDa11, iDa12, iDa13, iDa22, iDa23, iDa33, a11, a12, a13, a22, a23, a33, det, Exx, Ezz, Exz, gxz, Gxx, Gzz, Gxz ) firstprivate ( model, dt, comp )
+#pragma omp parallel for shared( mesh ) private ( ani, d0, d1, etae, K, Da11, Da12, Da13, Da22, Da23, Da33, iDa11, iDa12, iDa13, iDa22, iDa23, iDa33, a11, a12, a13, a22, a23, a33, det, Exx, Ezz, Exz, gxz, Gxx, Gzz, Gxz ) firstprivate ( model, dt, comp )
     for (k=0; k<Ncx*Ncz; k++) {
 
       if ( mesh->BCp.type[k] != 30 && mesh->BCp.type[k] != 31 ) {
         //----------------------------------------------------------//
         if ( model->iselastic==1 ) etae      = model->dt*mesh->mu_n[k];
         else                       etae      = 1.0; // set to arbitrary value to avoid division by 0.0
-        if ( comp==1 ) K         = 1.0/mesh->bet_n[k];
-        else           K         = 0.0;
+        if ( comp==1 )             K         = 1.0/mesh->bet_n[k];
+        else                       K         = 0.0;
         //----------------------------------------------------------//
         if ( model->aniso == 0 ) {
           ani = 0.0; d0   = 0.0; d1   = 0.0;
@@ -1340,7 +1340,7 @@ void RheologicalOperators( grid* mesh, params* model, scale* scaling, int Jacobi
     }
 
     // Loop on cell vertices
-#pragma omp parallel for shared( mesh )  private ( nx, nz, ani, d0, d1, etae, Da11, Da12, Da13, Da22, Da23, Da33, iDa11, iDa12, iDa13, iDa22, iDa23, iDa33, a11, a12, a13, a22, a23, a33, det, Exx, Ezz, Exz, gxz, Gxx, Gzz, Gxz  ) firstprivate ( model)
+#pragma omp parallel for shared( mesh )  private ( ani, d0, d1, etae, Da11, Da12, Da13, Da22, Da23, Da33, iDa11, iDa12, iDa13, iDa22, iDa23, iDa33, a11, a12, a13, a22, a23, a33, det, Exx, Ezz, Exz, gxz, Gxx, Gzz, Gxz  ) firstprivate ( model)
     for (k=0; k<Nx*Nz; k++) {
 
       if ( mesh->BCg.type[k] != 30 ) {
@@ -1894,7 +1894,7 @@ void GenerateDeformationMaps( grid* mesh, mat_prop *materials, params *model, Np
 
   // This functions generates deformation maps and writem to disk
 
-  //Definition of parameters and allocation of memory
+  // Definition of parameters and allocation of memory
   int nT = model->nT, nE = model->nE, nd = model->nd, ix, iy, iz;
   double stepT, stepE, stepd;
   double Tmin = model->Tmin;

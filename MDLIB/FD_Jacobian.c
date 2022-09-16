@@ -158,9 +158,9 @@ void ViscosityDerivatives( grid *mesh, mat_prop *materials, params *model, Npara
                 // Anisotropy
                 if ( model->aniso_fstrain  == 0 ) ani = 1.0 - 1.0 / mesh->aniso_factor_n[c0];
                 if ( model->aniso_fstrain  == 1 ) ani = 1.0 - 1.0 / mesh->FS_AR_n[c0];
-                d0      = mesh->d1_n[k];
-                d1      = mesh->d2_n[k];
-                angle   = mesh->angle_n[k];
+                d0      = mesh->d1_n[c0];
+                d1      = mesh->d2_n[c0];
+                angle   = mesh->angle_n[c0];
                 f_ani_p = 1.0 - ani*fabs(sin(2*angle));
             }
             //----------------------------------------------------------//
@@ -333,9 +333,9 @@ void ViscosityDerivatives( grid *mesh, mat_prop *materials, params *model, Npara
                 // Anisotropy
                 if ( model->aniso_fstrain  == 0 ) ani = 1.0 - 1.0 / mesh->aniso_factor_s[c1];
                 if ( model->aniso_fstrain  == 1 ) ani = 1.0 - 1.0 / mesh->FS_AR_s[c1];
-                d0      = mesh->d1_s[k];
-                d1      = mesh->d2_s[k];
-                angle   = mesh->angle_s[k];
+                d0      = mesh->d1_s[c1];
+                d1      = mesh->d2_s[c1];
+                angle   = mesh->angle_s[c1];
                 f_ani_p = 1.0 - ani*fabs(sin(2*angle));
             }
             //----------------------------------------------------------//
