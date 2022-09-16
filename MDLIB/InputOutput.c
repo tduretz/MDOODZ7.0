@@ -1616,11 +1616,10 @@ Input ReadInputFile( char *fileName ) {
 
     // Direct solver parameters
     model.lsolver          = ReadInt2( fin, "lsolver", 2 );
-    if ( model.lsolver == 0) {
+    if ( model.lsolver == 0 || model.Newton == 1 || model.aniso == 1) {
         printf("WARNING!! Changing from solver type 0 to solver type 2!!! That's the new standard in MDOODZ 6.0.\n");
         model.lsolver = 2;
     }
-    if ( model.Newton == 1 ) model.lsolver         = 2;
 
     // Close input file
     fclose(fin);

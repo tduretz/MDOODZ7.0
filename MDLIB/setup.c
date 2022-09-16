@@ -273,7 +273,6 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
     }
   }
 
-
   /* -------------------------------------------------------------------------------------------------------*/
   /* Set the BCs for T on all grid levels */
   /* Type  1: Dirichlet point that do not match the physical boundary (Vx:
@@ -343,7 +342,12 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
 
   printf("Velocity and pressure were initialised\n");
   printf("Boundary conditions were set up\n");
+  // Print2DArrayChar( mesh->BCu.type, mesh->Nx, (mesh->Nz+1), 1.0 );
 }
+
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
 
 void ValidateSetup(MdoodzSetup *setup, MdoodzInput *instance) {
   int   errorsCount   = 0;
@@ -462,6 +466,9 @@ void ValidateSetup(MdoodzSetup *setup, MdoodzInput *instance) {
   }
 }
 
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
 
 // TEMPLATES
 
@@ -479,6 +486,10 @@ SetBC SetPureShearBCVx(MdoodzInput *input, POSITION position, Coordinates coordi
   }
   return bc;
 }
+
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
 
 SetBC SetSimpleShearBCVx(MdoodzInput *input, POSITION position, Coordinates coordinates) {
   SetBC        bc;
@@ -502,6 +513,10 @@ SetBC SetSimpleShearBCVx(MdoodzInput *input, POSITION position, Coordinates coor
   return bc;
 }
 
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
+
 SetBC SetPureOrSimpleShearBCVx(MdoodzInput *input, POSITION position, Coordinates coordinates) {
   if (input->model.shear_style) {
     return SetSimpleShearBCVx(input, position, coordinates);
@@ -509,6 +524,10 @@ SetBC SetPureOrSimpleShearBCVx(MdoodzInput *input, POSITION position, Coordinate
     return SetPureShearBCVx(input, position, coordinates);
   }
 }
+
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
 
 SetBC SetPureShearBCVz(MdoodzInput *input, POSITION position, Coordinates coordinates) {
   SetBC bc;
@@ -525,6 +544,10 @@ SetBC SetPureShearBCVz(MdoodzInput *input, POSITION position, Coordinates coordi
   return bc;
 }
 
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
+
 SetBC SetSimpleShearBCVz(MdoodzInput *input, POSITION position, Coordinates coordinates) {
   SetBC bc;
   if (position == E || position == W || position == NE || position == NW || position == SE || position == SW) {
@@ -540,6 +563,10 @@ SetBC SetSimpleShearBCVz(MdoodzInput *input, POSITION position, Coordinates coor
   return bc;
 }
 
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
+
 SetBC SetPureOrSimpleShearBCVz(MdoodzInput *input, POSITION position, Coordinates coordinates) {
   if (input->model.shear_style) {
     return SetSimpleShearBCVz(input, position, coordinates);
@@ -547,6 +574,10 @@ SetBC SetPureOrSimpleShearBCVz(MdoodzInput *input, POSITION position, Coordinate
     return SetPureShearBCVz(input, position, coordinates);
   }
 }
+
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
 
 bool IsEllipseCoordinates(Coordinates coordinates, Ellipse ellipse, double scalingL) {
   const double theta   = ellipse.angle * M_PI / 180.0;
@@ -561,6 +592,10 @@ bool IsEllipseCoordinates(Coordinates coordinates, Ellipse ellipse, double scali
   }
 }
 
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
+
 bool IsRectangleCoordinates(Coordinates coordinates, Rectangle rectangle, double scalingL) {
   const double wX = coordinates.x * cos(rectangle.angle) - coordinates.z * sin(rectangle.angle);
   const double wZ = coordinates.x * sin(rectangle.angle) + coordinates.z * cos(rectangle.angle);
@@ -570,3 +605,7 @@ bool IsRectangleCoordinates(Coordinates coordinates, Rectangle rectangle, double
     return false;
   }
 }
+
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/

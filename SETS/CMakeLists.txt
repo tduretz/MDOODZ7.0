@@ -8,6 +8,7 @@ else()
     add_set(PinchSwellGSE)
     add_set(ShearTemplate)
     add_set(RiftingChenin)
+    add_set(RiftingBasic)
     add_set(TopoBenchCase1)
     add_set(QuartzCoesite) # not yet finished
     add_set(MLPS_Ellipses) # not yet finished

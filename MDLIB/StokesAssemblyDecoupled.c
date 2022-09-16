@@ -158,18 +158,18 @@ void Xjacobian_InnerNodesDecoupled3( SparseMat *Stokes, SparseMat *StokesA, Spar
         double D33S = mesh->D33_s[ixyS];
         double D34S = mesh->D34_s[ixyS];
     
-        double inE=0.0, inW=0.0, inS=0.0, inN = 0.0, inSv = 0.0, inNv = 0.0;
+        double inE=0.0, inW=0.0, inS=0.0, inN = 0.0;
+        // X-tra
+        double wE=0.0, wW=0.0, wS=0.0, wN = 0.0;
+        double inSWc=0.0, inSEc=0.0, inNWc=0.0, inNEc=0.0;
+        double inSWv=0.0, inSEv=0.0, inNWv=0.0, inNEv=0.0;
+
         if (mesh->BCp.type[iPrW] == -1) inW = 1.0;
         if (mesh->BCp.type[iPrE] == -1) inE = 1.0;
         
         if (mesh->BCu.type[iVxS] != 30 && mesh->BCu.type[iVxS] != 13)  inS  = 1.0;
         if (mesh->BCu.type[iVxN] != 30 && mesh->BCu.type[iVxN] != 13)  inN  = 1.0;
-
-         // X-tra
-        double wE=0.0, wW=0.0, wS=0.0, wN = 0.0;
-        double inSWc=0.0,inSEc=0.0,inNWc=0.0,inNEc=0.0;
-        double inSWv=0.0,inSEv=0.0,inNWv=0.0,inNEv=0.0;
-        
+                 
         if ( l>1 ){// || (l==1 && mesh->BCu.type[iVxS] == 11 ) ) {  //  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Apparently incorrect
             if (mesh->BCp.type[iPrSW] == -1) inSWc = 1.0;
             if (mesh->BCp.type[iPrSE] == -1) inSEc = 1.0;
@@ -186,7 +186,7 @@ void Xjacobian_InnerNodesDecoupled3( SparseMat *Stokes, SparseMat *StokesA, Spar
         }
         if ( (k<nx-1) || (k==nx-1 && (mesh->BCv.type[iVzSE] == -1 || mesh->BCv.type[iVzSE] == 0) ) ) {
             if (mesh->BCg.type[ixySE] != 30 && mesh->BCv.type[iVzSEE] == -1) inSEv = 1.0;   // modify for periodic
-            if (mesh->BCg.type[ixyNE] != 30 && mesh->BCv.type[iVzSEE] == -1) inNEv = 1.0;   // modify for periodic
+            if (mesh->BCg.type[ixyNE] != 30 && mesh->BCv.type[iVzNEE] == -1) inNEv = 1.0;   // modify for periodic
         }
 
         // FD Coefficients obtained using AssembleGeneralStiffness_MDOODZ_7.0.ipynb
@@ -213,10 +213,17 @@ void Xjacobian_InnerNodesDecoupled3( SparseMat *Stokes, SparseMat *StokesA, Spar
         vNNE = 0.083333333333333329*inN*inNEc*(D31N*comp*oop + D32N*(comp*oop - 3))/pow(dz, 2);
         pW = inW*(0.25*dx*(-D34N*inN + D34S*inS) + dz*(D14W - 1))/(dx*dz);
         pE = inE*(0.25*dx*(-D34N*inN + D34S*inS) + dz*(1 - D14E))/(dx*dz);
-        pSW = 0.25*D34S*inS/dz;
-        pSE = 0.25*D34S*inS/dz;
-        pNW = -0.25*D34N*inN/dz;
-        pNE = -0.25*D34N*inN/dz;
+        pSW = 0.25*D34S*inS*inSWc/dz;
+        pSE = 0.25*D34S*inS*inSEc/dz;
+        pNW = -0.25*D34N*inN*inSWc/dz;
+        pNE = -0.25*D34N*inN*inSEc/dz;
+        // if (l==1) {
+        //     printf("@south k=%d out of %d\n", k, mesh->Nx);
+        //     // printf("vSWW = %2.2e\n", vSWW);
+        //     // printf("vSEE = %2.2e\n", vSEE);
+        //     printf("vNWW = %2.2e %2.2e\n", vNWW, inNWv);
+        //     printf("vNEE = %2.2e %2.2e\n", vNEE, inNEv);
+        // }
     
         // Stabilisation with density gradients
         if ( stab==1 ) {
@@ -568,8 +575,8 @@ void Zjacobian_InnerNodesDecoupled3( SparseMat *Stokes, SparseMat *StokesA, Spar
         }
         
         if (l<nz-1) {
-            if( mesh->BCg.type[ixyNW] != 30 && mesh->BCu.type[iVxSSW] == -1) inNWv = 1.0; // accounts for bottom free slip
-            if( mesh->BCg.type[ixyNE] != 30 && mesh->BCu.type[iVxSSE] == -1) inNEv = 1.0; // accounts for bottom free slip
+            if( mesh->BCg.type[ixyNW] != 30 && mesh->BCu.type[iVxNNW] == -1) inNWv = 1.0; // accounts for bottom free slip
+            if( mesh->BCg.type[ixyNE] != 30 && mesh->BCu.type[iVxNNE] == -1) inNEv = 1.0; // accounts for bottom free slip
         }
  
         // FD Coefficients obtained using AssembleGeneralStiffness_MDOODZ_7.0.ipynb
