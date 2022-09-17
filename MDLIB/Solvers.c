@@ -2237,7 +2237,7 @@ void KillerSolver( SparseMat *matA,  SparseMat *matB,  SparseMat *matC,  SparseM
     int  noisy = 1;
     int nitmax = 20, k, cc, i; //nitmax=5
     double celvol = model.dx*model.dz;
-    double maxdiv0, mindiv, maxdiv, maxdivit=0, rel_tol_div=model.rel_tol_div;
+    double maxdiv0, mindiv, maxdiv, maxdivit=0;
 
     int pc_type = model.pc_type;
 
@@ -2601,7 +2601,7 @@ void KillerSolver( SparseMat *matA,  SparseMat *matB,  SparseMat *matC,  SparseM
         }
         //        if (fabs(maxdiv/maxdiv0)<rel_tol_div) break;
         //        if (k>0 && fabs(maxdiv)/fabs(maxdivit)>0.75) break;
-        if ( (fabs(maxdiv)<model.abs_tol_div || maxdiv/maxdiv0<rel_tol_div )  && (fabs(maxru)<model.abs_tol_div || maxru/maxru0<rel_tol_div ) ) break;
+        if ( (fabs(maxdiv)<model.abs_tol_div || maxdiv/maxdiv0<model.rel_tol_div )  && (fabs(maxru)<model.abs_tol_mom || maxru/maxru0<model.rel_tol_mom ) ) break;
 
         //        if ( ru<1e-11/(scaling.F/pow(scaling.L,3)) && rp<1e-11/scaling.E) break;
     }
@@ -2610,8 +2610,8 @@ void KillerSolver( SparseMat *matA,  SparseMat *matB,  SparseMat *matC,  SparseM
 
 
     //    if (fabs(maxdiv/maxdiv0)>rel_tol_div || fabs(maxdiv) > rel_tol_div ){
-    if (fabs(maxdiv)>model.abs_tol_div && maxdiv/maxdiv0>rel_tol_div) {
-        printf("The code has exited since the incompressibility constrain was not satisfied to abs. tol. = %2.2e and rel. tol. = %2.2e\n Try modifying the PENALTY factor or check MIN/MAX viscosities\n Good luck!\n", model.abs_tol_div, rel_tol_div);
+    if (fabs(maxdiv)>model.abs_tol_div && maxdiv/maxdiv0>model.rel_tol_div) {
+        printf("The code has exited since the incompressibility constrain was not satisfied to abs. tol. = %2.2e and rel. tol. = %2.2e\n Try modifying the PENALTY factor or check MIN/MAX viscosities\n Good luck!\n", model.abs_tol_div, model.rel_tol_div);
         exit(1);
     }
     printf("** PH - iterations = %lf sec - its_KSP_tot = %02d\n", (double)((double)omp_get_wtime() - t_omp), its_KSP_tot);

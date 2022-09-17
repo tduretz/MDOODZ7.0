@@ -258,7 +258,7 @@ void            MinMaxArrayI(int *, int, int, char *);
 //void Initialise1DArrayDouble( double*, int, double );
 void            Initialise1DArrayChar(char *, int, char);
 //void Print2DArrayDoubleTag( DoodzFP*, int, int, double, char* );
-//void Print2DArrayChar( char*, int, int, double);
+void Print2DArrayChar( char*, int, int, double);
 void            Initialise1DArrayInt(int *, int, int);
 void            IsNanArray2DFP(DoodzFP *, int);
 void            IsInfArray2DFP(DoodzFP *, int);
@@ -530,6 +530,7 @@ void            SetUpModel_NoMarkers(grid *, params *, scale *);
 void            Diffuse_X(grid *, params *, scale *);
 void            FiniteStrainAspectRatio(grid *, scale, params, markers *);
 void            Print2DArrayDouble(DoodzFP *, int, int, double);
+void            Print2DArrayInt(int *, int, int, double);
 
 void            OldDeviatoricStressesPressure(grid *, markers *, scale, params *);
 void            TotalStresses(grid *, markers *, scale, params *);
@@ -559,3 +560,5 @@ void            SetParticles(SetParticles_ff setParticles, MdoodzInput *instance
 void            SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh);
 
 void            ValidateSetup(MdoodzSetup *setup, MdoodzInput *instance);
+
+void SetBCs_MD6( grid*, params*, scale, markers*, mat_prop*, surface* );

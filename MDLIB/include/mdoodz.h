@@ -41,7 +41,7 @@ typedef struct {
   int    initial_noise, initial_part;
   // Linear solver
   int    decoupled_solve, lsolver, diag_scaling, pc_type;
-  double penalty, abs_tol_div, rel_tol_div, auto_penalty, compressible,
+  double penalty, abs_tol_div, rel_tol_div, abs_tol_mom, rel_tol_mom, auto_penalty, compressible,
           rel_tol_KSP;
   // Non-linear solver
   double line_search_min, safe_dt_div;
