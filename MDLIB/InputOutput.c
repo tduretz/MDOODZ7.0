@@ -1062,6 +1062,8 @@ Input ReadInputFile( char *fileName ) {
     model.penalty         = ReadDou2( fin, "penalty",      1.0e10 );
     model.abs_tol_div     = ReadDou2( fin, "abs_tol_div", 1.0e-14 );
     model.rel_tol_div     = ReadDou2( fin, "rel_tol_div",  1.0e-5 );
+    model.abs_tol_mom     = ReadDou2( fin, "abs_tol_mom", 1.0e-14 );
+    model.rel_tol_mom     = ReadDou2( fin, "rel_tol_mom",  1.0e-5 );
     model.auto_penalty    = ReadDou2( fin, "auto_penalty",    0.0  );
     model.decoupled_solve = ReadInt2( fin, "decoupled_solve",    1 );
     model.diag_scaling    = ReadInt2( fin, "diag_scaling",       1 );
