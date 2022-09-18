@@ -647,6 +647,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             Nmodel.stagnated   = 0;
             int nstag          = 0;
             int IsJacobianUsed = 0;
+            
 
             ArrayEqualArray( mesh.p_start,    mesh.p_in,      (mesh.Nx-1)*(mesh.Nz-1) );
             ArrayEqualArray( mesh.u_start,    mesh.u_in,      (mesh.Nx)  *(mesh.Nz+1) );
@@ -687,7 +688,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                 if (input.model.Newton == 1 || input.model.aniso == 1 ) IsJacobianUsed = 1;
 
                 printf("**********************************************\n");
-                if (input.model.Newton == 1 ) {
+                if ( IsNewtonStep == 1 ) {
                     printf("*** Newton it. %02d of %02d (step = %05d) ***\n", Nmodel.nit, Nmodel.nit_max, input.model.step);
                     Nmodel.LogIsNewtonStep[Nmodel.nit] = 1;
                 }
@@ -701,7 +702,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                 UpdateNonLinearity( &mesh, &particles, &topo_chain, &topo, input.materials, &input.model, &Nmodel, input.scaling, 0, 0.0 );
                 RheologicalOperators( &mesh, &input.model, &input.scaling, 0 );                               // ??????????? déjà fait dans UpdateNonLinearity
                 NonNewtonianViscosityGrid (     &mesh, &input.materials, &input.model, Nmodel, &input.scaling );    // ??????????? déjà fait dans UpdateNonLinearity
-
+             
                 if (input.model.noisy == 1 ) {
                     MinMaxArrayTag( mesh.T, input.scaling.T, (mesh.Nx-1)*(mesh.Nz-1), "T         ", mesh.BCt.type );
                     MinMaxArrayTag( mesh.p0_n, input.scaling.S, (mesh.Nx-1)*(mesh.Nz-1), "P old     ", mesh.BCp.type );

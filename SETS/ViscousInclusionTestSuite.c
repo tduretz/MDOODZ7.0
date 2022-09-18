@@ -335,8 +335,6 @@ void SetBCs_MD6( grid *mesh, params *model, scale scaling, markers* particles, m
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-
-//---------------------------------------------//
 void eval_anal_Dani(double *vx, double *vz, double *p, double *eta, double *sxx, double *syy, double x, double z, int ps, double rc, double mm, double mc) {
 
   double          gr, er, A;
@@ -401,7 +399,21 @@ void eval_anal_Dani(double *vx, double *vz, double *p, double *eta, double *sxx,
     *sxx         = 4 * creal(d_phi_z) - *syy;
   }
 }
-//---------------------------------------------//
+
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
+
+double SetSurfaceZCoord(MdoodzInput *instance, double x_coord) {
+  const double TopoLevel = 0.3;
+  const double h_pert    = instance->model.user0 / instance->scaling.L;
+  const double x0        = 0.5*(instance->model.xmax + instance->model.xmin);
+  return TopoLevel + h_pert * exp(  -pow(x_coord - x0, 2) / pow(h_pert,2)  );
+}
+
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
 
 int SetPhase(MdoodzInput *instance, Coordinates coordinates) {
   const double radius = instance->model.user1 / instance->scaling.L;
@@ -412,9 +424,17 @@ int SetPhase(MdoodzInput *instance, Coordinates coordinates) {
   }
 }
 
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
+
 double SetDensity(MdoodzInput *instance, Coordinates coordinates, int phase) {
   return instance->materials.rho[phase];
 }
+
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
 
 SetBC SetBCVx(MdoodzInput *instance, POSITION position, Coordinates coord) {
   SetBC           bc;
@@ -475,6 +495,10 @@ SetBC SetBCVx(MdoodzInput *instance, POSITION position, Coordinates coord) {
   return bc;
 }
 
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
+
 SetBC SetBCVz(MdoodzInput *instance, POSITION position, Coordinates coord) {
   SetBC           bc;
   const double radius = instance->model.user1 / instance->scaling.L;
@@ -522,8 +546,15 @@ SetBC SetBCVz(MdoodzInput *instance, POSITION position, Coordinates coord) {
   return bc;
 }
 
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
+
 int main() {
   MdoodzSetup instance = {
+          .BuildInitialTopography = &(BuildInitialTopography_ff){
+                  .SetSurfaceZCoord = SetSurfaceZCoord,
+          },
           .SetParticles = &(SetParticles_ff){
                   .SetPhase   = SetPhase,
                   .SetDensity = SetDensity,
