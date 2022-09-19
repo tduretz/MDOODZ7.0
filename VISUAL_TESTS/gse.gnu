@@ -1,5 +1,5 @@
 set terminal gif animate delay 40
-set output 'gse.gif'
+set output filename
 set cbrange [-12:-8.5]
 set xrange [-0.4:0.4]
 set yrange [-0.17:0.17]

@@ -35,3 +35,4 @@ configure_file("${PROJECT_SOURCE_DIR}/VISUAL_TESTS/ShearHeatingDuretz14Reference
 configure_file("${PROJECT_SOURCE_DIR}/VISUAL_TESTS/inferno.pal" "${PROJECT_SOURCE_DIR}/visualtests-out/inferno.pal" COPYONLY)
 configure_file("${PROJECT_SOURCE_DIR}/VISUAL_TESTS/PinchSwellGSE.txt" "${PROJECT_SOURCE_DIR}/visualtests-out/PinchSwellGSE.txt" COPYONLY)
 configure_file("${PROJECT_SOURCE_DIR}/VISUAL_TESTS/gse.gnu" "${PROJECT_SOURCE_DIR}/visualtests-out/gse.gnu" COPYONLY)
+file(COPY ${PROJECT_SOURCE_DIR}/VISUAL_TESTS/GSE_REF DESTINATION ${PROJECT_SOURCE_DIR}/visualtests-out/)

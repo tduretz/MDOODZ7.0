@@ -263,17 +263,17 @@ void RenameTopoBenchCaseFiles() {
 
 void RenameGSEFiles() {
   fs::create_directory("GSE");
-  fs::copy("Output00000.gzip.h5", "GSE/GSE00000.gzip.h5");
-  fs::copy("Output00010.gzip.h5", "GSE/GSE00010.gzip.h5");
-  fs::copy("Output00020.gzip.h5", "GSE/GSE00020.gzip.h5");
-  fs::copy("Output00030.gzip.h5", "GSE/GSE00030.gzip.h5");
-  fs::copy("Output00040.gzip.h5", "GSE/GSE00040.gzip.h5");
-  fs::copy("Output00050.gzip.h5", "GSE/GSE00050.gzip.h5");
-  fs::copy("Output00060.gzip.h5", "GSE/GSE00060.gzip.h5");
-  fs::copy("Output00070.gzip.h5", "GSE/GSE00070.gzip.h5");
-  fs::copy("Output00080.gzip.h5", "GSE/GSE00080.gzip.h5");
-  fs::copy("Output00090.gzip.h5", "GSE/GSE00090.gzip.h5");
-  fs::copy("Output00100.gzip.h5", "GSE/GSE00100.gzip.h5");
+  const auto copyOptions = fs::copy_options::overwrite_existing;
+  fs::copy("Output00010.gzip.h5", "GSE/GSE00010.gzip.h5", copyOptions);
+  fs::copy("Output00020.gzip.h5", "GSE/GSE00020.gzip.h5", copyOptions);
+  fs::copy("Output00030.gzip.h5", "GSE/GSE00030.gzip.h5", copyOptions);
+  fs::copy("Output00040.gzip.h5", "GSE/GSE00040.gzip.h5", copyOptions);
+  fs::copy("Output00050.gzip.h5", "GSE/GSE00050.gzip.h5", copyOptions);
+  fs::copy("Output00060.gzip.h5", "GSE/GSE00060.gzip.h5", copyOptions);
+  fs::copy("Output00070.gzip.h5", "GSE/GSE00070.gzip.h5", copyOptions);
+  fs::copy("Output00080.gzip.h5", "GSE/GSE00080.gzip.h5", copyOptions);
+  fs::copy("Output00090.gzip.h5", "GSE/GSE00090.gzip.h5", copyOptions);
+  fs::copy("Output00100.gzip.h5", "GSE/GSE00100.gzip.h5", copyOptions);
 }
 
 int SHD14SetPhase(MdoodzInput *instance, Coordinates coordinates) {
@@ -369,17 +369,17 @@ double GSESetTemperature(MdoodzInput *instance, Coordinates coordinates) {
 
 
 SetBC GSESetBCT(MdoodzInput *instance, POSITION position, double gridTemperature) {
-  return *(new SetBC{
+  return {
           .value = gridTemperature,
           .type  = 0,
-  });
+  };
 }
 
 SetBC GSESetBCTNew(MdoodzInput *instance, POSITION position, double gridTemperature) {
-  return *(new SetBC{
+  return {
           .value = gridTemperature,
           .type  = 0,
-  });
+  };
 }
 
 MdoodzSetup CreateGSEInstance() {
@@ -392,7 +392,7 @@ MdoodzSetup CreateGSEInstance() {
           },
           .SetBCs = new SetBCs_ff{
                   .SetBCVx   = SetPureShearBCVx,
-                  .SetBCVz   = SetSimpleShearBCVz,
+                  .SetBCVz   = SetPureShearBCVz,
                   .SetBCT    = GSESetBCT,
                   .SetBCTNew = GSESetBCTNew,
           },
@@ -448,6 +448,7 @@ void UpdateReadmeTimestamp() {
 int main() {
   RunTestCases();
   PlotGSE();
+  PlotGSERef();
   PlotRiftingPauline();
   PlotRiftingPaulineReference();
   PlotShearTemplate();
