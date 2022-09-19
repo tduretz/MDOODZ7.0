@@ -261,6 +261,21 @@ void RenameTopoBenchCaseFiles() {
   rename("Output00100.gzip.h5", "TopoBenchCase00100.gzip.h5");
 }
 
+void RenameGSEFiles() {
+  fs::create_directory("GSE");
+  fs::copy("Output00000.gzip.h5", "GSE/GSE00000.gzip.h5");
+  fs::copy("Output00010.gzip.h5", "GSE/GSE00010.gzip.h5");
+  fs::copy("Output00020.gzip.h5", "GSE/GSE00020.gzip.h5");
+  fs::copy("Output00030.gzip.h5", "GSE/GSE00030.gzip.h5");
+  fs::copy("Output00040.gzip.h5", "GSE/GSE00040.gzip.h5");
+  fs::copy("Output00050.gzip.h5", "GSE/GSE00050.gzip.h5");
+  fs::copy("Output00060.gzip.h5", "GSE/GSE00060.gzip.h5");
+  fs::copy("Output00070.gzip.h5", "GSE/GSE00070.gzip.h5");
+  fs::copy("Output00080.gzip.h5", "GSE/GSE00080.gzip.h5");
+  fs::copy("Output00090.gzip.h5", "GSE/GSE00090.gzip.h5");
+  fs::copy("Output00100.gzip.h5", "GSE/GSE00100.gzip.h5");
+}
+
 int SHD14SetPhase(MdoodzInput *instance, Coordinates coordinates) {
   const double radius = instance->model.user1 / instance->scaling.L;
   if (coordinates.x * coordinates.x + coordinates.z * coordinates.z < radius * radius) {
@@ -324,7 +339,70 @@ MdoodzSetup CreateShearHeatingDuretz14Instance() {
   };
 }
 
+int GSESetPhase(MdoodzInput *instance, Coordinates coordinates) {
+  const double A          = 2e-3 / instance->scaling.L;
+  const double layer_bot0 = -5e-2 / instance->scaling.L;
+  const double layer_top0 = 5e-2 / instance->scaling.L;
+  const double Lx         = (instance->model.xmax - instance->model.xmin);
+  const double layer_top  = layer_top0 - A * cos(coordinates.x * 2.0 * M_PI / Lx);
+  const double layer_bot  = layer_bot0 + A * cos(coordinates.x * 2.0 * M_PI / Lx);
+  if (coordinates.z > layer_bot && coordinates.z < layer_top) {
+    return 1;
+  } else {
+    return 0;
+  }
+}
+double GSESetGrainSize(MdoodzInput *instance, Coordinates coordinates, int phase) {
+  return instance->materials.gs_ref[phase];
+}
+
+double GSESetDensity(MdoodzInput *instance, Coordinates coordinates, int phase) {// phase
+  return instance->materials.rho[phase];
+}
+
+double GSESetTemperature(MdoodzInput *instance, Coordinates coordinates) {
+  const double T = (instance->model.user0 + zeroC) / instance->scaling.T;
+  return T;
+}
+
+//----------------------------- THERMAL SetBC -----------------------------//
+
+
+SetBC GSESetBCT(MdoodzInput *instance, POSITION position, double gridTemperature) {
+  return *(new SetBC{
+          .value = gridTemperature,
+          .type  = 0,
+  });
+}
+
+SetBC GSESetBCTNew(MdoodzInput *instance, POSITION position, double gridTemperature) {
+  return *(new SetBC{
+          .value = gridTemperature,
+          .type  = 0,
+  });
+}
+
+MdoodzSetup CreateGSEInstance() {
+  return (MdoodzSetup){
+          .SetParticles = new (SetParticles_ff){
+                  .SetPhase       = GSESetPhase,
+                  .SetTemperature = GSESetTemperature,
+                  .SetGrainSize   = GSESetGrainSize,
+                  .SetDensity     = GSESetDensity,
+          },
+          .SetBCs = new SetBCs_ff{
+                  .SetBCVx   = SetPureShearBCVx,
+                  .SetBCVz   = SetSimpleShearBCVz,
+                  .SetBCT    = GSESetBCT,
+                  .SetBCTNew = GSESetBCTNew,
+          },
+  };
+}
+
 void RunTestCases() {
+  MdoodzSetup gse = CreateGSEInstance();
+  RunMDOODZ("PinchSwellGSE.txt", &gse);
+  RenameGSEFiles();
   MdoodzSetup shearHeatingDuretz14 = CreateShearHeatingDuretz14Instance();
   RunMDOODZ("ShearHeatingDuretz14.txt", &shearHeatingDuretz14);
   rename("Output00005.gzip.h5", "ShearHeatingDuretz14.gzip.h5");
@@ -369,6 +447,7 @@ void UpdateReadmeTimestamp() {
 
 int main() {
   RunTestCases();
+  PlotGSE();
   PlotRiftingPauline();
   PlotRiftingPaulineReference();
   PlotShearTemplate();

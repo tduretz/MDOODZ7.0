@@ -27,39 +27,6 @@ double SetTemperature(MdoodzInput *instance, Coordinates coordinates) {
   return T;
 }
 
-SetBC SetBCVx(MdoodzInput *instance, POSITION position, Coordinates coordinates) {
-  SetBC bc;
-  if (position == W || position == E || position == NE || position == NW || position == SE || position == SW) {
-    bc.value = -coordinates.x * instance->model.EpsBG;
-    bc.type  = 0;
-  } else if (position == S || position == N) {
-    bc.value = 0.0;
-    bc.type  = 13;
-  } else {
-    bc.value = 0.0;
-    bc.type  = -1;
-  }
-  return bc;
-}
-
-SetBC SetBCVz(MdoodzInput *instance, POSITION position, Coordinates coordinates) {
-  SetBC bc;
-  if (position == NE || position == NW || position == SE || position == SW) {
-    bc.value = coordinates.z * instance->model.EpsBG;
-    bc.type  = 13;
-  } else if (position == W || position == E) {
-    bc.value = 0.0;
-    bc.type  = 13;
-  } else if (position == S || position == N) {
-    bc.value = coordinates.z * instance->model.EpsBG;
-    bc.type  = 0;
-  } else {
-    bc.value = 0.0;
-    bc.type  = -1;
-  }
-  return bc;
-}
-
 //----------------------------- THERMAL SetBC -----------------------------//
 
 
@@ -82,8 +49,8 @@ int main() {
                    .SetTemperature = SetTemperature,
           },
           .SetBCs = &(SetBCs_ff){
-                  .SetBCVz   = SetBCVz,
-                  .SetBCVx   = SetBCVx,
+                  .SetBCVz   = SetPureShearBCVz,
+                  .SetBCVx   = SetPureShearBCVx,
                   .SetBCT    = SetBCT,
                   .SetBCTNew = SetBCTNew,
           },

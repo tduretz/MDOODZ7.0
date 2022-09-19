@@ -10,5 +10,6 @@ void PlotShearTemplate1Reference();
 void PlotShearTemplate1();
 void PlotShearHeatingDuretz14Reference();
 void PlotShearHeatingDuretz14();
+void PlotGSE();
 
 #endif

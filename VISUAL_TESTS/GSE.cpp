@@ -1,27 +1,60 @@
 #include "HDF5pp.h"
+#include <Eigen/Core>
 #include <iostream>
 #include <cstdio>
 #include "visual-tests.h"
+#include <set>
 
-namespace fs = std::filesystem;
+using namespace Eigen;
+using namespace std;
+namespace fs = filesystem;
 
-void PlotTopoBenchCase1() {
+void BuildChart(set<fs::path> outputFiles) {
+  ofstream myfile;
+  const double secondsInYear = 31556952.0;
+  myfile.open("gse.dat");
+  for (fs::path filePath : outputFiles) {
+    myfile << '\n' << '\n';
+    H5p::File file = H5p::File(filePath, "r");
+    vector<double> params = file.read<vector<double>>("/Model/Params");
+    const double time = round(((double) params[0] / (secondsInYear * 1000)));
+    const int nx = (int) params[3];
+    const int nz = (int) params[4];
+
+    vector<float> grainSize = file.read<vector<float>>("/Centers/d");
+    Map<MatrixXf> grainSizeMatrix(grainSize.data(), nx - 1, nz - 1);
+    vector<float> xcCoord = file.read<vector<float>>("/Model/xc_coord");
+    vector<float> zcCoord = file.read<vector<float>>("/Model/zc_coord");
+
+    myfile << "\"Time: " << time << " kyrs\"" << endl;
+    for (int j = 0; j < nz - 1; j++) {
+      for (int i = 0; i < nx - 1; i++) {
+        myfile << xcCoord[i] << '\t' << zcCoord[j] << '\t' << log(grainSizeMatrix(i, j)) << endl;
+      }
+    }
+  }
+
+  myfile.close();
+  char command[500];
+  snprintf(command, sizeof(command), R"(gnuplot -e "filename='gse.png'" -e "data='ShearTemplate.dat'" gse.gnu)");
+  cout << command;
+  FILE *GNUplotPipe = popen(command, "w");
+  fflush(GNUplotPipe);
+}
+
+void PlotGSE() {
   std::string path = ".";
-  std::ofstream myfile;
-  myfile.open("TopoBenchCase1.dat");
+  set<fs::path> outputFiles;
   for (const auto & entry : fs::directory_iterator(path)) {
     std::string filePath = entry.path();
-    if (filePath.find("TopoBenchCase000") == std::string::npos) {
+    if (filePath.find("GSE000") == std::string::npos) {
       continue;
     }
-    H5p::File file = H5p::File(filePath, "r");
-    std::vector<double> params = file.read<std::vector<double>>("/Model/Params");
-    std::vector<float> z_mark = file.read<std::vector<float>>("/Topo/z_mark");
-    const float time = params[0];
-    myfile << time << '\t' << z_mark[0] << std::endl;
+    string path_string{entry.path().string()};
+    if (path_string.find(".gzip.h5") == string::npos) {
+      continue;
+    }
+    outputFiles.insert(entry.path());
   }
-  myfile.close();
-
-  std::FILE *GNUplotPipe = popen("gnuplot TopoBenchCase1.gnu", "w");
-  std::fflush(GNUplotPipe);
+  BuildChart(outputFiles);
 }
