@@ -416,11 +416,22 @@ double SetSurfaceZCoord(MdoodzInput *instance, double x_coord) {
 /*--------------------------------------------------------------------------------------------------------------------*/
 
 int SetPhase(MdoodzInput *instance, Coordinates coordinates) {
-  const double radius = instance->model.user1 / instance->scaling.L;
-  if (coordinates.x * coordinates.x + coordinates.z * coordinates.z < radius * radius) {
-    return 1;
-  } else {
-    return 0;
+  const double rad = instance->model.user1 / instance->scaling.L;
+  const double x = coordinates.x;
+  const double z = coordinates.z;
+  if ( instance->model.shear_style==0 ) {
+    if ( pow(x,2) + pow(z,2) < pow(rad,2) ) {
+      return 1;
+    } else {
+      return 0;
+    }
+  }
+  else {
+    if ( (pow(x-instance->model.xmin,2) + pow(z,2) < pow(rad,2)) || (pow(x-instance->model.xmax,2) + pow(z,2) < pow(rad,2)) ) {
+      return 1;
+    } else {
+      return 0;
+    }
   }
 }
 

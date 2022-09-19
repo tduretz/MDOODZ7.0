@@ -1851,8 +1851,10 @@ void StrainRateComponents( grid* mesh, scale scaling, params* model ) {
     mesh->exz[c1] = 0.0;
 
     if ( mesh->BCg.type[c1] != 30 ) {
+      //            // Original implementation from Duretz et al., 2016
       //            if (mesh->BCu.type[c1] != 30 && mesh->BCu.type[c1+Nx] != 30) mesh->exz[c1] +=  0.5 * (mesh->u_in[c1+Nx] - mesh->u_in[c1])/dz;
       //            if (mesh->BCv.type[c2] != 30 && mesh->BCv.type[c2+1]  != 30) mesh->exz[c1] +=  0.5 * (mesh->v_in[c2+1]  - mesh->v_in[c2])/dx;
+      // Simplified implementation
       const double dvxdz = (mesh->u_in[c1+Nx] - mesh->u_in[c1])/dz;
       const double dvzdx = (mesh->v_in[c2+1]  - mesh->v_in[c2])/dx;
       mesh->exz[c1] =  0.5 * (dvxdz + dvzdx);
@@ -1868,8 +1870,6 @@ void StrainRateComponents( grid* mesh, scale scaling, params* model ) {
     int c1 = k  + l*(Nx);
 
     mesh->exz_n[c0] = 0.0;
-
-    // if ( mesh->BCp.type[c0]      != 30) mesh->exz_n[c0] = 0.25*(mesh->exz[c1] + mesh->exz[c1+1] + mesh->exz[c1+Nx] + mesh->exz[c1+Nx+1]);
 
     if ( mesh->BCp.type[c0] != 30 && mesh->BCp.type[c0] != 31 ) {
       if (mesh->BCg.type[c1]      != 30 ) { mesh->exz_n[c0] += 0.25*mesh->exz[c1];      }

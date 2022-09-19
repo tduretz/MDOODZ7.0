@@ -16,8 +16,8 @@ V   = 1
 T   = 1
 
 /**** SPACE ****/
-Nx      = 12
-Nz      = 11
+Nx      = 52
+Nz      = 52
 Nt      = 1
 xmin    = -5.000000e-1 
 xmax    =  5.000000e-1
@@ -36,7 +36,7 @@ RK          = 4
 
 /**** LINEAR SOLVER ****/
 lsolver      = 2
-penalty      = 1e6
+penalty      = 1e5
 diag_scaling = 0
 abs_tol_div  = 1e-8
 rel_tol_div  = 1e-8
@@ -46,12 +46,12 @@ rel_tol_mom  = 1e-10
 /**** NON-LINEAR SOLVER ****/
 Newton      = 1
 line_search = 1
-nit_max     = 10
+nit_max     = 100
 rel_tol_KSP = 1e-4
-abs_tol_u   = 1e-12
-rel_tol_u   = 1e-12
-abs_tol_p   = 1e-11
-rel_tol_p   = 1e-11
+abs_tol_u   = 1e-10
+rel_tol_u   = 1e-10
+abs_tol_p   = 1e-10
+rel_tol_p   = 1e-10
 GNUplot_residuals = 1
 
 /**** VISCOSITY CUT-OFF ****/
@@ -93,7 +93,7 @@ pwlv  = 1
 eta0  = 1
 npwl  = 3.0
 Qpwl  = 0
-aniso_factor = 2.0
+aniso_factor = 3.0
 aniso_angle  = 240.0
 
 /**** PHASE 2 ****/
