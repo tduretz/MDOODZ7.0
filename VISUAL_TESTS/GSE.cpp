@@ -12,7 +12,9 @@ namespace fs = filesystem;
 void BuildChart(set<fs::path> outputFiles, char* fileSuffix) {
   ofstream myfile;
   const double secondsInYear = 31556952.0;
-  myfile.open("gse.dat");
+  char datFileName[20];
+  snprintf(datFileName, sizeof(datFileName), "gse%s.dat", fileSuffix);
+  myfile.open(datFileName);
   for (fs::path filePath : outputFiles) {
     myfile << '\n' << '\n';
     H5p::File file = H5p::File(filePath, "r");
@@ -36,7 +38,7 @@ void BuildChart(set<fs::path> outputFiles, char* fileSuffix) {
 
   myfile.close();
   char command[500];
-  snprintf(command, sizeof(command), R"(gnuplot -e "filename='gse%s.gif'" -e "data='ShearTemplate.dat'" gse.gnu)", fileSuffix);
+  snprintf(command, sizeof(command), R"(gnuplot -e "filename='../VISUAL_TESTS/img/gse%s.gif'" -e "data='gse%s.dat'" gse.gnu)", fileSuffix, fileSuffix);
   cout << command;
   FILE *GNUplotPipe = popen(command, "w");
   fflush(GNUplotPipe);
@@ -63,14 +65,6 @@ void PlotGSERef() {
   std::string path = "./GSE_REF";
   set<fs::path> outputFiles;
   for (const auto & entry : fs::directory_iterator(path)) {
-    std::string filePath = entry.path();
-    if (filePath.find("GSE00") == std::string::npos) {
-      continue;
-    }
-    string path_string{entry.path().string()};
-    if (path_string.find(".gzip.h5") == string::npos) {
-      continue;
-    }
     outputFiles.insert(entry.path());
   }
   BuildChart(outputFiles, "ref");

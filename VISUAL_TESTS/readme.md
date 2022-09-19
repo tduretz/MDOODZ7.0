@@ -50,3 +50,13 @@ make build-dev VIS=ON run-vis
 ### TopoBenchCase1 Result with Analytical solution
 
 <img style="width: 75%" src="img/TopoBenchCase1.png"/>
+
+### PinchSwellGSE
+
+Based on a [Schmalholz and Duretz, 2017](https://www.sciencedirect.com/science/article/pii/S019181411730161X). 
+Shows evolution of the grain size during the necking in simple shear boundary conditions mode.
+
+| Result           | Reference           |
+|------------------|---------------------|
+| ![](img/gse.gif) | ![](img/gseref.gif) |
+
