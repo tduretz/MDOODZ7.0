@@ -33,7 +33,7 @@ void BuildChart(set<fs::path> outputFiles, char* fileSuffix) {
       initialSize = xcCoord[0];
     }
     const double extensionPercent = round((xcCoord[0] / initialSize - 1) * 100);
-    myfile << "\"{/:Italic t}: " << time << " [Kyrs], Extension: " << extensionPercent << " % \"" << endl;
+    myfile << "\"{/:Italic t} = " << time << " [kyrs], Extension: " << extensionPercent << " % \"" << endl;
     for (int j = 0; j < nz - 1; j++) {
       for (int i = 0; i < nx - 1; i++) {
         myfile << xcCoord[i] << '\t' << zcCoord[j] << '\t' << log10(grainSizeMatrix(i, j) * 1e6) << endl;
