@@ -20,7 +20,7 @@ void BuildChart(set<fs::path> outputFiles, char* fileSuffix) {
     myfile << '\n' << '\n';
     H5p::File file = H5p::File(filePath, "r");
     vector<double> params = file.read<vector<double>>("/Model/Params");
-    const double time = round(((double) params[0] / (secondsInYear * 1000)));
+    const double time = round(((double) params[0] / (secondsInYear * 1000))) / 1000;
     const int nx = (int) params[3];
     const int nz = (int) params[4];
 
@@ -33,7 +33,7 @@ void BuildChart(set<fs::path> outputFiles, char* fileSuffix) {
       initialSize = xcCoord[0];
     }
     const double extensionPercent = round((xcCoord[0] / initialSize - 1) * 100);
-    myfile << "\"{/:Italic t} = " << time << " [kyrs], Extension: " << extensionPercent << " % \"" << endl;
+    myfile << "\"{/:Italic t} = " << time << " [Myr], Extension: " << extensionPercent << " % \"" << endl;
     for (int j = 0; j < nz - 1; j++) {
       for (int i = 0; i < nx - 1; i++) {
         myfile << xcCoord[i] << '\t' << zcCoord[j] << '\t' << log10(grainSizeMatrix(i, j) * 1e6) << endl;
