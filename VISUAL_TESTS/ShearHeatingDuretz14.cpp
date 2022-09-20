@@ -66,7 +66,7 @@ void PlotShearHeatingDuretz14() {
   myfile.open("ShearHeatingDuretz14.dat");
   for (int j = 0; j < nz - 1; j++) {
     for (int i = 0; i < nx - 1; i++) {
-      myfile << xcCoord[i] << '\t' << zcCoord[j] << '\t' << eII(i, j) << '\t' << sII(i, j) << std::endl;
+      myfile << xcCoord[i] << '\t' << zcCoord[j] << '\t' << log10(eII(i, j)) << '\t' << log10(sII(i, j)) << std::endl;
     }
   }
   myfile.close();
