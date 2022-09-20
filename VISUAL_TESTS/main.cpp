@@ -122,7 +122,7 @@ void RPMutateInput(MdoodzInput *instance, MutateInputParams *params) {
   };
 }
 
-MdoodzSetup CreateRiftingPaulineInstance() {
+MdoodzSetup CreateRiftingCheninInstance() {
   return (MdoodzSetup){
           .BuildInitialTopography = new BuildInitialTopography_ff{
                   .SetSurfaceZCoord = RPSetSurfaceZCoord,
@@ -406,9 +406,9 @@ void RunTestCases() {
   MdoodzSetup shearHeatingDuretz14 = CreateShearHeatingDuretz14Instance();
   RunMDOODZ("ShearHeatingDuretz14.txt", &shearHeatingDuretz14);
   rename("Output00005.gzip.h5", "ShearHeatingDuretz14.gzip.h5");
-  MdoodzSetup riftingPauline = CreateRiftingPaulineInstance();
-  RunMDOODZ("RiftingPauline.txt", &riftingPauline);
-  rename("Output00050.gzip.h5", "RiftingPauline50.gzip.h5");
+  MdoodzSetup RiftingChenin = CreateRiftingCheninInstance();
+  RunMDOODZ("RiftingChenin.txt", &RiftingChenin);
+  rename("Output00050.gzip.h5", "RiftingChenin50.gzip.h5");
   MdoodzSetup shearTemplate = CreateShearTemplateInstance();
   RunMDOODZ("ShearTemplate.txt", &shearTemplate);
   rename("Output00005.gzip.h5", "ShearTemplate.gzip.h5");
@@ -446,11 +446,10 @@ void UpdateReadmeTimestamp() {
 }
 
 int main() {
-  RunTestCases();
   PlotGSE();
   PlotGSERef();
-  PlotRiftingPauline();
-  PlotRiftingPaulineReference();
+  PlotRiftingChenin();
+  PlotRiftingCheninReference();
   PlotShearTemplate();
   PlotShearTemplateReference();
   PlotShearTemplate1();

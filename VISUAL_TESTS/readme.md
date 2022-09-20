@@ -1,6 +1,6 @@
 # Visual Tests
 
-Last run date: 2022-09-20.11:54:14
+Last run date: 2022-09-20.14:58:25
 
 ## Usage 
 
@@ -25,9 +25,9 @@ make build-dev VIS=ON run-vis
 Isotopic based on a [Chenin et al., 2019](https://agupubs.onlinelibrary.wiley.com/doi/pdf/10.1029/2018TC005318) model. 
 Shows symmetry and development of the rift zone
 
-| Result  | Reference                   |
-| ------------- |-----------------------------|
-| ![](img/RiftingPauline.png)  | ![](img/RiftingPauline.png) |
+| Result                     | Reference                           |
+|----------------------------|-------------------------------------|
+| ![](img/RiftingChenin.png) | ![](img/RiftingCheninReference.png) |
 
 
 ### ShearTemplate (Simple Shear)
