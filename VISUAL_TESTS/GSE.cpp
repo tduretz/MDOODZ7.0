@@ -15,6 +15,7 @@ void BuildChart(set<fs::path> outputFiles, char* fileSuffix) {
   char datFileName[20];
   snprintf(datFileName, sizeof(datFileName), "gse%s.dat", fileSuffix);
   myfile.open(datFileName);
+  double initialSize;
   for (fs::path filePath : outputFiles) {
     myfile << '\n' << '\n';
     H5p::File file = H5p::File(filePath, "r");
@@ -28,10 +29,14 @@ void BuildChart(set<fs::path> outputFiles, char* fileSuffix) {
     vector<float> xcCoord = file.read<vector<float>>("/Model/xc_coord");
     vector<float> zcCoord = file.read<vector<float>>("/Model/zc_coord");
 
-    myfile << "\"Time: " << time << " kyrs\"" << endl;
+    if (!initialSize) {
+      initialSize = xcCoord[0];
+    }
+    const double extensionPercent = round((xcCoord[0] / initialSize - 1) * 100);
+    myfile << "\"{/:Italic t}: " << time << " [Kyrs], Extension: " << extensionPercent << " % \"" << endl;
     for (int j = 0; j < nz - 1; j++) {
       for (int i = 0; i < nx - 1; i++) {
-        myfile << xcCoord[i] << '\t' << zcCoord[j] << '\t' << log(grainSizeMatrix(i, j)) << endl;
+        myfile << xcCoord[i] << '\t' << zcCoord[j] << '\t' << log10(grainSizeMatrix(i, j) * 1e6) << endl;
       }
     }
   }
