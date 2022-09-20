@@ -446,17 +446,6 @@ void UpdateReadmeTimestamp() {
 }
 
 int main() {
-  RunTestCases();
   PlotGSE();
   PlotGSERef();
-  PlotRiftingPauline();
-  PlotRiftingPaulineReference();
-  PlotShearTemplate();
-  PlotShearTemplateReference();
-  PlotShearTemplate1();
-  PlotShearTemplate1Reference();
-  PlotShearHeatingDuretz14();
-  PlotShearHeatingDuretz14Reference();
-  PlotTopoBenchCase1();
-  UpdateReadmeTimestamp();
 }

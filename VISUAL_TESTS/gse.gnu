@@ -10,6 +10,6 @@ set rmargin at screen 0.8
 
 set key center tmargin
 
-do for [i=1:10] {
+do for [i=0:9] {
     plot data index i with image title columnheader(1)
 }
