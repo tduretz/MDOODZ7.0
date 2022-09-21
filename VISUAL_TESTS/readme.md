@@ -1,6 +1,6 @@
 # Visual Tests
 
-Last run date: 2022-09-21.11:37:12
+Last run date: 2022-09-21.16:23:40
 
 ## Usage 
 
@@ -78,3 +78,14 @@ Shows evolution of the grain size during the necking in pure shear boundary cond
 |------------------|---------------------|
 | ![](img/gse.gif) | ![](img/gseref.gif) |
 
+### PinchSwellGSE
+
+Based on a [Duretz, 2018](https://agupubs.onlinelibrary.wiley.com/doi/pdfdirect/10.1029/2018GC007877) Matlab code. 
+The average stress is characterized by a period of elastic loading followed by a period of  
+elastoplastic loading during which shear banding takes place. 
+The transition between the two regimes occurs for a strain of approximately 1.3×10 
+and an average stress of approximately 2.5 MPa.
+
+| Result           | Reference           |
+|------------------|---------------------|
+| ![](img/VEP.gif) | ![](img/VEPref.gif) |

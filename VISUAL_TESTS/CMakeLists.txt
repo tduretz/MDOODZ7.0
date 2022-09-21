@@ -11,6 +11,7 @@ add_executable(visualtests
         TopoBenchCase1.cpp
         ShearTemplate.cpp
         ShearHeatingDuretz14.cpp
+        VEP.cpp
         GSE.cpp)
 
 target_link_libraries(visualtests LINK_PUBLIC mdoodz Eigen3::Eigen ${HDF5_LIBRARIES})
@@ -36,4 +37,7 @@ configure_file("${PROJECT_SOURCE_DIR}/VISUAL_TESTS/inferno.pal" "${PROJECT_SOURC
 configure_file("${PROJECT_SOURCE_DIR}/VISUAL_TESTS/PinchSwellGSE.txt" "${PROJECT_SOURCE_DIR}/visualtests-out/PinchSwellGSE.txt" COPYONLY)
 configure_file("${PROJECT_SOURCE_DIR}/VISUAL_TESTS/gse.gnu" "${PROJECT_SOURCE_DIR}/visualtests-out/gse.gnu" COPYONLY)
 configure_file("${PROJECT_SOURCE_DIR}/VISUAL_TESTS/turbo.pal" "${PROJECT_SOURCE_DIR}/visualtests-out/turbo.pal" COPYONLY)
+configure_file("${PROJECT_SOURCE_DIR}/VISUAL_TESTS/VEP.gnu" "${PROJECT_SOURCE_DIR}/visualtests-out/VEP.gnu" COPYONLY)
+configure_file("${PROJECT_SOURCE_DIR}/VISUAL_TESTS/VEP_Duretz18.txt" "${PROJECT_SOURCE_DIR}/visualtests-out/VEP_Duretz18.txt" COPYONLY)
 file(COPY ${PROJECT_SOURCE_DIR}/VISUAL_TESTS/GSE_REF DESTINATION ${PROJECT_SOURCE_DIR}/visualtests-out/)
+file(COPY ${PROJECT_SOURCE_DIR}/VISUAL_TESTS/VEP_REF DESTINATION ${PROJECT_SOURCE_DIR}/visualtests-out/)

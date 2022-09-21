@@ -12,5 +12,7 @@ void PlotShearHeatingDuretz14Reference();
 void PlotShearHeatingDuretz14();
 void PlotGSE();
 void PlotGSERef();
+void PlotVEP();
+void PlotVEPRef();
 
 #endif
