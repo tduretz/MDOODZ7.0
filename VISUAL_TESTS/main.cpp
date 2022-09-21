@@ -446,6 +446,7 @@ void UpdateReadmeTimestamp() {
 }
 
 int main() {
+  RunTestCases();
   PlotGSE();
   PlotGSERef();
   PlotRiftingChenin();

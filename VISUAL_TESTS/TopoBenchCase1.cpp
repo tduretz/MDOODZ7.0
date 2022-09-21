@@ -19,7 +19,7 @@ void PlotTopoBenchCase1() {
     H5p::File file = H5p::File(filePath, "r");
     std::vector<double> params = file.read<std::vector<double>>("/Model/Params");
     std::vector<float> z_mark = file.read<std::vector<float>>("/Topo/z_mark");
-    const double time = round(((double) params[0] / (secondsInYear * 1000))) / 1000;
+    const double time = round(((double) params[0] / (secondsInYear * 1000)));
     myfile << time << '\t' << z_mark[0] << std::endl;
   }
   myfile.close();
