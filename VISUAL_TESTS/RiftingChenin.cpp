@@ -8,8 +8,8 @@ namespace fs = std::filesystem;
 
 using namespace Eigen;
 
-void PlotRiftingPaulineReference() {
-  H5p::File           file    = H5p::File("RiftingPaulineReference.h5", "r");
+void PlotRiftingCheninReference() {
+  H5p::File           file    = H5p::File("RiftingCheninReference.h5", "r");
   std::vector<double> params  = file.read<std::vector<double>>("/Model/Params");
   const int           nx      = (int) params[3];
   const int           nz      = (int) params[4];
@@ -29,21 +29,21 @@ void PlotRiftingPaulineReference() {
   MatrixXf            sII = (0.5 * (2 * sxxdMatrix.array().square() + 0.5 * (sxzMatrix.block<149, 99>(1, 1).array().square() + sxzMatrix.block<149, 99>(0, 0).array().square() + sxzMatrix.block<149, 99>(1, 0).array().square() + sxzMatrix.block<149, 99>(0, 1).array().square()))).sqrt();
 
   std::ofstream myfile;
-  myfile.open("RiftingPauline.dat");
+  myfile.open("RiftingChenin.dat");
   for (int j = 0; j < nz - 1; j++) {
     for (int i = 0; i < nx - 1; i++) {
-      myfile << xcCoord[i] << '\t' << zcCoord[j] << '\t' << eII(i, j) << '\t' << sII(i, j) << std::endl;
+      myfile << xcCoord[i] << '\t' << zcCoord[j] << '\t' << log10(eII(i, j)) << '\t' << log10(sII(i, j)) << std::endl;
     }
   }
   myfile.close();
 
-  std::FILE *GNUplotPipe = popen("gnuplot -e \"filename='../VISUAL_TESTS/img/RiftingPaulineReference.png'\" RiftingPauline.gnu", "w");
+  std::FILE *GNUplotPipe = popen("gnuplot -e \"filename='../VISUAL_TESTS/img/RiftingCheninReference.png'\" RiftingChenin.gnu", "w");
   std::fflush(GNUplotPipe);
 }
 
 
-void PlotRiftingPauline() {
-  H5p::File           file    = H5p::File("RiftingPauline50.gzip.h5", "r");
+void PlotRiftingChenin() {
+  H5p::File           file    = H5p::File("RiftingChenin50.gzip.h5", "r");
   std::vector<double> params  = file.read<std::vector<double>>("/Model/Params");
   const int           nx      = (int) params[3];
   const int           nz      = (int) params[4];
@@ -63,14 +63,14 @@ void PlotRiftingPauline() {
   MatrixXf            sII = (0.5 * (2 * sxxdMatrix.array().square() + 0.5 * (sxzMatrix.block<149, 99>(1, 1).array().square() + sxzMatrix.block<149, 99>(0, 0).array().square() + sxzMatrix.block<149, 99>(1, 0).array().square() + sxzMatrix.block<149, 99>(0, 1).array().square()))).sqrt();
 
   std::ofstream myfile;
-  myfile.open("RiftingPauline.dat");
+  myfile.open("RiftingChenin.dat");
   for (int j = 0; j < nz - 1; j++) {
     for (int i = 0; i < nx - 1; i++) {
-      myfile << xcCoord[i] << '\t' << zcCoord[j] << '\t' << eII(i, j) << '\t' << sII(i, j) << std::endl;
+      myfile << xcCoord[i] << '\t' << zcCoord[j] << '\t' << log10(eII(i, j)) << '\t' << log10(sII(i, j)) << std::endl;
     }
   }
   myfile.close();
 
-  std::FILE *GNUplotPipe = popen("gnuplot -e \"filename='../VISUAL_TESTS/img/RiftingPauline.png'\" RiftingPauline.gnu", "w");
+  std::FILE *GNUplotPipe = popen("gnuplot -e \"filename='../VISUAL_TESTS/img/RiftingChenin.png'\" RiftingChenin.gnu", "w");
   std::fflush(GNUplotPipe);
 }
