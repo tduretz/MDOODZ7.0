@@ -3,16 +3,17 @@ unset table
 unset key
 set xrange [-33000:33000]
 set yrange [0:31000]
-set ylabel "z (m)"
-set xlabel "y (m)"
+set ylabel "{/:Italic z} [m]"
+set xlabel "{/:Italic x} [m]"
 set size ratio -1
+load 'turbo.pal'
 
 if (!exists("filename")) filename='../VISUAL_TESTS/img/ShearHeatingDuretz14.png'
-set terminal png size 1000,1000;
+set terminal png size 800,800;
 set output filename;
 set multiplot layout 2,1
-set title 'ShearHeatingDuretz14 step 5: eII'
+set cblabel "log_{10} {/:Italic ε}II"
 plot 'ShearHeatingDuretz14.dat' u 1:2:3 with image
-set title 'ShearHeatingDuretz14 step 5: sII'
+set cblabel "log_{10} {/:Italic σ}II"
 plot 'ShearHeatingDuretz14.dat' u 1:2:4 with image
 unset multiplot

@@ -3,7 +3,7 @@
 Welcome to MDOODZ7.0 public repository!
 This version of MDOODZ is under construction, more testing will be progressively added...
 
-[Visual Test Results](/VISUAL_TESTS/readme.md)
+## [Visual Test Results](/VISUAL_TESTS/readme.md)
 
 # Library usage
 
