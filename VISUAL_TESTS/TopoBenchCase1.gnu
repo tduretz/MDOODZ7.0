@@ -1,4 +1,4 @@
-set terminal png size 400,400;
+set terminal png size 600,600;
 set output '../VISUAL_TESTS/img/TopoBenchCase1.png';
 set ylabel "height [m]"
 set xlabel "{/:Italic t} [kyr]"
