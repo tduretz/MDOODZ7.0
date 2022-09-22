@@ -1,6 +1,6 @@
 # Visual Tests
 
-Last run date: 2022-09-21.16:23:40
+Last run date: 2022-09-22.11:13:43
 
 ## Usage 
 
@@ -19,6 +19,27 @@ make build-dev VIS=ON run-vis
 ```
 
 <hr>
+
+### PinchSwellGSE
+
+Based on a [Schmalholz and Duretz, 2017](https://www.sciencedirect.com/science/article/pii/S019181411730161X).
+Shows evolution of the grain size during the necking in pure shear boundary conditions mode.
+
+| Result           | Reference           |
+|------------------|---------------------|
+| ![](img/gse.gif) | ![](img/gseref.gif) |
+
+### VEP_Duretz18
+
+Based on a [Duretz, 2018](https://agupubs.onlinelibrary.wiley.com/doi/pdfdirect/10.1029/2018GC007877) Matlab code.
+The average stress is characterized by a period of elastic loading followed by a period of  
+elastoplastic loading during which shear banding takes place.
+The transition between the two regimes occurs for a strain of approximately 1.3×10
+and an average stress of approximately 2.5 MPa.
+
+| Result           | Reference           |
+|------------------|---------------------|
+| ![](img/VEP.gif) | ![](img/VEPref.gif) |
 
 ### RiftingChenin
 
@@ -67,25 +88,6 @@ which yields to upper estimates of the temperature  increase due to shear heatin
 
 Numerical model of the free surface based on analytical model of [Crameri et, al, 2012](https://academic.oup.com/gji/article-abstract/189/1/38/575556)
 
-<img style="width: 75%" src="img/TopoBenchCase1.png"/>
-
-### PinchSwellGSE
-
-Based on a [Schmalholz and Duretz, 2017](https://www.sciencedirect.com/science/article/pii/S019181411730161X). 
-Shows evolution of the grain size during the necking in pure shear boundary conditions mode.
-
-| Result           | Reference           |
-|------------------|---------------------|
-| ![](img/gse.gif) | ![](img/gseref.gif) |
-
-### PinchSwellGSE
-
-Based on a [Duretz, 2018](https://agupubs.onlinelibrary.wiley.com/doi/pdfdirect/10.1029/2018GC007877) Matlab code. 
-The average stress is characterized by a period of elastic loading followed by a period of  
-elastoplastic loading during which shear banding takes place. 
-The transition between the two regimes occurs for a strain of approximately 1.3×10 
-and an average stress of approximately 2.5 MPa.
-
-| Result           | Reference           |
-|------------------|---------------------|
-| ![](img/VEP.gif) | ![](img/VEPref.gif) |
+| Result       | 
+|--------------|
+| ![](img/TopoBenchCase1.png) |
