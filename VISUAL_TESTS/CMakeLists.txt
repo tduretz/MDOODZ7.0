@@ -5,18 +5,6 @@ include(FindHDF5)
 link_directories( ${HDF5_LIBRARY_DIRS} )
 include_directories( ${HDF5_INCLUDE_DIRS} )
 
-find_program(H5CPP
-        NAME h5cpp
-        HINTS /usr/bin /usr/local/bin
-        DOC "path to h5cpp source code transformation tool")
-
-if( H5CPP )
-    message("-- H5CPP compiler found: ${H5CPP}" )
-    set(H5CPP_COMPILER_FOUND TRUE)
-else()
-    set(H5CPP_COMPILER_FOUND FALSE)
-endif()
-
 add_executable(visualtests
         main.cpp
         HDF5pp.h
