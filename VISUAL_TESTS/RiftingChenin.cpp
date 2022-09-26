@@ -3,8 +3,9 @@
 #include <iostream>
 #include <cstdio>
 #include "visual-tests.h"
+#include <experimental/filesystem>
 
-namespace fs = std::filesystem;
+namespace fs = std::experimental::filesystem;
 
 using namespace Eigen;
 

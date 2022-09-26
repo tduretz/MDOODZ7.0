@@ -4,10 +4,11 @@
 #include <cstdio>
 #include "visual-tests.h"
 #include <set>
+#include <experimental/filesystem>
 
 using namespace Eigen;
 using namespace std;
-namespace fs = filesystem;
+namespace fs = std::experimental::filesystem;
 
 void BuildVEPChart(set<fs::path> outputFiles, char* fileSuffix) {
   ofstream myfile;

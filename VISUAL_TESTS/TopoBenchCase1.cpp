@@ -3,8 +3,9 @@
 #include <cstdio>
 #include "visual-tests.h"
 #include "math.h"
+#include <experimental/filesystem>
 
-namespace fs = std::filesystem;
+namespace fs = std::experimental::filesystem;
 
 void PlotTopoBenchCase1() {
   std::string path = ".";

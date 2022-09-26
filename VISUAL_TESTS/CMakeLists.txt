@@ -1,7 +1,21 @@
 set (CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_FLAGS "-std=c++17 -lstdc++fs")
 find_package(Eigen3 REQUIRED)
 include(FindHDF5)
-find_package(HDF5 COMPONENTS CXX)
+link_directories( ${HDF5_LIBRARY_DIRS} )
+include_directories( ${HDF5_INCLUDE_DIRS} )
+
+find_program(H5CPP
+        NAME h5cpp
+        HINTS /usr/bin /usr/local/bin
+        DOC "path to h5cpp source code transformation tool")
+
+if( H5CPP )
+    message("-- H5CPP compiler found: ${H5CPP}" )
+    set(H5CPP_COMPILER_FOUND TRUE)
+else()
+    set(H5CPP_COMPILER_FOUND FALSE)
+endif()
 
 add_executable(visualtests
         main.cpp
@@ -14,7 +28,7 @@ add_executable(visualtests
         VEP.cpp
         GSE.cpp)
 
-target_link_libraries(visualtests LINK_PUBLIC mdoodz Eigen3::Eigen ${HDF5_LIBRARIES})
+target_link_libraries(visualtests LINK_PUBLIC mdoodz Eigen3::Eigen ${HDF5_LIBRARIES} ${HDF5_CXX_LIBRARIES} stdc++fs /usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5_cpp.so)
 
 set_target_properties(visualtests
         PROPERTIES

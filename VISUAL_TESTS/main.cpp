@@ -4,11 +4,12 @@ extern "C" {
 #include "visual-tests.h"
 #include <cmath>
 #include <cstdio>
+#include <experimental/filesystem>
 #include <fstream>
 #include <iostream>
 
 using namespace std;
-namespace fs = filesystem;
+namespace fs = std::experimental::filesystem;
 
 
 double RPSetSurfaceZCoord(MdoodzInput *instance, double x_coord) {
