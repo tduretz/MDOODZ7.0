@@ -30,7 +30,7 @@ void PlotRiftingCheninReference() {
   MatrixXf            sII = (0.5 * (2 * sxxdMatrix.array().square() + 0.5 * (sxzMatrix.block<149, 99>(1, 1).array().square() + sxzMatrix.block<149, 99>(0, 0).array().square() + sxzMatrix.block<149, 99>(1, 0).array().square() + sxzMatrix.block<149, 99>(0, 1).array().square()))).sqrt();
 
   std::ofstream myfile;
-  myfile.open("RiftingChenin.dat");
+  myfile.open("RiftingCheninRef.dat");
   for (int j = 0; j < nz - 1; j++) {
     for (int i = 0; i < nx - 1; i++) {
       myfile << xcCoord[i] << '\t' << zcCoord[j] << '\t' << log10(eII(i, j)) << '\t' << log10(sII(i, j)) << std::endl;
@@ -38,7 +38,7 @@ void PlotRiftingCheninReference() {
   }
   myfile.close();
 
-  std::FILE *GNUplotPipe = popen("gnuplot -e \"filename='../VISUAL_TESTS/img/RiftingCheninReference.png'\" RiftingChenin.gnu", "w");
+  std::FILE *GNUplotPipe = popen("gnuplot -e \"filename='../VISUAL_TESTS/img/RiftingCheninReference.png'\" -e \"data='RiftingCheninRef.dat'\" RiftingChenin.gnu", "w");
   std::fflush(GNUplotPipe);
 }
 
@@ -72,6 +72,6 @@ void PlotRiftingChenin() {
   }
   myfile.close();
 
-  std::FILE *GNUplotPipe = popen("gnuplot -e \"filename='../VISUAL_TESTS/img/RiftingChenin.png'\" RiftingChenin.gnu", "w");
+  std::FILE *GNUplotPipe = popen("gnuplot -e \"filename='../VISUAL_TESTS/img/RiftingChenin.png'\" -e \"data='RiftingChenin.dat'\" RiftingChenin.gnu", "w");
   std::fflush(GNUplotPipe);
 }

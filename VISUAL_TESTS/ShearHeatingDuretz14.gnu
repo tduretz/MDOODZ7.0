@@ -13,7 +13,7 @@ set terminal png size 800,800;
 set output filename;
 set multiplot layout 2,1
 set cblabel "log_{10} {/:Italic ε}II"
-plot 'ShearHeatingDuretz14.dat' u 1:2:3 with image
+plot data u 1:2:3 with image
 set cblabel "log_{10} {/:Italic σ}II"
-plot 'ShearHeatingDuretz14.dat' u 1:2:4 with image
+plot data u 1:2:4 with image
 unset multiplot

@@ -17,5 +17,5 @@ set cbrange [-17:-14]
 plot 'RiftingChenin.dat' u 1:2:3 with image
 set cblabel "log_{10} {/:Italic σ}II"
 set cbrange [5:9]
-plot 'RiftingChenin.dat' u 1:2:4 with image
+plot data u 1:2:4 with image
 unset multiplot

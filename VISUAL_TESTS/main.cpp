@@ -507,13 +507,13 @@ int main() {
   PlotVEP();
   PlotVEPRef();
   PlotRiftingChenin();
+  PlotShearHeatingDuretz14Reference();
   PlotRiftingCheninReference();
   PlotShearTemplate();
   PlotShearTemplateReference();
   PlotShearTemplate1();
   PlotShearTemplate1Reference();
   PlotShearHeatingDuretz14();
-  PlotShearHeatingDuretz14Reference();
   PlotTopoBenchCase1();
   UpdateReadmeTimestamp();
 }

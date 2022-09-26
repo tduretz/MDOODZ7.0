@@ -28,7 +28,7 @@ add_executable(visualtests
         VEP.cpp
         GSE.cpp)
 
-target_link_libraries(visualtests LINK_PUBLIC mdoodz Eigen3::Eigen ${HDF5_LIBRARIES} ${HDF5_CXX_LIBRARIES} stdc++fs /usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5_cpp.so)
+target_link_libraries(visualtests LINK_PUBLIC mdoodz Eigen3::Eigen ${HDF5_LIBRARIES} ${HDF5_CXX_LIBRARIES} stdc++fs ${HDF5_CXX_LIB})
 
 set_target_properties(visualtests
         PROPERTIES

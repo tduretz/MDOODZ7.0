@@ -2,12 +2,15 @@
 #include <Eigen/Core>
 #include <iostream>
 #include <cstdio>
+#include <chrono>
+#include <thread>
 #include "visual-tests.h"
 #include <experimental/filesystem>
 
 namespace fs = std::experimental::filesystem;
 
 using namespace Eigen;
+using namespace std::chrono;
 
 void PlotShearHeatingDuretz14Reference() {
   H5p::File           file    = H5p::File("ShearHeatingDuretz14Reference.h5", "r");
@@ -30,7 +33,7 @@ void PlotShearHeatingDuretz14Reference() {
   MatrixXf            sII = (0.5 * (2 * sxxdMatrix.array().square() + 0.5 * (sxzMatrix.block<100, 50>(1, 1).array().square() + sxzMatrix.block<100, 50>(0, 0).array().square() + sxzMatrix.block<100, 50>(1, 0).array().square() + sxzMatrix.block<100, 50>(0, 1).array().square()))).sqrt();
 
   std::ofstream myfile;
-  myfile.open("ShearHeatingDuretz14.dat");
+  myfile.open("ShearHeatingDuretz14Ref.dat");
   for (int j = 0; j < nz - 1; j++) {
     for (int i = 0; i < nx - 1; i++) {
       myfile << xcCoord[i] << '\t' << zcCoord[j] << '\t' << log10(eII(i, j)) << '\t' << log10(sII(i, j)) << std::endl;
@@ -38,7 +41,8 @@ void PlotShearHeatingDuretz14Reference() {
   }
   myfile.close();
 
-  std::FILE *GNUplotPipe = popen("gnuplot -e \"filename='../VISUAL_TESTS/img/ShearHeatingDuretz14Reference.png'\" ShearHeatingDuretz14.gnu", "w");
+  std::cout << "gnuplot -e \"filename='../VISUAL_TESTS/img/ShearHeatingDuretz14Reference.png'\" -e \"data='ShearHeatingDuretz14Ref.dat'\" ShearHeatingDuretz14.gnu";
+  std::FILE *GNUplotPipe = popen("gnuplot -e \"filename='../VISUAL_TESTS/img/ShearHeatingDuretz14Reference.png'\" -e \"data='ShearHeatingDuretz14Ref.dat'\" ShearHeatingDuretz14.gnu", "w");
   std::fflush(GNUplotPipe);
 }
 
@@ -63,6 +67,7 @@ void PlotShearHeatingDuretz14() {
   Map<MatrixXf>       sxzMatrix(sxz.data(), nx, nz);
   MatrixXf            sII = (0.5 * (2 * sxxdMatrix.array().square() + 0.5 * (sxzMatrix.block<100, 50>(1, 1).array().square() + sxzMatrix.block<100, 50>(0, 0).array().square() + sxzMatrix.block<100, 50>(1, 0).array().square() + sxzMatrix.block<100, 50>(0, 1).array().square()))).sqrt();
 
+  std::this_thread::sleep_until(system_clock::now() + milliseconds(1000));
   std::ofstream myfile;
   myfile.open("ShearHeatingDuretz14.dat");
   for (int j = 0; j < nz - 1; j++) {
@@ -72,6 +77,6 @@ void PlotShearHeatingDuretz14() {
   }
   myfile.close();
 
-  std::FILE *GNUplotPipe = popen("gnuplot -e \"filename='../VISUAL_TESTS/img/ShearHeatingDuretz14.png'\" ShearHeatingDuretz14.gnu", "w");
+  std::FILE *GNUplotPipe = popen("gnuplot -e \"filename='../VISUAL_TESTS/img/ShearHeatingDuretz14.png'\" -e \"data='ShearHeatingDuretz14.dat'\" ShearHeatingDuretz14.gnu", "w");
   std::fflush(GNUplotPipe);
 }
