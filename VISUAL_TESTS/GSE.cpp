@@ -16,7 +16,7 @@ void BuildChart(set<fs::path> outputFiles, char* fileSuffix) {
   char datFileName[20];
   snprintf(datFileName, sizeof(datFileName), "gse%s.dat", fileSuffix);
   myfile.open(datFileName);
-  double initialSize;
+  double initialSize = 0.0;
   for (fs::path filePath : outputFiles) {
     myfile << '\n' << '\n';
     H5p::File file = H5p::File(filePath, "r");
@@ -30,7 +30,7 @@ void BuildChart(set<fs::path> outputFiles, char* fileSuffix) {
     vector<float> xcCoord = file.read<vector<float>>("/Model/xc_coord");
     vector<float> zcCoord = file.read<vector<float>>("/Model/zc_coord");
 
-    if (!initialSize) {
+    if (initialSize == 0.0) {
       initialSize = xcCoord[0];
     }
     const double extensionPercent = round((xcCoord[0] / initialSize - 1) * 100);

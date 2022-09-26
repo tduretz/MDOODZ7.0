@@ -27,7 +27,7 @@ void BuildVEPChart(set<fs::path> outputFiles, char* fileSuffix) {
     Map<MatrixXf> grainSizeMatrix(grainSize.data(), nx - 1, nz - 1);
     vector<float> xcCoord = file.read<vector<float>>("/Model/xc_coord");
     vector<float> zcCoord = file.read<vector<float>>("/Model/zc_coord");
-    myfile << "\"{/:Italic t} = " << time << " [kyr], Extension: " << endl;
+    myfile << "\"{/:Italic t} = " << time << " [kyr]" << endl;
     for (int j = 0; j < nz - 1; j++) {
       for (int i = 0; i < nx - 1; i++) {
         myfile << xcCoord[i] << '\t' << zcCoord[j] << '\t' << grainSizeMatrix(i, j) / 1e6 << endl;

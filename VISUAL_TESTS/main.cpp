@@ -501,7 +501,7 @@ void UpdateReadmeTimestamp() {
 }
 
 int main() {
-  RunTestCases();
+  //RunTestCases();
   PlotGSE();
   PlotGSERef();
   PlotVEP();
