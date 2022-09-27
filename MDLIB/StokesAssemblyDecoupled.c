@@ -2056,12 +2056,12 @@ void MergeParallelMatrixDecoupled( SparseMat *Stokes, double **Atemp, int **Jtem
     }
     
     // Recombine A and J
-#pragma omp parallel private(ith, eqn, c, k, l ) shared( Stokes, Atemp, Jtemp, Itemp, begin, BC_type, eqn_number )
+//#pragma omp parallel private(ith, eqn, c, k, l ) shared( Stokes, Atemp, Jtemp, Itemp, begin, BC_type, eqn_number )
     {
         ith = omp_get_thread_num();
-        
+
         for( c=estart[ith]; c<eend[ith]+1; c++) {
-            
+
             // Get equation numbering
             //            if ( BC_type[c] != 0 && BC_type[c] != 30 && BC_type[c] != 31 && BC_type[c] != 13 && BC_type[c] != 11 ) {
             if ( BC_type[c] != 0 && BC_type[c] != 30 && BC_type[c] != 31 && BC_type[c] != 13 && BC_type[c] != 11 && BC_type[c] != -12  ) {
@@ -2069,14 +2069,14 @@ void MergeParallelMatrixDecoupled( SparseMat *Stokes, double **Atemp, int **Jtem
                 Stokes->Ic[eqn] = Itemp[ith][eqn] + begin[ith];
             }
         }
-        
+
         for (k=0; k<nnzc2[ith]; k++) {
             l = begin[ith] + k;
             Stokes->A[l] = Atemp[ith][k];
             Stokes->J[l] = Jtemp[ith][k];
         }
     }
-    
+
     // Update total non-zero number
     for (ith=0; ith<n_th; ith++) {
         *(nnzc) += nnzc2[ith];
@@ -2112,11 +2112,11 @@ void AllocateDecompositionDecoupled( int n_th, int **estart, int **eend, int **D
 /*--------------------------------------------------------------------------------------------------------------------*/
 
 void DomainDecompositionDecoupled( int N, int n_th, int *estart, int *eend, int *DD ) {
-    
+
     int ith, eps, block_size, x0 = 0, x1 = 0;
     eps = N%n_th;
     block_size  = (N - eps) / n_th;
-    
+
     // Divide domain into blocks
     for (ith=0; ith<n_th; ith++) {
         if (ith<n_th-1)
@@ -2124,7 +2124,7 @@ void DomainDecompositionDecoupled( int N, int n_th, int *estart, int *eend, int 
         else {
             DD[ith] = block_size + eps;
         }
-        
+
         x1 = x0 + DD[ith];
         estart[ith] = x0;
         eend[ith]   = x1-1;
@@ -2137,15 +2137,15 @@ void DomainDecompositionDecoupled( int N, int n_th, int *estart, int *eend, int 
 /*--------------------------------------------------------------------------------------------------------------------*/
 
 void AllocateTempMatArraysDecoupled(double ***Atemp, int ***Itemp, int ***Jtemp, int n_th, int nnz, int neq, int* DD, int **nnzc2 ) {
-    
+
     int ith;
-    
+
     // Temporary parallel Matrix arrays
     *Atemp = DoodzMalloc( sizeof(double*) * n_th );
     *Itemp = DoodzMalloc( sizeof(int*) * n_th );
     *Jtemp = DoodzMalloc( sizeof(int*) * n_th );
     *nnzc2 = DoodzCalloc( n_th, sizeof(int) );
-    
+
     for (ith=0; ith<n_th; ith++) {
         (*Atemp)[ith] = DoodzMalloc( sizeof(double) * (int)(nnz/n_th) );
         (*Itemp)[ith] = DoodzCalloc( (neq+1), sizeof(int) );
@@ -2158,9 +2158,9 @@ void AllocateTempMatArraysDecoupled(double ***Atemp, int ***Itemp, int ***Jtemp,
 /*--------------------------------------------------------------------------------------------------------------------*/
 
 void FreeTempMatArraysDecoupled(double **Atemp, int **Itemp, int **Jtemp, int n_th, int *nnzc2 ) {
-    
+
     int ith;
-    
+
     // Temporary parallel Matrix arrays
     for (ith=0; ith<n_th; ith++) {
         DoodzFree( Atemp[ith] );
@@ -2179,13 +2179,13 @@ void FreeTempMatArraysDecoupled(double **Atemp, int **Itemp, int **Jtemp, int n_
 /*--------------------------------------------------------------------------------------------------------------------*/
 
 void BuildStokesOperatorDecoupled( grid *mesh, params model, int lev, double *p_corr, double *p, double *u, double *v, SparseMat *Stokes, SparseMat *StokesA, SparseMat *StokesB, SparseMat *StokesC, SparseMat *StokesD, int Assemble ) {
-    
+
     // FLAG
     // Assemble=1: Build the linear system of discrete equations
     // Assemble=0: Evaluate Stokes residuals
-    
+
     int    cc, k, l, c1, c2, c3, nx=mesh->Nx, nz=mesh->Nz, nxvz=nx+1, nzvx=nz+1, ncx=nx-1, ncz=nz-1;
-    
+
     // Pre-calculate FD coefs
     double celvol    = mesh->dx*mesh->dz;
     double one_dx    = 1.0/mesh->dx;
@@ -2193,19 +2193,19 @@ void BuildStokesOperatorDecoupled( grid *mesh, params model, int lev, double *p_
     double one_dx_dx = 1.0/mesh->dx/mesh->dx;
     double one_dz_dz = 1.0/mesh->dz/mesh->dz;
     double one_dx_dz = 1.0/mesh->dx/mesh->dz;
-    
+
     // Switches
     int eqn,  sign = 1, comp = 0, stab = 0;
     if (model.free_surf_stab>0) stab = 1;
     if (model.compressible==1  ) comp = 1;
     double theta = model.free_surf_stab;
-    
+
     //    if ( stab==1 ) printf("It tastes like Bo'\n");
-    
+
     // Decompose domain
     int n_th, N, ith;
     int *DD, *estart, *eend, *last_eqn;
-    
+
     // Temporary parallel matrix
     double **AtempA;
     int **JtempA, **ItempA;
@@ -2215,19 +2215,19 @@ void BuildStokesOperatorDecoupled( grid *mesh, params model, int lev, double *p_
     int **JtempC, **ItempC;
     double **AtempD;
     int **JtempD, **ItempD;
-    
+
     int nnzA, nnzB, nnzC, nnzD, nnzcA=0, nnzcB=0, nnzcC=0, nnzcD=0;
     int *nnzc2A, *nnzc2B, *nnzc2C, *nnzc2D;
-    
-#pragma omp parallel shared(n_th)
+
+//#pragma omp parallel shared(n_th)
     {
         n_th = omp_get_num_threads();
     }
-#pragma omp barrier
-    
+//#pragma omp barrier
+
     // Matrix initialisation
     if ( Assemble == 1 ) {
-        
+
         nnzA  = 9*((mesh->Nx-1) * mesh->Nz + (mesh->Nz-1) * mesh->Nx);
         nnzB  = 5*((mesh->Nx-1) * (mesh->Nz-1));
         nnzC  = nnzB;
@@ -2241,9 +2241,9 @@ void BuildStokesOperatorDecoupled( grid *mesh, params model, int lev, double *p_
         AllocMat( StokesB, nnzB );
         AllocMat( StokesC, nnzC );
         AllocMat( StokesD, nnzD );
-        
+
     }
-    
+
     // Build velocity block RHS
     int inc=0;
     for( l=0; l<nzvx; l++) {
@@ -2291,43 +2291,43 @@ void BuildStokesOperatorDecoupled( grid *mesh, params model, int lev, double *p_
         AllocateTempMatArraysDecoupled( &AtempA, &ItempA, &JtempA, n_th, nnzA, Stokes->neq_mom, DD, &nnzc2A  );
         AllocateTempMatArraysDecoupled( &AtempB, &ItempB, &JtempB, n_th, nnzB, Stokes->neq_mom, DD, &nnzc2B  );
     }
-    
-#pragma omp parallel shared( eend, estart, mesh, Stokes, StokesA, StokesB, u, v, p_corr, nx, ncx, nzvx, nnzc2A, AtempA, JtempA, ItempA, nnzc2B, AtempB, JtempB, ItempB, last_eqn )  private( ith, l, k, c1, c2, c3, eqn ) firstprivate( model, Assemble, lev, one_dx_dx, one_dz_dz, one_dx_dz, one_dx, one_dz, sign, theta, stab, celvol, comp )
+
+//#pragma omp parallel shared( eend, estart, mesh, Stokes, StokesA, StokesB, u, v, p_corr, nx, ncx, nzvx, nnzc2A, AtempA, JtempA, ItempA, nnzc2B, AtempB, JtempB, ItempB, last_eqn )  private( ith, l, k, c1, c2, c3, eqn ) firstprivate( model, Assemble, lev, one_dx_dx, one_dz_dz, one_dx_dz, one_dx, one_dz, sign, theta, stab, celvol, comp )
     {
         ith = omp_get_thread_num();
-        
+
         for( c1=estart[ith]; c1<eend[ith]+1; c1++) {
-            
+
             k      = mesh->kvx[c1];
             l      = mesh->lvx[c1];
             c2     = k-1 + (l-1)*ncx;
             c3     = k   + l*nxvz;
-            
+
             // Get equation numbering
             if ( mesh->BCu.type[c1]==-1 || mesh->BCu.type[c1]==2 || mesh->BCu.type[c1]==-2 ) {
                 eqn = Stokes->eqn_u[c1];
                 last_eqn[ith]   = eqn;
-                
+
                 if ( Assemble == 1 ) {
                     ItempA[ith][eqn] = nnzc2A[ith];
                     ItempB[ith][eqn] = nnzc2B[ith];
                 }
-                
+
                 //--------------------- INNER NODES ---------------------//
                 if ( l>0 && l<nzvx-1 && k>0 && k<nx-1 ) {
                     Xmomentum_InnerNodesDecoupled( Stokes, StokesA, StokesB, Assemble, lev, stab, comp, theta, sign, model, one_dx, one_dz, one_dx_dx, one_dz_dz, one_dx_dz, celvol, mesh, ith, c1, c2, c3, nx, ncx, nxvz, eqn, u, v, p_corr, JtempA, AtempA, nnzc2A, JtempB, AtempB, nnzc2B );
                 }
-                
+
                 // Periodic W
                 if ( k==0    && mesh->BCu.type[c1]==-2 ) {
                     Xmomentum_InnerNodesDecoupled( Stokes, StokesA, StokesB, Assemble, lev, stab, comp, theta, sign, model, one_dx, one_dz, one_dx_dx, one_dz_dz, one_dx_dz, celvol, mesh, ith, c1, c2, c3, nx, ncx, nxvz, eqn, u, v, p_corr, JtempA, AtempA, nnzc2A, JtempB, AtempB, nnzc2B );
                 }
-                
+
                 // Neumann W
                 if ( k==0    && mesh->BCu.type[c1]==2 ) {
                     Xmomentum_WestNeumannDecoupled( Stokes, StokesA, StokesB, Assemble, lev, stab, comp, theta, sign, model, one_dx, one_dz, one_dx_dx, one_dz_dz, one_dx_dz, celvol, mesh, ith, c1, c2, c3, nx, ncx, nxvz, eqn, u, v, p_corr, JtempA, AtempA, nnzc2A, JtempB, AtempB, nnzc2B );
                 }
-                
+
                 // Neumann E
                 if ( k==nx-1 && mesh->BCu.type[c1]==2 ) {
                     Xmomentum_EastNeumannDecoupled( Stokes, StokesA, StokesB, Assemble, lev, stab, comp, theta, sign, model, one_dx, one_dz, one_dx_dx, one_dz_dz, one_dx_dz, celvol, mesh, ith, c1, c2, c3, nx, ncx, nxvz, eqn, u, v, p_corr, JtempA, AtempA, nnzc2A, JtempB, AtempB, nnzc2B );
@@ -2335,109 +2335,110 @@ void BuildStokesOperatorDecoupled( grid *mesh, params model, int lev, double *p_
             }
         }
     }
-    
+
     //-----------------------------------------------------------------//
-    
+
     if ( Assemble == 1 ) {
         MergeParallelMatrix( StokesA, AtempA, JtempA, ItempA, mesh, estart, eend, &nnzcA, nnzc2A, last_eqn, n_th, mesh->BCu.type, Stokes->eqn_u );
         MergeParallelMatrix( StokesB, AtempB, JtempB, ItempB, mesh, estart, eend, &nnzcB, nnzc2B, last_eqn, n_th, mesh->BCu.type, Stokes->eqn_u );
     }
-    
+
     if ( Assemble == 1 ) {
         FreeTempMatArraysDecoupled( AtempA, ItempA, JtempA, n_th, nnzc2A );
         FreeTempMatArraysDecoupled( AtempB, ItempB, JtempB, n_th, nnzc2B );
     }
     FreeDecompositionDecoupled( estart, eend, DD, last_eqn );
-    
+
     //------------------------------------------------------------------//
     //------------------------- V-momentum -----------------------------//
     //------------------------------------------------------------------//
-    
+
     // Parallel decomposition
     N = nxvz*nz;
     AllocateDecompositionDecoupled(  n_th, &estart, &eend, &DD, &last_eqn );
     DomainDecompositionDecoupled( N, n_th, estart, eend, DD );
-    
+
     // Allocate parallel matrix
     if ( Assemble == 1 ) {
         AllocateTempMatArraysDecoupled( &AtempA, &ItempA, &JtempA, n_th, nnzA, Stokes->neq_mom, DD, &nnzc2A  );
         AllocateTempMatArraysDecoupled( &AtempB, &ItempB, &JtempB, n_th, nnzB, Stokes->neq_mom, DD, &nnzc2B  );
     }
-    
-#pragma omp parallel shared( eend, estart, mesh, Stokes, StokesA, StokesB, u, v, p_corr, nx, ncx, nzvx, nnzc2A, AtempA, JtempA, ItempA, nnzc2B, AtempB, JtempB, ItempB, last_eqn )  private( ith, l, k, c1, c2, c3, eqn ) firstprivate( model, Assemble, lev, one_dx_dx, one_dz_dz, one_dx_dz, one_dx, one_dz, sign, theta, stab, comp, celvol )
+
+
+//#pragma omp parallel shared( eend, estart, mesh, Stokes, StokesA, StokesB, u, v, p_corr, nx, ncx, nzvx, nnzc2A, AtempA, JtempA, ItempA, nnzc2B, AtempB, JtempB, ItempB, last_eqn )  private( ith, l, k, c1, c2, c3, eqn ) firstprivate( model, Assemble, lev, one_dx_dx, one_dz_dz, one_dx_dz, one_dx, one_dz, sign, theta, stab, comp, celvol )
     {
         ith = omp_get_thread_num();
-        
+
         for( c3=estart[ith]; c3<eend[ith]+1; c3++) {
-            
+
             k  = mesh->kvz[c3];
             l  = mesh->lvz[c3];
             c1 = k   + l*nx;
             c2 = k-1 + (l-1)*ncx;
-            
+
             // Get equation numbering
             if ( mesh->BCv.type[c3] == -1 || mesh->BCv.type[c3]==2 ) {
                 eqn = Stokes->eqn_v[c3];
                 last_eqn[ith]   = eqn;
-                
+
                 if ( Assemble == 1 ) {
                     ItempA[ith][eqn] = nnzc2A[ith];
                     ItempB[ith][eqn] = nnzc2B[ith];
                 }
-                
+
                 //--------------------- INNER NODES ---------------------//
                 if ( k>0 && k<nxvz-1 && l>0 && l<nz-1 ) {
-                    
+
                     Zmomentum_InnerNodesDecoupled( Stokes, StokesA, StokesB, Assemble, lev, stab, comp, theta, sign, model, one_dx, one_dz, one_dx_dx, one_dz_dz, one_dx_dz, celvol, mesh, ith, c1, c2, c3, nx, ncx, nxvz, eqn, u, v, p_corr, JtempA, AtempA, nnzc2A, JtempB, AtempB, nnzc2B );
                 }
-                
+
                 //--------------------- INNER NODES ---------------------//
-                
+
                 if ( l==0 && mesh->BCv.type[c3] == 2 ) {
                     Zmomentum_SouthNeumannDecoupled( Stokes, StokesA, StokesB, Assemble, lev, stab, comp, theta, sign, model, one_dx, one_dz, one_dx_dx, one_dz_dz, one_dx_dz, celvol, mesh, ith, c1, c2, c3, nx, ncx, nxvz, eqn, u, v, p_corr, JtempA, AtempA, nnzc2A, JtempB, AtempB, nnzc2B );
                 }
-                
+
                 //--------------------- INNER NODES ---------------------//
-                
+
                 if ( l==nz-1 && mesh->BCv.type[c3] == 2 ) {
                     Zmomentum_NorthNeumannDecoupled( Stokes, StokesA, StokesB, Assemble, lev, stab, comp, theta, sign, model, one_dx, one_dz, one_dx_dx, one_dz_dz, one_dx_dz, celvol, mesh, ith, c1, c2, c3, nx, ncx, nxvz, eqn, u, v, p_corr, JtempA, AtempA, nnzc2A, JtempB, AtempB, nnzc2B );
                 }
-                
+
             }
         }
     }
-    
+
     //-----------------------------------------------------------------//
-    
+
     if ( Assemble == 1 ) {
         MergeParallelMatrix( StokesA, AtempA, JtempA, ItempA, mesh, estart, eend, &nnzcA, nnzc2A, last_eqn, n_th, mesh->BCv.type, Stokes->eqn_v );
         MergeParallelMatrix( StokesB, AtempB, JtempB, ItempB, mesh, estart, eend, &nnzcB, nnzc2B, last_eqn, n_th, mesh->BCv.type, Stokes->eqn_v );
     }
-    
+
     if ( Assemble == 1 ) {
         FreeTempMatArraysDecoupled( AtempA, ItempA, JtempA, n_th, nnzc2A );
         FreeTempMatArraysDecoupled( AtempB, ItempB, JtempB, n_th, nnzc2B );
     }
     FreeDecompositionDecoupled( estart, eend, DD, last_eqn );
-    
+
     //------------------------------------------------------------------//
     //------------------------- Continuity -----------------------------//
     //------------------------------------------------------------------//
-    
+
     // Parallel decomposition
     N = ncx*ncz;
     AllocateDecompositionDecoupled(  n_th, &estart, &eend, &DD, &last_eqn );
     DomainDecompositionDecoupled( N, n_th, estart, eend, DD );
-    
+
     // Allocate parallel matrix
     if ( Assemble == 1 ) {
         AllocateTempMatArraysDecoupled( &AtempC, &ItempC, &JtempC, n_th, nnzC, Stokes->neq_cont, DD, &nnzc2C  );
         AllocateTempMatArraysDecoupled( &AtempD, &ItempD, &JtempD, n_th, nnzD, Stokes->neq_cont, DD, &nnzc2D  );
     }
-    
+
     //    printf("NC = %d %d %d %d %d\n", Stokes->neq_cont, estart[0], eend[0], DD[0], last_eqn[0]);
-    
-    //#pragma omp parallel shared( eend, estart, mesh, Stokes, u, v, p, nx, ncx, nzvx, nnzc2C, AtempC, JtempC, ItempC, nnzc2D, AtempD, JtempD, ItempD, last_eqn )  private( ith, l, k, c1, c2, c3, eqn ) firstprivate( model, Assemble, lev, one_dx_dx, one_dz_dz, one_dx_dz, one_dx, one_dz, sign, theta, stab, comp, celvol )
+
+    ////#pragma omp parallel shared( eend, estart, mesh, Stokes, u, v, p, nx, ncx, nzvx, nnzc2C, AtempC, JtempC, ItempC, nnzc2D, AtempD, JtempD, ItempD, last_eqn )  private( ith, l, k, c1, c2, c3, eqn ) firstprivate( model, Assemble, lev, one_dx_dx, one_dz_dz, one_dx_dz, one_dx, one_dz, sign, theta, stab, comp, celvol )
     //    {
     //
     //        ith = omp_get_thread_num();
@@ -2465,27 +2466,27 @@ void BuildStokesOperatorDecoupled( grid *mesh, params model, int lev, double *p_
     //            }
     //        }
     //    }
-    
-#pragma omp parallel shared( eend, estart, mesh, Stokes, StokesC, StokesD, u, v, p, nnzc2C, AtempC, JtempC, ItempC, nnzc2D, AtempD, JtempD, ItempD, last_eqn )  private( ith, l, k, c1, c2, c3, eqn, comp ) firstprivate( model, Assemble, lev, one_dx_dx, one_dz_dz, one_dx_dz, one_dx, one_dz, sign, theta, stab, celvol, nx, ncx, nxvz, nzvx )
+
+//#pragma omp parallel shared( eend, estart, mesh, Stokes, StokesC, StokesD, u, v, p, nnzc2C, AtempC, JtempC, ItempC, nnzc2D, AtempD, JtempD, ItempD, last_eqn )  private( ith, l, k, c1, c2, c3, eqn, comp ) firstprivate( model, Assemble, lev, one_dx_dx, one_dz_dz, one_dx_dz, one_dx, one_dz, sign, theta, stab, celvol, nx, ncx, nxvz, nzvx )
     {
-        
+
         ith = omp_get_thread_num();
-        
+
         for( c2=estart[ith]; c2<eend[ith]+1; c2++) {
-            
+
             k   = mesh->kp[c2];
             l   = mesh->lp[c2];
             c1  = k   + (l+1)*nx;
             c3  = k   + l*nxvz + 1;
-            
+
             //--------------------- INNER NODES ---------------------//
             if ( mesh->BCp.type[c2] == -1) {
-                
+
                 comp = mesh->comp_cells[c2];
-                
+
                 eqn = Stokes->eqn_p[c2]  - Stokes->neq_mom;
                 last_eqn[ith]   = eqn ;
-                
+
                 if ( Assemble == 1 ) {
                     ItempC[ith][eqn] = nnzc2C[ith];
                     ItempD[ith][eqn] = nnzc2D[ith]; //printf("%d ",  nnzc2D[ith]);
@@ -2495,9 +2496,9 @@ void BuildStokesOperatorDecoupled( grid *mesh, params model, int lev, double *p_
             }
         }
     }
-    
+
     //-----------------------------------------------------------------//
-    
+
     if ( Assemble == 1 ) {
         MergeParallelMatrixDecoupled( StokesC, AtempC, JtempC, ItempC, mesh, estart, eend, &nnzcC, nnzc2C, last_eqn, n_th, mesh->BCp.type, Stokes->eqn_p );
         MergeParallelMatrixDecoupled( StokesD, AtempD, JtempD, ItempD, mesh, estart, eend, &nnzcD, nnzc2D, last_eqn, n_th, mesh->BCp.type, Stokes->eqn_p );
@@ -2507,46 +2508,46 @@ void BuildStokesOperatorDecoupled( grid *mesh, params model, int lev, double *p_
         FreeTempMatArraysDecoupled( AtempD, ItempD, JtempD, n_th, nnzc2D );
     }
     FreeDecompositionDecoupled( estart, eend, DD, last_eqn );
-    
+
     //------------------------------------------------------------------//
     //----------------------------- End --------------------------------//
     //------------------------------------------------------------------//
-    
-    
-    
+
+
+
     if ( Assemble == 1 ) {
-        
+
         // Add contribution from the BC's
         for (k=0; k<StokesA->neq; k++) {
             StokesA->b[k] += StokesA->bbc[k];
             StokesB->b[k] = StokesA->b[k];
         }
-        
+
         //            MinMaxArray(StokesA->b, 1, StokesA->neq, "rhs_mom_here" );
         //            MinMaxArray(StokesC->b, 1, StokesC->neq, "rhs_cont_here" );
-        
-        
+
+
         // Add contribution from the BC's
         for (k=0; k<StokesC->neq; k++) {
             StokesC->b[k] += StokesC->bbc[k];
             StokesD->b[k] = StokesC->b[k];
         }
-        
-        
-        
+
+
+
         // Final index
         StokesA->Ic[StokesA->neq] = nnzcA;
         StokesB->Ic[StokesB->neq] = nnzcB;
         StokesC->Ic[StokesC->neq] = nnzcC;
         StokesD->Ic[StokesD->neq] = nnzcD;
-        
+
         //        for (ieq=0; ieq<Stokes->neq_cont+1; ieq++) printf( "%d ", StokesC->I[ieq] );
-        
+
         StokesA->nnz = nnzcA;
         StokesB->nnz = nnzcB;
         StokesC->nnz = nnzcC;
         StokesD->nnz = nnzcD;
-        
+
         // Resize arrays to proper number of non-zeros
         double *bufd;
         int *bufi;
@@ -2554,34 +2555,34 @@ void BuildStokesOperatorDecoupled( grid *mesh, params model, int lev, double *p_
         bufd      = DoodzRealloc(StokesA->A, nnzcA*sizeof(double));
         StokesA->J = bufi;
         StokesA->A = bufd;
-        
+
         bufi      = DoodzRealloc(StokesB->J, nnzcB*sizeof(int));
         bufd      = DoodzRealloc(StokesB->A, nnzcB*sizeof(double));
         StokesB->J = bufi;
         StokesB->A = bufd;
-        
+
         bufi      = DoodzRealloc(StokesC->J, nnzcC*sizeof(int));
         bufd      = DoodzRealloc(StokesC->A, nnzcC*sizeof(double));
         StokesC->J = bufi;
         StokesC->A = bufd;
-        
+
         bufi      = DoodzRealloc(StokesD->J, nnzcD*sizeof(int));
         bufd      = DoodzRealloc(StokesD->A, nnzcD*sizeof(double));
         StokesD->J = bufi;
         StokesD->A = bufd;
-        
-        
+
+
         //        printf("System size: ndof = %d, nzA = %d nzB = %d nzC = %d nzD = %d\n", Stokes->neq, nnzcA, nnzcB, nnzcC, nnzcD);
-        
+
         printf("Number of momentum equations: %d\n", StokesA->neq);
-        
+
         //        // Extract Diagonal of A - Viscous block
         //        int i, j, locNNZ;
         //        int I1, J1;
         //
         //        if (model.diag_scaling == 1) {
         //
-        //#pragma omp parallel for shared(StokesA) private(I1,J1, i, j, locNNZ )
+        ////#pragma omp parallel for shared(StokesA) private(I1,J1, i, j, locNNZ )
         //        for (i=0;i<StokesA->neq; i++) {
         //            I1     = StokesA->Ic[i];
         //            locNNZ = StokesA->Ic[i+1] - StokesA->Ic[i];
@@ -2591,13 +2592,13 @@ void BuildStokesOperatorDecoupled( grid *mesh, params model, int lev, double *p_
         //             }
         //        }
         //        // Extract Diagonal of D - Pressure block
-        //#pragma omp parallel for shared(StokesD) private(i)
+        ////#pragma omp parallel for shared(StokesD) private(i)
         //        for (i=0;i<StokesD->neq; i++) {
         //            StokesC->d[i] = 1.0;
         //        }
         //
         //        // Scale A
-        //#pragma omp parallel for shared(StokesA) private(I1,J1, i, j, locNNZ )
+        ////#pragma omp parallel for shared(StokesA) private(I1,J1, i, j, locNNZ )
         //        for (i=0;i<StokesA->neq; i++) {
         //
         //            StokesA->b[i] *= StokesA->d[i];  // scale RHS
@@ -2611,7 +2612,7 @@ void BuildStokesOperatorDecoupled( grid *mesh, params model, int lev, double *p_
         //        }
         //
         //        // Scale B
-        //#pragma omp parallel for shared(StokesB,StokesA) private(I1,J1, i, j, locNNZ )
+        ////#pragma omp parallel for shared(StokesB,StokesA) private(I1,J1, i, j, locNNZ )
         //        for (i=0;i<StokesB->neq; i++) {
         //            I1     = StokesB->Ic[i];
         //            locNNZ = StokesB->Ic[i+1] - StokesB->Ic[i];
@@ -2622,7 +2623,7 @@ void BuildStokesOperatorDecoupled( grid *mesh, params model, int lev, double *p_
         //        }
         //
         //        // Scale C
-        //#pragma omp parallel for shared(StokesC,StokesA) private(I1,J1, i, j, locNNZ )
+        ////#pragma omp parallel for shared(StokesC,StokesA) private(I1,J1, i, j, locNNZ )
         //        for (i=0;i<StokesC->neq; i++) {
         //
         //            StokesC->b[i] *= StokesC->d[i]; // scale RHS
@@ -2638,24 +2639,24 @@ void BuildStokesOperatorDecoupled( grid *mesh, params model, int lev, double *p_
         //    }
         //
         //        MinMaxArray(StokesA->d, 1, StokesA->neq, "diag. A" );
-        
+
         //        printf("\n");
         //         MinMaxArray(StokesA->A, 1, StokesA->nnz, "A" );
         //        printf("\n");
-        
-        
+
+
         //--------------------------------------//
-        
+
 #ifndef _VG_
         if ( model.write_debug == 1 ) {
-            
+
             char *filename;
             asprintf( &filename, "Stokes_%02dcpu_step%02d_iter%02d.gzip.h5", n_th, model.step, model.nit );
             printf("Writing Stokes matrix file: %s to disk...\n", filename);
-            
+
             // Fill in DD data structure
             OutputSparseMatrix OutputDDA, OutputDDB, OutputDDC, OutputDDD;
-            
+
             OutputDDA.V = StokesA->A;
             OutputDDA.Ic = StokesA->Ic;
             OutputDDA.J = StokesA->J;
@@ -2682,7 +2683,7 @@ void BuildStokesOperatorDecoupled( grid *mesh, params model, int lev, double *p_
             OutputDDA.eqn_u = DoodzMalloc(nx*nzvx*sizeof(int));
             OutputDDA.eqn_v = DoodzMalloc(nxvz*nz*sizeof(int));
             OutputDDA.eqn_p = DoodzMalloc(ncx*ncz*sizeof(int));
-            
+
             for( l=0; l<nzvx; l++) {
                 for( k=0; k<nx; k++) {
                     cc = k + l*nx;
@@ -2704,7 +2705,7 @@ void BuildStokesOperatorDecoupled( grid *mesh, params model, int lev, double *p_
                     OutputDDA.eqn_p[cc]=Stokes->eqn_p[cc];
                 }
             }
-            
+
             // Send data to file
             CreateOutputHDF5( filename );
             AddGroupToHDF5( filename, "model" );
@@ -2721,7 +2722,7 @@ void BuildStokesOperatorDecoupled( grid *mesh, params model, int lev, double *p_
             AddFieldToGroup( filename, "fields", "tag_n" , 'c', ncx*ncz, mesh->BCp.type,  1 );
             AddFieldToGroup( filename, "fields", "tag_u" , 'c', nx*nzvx, mesh->BCu.type,  1 );
             AddFieldToGroup( filename, "fields", "tag_v" , 'c', nxvz*nz, mesh->BCv.type,  1 );
-            
+
             AddFieldToGroup( filename, "matrix", "IA" , 'i', StokesA->neq+1, OutputDDA.Ic,  1 );
             AddFieldToGroup( filename, "matrix", "JA" , 'i', nnzcA,  OutputDDA.J,  1 );
             AddFieldToGroup( filename, "matrix", "VA" , 'd', nnzcA,  OutputDDA.V,  1 );
@@ -2754,13 +2755,13 @@ void BuildStokesOperatorDecoupled( grid *mesh, params model, int lev, double *p_
 /*--------------------------------------------------------------------------------------------------------------------*/
 
 void BuildJacobianOperatorDecoupled( grid *mesh, params model, int lev, double *p_corr, double *p, double *u, double *v, SparseMat *Stokes, SparseMat *StokesA, SparseMat *StokesB, SparseMat *StokesC, SparseMat *StokesD, int Assemble ) {
-    
+
     // FLAG
     // Assemble=1: Build the linear system of discrete equations
     // Assemble=0: Evaluate Stokes residuals
-    
+
     int    cc, k, l, c1, c2, c3, nx=mesh->Nx, nz=mesh->Nz, nxvz=nx+1, nzvx=nz+1, ncx=nx-1, ncz=nz-1;
-    
+
     // Pre-calculate FD coefs
     double celvol    = mesh->dx*mesh->dz;
     double one_dx    = 1.0/mesh->dx;
@@ -2768,17 +2769,17 @@ void BuildJacobianOperatorDecoupled( grid *mesh, params model, int lev, double *
     double one_dx_dx = 1.0/mesh->dx/mesh->dx;
     double one_dz_dz = 1.0/mesh->dz/mesh->dz;
     double one_dx_dz = 1.0/mesh->dx/mesh->dz;
-    
+
     // Switches
     int eqn,  sign = 1, comp = 1, stab = 0;
     if (model.free_surf_stab>0) stab = 1;
     if (model.compressible==1  ) comp = 1;
     double theta = model.free_surf_stab;
-    
+
     // Decompose domain
     int n_th, N, ith;
     int *DD, *estart, *eend, *last_eqn;
-    
+
     // Temporary parallel matrix
     double **AtempA;
     int **JtempA, **ItempA;
@@ -2788,37 +2789,37 @@ void BuildJacobianOperatorDecoupled( grid *mesh, params model, int lev, double *
     int **JtempC, **ItempC;
     double **AtempD;
     int **JtempD, **ItempD;
-    
+
     int nnzA, nnzB, nnzC, nnzD, nnzcA=0, nnzcB=0, nnzcC=0, nnzcD=0;
     int *nnzc2A, *nnzc2B, *nnzc2C, *nnzc2D;
-    
-#pragma omp parallel shared(n_th)
+
+//#pragma omp parallel shared(n_th)
     {
         n_th = omp_get_num_threads();
     }
-#pragma omp barrier
-    
+//#pragma omp barrier
+
     StokesA->neq = Stokes->neq_mom;
     StokesB->neq = Stokes->neq_mom;
     StokesC->neq = Stokes->neq_cont; StokesC->neq_mom = Stokes->neq_mom;
     StokesD->neq = Stokes->neq_cont; StokesD->neq_mom = Stokes->neq_mom;
-    
+
     // Matrix initialisation
     if ( Assemble == 1 ) {
-        
+
         nnzA  = 21*((mesh->Nx-1) * mesh->Nz + (mesh->Nz-1) * mesh->Nx);
         nnzB  = 6*((mesh->Nx-1) * mesh->Nz + (mesh->Nz-1) * mesh->Nx);
         nnzC  = 2*((mesh->Nx-1) * mesh->Nz + (mesh->Nz-1) * mesh->Nx);
         nnzD  = 1*((mesh->Nx-1) * (mesh->Nz-1));
-        
+
         //printf("Assembling  decoupled Jacobian matrix...\n");
         AllocMat( StokesA, nnzA );
         AllocMat( StokesB, nnzB );
         AllocMat( StokesC, nnzC );
         AllocMat( StokesD, nnzD );
-        
+
     }
-    
+
     // Build velocity block RHS
     int inc=0;
     for( l=0; l<nzvx; l++) {
@@ -2839,7 +2840,7 @@ void BuildJacobianOperatorDecoupled( grid *mesh, params model, int lev, double *
             }
         }
     }
-    
+
     // Build pressure block RHS
     inc=0;
     for( l=0; l<ncz; l++) {
@@ -2851,170 +2852,171 @@ void BuildJacobianOperatorDecoupled( grid *mesh, params model, int lev, double *
             }
         }
     }
-    
+
     //------------------------------------------------------------------//
     //------------------------- U-momentum -----------------------------//
     //------------------------------------------------------------------//
-    
+
     // Parallel decomposition
     N = nx*nzvx;
     AllocateDecompositionDecoupled(  n_th, &estart, &eend, &DD, &last_eqn );
     DomainDecompositionDecoupled( N, n_th, estart, eend, DD );
-    
+
     // Allocate parallel matrix
     if ( Assemble == 1 ) {
         AllocateTempMatArraysDecoupled( &AtempA, &ItempA, &JtempA, n_th, nnzA, Stokes->neq_mom, DD, &nnzc2A  );
         AllocateTempMatArraysDecoupled( &AtempB, &ItempB, &JtempB, n_th, nnzB, Stokes->neq_mom, DD, &nnzc2B  );
     }
-    
-#pragma omp parallel shared( eend, estart, mesh, Stokes, StokesA, StokesB, u, v, p_corr, nx, ncx, nzvx, nnzc2A, AtempA, JtempA, ItempA, nnzc2B, AtempB, JtempB, ItempB, last_eqn )  private( ith, l, k, c1, c2, c3, eqn ) firstprivate( model, Assemble, lev, one_dx_dx, one_dz_dz, one_dx_dz, one_dx, one_dz, sign, theta, stab, comp, celvol )
+
+//#pragma omp parallel shared( eend, estart, mesh, Stokes, StokesA, StokesB, u, v, p_corr, nx, ncx, nzvx, nnzc2A, AtempA, JtempA, ItempA, nnzc2B, AtempB, JtempB, ItempB, last_eqn )  private( ith, l, k, c1, c2, c3, eqn ) firstprivate( model, Assemble, lev, one_dx_dx, one_dz_dz, one_dx_dz, one_dx, one_dz, sign, theta, stab, comp, celvol )
     {
         ith = omp_get_thread_num();
-        
+
         for( c1=estart[ith]; c1<eend[ith]+1; c1++) {
-            
+
             k      = mesh->kvx[c1];
             l      = mesh->lvx[c1];
             c2     = k-1 + (l-1)*ncx;
             c3     = k   + l*nxvz;
-            
+
             // Get equation numbering
             if ( mesh->BCu.type[c1] == -1 || mesh->BCu.type[c1] == 2  || mesh->BCu.type[c1] == -2 ) {
                 eqn = Stokes->eqn_u[c1];
                 last_eqn[ith]   = eqn;
-                
+
                 if ( Assemble == 1 ) {
                     ItempA[ith][eqn] = nnzc2A[ith];
                     ItempB[ith][eqn] = nnzc2B[ith];
                 }
-                
+
                 //--------------------- INNER NODES ---------------------//
                 if ( l>0 && l<nzvx-1 && k>0 && k<nx-1 ) {
-                    Xjacobian_InnerNodesDecoupled3( Stokes, StokesA, StokesB, Assemble, lev, stab, comp, theta, sign, model, one_dx, one_dz, one_dx_dx, one_dz_dz, one_dx_dz, celvol, mesh, ith, c1, c2, c3, nx, ncx, nxvz, eqn, u, v, p, JtempA, AtempA, nnzc2A, JtempB, AtempB, nnzc2B, k, l );                    
+                    Xjacobian_InnerNodesDecoupled3( Stokes, StokesA, StokesB, Assemble, lev, stab, comp, theta, sign, model, one_dx, one_dz, one_dx_dx, one_dz_dz, one_dx_dz, celvol, mesh, ith, c1, c2, c3, nx, ncx, nxvz, eqn, u, v, p, JtempA, AtempA, nnzc2A, JtempB, AtempB, nnzc2B, k, l );
                 }
-                
+
                 // Periodic
                 if ( k==0  && mesh->BCu.type[c1]==-2  ) {
                     Xjacobian_InnerNodesDecoupled3( Stokes, StokesA, StokesB, Assemble, lev, stab, comp, theta, sign, model, one_dx, one_dz, one_dx_dx, one_dz_dz, one_dx_dz, celvol, mesh, ith, c1, c2, c3, nx, ncx, nxvz, eqn, u, v, p_corr, JtempA, AtempA, nnzc2A, JtempB, AtempB, nnzc2B, k, l );
                 }
-                
+
                 // NOT CODED YET
                 if ( k==0    && mesh->BCu.type[c1]==2 ) {
                     Xmomentum_WestNeumannDecoupled( Stokes, StokesA, StokesB, Assemble, lev, stab, comp, theta, sign, model, one_dx, one_dz, one_dx_dx, one_dz_dz, one_dx_dz, celvol, mesh, ith, c1, c2, c3, nx, ncx, nxvz, eqn, u, v, p_corr, JtempA, AtempA, nnzc2A, JtempB, AtempB, nnzc2B );
                 }
-                
+
                 if ( k==nx-1 && mesh->BCu.type[c1]==2 ) {
                     Xmomentum_EastNeumannDecoupled( Stokes, StokesA, StokesB, Assemble, lev, stab, comp, theta, sign, model, one_dx, one_dz, one_dx_dx, one_dz_dz, one_dx_dz, celvol, mesh, ith, c1, c2, c3, nx, ncx, nxvz, eqn, u, v, p_corr, JtempA, AtempA, nnzc2A, JtempB, AtempB, nnzc2B );
                 }
             }
         }
     }
-    
+
     //-----------------------------------------------------------------//
-    
+
     if ( Assemble == 1 ) {
         MergeParallelMatrix( StokesA, AtempA, JtempA, ItempA, mesh, estart, eend, &nnzcA, nnzc2A, last_eqn, n_th, mesh->BCu.type, Stokes->eqn_u );
         MergeParallelMatrix( StokesB, AtempB, JtempB, ItempB, mesh, estart, eend, &nnzcB, nnzc2B, last_eqn, n_th, mesh->BCu.type, Stokes->eqn_u );
     }
-    
+
     if ( Assemble == 1 ) {
         FreeTempMatArraysDecoupled( AtempA, ItempA, JtempA, n_th, nnzc2A );
         FreeTempMatArraysDecoupled( AtempB, ItempB, JtempB, n_th, nnzc2B );
     }
     FreeDecompositionDecoupled( estart, eend, DD, last_eqn );
-    
+
     //------------------------------------------------------------------//
     //------------------------- V-momentum -----------------------------//
     //------------------------------------------------------------------//
-    
+
     // Parallel decomposition
     N = nxvz*nz;
     AllocateDecompositionDecoupled(  n_th, &estart, &eend, &DD, &last_eqn );
     DomainDecompositionDecoupled( N, n_th, estart, eend, DD );
-    
+
     // Allocate parallel matrix
     if ( Assemble == 1 ) {
         AllocateTempMatArraysDecoupled( &AtempA, &ItempA, &JtempA, n_th, nnzA, Stokes->neq_mom, DD, &nnzc2A  );
         AllocateTempMatArraysDecoupled( &AtempB, &ItempB, &JtempB, n_th, nnzB, Stokes->neq_mom, DD, &nnzc2B  );
     }
-    
-#pragma omp parallel shared( eend, estart, mesh, Stokes, StokesA, StokesB, u, v, p_corr, nx, ncx, nzvx, nnzc2A, AtempA, JtempA, ItempA, nnzc2B, AtempB, JtempB, ItempB, last_eqn )  private( ith, l, k, c1, c2, c3, eqn ) firstprivate( model, Assemble, lev, one_dx_dx, one_dz_dz, one_dx_dz, one_dx, one_dz, sign, theta, stab, comp, celvol )
+
+
+//#pragma omp parallel shared( eend, estart, mesh, Stokes, StokesA, StokesB, u, v, p_corr, nx, ncx, nzvx, nnzc2A, AtempA, JtempA, ItempA, nnzc2B, AtempB, JtempB, ItempB, last_eqn )  private( ith, l, k, c1, c2, c3, eqn ) firstprivate( model, Assemble, lev, one_dx_dx, one_dz_dz, one_dx_dz, one_dx, one_dz, sign, theta, stab, comp, celvol )
     {
         ith = omp_get_thread_num();
-        
+
         for( c3=estart[ith]; c3<eend[ith]+1; c3++) {
-            
+
             k  = mesh->kvz[c3];
             l  = mesh->lvz[c3];
             c1 = k   + l*nx;
             c2 = k-1 + (l-1)*ncx;
-            
+
             // Get equation numbering
             if ( mesh->BCv.type[c3] == -1 || mesh->BCv.type[c3] == 2 ) {
                 eqn = Stokes->eqn_v[c3];
                 last_eqn[ith]   = eqn;
-                
+
                 if ( Assemble == 1 ) {
                     ItempA[ith][eqn] = nnzc2A[ith];
                     ItempB[ith][eqn] = nnzc2B[ith];
                 }
-                
+
                 //--------------------- INNER NODES ---------------------//
                 if ( k>0 && k<nxvz-1 && l>0 && l<nz-1 ) {
                     Zjacobian_InnerNodesDecoupled3( Stokes, StokesA, StokesB, Assemble, lev, stab, comp, theta, sign, model, one_dx, one_dz, one_dx_dx, one_dz_dz, one_dx_dz, celvol, mesh, ith, c1, c2, c3, nx, ncx, nxvz, eqn, u, v, p_corr, JtempA, AtempA, nnzc2A, JtempB, AtempB, nnzc2B, k, l );
                 }
-                
+
                 //                if ( k>0 && k<nxvz-1 && l>0 && l<nz-1 ) {
                 //
                 //                                  Zmomentum_InnerNodesDecoupled( Stokes, StokesA, StokesB, Assemble, lev, stab, comp, theta, sign, model, one_dx, one_dz, one_dx_dx, one_dz_dz, one_dx_dz, celvol, mesh, ith, c1, c2, c3, nx, ncx, nxvz, eqn, u, v, p, JtempA, AtempA, nnzc2A, JtempB, AtempB, nnzc2B );
                 //                              }
-                
+
                 //--------------------- INNER NODES ---------------------//
-                
+
                 if ( l==0 && mesh->BCv.type[c3] == 2 ) {
                     Zmomentum_SouthNeumannDecoupled( Stokes, StokesA, StokesB, Assemble, lev, stab, comp, theta, sign, model, one_dx, one_dz, one_dx_dx, one_dz_dz, one_dx_dz, celvol, mesh, ith, c1, c2, c3, nx, ncx, nxvz, eqn, u, v, p_corr, JtempA, AtempA, nnzc2A, JtempB, AtempB, nnzc2B );
                 }
-                
+
                 //--------------------- INNER NODES ---------------------//
-                
+
                 if ( l==nz-1 && mesh->BCv.type[c3] == 2 ) {
                     Zmomentum_NorthNeumannDecoupled( Stokes, StokesA, StokesB, Assemble, lev, stab, comp, theta, sign, model, one_dx, one_dz, one_dx_dx, one_dz_dz, one_dx_dz, celvol, mesh, ith, c1, c2, c3, nx, ncx, nxvz, eqn, u, v, p_corr, JtempA, AtempA, nnzc2A, JtempB, AtempB, nnzc2B );
                 }
-                
+
             }
         }
     }
-    
+
     //-----------------------------------------------------------------//
-    
+
     if ( Assemble == 1 ) {
         MergeParallelMatrix( StokesA, AtempA, JtempA, ItempA, mesh, estart, eend, &nnzcA, nnzc2A, last_eqn, n_th, mesh->BCv.type, Stokes->eqn_v );
         MergeParallelMatrix( StokesB, AtempB, JtempB, ItempB, mesh, estart, eend, &nnzcB, nnzc2B, last_eqn, n_th, mesh->BCv.type, Stokes->eqn_v );
     }
-    
+
     if ( Assemble == 1 ) {
         FreeTempMatArraysDecoupled( AtempA, ItempA, JtempA, n_th, nnzc2A );
         FreeTempMatArraysDecoupled( AtempB, ItempB, JtempB, n_th, nnzc2B );
     }
     FreeDecompositionDecoupled( estart, eend, DD, last_eqn );
-    
+
     //------------------------------------------------------------------//
     //------------------------- Continuity -----------------------------//
     //------------------------------------------------------------------//
-    
+
     // Parallel decomposition
     N = ncx*ncz;
     AllocateDecompositionDecoupled(  n_th, &estart, &eend, &DD, &last_eqn );
     DomainDecompositionDecoupled( N, n_th, estart, eend, DD );
-    
+
     // Allocate parallel matrix
     if ( Assemble == 1 ) {
         AllocateTempMatArraysDecoupled( &AtempC, &ItempC, &JtempC, n_th, nnzC, Stokes->neq_cont, DD, &nnzc2C  );
         AllocateTempMatArraysDecoupled( &AtempD, &ItempD, &JtempD, n_th, nnzD, Stokes->neq_cont, DD, &nnzc2D  );
     }
-    
-    
-#pragma omp parallel shared( eend, estart, mesh, Stokes, StokesC, StokesD, u, v, p, nnzc2C, AtempC, JtempC, ItempC, nnzc2D, AtempD, JtempD, ItempD, last_eqn )  private( ith, l, k, c1, c2, c3, eqn, comp ) firstprivate( model, Assemble, lev, one_dx_dx, one_dz_dz, one_dx_dz, one_dx, one_dz, sign, theta, stab, celvol, nx, ncx, nxvz, nzvx )
+
+
+//#pragma omp parallel shared( eend, estart, mesh, Stokes, StokesC, StokesD, u, v, p, nnzc2C, AtempC, JtempC, ItempC, nnzc2D, AtempD, JtempD, ItempD, last_eqn )  private( ith, l, k, c1, c2, c3, eqn, comp ) firstprivate( model, Assemble, lev, one_dx_dx, one_dz_dz, one_dx_dz, one_dx, one_dz, sign, theta, stab, celvol, nx, ncx, nxvz, nzvx )
     {
         
         ith = omp_get_thread_num();
@@ -3115,7 +3117,7 @@ void BuildJacobianOperatorDecoupled( grid *mesh, params model, int lev, double *
         //
         //        if (model.diag_scaling == 1) {
         //
-        //#pragma omp parallel for shared(StokesA) private(I1,J1, i, j, locNNZ )
+        ////#pragma omp parallel for shared(StokesA) private(I1,J1, i, j, locNNZ )
         //            for (i=0;i<StokesA->neq; i++) {
         //                I1     = StokesA->Ic[i];
         //                locNNZ = StokesA->Ic[i+1] - StokesA->Ic[i];
@@ -3125,13 +3127,13 @@ void BuildJacobianOperatorDecoupled( grid *mesh, params model, int lev, double *
         //                }
         //            }
         //            // Extract Diagonal of D - Pressure block
-        //#pragma omp parallel for shared(StokesD) private(i)
+        ////#pragma omp parallel for shared(StokesD) private(i)
         //            for (i=0;i<StokesD->neq; i++) {
         //                StokesC->d[i] = 1.0;
         //            }
         //
         //            // Scale A
-        //#pragma omp parallel for shared(StokesA) private(I1,J1, i, j, locNNZ )
+        ////#pragma omp parallel for shared(StokesA) private(I1,J1, i, j, locNNZ )
         //            for (i=0;i<StokesA->neq; i++) {
         //
         //                StokesA->b[i] *= StokesA->d[i];  // scale RHS
@@ -3145,7 +3147,7 @@ void BuildJacobianOperatorDecoupled( grid *mesh, params model, int lev, double *
         //            }
         //
         //            // Scale B
-        //#pragma omp parallel for shared(StokesB,StokesA) private(I1,J1, i, j, locNNZ )
+        ////#pragma omp parallel for shared(StokesB,StokesA) private(I1,J1, i, j, locNNZ )
         //            for (i=0;i<StokesB->neq; i++) {
         //                I1     = StokesB->Ic[i];
         //                locNNZ = StokesB->Ic[i+1] - StokesB->Ic[i];
@@ -3156,7 +3158,7 @@ void BuildJacobianOperatorDecoupled( grid *mesh, params model, int lev, double *
         //            }
         //
         //            // Scale C
-        //#pragma omp parallel for shared(StokesC,StokesA) private(I1,J1, i, j, locNNZ )
+        ////#pragma omp parallel for shared(StokesC,StokesA) private(I1,J1, i, j, locNNZ )
         //            for (i=0;i<StokesC->neq; i++) {
         //
         //                StokesC->b[i] *= StokesC->d[i]; // scale RHS

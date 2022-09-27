@@ -1465,7 +1465,7 @@ void MergeParallelMatrix( SparseMat *Stokes, double **Atemp, int **Jtemp, int **
     }
 
     // Recombine A and J
-#pragma omp parallel private(ith, eqn, c, k, l ) shared( Stokes, Atemp, Jtemp, Itemp, begin, BC_type, eqn_number )
+// #pragma omp parallel private(ith, eqn, c, k, l ) shared( Stokes, Atemp, Jtemp, Itemp, begin, BC_type, eqn_number )
     {
         ith = omp_get_thread_num();
 
