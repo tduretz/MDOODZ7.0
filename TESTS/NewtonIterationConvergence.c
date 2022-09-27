@@ -1,8 +1,6 @@
-#include "assert.h"
-#include "hdf5.h"
 #include "mdoodz.h"
 #include "stdlib.h"
-#define FILENAME "Output00001.gzip.h5"
+#include "stdio.h"
 
 
 int SetPhase(MdoodzInput *instance, Coordinates coordinates) {
@@ -48,30 +46,36 @@ int main() {
           .MutateInput = MutateInput,
   };
 
+  printf("lin_pureshear_iso");
   MutateInputParams *mutateInputParams = (MutateInputParams *) malloc(sizeof(MutateInputParams));
   mutateInputParams->int1              = 0;  // shear_style
   mutateInputParams->int2              = 0;  // matrix aniso
+  mutateInputParams->int3              = 0;  // free surf
   mutateInputParams->double1           = 1.0;// matrix nwpl
   setup.mutateInputParams              = mutateInputParams;
   RunMDOODZ("ShearTemplate.txt", &setup);
   rename("Output00001.gzip.h5", "lin_pureshear_iso.h5");
 
+  printf("lin_simpleshear_iso");
   mutateInputParams->int1 = 1;// shear_style
   setup.mutateInputParams = mutateInputParams;
   RunMDOODZ("ShearTemplate.txt", &setup);
   rename("Output00001.gzip.h5", "lin_simpleshear_iso.h5");
 
+  printf("lin_pureshear_aniso");
   mutateInputParams->int1 = 0;// shear_style
   mutateInputParams->int2 = 1;// matrix aniso
   setup.mutateInputParams = mutateInputParams;
   RunMDOODZ("ShearTemplate.txt", &setup);
   rename("Output00001.gzip.h5", "lin_pureshear_aniso.h5");
 
+  printf("lin_simpleshear_aniso");
   mutateInputParams->int1 = 1;// shear_style
   setup.mutateInputParams = mutateInputParams;
   RunMDOODZ("ShearTemplate.txt", &setup);
   rename("Output00001.gzip.h5", "lin_simpleshear_aniso.h5");
 
+  printf("nonlin_pureshear_iso");
   mutateInputParams->int1    = 0;  // shear_style
   mutateInputParams->int2    = 0;  // matrix aniso
   mutateInputParams->double1 = 3.0;// matrix nwpl
@@ -79,12 +83,14 @@ int main() {
   RunMDOODZ("ShearTemplate.txt", &setup);
   rename("Output00001.gzip.h5", "nonlin_pureshear_iso.h5");
 
+  printf("nonlin_simpleshear_iso");
   mutateInputParams->int1 = 1;// shear_style
   mutateInputParams->int2 = 0;// matrix aniso
   setup.mutateInputParams = mutateInputParams;
   RunMDOODZ("ShearTemplate.txt", &setup);
   rename("Output00001.gzip.h5", "nonlin_simpleshear_iso.h5");
 
+  printf("nonlin_pureshear_aniso");
   mutateInputParams->int1    = 0;  // shear_style
   mutateInputParams->int2    = 1;  // matrix aniso
   mutateInputParams->double1 = 3.0;// matrix nwpl
@@ -92,38 +98,11 @@ int main() {
   RunMDOODZ("ShearTemplate.txt", &setup);
   rename("Output00001.gzip.h5", "nonlin_pureshear_aniso.h5");
 
+  printf("nonlin_simpleshear_aniso");
   mutateInputParams->int1    = 1;  // shear_style
   mutateInputParams->double1 = 3.0;// matrix nwpl
   setup.mutateInputParams    = mutateInputParams;
   RunMDOODZ("ShearTemplate.txt", &setup);
   rename("Output00001.gzip.h5", "nonlin_simpleshear_aniso.h5");
-
-  mutateInputParams->int1      = 0;  // shear_style
-  mutateInputParams->int2      = 0;  // matrix aniso
-  mutateInputParams->int3      = 1;  // free_surface
-  setup.BuildInitialTopography = (BuildInitialTopography_ff *) malloc(sizeof(BuildInitialTopography_ff));
-  setup.SetParticles->SetPhase = NULL;
-  setup.SetParticles->SetDensity = NULL;
-  mutateInputParams->double1   = 1.0;// matrix nwpl
-  setup.mutateInputParams      = mutateInputParams;
-  RunMDOODZ("ShearTemplate.txt", &setup);
-  rename("Output00001.gzip.h5", "freesurf_lin_pureshear_iso.h5");
-
-  mutateInputParams->int2    = 1;  // matrix aniso
-  mutateInputParams->double1 = 1.0;// matrix nwpl
-  setup.mutateInputParams    = mutateInputParams;
-  RunMDOODZ("ShearTemplate.txt", &setup);
-  rename("Output00001.gzip.h5", "freesurf_lin_pureshear_iso.h5");
-
-  mutateInputParams->int2    = 0;  // matrix aniso
-  mutateInputParams->double1 = 3.0;// matrix nwpl
-  setup.mutateInputParams    = mutateInputParams;
-  RunMDOODZ("ShearTemplate.txt", &setup);
-  rename("Output00001.gzip.h5", "freesurf_nonlin_pureshear_aniso.h5");
-
-  mutateInputParams->int2    = 1;  // matrix aniso
-  mutateInputParams->double1 = 3.0;// matrix nwpl
-  setup.mutateInputParams    = mutateInputParams;
-  RunMDOODZ("ShearTemplate.txt", &setup);
-  rename("Output00001.gzip.h5", "freesurf_nonlin_pureshear_aniso.h5");
 }
+
