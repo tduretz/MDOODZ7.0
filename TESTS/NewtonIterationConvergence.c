@@ -72,13 +72,13 @@ int main() {
 
 
   MutateInputParams *mutateInputParams = (MutateInputParams *) malloc(sizeof(MutateInputParams));
+  setup.mutateInputParams    = mutateInputParams;
 
   printf("lin_pureshear_iso");
   mutateInputParams->int1    = 0;  // shear_style
   mutateInputParams->int2    = 0;  // matrix aniso
   mutateInputParams->int4    = 0;  // non-linear
   mutateInputParams->double1 = 1.0;// matrix nwpl
-  setup.mutateInputParams    = mutateInputParams;
   RunMDOODZ("ShearTemplate.txt", &setup);
   rename("Output00001.gzip.h5", "lin_pureshear_iso.h5");
   assert(isConvergedInOneIteration("lin_pureshear_iso.h5"));
@@ -86,7 +86,6 @@ int main() {
   printf("lin_simpleshear_iso");
   mutateInputParams->int1 = 1;// shear_style
   mutateInputParams->int4 = 0;// non-linear
-  setup.mutateInputParams = mutateInputParams;
   RunMDOODZ("ShearTemplate.txt", &setup);
   rename("Output00001.gzip.h5", "lin_simpleshear_iso.h5");
   assert(isConvergedInOneIteration("lin_simpleshear_iso.h5"));
@@ -95,7 +94,6 @@ int main() {
   mutateInputParams->int1 = 0;// shear_style
   mutateInputParams->int2 = 1;// matrix aniso
   mutateInputParams->int4 = 0;// non-linear
-  setup.mutateInputParams = mutateInputParams;
   RunMDOODZ("ShearTemplate.txt", &setup);
   rename("Output00001.gzip.h5", "lin_pureshear_aniso.h5");
   assert(isConvergedInOneIteration("lin_pureshear_aniso.h5"));
@@ -103,7 +101,6 @@ int main() {
   printf("lin_simpleshear_aniso");
   mutateInputParams->int1 = 1;// shear_style
   mutateInputParams->int4 = 0;// non-linear
-  setup.mutateInputParams = mutateInputParams;
   RunMDOODZ("ShearTemplate.txt", &setup);
   rename("Output00001.gzip.h5", "lin_simpleshear_aniso.h5");
   assert(isConvergedInOneIteration("lin_simpleshear_aniso.h5"));
@@ -112,7 +109,6 @@ int main() {
   mutateInputParams->int1 = 0;// shear_style
   mutateInputParams->int2 = 0;// matrix aniso
   mutateInputParams->int4 = 1;// non-linear
-  setup.mutateInputParams = mutateInputParams;
   RunMDOODZ("ShearTemplate.txt", &setup);
   rename("Output00001.gzip.h5", "nonlin_pureshear_iso.h5");
   assert(!isConvergedInOneIteration("nonlin_pureshear_iso.h5"));
@@ -121,7 +117,6 @@ int main() {
   mutateInputParams->int1 = 1;// shear_style
   mutateInputParams->int2 = 0;// matrix aniso
   mutateInputParams->int4 = 1;// non-linear
-  setup.mutateInputParams = mutateInputParams;
   RunMDOODZ("ShearTemplate.txt", &setup);
   rename("Output00001.gzip.h5", "nonlin_simpleshear_iso.h5");
   assert(!isConvergedInOneIteration("nonlin_simpleshear_iso.h5"));
@@ -130,7 +125,6 @@ int main() {
   mutateInputParams->int1 = 0;// shear_style
   mutateInputParams->int2 = 1;// matrix aniso
   mutateInputParams->int4 = 1;// non-linear
-  setup.mutateInputParams = mutateInputParams;
   RunMDOODZ("ShearTemplate.txt", &setup);
   rename("Output00001.gzip.h5", "nonlin_pureshear_aniso.h5");
   assert(!isConvergedInOneIteration("nonlin_pureshear_aniso.h5"));
@@ -138,7 +132,6 @@ int main() {
   printf("nonlin_simpleshear_aniso");
   mutateInputParams->int1 = 1;// shear_style
   mutateInputParams->int4 = 1;// non-linear
-  setup.mutateInputParams = mutateInputParams;
   RunMDOODZ("ShearTemplate.txt", &setup);
   rename("Output00001.gzip.h5", "nonlin_simpleshear_aniso.h5");
   assert(!isConvergedInOneIteration("nonlin_simpleshear_aniso.h5"));
