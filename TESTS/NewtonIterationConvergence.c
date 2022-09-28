@@ -54,6 +54,7 @@ bool isConvergedInOneIteration(char *hdf5FileName) {
   H5Dread(NumberStepsDataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           NumberStepsArray);
   int StepsCount = NumberStepsArray[0];
+  printf("Number of iterations: %d\n", StepsCount);
   return StepsCount == 1;
 }
 
