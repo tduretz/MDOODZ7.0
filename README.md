@@ -3,7 +3,7 @@
 Welcome to MDOODZ7.0 public repository!
 This version of MDOODZ is under construction, more testing will be progressively added...
 
-![](/images/Compression_Symmetric.gif)
+![](/misc/images/Compression_Symmetric.gif)
 
 ## [Visual Test Results](/VISUAL_TESTS/readme.md)
 
