@@ -11,7 +11,7 @@ build-dev:
 	cmake -B ./cmake-build -DOPT=$(OPT) -DOMP=$(OMP) -DVIS=$(VIS) -DSET=$(SET) && cmake --build ./cmake-build
 
 build:
-	cmake -DOPT=ON -DOMP=ON -B ./cmake-build -DSET=$(SET) && cmake --build ./cmake-build
+	cmake -DOPT=ON -DOMP=ON -DSETS=ON -B ./cmake-build -DSET=$(SET) && cmake --build ./cmake-build
 
 clean:
 	rm -rf *build*/ && rm -rf *exec*/
