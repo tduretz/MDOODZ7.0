@@ -652,6 +652,10 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
 
     // Generate file name
     asprintf( &FileName, "%s%05d%s",txtout, model.step, ".gzip.h5");
+    if (strcmp(model.writerSubfolder, "")) {
+      printf("subfolder is _%s_\n", model.writerSubfolder);
+      // asprintf( &FileName, "%s/%s", model.writerSubfolder, FileName);
+    }
     CreateOutputHDF5( FileName );
 
     // Add groups

@@ -1,8 +1,12 @@
+extern "C" {
+#include "mdoodz.h"
+}
+
 #include "assert.h"
 #include "hdf5.h"
-#include "mdoodz.h"
 #include "stdio.h"
 #include "stdlib.h"
+#include <gtest/gtest.h>
 
 
 int SetPhase(MdoodzInput *instance, Coordinates coordinates) {
@@ -58,13 +62,38 @@ int getStepsCount(char *hdf5FileName) {
   return stepsCount;
 }
 
-int main() {
+TEST(HelloTest, BasicAssertions) {
   MdoodzSetup setup = {
-          .SetParticles = &(SetParticles_ff){
+          .SetParticles = new SetParticles_ff {
                   .SetPhase   = SetPhase,
                   .SetDensity = SetDensity,
           },
-          .SetBCs = &(SetBCs_ff){
+          .SetBCs = new SetBCs_ff {
+                  .SetBCVx = SetPureOrSimpleShearBCVx,
+                  .SetBCVz = SetPureOrSimpleShearBCVz,
+          },
+          .MutateInput = MutateInput,
+  };
+
+
+  MutateInputParams *mutateInputParams = (MutateInputParams *) malloc(sizeof(MutateInputParams));
+  setup.mutateInputParams    = mutateInputParams;
+  mutateInputParams->int1    = 0;  // shear_style
+  mutateInputParams->int2    = 0;  // matrix aniso
+  mutateInputParams->int4    = 0;  // non-linear
+  mutateInputParams->double1 = 1.0;// matrix nwpl
+  RunMDOODZ("ShearTemplate.txt", &setup);
+  int stepsCount = getStepsCount("Output00001.gzip.h5");
+  ASSERT_EQ(stepsCount, 1);
+}
+
+int setup() {
+  MdoodzSetup setup = {
+          .SetParticles = new SetParticles_ff {
+                  .SetPhase   = SetPhase,
+                  .SetDensity = SetDensity,
+          },
+          .SetBCs = new SetBCs_ff {
                   .SetBCVx = SetPureOrSimpleShearBCVx,
                   .SetBCVz = SetPureOrSimpleShearBCVz,
           },

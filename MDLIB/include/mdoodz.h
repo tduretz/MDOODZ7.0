@@ -80,6 +80,7 @@ typedef struct {
   int      residual_form;
   int      irestart, istep;
   int      writer, writerStep;
+  char     *writerSubfolder;
 } params;
 
 // Stucture scale contains scaling parameters
