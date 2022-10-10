@@ -27,8 +27,14 @@ add_library(mdoodz SHARED
         RheologyDensity.h)
 target_link_libraries(mdoodz ${DEPENDENCIES})
 target_include_directories(mdoodz PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
-set_target_properties(mdoodz PROPERTIES
-        PUBLIC_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/include/mdoodz.h)
+if (CMAKE_SYSTEM_NAME STREQUAL "Windows" AND NOT JULIA)
+    set_target_properties(mdoodz PROPERTIES
+            PUBLIC_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/include/mdoodz.h
+            RUNTIME_OUTPUT_DIRECTORY $ENV{CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+else()
+    set_target_properties(mdoodz PROPERTIES
+            PUBLIC_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/include/mdoodz.h)
+endif()
 
 install(TARGETS mdoodz
         LIBRARY DESTINATION lib
