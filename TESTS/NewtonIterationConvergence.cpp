@@ -223,7 +223,7 @@ TEST_F(ShearTemplate, NonLinearPureshearAnisotropic) {
   asprintf(&fileName, "%s/%s", testName, "Output00001.gzip.h5");
   int stepsCount = getStepsCount(fileName);
   ASSERT_TRUE(stepsCount > 1);
-  ASSERT_TRUE(stepsCount < 10);
+  ASSERT_TRUE(stepsCount < 20);
 }
 
 TEST_F(ShearTemplate, NonLinearSimpleshearAnisotropic) {
