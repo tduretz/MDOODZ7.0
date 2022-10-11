@@ -2,7 +2,8 @@
 SHELL := /bin/bash
 
 # Compiler
-CC = /usr/local/Cellar/gcc/11.2.0_3/bin/gcc-11
+#CC = /usr/local/Cellar/gcc/11.2.0_3/bin/gcc-11
+CC =/opt/local/bin/gcc-mp-8
 
 # Path to setup file folder
 MODEL_PATH = 
