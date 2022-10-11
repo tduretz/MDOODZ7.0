@@ -29,12 +29,22 @@
 #include "mdoodz-private.h"
 #include "hdf5.h"
 #include "zlib.h"
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 #ifdef _OMP_
 #include "omp.h"
 #else
 #define omp_get_thread_num() 0
 #endif
+
+void CreateDir(char *dirName) {
+  struct stat st = {0};
+  if (stat(dirName, &st) == -1) {
+    mkdir(dirName, 0700);
+  }
+}
 
 /*--------------------------------------------------------------------------------------------------------------------*/
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
@@ -652,6 +662,10 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
 
     // Generate file name
     asprintf( &FileName, "%s%05d%s",txtout, model.step, ".gzip.h5");
+    if (strcmp(model.writerSubfolder, "")) {
+      CreateDir(model.writerSubfolder);
+      asprintf( &FileName, "%s/%s", model.writerSubfolder, FileName);
+    }
     CreateOutputHDF5( FileName );
 
     // Add groups

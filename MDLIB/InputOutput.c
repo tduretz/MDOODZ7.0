@@ -1035,6 +1035,7 @@ Input ReadInputFile( char *fileName ) {
     model.writerStep      = ReadInt2( fin, "writer_step",     1 );
     model.write_markers   = ReadInt2( fin, "writer_markers",  0 );
     model.write_debug     = ReadInt2( fin, "writer_debug",    0 );
+    model.writerSubfolder = ReadChar( fin, "writerSubfolder", "");
 
     // Input
     model.import_files_dir    = ReadChar( fin, "import_files_dir", "../../IMPORT");
