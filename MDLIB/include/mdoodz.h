@@ -80,6 +80,7 @@ typedef struct {
   int      residual_form;
   int      irestart, istep;
   int      writer, writerStep;
+  const char     *writerSubfolder;
 } params;
 
 // Stucture scale contains scaling parameters
@@ -215,6 +216,7 @@ typedef struct {
   int int2;
   int int3;
   int int4;
+  const char *str1;
 } MutateInputParams;
 
 typedef void(MutateInput_f)(MdoodzInput *input, MutateInputParams *mutateInputParams);
