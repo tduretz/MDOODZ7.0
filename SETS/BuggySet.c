@@ -1,20 +1,20 @@
-#include "math.h"
 #include "mdoodz.h"
 #include "stdbool.h"
-#include "stdlib.h"
 
 
 static double SetSurfaceZCoord(MdoodzInput *instance, double x_coord) {
-  const double TopoLevel = -0.0e3 / instance->scaling.L;
-  const double h_pert    = instance->model.user3 / instance->scaling.L;
-  return TopoLevel + h_pert * (3330.0 - 2800.0) / 2800.0 * cos(2 * M_PI * x_coord / (instance->model.xmax - instance->model.xmin));
+  return -0.0e3 / instance->scaling.L;;
 }
 
 static int SetPhase(MdoodzInput *instance, Coordinates coordinates) {
-  const double lithosphereThickness = instance->model.user1 / instance->scaling.L;
-  const bool   isBelowLithosphere   = coordinates.z < -lithosphereThickness;
-
-  if (isBelowLithosphere) {
+  Ellipse inclusion = (Ellipse){
+          .centreX = 0,
+          .centreZ = -15e3,
+          .radiusZ = 2e4,
+          .radiusX = 2e4,
+          .angle   = 0.0,
+  };
+  if (IsEllipseCoordinates(coordinates, inclusion, instance->scaling.L)) {
     return 1;
   } else {
     return 0;
