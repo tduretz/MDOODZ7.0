@@ -25,7 +25,7 @@ void BuildInitialTopography(BuildInitialTopography_ff buildInitialTopography, Md
 
 void ValidatePhase(int phaseId, int phasesCount) {
   if (phaseId > phasesCount) {
-    printf("Lazy bastard! Fix your particle phase ID! \n");
+    printf("Lazy bastard! Fix your particle phase ID! phaseId: %i, phasesCount: %i \n", phaseId, phasesCount);
     exit(144);
   }
 }

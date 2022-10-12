@@ -6,6 +6,7 @@ extern "C" {
 #include <cstdlib>
 #include <gtest/gtest.h>
 #include <hdf5.h>
+#include <math.h>
 
 using ::testing::Gt;
 using ::testing::Lt;
@@ -33,7 +34,7 @@ class MinimalistPrinter : public testing::EmptyTestEventListener {
 
   void OnTestEnd(const testing::TestInfo &test_info) override {
     printf("*** Test %s.%s ending.\n", test_info.test_suite_name(), test_info.name());
-    RemoveDir(test_info.name());
+    //RemoveDir(test_info.name());
   }
 };
 
@@ -234,6 +235,188 @@ TEST_F(ShearTemplate, NonLinearSimpleshearAnisotropic) {
   mutateInputParams->int4              = 1;// non-linear
   mutateInputParams->str1              = testName;
   RunMDOODZ("ShearTemplate.txt", &setup);
+  char *fileName;
+  asprintf(&fileName, "%s/%s", testName, "Output00001.gzip.h5");
+  int stepsCount = getStepsCount(fileName);
+  ASSERT_TRUE(stepsCount > 1);
+  ASSERT_TRUE(stepsCount < 10);
+}
+
+class SimpleRifting : public ::testing::Test {
+  protected:
+  MdoodzSetup setup;
+
+  void        SetUp() {
+    setup = {
+                   .BuildInitialTopography = new BuildInitialTopography_ff{
+                           .SetSurfaceZCoord = SetSurfaceZCoord,
+            },
+                   .SetParticles = new SetParticles_ff{
+                           .SetHorizontalVelocity = SetHorizontalVelocity,
+                           .SetVerticalVelocity   = SetVerticalVelocity,
+                           .SetPhase              = SetPhase,
+                           .SetGrainSize          = SetGrainSize,
+            },
+                   .SetBCs = new SetBCs_ff{
+                           .SetBCVx    = SetPureShearBCVx,
+                           .SetBCVz    = SetPureShearBCVz,
+                           .SetBCT     = SetBCT,
+                           .SetBCPType = SetBCPType,
+                           .SetBCTNew  = SetBCTNew,
+            },
+                   .MutateInput = MutateInput,
+    };
+  }
+
+  static double SetSurfaceZCoord(MdoodzInput *instance, double x_coord) {
+    const double TopoLevel = -0.0e3 / instance->scaling.L;
+    const double h_pert    = instance->model.user3 / instance->scaling.L;
+    return TopoLevel + h_pert * (3330.0 - 2800.0) / 2800.0 * cos(2 * M_PI * x_coord / (instance->model.xmax - instance->model.xmin));
+  }
+
+  static int SetPhase(MdoodzInput *instance, Coordinates coordinates) {
+    const double lithosphereThickness = instance->model.user1 / instance->scaling.L;
+    const bool   isBelowLithosphere   = coordinates.z < -lithosphereThickness;
+
+    if (isBelowLithosphere) {
+      return 1;
+    } else {
+      return 0;
+    }
+  }
+
+  static double SetGrainSize(MdoodzInput *instance, Coordinates coordinates, int phase) {
+    const int asthenospherePhase = 3;
+    return instance->materials.gs_ref[asthenospherePhase];
+  }
+
+  static double SetHorizontalVelocity(MdoodzInput *instance, Coordinates coordinates) {
+    return -coordinates.x * instance->model.EpsBG;
+  }
+
+  static double SetVerticalVelocity(MdoodzInput *instance, Coordinates coordinates) {
+    return coordinates.z * instance->model.EpsBG;
+  }
+
+  static char SetBCPType(MdoodzInput *instance, POSITION position) {
+    if (position == NE || position == NW) {
+      return 0;
+    } else {
+      return -1;
+    }
+  }
+
+  static SetBC SetBCT(MdoodzInput *instance, POSITION position, double particleTemperature) {
+    SetBC  bc;
+    double surfaceTemperature = zeroC / instance->scaling.T;
+    if (position == FREE_SURFACE) {
+      bc.value = surfaceTemperature;
+      bc.type  = 1;
+    } else {
+      bc.value = 0.0;
+      bc.type  = 0;
+    }
+    return bc;
+  }
+
+
+  static SetBC SetBCTNew(MdoodzInput *instance, POSITION position, double particleTemperature) {
+    SetBC  bc;
+    double surfaceTemperature = zeroC / instance->scaling.T;
+    double mantleTemperature  = (1330. + zeroC) / instance->scaling.T;
+    if (position == S || position == SE || position == SW) {
+      bc.value = particleTemperature;
+      bc.type  = 1;
+    } else if (position == N || position == NE || position == NW) {
+      bc.value = surfaceTemperature;
+      bc.type  = 1;
+    } else if (position == W || position == E) {
+      bc.value = mantleTemperature;
+      bc.type  = 0;
+    } else {
+      bc.value = 0;
+      bc.type  = 0;
+    }
+    return bc;
+  }
+
+  static void MutateInput(MdoodzInput *input, MutateInputParams *mutateInputParams) {
+    input->model.writerSubfolder = mutateInputParams->str1;
+    const int crustPhase         = 0;
+    if (mutateInputParams->int2) { //  aniso
+      input->materials.aniso_factor[crustPhase] = 2.0;
+      input->model.aniso                        = 1;
+      input->model.fstrain                      = 1;
+      input->materials.pwlv[crustPhase]         = 0;
+    } else {
+      input->materials.aniso_factor[crustPhase] = 1.0;
+      input->model.aniso                        = 0;
+      input->model.fstrain                      = 0;
+      input->materials.pwlv[crustPhase]         = 0;
+    }
+    if (mutateInputParams->int4) { // non-linear
+      input->materials.npwl[crustPhase] = 3.0;
+      input->materials.cstv[crustPhase] = 0;
+      input->materials.pwlv[crustPhase] = 1;
+    } else {
+      input->materials.npwl[crustPhase] = 0;
+      input->materials.cstv[crustPhase] = 1;
+      input->materials.pwlv[crustPhase] = 0;
+    }
+  }
+};
+
+TEST_F(SimpleRifting, FreeSurfaceLinearIsotropic) {
+  const char        *testName          = testing::UnitTest::GetInstance()->current_test_info()->name();
+  MutateInputParams *mutateInputParams = (MutateInputParams *) malloc(sizeof(MutateInputParams));
+  setup.mutateInputParams              = mutateInputParams;
+  mutateInputParams->int2              = 0;// matrix aniso
+  mutateInputParams->int4              = 0;// non-linear
+  mutateInputParams->str1              = testName;
+  RunMDOODZ("RiftingChenin.txt", &setup);
+  char *fileName;
+  asprintf(&fileName, "%s/%s", testName, "Output00001.gzip.h5");
+  int stepsCount = getStepsCount(fileName);
+  ASSERT_EQ(stepsCount, 1);
+}
+
+TEST_F(SimpleRifting, FreeSurfaceLinearAnisotropic) {
+  const char        *testName          = testing::UnitTest::GetInstance()->current_test_info()->name();
+  MutateInputParams *mutateInputParams = (MutateInputParams *) malloc(sizeof(MutateInputParams));
+  setup.mutateInputParams              = mutateInputParams;
+  mutateInputParams->int2              = 1; //  aniso
+  mutateInputParams->int4              = 0; // non-linear
+  mutateInputParams->str1              = testName;
+  RunMDOODZ("RiftingChenin.txt", &setup);
+  char *fileName;
+  asprintf(&fileName, "%s/%s", testName, "Output00001.gzip.h5");
+  int stepsCount = getStepsCount(fileName);
+  ASSERT_EQ(stepsCount, 1);
+}
+
+TEST_F(SimpleRifting, FreeSurfaceNonlinearIsotropic) {
+  const char        *testName          = testing::UnitTest::GetInstance()->current_test_info()->name();
+  MutateInputParams *mutateInputParams = (MutateInputParams *) malloc(sizeof(MutateInputParams));
+  setup.mutateInputParams              = mutateInputParams;
+  mutateInputParams->int2              = 0;// matrix aniso
+  mutateInputParams->int4              = 1;// non-linear
+  mutateInputParams->str1              = testName;
+  RunMDOODZ("RiftingChenin.txt", &setup);
+  char *fileName;
+  asprintf(&fileName, "%s/%s", testName, "Output00001.gzip.h5");
+  int stepsCount = getStepsCount(fileName);
+  ASSERT_TRUE(stepsCount > 1);
+  ASSERT_TRUE(stepsCount < 10);
+}
+
+TEST_F(SimpleRifting, FreeSurfaceNonlinearAnisotropic) {
+  const char        *testName          = testing::UnitTest::GetInstance()->current_test_info()->name();
+  MutateInputParams *mutateInputParams = (MutateInputParams *) malloc(sizeof(MutateInputParams));
+  setup.mutateInputParams              = mutateInputParams;
+  mutateInputParams->int2              = 1;// matrix aniso
+  mutateInputParams->int4              = 0;// non-linear
+  mutateInputParams->str1              = testName;
+  RunMDOODZ("RiftingChenin.txt", &setup);
   char *fileName;
   asprintf(&fileName, "%s/%s", testName, "Output00001.gzip.h5");
   int stepsCount = getStepsCount(fileName);
