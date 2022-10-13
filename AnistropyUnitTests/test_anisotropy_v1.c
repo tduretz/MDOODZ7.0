@@ -77,8 +77,8 @@ void MinMaxArrayVal( double* array, int size, double* min, double* max ) { // AL
 
 }
 
-void Invii( Tensor2D T ) {
-    T.ii = sqrt( 0.5*(pow(T.xx,2) + pow(T.zz,2)) + pow(T.xz,2));
+void Invii( Tensor2D *T ) {
+    T->ii = sqrt( 0.5*( pow(T->xx,2) + pow(T->zz,2)) + pow(T->xz,2) );
 }
 
 
@@ -95,7 +95,7 @@ void StressEffectiveViscosity_TensorInterface( Tensor2D* Tau, Tensor2D* Eps, mat
     const double n         = materials->n;
     const double ani_fac_v = materials->ani_fac_v;
     Tensor2D Eps_rot, Tau_rot;
-    // Transform strain rate
+    // Transform strain rate: Q*E*Qt
     const double nz2 = 1.0-nx2;
     Eps_rot.xx =   nx2*Eps->xx +  nz2*Eps->zz +   2.*nxnz*Eps->xz;
     Eps_rot.zz =   nz2*Eps->xx +  nx2*Eps->zz -   2.*nxnz*Eps->xz;
@@ -104,11 +104,11 @@ void StressEffectiveViscosity_TensorInterface( Tensor2D* Tau, Tensor2D* Eps, mat
     Tau_rot.xx = 2.*eta_v* Eps_rot.xx;
     Tau_rot.zz = 2.*eta_v* Eps_rot.zz;
     Tau_rot.xz = 2.*eta_v* Eps_rot.xz / ani_fac_v;
-    // Backtransform stress
+    // Backtransform stress: Qt*E*Q
     Tau->xx =   nx2*Tau_rot.xx +  nz2*Tau_rot.zz -   2.*nxnz*Tau_rot.xz;
     Tau->zz =   nz2*Tau_rot.xx +  nx2*Tau_rot.zz +   2.*nxnz*Tau_rot.xz;
     Tau->xz =  nxnz*Tau_rot.xx - nxnz*Tau_rot.zz + (nx2-nz2)*Tau_rot.xz;
-    Invii( (*Tau) );
+    Invii( Tau );
 }
 
 
@@ -119,14 +119,14 @@ void StressEffectiveViscosity_TensorInterface( Tensor2D* Tau, Tensor2D* Eps, mat
 int main( int argc, char *argv[] ) {
 
     // Kinematics
-    const double Exx = -1.0;
+    const double Exx = -0.0;
     const double Ezz = -Exx;
-    const double Exz = 0.0;
+    const double Exz = -1.0;
 
     // Materials
     mat_params materials;
     materials.eta_v     = 0.5;
-    materials.ani_fac_v = 2.0;
+    materials.ani_fac_v = 4.0;
     materials.n         = 10.;
 
     FILE        *GNUplotPipe;
@@ -174,82 +174,55 @@ int main( int argc, char *argv[] ) {
         dir_ang = iang*dang;
         nx2     = pow( cos(dir_ang), 2);
         nxnz    = cos(dir_ang)*sin(dir_ang);
-        
         printf("Angle: %2.3f\n", dir_ang*180./M_PI);
 
     #pragma omp parallel 
         { 
             if (omp_get_thread_num()==0) printf("With tensor interface on %02d threads\n", omp_get_num_threads() ); 
         }    
-        // t_mean=0.;
-        //
-        // for (int it=0; it<nt+n_warmup; it++) {
-        //     t_omp = (double)omp_get_wtime();
 
-            // Compute rheology at all points
+        // Compute rheology at all points
     #pragma omp parallel for shared( mesh ) private( Tau, Eps ) firstprivate( materials )
-            for (int k=0; k<Nx*Nz; k++) {
+        for (int k=0; k<Nx*Nz; k++) {
 
-                Eps.xx = mesh.Exx[k];
-                Eps.zz = mesh.Ezz[k];
-                Eps.xz = mesh.Exz[k];
-                Invii(Eps);
-                StressEffectiveViscosity_TensorInterface( &Tau, &Eps, &materials, nx2, nxnz);
-                mesh.Txx[k] = Tau.xx;
-                mesh.Tzz[k] = Tau.zz;
-                mesh.Txz[k] = Tau.xz;
-                mesh.Tii[k] = Tau.ii;
-            }
-            MinMaxArrayVal( mesh.Txx, Nx*Nz, &min_val, &max_val ); 
-            Txx_vec[iang][1] = min_val;
-            Txx_vec[iang][2] = max_val;
-            printf("min Txx = %2.2f --- max Txx = %2.2f\n", Txx_vec[iang][1], Txx_vec[iang][2]);
-            MinMaxArrayVal( mesh.Tzz, Nx*Nz, &min_val, &max_val ); 
-            Tzz_vec[iang][1] = min_val;
-            Tzz_vec[iang][2] = max_val;
-            printf("min Tzz = %2.2f --- max Tzz = %2.2f\n", Tzz_vec[iang][1], Tzz_vec[iang][2]);
-            MinMaxArrayVal( mesh.Txz, Nx*Nz, &min_val, &max_val ); 
-            Txz_vec[iang][1] = min_val;
-            Txz_vec[iang][2] = max_val;
-            printf("min Txz = %2.2f --- max Txz = %2.2f\n", Txz_vec[iang][1], Txz_vec[iang][2]);
-            MinMaxArrayVal( mesh.Tii, Nx*Nz, &min_val, &max_val ); 
-            Tii_vec[iang][1] = min_val;
-            Tii_vec[iang][2] = max_val;
-            printf("min Tii = %2.2f --- max Tii = %2.2f\n", Tii_vec[iang][1], Tii_vec[iang][2]);
-            // if (it>=n_warmup) {
-            //     t_diff = (double)((double)omp_get_wtime() - t_omp);
-            //     printf("Elapsed time: %f s\n", t_diff);
-            //     t_mean += t_diff;
-            // }
-        // }
-        // t_mean /=  nt;
-        // printf("Mean Elapsed time: %f s\n", t_mean);
+            Eps.xx = mesh.Exx[k];
+            Eps.zz = mesh.Ezz[k];
+            Eps.xz = mesh.Exz[k];
+            Invii(&Eps);
+            StressEffectiveViscosity_TensorInterface( &Tau, &Eps, &materials, nx2, nxnz);
+            mesh.Txx[k] = Tau.xx;
+            mesh.Tzz[k] = Tau.zz;
+            mesh.Txz[k] = Tau.xz;
+            mesh.Tii[k] = Tau.ii;
+        }
+        MinMaxArrayVal( mesh.Txx, Nx*Nz, &min_val, &max_val ); 
+        Txx_vec[iang][1] = min_val;
+        Txx_vec[iang][2] = max_val;
+        printf("min Txx = %2.2f --- max Txx = %2.2f\n", Txx_vec[iang][1], Txx_vec[iang][2]);
+        MinMaxArrayVal( mesh.Tzz, Nx*Nz, &min_val, &max_val ); 
+        Tzz_vec[iang][1] = min_val;
+        Tzz_vec[iang][2] = max_val;
+        printf("min Tzz = %2.2f --- max Tzz = %2.2f\n", Tzz_vec[iang][1], Tzz_vec[iang][2]);
+        MinMaxArrayVal( mesh.Txz, Nx*Nz, &min_val, &max_val ); 
+        Txz_vec[iang][1] = min_val;
+        Txz_vec[iang][2] = max_val;
+        printf("min Txz = %2.2f --- max Txz = %2.2f\n", Txz_vec[iang][1], Txz_vec[iang][2]);
+        MinMaxArrayVal( mesh.Tii, Nx*Nz, &min_val, &max_val ); 
+        Tii_vec[iang][1] = min_val;
+        Tii_vec[iang][2] = max_val;
+        printf("min Tii = %2.2f --- max Tii = %2.2f\n", Tii_vec[iang][1], Tii_vec[iang][2]);
     }
 
     //-------------------
 
-    int NumCommands = 5;
-    char *GNUplotCommands[] = {"set title \"Dev. stress components\"", 
-                               "set xlabel \"Angle\"", 
-                               "set ylabel \"Stress component\"", 
-                               "set style line 1 lc rgb '#0060ad' lt 1 lw 2 pt 7 pi -1 ps 1.5", "set pointintervalbox 3"};
-    GNUplotPipe = popen ("gnuplot", "w");
-    for (int i=0; i<NumCommands; i++) fprintf(GNUplotPipe, "%s \n", GNUplotCommands[i]); //Send commands to gnuplot one by one.
-    
-    // fprintf(GNUplotPipe, "plot '-' for [col=2:3] u 1:col with linespoints linestyle 1\n");  // for [col=1:1] u 0:col
-    // fprintf(GNUplotPipe, "plot '-' u 1:2 with linespoints linestyle 1\n");  // for [col=1:1] u 0:col
-    fprintf(GNUplotPipe, "plot '-' u 1:2 with linespoints linestyle 1\n"); 
-    for (int iang=0; iang<nang; iang++) {
-        fprintf(GNUplotPipe, "\t%lf\t%lf\t%lf\n", (double)iang*dang*180./M_PI, Txx_vec[iang][1], Tzz_vec[iang][1]); //Write the data to a temporary file
+    FILE* file=fopen("data4plot.txt", "wt");
+            fprintf(file, "%s %s %s %s %s\n", "angle", "Txx", "Tzz", "Txz", "Tii"); //Write the data to a temporary file
+        for (int iang=0; iang<nang; iang++) {
+        fprintf(file, "%lf %lf %lf %lf %lf\n", (double)iang*dang*180./M_PI, Txx_vec[iang][1], Tzz_vec[iang][1], Txz_vec[iang][1], Tii_vec[iang][1]); //Write the data to a temporary file
     }
+    fclose(file);
 
-    // fprintf(GNUplotPipe, "d\n");
-    // for (int iang=0; iang<nang; iang++) {
-    //     fprintf(GNUplotPipe, "%lf \n", Tzz_vec[iang][1]); //Write the data to a temporary file
-    // }
-
-    fprintf(GNUplotPipe, "e\n");
-    fflush(GNUplotPipe);
+    system("gnuplot -p plot.gp");
 
     //----------------------------------------------------------------------------------//
     //----------------------------------------------------------------------------------//

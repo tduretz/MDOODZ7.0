@@ -47,7 +47,7 @@ endif
 
 #---------------------------------------------------#
 # Rules
-FILES = test_anisotropy.o 
+FILES = test_anisotropy_v1.o 
 
 
 all: Doodzi_$(MODEL) 
