@@ -489,11 +489,9 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
 
   //  printf("%2.2e %2.2e %2.2e %2.2e %2.2e %2.2e\n", eta_el*scaling->eta, eta_cst*scaling->eta, eta_pwl*scaling->eta, eta_lin*scaling->eta, eta_lo*scaling->eta, eta_up*scaling->eta);
 
-  double Kg = materials->Kpzm[phase], Qg = materials->Qpzm[phase];
-  const double Ag = Kg * exp(-Qg / R / T);
+
   LocalIterationParams params = {
           .Eii         = Eii,
-          .Ag          = Ag,
           .gam         = materials->Gpzm[phase],
           .lam         = materials->Lpzm[phase],
           .cg          = materials->cpzm[phase],
@@ -525,6 +523,9 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
           .d           = d,
           .n_gbs       = n_gbs};
   if (gs) {
+    double Kg = materials->Kpzm[phase], Qg = materials->Qpzm[phase];
+    const double Ag = Kg * exp(-Qg / R / T);
+    params.Ag = Ag;
     LocalIterationViscoElasticGrainSize((LocalIterationMutables){.eta = &eta_ve, .d1 = d1}, params);
   } else {
     LocalIterationViscoElastic((LocalIterationMutables){.eta = &eta_ve}, params);
