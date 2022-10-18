@@ -1237,7 +1237,6 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
     free(input.model.import_file);
     free(input.model.import_files_dir);
     // free(input.model.description);
-    free(input.model.writerSubfolder);
 
     NmodelFree(Nmodel);
 
