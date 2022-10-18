@@ -426,7 +426,7 @@ void Zjacobian_InnerNodesDecoupled3( SparseMat *Stokes, SparseMat *StokesA, Spar
     double oop = 1.0;
     if (model.oop==1) oop = 3.0/2.0;
     int periodix = model.isperiodic_x;
-    double vC_corr;
+    double vC_corr = 0.0;
     
     int iVzC   = c3;
     int iVzW   = iVzC-1,  iVzE   = iVzC+1;
