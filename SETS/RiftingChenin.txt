@@ -1,13 +1,13 @@
 /**** Original name: Pauline_marylDiabCC_dryOlM ****/
 /**** RESTART ****/
-istep = 00000160
+istep = 00000000000000000000000000300
 irestart = 0
 
 /**** OUTPUT FILES ****/
 writer = 1
 writer_step = 10
 writer_markers = 0
-writer_debug   = 0 
+writer_debug   = 0
 
 /**** INPUT FILE FOR PARTICLES ****/
 input_file = setup_r501x501_fsp40.bin
@@ -17,15 +17,15 @@ eta = 1.e+22      /viscosity
 L   = 30.e4       /length
 V   = 1.5e-8     /velocity
 T   = 1.e+02      /temperature
- 
+
 /**** SPACE-TIME ****/
-Nx      = 150 // 300/600 = 0.5 km horizontal resolution 
+Nx      = 150 // 300/600 = 0.5 km horizontal resolution
 Nz      = 100 // 200/800 = 0.25 km vertical resolution
-Nt      = 50
-xmin    = -150.000000e3
-zmin    = -200.000000e3
-xmax    =  150.000000e3
-zmax    = 10.000000e3 
+Nt      = 300
+xmin    = -600.000000e3
+zmin    = -700.000000e3
+xmax    =  600.000000e3
+zmax    = 10.000000e3
 dt      = 1.2623e+11
 Courant = 0.45
 penalty = 1e2
@@ -52,7 +52,7 @@ adiab_heat      = 0
 surf_remesh     = 1
 surf_processes  = 1 /0 = none; 1 = diffusion only; 2 = fills instantaneously the basin up to the base level;  3 = diffusion + source term
 surf_diff       = 5.0e-6 /topography diffusion coefficient
-surf_ised1      = 4 /sediment phase indices 
+surf_ised1      = 4 /sediment phase indices
 surf_ised2      = 5
 surf_sedirate   = 0.0 / sedimentation rate [m/s]:3.1688e-12 <-> 0.01 cm/yr
 surf_baselev    = 0.0e3 / base level for sedimentation
@@ -61,7 +61,7 @@ polar           = 0
 aniso           = 0
 
 /**** SETUP DEPENDANT ****/
-EpsBG           = -1.056e-15 /Background strain rate [s-1] => extension rate = 1 cm/yr
+EpsBG           = 1.0056e-15 /Background strain rate [s-1] => extension rate = 1 cm/yr
 user0           = 0.0e3     /Radius of perturbation [m]
 user1           = 125.0e3   /Initial lithosphere thickness [m]
 user2           = 30.0e3    /Initial crust thickness [m]
@@ -76,7 +76,7 @@ gx = 0.0000
 gz = -9.81
 
 /**** PHASE PROPERTIES ****/
-Nb_phases = 9 
+Nb_phases = 9
 
 ID   = 0       / Seed
 rho  = 2700.00 / ref. density
@@ -131,7 +131,7 @@ gbsv = 0
 expv = 40
 
 ID   = 3
-rho  = 3330.00 / asthenosphere (same as 2)
+rho  = 3520.00 / asthenosphere (same as 2)
 alp  = 32.0e-6
 bet  = 1.5e-11
 mu   = 1.0e10
@@ -173,9 +173,9 @@ ID   = 5
 rho  = 2300.00 / sediments
 mu   = 1e10
 Cv   = 1050
-k    = 2   
+k    = 2
 Qr   = 0.5e-6
-C    = 1e7 
+C    = 1e7
 phi  = 30
 Slim = 500e9
 alp  = 10.0e-6
@@ -228,7 +228,7 @@ niso_factor = 1.0
 aniso_angle  = 45
 
 ID   = 8
-rho  = 2800.00 / Crust - Dry Quartz
+rho  = 3000.00 / Crust - Dry Quartz// edited
 mu   = 1.0e10
 Cv   = 1050.0
 k    = 2.5

@@ -11,32 +11,50 @@ double SetSurfaceZCoord(MdoodzInput *instance, double x_coord) {
 }
 
 int SetPhase(MdoodzInput *instance, Coordinates coordinates) {
-  const double lithosphereThickness  = instance->model.user1 / instance->scaling.L;
-  const double crustThickness        = instance->model.user2 / instance->scaling.L;
-  const double perturbationAmplitude = instance->model.user3 / instance->scaling.L;
-  const double mohoLevel             = -crustThickness - perturbationAmplitude * cos(2 * M_PI * coordinates.x / (instance->model.xmax - instance->model.xmin));
-  const bool   isBelowLithosphere    = coordinates.z < -lithosphereThickness;
-  const bool   isAboveMoho           = coordinates.z > mohoLevel;
+  Rectangle westernContinent = {
+          .sizeZ   = 180e3,
+          .sizeX   = 500e3,
+          .centreZ = -90e3,
+          .centreX = -350e3,
+          .angle   = 0,
+  };
+  Rectangle easternContinent = {
+          .sizeZ   = 140e3,
+          .sizeX   = 500e3,
+          .centreZ = -70e3,
+          .centreX = 350e3,
+          .angle   = 0,
+  };
+  Rectangle HOceanicPlate = {
+          .sizeZ   = 60e3,
+          .sizeX   = 200e3,
+          .centreZ = -30e3,
+          .centreX = 0e3,
+          .angle   = 0,
+  };
 
-  if (instance->model.user4 && isAboveMoho) {
-    const bool is2500MAboveMoho = coordinates.z > mohoLevel + 2500 / instance->scaling.L;
-    const bool is4500MAboveMoho = coordinates.z > mohoLevel + 4500 / instance->scaling.L;
-    const bool is7000MAboveMoho = coordinates.z > mohoLevel + 7000 / instance->scaling.L;
-    const bool is9000MAboveMoho = coordinates.z > mohoLevel + 9000 / instance->scaling.L;
-    if (is2500MAboveMoho && !is4500MAboveMoho) {
-      return 7;
-    } else if (is7000MAboveMoho && !is9000MAboveMoho) {
+
+  // const double HOceanicPlate = 20e3 / instance->scaling.L;
+  if (IsRectangleCoordinates(coordinates, westernContinent, instance->scaling.L)) {
+    if (coordinates.z > -40e3 / instance->scaling.L) {
+      return 1;}
+    else {
+      return 2;
+    }
+  } else if (IsRectangleCoordinates(coordinates, easternContinent, instance->scaling.L)) {
+    if (coordinates.z > -30e3 / instance->scaling.L) {
+      return 1;}
+    else {
+      return 2;
+    }
+  } else if (IsRectangleCoordinates(coordinates, HOceanicPlate, instance->scaling.L)) {
+    if (coordinates.z > -20e3 / instance->scaling.L) {
       return 8;
     } else {
-      return 1;
+      return 2;
     }
-  } else if (isAboveMoho) {
-    return 1;
-  } else if (isBelowLithosphere) {
-    return 3;
-  } else {
-    return 2;
   }
+  return 6;
 }
 
 double SetTemperature(MdoodzInput *instance, Coordinates coordinates) {
@@ -94,7 +112,7 @@ SetBC SetBCTNew(MdoodzInput *instance, POSITION position, double particleTempera
     bc.value = particleTemperature;
     bc.type  = 1;
   } else if (position == N || position == NE || position == NW) {
-    bc.value = surfaceTemperature;
+    bc.value = mantleTemperature;
     bc.type  = 1;
   } else if (position == W || position == E) {
     bc.value = mantleTemperature;
