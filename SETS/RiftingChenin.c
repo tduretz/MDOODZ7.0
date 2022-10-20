@@ -124,6 +124,39 @@ SetBC SetBCTNew(MdoodzInput *instance, POSITION position, double particleTempera
   return bc;
 }
 
+static double *BCVxs;
+
+static void    setBCVxs(int nz, double Vx,  double zTotal) {
+  BCVxs           = malloc(nz * sizeof(double));
+  const double dz = 2.0 / (nz - 1.0);
+  const int    nt = 20;
+
+  for (int i = 0; i < nz; i++) {
+
+  }
+
+  const double dt = 1.5 * pow(zTotal, 2);
+}
+
+
+SetBC SetBCVx(MdoodzInput *input, POSITION position, Coordinates coordinates) {
+  SetBC bc;
+  if (position == N || position == S || position == NW || position == SW || position == NE || position == SE) {
+    bc.value = 0;
+    bc.type  = 13;
+  } else if (position == W) {
+    bc.value = -coordinates.x * input->model.EpsBG;
+    bc.type  = 0;
+  } else if (position == E) {
+    bc.value = 0.0;
+    bc.type  = 0;
+  } else {
+    bc.value = 0.0;
+    bc.type  = -1;
+  }
+  return bc;
+}
+
 SetBC SetBCVz(MdoodzInput *input, POSITION position, Coordinates coordinates) {
   SetBC bc;
   if (position == W || position == E || position == SW || position == SE || position == NW || position == NE) {
@@ -165,7 +198,7 @@ int main() {
                   .SetVerticalVelocity   = SetVerticalVelocity,
           },
           .SetBCs = &(SetBCs_ff){
-                  .SetBCVx    = SetPureShearBCVx,
+                  .SetBCVx    = SetBCVx,
                   .SetBCVz    = SetBCVz,
                   .SetBCPType = SetBCPType,
                   .SetBCT     = SetBCT,

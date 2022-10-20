@@ -123,6 +123,8 @@ typedef struct MdoodzSetup    MdoodzSetup;
 typedef struct MdoodzInput    MdoodzInput;
 
 typedef struct {
+  int    k;
+  int    l;
   double x;
   double z;
 } Coordinates;

@@ -154,6 +154,8 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
           position = INTERNAL;
         }
         Coordinates coordinates = {
+                .k = k,
+                .l = l,
                 .x = mesh->xg_coord[k],
                 .z = mesh->zvx_coord[l]};
         SetBC bc          = setBCs.SetBCVx(instance, position, coordinates);
@@ -211,6 +213,8 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
           position = INTERNAL;
         }
         Coordinates coordinates = {
+                .k = k,
+                .l = l,
                 .x = mesh->xvz_coord[k],
                 .z = mesh->zg_coord[l]};
         SetBC bc          = setBCs.SetBCVz(instance, position, coordinates);
