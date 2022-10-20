@@ -2,8 +2,8 @@ import h5py as h5py
 import numpy as np
 import matplotlib.pyplot as mpl
 
-file = h5py.File('/Users/romankulakov/CLionProjects/MDOODZ7/cmake-exec/AnisotropyLayer/Output00040.gzip.h5', 'r')
-P    = file['Centers/P']
+file = h5py.File('/home/roman/CLionProjects/MDOODZ7.0/cmake-exec/RiftingChenin/result4/Output00200.gzip.h5', 'r')
+P    = file['Centers/T']
 Vx   = file['VxNodes/Vx']
 Vz   = file['VzNodes/Vz']
 Txx  = file['Centers/sxxd']

@@ -124,6 +124,24 @@ SetBC SetBCTNew(MdoodzInput *instance, POSITION position, double particleTempera
   return bc;
 }
 
+SetBC SetBCVz(MdoodzInput *input, POSITION position, Coordinates coordinates) {
+  SetBC bc;
+  if (position == W || position == E || position == SW || position == SE || position == NW || position == NE) {
+    bc.value = 0;
+    bc.type  = 13;
+  } else if (position == N) {
+    bc.value = coordinates.z * input->model.EpsBG;
+    bc.type  = 0;
+  } else if (position == S) {
+    bc.value = coordinates.z * input->model.EpsBG;
+    bc.type  = 0;
+  } else {
+    bc.value = 0;
+    bc.type  = -1;
+  }
+  return bc;
+}
+
 void AddCrazyConductivity(MdoodzInput *input) {
   int               *asthenospherePhases = (int *) malloc(sizeof(int));
   CrazyConductivity *crazyConductivity   = (CrazyConductivity *) malloc(sizeof(CrazyConductivity));
@@ -148,7 +166,7 @@ int main() {
           },
           .SetBCs = &(SetBCs_ff){
                   .SetBCVx    = SetPureShearBCVx,
-                  .SetBCVz    = SetPureShearBCVz,
+                  .SetBCVz    = SetBCVz,
                   .SetBCPType = SetBCPType,
                   .SetBCT     = SetBCT,
                   .SetBCTNew  = SetBCTNew,
