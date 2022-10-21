@@ -2,12 +2,11 @@
 #include "mdoodz.h"
 #include "stdbool.h"
 #include "stdlib.h"
+#include "stdio.h"
 
 
 double SetSurfaceZCoord(MdoodzInput *instance, double x_coord) {
-  const double TopoLevel = -0.0e3 / instance->scaling.L;
-  const double h_pert    = instance->model.user3 / instance->scaling.L;
-  return TopoLevel + h_pert * (3330.0 - 2800.0) / 2800.0 * cos(2 * M_PI * x_coord / (instance->model.xmax - instance->model.xmin));
+  return 0.0;
 }
 
 int SetPhase(MdoodzInput *instance, Coordinates coordinates) {
@@ -75,11 +74,11 @@ double SetGrainSize(MdoodzInput *instance, Coordinates coordinates, int phase) {
 }
 
 double SetHorizontalVelocity(MdoodzInput *instance, Coordinates coordinates) {
-  return -coordinates.x * instance->model.EpsBG;
+  return 0.0;
 }
 
 double SetVerticalVelocity(MdoodzInput *instance, Coordinates coordinates) {
-  return coordinates.z * instance->model.EpsBG;
+  return 0.0;
 }
 
 char SetBCPType(MdoodzInput *instance, POSITION position) {
@@ -140,12 +139,15 @@ static void    setBCVxs(int nz, double Vx,  double zTotal) {
 
 
 SetBC SetBCVx(MdoodzInput *input, POSITION position, Coordinates coordinates) {
+  const double plateThickness = 180e3;
   SetBC bc;
   if (position == N || position == S || position == NW || position == SW || position == NE || position == SE) {
     bc.value = 0;
     bc.type  = 13;
   } else if (position == W) {
-    bc.value = -coordinates.x * input->model.EpsBG;
+    if (coordinates.z > -plateThickness / input->scaling.L) {
+      bc.value = -coordinates.x * input->model.EpsBG;
+    }
     bc.type  = 0;
   } else if (position == E) {
     bc.value = 0.0;
@@ -166,7 +168,7 @@ SetBC SetBCVz(MdoodzInput *input, POSITION position, Coordinates coordinates) {
     bc.value = coordinates.z * input->model.EpsBG;
     bc.type  = 0;
   } else if (position == S) {
-    bc.value = coordinates.z * input->model.EpsBG;
+    bc.value = 0.0;
     bc.type  = 0;
   } else {
     bc.value = 0;

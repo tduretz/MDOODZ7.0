@@ -55,32 +55,32 @@ typedef struct {
   double therm_pert_x0, therm_pert_z0, therm_pert_dT, therm_pert_rad,
           cooling_time;
   // For rheological database...
-  int      force_act_vol_ast;
-  double   act_vol_dis_ast, act_vol_dif_ast;
+  int         force_act_vol_ast;
+  double      act_vol_dis_ast, act_vol_dif_ast;
   // Phase diagrams
-  int      isPD, num_PD, *PDMnT, *PDMnP, *PD1DnP;
-  double **PDMrho, *PDMTmin, *PDMTmax, *PDMPmin, *PDMPmax;
-  double **PD1Drho, *PD1Dmin, *PD1Dmax;
+  int         isPD, num_PD, *PDMnT, *PDMnP, *PD1DnP;
+  double    **PDMrho, *PDMTmin, *PDMTmax, *PDMPmin, *PDMPmax;
+  double    **PD1Drho, *PD1Dmin, *PD1Dmax;
   // Kinetics
-  int      kin_nP, kin_nT;
-  double  *kin_dG, kin_Tmin, kin_Tmax, kin_Pmin, kin_Pmax;
+  int         kin_nP, kin_nT;
+  double     *kin_dG, kin_Tmin, kin_Tmax, kin_Pmin, kin_Pmax;
   // Visualisation
-  int      rec_T_P_x_z, delete_breakpoints, GNUplot_residuals;
+  int         rec_T_P_x_z, delete_breakpoints, GNUplot_residuals;
   // Boundary conditions type
-  int      BC_setup_type, shear_style, polar;
-  int      StressRotation, StressUpdate, DirectNeighbour;
+  int         BC_setup_type, shear_style, polar;
+  int         StressRotation, StressUpdate, DirectNeighbour;
   // For diffused rheological constrasts
-  int      diffuse_X, diffuse_avg;
-  double   diffusion_length;
+  int         diffuse_X, diffuse_avg;
+  double      diffusion_length;
   // For Pips
-  int      ProgReac, NoReturn, VolChangeReac, Plith_trick, UnsplitDiffReac, kinetics;
+  int         ProgReac, NoReturn, VolChangeReac, Plith_trick, UnsplitDiffReac, kinetics;
   // Anisotropy
-  int      aniso, aniso_fstrain, oop, noise_bg;
-  int      eqn_state;
-  int      residual_form;
-  int      irestart, istep;
-  int      writer, writerStep;
-  const char     *writerSubfolder;
+  int         aniso, aniso_fstrain, oop, noise_bg;
+  int         eqn_state;
+  int         residual_form;
+  int         irestart, istep;
+  int         writer, writerStep;
+  const char *writerSubfolder;
 } params;
 
 // Stucture scale contains scaling parameters
@@ -117,16 +117,22 @@ typedef struct {
   double aniso_factor[20], aniso_angle[20];
 } mat_prop;
 
-char                         *GetSetupFileName(int nargs, char *args[]);
+char                      *GetSetupFileName(int nargs, char *args[]);
 
-typedef struct MdoodzSetup    MdoodzSetup;
-typedef struct MdoodzInput    MdoodzInput;
+typedef struct MdoodzSetup MdoodzSetup;
+typedef struct MdoodzInput MdoodzInput;
 
 typedef struct {
-  int    k;
-  int    l;
-  double x;
-  double z;
+  double west;
+  double east;
+} AirCoordinates;
+
+typedef struct {
+  int            k;
+  int            l;
+  double         x;
+  double         z;
+  AirCoordinates *airCoordinates;
 } Coordinates;
 
 typedef double (*SetSurfaceZCoord_f)(MdoodzInput *input, double x_coord);
@@ -210,14 +216,14 @@ typedef struct {
 } Geometry;
 
 typedef struct {
-  double double1;
-  double double2;
-  double double3;
-  double double4;
-  int int1;
-  int int2;
-  int int3;
-  int int4;
+  double      double1;
+  double      double2;
+  double      double3;
+  double      double4;
+  int         int1;
+  int         int2;
+  int         int3;
+  int         int4;
   const char *str1;
 } MutateInputParams;
 

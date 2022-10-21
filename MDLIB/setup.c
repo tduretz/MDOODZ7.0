@@ -110,6 +110,26 @@ void ValidateInternalPoint(POSITION position, char bcType, Coordinates coordinat
 }
 
 void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
+  AirCoordinates airCoordinates = (AirCoordinates){
+          .east = instance->model.zmax,
+          .west = instance->model.zmax,
+  };
+
+  for (int l = 0; l < mesh->Nz + 1; l++) {
+    const double zCoord = mesh->zvx_coord[l];
+    if (mesh->BCu.type[0 + l * (mesh->Nx)] == 30) {
+      if (airCoordinates.west > zCoord) {
+        airCoordinates.west = zCoord;
+      }
+    }
+    if (mesh->BCu.type[mesh->Nx - 1 + l * (mesh->Nx)] == 30) {
+      if (airCoordinates.east > zCoord) {
+        airCoordinates.east = zCoord;
+      }
+    }
+  }
+
+
   /* --------------------------------------------------------------------------------------------------------*/
   /* Set the BCs for Vx on all grid levels */
   /* Type  0: Dirichlet point that matches the physical boundary (Vx:
@@ -124,6 +144,10 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
   /* Type -1: not a BC point (tag for inner points) */
   /* Type 30: not calculated (part of the "air") */
   /* --------------------------------------------------------------------------------------------------------*/
+
+  double VxWestSum  = 0.0;
+  double VxEastSum  = 0.0;
+  double VxSouthSum = 0.0;
 
   for (int l = 0; l < mesh->Nz + 1; l++) {
     for (int k = 0; k < mesh->Nx; k++) {
@@ -154,17 +178,57 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
           position = INTERNAL;
         }
         Coordinates coordinates = {
-                .k = k,
-                .l = l,
-                .x = mesh->xg_coord[k],
-                .z = mesh->zvx_coord[l]};
+                .k              = k,
+                .l              = l,
+                .x              = mesh->xg_coord[k],
+                .z              = mesh->zvx_coord[l],
+                .airCoordinates = &airCoordinates};
         SetBC bc          = setBCs.SetBCVx(instance, position, coordinates);
         mesh->BCu.type[c] = bc.type;
         mesh->BCu.val[c]  = bc.value;
-        if (bc.type==11) mesh->BCu.val[c] = 2.0*bc.value;
+        if (bc.type == 11) mesh->BCu.val[c] = 2.0 * bc.value;
         ValidateInternalPoint(position, bc.type, coordinates, "SetBCVxType");
+        if (k == 0) {
+          VxWestSum += bc.value;
+        } else if (k == mesh->Nx - 1) {
+          VxEastSum += bc.value;
+        } else if (l == 0) {
+          VxSouthSum += bc.value;
+        }
       }
     }
+  }
+
+  printf("VxWestSum: %f, VxEastSum: %f\n", VxWestSum, VxEastSum);
+  const double tolerance = 0.000001;
+
+  double border[100];
+
+  if (VxWestSum > tolerance || VxWestSum < -tolerance) {
+    int zeroValuesCount = 0;
+    for (int l = 1; l < mesh->Nz; l++) {
+      const int c = 0 + l * (mesh->Nx);
+      if (mesh->BCu.type[c] == 30) {
+        continue;
+      }
+      if (mesh->BCu.val[c] == 0.0) {
+        zeroValuesCount++;
+      }
+      border[l] = mesh->BCu.val[c];
+    }
+    double correctedVxWestSum = 0.0;
+    for (int l = 0; l < mesh->Nz + 1; l++) {
+      const int k = 0;
+      const int c = k + l * (mesh->Nx);
+      if (mesh->BCu.type[c] == 30) {
+        continue;
+      }
+      if (mesh->BCu.val[c] == 0.0) {
+        mesh->BCu.val[c] = -VxWestSum / zeroValuesCount;
+      }
+      correctedVxWestSum += mesh->BCu.val[c];
+    }
+    printf("correctedVxWestSum: %f\n", correctedVxWestSum);
   }
 
   /* --------------------------------------------------------------------------------------------------------*/
@@ -183,6 +247,10 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
   /* Type -1: not a BC point (tag for inner points) */
   /* Type 30: not calculated (part of the "air") */
   /* --------------------------------------------------------------------------------------------------------*/
+
+  double VzWestSum  = 0.0;
+  double VzEastSum  = 0.0;
+  double VzSouthSum = 0.0;
 
   for (int l = 0; l < mesh->Nz; l++) {
     for (int k = 0; k < mesh->Nx + 1; k++) {
@@ -213,18 +281,30 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
           position = INTERNAL;
         }
         Coordinates coordinates = {
-                .k = k,
-                .l = l,
-                .x = mesh->xvz_coord[k],
-                .z = mesh->zg_coord[l]};
+                .k              = k,
+                .l              = l,
+                .x              = mesh->xvz_coord[k],
+                .z              = mesh->zg_coord[l],
+                .airCoordinates = &airCoordinates};
         SetBC bc          = setBCs.SetBCVz(instance, position, coordinates);
         mesh->BCv.type[c] = bc.type;
         mesh->BCv.val[c]  = bc.value;
-        if (bc.type==11) mesh->BCu.val[c] = 2.0*bc.value;
+        if (bc.type == 11) mesh->BCu.val[c] = 2.0 * bc.value;
         ValidateInternalPoint(position, mesh->BCv.type[c], coordinates, "SetBCVzType");
+        if (k == 0) {
+          VzWestSum += bc.value;
+        } else if (k == mesh->Nx) {
+          VzEastSum += bc.value;
+        } else if (l == 0) {
+          VzSouthSum += bc.value;
+        }
       }
     }
   }
+
+  printf("VzWestSum: %f, VzEastSum: %f: \n", VzWestSum, VzEastSum);
+  printf("total West+East+South outflow: %f\n", VxWestSum + VxEastSum - VzSouthSum);
+
 
   const int NCX = mesh->Nx - 1;
   const int NCZ = mesh->Nz - 1;
