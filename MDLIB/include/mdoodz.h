@@ -123,16 +123,10 @@ typedef struct MdoodzSetup MdoodzSetup;
 typedef struct MdoodzInput MdoodzInput;
 
 typedef struct {
-  double west;
-  double east;
-} AirCoordinates;
-
-typedef struct {
   int            k;
   int            l;
   double         x;
   double         z;
-  AirCoordinates *airCoordinates;
 } Coordinates;
 
 typedef double (*SetSurfaceZCoord_f)(MdoodzInput *input, double x_coord);

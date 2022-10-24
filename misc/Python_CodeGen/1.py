@@ -5,7 +5,7 @@ from matplotlib import pyplot   #2D plotting library that we will use to plot ou
 #setting the grid
 space = 6e6
 h_litho = 2e6
-nx = 200                     #grid points
+nx = 100                     #grid points
 dx  = space / (nx - 1)          #grid spacing
 nt = 20                     #number of timesteps
 nu = 0.3                    #viscosity
@@ -17,8 +17,8 @@ dt = diff_coef*dx**2           #based on von neumaan stability analysis
 #innitial condition
 
 u = numpy.ones(nx)
-u[:int(h_litho/dx+1)] = 3      #Square Wave Profile
-u[int(h_litho/dx+1):] = -3      #Square Wave Profile
+u[:int(h_litho/dx+1)] = 0.040223999999999996      #Square Wave Profile
+u[int(h_litho/dx+1):] = -0.019211462686567173      #Square Wave Profile
 
 pyplot.plot(numpy.linspace(0,space,nx), u, label='Initial Solution')
 

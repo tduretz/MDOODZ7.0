@@ -110,26 +110,6 @@ void ValidateInternalPoint(POSITION position, char bcType, Coordinates coordinat
 }
 
 void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
-  AirCoordinates airCoordinates = (AirCoordinates){
-          .east = instance->model.zmax,
-          .west = instance->model.zmax,
-  };
-
-  for (int l = 0; l < mesh->Nz + 1; l++) {
-    const double zCoord = mesh->zvx_coord[l];
-    if (mesh->BCu.type[0 + l * (mesh->Nx)] == 30) {
-      if (airCoordinates.west > zCoord) {
-        airCoordinates.west = zCoord;
-      }
-    }
-    if (mesh->BCu.type[mesh->Nx - 1 + l * (mesh->Nx)] == 30) {
-      if (airCoordinates.east > zCoord) {
-        airCoordinates.east = zCoord;
-      }
-    }
-  }
-
-
   /* --------------------------------------------------------------------------------------------------------*/
   /* Set the BCs for Vx on all grid levels */
   /* Type  0: Dirichlet point that matches the physical boundary (Vx:
@@ -145,8 +125,9 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
   /* Type 30: not calculated (part of the "air") */
   /* --------------------------------------------------------------------------------------------------------*/
 
-  double VxWestSum  = 0.0;
-  double VxEastSum  = 0.0;
+  double VxWestSum = 0.0;
+  double VxEastSum = 0.0;
+
 
   for (int l = 0; l < mesh->Nz + 1; l++) {
     for (int k = 0; k < mesh->Nx; k++) {
@@ -177,11 +158,11 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
           position = INTERNAL;
         }
         Coordinates coordinates = {
-                .k              = k,
-                .l              = l,
-                .x              = mesh->xg_coord[k],
-                .z              = mesh->zvx_coord[l],
-                .airCoordinates = &airCoordinates};
+                .k = k,
+                .l = l,
+                .x = mesh->xg_coord[k],
+                .z = mesh->zvx_coord[l],
+        };
         SetBC bc          = setBCs.SetBCVx(instance, position, coordinates);
         mesh->BCu.type[c] = bc.type;
         mesh->BCu.val[c]  = bc.value;
@@ -200,8 +181,8 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
   const double tolerance = 0.000001;
 
   if (VxWestSum > tolerance || VxWestSum < -tolerance) {
-    // double      *boundary  = malloc(mesh->Nz - 1 * sizeof(double));
-    int zeroValuesCount = 0;
+    double boundary[100];// = malloc((mesh->Nz - 1) * sizeof(double));
+    int    zeroValuesCount = 0;
     for (int l = 1; l < mesh->Nz; l++) {
       const int c = 0 + l * (mesh->Nx);
       if (mesh->BCu.type[c] == 30) {
@@ -216,17 +197,37 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
       exit(144);
     }
     double correctedVxWestSum = 0.0;
+    double gridZmax           = -3e3;
     for (int l = 1; l < mesh->Nz + 1; l++) {
       const int k = 0;
       const int c = k + l * (mesh->Nx);
       if (mesh->BCu.type[c] == 30) {
         continue;
       }
+      if (gridZmax < mesh->zvx_coord[l]) {
+        gridZmax = mesh->zvx_coord[l];
+      }
       if (mesh->BCu.val[c] == 0.0) {
         mesh->BCu.val[c] = -VxWestSum / zeroValuesCount;
       }
-      // boundary[l] = mesh->BCu.val[c];
+      boundary[l - 1] = mesh->BCu.val[c];
       correctedVxWestSum += mesh->BCu.val[c];
+    }
+
+    const double space = (gridZmax + -instance->model.zmin) * instance->scaling.L;
+    const double dx    = space / (mesh->Nz - 1);
+    const double dt    = 1.5 * pow(dx, 2);
+
+    double       newBoundary[100];
+
+    for (int i = 0; i < 200; i++) {
+      for (int l = 0; l < mesh->Nz + 1; l++) {
+        newBoundary[l] = boundary[l];
+      }
+      for (int l = 1; l < mesh->Nz; l++) {
+        boundary[l] = newBoundary[l] + 0.3 * dt / pow(dx, 2) * (newBoundary[l + 1] - 2 * newBoundary[l] + newBoundary[l - 1]);
+      }
+      *boundary = *newBoundary;
     }
     printf("correctedVxWestSum: %f\n", correctedVxWestSum);
   }
@@ -313,11 +314,11 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
           position = INTERNAL;
         }
         Coordinates coordinates = {
-                .k              = k,
-                .l              = l,
-                .x              = mesh->xvz_coord[k],
-                .z              = mesh->zg_coord[l],
-                .airCoordinates = &airCoordinates};
+                .k = k,
+                .l = l,
+                .x = mesh->xvz_coord[k],
+                .z = mesh->zg_coord[l],
+        };
         SetBC bc          = setBCs.SetBCVz(instance, position, coordinates);
         mesh->BCv.type[c] = bc.type;
         mesh->BCv.val[c]  = bc.value;
