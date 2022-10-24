@@ -147,7 +147,6 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
 
   double VxWestSum  = 0.0;
   double VxEastSum  = 0.0;
-  double VxSouthSum = 0.0;
 
   for (int l = 0; l < mesh->Nz + 1; l++) {
     for (int k = 0; k < mesh->Nx; k++) {
@@ -192,8 +191,6 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
           VxWestSum += bc.value;
         } else if (k == mesh->Nx - 1) {
           VxEastSum += bc.value;
-        } else if (l == 0) {
-          VxSouthSum += bc.value;
         }
       }
     }
@@ -202,9 +199,8 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
   printf("VxWestSum: %f, VxEastSum: %f\n", VxWestSum, VxEastSum);
   const double tolerance = 0.000001;
 
-  double border[100];
-
   if (VxWestSum > tolerance || VxWestSum < -tolerance) {
+    double      *boundary  = malloc(mesh->Nz - 1 * sizeof(double));
     int zeroValuesCount = 0;
     for (int l = 1; l < mesh->Nz; l++) {
       const int c = 0 + l * (mesh->Nx);
@@ -214,7 +210,6 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
       if (mesh->BCu.val[c] == 0.0) {
         zeroValuesCount++;
       }
-      border[l] = mesh->BCu.val[c];
     }
     double correctedVxWestSum = 0.0;
     for (int l = 0; l < mesh->Nz + 1; l++) {
@@ -226,9 +221,38 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
       if (mesh->BCu.val[c] == 0.0) {
         mesh->BCu.val[c] = -VxWestSum / zeroValuesCount;
       }
+      boundary[l] = mesh->BCu.val[c];
       correctedVxWestSum += mesh->BCu.val[c];
     }
     printf("correctedVxWestSum: %f\n", correctedVxWestSum);
+  }
+
+  if (VxEastSum > tolerance || VxEastSum < -tolerance) {
+    double      *boundary  = malloc(mesh->Nz - 1 * sizeof(double));
+    int zeroValuesCount = 0;
+    for (int l = 1; l < mesh->Nz; l++) {
+      const int c = (mesh->Nx + 1) + l * (mesh->Nx);
+      if (mesh->BCu.type[c] == 30) {
+        continue;
+      }
+      if (mesh->BCu.val[c] == 0.0) {
+        zeroValuesCount++;
+      }
+    }
+    double correctedVxWestSum = 0.0;
+    for (int l = 0; l < mesh->Nz + 1; l++) {
+      const int k = mesh->Nx;
+      const int c = k + l * (mesh->Nx);
+      if (mesh->BCu.type[c] == 30) {
+        continue;
+      }
+      if (mesh->BCu.val[c] == 0.0) {
+        mesh->BCu.val[c] = -VxEastSum / zeroValuesCount;
+      }
+      boundary[l] = mesh->BCu.val[c];
+      correctedVxWestSum += mesh->BCu.val[c];
+    }
+    printf("correctedVxEastSum: %f\n", correctedVxWestSum);
   }
 
   /* --------------------------------------------------------------------------------------------------------*/
@@ -303,11 +327,35 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
   }
 
   printf("VzWestSum: %f, VzEastSum: %f: \n", VzWestSum, VzEastSum);
-  printf("total West+East+South outflow: %f\n", VxWestSum + VxEastSum - VzSouthSum);
+  printf("total West+East+South sum: %f\n", VxWestSum + VxEastSum - VzSouthSum);
 
+  if (VzSouthSum > tolerance || VzSouthSum < -tolerance) {
+    double      *boundary  = malloc(mesh->Nz - 1 * sizeof(double));
+    int zeroValuesCount = 0;
+    for (int k = 0; k < mesh->Nx + 1; k++) {
+      const int c = k;
+      if (mesh->BCu.type[c] == 30) {
+        continue;
+      }
+      if (mesh->BCu.val[c] == 0.0) {
+        zeroValuesCount++;
+      }
+    }
+    double correctedVzSouthSum = 0.0;
+    for (int k = 0; k < mesh->Nx + 1; k++) {
+      const int c = k;
+      if (mesh->BCu.type[c] == 30) {
+        continue;
+      }
+      if (mesh->BCu.val[c] == 0.0) {
+        mesh->BCu.val[c] = -VzSouthSum / zeroValuesCount;
+      }
+      boundary[k] = mesh->BCu.val[c];
+      correctedVzSouthSum += mesh->BCu.val[c];
+    }
+    printf("correctedVzSouthSum: %f\n", correctedVzSouthSum);
+  }
 
-  const int NCX = mesh->Nx - 1;
-  const int NCZ = mesh->Nz - 1;
 
   /* --------------------------------------------------------------------------------------------------------*/
   /* Set the BCs for P on all grid levels */
@@ -316,6 +364,9 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
   /* Type 30: not calculated (part of the "air") */
   /* Type 31: surface pressure (Dirichlet) */
   /* --------------------------------------------------------------------------------------------------------*/
+
+  const int NCX = mesh->Nx - 1;
+  const int NCZ = mesh->Nz - 1;
 
   for (int l = 0; l < NCZ; l++) {
     for (int k = 0; k < NCX; k++) {
