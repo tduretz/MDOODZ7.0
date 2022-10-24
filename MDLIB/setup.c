@@ -200,7 +200,7 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
   const double tolerance = 0.000001;
 
   if (VxWestSum > tolerance || VxWestSum < -tolerance) {
-    double      *boundary  = malloc(mesh->Nz - 1 * sizeof(double));
+    // double      *boundary  = malloc(mesh->Nz - 1 * sizeof(double));
     int zeroValuesCount = 0;
     for (int l = 1; l < mesh->Nz; l++) {
       const int c = 0 + l * (mesh->Nx);
@@ -212,7 +212,7 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
       }
     }
     double correctedVxWestSum = 0.0;
-    for (int l = 0; l < mesh->Nz + 1; l++) {
+    for (int l = 1; l < mesh->Nz + 1; l++) {
       const int k = 0;
       const int c = k + l * (mesh->Nx);
       if (mesh->BCu.type[c] == 30) {
@@ -221,14 +221,14 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
       if (mesh->BCu.val[c] == 0.0) {
         mesh->BCu.val[c] = -VxWestSum / zeroValuesCount;
       }
-      boundary[l] = mesh->BCu.val[c];
+      // boundary[l] = mesh->BCu.val[c];
       correctedVxWestSum += mesh->BCu.val[c];
     }
     printf("correctedVxWestSum: %f\n", correctedVxWestSum);
   }
 
   if (VxEastSum > tolerance || VxEastSum < -tolerance) {
-    double      *boundary  = malloc(mesh->Nz - 1 * sizeof(double));
+    // double      *boundary  = malloc(mesh->Nz - 1 * sizeof(double));
     int zeroValuesCount = 0;
     for (int l = 1; l < mesh->Nz; l++) {
       const int c = (mesh->Nx + 1) + l * (mesh->Nx);
@@ -240,7 +240,7 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
       }
     }
     double correctedVxWestSum = 0.0;
-    for (int l = 0; l < mesh->Nz + 1; l++) {
+    for (int l = 1; l < mesh->Nz + 1; l++) {
       const int k = mesh->Nx;
       const int c = k + l * (mesh->Nx);
       if (mesh->BCu.type[c] == 30) {
@@ -249,7 +249,7 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
       if (mesh->BCu.val[c] == 0.0) {
         mesh->BCu.val[c] = -VxEastSum / zeroValuesCount;
       }
-      boundary[l] = mesh->BCu.val[c];
+      // boundary[l] = mesh->BCu.val[c];
       correctedVxWestSum += mesh->BCu.val[c];
     }
     printf("correctedVxEastSum: %f\n", correctedVxWestSum);
@@ -330,28 +330,28 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
   printf("total West+East+South sum: %f\n", VxWestSum + VxEastSum - VzSouthSum);
 
   if (VzSouthSum > tolerance || VzSouthSum < -tolerance) {
-    double      *boundary  = malloc(mesh->Nz - 1 * sizeof(double));
+    //double      *boundary  = malloc(mesh->Nx + 1 * sizeof(double));
     int zeroValuesCount = 0;
     for (int k = 0; k < mesh->Nx + 1; k++) {
       const int c = k;
-      if (mesh->BCu.type[c] == 30) {
+      if (mesh->BCv.type[c] == 30) {
         continue;
       }
-      if (mesh->BCu.val[c] == 0.0) {
+      if (mesh->BCv.val[c] == 0.0) {
         zeroValuesCount++;
       }
     }
     double correctedVzSouthSum = 0.0;
     for (int k = 0; k < mesh->Nx + 1; k++) {
       const int c = k;
-      if (mesh->BCu.type[c] == 30) {
+      if (mesh->BCv.type[c] == 30) {
         continue;
       }
-      if (mesh->BCu.val[c] == 0.0) {
-        mesh->BCu.val[c] = -VzSouthSum / zeroValuesCount;
+      if (mesh->BCv.val[c] == 0.0) {
+        mesh->BCv.val[c] = -VzSouthSum / zeroValuesCount;
       }
-      boundary[k] = mesh->BCu.val[c];
-      correctedVzSouthSum += mesh->BCu.val[c];
+      //boundary[k] = mesh->BCu.val[c];
+      correctedVzSouthSum += mesh->BCv.val[c];
     }
     printf("correctedVzSouthSum: %f\n", correctedVzSouthSum);
   }
