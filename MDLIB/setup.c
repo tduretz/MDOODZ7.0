@@ -211,6 +211,10 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
         zeroValuesCount++;
       }
     }
+    if (zeroValuesCount == 0) {
+      printf("Western boundary velocity is imbalanced, but no zero velocity points are left for correction\n");
+      exit(144);
+    }
     double correctedVxWestSum = 0.0;
     for (int l = 1; l < mesh->Nz + 1; l++) {
       const int k = 0;
@@ -238,6 +242,10 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
       if (mesh->BCu.val[c] == 0.0) {
         zeroValuesCount++;
       }
+    }
+    if (zeroValuesCount == 0) {
+      printf("Eastern boundary velocity is imbalanced, but no zero velocity points are left for correction\n");
+      exit(144);
     }
     double correctedVxWestSum = 0.0;
     for (int l = 1; l < mesh->Nz + 1; l++) {
@@ -340,6 +348,10 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
       if (mesh->BCv.val[c] == 0.0) {
         zeroValuesCount++;
       }
+    }
+    if (zeroValuesCount == 0) {
+      printf("Southern boundary velocity is imbalanced, but no zero velocity points are left for correction\n");
+      exit(144);
     }
     double correctedVzSouthSum = 0.0;
     for (int k = 0; k < mesh->Nx + 1; k++) {
