@@ -62,8 +62,8 @@ void ExplicitDiffusion2D( double* rho, int nT, int nP, double dT, double dP, sca
     const double Kdiff   = 1e0;              // diffusivity
     const double dt_exp  =  MINV(dP*dP,dT*dT)/Kdiff/2.1; // explicit time step
     const int    n_steps = 200;              // number of steps
-    double       qW, qE, qS, qN;   
-    double *rho0   = DoodzCalloc( nT*nP, sizeof(double)); 
+    double       qW, qE, qS, qN;
+    double *rho0   = DoodzCalloc( nT*nP, sizeof(double));
 
     for ( int it=0; it<n_steps; it++) {
         ArrayEqualArray( rho0, rho, nT*nP);
@@ -1130,6 +1130,7 @@ Input ReadInputFile( char *fileName ) {
     if ( model.shear_style == 0 ) model.isperiodic_x  = 0;
     if ( model.aniso       == 1 ) model.fstrain       = 1;
     // Setup dependant
+    model.compensateMassBalance    = ReadInt2( fin, "compensateMassBalance",    0 );
     model.EpsBG           = ReadDou2( fin, "EpsBG",         1e-30 ) / scaling.E; // Background tectonic rate, defaut is close to zero to avoid any Nans of Infs in rheology
     model.DivBG           = ReadDou2( fin, "DivBG",           0.0 ) / scaling.E;
     model.PrBG            = ReadDou2( fin, "PrBG",            0.0 ) / scaling.S;
