@@ -220,16 +220,16 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
     }
 
     const double space = (gridZmax + -instance->model.zmin) * instance->scaling.L;
-    const double dx    = space / (mesh->Nz - 1);
+    const double dx    = space / (nz - 1);
     const double dt    = 1.5 * pow(dx, 2);
 
     double       newBoundary[100];
 
-    for (int i = 0; i < 200; i++) {
-      for (int l = 0; l < mesh->Nz + 1; l++) {
+    for (int i = 0; i < 20; i++) {
+      for (int l = 0; l < nz; l++) {
         newBoundary[l] = boundary[l];
       }
-      for (int l = 1; l < mesh->Nz; l++) {
+      for (int l = 1; l < nz - 1; l++) {
         boundary[l] = newBoundary[l] + 0.3 * dt / pow(dx, 2) * (newBoundary[l + 1] - 2 * newBoundary[l] + newBoundary[l - 1]);
       }
       *boundary = *newBoundary;
