@@ -2,7 +2,7 @@ import h5py as h5py
 import numpy as np
 import matplotlib.pyplot as mpl
 
-file = h5py.File('/home/roman/CLionProjects/MDOODZ7.0/cmake-exec/RiftingChenin/result4/Output00160.gzip.h5', 'r')
+file = h5py.File('/home/roman/CLionProjects/MDOODZ7.0/cmake-exec/RiftingChenin/result4/Output00200.gzip.h5', 'r')
 Vx   = file['VxNodes/Vx']
 Vz   = file['VzNodes/Vz']
 xc   = file['/Model/xc_coord']
@@ -35,12 +35,12 @@ mpl.set_cmap('jet')
 plot1 =  ax[0].pcolor(xc, zc, Vx.transpose())
 ax[0].plot()
 cbar1 = mpl.colorbar(plot1, ax=ax[0])
-cbar1.set_label('Vx [cm/s]')
+cbar1.set_label('Vx [cm/yr]')
 
 plot2 = ax[1].pcolor(xc, zc, Vz.transpose())
 ax[1].plot()
 cbar2 = mpl.colorbar(plot2, ax=ax[1])
-cbar2.set_label('Vz [cm/s]')
+cbar2.set_label('Vz [cm/yr]')
 
 
 mpl.show()
