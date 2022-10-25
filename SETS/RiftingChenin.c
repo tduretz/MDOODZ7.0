@@ -150,7 +150,11 @@ SetBC SetBCVx(MdoodzInput *input, POSITION position, Coordinates coordinates) {
     }
     bc.type  = 0;
   } else if (position == E) {
-    bc.value = 0.0;
+    if (coordinates.z < -250e3 / input->scaling.L && coordinates.z > -400e3 / input->scaling.L) {
+      bc.value = -coordinates.x * input->model.EpsBG;
+    } else {
+      bc.value = 0.0;
+    }
     bc.type  = 0;
   } else {
     bc.value = 0.0;

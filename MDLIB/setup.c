@@ -216,6 +216,7 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
         nz++;
       }
     }
+    printf("correctedVxWestSum: %f\n", correctedVxWestSum);
 
     double *boundary = malloc((nz) * sizeof(double));
     for (int l = 1; l < nz + 1; l++) {
@@ -245,14 +246,14 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
       mesh->BCu.val[c] = boundary[l - 1];
     }
 
-    printf("correctedVxWestSum: %f\n", correctedVxWestSum);
+    free(boundary);
+    free(newBoundary);
   }
 
   if (VxEastSum > tolerance || VxEastSum < -tolerance) {
-    // double      *boundary  = malloc(mesh->Nz - 1 * sizeof(double));
     int zeroValuesCount = 0;
     for (int l = 1; l < mesh->Nz; l++) {
-      const int c = (mesh->Nx + 1) + l * (mesh->Nx);
+      const int c = (mesh->Nx - 1) + l * (mesh->Nx);
       if (mesh->BCu.type[c] == 30) {
         continue;
       }
@@ -265,19 +266,58 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
       exit(144);
     }
     double correctedVxWestSum = 0.0;
+    double gridZmax           = -3e3;
+    int    nz                 = 0;
     for (int l = 1; l < mesh->Nz + 1; l++) {
-      const int k = mesh->Nx;
+      const int k = mesh->Nx - 1;
       const int c = k + l * (mesh->Nx);
       if (mesh->BCu.type[c] == 30) {
         continue;
       }
+      if (gridZmax < mesh->zvx_coord[l]) {
+        gridZmax = mesh->zvx_coord[l];
+      }
       if (mesh->BCu.val[c] == 0.0) {
         mesh->BCu.val[c] = -VxEastSum / zeroValuesCount;
       }
-      // boundary[l] = mesh->BCu.val[c];
+      double value = mesh->BCu.val[c];
       correctedVxWestSum += mesh->BCu.val[c];
+      if (value > tolerance || value < -tolerance) {
+        nz++;
+      }
     }
     printf("correctedVxEastSum: %f\n", correctedVxWestSum);
+
+    double *boundary = malloc((nz) * sizeof(double));
+    for (int l = 1; l < nz + 1; l++) {
+      const int    c     = (mesh->Nx - 1) + l * (mesh->Nx);
+      const double value = mesh->BCu.val[c];
+      boundary[l - 1]    = value;
+    }
+
+    const double space       = (gridZmax + -instance->model.zmin) * instance->scaling.L;
+    const double dx          = space / (nz - 1);
+    const double dt          = 1.5 * pow(dx, 2);
+
+    double      *newBoundary = malloc((nz) * sizeof(double));
+
+    for (int i = 0; i < 20; i++) {
+      for (int l = 0; l < nz; l++) {
+        newBoundary[l] = boundary[l];
+      }
+      for (int l = 1; l < nz - 1; l++) {
+        boundary[l] = newBoundary[l] + 0.3 * dt / pow(dx, 2) * (newBoundary[l + 1] - 2 * newBoundary[l] + newBoundary[l - 1]);
+      }
+      *boundary = *newBoundary;
+    }
+
+    for (int l = 1; l < nz + 1; l++) {
+      const int c      = (mesh->Nx - 1) + l * (mesh->Nx);
+      mesh->BCu.val[c] = boundary[l - 1];
+    }
+
+    free(boundary);
+    free(newBoundary);
   }
 
   /* --------------------------------------------------------------------------------------------------------*/
