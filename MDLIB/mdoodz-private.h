@@ -561,4 +561,12 @@ void            SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh);
 
 void            ValidateSetup(MdoodzSetup *setup, MdoodzInput *instance);
 
+typedef struct {
+  double VxWestSum;
+  double VxEastSum;
+  double VzSouthSum;
+} BoundarySums;
+
+void            CompensateMassBalance(MdoodzInput *instance, grid *mesh, BoundarySums boundarySums);
+
 void SetBCs_MD6( grid*, params*, scale, markers*, mat_prop*, surface* );
