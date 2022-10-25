@@ -237,6 +237,10 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
     }
   }
 
+  if (!instance->model.compensateMassBalance) {
+    return;
+  }
+
   printf("VxWestSum: %f, VxEastSum: %f, VzSouthSum: %f\n", VxWestSum, VxEastSum, VzSouthSum);
   const double tolerance = 0.000001;
 
