@@ -198,6 +198,7 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
     }
     double correctedVxWestSum = 0.0;
     double gridZmax           = -3e3;
+    int nz = 0;
     for (int l = 1; l < mesh->Nz + 1; l++) {
       const int k = 0;
       const int c = k + l * (mesh->Nx);
@@ -210,8 +211,12 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
       if (mesh->BCu.val[c] == 0.0) {
         mesh->BCu.val[c] = -VxWestSum / zeroValuesCount;
       }
-      boundary[l - 1] = mesh->BCu.val[c];
-      correctedVxWestSum += mesh->BCu.val[c];
+      const double value = mesh->BCu.val[c];
+      boundary[l - 1] = value;
+      correctedVxWestSum += value;
+      if (value > tolerance || value < -tolerance) {
+        nz++;
+      }
     }
 
     const double space = (gridZmax + -instance->model.zmin) * instance->scaling.L;
