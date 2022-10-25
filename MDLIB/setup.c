@@ -181,8 +181,7 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
   const double tolerance = 0.000001;
 
   if (VxWestSum > tolerance || VxWestSum < -tolerance) {
-    double boundary[100];// = malloc((mesh->Nz - 1) * sizeof(double));
-    int    zeroValuesCount = 0;
+    int zeroValuesCount = 0;
     for (int l = 1; l < mesh->Nz; l++) {
       const int c = 0 + l * (mesh->Nx);
       if (mesh->BCu.type[c] == 30) {
@@ -198,7 +197,7 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
     }
     double correctedVxWestSum = 0.0;
     double gridZmax           = -3e3;
-    int nz = 0;
+    int    nz                 = 0;
     for (int l = 1; l < mesh->Nz + 1; l++) {
       const int k = 0;
       const int c = k + l * (mesh->Nx);
@@ -212,18 +211,24 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
         mesh->BCu.val[c] = -VxWestSum / zeroValuesCount;
       }
       const double value = mesh->BCu.val[c];
-      boundary[l - 1] = value;
       correctedVxWestSum += value;
       if (value > tolerance || value < -tolerance) {
         nz++;
       }
     }
 
-    const double space = (gridZmax + -instance->model.zmin) * instance->scaling.L;
-    const double dx    = space / (nz - 1);
-    const double dt    = 1.5 * pow(dx, 2);
+    double *boundary = malloc((nz) * sizeof(double));
+    for (int l = 1; l < nz + 1; l++) {
+      const int    c     = 0 + l * (mesh->Nx);
+      const double value = mesh->BCu.val[c];
+      boundary[l - 1]    = value;
+    }
 
-    double       newBoundary[100];
+    const double space       = (gridZmax + -instance->model.zmin) * instance->scaling.L;
+    const double dx          = space / (nz - 1);
+    const double dt          = 1.5 * pow(dx, 2);
+
+    double      *newBoundary = malloc((nz) * sizeof(double));
 
     for (int i = 0; i < 20; i++) {
       for (int l = 0; l < nz; l++) {
@@ -234,6 +239,12 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
       }
       *boundary = *newBoundary;
     }
+
+    for (int l = 1; l < nz + 1; l++) {
+      const int c      = 0 + l * (mesh->Nx);
+      mesh->BCu.val[c] = boundary[l - 1];
+    }
+
     printf("correctedVxWestSum: %f\n", correctedVxWestSum);
   }
 
