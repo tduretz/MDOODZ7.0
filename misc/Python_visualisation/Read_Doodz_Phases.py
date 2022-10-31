@@ -2,11 +2,15 @@ import h5py as h5py
 import numpy as np
 import matplotlib.pyplot as mpl
 
-file   = h5py.File('/home/roman/CLionProjects/MDOODZ7.0/cmake-exec/CollisionIra/result6/Output00100.gzip.h5', 'r')
+file   = h5py.File('/home/roman/CLionProjects/MDOODZ7.0/cmake-exec/CollisionIra/result6/Output00200.gzip.h5', 'r')
 phases = file['/VizGrid/compo_hr']
 xv_ph  = file['/VizGrid/xviz_hr']
 zv_ph  = file['/VizGrid/zviz_hr']
 data   = file['/Model/Params']
+
+secondsInYear = 31556952.0
+time = round(data[0] / secondsInYear)
+
 
 # Achtung the phase map has a twice finer resolution
 xc_ph  = 0.5*(xv_ph[0:-1] + xv_ph[1:])
@@ -20,5 +24,5 @@ mpl.pcolor(xc_ph, zc_ph, phases)
 mpl.set_cmap('jet')
 mpl.colorbar()
 mpl.tight_layout()
+mpl.title(time)
 mpl.show()
-mpl.title('T')

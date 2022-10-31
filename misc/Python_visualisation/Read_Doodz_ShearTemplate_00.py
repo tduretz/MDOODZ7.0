@@ -2,8 +2,8 @@ import h5py as h5py
 import numpy as np
 import matplotlib.pyplot as mpl
 
-file = h5py.File('/home/roman/CLionProjects/MDOODZ7.0/cmake-exec/CollisionIra/result6/Output00100.gzip.h5', 'r')
-P    = file['Centers/P']
+file = h5py.File('/home/roman/CLionProjects/MDOODZ7.0/cmake-exec/CollisionIra/result6/Output00200.gzip.h5', 'r')
+P    = file['Centers/T']
 Vx   = file['VxNodes/Vx']
 Vz   = file['VzNodes/Vz']
 Txx  = file['Centers/sxxd']
@@ -50,6 +50,6 @@ mpl.tight_layout()
 contours = mpl.contour(xc2, zc2, Tiic.transpose(), [2.0], colors='white')
 mpl.clabel(contours, inline=True, fontsize=15)
 mpl.quiver( xc2[::stp,::stp], zc2[::stp,::stp], Vxc[::stp, ::stp].transpose(), Vzc[::stp, ::stp].transpose())
-mpl.title('P map + Tii = 2.0 contour')
+mpl.title('T map + Tii = 2.0 contour')
 mpl.show()
 
