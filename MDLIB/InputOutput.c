@@ -1130,7 +1130,7 @@ Input ReadInputFile( char *fileName ) {
     if ( model.shear_style == 0 ) model.isperiodic_x  = 0;
     if ( model.aniso       == 1 ) model.fstrain       = 1;
     // Setup dependant
-    model.compensateMassBalance    = ReadInt2( fin, "compensateMassBalance",    0 );
+    model.massBalance    = ReadInt2( fin, "massBalance",    0 );
     model.EpsBG           = ReadDou2( fin, "EpsBG",         1e-30 ) / scaling.E; // Background tectonic rate, defaut is close to zero to avoid any Nans of Infs in rheology
     model.DivBG           = ReadDou2( fin, "DivBG",           0.0 ) / scaling.E;
     model.PrBG            = ReadDou2( fin, "PrBG",            0.0 ) / scaling.S;

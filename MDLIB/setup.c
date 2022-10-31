@@ -237,7 +237,8 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
     }
   }
 
-  if (instance->model.compensateMassBalance) {
+  printf("VxWestSum: %f, VxEastSum: %f, VzSouthSum: %f\n", VxWestSum, VxEastSum, VzSouthSum);
+  if (instance->model.massBalance == 1) {
     CompensateMassBalance(instance, mesh, (BoundarySums){VxWestSum, VxEastSum, VzSouthSum});
   }
 
@@ -368,13 +369,13 @@ void CompensateMassBalance(MdoodzInput *instance, grid *mesh, BoundarySums bound
   double VxWestSum = boundarySums.VxWestSum;
   double VxEastSum = boundarySums.VxEastSum;
   double VzSouthSum = boundarySums.VzSouthSum;
-  printf("VxWestSum: %f, VxEastSum: %f, VzSouthSum: %f\n", VxWestSum, VxEastSum, VzSouthSum);
   const double tolerance = 0.000001;
 
   if (VxWestSum > tolerance || VxWestSum < -tolerance) {
     int zeroValuesCount = 0;
     for (int l = 1; l < mesh->Nz; l++) {
-      const int c = 0 + l * (mesh->Nx);
+      const int k = 0;
+      const int c = k + l * (mesh->Nx);
       if (mesh->BCu.type[c] == 30) {
         continue;
       }

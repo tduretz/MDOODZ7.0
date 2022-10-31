@@ -81,7 +81,7 @@ typedef struct {
   int         irestart, istep;
   int         writer, writerStep;
   const char *writerSubfolder;
-  int         compensateMassBalance;
+  int         massBalance;
 } params;
 
 // Stucture scale contains scaling parameters
