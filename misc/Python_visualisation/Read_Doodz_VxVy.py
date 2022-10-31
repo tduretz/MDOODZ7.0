@@ -2,7 +2,7 @@ import h5py as h5py
 import numpy as np
 import matplotlib.pyplot as mpl
 
-file = h5py.File('/home/roman/CLionProjects/MDOODZ7.0/cmake-exec/CollisionIra/result10/Output00010.gzip.h5', 'r')
+file = h5py.File('/home/roman/CLionProjects/MDOODZ7.0/cmake-exec/CollisionIra/result2/Output00010.gzip.h5', 'r')
 Vx   = file['VxNodes/Vx']
 Vz   = file['VzNodes/Vz']
 xc   = file['/Model/xc_coord']

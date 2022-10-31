@@ -147,6 +147,8 @@ SetBC SetBCVx(MdoodzInput *input, POSITION position, Coordinates coordinates) {
   } else if (position == W) {
     if (coordinates.z > -plateThickness / input->scaling.L) {
       bc.value = -coordinates.x * input->model.EpsBG;
+    } else {
+      bc.value = 0.0;
     }
     bc.type  = 0;
   } else if (position == E) {

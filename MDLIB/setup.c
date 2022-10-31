@@ -168,7 +168,7 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
         if (k == 0) {
           VxWestSum += bc.value;
         } else if (k == mesh->Nx - 1) {
-          VxEastSum += bc.value;
+          VxEastSum += mesh->BCu.val[c];
         }
       }
     }
@@ -228,10 +228,10 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
         SetBC bc          = setBCs.SetBCVz(instance, position, coordinates);
         mesh->BCv.type[c] = bc.type;
         mesh->BCv.val[c]  = bc.value;
-        if (bc.type == 11) mesh->BCu.val[c] = 2.0 * bc.value;
+        if (bc.type == 11) mesh->BCv.val[c] = 2.0 * bc.value;
         ValidateInternalPoint(position, mesh->BCv.type[c], coordinates, "SetBCVzType");
         if (l == 0) {
-          VzSouthSum += bc.value;
+          VzSouthSum += mesh->BCv.val[c];
         }
       }
     }
@@ -371,7 +371,7 @@ void CompensateMassBalance(MdoodzInput *instance, grid *mesh, BoundarySums bound
   double VzSouthSum = boundarySums.VzSouthSum;
   const double tolerance = 0.000001;
 
-  if (VxWestSum > tolerance || VxWestSum < -tolerance) {
+  if (VxWestSum && (VxWestSum > tolerance || VxWestSum < -tolerance)) {
     int zeroValuesCount = 0;
     for (int l = 1; l < mesh->Nz; l++) {
       const int k = 0;
@@ -441,7 +441,7 @@ void CompensateMassBalance(MdoodzInput *instance, grid *mesh, BoundarySums bound
     free(newBoundary);
   }
 
-  if (VxEastSum > tolerance || VxEastSum < -tolerance) {
+  if (VxEastSum && (VxEastSum > tolerance || VxEastSum < -tolerance)) {
     int zeroValuesCount = 0;
     for (int l = 1; l < mesh->Nz; l++) {
       const int c = (mesh->Nx - 1) + l * (mesh->Nx);
@@ -510,10 +510,7 @@ void CompensateMassBalance(MdoodzInput *instance, grid *mesh, BoundarySums bound
     free(newBoundary);
   }
 
-  printf("VzSouthSum: %f\n", VzSouthSum);
-  printf("total West+East+South sum: %f\n", VxWestSum + VxEastSum - VzSouthSum);
-
-  if (VzSouthSum > tolerance || VzSouthSum < -tolerance) {
+  if (VzSouthSum && (VzSouthSum > tolerance || VzSouthSum < -tolerance)) {
     int zeroValuesCount = 0;
     for (int k = 0; k < mesh->Nx + 1; k++) {
       const int c = k;
