@@ -150,7 +150,13 @@ SetBC SetBCVx(MdoodzInput *input, POSITION position, Coordinates coordinates) {
     }
     bc.type  = 0;
   } else if (position == E) {
-    bc.value = 0.0;
+    if (coordinates.z > -180e3 / input->scaling.L) {
+      bc.value = (-coordinates.x / 10) * input->model.EpsBG;
+    } else if (coordinates.z < -250e3 / input->scaling.L && coordinates.z > -400e3 / input->scaling.L) {
+      bc.value = -coordinates.x * input->model.EpsBG;
+    } else {
+      bc.value = 0.0;
+    }
     bc.type  = 0;
   } else {
     bc.value = 0.0;
@@ -168,7 +174,11 @@ SetBC SetBCVz(MdoodzInput *input, POSITION position, Coordinates coordinates) {
     bc.value = coordinates.z * input->model.EpsBG;
     bc.type  = 0;
   } else if (position == S) {
-    bc.value = 0.0;
+    if (coordinates.x > -100e3 / input->scaling.L && coordinates.x < 100e3 / input->scaling.L) {
+      bc.value = -coordinates.z * input->model.EpsBG;
+    } else {
+      bc.value = 0.0;
+    }
     bc.type  = 0;
   } else {
     bc.value = 0;

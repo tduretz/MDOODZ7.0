@@ -379,7 +379,7 @@ void CompensateMassBalance(MdoodzInput *instance, grid *mesh, BoundarySums bound
       if (mesh->BCu.type[c] == 30) {
         continue;
       }
-      if (mesh->BCu.val[c] == 0.0) {
+      if (mesh->BCu.val[c] < tolerance && mesh->BCu.val[c] > -tolerance) {
         zeroValuesCount++;
       }
     }
@@ -398,7 +398,7 @@ void CompensateMassBalance(MdoodzInput *instance, grid *mesh, BoundarySums bound
       if (gridZmax < mesh->zvx_coord[l]) {
         gridZmax = mesh->zvx_coord[l];
       }
-      if (mesh->BCu.val[c] == 0.0) {
+      if (mesh->BCu.val[c] < tolerance && mesh->BCu.val[c] > -tolerance) {
         mesh->BCu.val[c] = -VxWestSum / zeroValuesCount;
       }
       const double value = mesh->BCu.val[c];
@@ -448,7 +448,7 @@ void CompensateMassBalance(MdoodzInput *instance, grid *mesh, BoundarySums bound
       if (mesh->BCu.type[c] == 30) {
         continue;
       }
-      if (mesh->BCu.val[c] == 0.0) {
+      if (mesh->BCu.val[c] < tolerance && mesh->BCu.val[c] > -tolerance) {
         zeroValuesCount++;
       }
     }
@@ -467,7 +467,7 @@ void CompensateMassBalance(MdoodzInput *instance, grid *mesh, BoundarySums bound
       if (gridZmax < mesh->zvx_coord[l]) {
         gridZmax = mesh->zvx_coord[l];
       }
-      if (mesh->BCu.val[c] == 0.0) {
+      if (mesh->BCu.val[c] < tolerance && mesh->BCu.val[c] > -tolerance) {
         mesh->BCu.val[c] = -VxEastSum / zeroValuesCount;
       }
       double value = mesh->BCu.val[c];
@@ -520,7 +520,7 @@ void CompensateMassBalance(MdoodzInput *instance, grid *mesh, BoundarySums bound
       if (mesh->BCv.type[c] == 30) {
         continue;
       }
-      if (mesh->BCv.val[c] == 0.0) {
+      if (mesh->BCv.val[c] < tolerance && mesh->BCv.val[c] > -tolerance) {
         zeroValuesCount++;
       }
     }
@@ -533,7 +533,7 @@ void CompensateMassBalance(MdoodzInput *instance, grid *mesh, BoundarySums bound
       if (mesh->BCv.type[c] == 30) {
         continue;
       }
-      if (mesh->BCv.val[c] == 0.0) {
+      if (mesh->BCv.val[c] < tolerance && mesh->BCv.val[c] > -tolerance) {
         mesh->BCv.val[c] = -VzSouthSum / zeroValuesCount;
       }
       correctedVzSouthSum += mesh->BCv.val[c];
