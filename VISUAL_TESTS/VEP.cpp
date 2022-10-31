@@ -4,6 +4,7 @@
 #include <cstdio>
 #include "visual-tests.h"
 #include <set>
+#include <filesystem>
 
 using namespace Eigen;
 using namespace std;

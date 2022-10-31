@@ -3,6 +3,7 @@
 #include <cstdio>
 #include "visual-tests.h"
 #include "math.h"
+#include <filesystem>
 
 namespace fs = std::filesystem;
 
