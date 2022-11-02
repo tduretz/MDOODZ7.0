@@ -1,9 +1,7 @@
-set terminal gif animate delay 40 size 800,400
+set terminal gif animate delay 40 size 1300,1000
 set output filename
 set ylabel "{/:Italic z} [m]"
 set xlabel "{/:Italic x} [m]"
-set cblabel "{/:Italic P} [MPa]" offset 1
-
 
 
 set palette defined ( 0 '#000090',\
@@ -18,6 +16,14 @@ set palette defined ( 0 '#000090',\
 
 set key center tmargin
 
-do for [i=0:10] {
-    plot data index i with image title columnheader(1)
+do for [i=1:frames-1] {
+    print i
+    set multiplot layout 2,1
+        set cblabel "log_{10} {/:Italic ε}II"
+        set cbrange [-18:-14.5]
+        plot data index i u 1:2:3 with image title columnheader(1)
+        set cblabel "log_{10} {/:Italic σ}II"
+        set cbrange [5:9]
+        plot data index i u 1:2:4 with image
+    unset multiplot
 }

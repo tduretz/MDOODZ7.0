@@ -5,6 +5,7 @@ irestart = 0
 /**** OUTPUT FILES ****/
 writer         = 1
 writer_step    = 10
+writerSubfolder = TopoBenchCase1
 
 /**** SCALES ****/
 eta = 1e+22

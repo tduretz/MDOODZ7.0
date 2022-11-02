@@ -7,6 +7,7 @@ writer = 1
 writer_step = 10
 writer_markers = 0
 writer_debug = 0
+writerSubfolder = GSE
 
 /**** SCALES ****/
 eta = 1e21

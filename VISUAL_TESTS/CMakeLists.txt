@@ -3,8 +3,16 @@ find_package(Eigen3 REQUIRED)
 include(FindHDF5)
 find_package(HDF5 COMPONENTS CXX)
 
+include(FetchContent)
+FetchContent_Declare(
+        googletest
+        GIT_REPOSITORY https://github.com/google/googletest.git
+        GIT_TAG release-1.12.1
+)
+FetchContent_MakeAvailable(googletest)
+
 add_executable(visualtests
-        main.cpp
+        VisualTests.cpp
         HDF5pp.h
         visual-tests.h
         RiftingChenin.cpp
@@ -14,7 +22,7 @@ add_executable(visualtests
         VEP.cpp
         GSE.cpp)
 
-target_link_libraries(visualtests LINK_PUBLIC mdoodz Eigen3::Eigen ${HDF5_LIBRARIES})
+target_link_libraries(visualtests LINK_PUBLIC mdoodz Eigen3::Eigen ${HDF5_LIBRARIES} GTest::gtest_main)
 
 set_target_properties(visualtests
         PROPERTIES

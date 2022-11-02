@@ -2,7 +2,7 @@ import h5py as h5py
 import numpy as np
 import matplotlib.pyplot as mpl
 
-file = h5py.File('/home/roman/CLionProjects/MDOODZ7.0/cmake-exec/CollisionIra/result2/Output00010.gzip.h5', 'r')
+file = h5py.File('/home/roman/CLionProjects/MDOODZ7.0/cmake-exec/CollisionIra/heavy3/Output00380.gzip.h5', 'r')
 Vx   = file['VxNodes/Vx']
 Vz   = file['VzNodes/Vz']
 xc   = file['/Model/xc_coord']
@@ -31,11 +31,11 @@ stp = 9
 
 Vx_West = Vx[0]
 Vx_East = Vx[Ncx-1]
-Vz_South = Vz[0]
+Vz_South = Vz[:,0]
 
 #mpl.plot(Vx_East)
-mpl.plot(Vx_West)
-#mpl.plot(Vz_South)
+#mpl.plot(Vx_West)
+mpl.plot(Vz_South)
 
 
 fig, ax = mpl.subplots(nrows=2, ncols=1, figsize=(6, 6))

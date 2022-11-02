@@ -4,9 +4,9 @@ include(FindHDF5)
 find_package(HDF5 COMPONENTS CXX)
 
 add_executable(StrainStressGif StrainStressGif.cpp)
+add_executable(SurfaceEvolution SurfaceEvolution.cpp)
 
 target_link_libraries(StrainStressGif LINK_PUBLIC Eigen3::Eigen ${HDF5_LIBRARIES})
-
-set_target_properties(StrainStressGif
-        PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/GnuPlot)
+set_target_properties(StrainStressGif PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/GnuPlot)
+target_link_libraries(SurfaceEvolution LINK_PUBLIC Eigen3::Eigen ${HDF5_LIBRARIES})
+set_target_properties(SurfaceEvolution PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/GnuPlot)

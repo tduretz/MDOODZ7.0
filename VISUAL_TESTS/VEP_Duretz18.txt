@@ -9,6 +9,7 @@ writer_markers  = 0
 writer_debug    = 0
 writer_energies = 0
 delete_breakpoints = 0
+writerSubfolder = VEP
 
 /**** SCALES ****/
 eta = 1e20
