@@ -515,6 +515,8 @@ TEST_F(ShearTemplate, PureShear) {
   mutateInputParams->int1              = 0;       // shear_style
   mutateInputParams->str1              = testName;// writerSubfolder
   RunMDOODZ("ShearTemplate.txt", &setup);
+  PlotShearTemplateReference();
+  PlotShearTemplate();
 }
 
 TEST_F(ShearTemplate, SimpleShear) {
@@ -524,24 +526,35 @@ TEST_F(ShearTemplate, SimpleShear) {
   mutateInputParams->int1              = 1;       // shear_style
   mutateInputParams->str1              = testName;// writerSubfolder
   RunMDOODZ("ShearTemplate.txt", &setup);
+  PlotShearTemplate1Reference();
+  PlotShearTemplate1();
 }
 
 TEST_F(ShearHeatingDuretz14, test) {
   RunMDOODZ("ShearHeatingDuretz14.txt", &setup);
+  PlotShearHeatingDuretz14Reference();
+  PlotShearHeatingDuretz14();
 }
 
 TEST_F(RiftingChenin, test) {
   RunMDOODZ("RiftingChenin.txt", &setup);
+  PlotRiftingChenin();
+  PlotRiftingCheninReference();
 }
 
 TEST_F(TopoBenchCase1, test) {
   RunMDOODZ("TopoBenchCase1.txt", &setup);
+  PlotTopoBenchCase1();
 }
 
 TEST_F(VEPDuretz18, test) {
   RunMDOODZ("VEP_Duretz18.txt", &setup);
+  PlotVEP();
+  PlotVEPRef();
 }
 
 TEST_F(PinchSwellGSE, test) {
   RunMDOODZ("PinchSwellGSE.txt", &setup);
+  PlotGSE();
+  PlotGSERef();
 }
