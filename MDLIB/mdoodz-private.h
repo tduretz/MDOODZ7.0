@@ -548,7 +548,7 @@ void            ChemicalDirectSolve(grid *, params, markers *, mat_prop *, doubl
 void            InitialiseGrainSizeParticles(markers *, mat_prop *);
 
 void            ViscosityDerivatives(grid *, mat_prop *, params *, Nparams, scale *);
-double          ViscosityConcise(int, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, mat_prop *, params *, scale *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double, double, double, double, double, double, double *, double *, double *, double *, double, double, double *, double *, double *, int, int);
+double          ViscosityConcise(int, double, double, double, double, double, double, double, double, double, double, double, double, mat_prop *, params *, scale *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double, double, double, double, double, double, double *, double *, double *, double *, double, double, double *, double *, double *, int, int);
 double          EvaluateDensity(int, double, double, double, params *, mat_prop *);
 void            ComputeMeanQuantitesForTimeSeries(grid *mesh);
 void            LogTimeSeries(grid *, params, scale);
