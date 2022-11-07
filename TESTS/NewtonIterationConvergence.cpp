@@ -147,6 +147,8 @@ TEST_F(ShearTemplate, LinearSimpleshearIsotropic) {
   ASSERT_EQ(stepsCount, 1);
 }
 
+/*
+
 TEST_F(ShearTemplate, LinearPureshearAnisotropic) {
   const char        *testName          = testing::UnitTest::GetInstance()->current_test_info()->name();
   MutateInputParams *mutateInputParams = (MutateInputParams *) malloc(sizeof(MutateInputParams));
@@ -176,6 +178,9 @@ TEST_F(ShearTemplate, LinearSimpleshearAnisotropic) {
   int stepsCount = getStepsCount(fileName);
   ASSERT_EQ(stepsCount, 1);
 }
+
+*/
+
 
 TEST_F(ShearTemplate, NonLinearPureshearIsotropic) {
   const char        *testName          = testing::UnitTest::GetInstance()->current_test_info()->name();
@@ -209,6 +214,7 @@ TEST_F(ShearTemplate, NonLinearSimpleshearIsotropic) {
   ASSERT_TRUE(stepsCount < 10);
 }
 
+/*
 TEST_F(ShearTemplate, NonLinearPureshearAnisotropic) {
   const char        *testName          = testing::UnitTest::GetInstance()->current_test_info()->name();
   MutateInputParams *mutateInputParams = (MutateInputParams *) malloc(sizeof(MutateInputParams));
@@ -240,3 +246,4 @@ TEST_F(ShearTemplate, NonLinearSimpleshearAnisotropic) {
   ASSERT_TRUE(stepsCount > 1);
   ASSERT_TRUE(stepsCount < 10);
 }
+*/
