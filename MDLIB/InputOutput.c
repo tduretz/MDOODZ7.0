@@ -1254,8 +1254,11 @@ Input ReadInputFile( char *fileName ) {
         materials.phase_mix[k]  = (int)ReadMatProps( fin, "phase_mix",k,          0.0  );
         materials.phase_two[k]  = (int)ReadMatProps( fin, "phase_mix",k,    (double)k  );
         // Anisotropy
-        materials.aniso_factor[k] =      ReadMatProps( fin, "aniso_factor", k,    1.0  );
-        materials.aniso_angle[k]  =      ReadMatProps( fin, "aniso_angle"  ,k,   90.0  )  * M_PI/ 180.0;
+        materials.aniso_factor[k] =      ReadMatProps( fin, "aniso_factor", k,    1.0  ); // to be deleted
+        materials.aniso_angle[k]  =      ReadMatProps( fin, "aniso_angle",  k,   90.0  )  * M_PI/ 180.0;
+        materials.ani_fac_v[k]    =      ReadMatProps( fin, "ani_fac_v",    k,    1.0  );
+        materials.ani_fac_e[k]    =      ReadMatProps( fin, "ani_fac_e",    k,    1.0  );
+        materials.ani_fac_p[k]    =      ReadMatProps( fin, "ani_fac_p",    k,    1.0  );
         // Check if any flow law is active
         int sum = abs(materials.cstv[k]) + abs(materials.pwlv[k]) + abs(materials.linv[k]) + abs(materials.gbsv[k]) + abs(materials.expv[k]);
         if ( sum == 0 ) {

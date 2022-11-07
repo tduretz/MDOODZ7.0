@@ -115,6 +115,7 @@ typedef struct {
   double *phi0_s, *d0_s, *T_s, *P_s;
   // For anisotropy
   double *FS_AR_n, *FS_AR_s, *aniso_factor_n, *aniso_factor_s;
+  double *aniso_factor_v_n, *aniso_factor_v_s, *aniso_factor_e_n, *aniso_factor_e_s, *aniso_factor_p_n, *aniso_factor_p_s;
   double *d1_n, *d2_n, *d1_s, *d2_s, *angle_n, *angle_s;
 
   double *cell_min_z, *cell_max_z, *vert_min_z, *vert_max_z;
