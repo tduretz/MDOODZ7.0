@@ -303,21 +303,21 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             P2Mastah( &input.model, particles, NULL, &mesh, mesh.d2_s,    mesh.BCg.type, -2, 0, interp, vert, input.model.itp_stencil);
             P2Mastah( &input.model, particles, NULL, &mesh, mesh.angle_s, mesh.BCg.type, -3, 0, interp, vert, input.model.itp_stencil);
             FiniteStrainAspectRatio ( &mesh, input.scaling, input.model, &particles );
-            P2Mastah( &input.model, particles, input.materials.aniso_factor,     &mesh, mesh.aniso_factor_n , mesh.BCp.type,  0, 0, interp, cent, input.model.itp_stencil);
-            P2Mastah( &input.model, particles, input.materials.aniso_factor,     &mesh, mesh.aniso_factor_s , mesh.BCg.type,  0, 0, interp, vert, input.model.itp_stencil);
         }
 
         printf("*************************************\n");
         printf("******* Initialize viscosity ********\n");
         printf("*************************************\n");
 
-        // Compute shear modulus, expansivity, compressibiulity, cohesion and friction angle on the grid
+        // Compute shear modulus, expansivity, compressibility, cohesion and friction angle on the grid
         if (input.model.iselastic == 1 ) ShearModCompExpGrid( &mesh, input.materials, input.model, input.scaling );
         CohesionFrictionDilationGrid( &mesh, &particles, input.materials, input.model, input.scaling );
         ShearModCompExpGrid( &mesh, input.materials, input.model, input.scaling );
         Interp_Grid2P_centroids2( particles, particles.P,    &mesh, mesh.p_in, mesh.xvz_coord,  mesh.zvx_coord,  mesh.Nx-1, mesh.Nz-1, mesh.BCp.type, &input.model );
         Interp_Grid2P_centroids2( particles, particles.T,    &mesh, mesh.T,    mesh.xvz_coord,  mesh.zvx_coord,  mesh.Nx-1, mesh.Nz-1, mesh.BCt.type, &input.model );
-        NonNewtonianViscosityGrid (     &mesh, &input.materials, &input.model, Nmodel, &input.scaling );
+        if (input.model.aniso==0) NonNewtonianViscosityGrid(      &mesh, &input.materials, &input.model, Nmodel, &input.scaling );
+        if (input.model.aniso==1) NonNewtonianViscosityGridAniso( &mesh, &input.materials, &input.model, Nmodel, &input.scaling );
+        printf("input.model.aniso %d\n", input.model.aniso);
 
         // Print informations!
         printf("Number of phases : %d\n", input.model.Nb_phases);
@@ -499,8 +499,6 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             P2Mastah( &input.model, particles, NULL, &mesh, mesh.d2_s,    mesh.BCg.type, -2, 0, interp, vert, input.model.itp_stencil);
             P2Mastah( &input.model, particles, NULL, &mesh, mesh.angle_s, mesh.BCg.type, -3, 0, interp, vert, input.model.itp_stencil);
             FiniteStrainAspectRatio ( &mesh, input.scaling, input.model, &particles );
-            P2Mastah( &input.model, particles, input.materials.aniso_factor,     &mesh, mesh.aniso_factor_n , mesh.BCp.type,  0, 0, interp, cent, input.model.itp_stencil);
-            P2Mastah( &input.model, particles, input.materials.aniso_factor,     &mesh, mesh.aniso_factor_s , mesh.BCg.type,  0, 0, interp, vert, input.model.itp_stencil);
         }
 
         P2Mastah( &input.model, particles, particles.X,     &mesh, mesh.X0_n , mesh.BCp.type,  1, 0, interp, cent, input.model.itp_stencil);
@@ -577,8 +575,6 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             if ( input.model.aniso == 1 ) {
                 MinMaxArrayTag( mesh.FS_AR_n,  1.0,   (mesh.Nx-1)*(mesh.Nz-1), "FS_AR_n", mesh.BCp.type );
                 MinMaxArrayTag( mesh.FS_AR_s,  1.0,   (mesh.Nx)*(mesh.Nz),     "FS_AR_s", mesh.BCg.type );
-                MinMaxArrayTag( mesh.aniso_factor_n,  1.0,   (mesh.Nx-1)*(mesh.Nz-1), "aniso_factor_n", mesh.BCp.type );
-                MinMaxArrayTag( mesh.aniso_factor_s,  1.0,   (mesh.Nx)*(mesh.Nz),     "aniso_factor_s", mesh.BCg.type );
                 MinMaxArrayTag( mesh.angle_n,  180/M_PI,   (mesh.Nx-1)*(mesh.Nz-1), "angle_n", mesh.BCp.type );
                 MinMaxArrayTag( mesh.angle_s,  180/M_PI,   (mesh.Nx)*(mesh.Nz),     "angle_s", mesh.BCg.type );
             }
@@ -700,8 +696,9 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
                 // Update non-linear rheology
                 UpdateNonLinearity( &mesh, &particles, &topo_chain, &topo, input.materials, &input.model, &Nmodel, input.scaling, 0, 0.0 );
-                RheologicalOperators( &mesh, &input.model, &input.scaling, 0 );                               // ??????????? déjà fait dans UpdateNonLinearity
-                NonNewtonianViscosityGrid (     &mesh, &input.materials, &input.model, Nmodel, &input.scaling );    // ??????????? déjà fait dans UpdateNonLinearity
+                RheologicalOperators( &mesh, &input.model, &input.scaling, 0 );                              
+                if (input.model.aniso==0) NonNewtonianViscosityGrid(      &mesh, &input.materials, &input.model, Nmodel, &input.scaling );    
+                if (input.model.aniso==1) NonNewtonianViscosityGridAniso( &mesh, &input.materials, &input.model, Nmodel, &input.scaling ); 
              
                 if (input.model.noisy == 1 ) {
                     MinMaxArrayTag( mesh.T, input.scaling.T, (mesh.Nx-1)*(mesh.Nz-1), "T         ", mesh.BCt.type );
@@ -722,6 +719,8 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                     MinMaxArrayTag( mesh.rho_n, input.scaling.rho, (mesh.Nx-1)*(mesh.Nz-1), "rho_n     ", mesh.BCp.type );
                     MinMaxArrayTag( mesh.rho0_n, input.scaling.rho, (mesh.Nx-1)*(mesh.Nz-1), "rho0_n    ", mesh.BCp.type );
                     MinMaxArrayTag( mesh.d_n, input.scaling.L,   (mesh.Nx-1)*(mesh.Nz-1), "d         ", mesh.BCp.type );
+                    if (input.model.aniso==1) MinMaxArrayTag( mesh.aniso_factor_n,  1.0,   (mesh.Nx-1)*(mesh.Nz-1), "ani_fac_n ", mesh.BCp.type );
+                    if (input.model.aniso==1) MinMaxArrayTag( mesh.aniso_factor_s,  1.0,   (mesh.Nx)*(mesh.Nz),     "ani_fac_s ", mesh.BCg.type );
                 }
 
                 if (input.model.write_debug == 1 ) {

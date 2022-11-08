@@ -368,6 +368,9 @@ void            UpdateParticleGrainSize(grid *, scale, params, markers *, mat_pr
 void            UpdateParticleDensity(grid *, scale, params, markers *, mat_prop *);
 void            UpdateParticleX(grid *, scale, params, markers *, mat_prop *);
 void            UpdateParticlePhi(grid *, scale, params, markers *, mat_prop *);
+// Anisotropy
+void            NonNewtonianViscosityGridAniso(grid *, mat_prop *, params *, Nparams, scale *);
+
 // Advection
 void            DefineInitialTimestep(params *, grid *, markers, mat_prop, scale);
 void            EvaluateCourantCriterion(double *, double *, params *, scale, grid *, int);

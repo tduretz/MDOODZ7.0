@@ -1,16 +1,3 @@
-# set title "Dev. stress components"
-# set xlabel "Angle"
-# set ylabel "Stress magnitude"
-# set key autotitle columnheader
-# set style data lines
-# set style line 1 lw 1 lc rgb "blue"
-# set style line 2 lw 1 lc rgb "green"
-# set style line 3 pt 1 ps 1.0 lc rgb "red"
-# set style line 4 pt 2 ps 1.0 lc rgb "black"
-# set grid x y mx my
-# set grid lt -1 lc "black" lw 1 , lt -1 lc bgnd lw 16
-# p for [col=2:5] "data4plot.txt" u 1:col w lp
-
 ### lines and points in the same plot for-loop
 reset session
 

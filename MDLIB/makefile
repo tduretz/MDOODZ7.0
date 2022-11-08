@@ -51,8 +51,8 @@ FILES = AnisotropyRoutines.o Main_DOODZ.o FD_Jacobian.o  RheologyParticles.o Che
 
 all: Doodzi_$(MODEL) 
 Doodzi_$(MODEL): ${FILES}
-	cp $(MODEL_PATH)/$(MODEL).txt . 
 	$(CC) ${FILES} -o $(MODEL) ${LIBS}
 
 clean:
+	cp $(MODEL_PATH)/$(MODEL).txt . 
 	rm -rf *o ./$(MODEL_PATH)/*.o $(MODEL) 

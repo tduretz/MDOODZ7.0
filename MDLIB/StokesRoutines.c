@@ -155,25 +155,19 @@ void ApplyBC( grid* mesh, params* model ) {
 /*--------------------------------------------------------------------------------------------------------------------*/
 
 void UpdateNonLinearity( grid* mesh, markers* particles, markers* topo_chain, surface *topo, mat_prop materials, params *model, Nparams *Nmodel, scale scaling, int mode, double h_contin ) {
-
+    
     // Strain rate component evaluation
     StrainRateComponents( mesh, scaling, model );
-    //    MinMaxArrayTag( mesh->exxd,      scaling.E, (mesh->Nx-1)*(mesh->Nz-1),     "exx     ", mesh->BCp.type );
 
-    //-----------------------------------------------//
-
-    NonNewtonianViscosityGrid ( mesh, &materials, model, *Nmodel, &scaling );
-
-    //-----------------------------------------------//
+    // Stress update
+    if (model->aniso==0) NonNewtonianViscosityGrid(      mesh, &materials, model, *Nmodel, &scaling );
+    if (model->aniso==1) NonNewtonianViscosityGridAniso( mesh, &materials, model, *Nmodel, &scaling );
 
     // Evaluate right hand side
     EvaluateRHS( mesh, *model, scaling, materials.rho[0] );
 
-    //-----------------------------------------------//
-
     // Fill up the rheological matrices arrays
     RheologicalOperators( mesh, model, &scaling, 0 );
-
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/

@@ -795,9 +795,9 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
         angle   = mesh->angle_n[c0];
       }
       //----------------------------------------------------------//
-      Exx = mesh->exxd[c0]  + mesh->sxxd0[c0] /etae/2.0;
-      Ezz = mesh->ezzd[c0]  + mesh->szzd0[c0] /etae/2.0;
-      Exz = mesh->exz_n[c0] + mesh->sxz0_n[c0]/etae/2.0;
+      Exx = mesh->exxd[c0]  + el*mesh->sxxd0[c0] /etae/2.0;
+      Ezz = mesh->ezzd[c0]  + el*mesh->szzd0[c0] /etae/2.0;
+      Exz = mesh->exz_n[c0] + el*mesh->sxz0_n[c0]/etae/2.0;
       //
       // Da11  = 2.0 - 2.0*ani*d0;
       // Da12  = 2.0*ani*d0;
@@ -959,9 +959,9 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
         angle   = mesh->angle_s[c1];
       }
       //----------------------------------------------------------//
-      Exx = mesh->exxd_s[c1] + mesh->sxxd0_s[c1]/etae/2.0;
-      Ezz = mesh->ezzd_s[c1] + mesh->szzd0_s[c1]/etae/2.0;
-      Exz = mesh->exz[c1]    + mesh->sxz0[c1]   /etae/2.0;
+      Exx = mesh->exxd_s[c1] + el*mesh->sxxd0_s[c1]/etae/2.0;
+      Ezz = mesh->ezzd_s[c1] + el*mesh->szzd0_s[c1]/etae/2.0;
+      Exz = mesh->exz[c1]    + el*mesh->sxz0[c1]   /etae/2.0;
       //
       // Da11  = 2.0 - 2.0*ani*d0;
       // Da12  = 2.0*ani*d0;
@@ -1050,6 +1050,18 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
   }
   // printf("Txz:\n");
   //  Print2DArrayDouble( mesh->sxz,  mesh->Nx, mesh->Nz, scaling->S );
+  //    printf("eta_s:\n");
+  //  Print2DArrayDouble( mesh->eta_s,  mesh->Nx, mesh->Nz, scaling->eta );
+
+  //  printf("eta_n:\n");
+  //  Print2DArrayDouble( mesh->eta_n,  mesh->Nx-1, mesh->Nz-1, scaling->eta );
+  //     printf("Txx:\n");
+  //  Print2DArrayDouble( mesh->sxxd,  mesh->Nx-1, mesh->Nz-1, scaling->S );
+  //    printf("Tzz:\n");
+  //  Print2DArrayDouble( mesh->szzd,  mesh->Nx-1, mesh->Nz-1, scaling->S );
+  // printf("Txz:\n");
+  //  Print2DArrayDouble( mesh->sxz,  mesh->Nx, mesh->Nz, scaling->S );
+
 
 }
 
@@ -1989,75 +2001,6 @@ void GenerateDeformationMaps( grid* mesh, mat_prop *materials, params *model, Np
   free(d);
   free(dlog);
   free(Elog);
-}
-
-/*--------------------------------------------------------------------------------------------------------------------*/
-/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
-/*--------------------------------------------------------------------------------------------------------------------*/
-
-void InitialiseDirectorVector (grid* mesh, markers* particles, params* model, mat_prop* materials ) {
-
-  int    cent=1, vert=0, prop=1, interp=0;
-  int k;
-  double angle, norm;
-
-#pragma omp parallel for shared( particles ) private( angle, norm )
-  for (k=0; k<particles->Nb_part; k++) {
-
-    if ( particles->phase[k] != -1 ) {
-
-      // Set up director vector
-      angle             = materials->aniso_angle[particles->phase[k]];
-      particles->nx[k]  = cos(angle);
-      particles->nz[k]  = sin(angle);
-      norm              = sqrt(particles->nx[k]*particles->nx[k] + particles->nz[k]*particles->nz[k]);
-      particles->nx[k] /= norm;
-      particles->nz[k] /= norm;
-    }
-  }
-}
-
-/*--------------------------------------------------------------------------------------------------------------------*/
-/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
-/*--------------------------------------------------------------------------------------------------------------------*/
-
-void NormalizeDirector( grid* mesh, DoodzFP* nx_n, DoodzFP* nz_n, DoodzFP* nx_s, DoodzFP* nz_s, params *model ) {
-
-  int Nx, Nz, k;
-  double nx, nz, norm;
-  Nx = model->Nx;
-  Nz = model->Nz;
-
-#pragma omp parallel for shared ( mesh, nx_n, nz_n ) \
-private ( k, nx, nz, norm )              \
-firstprivate( model )
-  for ( k=0; k<(Nx-1)*(Nz-1); k++ ) {
-    if (mesh->BCp.type[k] != 30 && mesh->BCp.type[k] != 31) {
-      nx            = nx_n[k];
-      nz            = nz_n[k];
-      norm          = sqrt(nx*nx + nz*nz);
-      nx            = nx/norm;
-      nz            = nz/norm;
-      nx_n[k]       = nx;
-      nz_n[k]       = nz;
-    }
-  }
-
-#pragma omp parallel for shared ( mesh, nx_s, nz_s ) \
-private ( k, nx, nz, norm )              \
-firstprivate( model )
-  for ( k=0; k<Nx*Nz; k++ ) {
-    if (mesh->BCg.type[k] != 30) {
-      nx            = nx_s[k];
-      nz            = nz_s[k];
-      norm          = sqrt(nx*nx + nz*nz);
-      nx            = nx/norm;
-      nz            = nz/norm;
-      nx_s[k]       = nx;
-      nz_s[k]       = nz;
-    }
-  }
-
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/

@@ -58,7 +58,10 @@ void Invii( Tensor2D *T ) {
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-double ViscosityConciseAniso( int phase, double nxnz, double nx2, double angle, double ani_fstrain, double G, double T, double P, double d, double phi, double X0, double Exx, double Ezz, double Exz, double Txx0, double Tzz0, double Txz0, mat_prop* materials, params *model, scale *scaling, double *Txx, double *Tzz, double *Txz, double* eta_vep, double* ani_vep, double* ani_e, double* Eii_el, double* Eii_pl, double* Eii_pwl, double* Eii_exp , double* Eii_lin, double* Eii_gbs, double* Eii_cst, double* Exx_el, double* Ezz_el, double* Exz_el, double* Exx_diss, double* Ezz_diss, double* Exz_diss, double *d2, double strain_acc, double dil, double fric, double C, double P0, double T0,  double *X1, double *OverS, double *Pcorr, double *rho, double beta, double div, double *div_el, double *div_pl, double *div_r, int post_process, int centroid ) {
+double ViscosityConciseAniso( int phase, double nxnz, double nx2, double angle, double ani_fstrain, double G, double T, double P, double d0, double phi, double X0, double Exx, double Ezz, double Exz, double Txx0, double Tzz0, double Txz0, mat_prop* materials, params *model, scale *scaling, double *Txx, double *Tzz, double *Txz, double* eta_vep, double* ani_vep, double* ani_e, double* Eii_el, double* Eii_pl, double* Eii_pwl, double* Eii_exp , double* Eii_lin, double* Eii_gbs, double* Eii_cst, double* Exx_el, double* Ezz_el, double* Exz_el, double* Exx_diss, double* Ezz_diss, double* Exz_diss, double *d, double strain_acc, double dil, double fric, double C, double P0, double T0,  double *X1, double *OverS, double *Pcorr, double *rho, double beta, double div, double *div_el, double *div_pl, double *div_r, int post_process, int centroid ) {
+    // !!!!!!!!!!!!!!!!!!!!!!!!
+    // ACTUNG FOR GSE:: d is now d0 and d1 is now d
+    // !!!!!!!!!!!!!!!!!!!!!!!!
     // General paramaters
     double eta = 0.0, R = materials->R, dt = model->dt, lay_angle = angle + M_PI/2.0;
     double minEta = model->mineta, maxEta = model->maxeta;
@@ -69,7 +72,16 @@ double ViscosityConciseAniso( int phase, double nxnz, double nx2, double angle, 
     Tensor2D E_rot, T_rot;
     // Clean up
     *eta_vep   = 0.0, *ani_vep = 0.0, *ani_e = 0.0;
-    *Txx = 0.0; *Tzz = 0.0; *Txz = 0.0;
+    // Initialise strain rate invariants to 0
+    *Eii_exp = 0.0, *Eii_lin = 0.0, *Eii_pl = 0.0, *Eii_pwl = 0.0, *Eii_el = 0.0, *Eii_gbs = 0, *Eii_cst = 0.0;
+    *Txx     = 0.0, *Tzz     = 0.0, *Txz    = 0.0;
+    *Exx_el  = 0.0, *Ezz_el  = 0.0, *Exz_el = 0.0, *Exx_diss = 0.0, *Ezz_diss = 0.0, *Exz_diss = 0.0, *d = 0.0;
+    *div_el  = 0.0, *div_pl  = 0.0, *div_r  = 0.0;
+    *X1      = 0.0, *rho     = 0.0, *OverS  = 0.0, *Pcorr    = 0.0;
+    // P corr will be corrected if plasticity feedbacks on pressure (dilation)
+    *Pcorr = P;
+    // Constant grain size
+    *d = d0;
     // Activate deformation mechanisms
     if ( materials->cstv[phase] !=0                  ) constant    = 1;
     // Isolated viscosities
@@ -103,6 +115,7 @@ double ViscosityConciseAniso( int phase, double nxnz, double nx2, double angle, 
     *eta_vep = eta_cst;
     *ani_vep = ani_fac_v;
     *ani_e   = ani_fac_e;
+    eta      = *eta_vep;
     return eta;
 }
 
@@ -111,6 +124,8 @@ double ViscosityConciseAniso( int phase, double nxnz, double nx2, double angle, 
 /*--------------------------------------------------------------------------------------------------------------------*/
 
 void NonNewtonianViscosityGridAniso( grid *mesh, mat_prop *materials, params *model, Nparams Nmodel, scale *scaling ) {
+
+    // printf("NonNewtonianViscosityGridAniso!\n");
 
   int    p, k, l, Nx, Nz, Ncx, Ncz, c0, c1, k1;
   double eta, txx1, tzz1, txz1, eta_vep, ani_vep, ani_e, eII_el, eII_pl, eII_pwl, eII_exp, eII_lin, eII_gbs, eII_cst, dnew, div_el, div_pl, div_r;
@@ -122,6 +137,8 @@ void NonNewtonianViscosityGridAniso( grid *mesh, mat_prop *materials, params *mo
   double Exx, Ezz, Exz, etae, ani, d1, d2, angle, nxnz, nx2;
   double Da11, Da12, Da13, Da22, Da23, Da33, iDa11, iDa12, iDa13, iDa22, iDa23, iDa33, a11, a12, a13, a22, a23, a33, det;
   if (model->iselastic == 1) el = 1.0;
+
+  double etaVE, VEcoeff, d0; // to delete
 
   Nx  = mesh->Nx;
   Ncx = Nx - 1;
@@ -174,6 +191,8 @@ void NonNewtonianViscosityGridAniso( grid *mesh, mat_prop *materials, params *mo
     //        if (model->ProgReac==1) mesh->Xreac_n[c0]    = 0.0;
     if ( UnsplitDiffReac == 0 ) mesh->X_n[c0]        = 0.0;
     mesh->OverS_n[c0]    = 0.0;
+    mesh->aniso_factor_n[c0]   = 0.0;
+    mesh->aniso_factor_e_n[c0] = 0.0;
 
     if ( model->VolChangeReac == 1 ) {
       mesh->rho_n[c0]  = 0.0;
@@ -341,8 +360,8 @@ void NonNewtonianViscosityGridAniso( grid *mesh, mat_prop *materials, params *mo
       Da23  = 2.0*ani*d2;
       Da33  = 1.0  + 2.0*ani*(d1 - 0.5);
       // Normal stress
-      mesh->sxxd[c0] = mesh->eta_n[c0]*Exx * ( Da11*Exx + Da12*Ezz + 2*Da13*Exz );
-      mesh->szzd[c0] = mesh->eta_n[c0]*Ezz * ( Da12*Exx + Da22*Ezz + 2*Da23*Exz );
+      mesh->sxxd[c0] = mesh->eta_n[c0] * ( Da11*Exx + Da12*Ezz + 2.0*Da13*Exz );
+      mesh->szzd[c0] = mesh->eta_n[c0] * ( Da12*Exx + Da22*Ezz + 2.0*Da23*Exz );
 
     }
   }
@@ -355,12 +374,14 @@ void NonNewtonianViscosityGridAniso( grid *mesh, mat_prop *materials, params *mo
     l  = mesh->ln[k1];
     c1 = k + l*Nx;
 
-    mesh->VE_s[c1]       = 0.0;
-    mesh->sxz[c1]        = 0.0;
-    mesh->eta_phys_s[c1] = 0.0;
-    mesh->eta_s[c1]      = 0.0;
-    mesh->exz_el[c1]     = 0.0;
-    mesh->exz_diss[c1]   = 0.0;
+    mesh->VE_s[c1]             = 0.0;
+    mesh->sxz[c1]              = 0.0;
+    mesh->eta_phys_s[c1]       = 0.0;
+    mesh->eta_s[c1]            = 0.0;
+    mesh->exz_el[c1]           = 0.0;
+    mesh->exz_diss[c1]         = 0.0;
+    mesh->aniso_factor_s[c1]   = 0.0;
+    mesh->aniso_factor_e_s[c1] = 0.0;
 
     if (UnsplitDiffReac == 0) mesh->X_s[c1]        = 0.0;
 
@@ -486,11 +507,92 @@ void NonNewtonianViscosityGridAniso( grid *mesh, mat_prop *materials, params *mo
       Da23  = 2.0*ani*d2;
       Da33  = 1.0  + 2.0*ani*(d1 - 0.5);
       // Shear stress
-      mesh->sxz[c1] = mesh->eta_s[c1] * ( Da13*Exx + Da23*Ezz + 2*Da33*Exz );
+      mesh->sxz[c1] = mesh->eta_s[c1] * ( Da13*Exx + Da23*Ezz + 2.0*Da33*Exz );
+    // printf("%2.2e %2.2e %2.2e %2.2e %2.2e\n",Da13,Da23,Da33,ani,mesh->aniso_factor_s[c1]);
+    //   mesh->sxz[c1] = mesh->eta_s[c1] * ( 2*Da33*Exz );
     }
   }
-  // printf("Txz:\n");
-  //  Print2DArrayDouble( mesh->sxz,  mesh->Nx, mesh->Nz, scaling->S );
+//     printf("Txx:\n");
+//    Print2DArrayDouble( mesh->sxxd,  mesh->Nx-1, mesh->Nz-1, scaling->S );
+//      printf("Tzz:\n");
+//    Print2DArrayDouble( mesh->szzd,  mesh->Nx-1, mesh->Nz-1, scaling->S );
+//   printf("Txz:\n");
+//    Print2DArrayDouble( mesh->sxz,  mesh->Nx, mesh->Nz, scaling->S );
+//    printf("eta_s:\n");
+//    Print2DArrayDouble( mesh->eta_s,  mesh->Nx, mesh->Nz, scaling->eta );
+
+//       printf("eta_n:\n");
+//    Print2DArrayDouble( mesh->eta_n,  mesh->Nx-1, mesh->Nz-1, scaling->eta );
+
+
+}
+
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
+
+void InitialiseDirectorVector (grid* mesh, markers* particles, params* model, mat_prop* materials ) {
+
+  int    cent=1, vert=0, prop=1, interp=0;
+  int k;
+  double angle, norm;
+
+#pragma omp parallel for shared( particles ) private( angle, norm )
+  for (k=0; k<particles->Nb_part; k++) {
+
+    if ( particles->phase[k] != -1 ) {
+
+      // Set up director vector
+      angle             = materials->aniso_angle[particles->phase[k]];
+      particles->nx[k]  = cos(angle);
+      particles->nz[k]  = sin(angle);
+      norm              = sqrt(particles->nx[k]*particles->nx[k] + particles->nz[k]*particles->nz[k]);
+      particles->nx[k] /= norm;
+      particles->nz[k] /= norm;
+    }
+  }
+}
+
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
+
+void NormalizeDirector( grid* mesh, DoodzFP* nx_n, DoodzFP* nz_n, DoodzFP* nx_s, DoodzFP* nz_s, params *model ) {
+
+  int Nx, Nz, k;
+  double nx, nz, norm;
+  Nx = model->Nx;
+  Nz = model->Nz;
+
+#pragma omp parallel for shared ( mesh, nx_n, nz_n ) \
+private ( k, nx, nz, norm )              \
+firstprivate( model )
+  for ( k=0; k<(Nx-1)*(Nz-1); k++ ) {
+    if (mesh->BCp.type[k] != 30 && mesh->BCp.type[k] != 31) {
+      nx            = nx_n[k];
+      nz            = nz_n[k];
+      norm          = sqrt(nx*nx + nz*nz);
+      nx            = nx/norm;
+      nz            = nz/norm;
+      nx_n[k]       = nx;
+      nz_n[k]       = nz;
+    }
+  }
+
+#pragma omp parallel for shared ( mesh, nx_s, nz_s ) \
+private ( k, nx, nz, norm )              \
+firstprivate( model )
+  for ( k=0; k<Nx*Nz; k++ ) {
+    if (mesh->BCg.type[k] != 30) {
+      nx            = nx_s[k];
+      nz            = nz_s[k];
+      norm          = sqrt(nx*nx + nz*nz);
+      nx            = nx/norm;
+      nz            = nz/norm;
+      nx_s[k]       = nx;
+      nz_s[k]       = nz;
+    }
+  }
 
 }
 
