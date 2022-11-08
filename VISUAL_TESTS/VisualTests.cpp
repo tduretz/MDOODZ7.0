@@ -53,7 +53,7 @@ class MinimalistPrinter : public testing::EmptyTestEventListener {
 
   void OnTestEnd(const testing::TestInfo &test_info) override {
     printf("*** Test %s.%s ending.\n", test_info.test_suite_name(), test_info.name());
-    UpdateReadmeTimestamp();
+    //UpdateReadmeTimestamp();
   }
 };
 
@@ -515,6 +515,8 @@ TEST_F(ShearTemplate, PureShear) {
   mutateInputParams->int1              = 0;       // shear_style
   mutateInputParams->str1              = testName;// writerSubfolder
   RunMDOODZ("ShearTemplate.txt", &setup);
+  PlotShearTemplate();
+  //PlotShearTemplateReference();
 }
 
 TEST_F(ShearTemplate, SimpleShear) {
@@ -524,24 +526,35 @@ TEST_F(ShearTemplate, SimpleShear) {
   mutateInputParams->int1              = 1;       // shear_style
   mutateInputParams->str1              = testName;// writerSubfolder
   RunMDOODZ("ShearTemplate.txt", &setup);
+  PlotShearTemplate1();
+  PlotShearTemplate1Reference();
 }
 
 TEST_F(ShearHeatingDuretz14, test) {
   RunMDOODZ("ShearHeatingDuretz14.txt", &setup);
+  PlotShearHeatingDuretz14();
+  PlotShearHeatingDuretz14Reference();
 }
 
 TEST_F(RiftingChenin, test) {
   RunMDOODZ("RiftingChenin.txt", &setup);
+  PlotRiftingChenin();
+  PlotRiftingCheninReference();
 }
 
 TEST_F(TopoBenchCase1, test) {
   RunMDOODZ("TopoBenchCase1.txt", &setup);
+  PlotTopoBenchCase1();
 }
 
 TEST_F(VEPDuretz18, test) {
   RunMDOODZ("VEP_Duretz18.txt", &setup);
+  PlotVEP();
+  PlotVEPRef();
 }
 
 TEST_F(PinchSwellGSE, test) {
   RunMDOODZ("PinchSwellGSE.txt", &setup);
+  PlotGSE();
+  PlotGSERef();
 }

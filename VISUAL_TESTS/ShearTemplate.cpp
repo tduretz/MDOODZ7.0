@@ -69,7 +69,7 @@ void PlotShearTemplateReference() {
 }
 
 void PlotShearTemplate() {
-  H5p::File file = H5p::File("ShearTemplate.gzip.h5", "r");
+  H5p::File file = H5p::File("PureShear/ShearTemplate.gzip.h5", "r");
   std::vector<double> params = file.read<std::vector<double>>("/Model/Params");
   const int nx = (int) params[3];
   const int nz = (int) params[4];
@@ -186,7 +186,7 @@ void PlotShearTemplate1Reference() {
 }
 
 void PlotShearTemplate1() {
-  H5p::File file = H5p::File("ShearTemplate1.gzip.h5", "r");
+  H5p::File file = H5p::File("SimpleShear/ShearTemplate1.gzip.h5", "r");
   std::vector<double> params = file.read<std::vector<double>>("/Model/Params");
   const int nx = (int) params[3];
   const int nz = (int) params[4];
