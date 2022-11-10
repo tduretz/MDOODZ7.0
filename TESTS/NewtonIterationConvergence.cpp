@@ -147,7 +147,6 @@ TEST_F(ShearTemplate, LinearSimpleshearIsotropic) {
   ASSERT_EQ(stepsCount, 1);
 }
 
-/*
 
 TEST_F(ShearTemplate, LinearPureshearAnisotropic) {
   const char        *testName          = testing::UnitTest::GetInstance()->current_test_info()->name();
@@ -178,8 +177,6 @@ TEST_F(ShearTemplate, LinearSimpleshearAnisotropic) {
   int stepsCount = getStepsCount(fileName);
   ASSERT_EQ(stepsCount, 1);
 }
-
-*/
 
 
 TEST_F(ShearTemplate, NonLinearPureshearIsotropic) {
