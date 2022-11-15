@@ -37,7 +37,7 @@ dt          = 0.5
 RK          = 4
 
 /**** LINEAR SOLVER ****/
-noisy        = 0
+noisy        = 1
 penalty      = 1e5
 lsolver      = -1
 diag_scaling = 0
@@ -50,7 +50,7 @@ rel_tol_mom    = 1e-11
 /**** NON-LINEAR SOLVER ****/
 Newton      = 1
 line_search = 1
-nit_max     = 100
+nit_max     = 10
 rel_tol_KSP = 1e-4
 abs_tol_u   = 1e-9
 rel_tol_u   = 1e-9
@@ -99,8 +99,8 @@ Slim = 500e9
 alp  = 10.0e-6
 bet  = 1e-11
 drho = 0
-cstv = 0             / constant visc law
-pwlv = 1            / disloc. creep
+cstv = 1             / constant visc law
+pwlv = 0            / disloc. creep
 linv = 0             / diff. creep
 gbsv = 0             / grain boundary sliding
 expv = 0             / peierls creep
@@ -108,7 +108,8 @@ gsel = 0             / grain size evo.
 eta0 = 1
 npwl = 3.0
 Qpwl = 0
-aniso_factor = 2.0
+aniso_factor = 5.0 / THIS IS DEPRECATED USE LINE BELOW:
+ani_fac_v = 5.0
 
 /**** PHASE 2 ****/
 ID   = 1
