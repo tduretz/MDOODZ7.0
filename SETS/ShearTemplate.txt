@@ -1,5 +1,5 @@
 /**** RESTART ****/
-istep = 000001
+istep = 000002
 irestart = 0
 
 /**** OUTPUT FILES ****/
@@ -8,8 +8,7 @@ writer_step     = 1
 writer_markers  = 0
 writer_debug    = 0
 writer_energies = 0
-GNUplot_residuals = 0
-aniso = 1
+GNUplot_residuals = 1
 
 /**** SCALES ****/
 eta = 1
@@ -18,8 +17,8 @@ V   = 1
 T   = 1
 
 /**** SPACE ****/
-Nx      = 101
-Nz      = 101
+Nx      = 41
+Nz      = 41
 Nt      = 1
 xmin    = -5.000000e-1
 zmin    = -5.000000e-1
@@ -41,10 +40,10 @@ noisy        = 1
 penalty      = 1e5
 lsolver      = -1
 diag_scaling = 0
-abs_tol_div      = 1e-9
-rel_tol_div        = 1e-9
+abs_tol_div  = 1e-9
+rel_tol_div  = 1e-9
 abs_tol_mom  = 1e-11
-rel_tol_mom    = 1e-11
+rel_tol_mom  = 1e-11
 
 
 /**** NON-LINEAR SOLVER ****/
@@ -62,12 +61,12 @@ mineta      = 1e-3
 maxeta      = 1e6
 
 /**** SWITCHES ****/
+aniso             = 1
 iselastic         = 0
 free_surf         = 0
 free_surf_stab    = 0
 fstrain           = 1
 advection         = 0
-GNUplot_residuals = 0
 
 /**** SETUP-DEPENDANT ****/
 shear_style     = 0
@@ -100,7 +99,7 @@ alp  = 10.0e-6
 bet  = 1e-11
 drho = 0
 cstv = 1             / constant visc law
-pwlv = 0            / disloc. creep
+pwlv = 1            / disloc. creep
 linv = 0             / diff. creep
 gbsv = 0             / grain boundary sliding
 expv = 0             / peierls creep
@@ -109,7 +108,8 @@ eta0 = 1
 npwl = 3.0
 Qpwl = 0
 aniso_factor = 5.0 / THIS IS DEPRECATED USE LINE BELOW:
-ani_fac_v = 5.0
+ani_fac_v = 3.0
+ani_fac_e = 1.0
 
 /**** PHASE 2 ****/
 ID   = 1
