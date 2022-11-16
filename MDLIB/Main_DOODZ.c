@@ -582,21 +582,6 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
         printf("** Time for particles interpolations I = %lf sec\n",  (double)((double)omp_get_wtime() - t_omp) );
 
-//        struct timespec begin, end;
-//        clock_gettime(CLOCK_REALTIME, &begin);
-//
-//        ViscosityDerivatives( &mesh, &input.materials, &input.model, Nmodel, &input.scaling );
-//
-//        // Stop measuring time and calculate the elapsed time
-//        clock_gettime(CLOCK_REALTIME, &end);
-//        long seconds = end.tv_sec - begin.tv_sec;
-//        long nanoseconds = end.tv_nsec - begin.tv_nsec;
-//        double elapsed = seconds + nanoseconds*1e-9;
-//
-//        printf("** Time for ViscosityDerivatives = %3f sec\n",  elapsed );
-//
-//        exit(0);
-
         if (input.model.ismechanical == 1 ) {
 
           if (input.crazyConductivity) {
@@ -696,7 +681,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
                 // Update non-linear rheology
                 UpdateNonLinearity( &mesh, &particles, &topo_chain, &topo, input.materials, &input.model, &Nmodel, input.scaling, 0, 0.0 );
-                RheologicalOperators( &mesh, &input.model, &input.scaling, 0 );                              
+                RheologicalOperators( &mesh, &input.model, &input.materials,  &input.scaling, 0 );                              
                 if (input.model.aniso==0) NonNewtonianViscosityGrid(      &mesh, &input.materials, &input.model, Nmodel, &input.scaling );    
                 if (input.model.aniso==1) NonNewtonianViscosityGridAniso( &mesh, &input.materials, &input.model, Nmodel, &input.scaling ); 
              
@@ -733,8 +718,8 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                 if (input.model.decoupled_solve == 1 ) BuildStokesOperatorDecoupled  ( &mesh, input.model, 0, mesh.p_corr, mesh.p_in, mesh.u_in, mesh.v_in, &Stokes, &StokesA, &StokesB, &StokesC, &StokesD, 1 );
 
                 // Build discrete system of equations - Jacobian
-                ViscosityDerivatives( &mesh, &input.materials, &input.model, Nmodel, &input.scaling );
-                if ( IsFullNewton   == 1 && Nmodel.nit > 0 ) RheologicalOperators( &mesh, &input.model, &input.scaling, 1 );
+                ViscosityDerivatives( &mesh, &input.materials, &input.model, &input.scaling );
+                if ( IsFullNewton   == 1 && Nmodel.nit > 0 ) RheologicalOperators( &mesh, &input.model, &input.materials, &input.scaling, 1 );
                 if ( IsJacobianUsed == 1 )                   BuildJacobianOperatorDecoupled( &mesh, input.model, 0, mesh.p_corr, mesh.p_in, mesh.u_in, mesh.v_in,  &Jacob,  &JacobA,  &JacobB,  &JacobC,   &JacobD, 1 );
                 
                 // IsNanArray2DFP(mesh.eta_n, (mesh.Nx-1)*(mesh.Nz-1));
@@ -772,7 +757,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
                 // Needs to be done after matrix assembly since diagonal input.scaling is used in there
                 printf("---- Non-linear residual ----\n");
-                RheologicalOperators( &mesh, &input.model, &input.scaling, 0 );
+                RheologicalOperators( &mesh, &input.model, &input.materials, &input.scaling, 0 );
                 if (input.model.decoupled_solve == 0 ) EvaluateStokesResidual( &Stokes, &Nmodel, &mesh, input.model, input.scaling, 0 );
                 if (input.model.decoupled_solve == 1 ) EvaluateStokesResidualDecoupled( &Stokes, &StokesA, &StokesB, &StokesC, &StokesD, &Nmodel, &mesh, input.model, input.scaling, 0 );
                 printf("---- Non-linear residual ----\n");

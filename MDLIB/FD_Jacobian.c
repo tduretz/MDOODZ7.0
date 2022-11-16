@@ -47,10 +47,10 @@ void PhaseRheologyLoop_v1( int is_centroid, double sign, double denom, double Ex
                double* G, double* T, double* P0, double T0, double* gs0, double* phi0, double* X0, double* txx0, double* tzz0, double* txz0, double* beta, double* div,
                double* strain, double* dil, double* fric, double* C,
                params* model, mat_prop* materials, scale* scaling,
-               double* detadE, double* ddivpdE, double* drhodP, double**eta_phase ) {
+               double* detadE, double* ddivpdE, double* danidE, double* drhodP, double**eta_phase ) {
         
     double txx1, tzz1, txz1, eta_vep, VEcoeff, eII_el, eII_pl, eII_pwl, eII_exp, eII_lin, eII_gbs, eII_cst, exx_el, ezz_el, exz_el, exx_diss, ezz_diss, exz_diss, dnew, detadp, Xreac, OverS, Pcorr, rho, div_el, div_pl, div_r;
-
+    double ani_e, ani_vep;
     // Loop on phases
     for (int p=0; p<model->Nb_phases; p++) {
 
@@ -61,8 +61,8 @@ void PhaseRheologyLoop_v1( int is_centroid, double sign, double denom, double Ex
 
         if ( is_phase_active==true ) {
 
-            if (model->aniso==0) ViscosityConcise(      p,                                      G[c], T[c], P, gs0[c], phi0[c], X0[c], Exx, Ezz, Exz, txx0[c], tzz0[c], txz0[c], materials, model, scaling, &txx1, &tzz1, &txz1, &eta_vep,   &VEcoeff, &eII_el, &eII_pl, &eII_pwl, &eII_exp, &eII_lin, &eII_gbs, &eII_cst, &exx_el, &ezz_el, &exz_el, &exx_diss, &ezz_diss, &exz_diss, &dnew, strain[c], dil[c], fric[c], C[c], P0[c], T0, &Xreac, &OverS, &Pcorr, &rho, beta[c], div[c], &div_el, &div_pl, &div_r, 0, is_centroid );
-            // if (model->aniso==1) ViscosityConciseAniso( p, nxnz, nx2, angle, ani_fstrain, G[c], T[c], P, gs0[c], phi0[c], X0[c], Exx, Ezz, Exz, txx0[c], tzz0[c], txz0[c], materials, model, scaling, &txx1, &tzz1, &txz1, &eta_vep, &ani_vep, &ani_e, &eII_el, &eII_pl, &eII_pwl, &eII_exp, &eII_lin, &eII_gbs, &eII_cst, &exx_el, &ezz_el, &exz_el, &exx_diss, &ezz_diss, &exz_diss, &dnew, strain[c], dil[c], fric[c], C[c], P0[c], T0, &Xreac, &OverS, &Pcorr, &rho, beta[c], div[c], &div_el, &div_pl, &div_r, 0, is_centroid );
+            if (model->aniso==0) ViscosityConcise(      p,                                G[c], T[c], P, gs0[c], phi0[c], X0[c], Exx, Ezz, Exz, txx0[c], tzz0[c], txz0[c], materials, model, scaling, &txx1, &tzz1, &txz1, &eta_vep, &VEcoeff,         &eII_el, &eII_pl, &eII_pwl, &eII_exp, &eII_lin, &eII_gbs, &eII_cst, &exx_el, &ezz_el, &exz_el, &exx_diss, &ezz_diss, &exz_diss, &dnew, strain[c], dil[c], fric[c], C[c], P0[c], T0, &Xreac, &OverS, &Pcorr, &rho, beta[c], div[c], &div_el, &div_pl, &div_r, 0, is_centroid );
+            if (model->aniso==1) ViscosityConciseAniso( p, nxnz, nx2, angle, ani_fstrain, G[c], T[c], P, gs0[c], phi0[c], X0[c], Exx, Ezz, Exz, txx0[c], tzz0[c], txz0[c], materials, model, scaling, &txx1, &tzz1, &txz1, &eta_vep, &ani_vep, &ani_e, &eII_el, &eII_pl, &eII_pwl, &eII_exp, &eII_lin, &eII_gbs, &eII_cst, &exx_el, &ezz_el, &exz_el, &exx_diss, &ezz_diss, &exz_diss, &dnew, strain[c], dil[c], fric[c], C[c], P0[c], T0, &Xreac, &OverS, &Pcorr, &rho, beta[c], div[c], &div_el, &div_pl, &div_r, 0, is_centroid );
             if ( model->eta_avg == ARITHMETIC) {
                 *detadE      += sign*vol[p][c] * eta_vep/(denom); 
             }
@@ -74,6 +74,9 @@ void PhaseRheologyLoop_v1( int is_centroid, double sign, double denom, double Ex
             if ( model->eta_avg == GEOMETRIC) {
                 *detadE      += sign*vol[p][c] * eta_vep/(denom) / eta_phase[p][c];
             }
+
+            // Anisotropic factor
+            *danidE     += sign*vol[p][c] * ani_vep/(denom);
 
             // Plastic divergence (default arithmetic average)
             if (is_centroid > 0) { // if centroid, compute all derivatives of divp
@@ -144,7 +147,7 @@ void PhaseRheologyLoop( int is_centroid, double sign, double denom, double Exx, 
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-void ViscosityDerivatives0( grid *mesh, mat_prop *materials, params *model, Nparams Nmodel, scale *scaling ) {
+void ViscosityDerivatives0( grid *mesh, mat_prop *materials, params *model, scale *scaling ) {
 
     int p, k, l, Nx, Nz, Ncx, Ncz, c0, c1, k1, cond;
     double eta, txx1, tzz1, txz1, Pn, Tn, eta_vep, VEcoeff=0.0, eII_el, eII_pl, eII_pwl, eII_exp, eII_lin, eII_gbs, eII_cst, dnew, div_el, div_pl, div_r;
@@ -527,7 +530,7 @@ void ViscosityDerivatives0( grid *mesh, mat_prop *materials, params *model, Npar
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-void DerivativesOnTheFly_n( double* detadexx, double* detadezz, double* detadgxz, double* detadp, double* ddivpdexx, double* ddivpdezz, double* ddivpdgxz, double* ddivpdp, double* drhodp, int c0, double Exx_ref, double Ezz_ref, double Exz_ref, double P_ref, double ani, double d1, double d2, double angle, double nx2, double nxnz, grid *mesh, mat_prop *materials, params *model, Nparams Nmodel, scale *scaling ) {
+void DerivativesOnTheFly_n( double* detadexx, double* detadezz, double* detadgxz, double* detadp, double* ddivpdexx, double* ddivpdezz, double* ddivpdgxz, double* ddivpdp, double* danidexx, double* danidezz, double* danidgxz, double* danidp, double* drhodp, int c0, double Exx_ref, double Ezz_ref, double Exz_ref, double P_ref, double ani, double d1, double d2, double angle, double nx2, double nxnz, grid *mesh, mat_prop *materials, params *model, scale *scaling ) {
     const double tol = 1e-7;
     double pert_xx   = tol*fabs(Exx_ref) + tol/1e10;
     double pert_zz   = tol*fabs(Ezz_ref) + tol/1e10;
@@ -544,7 +547,7 @@ void DerivativesOnTheFly_n( double* detadexx, double* detadezz, double* detadgxz
                         mesh->bet_n, mesh->div_u,
                         mesh->strain_n, mesh->dil_n, mesh->fric_n, mesh->C_n,
                         model, materials, scaling,
-                        detadexx, ddivpdexx, NULL, mesh->phase_eta_n );
+                        detadexx, ddivpdexx, danidexx, NULL, mesh->phase_eta_n );
 
     // 2) Negative perturbation in Exx
     PhaseRheologyLoop_v1( 1, -1.0, 2.0*pert_xx, Exx_ref-pert_xx, Ezz_ref, Exz_ref, P_ref, ani, d1, d2, angle, nx2, nxnz, c0, mesh->phase_perc_n,
@@ -554,7 +557,7 @@ void DerivativesOnTheFly_n( double* detadexx, double* detadezz, double* detadgxz
                         mesh->bet_n, mesh->div_u,
                         mesh->strain_n, mesh->dil_n, mesh->fric_n, mesh->C_n,
                         model, materials, scaling,
-                        detadexx, ddivpdexx, NULL, mesh->phase_eta_n );
+                        detadexx, ddivpdexx, danidexx, NULL, mesh->phase_eta_n );
 
     //----------------------------------------------------------------------------------------------------------------------------------------------------//
 
@@ -566,7 +569,7 @@ void DerivativesOnTheFly_n( double* detadexx, double* detadezz, double* detadgxz
                         mesh->bet_n, mesh->div_u,
                         mesh->strain_n, mesh->dil_n, mesh->fric_n, mesh->C_n,
                         model, materials, scaling,
-                        detadezz, ddivpdezz, NULL, mesh->phase_eta_n );
+                        detadezz, ddivpdezz, danidezz, NULL, mesh->phase_eta_n );
 
     // 2) Negative perturbation in Ezz
     PhaseRheologyLoop_v1( 1, -1.0, 2.0*pert_zz, Exx_ref, Ezz_ref-pert_zz, Exz_ref, P_ref, ani, d1, d2, angle, nx2, nxnz, c0, mesh->phase_perc_n,
@@ -576,7 +579,7 @@ void DerivativesOnTheFly_n( double* detadexx, double* detadezz, double* detadgxz
                         mesh->bet_n, mesh->div_u,
                         mesh->strain_n, mesh->dil_n, mesh->fric_n, mesh->C_n,
                         model, materials, scaling,
-                        detadezz, ddivpdezz, NULL, mesh->phase_eta_n );
+                        detadezz, ddivpdezz, danidezz, NULL, mesh->phase_eta_n );
 
     //----------------------------------------------------------------------------------------------------------------------------------------------------//
 
@@ -588,7 +591,7 @@ void DerivativesOnTheFly_n( double* detadexx, double* detadezz, double* detadgxz
                         mesh->bet_n, mesh->div_u,
                         mesh->strain_n, mesh->dil_n, mesh->fric_n, mesh->C_n,
                         model, materials, scaling,
-                        detadgxz, ddivpdgxz, NULL, mesh->phase_eta_n );
+                        detadgxz, ddivpdgxz, danidgxz, NULL, mesh->phase_eta_n );
 
     // 2) Negative perturbation in Exz ---- NOTE THE FACTOR 2 due to Gxz = 2*Exz
     PhaseRheologyLoop_v1( 1, -1.0, 4.0*pert_xz, Exx_ref, Ezz_ref, Exz_ref-pert_xz, P_ref, ani, d1, d2, angle, nx2, nxnz, c0, mesh->phase_perc_n,
@@ -598,7 +601,7 @@ void DerivativesOnTheFly_n( double* detadexx, double* detadezz, double* detadgxz
                         mesh->bet_n, mesh->div_u,
                         mesh->strain_n, mesh->dil_n, mesh->fric_n, mesh->C_n,
                         model, materials, scaling,
-                        detadgxz, ddivpdgxz, NULL, mesh->phase_eta_n );
+                        detadgxz, ddivpdgxz, danidgxz, NULL, mesh->phase_eta_n );
 
     //----------------------------------------------------------------------------------------------------------------------------------------------------//
 
@@ -610,7 +613,7 @@ void DerivativesOnTheFly_n( double* detadexx, double* detadezz, double* detadgxz
                         mesh->bet_n, mesh->div_u,
                         mesh->strain_n, mesh->dil_n, mesh->fric_n, mesh->C_n,
                         model, materials, scaling,
-                        detadp, ddivpdp, drhodp, mesh->phase_eta_n );
+                        detadp, ddivpdp, danidp, drhodp, mesh->phase_eta_n );
 
     // 2) Negative perturbation in P
     PhaseRheologyLoop_v1( 2, -1.0, 2.0*pert_p, Exx_ref, Ezz_ref, Exz_ref, P_ref-pert_p, ani, d1, d2, angle, nx2, nxnz, c0, mesh->phase_perc_n,
@@ -620,7 +623,7 @@ void DerivativesOnTheFly_n( double* detadexx, double* detadezz, double* detadgxz
                         mesh->bet_n, mesh->div_u,
                         mesh->strain_n, mesh->dil_n, mesh->fric_n, mesh->C_n,
                         model, materials, scaling,
-                        detadp, ddivpdp, drhodp, mesh->phase_eta_n );
+                        detadp, ddivpdp, danidp, drhodp, mesh->phase_eta_n );
 
     // ----------------------------------------------------------------------------------------------------------------------------------------------------//
     if ( model->eta_avg == HARMONIC ) {
@@ -641,7 +644,7 @@ void DerivativesOnTheFly_n( double* detadexx, double* detadezz, double* detadgxz
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-void DerivativesOnTheFly_s( double* detadexx, double* detadezz, double* detadgxz, double* detadp, int c1, double Exx_ref, double Ezz_ref, double Exz_ref, double P_ref, double ani, double d1, double d2, double angle, double nx2, double nxnz, grid *mesh, mat_prop *materials, params *model, Nparams Nmodel, scale *scaling ) {
+void DerivativesOnTheFly_s( double* detadexx, double* detadezz, double* detadgxz, double* detadp, double* danidexx, double* danidezz, double* danidgxz, double* danidp, int c1, double Exx_ref, double Ezz_ref, double Exz_ref, double P_ref, double ani, double d1, double d2, double angle, double nx2, double nxnz, grid *mesh, mat_prop *materials, params *model, scale *scaling ) {
     const double tol = 1e-7;
     const double pert_xx   = tol*fabs(Exx_ref) + tol/1e10;
     const double pert_zz   = tol*fabs(Ezz_ref) + tol/1e10;
@@ -658,7 +661,7 @@ void DerivativesOnTheFly_s( double* detadexx, double* detadezz, double* detadgxz
                         mesh->bet_s, mesh->div_u_s,
                         mesh->strain_s, mesh->dil_s, mesh->fric_s, mesh->C_s,
                         model, materials, scaling,
-                        detadexx, NULL, NULL, mesh->phase_eta_s );
+                        detadexx, NULL, danidexx, NULL, mesh->phase_eta_s );
 
     // 2) Negative perturbation in Exx
     PhaseRheologyLoop_v1( 0, -1.0, 2.0*pert_xx, Exx_ref-pert_xx, Ezz_ref, Exz_ref, P_ref, ani, d1, d2, angle, nx2, nxnz, c1, mesh->phase_perc_s,
@@ -668,7 +671,7 @@ void DerivativesOnTheFly_s( double* detadexx, double* detadezz, double* detadgxz
                         mesh->bet_s, mesh->div_u_s,
                         mesh->strain_s, mesh->dil_s, mesh->fric_s, mesh->C_s,
                         model, materials, scaling,
-                        detadexx, NULL, NULL, mesh->phase_eta_s );
+                        detadexx, NULL, danidexx, NULL, mesh->phase_eta_s );
 
     //----------------------------------------------------------------------------------------------------------------------------------------------------//
 
@@ -680,7 +683,7 @@ void DerivativesOnTheFly_s( double* detadexx, double* detadezz, double* detadgxz
                         mesh->bet_s, mesh->div_u_s,
                         mesh->strain_s, mesh->dil_s, mesh->fric_s, mesh->C_s,
                         model, materials, scaling,
-                        detadezz, NULL, NULL, mesh->phase_eta_s );
+                        detadezz, NULL, danidezz, NULL, mesh->phase_eta_s );
 
     // 2) Negative perturbation in Ezz
     PhaseRheologyLoop_v1( 0, -1.0, 2.0*pert_zz, Exx_ref, Ezz_ref-pert_zz, Exz_ref, P_ref, ani, d1, d2, angle, nx2, nxnz, c1, mesh->phase_perc_s,
@@ -690,7 +693,7 @@ void DerivativesOnTheFly_s( double* detadexx, double* detadezz, double* detadgxz
                         mesh->bet_s, mesh->div_u_s,
                         mesh->strain_s, mesh->dil_s, mesh->fric_s, mesh->C_s,
                         model, materials, scaling,
-                        detadezz, NULL, NULL, mesh->phase_eta_s );
+                        detadezz, NULL, danidezz, NULL, mesh->phase_eta_s );
 
     //----------------------------------------------------------------------------------------------------------------------------------------------------//
 
@@ -702,7 +705,7 @@ void DerivativesOnTheFly_s( double* detadexx, double* detadezz, double* detadgxz
                         mesh->bet_s, mesh->div_u_s,
                         mesh->strain_s, mesh->dil_s, mesh->fric_s, mesh->C_s,
                         model, materials, scaling,
-                        detadgxz, NULL, NULL, mesh->phase_eta_s );
+                        detadgxz, NULL, danidgxz, NULL, mesh->phase_eta_s );
 
     // 2) Negative perturbation in Exz
     PhaseRheologyLoop_v1( 0, -1.0, 4.0*pert_xz, Exx_ref, Ezz_ref, Exz_ref-pert_xz, P_ref, ani, d1, d2, angle, nx2, nxnz, c1, mesh->phase_perc_s,
@@ -712,7 +715,7 @@ void DerivativesOnTheFly_s( double* detadexx, double* detadezz, double* detadgxz
                         mesh->bet_s, mesh->div_u_s,
                         mesh->strain_s, mesh->dil_s, mesh->fric_s, mesh->C_s,
                         model, materials, scaling,
-                        detadgxz, NULL, NULL, mesh->phase_eta_s );
+                        detadgxz, NULL, danidgxz, NULL, mesh->phase_eta_s );
 
     //----------------------------------------------------------------------------------------------------------------------------------------------------//
     // 1) Positive perturbation in P
@@ -723,7 +726,7 @@ void DerivativesOnTheFly_s( double* detadexx, double* detadezz, double* detadgxz
                         mesh->bet_s, mesh->div_u_s,
                         mesh->strain_s, mesh->dil_s, mesh->fric_s, mesh->C_s,
                         model, materials, scaling,
-                        detadp, NULL, NULL, mesh->phase_eta_s );
+                        detadp, NULL, danidp, NULL, mesh->phase_eta_s );
 
     // 2) Negative perturbation in P
     PhaseRheologyLoop_v1( 0, -1.0, 2.0*pert_p, Exx_ref, Ezz_ref, Exz_ref, P_ref-pert_p, ani, d1, d2, angle, nx2, nxnz, c1, mesh->phase_perc_s,
@@ -733,7 +736,7 @@ void DerivativesOnTheFly_s( double* detadexx, double* detadezz, double* detadgxz
                         mesh->bet_s, mesh->div_u_s,
                         mesh->strain_s, mesh->dil_s, mesh->fric_s, mesh->C_s,
                         model, materials, scaling,
-                        detadp, NULL, NULL, mesh->phase_eta_s );
+                        detadp, NULL, danidp, NULL, mesh->phase_eta_s );
 
     //----------------------------------------------------------------------------------------------------------------------------------------------------//
     if ( model->eta_avg == HARMONIC ) {
@@ -753,7 +756,7 @@ void DerivativesOnTheFly_s( double* detadexx, double* detadezz, double* detadgxz
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-void ViscosityDerivatives( grid *mesh, mat_prop *materials, params *model, Nparams Nmodel, scale *scaling ) {
+void ViscosityDerivatives( grid *mesh, mat_prop *materials, params *model, scale *scaling ) {
 
     int p, k, l, Nx, Nz, Ncx, Ncz, c0, c1, k1, cond;
     double eta, txx1, tzz1, txz1, Pn, Tn, eta_vep, VEcoeff=0.0, eII_el, eII_pl, eII_pwl, eII_exp, eII_lin, eII_gbs, eII_cst, dnew, div_el, div_pl, div_r;
@@ -844,125 +847,12 @@ void ViscosityDerivatives( grid *mesh, mat_prop *materials, params *model, Npara
             double Exz_ref   = mesh->exz_n[c0]     + (iDa13*mesh->sxxd0[c0] + iDa23*mesh->szzd0[c0] + iDa33*mesh->sxz0_n[c0])/2.0/etae;
             double P_ref     = mesh->p_in[c0];
 
-//             double gxz_ref   = 2.0*Exz_ref;
-//             double pert_xx   = tol*fabs(Exx_ref) + tol/1e10;
-//             double pert_zz   = tol*fabs(Ezz_ref) + tol/1e10;
-//             double pert_xz   = tol*fabs(Exz_ref) + tol/1e10;
-//             double pert_p    = tol*fabs(P_ref)   + tol/1e10;
-            
-// //            printf("exxd %2.2e ezzd %2.2e eyyd %2.2e \n", Exx_ref, Ezz_ref, - Exx_ref - Ezz_ref);
-            
-//             //----------------------------------------------------------------------------------------------------------------------------------------------------//
-            
-//             // 1) Positive perturbation in Exx
-//             PhaseRheologyLoop(  1, 1.0, 2.0*pert_xx, Exx_ref+pert_xx, Ezz_ref, Exz_ref, P_ref, ani, d1, d2, angle, nx2, nxnz, c0, mesh->phase_perc_n,
-//                               mesh->mu_n, mesh->T, mesh->p0_n, mesh->T0_n[c0],
-//                               mesh->d0_n, mesh->phi0_n, mesh->X0_n,
-//                               mesh->sxxd0, mesh->szzd0, mesh->sxz0_n,
-//                               mesh->bet_n, mesh->div_u,
-//                               mesh->strain_n, mesh->dil_n, mesh->fric_n, mesh->C_n,
-//                               model, materials, scaling,
-//                               mesh->detadexx_n, mesh->ddivpdexx_n, NULL, mesh->phase_eta_n );
-            
-//             // 2) Negative perturbation in Exx
-//             PhaseRheologyLoop( 1, -1.0, 2.0*pert_xx, Exx_ref-pert_xx, Ezz_ref, Exz_ref, P_ref, ani, d1, d2, angle, nx2, nxnz, c0, mesh->phase_perc_n,
-//                               mesh->mu_n, mesh->T, mesh->p0_n, mesh->T0_n[c0],
-//                               mesh->d0_n, mesh->phi0_n, mesh->X0_n,
-//                               mesh->sxxd0, mesh->szzd0, mesh->sxz0_n,
-//                               mesh->bet_n, mesh->div_u,
-//                               mesh->strain_n, mesh->dil_n, mesh->fric_n, mesh->C_n,
-//                               model, materials, scaling,
-//                               mesh->detadexx_n, mesh->ddivpdexx_n, NULL, mesh->phase_eta_n );
-            
-//             //----------------------------------------------------------------------------------------------------------------------------------------------------//
-
-//             // 1) Positive perturbation in Ezz
-//             PhaseRheologyLoop( 1, 1.0, 2.0*pert_zz, Exx_ref, Ezz_ref+pert_zz, Exz_ref, P_ref, ani, d1, d2, angle, nx2, nxnz, c0, mesh->phase_perc_n,
-//                               mesh->mu_n, mesh->T, mesh->p0_n, mesh->T0_n[c0],
-//                               mesh->d0_n, mesh->phi0_n, mesh->X0_n,
-//                               mesh->sxxd0, mesh->szzd0, mesh->sxz0_n,
-//                               mesh->bet_n, mesh->div_u,
-//                               mesh->strain_n, mesh->dil_n, mesh->fric_n, mesh->C_n,
-//                               model, materials, scaling,
-//                               mesh->detadezz_n, mesh->ddivpdezz_n, NULL, mesh->phase_eta_n );
-
-//             // 2) Negative perturbation in Ezz
-//             PhaseRheologyLoop( 1, -1.0, 2.0*pert_zz, Exx_ref, Ezz_ref-pert_zz, Exz_ref, P_ref, ani, d1, d2, angle, nx2, nxnz, c0, mesh->phase_perc_n,
-//                               mesh->mu_n, mesh->T, mesh->p0_n, mesh->T0_n[c0],
-//                               mesh->d0_n, mesh->phi0_n, mesh->X0_n,
-//                               mesh->sxxd0, mesh->szzd0, mesh->sxz0_n,
-//                               mesh->bet_n, mesh->div_u,
-//                               mesh->strain_n, mesh->dil_n, mesh->fric_n, mesh->C_n,
-//                               model, materials, scaling,
-//                               mesh->detadezz_n, mesh->ddivpdezz_n, NULL, mesh->phase_eta_n );
-
-//             //----------------------------------------------------------------------------------------------------------------------------------------------------//
-
-//             // 1) Positive perturbation in Exz ---- NOTE THE FACTOR 2 due to Gxz = 2*Exz
-//             PhaseRheologyLoop(  1, 1.0, 4.0*pert_xz, Exx_ref, Ezz_ref, Exz_ref+pert_xz, P_ref, ani, d1, d2, angle, nx2, nxnz, c0, mesh->phase_perc_n,
-//                               mesh->mu_n, mesh->T, mesh->p0_n, mesh->T0_n[c0],
-//                               mesh->d0_n, mesh->phi0_n, mesh->X0_n,
-//                               mesh->sxxd0, mesh->szzd0, mesh->sxz0_n,
-//                               mesh->bet_n, mesh->div_u,
-//                               mesh->strain_n, mesh->dil_n, mesh->fric_n, mesh->C_n,
-//                               model, materials, scaling,
-//                               mesh->detadgxz_n, mesh->ddivpdgxz_n, NULL, mesh->phase_eta_n );
-
-//             // 2) Negative perturbation in Exz ---- NOTE THE FACTOR 2 due to Gxz = 2*Exz
-//             PhaseRheologyLoop( 1, -1.0, 4.0*pert_xz, Exx_ref, Ezz_ref, Exz_ref-pert_xz, P_ref, ani, d1, d2, angle, nx2, nxnz, c0, mesh->phase_perc_n,
-//                               mesh->mu_n, mesh->T, mesh->p0_n, mesh->T0_n[c0],
-//                               mesh->d0_n, mesh->phi0_n, mesh->X0_n,
-//                               mesh->sxxd0, mesh->szzd0, mesh->sxz0_n,
-//                               mesh->bet_n, mesh->div_u,
-//                               mesh->strain_n, mesh->dil_n, mesh->fric_n, mesh->C_n,
-//                               model, materials, scaling,
-//                               mesh->detadgxz_n, mesh->ddivpdgxz_n, NULL, mesh->phase_eta_n );
-
-//             //----------------------------------------------------------------------------------------------------------------------------------------------------//
-
-//             // 1) Positive perturbation in P
-//             PhaseRheologyLoop(  2, 1.0, 2.0*pert_p, Exx_ref, Ezz_ref, Exz_ref, P_ref+pert_p, ani, d1, d2, angle, nx2, nxnz, c0, mesh->phase_perc_n,
-//                               mesh->mu_n, mesh->T, mesh->p0_n, mesh->T0_n[c0],
-//                               mesh->d0_n, mesh->phi0_n, mesh->X0_n,
-//                               mesh->sxxd0, mesh->szzd0, mesh->sxz0_n,
-//                               mesh->bet_n, mesh->div_u,
-//                               mesh->strain_n, mesh->dil_n, mesh->fric_n, mesh->C_n,
-//                               model, materials, scaling,
-//                               mesh->detadp_n, mesh->ddivpdp_n, mesh->drhodp_n, mesh->phase_eta_n );
-
-//             // 2) Negative perturbation in P
-//             PhaseRheologyLoop( 2, -1.0, 2.0*pert_p, Exx_ref, Ezz_ref, Exz_ref, P_ref-pert_p, ani, d1, d2, angle, nx2, nxnz, c0, mesh->phase_perc_n,
-//                               mesh->mu_n, mesh->T, mesh->p0_n, mesh->T0_n[c0],
-//                               mesh->d0_n, mesh->phi0_n, mesh->X0_n,
-//                               mesh->sxxd0, mesh->szzd0, mesh->sxz0_n,
-//                               mesh->bet_n, mesh->div_u,
-//                               mesh->strain_n, mesh->dil_n, mesh->fric_n, mesh->C_n,
-//                               model, materials, scaling,
-//                               mesh->detadp_n, mesh->ddivpdp_n, mesh->drhodp_n, mesh->phase_eta_n );
-//             // if ( mesh->drhodp_n[c0]<0.0 ) {
-//             //     printf("%2.2e\n", mesh->drhodp_n[c0]);
-//             //     exit(1);
-//             // }
-
-//             //----------------------------------------------------------------------------------------------------------------------------------------------------//
-//             if ( model->eta_avg == HARMONIC ) {
-//                 mesh->detadexx_n[c0] *= pow(mesh->eta_n[c0] , 2);
-//                 mesh->detadezz_n[c0] *= pow(mesh->eta_n[c0] , 2);
-//                 mesh->detadgxz_n[c0] *= pow(mesh->eta_n[c0] , 2);
-//                 mesh->detadp_n[c0]   *= pow(mesh->eta_n[c0] , 2);
-//             }
-//             if ( model->eta_avg == GEOMETRIC ) {
-//                 mesh->detadexx_n[c0] *= mesh->eta_n[c0];
-//                 mesh->detadezz_n[c0] *= mesh->eta_n[c0];
-//                 mesh->detadgxz_n[c0] *= mesh->eta_n[c0];
-//                 mesh->detadp_n[c0]   *= mesh->eta_n[c0];
-//             }
-            
-             // Compute derivatives on the fly
-            double detadexx=0., detadezz=0., detadgxz=0., detadp=0.;
+            // Compute derivatives on the fly
+            double detadexx =0., detadezz =0., detadgxz =0., detadp =0.;
             double ddivpdexx=0., ddivpdezz=0., ddivpdgxz=0., ddivpdp=0.;
+            double danidexx =0., danidezz =0., danidgxz =0., danidp =0.;
             double drhodp=0.;
-            DerivativesOnTheFly_n( &detadexx, &detadezz, &detadgxz, &detadp, &ddivpdexx, &ddivpdezz, &ddivpdgxz, &ddivpdp, &drhodp, c0, Exx_ref, Ezz_ref, Exz_ref, P_ref, ani, d1, d2, angle, nx2, nxnz, mesh, materials, model, Nmodel, scaling );
+            DerivativesOnTheFly_n( &detadexx, &detadezz, &detadgxz, &detadp, &ddivpdexx, &ddivpdezz, &ddivpdgxz, &ddivpdp, &danidexx, &danidezz, &danidgxz, &danidp, &drhodp, c0, Exx_ref, Ezz_ref, Exz_ref, P_ref, ani, d1, d2, angle, nx2, nxnz, mesh, materials, model, scaling );
             mesh->detadexx_n[c0]  = detadexx;
             mesh->detadezz_n[c0]  = detadezz;
             mesh->detadgxz_n[c0]  = detadgxz;
@@ -1035,7 +925,8 @@ void ViscosityDerivatives( grid *mesh, mat_prop *materials, params *model, Npara
             
             // Compute derivatives on the fly
             double detadexx=0., detadezz=0., detadgxz=0., detadp=0.;
-            DerivativesOnTheFly_s( &detadexx, &detadezz, &detadgxz, &detadp, c1, Exx_ref, Ezz_ref, Exz_ref, P_ref, ani, d1, d2, angle, nx2, nxnz, mesh, materials, model, Nmodel, scaling );
+            double danidexx =0., danidezz =0., danidgxz =0., danidp =0.;
+            DerivativesOnTheFly_s( &detadexx, &detadezz, &detadgxz, &detadp, &danidexx, &danidezz, &danidgxz, &danidp, c1, Exx_ref, Ezz_ref, Exz_ref, P_ref, ani, d1, d2, angle, nx2, nxnz, mesh, materials, model, scaling );
             mesh->detadexx_s[c1] = detadexx;
             mesh->detadezz_s[c1] = detadezz;
             mesh->detadgxz_s[c1] = detadgxz;

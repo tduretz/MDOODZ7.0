@@ -167,7 +167,7 @@ void UpdateNonLinearity( grid* mesh, markers* particles, markers* topo_chain, su
     EvaluateRHS( mesh, *model, scaling, materials.rho[0] );
 
     // Fill up the rheological matrices arrays
-    RheologicalOperators( mesh, model, &scaling, 0 );
+    RheologicalOperators( mesh, model, &materials, &scaling, 0 );
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
