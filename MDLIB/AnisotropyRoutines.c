@@ -69,14 +69,14 @@ double I2( Tensor2D *E, double ani_fac ) {
     return 0.5*( pow(E->xx,2) + pow(E->zz,2) + pow(E->yy,2)) + pow(E->xz,2)/ani_fac;
 }
 
-// Solution of 2x2 system
+// Solution of 2x2 system: TODO: move to MiscFunction.c, make x and f vectors and A matrix
 void Solve2x2(double *x1, double *x2, double f1, double f2, double a11, double a12, double a21, double a22) {
-  const double det       = a11 * a22 - a12 * a21; // determinant
-  const double ai        =  1.0 / det * a22;      // inverse matrix components
-  const double bi        = -1.0 / det * a12;
-  const double ci        = -1.0 / det * a21;
-  const double di        =  1.0 / det * a11;
-  *x1 = ai * f1 + bi * f2;                        // inverse times rhs
+  const double det = a11 * a22 - a12 * a21; // determinant
+  const double ai  =  1.0 / det * a22;      // inverse matrix components
+  const double bi  = -1.0 / det * a12;
+  const double ci  = -1.0 / det * a21;
+  const double di  =  1.0 / det * a11;
+  *x1 = ai * f1 + bi * f2;                  // inverse times rhs
   *x2 = ci * f1 + di * f2;
 }
 
@@ -185,7 +185,7 @@ double ViscosityConciseAniso( int phase, double nxnz, double nx2, double angle, 
       W_s       = 2.0*E_rot.xz*T_rot.xz;
       ieta_pwl  = 1.0 / eta_pwl;
       // Make some noise!!!!!
-      if (noisy) printf("It. %02d: f_n: %2.2e f_s:%2.2e\n", it, f_n, f_s);
+      if (noisy) printf("It. %02d: f_n = %2.2e --- f_s = %2.2e\n", it, f_n, f_s);
       // Exit criteria
       if ( fabs(f_n) < tol / 100 && fabs(f_s) < tol / 100 ) {
         if (it > 10) printf("L.I. Warnung: more that 10 local iterations, there might be a problem...\n");
@@ -244,7 +244,7 @@ void NonNewtonianViscosityGridAniso( grid *mesh, mat_prop *materials, params *mo
   double Xreac;
   double OverS;
   double Pcorr, rho;
-  double Exx, Ezz, Exz, etae, ani, d1, d2, angle, nxnz, nx2;
+  double Exx, Ezz, Exz, eta_e, ani, d1, d2, angle, nxnz, nx2;
   double Da11, Da12, Da13, Da22, Da23, Da33, iDa11, iDa12, iDa13, iDa22, iDa23, iDa33, a11, a12, a13, a22, a23, a33, det;
   if (model->iselastic == 1) el = 1.0;
 
@@ -261,7 +261,7 @@ void NonNewtonianViscosityGridAniso( grid *mesh, mat_prop *materials, params *mo
   InterpCentroidsToVerticesDouble( mesh->phi0_n,  mesh->phi0_s,  mesh, model ); // ACHTUNG NOT FRICTION ANGLE
 
   // Evaluate cell center viscosities
-#pragma omp parallel for shared( mesh ) private( k, l, k1, p, eta, c1, c0, txx1, tzz1, txz1, eta_vep, ani_vep, ani_e, eII_el, eII_pl, eII_pwl, eII_exp, eII_lin, eII_gbs, eII_cst, dnew, exx_el, ezz_el, exz_el, exx_diss, ezz_diss, exz_diss, Xreac,OverS, Pcorr, rho, div_el, div_pl, div_r, Exx, Ezz, Exz, etae, ani, d1, d2, Da11, Da12, Da13, Da22, Da23, Da33, iDa11, iDa12, iDa13, iDa22, iDa23, iDa33, a11, a12, a13, a22, a23, a33, det, angle, nxnz, nx2 ) firstprivate( el, UnsplitDiffReac, materials, scaling, average, model, Ncx, Ncz )
+#pragma omp parallel for shared( mesh ) private( k, l, k1, p, eta, c1, c0, txx1, tzz1, txz1, eta_vep, ani_vep, ani_e, eII_el, eII_pl, eII_pwl, eII_exp, eII_lin, eII_gbs, eII_cst, dnew, exx_el, ezz_el, exz_el, exx_diss, ezz_diss, exz_diss, Xreac,OverS, Pcorr, rho, div_el, div_pl, div_r, Exx, Ezz, Exz, eta_e, ani, d1, d2, Da11, Da12, Da13, Da22, Da23, Da33, iDa11, iDa12, iDa13, iDa22, iDa23, iDa33, a11, a12, a13, a22, a23, a33, det, angle, nxnz, nx2 ) firstprivate( el, UnsplitDiffReac, materials, scaling, average, model, Ncx, Ncz )
   for ( k1=0; k1<Ncx*Ncz; k1++ ) {
 
     //    for ( l=0; l<Ncz; l++ ) {
@@ -312,8 +312,8 @@ void NonNewtonianViscosityGridAniso( grid *mesh, mat_prop *materials, params *mo
     if ( mesh->BCp.type[c0] != 30 && mesh->BCp.type[c0] != 31 ) {
 
       //----------------------------------------------------------//
-      if ( model->iselastic==1 ) etae      = model->dt*mesh->mu_n[c0];
-      else                       etae      = 1.0; // set to arbitrary value to avoid division by 0.0
+      if ( model->iselastic==1 ) eta_e      = model->dt*mesh->mu_n[c0];
+      else                       eta_e      = 1.0; // set to arbitrary value to avoid division by 0.0
       //----------------------------------------------------------//
         // Anisotropy
         // if ( model->aniso_fstrain  == 0 ) ani = 1.0 - 1.0 / mesh->aniso_factor_n[c0];
@@ -324,9 +324,9 @@ void NonNewtonianViscosityGridAniso( grid *mesh, mat_prop *materials, params *mo
         nxnz    = 0.5*d1;
         nx2     = pow( cos(angle), 2);
       //----------------------------------------------------------//
-      Exx = mesh->exxd[c0]  + mesh->sxxd0[c0] /etae/2.0;
-      Ezz = mesh->ezzd[c0]  + mesh->szzd0[c0] /etae/2.0;
-      Exz = mesh->exz_n[c0] + mesh->sxz0_n[c0]/etae/2.0;
+      Exx = mesh->exxd[c0]  + mesh->sxxd0[c0] /eta_e/2.0;
+      Ezz = mesh->ezzd[c0]  + mesh->szzd0[c0] /eta_e/2.0;
+      Exz = mesh->exz_n[c0] + mesh->sxz0_n[c0]/eta_e/2.0;
       
       // Loop on phases
       for ( p=0; p<model->Nb_phases; p++) {
@@ -435,40 +435,19 @@ void NonNewtonianViscosityGridAniso( grid *mesh, mat_prop *materials, params *mo
       }
 
       // Effective strain rate
-      if ( model->aniso_fstrain  == 0 ) ani = 1.0 - 1.0 / mesh->aniso_factor_e_n[c0];
-      if ( model->aniso_fstrain  == 1 ) ani = 1.0 - 1.0 / mesh->FS_AR_n[c0];
-      Da11  = 2.0 - 2.0*ani*d1;
-      Da12  = 2.0*ani*d1;
-      Da13  =-2.0*ani*d2;
-      Da22  = 2.0 - 2.0*ani*d1;
-      Da23  = 2.0*ani*d2;
-      Da33  = 1.0  + 2.0*ani*(d1 - 0.5);
-      //
-      a11   = Da33 * Da22 - pow(Da23,2);
-      a12   = Da13 * Da23 - Da33 * Da12;
-      a13   = Da12 * Da23 - Da13 * Da22;
-      a22   = Da33 * Da11 - pow(Da13,2);
-      a23   = Da12 * Da13 - Da11 * Da23;
-      a33   = Da11 * Da22 - pow(Da12,2);
-      //
-      det   = (Da11 * a11) + (Da12 * a12) + (Da13 * a13);
-      iDa11 = a11/det; iDa12 = a12/det; iDa13 = a13/det;
-      iDa22 = a22/det; iDa23 = a23/det;
-      iDa33 = a33/det;
-      
-      Exx   = mesh->exxd[c0]      + el*(iDa11*mesh->sxxd0[c0] + iDa12*mesh->szzd0[c0] + iDa13*mesh->sxz0_n[c0])/etae;
-      Ezz   = mesh->ezzd[c0]      + el*(iDa12*mesh->sxxd0[c0] + iDa22*mesh->szzd0[c0] + iDa23*mesh->sxz0_n[c0])/etae;
-      Exz   = mesh->exz_n[c0]     + el*(iDa13*mesh->sxxd0[c0] + iDa23*mesh->szzd0[c0] + iDa33*mesh->sxz0_n[c0])/2.0/etae;
-
+      double aniS_e, aniS_vep;
+      if ( model->aniso_fstrain  == 0 ) aniS_e = 1.0 - 1.0 / mesh->aniso_factor_e_n[c0];
+      if ( model->aniso_fstrain  == 1 ) aniS_e = 1.0 - 1.0 / mesh->FS_AR_n[c0];
+      EffectiveStrainRate( &Exx, &Ezz, &Exz, mesh->exxd[c0], mesh->ezzd[c0], mesh->exz_n[c0], mesh->sxxd0[c0], mesh->szzd0[c0], mesh->sxz0_n[c0], d1, d2, aniS_e, eta_e, model->iselastic ); 
       // Final stress update
-      if ( model->aniso_fstrain  == 0 ) ani = 1.0 - 1.0 / mesh->aniso_factor_n[c0];
-      if ( model->aniso_fstrain  == 1 ) ani = 1.0 - 1.0 / mesh->FS_AR_n[c0];
-      Da11  = 2.0 - 2.0*ani*d1;
-      Da12  = 2.0*ani*d1;
-      Da13  =-2.0*ani*d2;
-      Da22  = 2.0 - 2.0*ani*d1;
-      Da23  = 2.0*ani*d2;
-      Da33  = 1.0  + 2.0*ani*(d1 - 0.5);
+      if ( model->aniso_fstrain  == 0 ) aniS_vep = 1.0 - 1.0 / mesh->aniso_factor_n[c0];
+      if ( model->aniso_fstrain  == 1 ) aniS_vep = 1.0 - 1.0 / mesh->FS_AR_n[c0];
+      Da11  = 2.0 - 2.0*aniS_vep*d1;
+      Da12  = 2.0*aniS_vep*d1;
+      Da13  =-2.0*aniS_vep*d2;
+      Da22  = 2.0 - 2.0*aniS_vep*d1;
+      Da23  = 2.0*aniS_vep*d2;
+      Da33  = 1.0  + 2.0*aniS_vep*(d1 - 0.5);
       // Normal stress
       mesh->sxxd[c0] = mesh->eta_n[c0] * ( Da11*Exx + Da12*Ezz + 2.0*Da13*Exz );
       mesh->szzd[c0] = mesh->eta_n[c0] * ( Da12*Exx + Da22*Ezz + 2.0*Da23*Exz );
@@ -477,7 +456,7 @@ void NonNewtonianViscosityGridAniso( grid *mesh, mat_prop *materials, params *mo
   }
 
 // Calculate vertices viscosity
-#pragma omp parallel for shared( mesh ) private( k, l, k1, p, eta, c1, c0, txx1, tzz1, txz1, eta_vep, ani_vep, ani_e, eII_el, eII_pl, eII_pwl, eII_exp, eII_lin, eII_gbs, eII_cst, dnew, exx_el, ezz_el, exz_el, exx_diss, ezz_diss, exz_diss, Xreac, OverS, Pcorr, rho, div_el, div_pl, div_r, Exx, Ezz, Exz, etae, ani, d1, d2, Da11, Da12, Da13, Da22, Da23, Da33, iDa11, iDa12, iDa13, iDa22, iDa23, iDa33, a11, a12, a13, a22, a23, a33, det, angle, nxnz, nx2 ) firstprivate( el, UnsplitDiffReac, materials, scaling, average, model, Nx, Nz )
+#pragma omp parallel for shared( mesh ) private( k, l, k1, p, eta, c1, c0, txx1, tzz1, txz1, eta_vep, ani_vep, ani_e, eII_el, eII_pl, eII_pwl, eII_exp, eII_lin, eII_gbs, eII_cst, dnew, exx_el, ezz_el, exz_el, exx_diss, ezz_diss, exz_diss, Xreac, OverS, Pcorr, rho, div_el, div_pl, div_r, Exx, Ezz, Exz, eta_e, ani, d1, d2, Da11, Da12, Da13, Da22, Da23, Da33, iDa11, iDa12, iDa13, iDa22, iDa23, iDa33, a11, a12, a13, a22, a23, a33, det, angle, nxnz, nx2 ) firstprivate( el, UnsplitDiffReac, materials, scaling, average, model, Nx, Nz )
   for ( k1=0; k1<Nx*Nz; k1++ ) {
 
     k  = mesh->kn[k1];
@@ -497,8 +476,8 @@ void NonNewtonianViscosityGridAniso( grid *mesh, mat_prop *materials, params *mo
 
     if ( mesh->BCg.type[c1] != 30 ) {
 
-      if ( model->iselastic==1   ) etae      = model->dt*mesh->mu_s[c1];
-      else           etae      = 1.0; // set to arbitrary value to avoid division by 0.0
+      if ( model->iselastic==1   ) eta_e      = model->dt*mesh->mu_s[c1];
+      else           eta_e      = 1.0; // set to arbitrary value to avoid division by 0.0
       //----------------------------------------------------------//
         // // Anisotropy
         // if ( model->aniso_fstrain  == 0 ) ani = 1.0 - 1.0 / mesh->aniso_factor_s[c1];
@@ -509,9 +488,9 @@ void NonNewtonianViscosityGridAniso( grid *mesh, mat_prop *materials, params *mo
         nxnz    = 0.5*d1;
         nx2     = pow( cos(angle), 2);
       //----------------------------------------------------------//
-      Exx = mesh->exxd_s[c1] + mesh->sxxd0_s[c1]/etae/2.0;
-      Ezz = mesh->ezzd_s[c1] + mesh->szzd0_s[c1]/etae/2.0;
-      Exz = mesh->exz[c1]    + mesh->sxz0[c1]   /etae/2.0;
+      Exx = mesh->exxd_s[c1] + mesh->sxxd0_s[c1]/eta_e/2.0;
+      Ezz = mesh->ezzd_s[c1] + mesh->szzd0_s[c1]/eta_e/2.0;
+      Exz = mesh->exz[c1]    + mesh->sxz0[c1]   /eta_e/2.0;
       
       // Loop on phases
       for ( p=0; p<model->Nb_phases; p++) {
@@ -582,44 +561,22 @@ void NonNewtonianViscosityGridAniso( grid *mesh, mat_prop *materials, params *mo
       }
 
       // Effective strain rate
-      if ( model->aniso_fstrain  == 0 ) ani = 1.0 - 1.0 / mesh->aniso_factor_e_s[c1];
-      if ( model->aniso_fstrain  == 1 ) ani = 1.0 - 1.0 / mesh->FS_AR_s[c1];
-      Da11  = 2.0 - 2.0*ani*d1;
-      Da12  = 2.0*ani*d1;
-      Da13  = -2.0*ani*d2;
-      Da22  = 2.0 - 2.0*ani*d1;
-      Da23  = 2.0*ani*d2;
-      Da33  = 1.0  + 2.0*ani*(d1 - 0.5);
-      //
-      a11   = Da33 * Da22 - pow(Da23,2);
-      a12   = Da13 * Da23 - Da33 * Da12;
-      a13   = Da12 * Da23 - Da13 * Da22;
-      a22   = Da33 * Da11 - pow(Da13,2);
-      a23   = Da12 * Da13 - Da11 * Da23;
-      a33   = Da11 * Da22 - pow(Da12,2);
-      det   = (Da11 * a11) + (Da12 * a12) + (Da13 * a13);
-      //
-      iDa11 = a11/det; iDa12 = a12/det; iDa13 = a13/det;
-      iDa22 = a22/det; iDa23 = a23/det;
-      iDa33 = a33/det;
-      //
-      Exx = mesh->exxd_s[c1]  + el*(iDa11*mesh->sxxd0_s[c1] + iDa12*mesh->szzd0_s[c1] + iDa13*mesh->sxz0[c1])/etae;
-      Ezz = mesh->ezzd_s[c1]  + el*(iDa12*mesh->sxxd0_s[c1] + iDa22*mesh->szzd0_s[c1] + iDa23*mesh->sxz0[c1])/etae;
-      Exz = mesh->exz[c1]     + el*(iDa13*mesh->sxxd0_s[c1] + iDa23*mesh->szzd0_s[c1] + iDa33*mesh->sxz0[c1])/2.0/etae;
+      double aniS_e, aniS_vep;
+      if ( model->aniso_fstrain  == 0 ) aniS_e = 1.0 - 1.0 / mesh->aniso_factor_e_s[c1];
+      if ( model->aniso_fstrain  == 1 ) aniS_e = 1.0 - 1.0 / mesh->FS_AR_s[c1];
+      EffectiveStrainRate( &Exx, &Ezz, &Exz, mesh->exxd_s[c1], mesh->ezzd_s[c1], mesh->exz[c1], mesh->sxxd0_s[c1], mesh->szzd0_s[c1], mesh->sxz0[c1], d1, d2, ani_e, eta_e ); 
 
       // Final stress update
-      if ( model->aniso_fstrain  == 0 ) ani = 1.0 - 1.0 / mesh->aniso_factor_s[c1];
-      if ( model->aniso_fstrain  == 1 ) ani = 1.0 - 1.0 / mesh->FS_AR_s[c1];
-      Da11  = 2.0 - 2.0*ani*d1;
-      Da12  = 2.0*ani*d1;
-      Da13  = -2.0*ani*d2;
-      Da22  = 2.0 - 2.0*ani*d1;
-      Da23  = 2.0*ani*d2;
-      Da33  = 1.0  + 2.0*ani*(d1 - 0.5);
+      if ( model->aniso_fstrain  == 0 ) aniS_vep = 1.0 - 1.0 / mesh->aniso_factor_s[c1];
+      if ( model->aniso_fstrain  == 1 ) aniS_vep = 1.0 - 1.0 / mesh->FS_AR_s[c1];
+      Da11  = 2.0 - 2.0*aniS_vep*d1;
+      Da12  = 2.0*aniS_vep*d1;
+      Da13  = -2.0*aniS_vep*d2;
+      Da22  = 2.0 - 2.0*aniS_vep*d1;
+      Da23  = 2.0*aniS_vep*d2;
+      Da33  = 1.0  + 2.0*aniS_vep*(d1 - 0.5);
       // Shear stress
       mesh->sxz[c1] = mesh->eta_s[c1] * ( Da13*Exx + Da23*Ezz + 2.0*Da33*Exz );
-    // printf("%2.2e %2.2e %2.2e %2.2e %2.2e\n",Da13,Da23,Da33,ani,mesh->aniso_factor_s[c1]);
-    //   mesh->sxz[c1] = mesh->eta_s[c1] * ( 2*Da33*Exz );
     }
   }
 //     printf("Txx:\n");
