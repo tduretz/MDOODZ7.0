@@ -63,6 +63,7 @@ void EffectiveStrainRate( double* Exx, double* Ezz, double* Exz, double exx, dou
     *Exx = exx + (iDa11*Txx + iDa12*Tzz + iDa13*Txz)/eta_e;
     *Ezz = ezz + (iDa12*Txx + iDa22*Tzz + iDa23*Txz)/eta_e;
     *Exz = exz + (iDa13*Txx + iDa23*Tzz + iDa33*Txz)/eta_e/2.0;
+    printf("SHOULD NOT\n");
   }
   else {
     *Exx = exx;

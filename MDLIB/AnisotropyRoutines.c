@@ -324,9 +324,16 @@ void NonNewtonianViscosityGridAniso( grid *mesh, mat_prop *materials, params *mo
         nxnz    = 0.5*d1;
         nx2     = pow( cos(angle), 2);
       //----------------------------------------------------------//
-      Exx = mesh->exxd[c0]  + mesh->sxxd0[c0] /eta_e/2.0;
-      Ezz = mesh->ezzd[c0]  + mesh->szzd0[c0] /eta_e/2.0;
-      Exz = mesh->exz_n[c0] + mesh->sxz0_n[c0]/eta_e/2.0;
+      if ( model->iselastic==1 ) {
+        Exx = mesh->exxd[c0]  + mesh->sxxd0[c0] /eta_e/2.0;
+        Ezz = mesh->ezzd[c0]  + mesh->szzd0[c0] /eta_e/2.0;
+        Exz = mesh->exz_n[c0] + mesh->sxz0_n[c0]/eta_e/2.0;
+      }
+      else {
+        Exx = mesh->exxd[c0] ;
+        Ezz = mesh->ezzd[c0] ;
+        Exz = mesh->exz_n[c0];
+      }
       
       // Loop on phases
       for ( p=0; p<model->Nb_phases; p++) {
@@ -488,9 +495,16 @@ void NonNewtonianViscosityGridAniso( grid *mesh, mat_prop *materials, params *mo
         nxnz    = 0.5*d1;
         nx2     = pow( cos(angle), 2);
       //----------------------------------------------------------//
-      Exx = mesh->exxd_s[c1] + mesh->sxxd0_s[c1]/eta_e/2.0;
-      Ezz = mesh->ezzd_s[c1] + mesh->szzd0_s[c1]/eta_e/2.0;
-      Exz = mesh->exz[c1]    + mesh->sxz0[c1]   /eta_e/2.0;
+      if ( model->iselastic==1   ) {
+        Exx = mesh->exxd_s[c1] + mesh->sxxd0_s[c1]/eta_e/2.0;
+        Ezz = mesh->ezzd_s[c1] + mesh->szzd0_s[c1]/eta_e/2.0;
+        Exz = mesh->exz[c1]    + mesh->sxz0[c1]   /eta_e/2.0;
+      }
+      else {
+        Exx = mesh->exxd_s[c1];
+        Ezz = mesh->ezzd_s[c1];
+        Exz = mesh->exz[c1]   ;
+      }
       
       // Loop on phases
       for ( p=0; p<model->Nb_phases; p++) {
