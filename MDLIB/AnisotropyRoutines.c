@@ -148,7 +148,18 @@ double ViscosityConciseAniso( int phase, double nxnz, double nx2, double angle, 
     I2_v     = I2( &E_rot, ani_fac_v); 
     if (constant)    eta_cst  = materials->eta0[phase];
     if (dislocation) eta_pwl  = pow( B_pwl, -1.0/n_pwl ) * pow( I2_v, 0.5*(1-n_pwl)/n_pwl );
-    if (elastic)     eta_el     = G*dt; 
+    if (elastic)     eta_el   = G*dt; 
+
+    // Cases where no local iterations are needed
+    // if (dislocation) eta_ve_n = eta_pwl;
+    // if (dislocation) eta_ve_s = eta_pwl/ani_fac_v;
+    // if (constant) eta_ve_n = eta_cst;
+    // if (constant) eta_ve_s = eta_cst/ani_fac_v;
+    // T_rot.xx = 2.0 * eta_ve_n * E_rot.xx;
+    // T_rot.zz = 2.0 * eta_ve_n * E_rot.zz;
+    // T_rot.xz = 2.0 * eta_ve_s * E_rot.xz;
+    // T_rot.yy = -T_rot.xx - T_rot.xx; 
+
     // Define viscosity bounds
     double eta_up_n  = 1.0e100 / scaling->eta, eta_up_s  = 1.0e100 / scaling->eta;
     if (constant)    eta_up_n = MINV(eta_up_n, eta_cst);
@@ -161,7 +172,7 @@ double ViscosityConciseAniso( int phase, double nxnz, double nx2, double angle, 
     // Initial guess
     eta_ve_n = eta_up_n;
     eta_ve_s = eta_up_s;
-    // Iterate
+    // Iterations
     if (noisy) printf("Start local iterations (cst: %d --- el: %d --- pwl: %d)\n", constant, elastic, dislocation);
     for (int it = 0; it < nitmax; it++) {
       // Compute stress in principal plane
@@ -458,6 +469,13 @@ void NonNewtonianViscosityGridAniso( grid *mesh, mat_prop *materials, params *mo
       // Normal stress
       mesh->sxxd[c0] = mesh->eta_n[c0] * ( Da11*Exx + Da12*Ezz + 2.0*Da13*Exz );
       mesh->szzd[c0] = mesh->eta_n[c0] * ( Da12*Exx + Da22*Ezz + 2.0*Da23*Exz );
+      // if (c0==100) {
+      //   printf("Rheo\n");
+      //   printf("Txx = %2.6e\n", mesh->sxxd[c0]);
+      //   printf("Da11 = %2.6e\n", Da11);
+      //   printf("Da12 = %2.6e\n", Da12);
+      //   printf("Da13 = %2.6e\n", Da13);
+      // }
 
     }
   }
@@ -583,10 +601,7 @@ void NonNewtonianViscosityGridAniso( grid *mesh, mat_prop *materials, params *mo
       // Final stress update
       if ( model->aniso_fstrain  == 0 ) aniS_vep = 1.0 - 1.0 / mesh->aniso_factor_s[c1];
       if ( model->aniso_fstrain  == 1 ) aniS_vep = 1.0 - 1.0 / mesh->FS_AR_s[c1];
-      Da11  = 2.0 - 2.0*aniS_vep*d1;
-      Da12  = 2.0*aniS_vep*d1;
       Da13  = -2.0*aniS_vep*d2;
-      Da22  = 2.0 - 2.0*aniS_vep*d1;
       Da23  = 2.0*aniS_vep*d2;
       Da33  = 1.0  + 2.0*aniS_vep*(d1 - 0.5);
       // Shear stress
