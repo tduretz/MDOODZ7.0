@@ -596,7 +596,16 @@ void NonNewtonianViscosityGridAniso( grid *mesh, mat_prop *materials, params *mo
       double aniS_e, aniS_vep;
       if ( model->aniso_fstrain  == 0 ) aniS_e = 1.0 - 1.0 / mesh->aniso_factor_e_s[c1];
       if ( model->aniso_fstrain  == 1 ) aniS_e = 1.0 - 1.0 / mesh->FS_AR_s[c1];
-      EffectiveStrainRate( &Exx, &Ezz, &Exz, mesh->exxd_s[c1], mesh->ezzd_s[c1], mesh->exz[c1], mesh->sxxd0_s[c1], mesh->szzd0_s[c1], mesh->sxz0[c1], d1, d2, ani_e, eta_e, model->iselastic ); 
+
+      // if (c1==10) {
+      //   printf("%2.6e\n", mesh->sxz[c1]);
+      //   printf("eta=%2.6e\n", mesh->eta_s[c1]);
+      //   printf("exx=%2.6e Exx=%2.6e sxxd0/2/etae=%2.6e\n", mesh->exxd_s[c1], Exx, mesh->sxxd0_s[c1]/eta_e/2.0);
+      //   printf("%2.6e\n",  mesh->exxd_s[c1] + mesh->sxxd0_s[c1]/eta_e/2.0);
+      //   printf("%2.6e\n", ani_e);
+      // }
+
+      EffectiveStrainRate( &Exx, &Ezz, &Exz, mesh->exxd_s[c1], mesh->ezzd_s[c1], mesh->exz[c1], mesh->sxxd0_s[c1], mesh->szzd0_s[c1], mesh->sxz0[c1], d1, d2, aniS_e, eta_e, model->iselastic ); 
 
       // Final stress update
       if ( model->aniso_fstrain  == 0 ) aniS_vep = 1.0 - 1.0 / mesh->aniso_factor_s[c1];
@@ -606,8 +615,10 @@ void NonNewtonianViscosityGridAniso( grid *mesh, mat_prop *materials, params *mo
       Da33  = 1.0  + 2.0*aniS_vep*(d1 - 0.5);
       // Shear stress
       mesh->sxz[c1] = mesh->eta_s[c1] * ( Da13*Exx + Da23*Ezz + 2.0*Da33*Exz );
+
     }
   }
+  // exit(1);
 //     printf("Txx:\n");
 //    Print2DArrayDouble( mesh->sxxd,  mesh->Nx-1, mesh->Nz-1, scaling->S );
 //      printf("Tzz:\n");
