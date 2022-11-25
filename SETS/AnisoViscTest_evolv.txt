@@ -1,10 +1,10 @@
 /**** RESTART ****/
-istep = 000030
+istep = 000200
 irestart = 0
 
 /**** OUTPUT FILES ****/
 writer          = 1
-writer_step     = 1
+writer_step     = 10
 writer_markers  = 0
 writer_debug    = 0
 writer_energies = 0
@@ -29,12 +29,12 @@ xmax    =  5.000000e-1
 zmax    =  5.000000e-1
 
 /**** PARTICLES ****/
-Nx_part = 10
-Nz_part = 10
+Nx_part = 4
+Nz_part = 4
 
 /**** TIME ****/
 dt_constant = 0
-Courant     = 0.3
+Courant     = 0.5
 dt          = 0.1
 RK          = 4
 

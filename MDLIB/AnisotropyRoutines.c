@@ -246,7 +246,7 @@ double ViscosityConciseAniso( int phase, double nxnz, double nx2, double angle, 
 
 void NonNewtonianViscosityGridAniso( grid *mesh, mat_prop *materials, params *model, Nparams Nmodel, scale *scaling ) {
 
-    // printf("NonNewtonianViscosityGridAniso!\n");
+  // printf("NonNewtonianViscosityGridAniso!\n");
 
   int    p, k, l, Nx, Nz, Ncx, Ncz, c0, c1, k1;
   double eta, txx1, tzz1, txz1, eta_vep, ani_vep, ani_e, eII_el, eII_pl, eII_pwl, eII_exp, eII_lin, eII_gbs, eII_cst, dnew, div_el, div_pl, div_r;

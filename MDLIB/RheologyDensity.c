@@ -1472,6 +1472,10 @@ void StrainRateComponents( grid* mesh, scale scaling, params* model ) {
       const double dvxdz = (mesh->u_in[c1+Nx] - mesh->u_in[c1])/dz;
       const double dvzdx = (mesh->v_in[c2+1]  - mesh->v_in[c2])/dx;
       mesh->exz[c1] =  0.5 * (dvxdz + dvzdx);
+      // if (c1==Nx-1) {
+      //   printf("exz=%2.4e %2.4e %2.4e\n",mesh->exz[c1], dvxdz, dvzdx );
+      //   printf("VxW = %2.6e --- VxE = %2.6e\n", mesh->u_in[c1], mesh->u_in[c1+Nx]);
+      // }
     }
   }
 

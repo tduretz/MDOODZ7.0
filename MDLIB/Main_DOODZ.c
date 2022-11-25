@@ -680,7 +680,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
                 // Update non-linear rheology
                 UpdateNonLinearity( &mesh, &particles, &topo_chain, &topo, input.materials, &input.model, &Nmodel, input.scaling, 0, 0.0 );
-                RheologicalOperators( &mesh, &input.model, &input.materials,  &input.scaling, 0 );                              
+                // RheologicalOperators( &mesh, &input.model, &input.materials,  &input.scaling, 0 );                              
 
                 if (input.model.noisy == 1 ) {
                     MinMaxArrayTag( mesh.T, input.scaling.T, (mesh.Nx-1)*(mesh.Nz-1), "T         ", mesh.BCt.type );
@@ -718,29 +718,9 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
                 // Build discrete system of equations - Jacobian
                 // ViscosityDerivatives( &mesh, &input.materials, &input.model, &input.scaling );
-                printf("IsFullNewton= %d\n", IsFullNewton);
                 if ( IsFullNewton   == 1 && Nmodel.nit > 0 ) RheologicalOperators( &mesh, &input.model, &input.materials, &input.scaling, 1 );
                 if ( IsJacobianUsed == 1 )                   BuildJacobianOperatorDecoupled( &mesh, input.model, 0, mesh.p_corr, mesh.p_in, mesh.u_in, mesh.v_in,  &Jacob,  &JacobA,  &JacobB,  &JacobC,   &JacobD, 1 );
                 
-                // IsNanArray2DFP(mesh.eta_n, (mesh.Nx-1)*(mesh.Nz-1));
-                // IsInfArray2DFP(mesh.eta_n, (mesh.Nx-1)*(mesh.Nz-1));
-
-                // IsNanArray2DFP(mesh.eta_s, (mesh.Nx-0)*(mesh.Nz));
-                // IsInfArray2DFP(mesh.eta_s, (mesh.Nx-0)*(mesh.Nz));
-
-                // MinMaxArrayTag( mesh.D11_n,      input.scaling.eta, (mesh.Nx-1)*(mesh.Nz-1),     "D11_n     ", mesh.BCp.type );
-                // MinMaxArrayTag( mesh.D12_n,      input.scaling.eta, (mesh.Nx-1)*(mesh.Nz-1),     "D12_n     ", mesh.BCp.type );
-                // MinMaxArrayTag( mesh.D13_n,      input.scaling.eta, (mesh.Nx-1)*(mesh.Nz-1),     "D13_n     ", mesh.BCp.type );
-                // MinMaxArrayTag( mesh.D14_n,      input.scaling.eta, (mesh.Nx-1)*(mesh.Nz-1),     "D14_n     ", mesh.BCp.type );
-                // MinMaxArrayTag( mesh.D21_n,      input.scaling.eta, (mesh.Nx-1)*(mesh.Nz-1),     "D21_n     ", mesh.BCp.type );
-                // MinMaxArrayTag( mesh.D22_n,      input.scaling.eta, (mesh.Nx-1)*(mesh.Nz-1),     "D22_n     ", mesh.BCp.type );
-                // MinMaxArrayTag( mesh.D23_n,      input.scaling.eta, (mesh.Nx-1)*(mesh.Nz-1),     "D23_n     ", mesh.BCp.type );
-                // MinMaxArrayTag( mesh.D24_n,      input.scaling.eta, (mesh.Nx-1)*(mesh.Nz-1),     "D24_n     ", mesh.BCp.type );
-                // MinMaxArrayTag( mesh.D31_s,      input.scaling.eta, (mesh.Nx-0)*(mesh.Nz-0),     "D31_s     ", mesh.BCg.type );
-                // MinMaxArrayTag( mesh.D32_s,      input.scaling.eta, (mesh.Nx-0)*(mesh.Nz-0),     "D32_s     ", mesh.BCg.type );
-                // MinMaxArrayTag( mesh.D33_s,      input.scaling.eta, (mesh.Nx-0)*(mesh.Nz-0),     "D33_s     ", mesh.BCg.type );
-                // MinMaxArrayTag( mesh.D34_s,      input.scaling.eta, (mesh.Nx-0)*(mesh.Nz-0),     "D34_s     ", mesh.BCg.type );
-
                 // Diagonal input.scaling
                 if ( input.model.diag_scaling ) {
                     if (input.model.Newton          == 0 )  ExtractDiagonalScale( &StokesA, &StokesB, &StokesC, &StokesD );

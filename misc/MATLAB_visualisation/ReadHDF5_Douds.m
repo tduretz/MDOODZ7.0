@@ -19,7 +19,7 @@ path = '/Users/imac/REPO_GIT/MDOODZ6.0/SOURCE/Huismans_Reg2e20_noise/';
 path = '/Users/imac/REPO_GIT/MDOODZ6.0/SOURCE/Huismans_OS2e5_n1_5/';
 path = '/Users/imac/REPO_GIT/MDOODZ6.0/SOURCE/Huismans_Reg8e19_noise_NEW/';
 
-path = '/Users/imac/REPO_GIT/MDOODZ6.0/SOURCE//';
+path = '/Users/tduretz/REPO_GIT/MDOODZ7.0/MDLIB/';
 
 
 % path = '/Users/imac/REPO_GIT/mdoodz4.5_repo/SOURCE/'
@@ -59,7 +59,7 @@ vel_vectors     = 0;
 vel_divergence  = 0;
 pre_plot        = 0;
 dyna_pre        = 0;
-stress_inv      = 1;
+stress_inv      = 0;
 stress_evol     = 0;
 stress_plot     = 0;
 srate_plot      = 0;
@@ -94,7 +94,7 @@ emergency_benoit = 0;
 fstrain          = 0;
 shear_heating    = 0;
 princi_stress    = 0;
-director_vector  = 0;
+director_vector  = 1;
 Pl_soft          = 0;
 Sole             = 0;
 overstress       = 0;
@@ -169,8 +169,8 @@ maxX = 1;
 minTxx = -11e0;
 maxTxx =  0.642;
 
-minStr = 0.01;
-maxStr = 0.4;
+% minStr = 0.01;
+% maxStr = 0.4;
 
 minPdyn = -1e8;
 maxPdyn =  5e8;
@@ -1411,9 +1411,7 @@ for istep=istart:ijump:iend
             HSc = 2*sxzc.*exzc + sxxd.*exx + szzd.*ezz;
             minHS=min(HSc(:));
             maxHS=max(HSc(:));
-            
-            load('roma.mat')
-            
+                
             if print2screen == 1
                 figCount = figCount +1;
                 figure(figCount), clf
@@ -1427,7 +1425,7 @@ for istep=istart:ijump:iend
             else
                 subplot(2,1,1)
             end
-            colormap(flipud(roma));
+            colormap(turbo);
             imagesc( xc_plot, zc_plot, log10(eII) )
             hold on
             if Ccontours == 1; AddCompoContours( filename, VizGrid, crop, lim  ); end
