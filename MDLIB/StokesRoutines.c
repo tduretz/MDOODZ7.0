@@ -185,7 +185,7 @@ void RheologicalOperators( grid* mesh, params* model, mat_prop* materials, scale
         const double Gxz = 2.0*Exz;
         const double Dxx = Exx*(1.0 - aniS_vep*d1) + Ezz*aniS_vep*d1 - Gxz*aniS_vep*d2;
         const double Dzz = Ezz*(1.0 - aniS_vep*d1) + Exx*aniS_vep*d1 + Gxz*aniS_vep*d2;
-        const double Axx = -Exx*d1*e_a2 + Ezz*d1*e_a2 + Gxz*d2*e_a2;
+        const double Axx = -Exx*d1*e_a2 + Ezz*d1*e_a2 - Gxz*d2*e_a2;
         const double Azz =  Exx*d1*e_a2 - Ezz*d1*e_a2 + Gxz*d2*e_a2;
 
         // Compute derivatives on the fly
@@ -194,13 +194,6 @@ void RheologicalOperators( grid* mesh, params* model, mat_prop* materials, scale
         double danidexx =0., danidezz =0., danidgxz =0., danidp =0.;
         double drhodp=0.;
         DerivativesOnTheFly_n( &detadexx, &detadezz, &detadgxz, &detadp, &ddivpdexx, &ddivpdezz, &ddivpdgxz, &ddivpdp, &danidexx, &danidezz, &danidgxz, &danidp, &drhodp, k, Exx, Ezz, Exz, mesh->p_in[k], ani_fstrain, d1, d2, angle, nx2, nxnz, mesh, materials, model, scaling );
-
-    //   if (k==100) {
-    //     printf("Jacob\n");
-    //     printf("Da11 = %2.6e\n", 2.0*(1.0 - aniS_vep*d1));
-    //     printf("Da12 = %2.6e\n", 2.0*aniS_vep*d1);
-    //     printf("Da13 = %2.6e\n", - 2.0*aniS_vep*d2);
-    //   }
 
         //----------------------------------------------------------//
         mesh->D11_n[k] = 2.0*(1.0 - aniS_vep*d1)*eta_vep + 2.0*detadexx*Dxx - K*dt*ddivpdexx + 2.0*danidexx*Axx;
@@ -257,8 +250,8 @@ void RheologicalOperators( grid* mesh, params* model, mat_prop* materials, scale
         EffectiveStrainRate( &Exx, &Ezz, &Exz, mesh->exxd_s[k], mesh->ezzd_s[k], mesh->exz[k], mesh->sxxd0_s[k], mesh->szzd0_s[k], mesh->sxz0[k], d1, d2, aniS_e, eta_e, model->iselastic );
         const double e_a2 = eta_vep/(ani_vep*ani_vep);
         const double Gxz  = 2.*Exz;
-        const double Dxz  = -Exx*aniS_vep*d2 + Ezz*aniS_vep*d2 + Gxz*(aniS_vep*(d1 - 0.5) + 0.5);  // NOT SURE ABOUT THE FACTOR 2
-        const double Axz  = -Exx*d1*e_a2 + Ezz*d1*e_a2 + Gxz*d2*e_a2*(d1-0.5);
+        const double Dxz  = -Exx*aniS_vep*d2 + Ezz*aniS_vep*d2 + Gxz*(aniS_vep*(d1 - 0.5) + 0.5);  
+        const double Axz  = -Exx*d2*e_a2 + Ezz*d2*e_a2 + Gxz*e_a2*(d1-0.5);
 
         // Compute derivatives on the fly
         double detadexx=0., detadezz=0., detadgxz=0., detadp=0.;

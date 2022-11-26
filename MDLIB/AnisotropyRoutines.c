@@ -460,23 +460,17 @@ void NonNewtonianViscosityGridAniso( grid *mesh, mat_prop *materials, params *mo
       // Final stress update
       if ( model->aniso_fstrain  == 0 ) aniS_vep = 1.0 - 1.0 / mesh->aniso_factor_n[c0];
       if ( model->aniso_fstrain  == 1 ) aniS_vep = 1.0 - 1.0 / mesh->FS_AR_n[c0];
-      Da11  = 2.0 - 2.0*aniS_vep*d1;
-      Da12  = 2.0*aniS_vep*d1;
-      Da13  =-2.0*aniS_vep*d2;
-      Da22  = 2.0 - 2.0*aniS_vep*d1;
-      Da23  = 2.0*aniS_vep*d2;
-      Da33  = 1.0  + 2.0*aniS_vep*(d1 - 0.5);
+      // Da11  = 2.0 - 2.0*aniS_vep*d1;
+      // Da12  = 2.0*aniS_vep*d1;
+      // Da13  =-2.0*aniS_vep*d2;
+      // Da22  = 2.0 - 2.0*aniS_vep*d1;
+      // Da23  = 2.0*aniS_vep*d2;
+      // Da33  = 1.0  + 2.0*aniS_vep*(d1 - 0.5);
       // Normal stress
-      mesh->sxxd[c0] = mesh->eta_n[c0] * ( Da11*Exx + Da12*Ezz + 2.0*Da13*Exz );
-      mesh->szzd[c0] = mesh->eta_n[c0] * ( Da12*Exx + Da22*Ezz + 2.0*Da23*Exz );
-      // if (c0==100) {
-      //   printf("Rheo\n");
-      //   printf("Txx = %2.6e\n", mesh->sxxd[c0]);
-      //   printf("Da11 = %2.6e\n", Da11);
-      //   printf("Da12 = %2.6e\n", Da12);
-      //   printf("Da13 = %2.6e\n", Da13);
-      // }
-
+      const double Dxx = Exx*(1.0 - aniS_vep*d1) + Ezz*aniS_vep*d1 - 2.0*Exz*aniS_vep*d2;
+      const double Dzz = Ezz*(1.0 - aniS_vep*d1) + Exx*aniS_vep*d1 + 2.0*Exz*aniS_vep*d2;
+      mesh->sxxd[c0] = 2.0 * mesh->eta_n[c0] * Dxx;
+      mesh->szzd[c0] = 2.0 * mesh->eta_n[c0] * Dzz;
     }
   }
 
@@ -610,11 +604,9 @@ void NonNewtonianViscosityGridAniso( grid *mesh, mat_prop *materials, params *mo
       // Final stress update
       if ( model->aniso_fstrain  == 0 ) aniS_vep = 1.0 - 1.0 / mesh->aniso_factor_s[c1];
       if ( model->aniso_fstrain  == 1 ) aniS_vep = 1.0 - 1.0 / mesh->FS_AR_s[c1];
-      Da13  = -2.0*aniS_vep*d2;
-      Da23  = 2.0*aniS_vep*d2;
-      Da33  = 1.0  + 2.0*aniS_vep*(d1 - 0.5);
+      const double Dxz  = -Exx*aniS_vep*d2 + Ezz*aniS_vep*d2 + 2*Exz*(aniS_vep*(d1 - 0.5) + 0.5); 
       // Shear stress
-      mesh->sxz[c1] = mesh->eta_s[c1] * ( Da13*Exx + Da23*Ezz + 2.0*Da33*Exz );
+      mesh->sxz[c1]  = 2.0 * mesh->eta_s[c1] * Dxz;
 
     }
   }
