@@ -605,26 +605,27 @@ grid GridAlloc(params *model) {
 
   mesh.drhodp_n      = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
 
-  mesh.detadexx_n    = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
-  mesh.detadezz_n    = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
-  mesh.detadgxz_n    = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
-  mesh.detadp_n      = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+//   mesh.detadexx_n    = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+//   mesh.detadezz_n    = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+//   mesh.detadgxz_n    = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+//   mesh.detadp_n      = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
 
-  mesh.ddivpdexx_n   = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
-  mesh.ddivpdezz_n   = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
-  mesh.ddivpdgxz_n   = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
-  mesh.ddivpdp_n     = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+//   mesh.ddivpdexx_n   = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+//   mesh.ddivpdezz_n   = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+//   mesh.ddivpdgxz_n   = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+//   mesh.ddivpdp_n     = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
 
-  mesh.detadexx_s    = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double));
-  mesh.detadezz_s    = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double));
-  mesh.detadgxz_s    = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double));
-  mesh.detadp_s      = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double));
+//   mesh.detadexx_s    = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double));
+//   mesh.detadezz_s    = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double));
+//   mesh.detadgxz_s    = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double));
+//   mesh.detadp_s      = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double));
 
   mesh.d0_s          = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double));
   mesh.phi0_s        = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double));
   mesh.T_s           = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double));
   mesh.P_s           = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double));
 
+  // Anisotropy 
   if (model->aniso == 1) mesh.d1_n = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
   if (model->aniso == 1) mesh.d1_s = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double));
   if (model->aniso == 1) mesh.d2_n = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
@@ -922,7 +923,7 @@ void GridFree(grid *mesh, params *model) {
     DoodzFree(mesh->vert_min_z);
     DoodzFree(mesh->vert_max_z);
 
-    // New arrays for plastic strain softening
+    // For plastic strain softening
     DoodzFree(mesh->C_s);
     DoodzFree(mesh->fric_s);
     DoodzFree(mesh->dil_s);
@@ -948,26 +949,27 @@ void GridFree(grid *mesh, params *model) {
     
     DoodzFree(mesh->drhodp_n);
 
-    DoodzFree(mesh->detadexx_n);
-    DoodzFree(mesh->detadezz_n);
-    DoodzFree(mesh->detadgxz_n);
-    DoodzFree(mesh->detadp_n);
+    // DoodzFree(mesh->detadexx_n);
+    // DoodzFree(mesh->detadezz_n);
+    // DoodzFree(mesh->detadgxz_n);
+    // DoodzFree(mesh->detadp_n);
     
-    DoodzFree(mesh->ddivpdexx_n);
-    DoodzFree(mesh->ddivpdezz_n);
-    DoodzFree(mesh->ddivpdgxz_n);
-    DoodzFree(mesh->ddivpdp_n);
+    // DoodzFree(mesh->ddivpdexx_n);
+    // DoodzFree(mesh->ddivpdezz_n);
+    // DoodzFree(mesh->ddivpdgxz_n);
+    // DoodzFree(mesh->ddivpdp_n);
 
-    DoodzFree(mesh->detadexx_s);
-    DoodzFree(mesh->detadezz_s);
-    DoodzFree(mesh->detadgxz_s);
-    DoodzFree(mesh->detadp_s);
+    // DoodzFree(mesh->detadexx_s);
+    // DoodzFree(mesh->detadezz_s);
+    // DoodzFree(mesh->detadgxz_s);
+    // DoodzFree(mesh->detadp_s);
 
     DoodzFree(mesh->d0_s);
     DoodzFree(mesh->phi0_s);
     DoodzFree(mesh->T_s);
     DoodzFree(mesh->P_s);
 
+    // Anisotropy
     if ( model->aniso == 1 ) DoodzFree(mesh->d1_n);
     if ( model->aniso == 1 ) DoodzFree(mesh->d1_s);
     if ( model->aniso == 1 ) DoodzFree(mesh->d2_n);

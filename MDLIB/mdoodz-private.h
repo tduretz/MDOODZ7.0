@@ -108,9 +108,9 @@ typedef struct {
   double *D11_n, *D12_n, *D13_n, *D14_n;
   double *D21_n, *D22_n, *D23_n, *D24_n;
   double *D31_s, *D32_s, *D33_s, *D34_s;
-  double *detadexx_n, *detadezz_n, *detadgxz_n, *detadp_n;
-  double *ddivpdexx_n, *ddivpdezz_n, *ddivpdgxz_n, *ddivpdp_n;
-  double *detadexx_s, *detadezz_s, *detadgxz_s, *detadp_s;
+  //double *detadexx_n, *detadezz_n, *detadgxz_n, *detadp_n;
+  //double *ddivpdexx_n, *ddivpdezz_n, *ddivpdgxz_n, *ddivpdp_n;
+  //double *detadexx_s, *detadezz_s, *detadgxz_s, *detadp_s;
   double *drhodp_n;
   double *phi0_s, *d0_s, *T_s, *P_s;
   // For anisotropy

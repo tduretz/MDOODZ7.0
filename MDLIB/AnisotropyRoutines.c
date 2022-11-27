@@ -44,20 +44,20 @@ typedef struct {
    double xx, zz, yy, xz, ii, ii2;
 } Tensor2D;
 
-// Vector 2D
-typedef struct {
-   double x, z;
-} Vector2D;
+// // Vector 2D
+// typedef struct {
+//    double x, z;
+// } Vector2D;
 
-// Second invariant
-void Invii( Tensor2D *T ) {
-    T->ii = sqrt( 0.5*( pow(T->xx,2) + pow(T->zz,2) + pow(T->yy,2)) + pow(T->xz,2) );
-}
+// // Second invariant
+// void Invii( Tensor2D *T ) {
+//     T->ii = sqrt( 0.5*( pow(T->xx,2) + pow(T->zz,2) + pow(T->yy,2)) + pow(T->xz,2) );
+// }
 
-// Squared second invariant
-void Invii2( Tensor2D *T ) {
-    T->ii2 =  0.5*( pow(T->xx,2) + pow(T->zz,2) + pow(T->yy,2)) + pow(T->xz,2);
-}
+// // Squared second invariant
+// void Invii2( Tensor2D *T ) {
+//     T->ii2 =  0.5*( pow(T->xx,2) + pow(T->zz,2) + pow(T->yy,2)) + pow(T->xz,2);
+// }
 
 // Squared second invariant of deviatoric stress
 double Y2( Tensor2D *T, double ani_fac ) {
@@ -231,7 +231,6 @@ double ViscosityConciseAniso( int phase, double nxnz, double nx2, double angle, 
     *Txx =   nx2*T_rot.xx +  nz2*T_rot.zz -   2.*nxnz*T_rot.xz;
     *Tzz =   nz2*T_rot.xx +  nx2*T_rot.zz +   2.*nxnz*T_rot.xz;
     *Txz =  nxnz*T_rot.xx - nxnz*T_rot.zz + (nx2-nz2)*T_rot.xz;
-    // Invii( Tau );
     // Update effective viscosity and abisotropy factor
     *eta_vep = eta_ve_n;
     *ani_vep = eta_ve_n/eta_ve_s;
