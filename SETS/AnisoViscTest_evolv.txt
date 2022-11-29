@@ -9,9 +9,15 @@ writer_markers  = 0
 writer_debug    = 0
 writer_energies = 0
 GNUplot_residuals = 0
-aniso           = 1
-aniso_fstrain   = 1 // finite strain anisotropy activated
 
+/**** SWITCHES ****/
+iselastic         = 0
+free_surf         = 0
+free_surf_stab    = 0
+fstrain           = 1
+advection         = 1
+aniso             = 1
+aniso_fstrain     = 1 // finite strain anisotropy activated
 
 /**** SCALES ****/
 eta = 1
@@ -22,7 +28,7 @@ T   = 1
 /**** SPACE ****/
 Nx      = 251
 Nz      = 251
-Nt      = 500
+Nt      = 20
 xmin    = -5.000000e-1
 zmin    = -5.000000e-1
 xmax    =  5.000000e-1
@@ -62,14 +68,6 @@ rel_tol_p   = 1e-9
 /**** VISCOSITY CUT-OFF ****/
 mineta      = 1e-3
 maxeta      = 1e6
-
-/**** SWITCHES ****/
-iselastic         = 0
-free_surf         = 0
-free_surf_stab    = 0
-fstrain           = 1
-advection         = 1
-GNUplot_residuals = 0
 
 /**** SETUP-DEPENDANT ****/
 shear_style     = 1
