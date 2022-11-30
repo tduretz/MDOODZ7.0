@@ -283,23 +283,23 @@ double ViscosityConciseAniso( int phase, double nxnz, double nx2, double angle, 
       double txz1 = sqrt(pow(ap_s, 2)*pow(txz, 2));
                               // J2_corr = Txx .^ 2 .* ap_n .^ 2 / 2 + Txy .^ 2 .* a_p .^ 2 .* ap_s .^ 2 / 2 + Tyx .^ 2 .* a_p .^ 2 .* ap_s .^ 2 / 2 + Tyy .^ 2 .* ap_n .^ 2 / 2;
 
-      printf("txxc1 = %2.4e --- txxc1 = %2.4e\n", T_rot.xx, txx1 );
-      printf("tzzc1 = %2.4e --- tzzc1 = %2.4e\n", T_rot.zz, tzz1 );
-      printf("txzc1 = %2.4e --- txzc1 = %2.4e\n", T_rot.xz, txz1 );
-      printf("Y2p = %2.4e --- Y2p = %2.4e --- Y2p = %2.4e\n", Y2_p_c1, Y2_p_c,  T_rot.xx* T_rot.xx/2+ T_rot.zz* T_rot.zz/2 + T_rot.yy* T_rot.yy/2 + ani_fac_p*T_rot.xz*T_rot.xz );
-      printf("ani_fac_p=%2.2e\n",ani_fac_p);
+      // printf("txxc1 = %2.4e --- txxc1 = %2.4e\n", T_rot.xx, txx1 );
+      // printf("tzzc1 = %2.4e --- tzzc1 = %2.4e\n", T_rot.zz, tzz1 );
+      // printf("txzc1 = %2.4e --- txzc1 = %2.4e\n", T_rot.xz, txz1 );
+      // printf("Y2p = %2.4e --- Y2p = %2.4e --- Y2p = %2.4e\n", Y2_p_c1, Y2_p_c,  T_rot.xx* T_rot.xx/2+ T_rot.zz* T_rot.zz/2 + T_rot.yy* T_rot.yy/2 + ani_fac_p*T_rot.xz*T_rot.xz );
+      // printf("ani_fac_p=%2.2e\n",ani_fac_p);
 
 
         // Make some noise!!!!!
         if (noisy) printf("It. %02d: f_n = %2.2e\n", it, fabs(Fc/Ft));
-        printf("It. %02d: f_n = %2.2e\n", it, fabs(Fc/Ft));
+        // printf("It. %02d: f_n = %2.2e\n", it, fabs(Fc/Ft));
 
-        if ( fabs(Fc/Ft) < tol / 100 ) {
+        if ( fabs(Fc/Ft) < 1e-8 ) {
         if (it > 10) printf("L.I. Warnung: more that 10 local iterations, there might be a problem...\n");
         // if (model->step>0)exit(0);
         break;
-        } else if (it == nitmax - 1 && fabs(Fc/Ft) > tol ) {
-          printf("Viscoplastic iterations failed!\n");
+        } else if (it == nitmax - 1 && fabs(Fc/Ft) > 1e-8 ) {
+          printf("Viscoplastic iterations failed! tol=%2.2e\n", tol);
           exit(0);
         }
 
@@ -311,7 +311,7 @@ double ViscosityConciseAniso( int phase, double nxnz, double nx2, double angle, 
   
       Y2_p_c   = Y2(&T_rot, ani_fac_p);
       Y1_p_c   = a1*T_rot.xx + a2*T_rot.zz + a3*T_rot.yy;
-       printf("%2.2e %2.2e\n", Y1_p_c, Y2_p_c);
+      //  printf("%2.2e %2.2e\n", Y1_p_c, Y2_p_c);
       double Fchk0 = sqrt(Y2_p_c) - Coh - Pc*sin(fric)/3.0*(a1+a2+a3) +  sin(fric)/3.0*Y1_p_c - eta_vp*gdot;
 
       double axx   = (sqrt(Y2_p)             -            eta_ve*gdot)/(sqrt(Y2_p));
@@ -336,7 +336,7 @@ double ViscosityConciseAniso( int phase, double nxnz, double nx2, double angle, 
       Y2_p_c   = Y2(&T_rot, ani_fac_p);
       Y1_p_c   = a1*T_rot.xx + a2*T_rot.zz + a3*T_rot.yy;
       double Fchk2 = sqrt(Y2_p_c) - Coh - Pc*sin(fric)/3*(a1+a2+a3) +  sin(fric)/3.0*Y1_p_c - eta_vp*gdot;
-      printf("Ft = %2.6e --- Fc = %2.2e --- Fchk0 = %2.6e --- Fchk1 = %2.6e --- Fchk2 = %2.6e\n", Ft, Fc, Fchk0, Fchk1, Fchk2);
+      // printf("Ft = %2.6e --- Fc = %2.2e --- Fchk0 = %2.6e --- Fchk1 = %2.6e --- Fchk2 = %2.6e\n", Ft, Fc, Fchk0, Fchk1, Fchk2);
       // exit(1);
     }
     // Back-transform stress: Qt*E*Q
