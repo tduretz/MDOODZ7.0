@@ -180,6 +180,7 @@ void RheologicalOperators( grid* mesh, params* model, mat_prop* materials, scale
           nx2   = pow( cos(angle), 2);
         }
         //----------------------------------------------------------//
+        // Exx = mesh->exxd[k]; Ezz = mesh->ezzd[k]; Exz = mesh->exz_n[k];
         EffectiveStrainRate( &Exx, &Ezz, &Exz, mesh->exxd[k], mesh->ezzd[k], mesh->exz_n[k], mesh->sxxd0[k], mesh->szzd0[k], mesh->sxz0_n[k], d1, d2, aniS_e, eta_e, model->iselastic ); 
         const double e_a2 = eta_vep/(ani_vep*ani_vep);      
         const double Gxz = 2.0*Exz;
@@ -193,7 +194,7 @@ void RheologicalOperators( grid* mesh, params* model, mat_prop* materials, scale
         double ddivpdexx=0., ddivpdezz=0., ddivpdgxz=0., ddivpdp=0.;
         double danidexx =0., danidezz =0., danidgxz =0., danidp =0.;
         double drhodp=0.;
-        DerivativesOnTheFly_n( &detadexx, &detadezz, &detadgxz, &detadp, &ddivpdexx, &ddivpdezz, &ddivpdgxz, &ddivpdp, &danidexx, &danidezz, &danidgxz, &danidp, &drhodp, k, Exx, Ezz, Exz, mesh->p_in[k], ani_fstrain, d1, d2, angle, nx2, nxnz, mesh, materials, model, scaling );
+        DerivativesOnTheFly_n( &detadexx, &detadezz, &detadgxz, &detadp, &ddivpdexx, &ddivpdezz, &ddivpdgxz, &ddivpdp, &danidexx, &danidezz, &danidgxz, &danidp, &drhodp, k, Exx, Ezz, Exz, mesh->p_in[k], ani_fstrain, ani_e, d1, d2, angle, nx2, nxnz, mesh, materials, model, scaling );
         mesh->drhodp_n[k] = drhodp;
         //----------------------------------------------------------//
         mesh->D11_n[k] = 2.0*(1.0 - aniS_vep*d1)*eta_vep + 2.0*detadexx*Dxx - K*dt*ddivpdexx + 2.0*danidexx*Axx;
@@ -248,6 +249,7 @@ void RheologicalOperators( grid* mesh, params* model, mat_prop* materials, scale
         }
         //----------------------------------------------------------//
         EffectiveStrainRate( &Exx, &Ezz, &Exz, mesh->exxd_s[k], mesh->ezzd_s[k], mesh->exz[k], mesh->sxxd0_s[k], mesh->szzd0_s[k], mesh->sxz0[k], d1, d2, aniS_e, eta_e, model->iselastic );
+        // Exx = mesh->exxd_s[k]; Ezz = mesh->ezzd_s[k]; Exz = mesh->exz[k];
         const double e_a2 = eta_vep/(ani_vep*ani_vep);
         const double Gxz  = 2.*Exz;
         const double Dxz  = -Exx*aniS_vep*d2 + Ezz*aniS_vep*d2 + Gxz*(aniS_vep*(d1 - 0.5) + 0.5);  
@@ -256,7 +258,7 @@ void RheologicalOperators( grid* mesh, params* model, mat_prop* materials, scale
         // Compute derivatives on the fly
         double detadexx=0., detadezz=0., detadgxz=0., detadp=0.;
         double danidexx =0., danidezz =0., danidgxz =0., danidp =0.;
-        DerivativesOnTheFly_s( &detadexx, &detadezz, &detadgxz, &detadp, &danidexx, &danidezz, &danidgxz, &danidp, k, Exx, Ezz, Exz, mesh->P_s[k], ani_fstrain, d1, d2, angle, nx2, nxnz, mesh, materials, model, scaling );
+        DerivativesOnTheFly_s( &detadexx, &detadezz, &detadgxz, &detadp, &danidexx, &danidezz, &danidgxz, &danidp, k, Exx, Ezz, Exz, mesh->P_s[k], ani_fstrain, ani_e, d1, d2, angle, nx2, nxnz, mesh, materials, model, scaling );
 
         //----------------------------------------------------------//
         mesh->D31_s[k] =               - 2.0*aniS_vep*d2*eta_vep + 2.0*detadexx*Dxz + 2.0*danidexx*Axz;

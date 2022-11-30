@@ -1222,6 +1222,7 @@ void ShearModCompExpGrid( grid* mesh, mat_prop materials, params model, scale sc
       mesh->mu_n[c0]  = 0.0;
       mesh->bet_n[c0] = 0.0;
       mesh->alp[c0]   = 0.0;
+      mesh->aniso_factor_e_n[c0] = 0.0;
 
       // Compute only if below free surface
       if ( mesh->BCp.type[c0] != 30 && mesh->BCp.type[c0] != 31) {
@@ -1233,16 +1234,20 @@ void ShearModCompExpGrid( grid* mesh, mat_prop materials, params model, scale sc
           if (average == 0) {
             mesh->mu_n[c0]  += mesh->phase_perc_n[p][c0] * materials.mu[p];
             mesh->bet_n[c0] += mesh->phase_perc_n[p][c0] * materials.bet[p];
+            mesh->aniso_factor_e_n[c0] += mesh->phase_perc_n[p][c0] * materials.ani_fac_e[p];
+            // if (c0==100)         printf("%2.2e\n", materials.ani_fac_e[p]);
           }
           // Harmonic
           if (average == 1) {
             mesh->mu_n[c0]  += mesh->phase_perc_n[p][c0] *  1.0/materials.mu[p];
             mesh->bet_n[c0] += mesh->phase_perc_n[p][c0] *  1.0/materials.bet[p];
+            mesh->aniso_factor_e_n[c0] += mesh->phase_perc_n[p][c0] * 1.0/materials.ani_fac_e[p];
           }
           // Geometric
           if (average == 2) {
             mesh->mu_n[c0]  += mesh->phase_perc_n[p][c0] *  log(materials.mu[p]);
             mesh->bet_n[c0] += mesh->phase_perc_n[p][c0] *  log(materials.bet[p]);
+            mesh->aniso_factor_e_n[c0] += mesh->phase_perc_n[p][c0] * log(materials.ani_fac_e[p]);
           }
 
           // Standard arithmetic interpolation
@@ -1254,7 +1259,8 @@ void ShearModCompExpGrid( grid* mesh, mat_prop materials, params model, scale sc
         if ( average==2 ) mesh->mu_n[c0] = exp(mesh->mu_n[c0]);
         if ( average==1 ) mesh->bet_n[c0] = 1.0/mesh->bet_n[c0];
         if ( average==2 ) mesh->bet_n[c0] = exp(mesh->bet_n[c0]);
-
+        if ( average==1 ) mesh->aniso_factor_e_n[c0] = 1.0/mesh->aniso_factor_e_n[c0];
+        if ( average==2 ) mesh->aniso_factor_e_n[c0] = exp(mesh->aniso_factor_e_n[c0]);
       }
     }
   }
@@ -1270,6 +1276,7 @@ void ShearModCompExpGrid( grid* mesh, mat_prop materials, params model, scale sc
       // First - initialize to 0
       mesh->mu_s[c1]  = 0.0;
       mesh->bet_s[c1] = 0.0;
+      mesh->aniso_factor_e_s[c1] = 0.0;
 
       // Compute only if below free surface
       if ( mesh->BCg.type[c1] != 30 ) {
@@ -1281,16 +1288,19 @@ void ShearModCompExpGrid( grid* mesh, mat_prop materials, params model, scale sc
           if (average == 0) {
             mesh->mu_s[c1]  += mesh->phase_perc_s[p][c1] * materials.mu[p];
             mesh->bet_s[c1] += mesh->phase_perc_s[p][c1] * materials.bet[p];
+            mesh->aniso_factor_e_s[c1] += mesh->phase_perc_s[p][c1] * materials.ani_fac_e[p];
           }
           // Harmonic
           if (average == 1) {
             mesh->mu_s[c1]  += mesh->phase_perc_s[p][c1] *  1.0/materials.mu[p];
             mesh->bet_s[c1] += mesh->phase_perc_s[p][c1] *  1.0/materials.bet[p];
+            mesh->aniso_factor_e_s[c1] += mesh->phase_perc_s[p][c1] *  1.0/materials.ani_fac_e[p];
           }
           // Geometric
           if (average == 2) {
             mesh->mu_s[c1]  += mesh->phase_perc_s[p][c1] *  log(materials.mu[p]);
             mesh->bet_s[c1] += mesh->phase_perc_s[p][c1] *  log(materials.bet[p]);
+            mesh->aniso_factor_e_s[c1] += mesh->phase_perc_s[p][c1] *  log(materials.ani_fac_e[p]);
           }
 
         }
@@ -1304,6 +1314,8 @@ void ShearModCompExpGrid( grid* mesh, mat_prop materials, params model, scale sc
         if ( average==2 ) mesh->mu_s[c1]  = exp(mesh->mu_s[c1]);
         if ( average==1 ) mesh->bet_s[c1] = 1.0/mesh->bet_s[c1];
         if ( average==2 ) mesh->bet_s[c1] = exp(mesh->bet_s[c1]);
+        if ( average==1 ) mesh->aniso_factor_e_s[c1] = 1.0/mesh->aniso_factor_e_s[c1];
+        if ( average==2 ) mesh->aniso_factor_e_s[c1] = exp(mesh->aniso_factor_e_s[c1]);
       }
     }
   }
