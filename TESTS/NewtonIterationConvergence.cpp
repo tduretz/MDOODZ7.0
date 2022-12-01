@@ -211,7 +211,6 @@ TEST_F(ShearTemplate, NonLinearSimpleshearIsotropic) {
   ASSERT_TRUE(stepsCount < 10);
 }
 
-/*
 TEST_F(ShearTemplate, NonLinearPureshearAnisotropic) {
   const char        *testName          = testing::UnitTest::GetInstance()->current_test_info()->name();
   MutateInputParams *mutateInputParams = (MutateInputParams *) malloc(sizeof(MutateInputParams));
@@ -243,4 +242,3 @@ TEST_F(ShearTemplate, NonLinearSimpleshearAnisotropic) {
   ASSERT_TRUE(stepsCount > 1);
   ASSERT_TRUE(stepsCount < 10);
 }
-*/
