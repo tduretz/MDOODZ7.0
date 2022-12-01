@@ -1201,7 +1201,7 @@ void CohesionFrictionDilationGrid( grid* mesh, markers* particles, mat_prop mate
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-void ShearModCompExpGrid( grid* mesh, mat_prop materials, params model, scale scaling ) {
+void ShearModCompExpGrid( grid* mesh, mat_prop materials, params *model, scale scaling ) {
 
   int p, k, l, Nx, Nz, Ncx, Ncz, c0, c1;
   int average = 1;//%model.eta_avg; // SHOULD NOT BE ALLOWED TO BE ELSE THAN 1
@@ -1228,7 +1228,7 @@ void ShearModCompExpGrid( grid* mesh, mat_prop materials, params model, scale sc
       if ( mesh->BCp.type[c0] != 30 && mesh->BCp.type[c0] != 31) {
 
         // Loop on phases
-        for ( p=0; p<model.Nb_phases; p++) {
+        for ( p=0; p<model->Nb_phases; p++) {
 
           // Arithmetic
           if (average == 0) {
@@ -1281,7 +1281,7 @@ void ShearModCompExpGrid( grid* mesh, mat_prop materials, params model, scale sc
       if ( mesh->BCg.type[c1] != 30 ) {
 
         // Loop on phases
-        for ( p=0; p<model.Nb_phases; p++) {
+        for ( p=0; p<model->Nb_phases; p++) {
 
           // Arithmetic
           if (average == 0) {
@@ -1321,7 +1321,7 @@ void ShearModCompExpGrid( grid* mesh, mat_prop materials, params model, scale sc
 
   // Periodic
   double av;
-  if (model.isperiodic_x==1) {
+  if (model->isperiodic_x==1) {
     for( l=0; l<Nz; l++) {
       c1 = l*Nx + Nx-1;
       av = 0.5*(mesh->mu_s[c1] + mesh->mu_s[l*Nx]);

@@ -310,9 +310,9 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         printf("*************************************\n");
 
         // Compute shear modulus, expansivity, compressibility, cohesion and friction angle on the grid
-        if (input.model.iselastic == 1 ) ShearModCompExpGrid( &mesh, input.materials, input.model, input.scaling );
+        if (input.model.iselastic == 1 ) ShearModCompExpGrid( &mesh, input.materials, &input.model, input.scaling );
         CohesionFrictionDilationGrid( &mesh, &particles, input.materials, input.model, input.scaling );
-        ShearModCompExpGrid( &mesh, input.materials, input.model, input.scaling );
+        ShearModCompExpGrid( &mesh, input.materials, &input.model, input.scaling );
         Interp_Grid2P_centroids2( particles, particles.P,    &mesh, mesh.p_in, mesh.xvz_coord,  mesh.zvx_coord,  mesh.Nx-1, mesh.Nz-1, mesh.BCp.type, &input.model );
         Interp_Grid2P_centroids2( particles, particles.T,    &mesh, mesh.T,    mesh.xvz_coord,  mesh.zvx_coord,  mesh.Nx-1, mesh.Nz-1, mesh.BCt.type, &input.model );
         if (input.model.aniso==0) NonNewtonianViscosityGrid(      &mesh, &input.materials, &input.model, Nmodel, &input.scaling );
@@ -487,7 +487,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             InterpVerticesToCentroidsDouble( mesh.sxz0_n,  mesh.sxz0,  &mesh, &input.model );
 
             // Interpolate shear modulus
-            ShearModCompExpGrid( &mesh, input.materials, input.model, input.scaling );
+            ShearModCompExpGrid( &mesh, input.materials, &input.model, input.scaling );
         }
 
         // Director vector

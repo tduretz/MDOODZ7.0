@@ -138,17 +138,7 @@ double ViscosityConciseAniso( int phase, double nxnz, double nx2, double angle, 
     E_rot.xx  =   nx2*Exx +  nz2*Ezz +   2.*nxnz*Exz;
     E_rot.zz  =   nz2*Exx +  nx2*Ezz -   2.*nxnz*Exz;
     E_rot.xz  = -nxnz*Exx + nxnz*Ezz + (nx2-nz2)*Exz;
-    E_rot.yy  = -E_rot.xx - E_rot.xx;                 // !!! out-of-plane component !!!
-    // T0_rot.xx =   nx2*Txx0 +  nz2*Tzz0 +   2.*nxnz*Txz0;
-    // T0_rot.zz =   nz2*Txx0 +  nx2*Tzz0 -   2.*nxnz*Txz0;
-    // T0_rot.xz = -nxnz*Txx0 + nxnz*Tzz0 + (nx2-nz2)*Txz0;
-    // T0_rot.yy = -T0_rot.xx - T0_rot.xx;              // !!! out-of-plane component !!!
-    // if (elastic) {
-    //   E_rot.xx  =  E_rot.xx + T0_rot.xx/2/(G*dt);
-    //   E_rot.zz  =  E_rot.zz + T0_rot.zz/2/(G*dt);
-    //   E_rot.xz  =  E_rot.xz + T0_rot.xz/2/(G*dt)*ani_fac_e;
-    //   E_rot.yy  = -E_rot.xx-E_rot.zz;
-    // }
+    E_rot.yy  = -E_rot.xx - E_rot.zz;                 // !!! out-of-plane component !!!
     // Local iterations to determine eta_vep and ani_vep
     double f0_n, f0_s, f_n, f_s, dfnden, dfndes, dfsden, dfsdes;
     double I2_v, Y2_v, Eii_vis, W_n, W_s, ieta_pwl, deta_n, deta_s;
@@ -207,7 +197,7 @@ double ViscosityConciseAniso( int phase, double nxnz, double nx2, double angle, 
       if (noisy) printf("It. %02d: f_n = %2.2e --- f_s = %2.2e\n", it, f_n, f_s);
       // Exit criteria
       if ( fabs(f_n) < tol / 100 && fabs(f_s) < tol / 100 ) {
-        if (it > 10) printf("L.I. Warnung: more that 10 local iterations, there might be a problem...\n");
+        if (it > 10) printf("V-E L.I. Warnung: more that 10 local iterations, there might be a problem...\n");
         break;
       } else if (it == nitmax - 1 && (fabs(f_n) > tol || fabs(f_s) > tol) ) {
         printf("Visco-Elastic iterations failed!\n");
@@ -239,7 +229,7 @@ double ViscosityConciseAniso( int phase, double nxnz, double nx2, double angle, 
     *ani_vep = eta_ve_n/eta_ve_s;
     // Iterations for visco-elasto-viscoplastic correction
     double eta_vp0 = materials->eta_vp[phase], n_vp = materials->n_vp[phase], eta_vp = materials->eta_vp[phase];
-    double a1=0.0, a2=0.0, a3=0.0;
+    double a1=1.0, a2=1.0, a3=1.0;
     double Coh = C, K = 1.0 / beta;
     double Y2_p = Y2( &T_rot, ani_fac_p);
     double Ft   = sqrt(Y2_p) - Coh - P*sin(fric)/3*(a1+a2+a3) +  sin(fric)/3.0*( a1*T_rot.xx + a2*T_rot.zz + a3*T_rot.yy);
@@ -270,32 +260,24 @@ double ViscosityConciseAniso( int phase, double nxnz, double nx2, double angle, 
         //  printf("%2.2e %2.2e\n", Y1_p_c, Y2_p_c);
 
 
-      double exxp      = gdot*( (a1/3-a3/3)*sin(fric) + txx/sqrt(Y2_p)/2);
-      double ezzp      = gdot*( (a2/3-a3/3)*sin(fric) + tzz/sqrt(Y2_p)/2);
-      double exzp      = gdot*txz/sqrt(Y2_p)*a_p*a_p;
-      T_rot.xx = 2.0 * eta_ve_n * (E_rot.xx - exxp);
-      T_rot.zz = 2.0 * eta_ve_n * (E_rot.zz - ezzp);
-      T_rot.xz = 2.0 * eta_ve_s * (E_rot.xz - 0.5*exzp);
-      T_rot.yy = -T_rot.xx-T_rot.zz;
-      double Y2_p_c1   = Y2(&T_rot, ani_fac_p);
-      double txx1 = sqrt(pow(ap_n, 2)*pow(txx, 2));
-      double tzz1 = sqrt(pow(ap_n, 2)*pow(tzz, 2));
-      double txz1 = sqrt(pow(ap_s, 2)*pow(txz, 2));
-                              // J2_corr = Txx .^ 2 .* ap_n .^ 2 / 2 + Txy .^ 2 .* a_p .^ 2 .* ap_s .^ 2 / 2 + Tyx .^ 2 .* a_p .^ 2 .* ap_s .^ 2 / 2 + Tyy .^ 2 .* ap_n .^ 2 / 2;
-
-      // printf("txxc1 = %2.4e --- txxc1 = %2.4e\n", T_rot.xx, txx1 );
-      // printf("tzzc1 = %2.4e --- tzzc1 = %2.4e\n", T_rot.zz, tzz1 );
-      // printf("txzc1 = %2.4e --- txzc1 = %2.4e\n", T_rot.xz, txz1 );
-      // printf("Y2p = %2.4e --- Y2p = %2.4e --- Y2p = %2.4e\n", Y2_p_c1, Y2_p_c,  T_rot.xx* T_rot.xx/2+ T_rot.zz* T_rot.zz/2 + T_rot.yy* T_rot.yy/2 + ani_fac_p*T_rot.xz*T_rot.xz );
-      // printf("ani_fac_p=%2.2e\n",ani_fac_p);
-
+      // double exxp      = gdot*( (a1/3-a3/3)*sin(fric) + txx/sqrt(Y2_p)/2);
+      // double ezzp      = gdot*( (a2/3-a3/3)*sin(fric) + tzz/sqrt(Y2_p)/2);
+      // double exzp      = gdot*txz/sqrt(Y2_p)*a_p*a_p;
+      // T_rot.xx = 2.0 * eta_ve_n * (E_rot.xx - exxp);
+      // T_rot.zz = 2.0 * eta_ve_n * (E_rot.zz - ezzp);
+      // T_rot.xz = 2.0 * eta_ve_s * (E_rot.xz - 0.5*exzp);
+      // T_rot.yy = -T_rot.xx-T_rot.zz;
+      // double Y2_p_c1   = Y2(&T_rot, ani_fac_p);
+      // double txx1 = sqrt(pow(ap_n, 2)*pow(txx, 2));
+      // double tzz1 = sqrt(pow(ap_n, 2)*pow(tzz, 2));
+      // double txz1 = sqrt(pow(ap_s, 2)*pow(txz, 2));
 
         // Make some noise!!!!!
         if (noisy) printf("It. %02d: f_n = %2.2e\n", it, fabs(Fc/Ft));
         // printf("It. %02d: f_n = %2.2e\n", it, fabs(Fc/Ft));
 
         if ( fabs(Fc/Ft) < 1e-8 ) {
-        if (it > 10) printf("L.I. Warnung: more that 10 local iterations, there might be a problem...\n");
+        if (it > 10) printf("VP L.I. Warnung: more that 10 local iterations, there might be a problem...\n");
         // if (model->step>0)exit(0);
         break;
         } else if (it == nitmax - 1 && fabs(Fc/Ft) > 1e-8 ) {
@@ -309,33 +291,34 @@ double ViscosityConciseAniso( int phase, double nxnz, double nx2, double angle, 
 
       }
   
-      Y2_p_c   = Y2(&T_rot, ani_fac_p);
-      Y1_p_c   = a1*T_rot.xx + a2*T_rot.zz + a3*T_rot.yy;
-      //  printf("%2.2e %2.2e\n", Y1_p_c, Y2_p_c);
-      double Fchk0 = sqrt(Y2_p_c) - Coh - Pc*sin(fric)/3.0*(a1+a2+a3) +  sin(fric)/3.0*Y1_p_c - eta_vp*gdot;
+      // Y2_p_c   = Y2(&T_rot, ani_fac_p);
+      // Y1_p_c   = a1*T_rot.xx + a2*T_rot.zz + a3*T_rot.yy;
+      // double Fchk0 = sqrt(Y2_p_c) - Coh - Pc*sin(fric)/3.0*(a1+a2+a3) +  sin(fric)/3.0*Y1_p_c - eta_vp*gdot;
 
       double axx   = (sqrt(Y2_p)             -            eta_ve*gdot)/(sqrt(Y2_p));
       double axz   = (sqrt(Y2_p)*pow(a_ve,2) - pow(a_p,2)*eta_ve*gdot)/(sqrt(Y2_p)*pow(a_ve,2));
-      T_rot.xx = 2.0 * eta_ve_n*axx * E_rot.xx;
-      T_rot.zz = 2.0 * eta_ve_n*axx * E_rot.zz;
-      T_rot.xz = 2.0 * eta_ve_s*axz * E_rot.xz;
-      T_rot.yy = -T_rot.xx -T_rot.zz;
-      Y2_p_c   = Y2(&T_rot, ani_fac_p);
-      Y1_p_c   = a1*T_rot.xx + a2*T_rot.zz + a3*T_rot.yy;
-      double Fchk1 = sqrt(Y2_p_c) - Coh - Pc*sin(fric)/3.0*(a1+a2+a3) +  sin(fric)/3.0*Y1_p_c - eta_vp*gdot;
+      // T_rot.xx = 2.0 * eta_ve_n*axx * E_rot.xx;
+      // T_rot.zz = 2.0 * eta_ve_n*axx * E_rot.zz;
+      // T_rot.xz = 2.0 * eta_ve_s*axz * E_rot.xz;
+      // T_rot.yy = -T_rot.xx -T_rot.zz;
+      // Y2_p_c   = Y2(&T_rot, ani_fac_p);
+      // Y1_p_c   = a1*T_rot.xx + a2*T_rot.zz + a3*T_rot.yy;
+      // double Fchk1 = sqrt(Y2_p_c) - Coh - Pc*sin(fric)/3.0*(a1+a2+a3) +  sin(fric)/3.0*Y1_p_c - eta_vp*gdot;
 
       *eta_vep = eta_ve*axx;
       *ani_vep = a_ve*a_ve*(axx/axz);
-      eta_ve_n  = *eta_vep;
-      eta_ve_s  = *eta_vep/(*ani_vep);
+      eta_ve_n = *eta_vep;
+      eta_ve_s = *eta_vep/(*ani_vep);
       T_rot.xx = 2.0 * eta_ve_n * E_rot.xx;
       T_rot.zz = 2.0 * eta_ve_n * E_rot.zz;
       T_rot.xz = 2.0 * eta_ve_s * E_rot.xz;
       T_rot.yy = -T_rot.xx - T_rot.zz; 
+      *div_pl  = gdot*sin(dil)/3.*(a1+a2+a3);
+      *Eii_pl  = gdot/2.0;
   
-      Y2_p_c   = Y2(&T_rot, ani_fac_p);
-      Y1_p_c   = a1*T_rot.xx + a2*T_rot.zz + a3*T_rot.yy;
-      double Fchk2 = sqrt(Y2_p_c) - Coh - Pc*sin(fric)/3*(a1+a2+a3) +  sin(fric)/3.0*Y1_p_c - eta_vp*gdot;
+      // Y2_p_c   = Y2(&T_rot, ani_fac_p);
+      // Y1_p_c   = a1*T_rot.xx + a2*T_rot.zz + a3*T_rot.yy;
+      // double Fchk2 = sqrt(Y2_p_c) - Coh - Pc*sin(fric)/3*(a1+a2+a3) +  sin(fric)/3.0*Y1_p_c - eta_vp*gdot;
       // printf("Ft = %2.6e --- Fc = %2.2e --- Fchk0 = %2.6e --- Fchk1 = %2.6e --- Fchk2 = %2.6e\n", Ft, Fc, Fchk0, Fchk1, Fchk2);
       // exit(1);
     }
@@ -345,7 +328,13 @@ double ViscosityConciseAniso( int phase, double nxnz, double nx2, double angle, 
     *Txz =  nxnz*T_rot.xx - nxnz*T_rot.zz + (nx2-nz2)*T_rot.xz;
     // Update effective viscosity and anisotropy factor
     *Pcorr   = Pc;
+    
     eta      = *eta_vep;
+    if ( post_process == 1) {
+      *div_el  = - (Pc - P0) / (K*dt);
+      double Eii = sqrt( Exx*Exx+Ezz*Ezz+(-Exx-Ezz)*(-Exx-Ezz));
+      if (elastic==1) *Eii_el  = fabs(Eii-*Eii_pwl-*Eii_pl); // this is a big shortcut, ideally one should compute E^e = 1/(2G)*Dani_e*(T-T0)/dt
+    }
     return eta;
 }
 

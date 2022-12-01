@@ -1202,6 +1202,7 @@ Input ReadInputFile( char *fileName ) {
         materials.C[k]    = ReadMatProps( fin, "C",    k,   1.0e7 )  / scaling.S;
         materials.phi[k]  = ReadMatProps( fin, "phi",  k,    30.0 )  * M_PI/ 180.0;
         materials.psi[k]  = ReadMatProps( fin, "psi",  k,     0.0 )  * M_PI/ 180.0;
+        if (materials.psi[k]>0.0 && model.compressible==0) { printf("Set compressible=1 to activate dilation\n"); exit(1); }
         materials.Slim[k] = ReadMatProps( fin, "Slim" ,k,  1.0e90 )  / scaling.S;
         // Read flow law parameters
         materials.cstv[k]  = ReadMatProps( fin, "cstv",k,    1.0  );
@@ -1221,6 +1222,7 @@ Input ReadInputFile( char *fileName ) {
         materials.coh_soft[k]   = (int)ReadMatProps( fin, "coh_soft",   k,    0.0   );
         materials.phi_soft[k]   = (int)ReadMatProps( fin, "phi_soft",   k,    0.0   );
         materials.psi_soft[k]   = (int)ReadMatProps( fin, "psi_soft",   k,    0.0   );
+        if (materials.psi_soft[k]>0 && model.compressible==0) { printf("Set compressible=1 to activate dilation softening\n"); exit(1); }
         materials.is_tensile[k] = (int)ReadMatProps( fin, "is_tensile", k,    0.0   );
         materials.C_end[k]     = ReadMatProps( fin, "Ce",     k,    materials.C[k]*scaling.S    ) / scaling.S;
         materials.phi_end[k]   = ReadMatProps( fin, "phie",   k,    materials.phi[k]*180.0/M_PI  ) * M_PI / 180.0;
