@@ -1,5 +1,5 @@
 /**** RESTART ****/
-istep = 000020
+istep = 000010
 irestart = 0
 
 /**** OUTPUT FILES ****/
@@ -11,7 +11,7 @@ writer_energies = 0
 GNUplot_residuals = 1
 
 /**** SWITCHES ****/
-compressible      = 0
+compressible      = 1
 iselastic         = 1
 free_surf         = 0
 free_surf_stab    = 0
@@ -29,7 +29,7 @@ T   = 1
 /**** SPACE ****/
 Nx      = 51
 Nz      = 51
-Nt      = 20
+Nt      = 10
 xmin    = -5.000000e-1
 zmin    = -5.000000e-1
 xmax    =  5.000000e-1
