@@ -1,14 +1,23 @@
 /**** RESTART ****/
-istep = 000002
+istep = 000200
 irestart = 0
 
 /**** OUTPUT FILES ****/
 writer          = 1
-writer_step     = 1
+writer_step     = 10
 writer_markers  = 0
 writer_debug    = 0
 writer_energies = 0
-GNUplot_residuals = 1
+GNUplot_residuals = 0
+
+/**** SWITCHES ****/
+iselastic         = 0
+free_surf         = 0
+free_surf_stab    = 0
+fstrain           = 1
+advection         = 1
+aniso             = 1
+aniso_fstrain     = 1 // finite strain anisotropy activated
 
 /**** SCALES ****/
 eta = 1
@@ -17,9 +26,9 @@ V   = 1
 T   = 1
 
 /**** SPACE ****/
-Nx      = 41
-Nz      = 41
-Nt      = 1
+Nx      = 251
+Nz      = 251
+Nt      = 20
 xmin    = -5.000000e-1
 zmin    = -5.000000e-1
 xmax    =  5.000000e-1
@@ -30,9 +39,9 @@ Nx_part = 4
 Nz_part = 4
 
 /**** TIME ****/
-dt_constant = 1
-Courant     = 0.3
-dt          = 0.5
+dt_constant = 0
+Courant     = 0.5
+dt          = 0.1
 RK          = 4
 
 /**** LINEAR SOLVER ****/
@@ -60,21 +69,13 @@ rel_tol_p   = 1e-9
 mineta      = 1e-3
 maxeta      = 1e6
 
-/**** SWITCHES ****/
-aniso             = 1
-iselastic         = 0
-free_surf         = 0
-free_surf_stab    = 0
-fstrain           = 1
-advection         = 0
-
 /**** SETUP-DEPENDANT ****/
-shear_style     = 0
-isperiodic_x    = 0
+shear_style     = 1
+isperiodic_x    = 1
 ispureshear_ALE = 1
 EpsBG           = 1
 user0           = 1     / temperature [°C]
-user1           = 0.05  / inclusion radius [m]
+user1           = 0.12  / inclusion radius [m]
 user2           = 0
 user3           = 0
 
@@ -88,33 +89,7 @@ Nb_phases = 2
 /**** PHASE 1 ****/
 ID   = 0
 rho  = 2700.00 / matrix
-mu   = 1
-Cv   = 1050
-k    = 2.5
-Qr   = 0
-C    = 1e90
-phi  = 30
-Slim = 500e9
-alp  = 10.0e-6
-bet  = 1e-11
-drho = 0
-cstv = 1             / constant visc law
-pwlv = 1            / disloc. creep
-linv = 0             / diff. creep
-gbsv = 0             / grain boundary sliding
-expv = 0             / peierls creep
-gsel = 0             / grain size evo.
-eta0 = 1
-npwl = 3.0
-Qpwl = 0
-aniso_factor = 5.0 / THIS IS DEPRECATED USE LINE BELOW:
-ani_fac_v = 3.0
-ani_fac_e = 1.0
-
-/**** PHASE 2 ****/
-ID   = 1
-rho  = 2700.00 / inclusion
-mu   = 1
+mu   = 1e30
 Cv   = 1050
 k    = 2.5
 Qr   = 0
@@ -130,6 +105,33 @@ linv = 0             / diff. creep
 gbsv = 0             / grain boundary sliding
 expv = 0             / peierls creep
 gsel = 0             / grain size evo.
-eta0 = 1e1
+eta0 = 1e0
+npwl = 0.0
+Qpwl = 0
+aniso_angle  = 135.0
+ani_fac_v    = 1.0
+
+/**** PHASE 2 ****/
+ID   = 1
+rho  = 2700.00 / inclusion
+mu   = 1e30
+Cv   = 1050
+k    = 2.5
+Qr   = 0
+C    = 1e90
+phi  = 30
+Slim = 500e9
+alp  = 10.0e-6
+bet  = 1e-11
+drho = 0
+cstv = 1             / constant visc law
+pwlv = 0             / disloc. creep
+linv = 0             / diff. creep
+gbsv = 0             / grain boundary sliding
+expv = 0             / peierls creep
+gsel = 0             / grain size evo.
+eta0 = 1e-1
 npwl = 0
 Qpwl = 0
+aniso_angle  = 135.0
+ani_fac_v    = 1.0

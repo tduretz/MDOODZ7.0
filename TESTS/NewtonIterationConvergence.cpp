@@ -85,19 +85,19 @@ class ShearTemplate : public ::testing::Test {
     input->model.free_surf       = 0;
     input->model.writerSubfolder = mutateInputParams->str1;
     const int matrixPhase        = 0;
-    if (mutateInputParams->int2) {
-      input->materials.aniso_factor[matrixPhase] = 2.0;
+    if (mutateInputParams->int2) { // aniso = 1
+      input->materials.ani_fac_v[matrixPhase] = 2.0;
       input->model.aniso                         = 1;
     } else {
-      input->materials.aniso_factor[matrixPhase] = 1.0;
+      input->materials.ani_fac_v[matrixPhase] = 1.0;
       input->model.aniso                         = 0;
     }
-    if (mutateInputParams->int4) {
+    if (mutateInputParams->int4) { // nonlinear = 1
       input->materials.npwl[matrixPhase] = 3.0;
       input->materials.cstv[matrixPhase] = 0;
       input->materials.pwlv[matrixPhase] = 1;
     } else {
-      input->materials.npwl[matrixPhase] = 1.0;
+      input->materials.npwl[matrixPhase] = 0;
       input->materials.cstv[matrixPhase] = 1;
       input->materials.pwlv[matrixPhase] = 0;
     }
@@ -147,6 +147,7 @@ TEST_F(ShearTemplate, LinearSimpleshearIsotropic) {
   ASSERT_EQ(stepsCount, 1);
 }
 
+
 TEST_F(ShearTemplate, LinearPureshearAnisotropic) {
   const char        *testName          = testing::UnitTest::GetInstance()->current_test_info()->name();
   MutateInputParams *mutateInputParams = (MutateInputParams *) malloc(sizeof(MutateInputParams));
@@ -167,7 +168,7 @@ TEST_F(ShearTemplate, LinearSimpleshearAnisotropic) {
   MutateInputParams *mutateInputParams = (MutateInputParams *) malloc(sizeof(MutateInputParams));
   setup.mutateInputParams              = mutateInputParams;
   mutateInputParams->int1              = 1;// shear_style
-  mutateInputParams->int2              = 0;// matrix aniso
+  mutateInputParams->int2              = 1;// matrix aniso
   mutateInputParams->int4              = 0;// non-linear
   mutateInputParams->str1              = testName;
   RunMDOODZ("ShearTemplate.txt", &setup);
@@ -176,6 +177,7 @@ TEST_F(ShearTemplate, LinearSimpleshearAnisotropic) {
   int stepsCount = getStepsCount(fileName);
   ASSERT_EQ(stepsCount, 1);
 }
+
 
 TEST_F(ShearTemplate, NonLinearPureshearIsotropic) {
   const char        *testName          = testing::UnitTest::GetInstance()->current_test_info()->name();
@@ -230,7 +232,7 @@ TEST_F(ShearTemplate, NonLinearSimpleshearAnisotropic) {
   MutateInputParams *mutateInputParams = (MutateInputParams *) malloc(sizeof(MutateInputParams));
   setup.mutateInputParams              = mutateInputParams;
   mutateInputParams->int1              = 1;// shear_style
-  mutateInputParams->int2              = 0;// matrix aniso
+  mutateInputParams->int2              = 1;// matrix aniso
   mutateInputParams->int4              = 1;// non-linear
   mutateInputParams->str1              = testName;
   RunMDOODZ("ShearTemplate.txt", &setup);
