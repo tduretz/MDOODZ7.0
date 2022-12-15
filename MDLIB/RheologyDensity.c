@@ -1474,7 +1474,7 @@ void StrainRateComponents( grid* mesh, scale scaling, params* model ) {
       mesh->exxd[c0]  = dvxdx - 1.0/3.0*mesh->div_u[c0];
       mesh->ezzd[c0]  = dvzdz - 1.0/3.0*mesh->div_u[c0];
 
-      printf("%2.2e %2.2e %2.2e\n", mesh->exxd[c0], mesh->ezzd[c0], mesh->div_u[c0]);
+      // printf("%2.2e %2.2e %2.2e\n", mesh->exxd[c0], mesh->ezzd[c0], mesh->div_u[c0]);
 
     }
   }
