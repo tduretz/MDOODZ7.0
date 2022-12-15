@@ -672,7 +672,7 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
   // Deviatoric stress
   *Txx       = 2.0*(*etaVE)*Exx;
   *Tzz       = 2.0*(*etaVE)*Ezz;
-  *Txz       = 2.0*(*etaVE)*Exx;
+  *Txz       = 2.0*(*etaVE)*Exz;
 
   //-------- Post-Processing
   if ( post_process == 1) {
@@ -695,6 +695,8 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
     *Ezz_diss =  Ezz_pl + Ezz_lin +  Ezz_pwl + Ezz_exp + Ezz_gbs + Ezz_cst;
     *Exz_diss =  Exz_pl + Exz_lin +  Exz_pwl + Exz_exp + Exz_gbs + Exz_cst;
     *Eii_el   = (double)elastic* sqrt( 0.5*(pow(*Exx_el,2) + pow(*Ezz_el,2)) + pow(*Exz_el,2) );
+    // printf("%2.4e %2.4e %2.4e %2.4e %2.4e\n ", Tii, *Txx, *Tzz, *Txz, sqrt(0.5*(pow(*Txx,2) + pow(*Tzz,2) + pow(-*Txx - *Tzz,2)) + pow(*Txz,2)  ));
+    // printf("%2.4e %2.4e %2.4e %2.4e %2.4e %2.4e \n ", Exx, Ezz, Exz, Txx0, Tzz0, Txz0);
     *Eii_pwl  =  Tii/2.0/eta_pwl;
     *Eii_pl = gdot/2.0;
 
@@ -947,6 +949,9 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
       Exx = mesh->exxd_s[c1] + el*mesh->sxxd0_s[c1]/eta_e/2.0;
       Ezz = mesh->ezzd_s[c1] + el*mesh->szzd0_s[c1]/eta_e/2.0;
       Exz = mesh->exz[c1]    + el*mesh->sxz0[c1]   /eta_e/2.0;
+      // printf("-----\n");
+      // printf("%2.4e %2.4e  %2.4e \n", mesh->exxd_s[c1], mesh->ezzd_s[c1], mesh->exz[c1]);
+      // printf("%2.4e %2.4e  %2.4e \n", Exx, Ezz, Exz);
 
       // Loop on phases
       for ( p=0; p<model->Nb_phases; p++) {
@@ -1468,6 +1473,9 @@ void StrainRateComponents( grid* mesh, scale scaling, params* model ) {
       // Normal strain rates
       mesh->exxd[c0]  = dvxdx - 1.0/3.0*mesh->div_u[c0];
       mesh->ezzd[c0]  = dvzdz - 1.0/3.0*mesh->div_u[c0];
+
+      printf("%2.2e %2.2e %2.2e\n", mesh->exxd[c0], mesh->ezzd[c0], mesh->div_u[c0]);
+
     }
   }
 

@@ -1091,6 +1091,7 @@ void KillerSolver( SparseMat *matA,  SparseMat *matB,  SparseMat *matC,  SparseM
             if (mesh->comp_cells[k]==0) ((double*)D1cm0->x)[i] *= 0.0;
             if (mesh->comp_cells[k]==1 && vol_change == 0 ) ((double*)D1cm0->x)[i]  = mesh->bet_n[k] / model.dt * celvol * matD->d[i]*matD->d[i];
             if (mesh->comp_cells[k]==1 && vol_change == 1 ) ((double*)D1cm0->x)[i]  = mesh->drhodp_n[k] / (mesh->rho_n[k]*model.dt) * celvol * matD->d[i]*matD->d[i];
+            // printf("%2.2e %2.2e\n", mesh->bet_n[k], mesh->drhodp_n[k]);
             // Here Dcm0 is the inverse of the pressure block - This relates to numerics in this incompressible case (penalty) or physics in the compressible case (dt/Beta)
             if (mesh->comp_cells[k]==0) ((double*)Dcm0->x)[i]  *= penalty;
             if (mesh->comp_cells[k]==1) ((double*)Dcm0->x)[i]   = 1.0 /  ((double*)D1cm0->x)[i];
@@ -1301,6 +1302,8 @@ void KillerSolver( SparseMat *matA,  SparseMat *matB,  SparseMat *matC,  SparseM
 
         if ( noisy > 0 ) printf("PH comp it. %01d. its_KSP = %02d: max. cont. = %2.2e - rel. max. div. = %2.2e / max. mom. = %2.2e - rel. max. mom. = %2.2e\n", k, its_KSP, maxdiv, fabs(maxdiv/maxdiv0), maxru, maxru/maxru0);
         if ( k>1 && (fabs(maxdiv)<model.abs_tol_div || maxdiv/maxdiv0<model.rel_tol_div )  && (fabs(maxru)<model.abs_tol_mom || maxru/maxru0<model.rel_tol_mom ) ) break;
+        printf("%2.2e %2.2e\n", model.abs_tol_div, model.rel_tol_div);
+        printf("%2.2e %2.2e\n", model.abs_tol_mom, model.rel_tol_mom);
     }
 
     // A posteriori checks
