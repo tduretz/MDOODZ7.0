@@ -1085,6 +1085,15 @@ void EvaluateStokesResidualDecoupled( SparseMat *Stokes, SparseMat *StokesA, Spa
     }
     Nmodel->resp = resp;
 
+    // printf("rho0\n");
+    // Print2DArrayDouble( mesh->rho0_n,  ncx, ncz, scaling.rho );
+    // printf("rho\n");
+    // Print2DArrayDouble( mesh->rho_n,  ncx, ncz, scaling.rho );
+    // printf("div\n");
+    // Print2DArrayDouble( mesh->div_u,  ncx, ncz, scaling.E );
+    // printf("rp\n");
+    // Print2DArrayDouble( mesh->rp,  ncx, ncz, 1.0 );
+
     // Sqrt
     Nmodel->resx =  sqrt(Nmodel->resx/ndofx);
     Nmodel->resz =  sqrt(Nmodel->resz/ndofz);

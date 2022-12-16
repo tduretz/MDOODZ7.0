@@ -457,9 +457,6 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         // Interp P --> p0_n , p0_s
         P2Mastah( &input.model, particles, particles.P,     &mesh, mesh.p0_n,   mesh.BCp.type,  1, 0, interp, cent, input.model.itp_stencil);
 
-        // Get physical properties that are constant throughout each timestep
-        UpdateDensity( &mesh, &particles, &input.materials, &input.model, &input.scaling );
-
         // Free surface - subgrid density correction
         if (input.model.free_surf == 1 ) {
             SurfaceDensityCorrection( &mesh, input.model, topo, input.scaling  );
@@ -531,11 +528,14 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         // Detect compressible cells
         if (input.model.compressible == 1 ) DetectCompressibleCells ( &mesh, &input.model );
 
-        // Compute cohesion and friction angle on the grid
-        CohesionFrictionDilationGrid( &mesh, &particles, input.materials, input.model, input.scaling );
+        // // Compute cohesion and friction angle on the grid
+        // CohesionFrictionDilationGrid( &mesh, &particles, input.materials, input.model, input.scaling );
 
-        // Detect compressible cells
-        if (input.model.compressible == 1) DetectCompressibleCells ( &mesh, &input.model );
+        // // Detect compressible cells
+        // if (input.model.compressible == 1) DetectCompressibleCells ( &mesh, &input.model );
+
+        // Get physical properties that are constant throughout each timestep
+        UpdateDensity( &mesh, &particles, &input.materials, &input.model, &input.scaling );
 
         // Min/Max interpolated fields
         if (input.model.noisy == 1 ) {
@@ -565,6 +565,8 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             MinMaxArrayTag( mesh.rho_s, input.scaling.rho, (mesh.Nx)*(mesh.Nz),     "rho_s     ", mesh.BCg.type );
             MinMaxArrayTag( mesh.rho_n, input.scaling.rho, (mesh.Nx-1)*(mesh.Nz-1), "rho_n     ", mesh.BCp.type );
             MinMaxArrayTag( mesh.rho0_n, input.scaling.rho, (mesh.Nx-1)*(mesh.Nz-1), "rho0_n    ", mesh.BCp.type );
+            MinMaxArrayTag( mesh.X0_s, 1.0, (mesh.Nx)*(mesh.Nz),     "X0_s     ", mesh.BCg.type );
+            MinMaxArrayTag( mesh.X0_n, 1.0, (mesh.Nx-1)*(mesh.Nz-1), "X0_n     ", mesh.BCp.type );
 
             for (int p=0; p< input.model.Nb_phases; p++) {
                 printf("Phase number %d:\n", p);
@@ -647,10 +649,13 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             // If Picard 2 Newton is activated: force initial Newton step
             if ( IsNewtonStep == 1 && Nmodel.Picard2Newton == 1 ) {
               input.model.Newton = 0;
-                IsFirstNewtonStep  = 1;
+              IsNewtonStep       = 0;
+              IsFirstNewtonStep  = 1;
             }
 
             while ( Nmodel.nit <= Nmax_picard && nstag< input.model.nstagmax) {
+
+                printf("input.model.Newton = %d --- %d\n", input.model.Newton, Nmodel.rp_rel[Nmodel.nit-1] < Nmodel.Pic2NewtCond);
 
                 if ( Nmodel.nit > 0 && Nmodel.Picard2Newton == 1 ) {
                     if ( Nmodel.rx_rel[Nmodel.nit-1] < Nmodel.Pic2NewtCond || Nmodel.rz_rel[Nmodel.nit-1] < Nmodel.Pic2NewtCond || Nmodel.rp_rel[Nmodel.nit-1] < Nmodel.Pic2NewtCond || Nmodel.nit>= Nmodel.nit_Pic_max) {
@@ -661,6 +666,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                             IsFirstNewtonStep    = 0;
                         }
                         input.model.Newton = 1;
+                        IsNewtonStep = 1;
                     }
                 }
 
@@ -680,7 +686,6 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
                 // Update non-linear rheology
                 UpdateNonLinearity( &mesh, &particles, &topo_chain, &topo, input.materials, &input.model, &Nmodel, input.scaling, 0, 0.0 );
-                // RheologicalOperators( &mesh, &input.model, &input.materials,  &input.scaling, 0 );                              
 
                 if (input.model.noisy == 1 ) {
                     MinMaxArrayTag( mesh.T, input.scaling.T, (mesh.Nx-1)*(mesh.Nz-1), "T         ", mesh.BCt.type );
@@ -701,6 +706,8 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                     MinMaxArrayTag( mesh.rho_n, input.scaling.rho, (mesh.Nx-1)*(mesh.Nz-1), "rho_n     ", mesh.BCp.type );
                     MinMaxArrayTag( mesh.rho0_n, input.scaling.rho, (mesh.Nx-1)*(mesh.Nz-1), "rho0_n    ", mesh.BCp.type );
                     MinMaxArrayTag( mesh.d_n, input.scaling.L,   (mesh.Nx-1)*(mesh.Nz-1), "d         ", mesh.BCp.type );
+                    MinMaxArrayTag( mesh.X_s, 1.0, (mesh.Nx)*(mesh.Nz),     "X_s     ", mesh.BCg.type );
+                    MinMaxArrayTag( mesh.X_n, 1.0, (mesh.Nx-1)*(mesh.Nz-1), "X_n     ", mesh.BCp.type );
                     if (input.model.aniso==1) MinMaxArrayTag( mesh.aniso_factor_n,  1.0,   (mesh.Nx-1)*(mesh.Nz-1), "ani_fac_n ",   mesh.BCp.type );
                     if (input.model.aniso==1) MinMaxArrayTag( mesh.aniso_factor_s,  1.0,   (mesh.Nx)*(mesh.Nz),     "ani_fac_s ",   mesh.BCg.type );
                     if (input.model.aniso==1) MinMaxArrayTag( mesh.aniso_factor_e_n,  1.0, (mesh.Nx-1)*(mesh.Nz-1), "ani_fac_e_n ", mesh.BCp.type );
@@ -717,9 +724,8 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                 if (input.model.decoupled_solve == 1 ) BuildStokesOperatorDecoupled  ( &mesh, input.model, 0, mesh.p_corr, mesh.p_in, mesh.u_in, mesh.v_in, &Stokes, &StokesA, &StokesB, &StokesC, &StokesD, 1 );
 
                 // Build discrete system of equations - Jacobian
-                // ViscosityDerivatives( &mesh, &input.materials, &input.model, &input.scaling );
-                if ( IsFullNewton   == 1 && Nmodel.nit > 0 ) RheologicalOperators( &mesh, &input.model, &input.materials, &input.scaling, 1 );
-                if ( IsJacobianUsed == 1 )                   BuildJacobianOperatorDecoupled( &mesh, input.model, 0, mesh.p_corr, mesh.p_in, mesh.u_in, mesh.v_in,  &Jacob,  &JacobA,  &JacobB,  &JacobC,   &JacobD, 1 );
+                RheologicalOperators( &mesh, &input.model, &input.materials, &input.scaling, 1 );
+                if ( IsJacobianUsed == 1 ) BuildJacobianOperatorDecoupled( &mesh, input.model, 0, mesh.p_corr, mesh.p_in, mesh.u_in, mesh.v_in,  &Jacob,  &JacobA,  &JacobB,  &JacobC,   &JacobD, 1 );
                 
                 // Diagonal input.scaling
                 if ( input.model.diag_scaling ) {
@@ -826,7 +832,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             if (Nmodel.Picard2Newton == 1 )  printf("Picard 2 Newton is activated with condition: %2.2e\n", Nmodel.Pic2NewtCond);
             for (i=0; i<=nit; i++) {
                 if (Nmodel.LogIsNewtonStep[i] == 1) printf("New. it. %02d: abs: |Fx| = %2.2e - |Fz| = %2.2e - |Fp| = %2.2e --- rel: |Fx| = %2.2e - |Fz| = %2.2e - |Fp| = %2.2e\n", i, Nmodel.rx_abs[i], Nmodel.rz_abs[i], Nmodel.rp_abs[i], Nmodel.rx_rel[i], Nmodel.rz_rel[i], Nmodel.rp_rel[i]);
-                else                         printf("Pic. it. %02d: abs: |Fx| = %2.2e - |Fz| = %2.2e - |Fp| = %2.2e --- rel: |Fx| = %2.2e - |Fz| = %2.2e - |Fp| = %2.2e\n", i, Nmodel.rx_abs[i], Nmodel.rz_abs[i], Nmodel.rp_abs[i], Nmodel.rx_rel[i], Nmodel.rz_rel[i], Nmodel.rp_rel[i]);
+                else                                printf("Pic. it. %02d: abs: |Fx| = %2.2e - |Fz| = %2.2e - |Fp| = %2.2e --- rel: |Fx| = %2.2e - |Fz| = %2.2e - |Fp| = %2.2e\n", i, Nmodel.rx_abs[i], Nmodel.rz_abs[i], Nmodel.rp_abs[i], Nmodel.rx_rel[i], Nmodel.rz_rel[i], Nmodel.rp_rel[i]);
                 if (i == Nmodel.nit_max && input.model.safe_mode == 1) {
                     printf("Exit: Max iteration reached: Nmodel.nit_max = %02d! Check what you wanna do now...\n",Nmodel.nit_max);
                     if ( (Nmodel.resx < Nmodel.abs_tol_u) && (Nmodel.resz < Nmodel.abs_tol_u) && (Nmodel.resp < Nmodel.abs_tol_p) ) {}
