@@ -193,7 +193,7 @@ cd cmake-exec/YourSetName
 
 # Building and running MDOODZ7.0 using make
 
-It is possible to build MDOODZ7.0 using the `makefile` which is located in the `MDLIB` folder. The `make` build does not install the necessary libraries, it is thus mandatory to manually install [SuiteSparse](https://github.com/DrTimothyAldenDavis/SuiteSparse) and [HDF5](https://www.hdfgroup.org/solutions/hdf5/) prior to building MDOODZ7.0 with make. These libraries are also available via package managers (e.g., Homebrew or MacPorts). For a successful build procedure, links to compiler, library and header files should be added to the current the environement (e.g. add to `PATH`, `LIBRARY_PATH`, `C_INCLUDE_PATH`...). The excutable file will be located directly in the `MDLIB` folder and the related `YourSetName.txt` fille will be automatically copied there.
+It is possible to build MDOODZ7.0 using the [`makefile`](https://github.com/tduretz/MDOODZ7.0/blob/debug-strain-rate-pipo/MDLIB/makefile) which is located in the `MDLIB` folder. The `make` build does not install the necessary libraries, it is thus mandatory to manually install [SuiteSparse](https://github.com/DrTimothyAldenDavis/SuiteSparse) and [HDF5](https://www.hdfgroup.org/solutions/hdf5/) prior to building MDOODZ7.0 with make. These libraries are also available via package managers (e.g., Homebrew or MacPorts). For a successful build procedure, links to compiler, library and header files should be added to the current the environement (e.g. add to `PATH`, `LIBRARY_PATH`, `C_INCLUDE_PATH`...). The excutable file will be located directly in the `MDLIB` folder and the related `YourSetName.txt` fille will be automatically copied there.
 
 This type of build is (so far) only supported on Linux and Mac OS. 
 
