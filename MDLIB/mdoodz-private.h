@@ -108,14 +108,13 @@ typedef struct {
   double *D11_n, *D12_n, *D13_n, *D14_n;
   double *D21_n, *D22_n, *D23_n, *D24_n;
   double *D31_s, *D32_s, *D33_s, *D34_s;
-  //double *detadexx_n, *detadezz_n, *detadgxz_n, *detadp_n;
-  //double *ddivpdexx_n, *ddivpdezz_n, *ddivpdgxz_n, *ddivpdp_n;
-  //double *detadexx_s, *detadezz_s, *detadgxz_s, *detadp_s;
+  double *detadexx_n, *detadezz_n, *detadgxz_n, *detadp_n;
+  double *ddivpdexx_n, *ddivpdezz_n, *ddivpdgxz_n, *ddivpdp_n;
+  double *detadexx_s, *detadezz_s, *detadgxz_s, *detadp_s;
   double *drhodp_n;
   double *phi0_s, *d0_s, *T_s, *P_s;
   // For anisotropy
   double *FS_AR_n, *FS_AR_s, *aniso_factor_n, *aniso_factor_s;
-  double *aniso_factor_v_n, *aniso_factor_v_s, *aniso_factor_e_n, *aniso_factor_e_s, *aniso_factor_p_n, *aniso_factor_p_s;
   double *d1_n, *d2_n, *d1_s, *d2_s, *angle_n, *angle_s;
 
   double *cell_min_z, *cell_max_z, *vert_min_z, *vert_max_z;
@@ -355,7 +354,7 @@ void            InitialiseSolutionVector(grid *, SparseMat *, params *);
 // Viscoelastoplasticity
 void            RotateStresses(grid, markers *, params, scale *);
 void            UpdateParticleStress(grid *, markers *, params *, mat_prop *, scale *);
-void            ShearModCompExpGrid(grid *, mat_prop, params*, scale);
+void            ShearModCompExpGrid(grid *, mat_prop, params, scale);
 void            CohesionFrictionDilationGrid(grid *, markers *, mat_prop, params, scale);
 
 // Non-Newtonian rheology
@@ -368,9 +367,6 @@ void            UpdateParticleGrainSize(grid *, scale, params, markers *, mat_pr
 void            UpdateParticleDensity(grid *, scale, params, markers *, mat_prop *);
 void            UpdateParticleX(grid *, scale, params, markers *, mat_prop *);
 void            UpdateParticlePhi(grid *, scale, params, markers *, mat_prop *);
-// Anisotropy
-void            NonNewtonianViscosityGridAniso(grid *, mat_prop *, params *, Nparams, scale *);
-
 // Advection
 void            DefineInitialTimestep(params *, grid *, markers, mat_prop, scale);
 void            EvaluateCourantCriterion(double *, double *, params *, scale, grid *, int);
@@ -528,13 +524,13 @@ void            ScaleVelocitiesRHSBack(SparseMat *, SparseMat *, double *);
 void            ExtractDiagonalScale(SparseMat *, SparseMat *, SparseMat *, SparseMat *);
 void            ScaleMatrix(SparseMat *, SparseMat *, SparseMat *, SparseMat *);
 
-void            RheologicalOperators(grid*, params*, mat_prop*, scale*, int);
-void            ComputeViscosityDerivatives_FD(grid*, mat_prop*, params*, Nparams, scale*);
-void            SetUpModel_NoMarkers(grid*, params*, scale*);
-void            Diffuse_X(grid*, params*, scale*);
-void            FiniteStrainAspectRatio(grid*, scale, params, markers*);
-void            Print2DArrayDouble(DoodzFP*, int, int, double);
-void            Print2DArrayInt(int*, int, int, double);
+void            RheologicalOperators(grid *, params *, scale *, int);
+void            ComputeViscosityDerivatives_FD(grid *, mat_prop *, params *, Nparams, scale *);
+void            SetUpModel_NoMarkers(grid *, params *, scale *);
+void            Diffuse_X(grid *, params *, scale *);
+void            FiniteStrainAspectRatio(grid *, scale, params, markers *);
+void            Print2DArrayDouble(DoodzFP *, int, int, double);
+void            Print2DArrayInt(int *, int, int, double);
 
 void            OldDeviatoricStressesPressure(grid *, markers *, scale, params *);
 void            TotalStresses(grid *, markers *, scale, params *);
@@ -551,12 +547,8 @@ void            CheckSym(DoodzFP *, double, int, int, char *, int, int);
 void            ChemicalDirectSolve(grid *, params, markers *, mat_prop *, double, scale);
 void            InitialiseGrainSizeParticles(markers *, mat_prop *);
 
-void            DerivativesOnTheFly_n( double*, double*, double*, double*, double*, double*, double*, double*, double*, double*, double*, double*, double*, int, double, double, double, double, double, double, double, double, double, double, double, grid*, mat_prop*, params*, scale* );
-void            DerivativesOnTheFly_s( double*, double*, double*, double*, double*, double*, double*, double*, int, double, double, double, double, double, double, double, double, double, double, double, grid*, mat_prop*, params*, scale* );
-void            ViscosityDerivatives(grid *, mat_prop *, params *, scale *);
-void            EffectiveStrainRate( double*, double*, double*, double, double, double, double, double, double, double, double d2, double, double, int );
-double          ViscosityConcise(int, double, double, double, double, double, double, double, double, double, double, double, double, mat_prop *, params *, scale *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double, double, double, double, double, double, double *, double *, double *, double *, double, double, double *, double *, double *, int, int);
-double          ViscosityConciseAniso(int, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, mat_prop *, params *, scale *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double, double, double, double, double, double, double *, double *, double *, double *, double, double, double *, double *, double *, int, int);
+void            ViscosityDerivatives(grid *, mat_prop *, params *, Nparams, scale *);
+double          ViscosityConcise(int, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, mat_prop *, params *, scale *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double, double, double, double, double, double, double *, double *, double *, double *, double, double, double *, double *, double *, int, int);
 double          EvaluateDensity(int, double, double, double, params *, mat_prop *);
 void            ComputeMeanQuantitesForTimeSeries(grid *mesh);
 void            LogTimeSeries(grid *, params, scale);

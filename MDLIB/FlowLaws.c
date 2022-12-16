@@ -95,7 +95,7 @@ void ReadDataPowerLaw( mat_prop* mat, params* model, int k, int number, scale* s
             mat->apwl[k] = 0.0;
             success      = 1;
             break;
-
+            
         /******************************** Crust flow laws *********************************/
                 
         case 10:
@@ -565,25 +565,7 @@ void ReadDataLinear( mat_prop* mat, params* model, int k, int number, scale* sca
             printf ("should not be here\n");
             success      = 0;
             break;
-
-        /****************** SPECIAL CASE: user-defined power law flow law ******************/
             
-        case 1:
-            printf("Siltstone flow law calibrated from file data  at 350 C ():\n" );
-            mat->tpwl[k] = 1;
-            mat->npwl[k] = 3.3;
-            mat->mpwl[k] = 0.0;
-            mat->rpwl[k] = 0.0;
-            mat->Qpwl[k] = 186.5e3;
-            mat->Vpwl[k] = 0.0e-6;
-            mat->Apwl[k] = 3.1623e-26;
-            mat->fpwl[k] = 0.0;
-            mat->apwl[k] = 0.0;
-            success      = 1;
-            break;
-        
-        /******************************** Crust flow laws *********************************/
-               
         case 15 :
             printf("Calcite Diffusion creep - Herwegh (2003):\n");
             mat->tlin[k] = 1.0;

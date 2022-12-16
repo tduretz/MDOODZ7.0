@@ -1,5 +1,5 @@
 /**** RESTART ****/
-istep = 000002
+istep = 00001
 irestart = 0
 
 /**** OUTPUT FILES ****/
@@ -8,7 +8,6 @@ writer_step     = 1
 writer_markers  = 0
 writer_debug    = 0
 writer_energies = 0
-GNUplot_residuals = 1
 
 /**** SCALES ****/
 eta = 1
@@ -17,11 +16,11 @@ V   = 1
 T   = 1
 
 /**** SPACE ****/
-Nx      = 41
-Nz      = 41
+Nx      = 101
+Nz      = 101
 Nt      = 1
 xmin    = -5.000000e-1
-zmin    = -5.000000e-1
+zmin    = -5.000000e-1 
 xmax    =  5.000000e-1
 zmax    =  5.000000e-1
 
@@ -36,40 +35,37 @@ dt          = 0.5
 RK          = 4
 
 /**** LINEAR SOLVER ****/
-noisy        = 1
+noisy        = 0
 penalty      = 1e5
 lsolver      = -1
 diag_scaling = 0
-abs_tol_div  = 1e-9
-rel_tol_div  = 1e-9
-abs_tol_mom  = 1e-11
-rel_tol_mom  = 1e-11
-
+abs_tol_div  = 1e-8
+rel_tol_div  = 1e-8
 
 /**** NON-LINEAR SOLVER ****/
-Newton      = 1
+Newton      = 1 
 line_search = 1
-nit_max     = 10
+nit_max     = 100
 rel_tol_KSP = 1e-4
-abs_tol_u   = 1e-9
-rel_tol_u   = 1e-9
-abs_tol_p   = 1e-9
-rel_tol_p   = 1e-9
+abs_tol_u   = 1e-8
+abs_tol_u   = 1e-8
+rel_tol_p   = 1e-8
+rel_tol_p   = 1e-8
 
 /**** VISCOSITY CUT-OFF ****/
 mineta      = 1e-3
 maxeta      = 1e6
 
 /**** SWITCHES ****/
-aniso             = 1
 iselastic         = 0
 free_surf         = 0
 free_surf_stab    = 0
 fstrain           = 1
 advection         = 0
+GNUplot_residuals = 0
 
 /**** SETUP-DEPENDANT ****/
-shear_style     = 0
+shear_style     = 1
 isperiodic_x    = 0
 ispureshear_ALE = 1
 EpsBG           = 1
@@ -99,17 +95,14 @@ alp  = 10.0e-6
 bet  = 1e-11
 drho = 0
 cstv = 1             / constant visc law
-pwlv = 1            / disloc. creep
+pwlv = 0            / disloc. creep
 linv = 0             / diff. creep
 gbsv = 0             / grain boundary sliding
 expv = 0             / peierls creep
 gsel = 0             / grain size evo.
 eta0 = 1
-npwl = 3.0
+npwl = 30
 Qpwl = 0
-aniso_factor = 5.0 / THIS IS DEPRECATED USE LINE BELOW:
-ani_fac_v = 3.0
-ani_fac_e = 1.0
 
 /**** PHASE 2 ****/
 ID   = 1
@@ -131,5 +124,5 @@ gbsv = 0             / grain boundary sliding
 expv = 0             / peierls creep
 gsel = 0             / grain size evo.
 eta0 = 1e1
-npwl = 0
+npwl = 3
 Qpwl = 0
