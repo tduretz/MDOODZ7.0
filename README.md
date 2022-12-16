@@ -97,7 +97,7 @@ Must have.
  - The first possibility is to use the CMake project tools. This is recommended for most users. This allows to: (1) automatically download necessary libraries (HDF5 and SuiteSparse), (2) build MDOODZ7.0 and (3) run MDOODZ7.0. 
  - The second possibility is to use the standard make project as for previous versions of MDOODZ. It is still available and recommended for users who want to manually install necesary libraries HDF5 and SuiteSparse) and control the type/versions of compilers.  
 
-# CMake usage --- New in MDOODZ7.0
+# Building and running MDOODZ7.0 using CMake
 
 Project is ready to be built in CMake
 
@@ -190,3 +190,29 @@ Setup `.txt` file will be automatically detected if it has a same name as the ex
 cd cmake-exec/YourSetName
 ./YourSetName /path/to/setup.txt
 ```
+
+# Building and running MDOODZ7.0 using make
+
+It is possible to build MDOODZ7.0 using the `makefile` which is located in the `MDLIB` folder. The `make` build does not install the necessary libraries, it is thus mandatory to manually install [SuiteSparse](https://github.com/DrTimothyAldenDavis/SuiteSparse) and [HDF5](https://www.hdfgroup.org/solutions/hdf5/) prior to building MDOODZ7.0 with make. These libraries are also available via package managers (e.g., Homebrew or MacPorts). For a successful build procedure, links to compiler, library and header files should be added to the current the environement (e.g. add to `PATH`, `LIBRARY_PATH`, `C_INCLUDE_PATH`...). The excutable file will be located directly in the `MDLIB` folder and the related `YourSetName.txt` fille will be automatically copied there.
+
+This type of build is (so far) only supported on Linux and Mac OS. 
+
+```bash
+make clean all SET=YourSetName
+```
+Will clean and make a fresh build without any specific optmisation.
+
+```bash
+make all SET=YourSetName
+```
+Will update the build (compiles only modified files) without any specific optmisation.
+
+```bash
+make clean all SET=YourSetName OPT=yes OMP=yes
+```
+Will clean and make a fresh build with optmisation level 3 and including OpenMP parallelism.
+
+```bash
+make all SET=YourSetName OPT=yes OMP=yes
+```
+Will update the build (compiles only modified files) with optmisation level 3 and including OpenMP parallelism.
