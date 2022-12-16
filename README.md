@@ -91,7 +91,13 @@ Must have.
 - `SetBCT` describes the Temperature Boundary type and value. Must be implemented if `model.isthermal == 1`
 - `SetBCTNew` describes the Temperature Boundary type and value on 1d boundary array. Must be implemented if `model.isthermal == 1`. Will be deprecated
 
-# CMake usage
+# How to build and run MDOODZ7.0?
+
+ There are two ways to build and run MDOODZ7.0:
+ - The first possibility is to use the CMake project tools. This is recommended for most users. This allows to: (1) automatically download necessary libraries (HDF5 and SuiteSparse), (2) build MDOODZ7.0 and (3) run MDOODZ7.0. 
+ - The second possibility is to use the standard make project as for previous versions of MDOODZ. It is still available and recommended for users who want to manually install necesary libraries HDF5 and SuiteSparse) and control the type/versions of compilers.  
+
+# CMake usage --- New in MDOODZ7.0
 
 Project is ready to be built in CMake
 
