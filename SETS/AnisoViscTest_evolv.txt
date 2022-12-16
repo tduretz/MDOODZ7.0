@@ -1,5 +1,5 @@
 /**** RESTART ****/
-istep = 000200
+istep = 000010
 irestart = 0
 
 /**** OUTPUT FILES ****/
@@ -17,7 +17,6 @@ free_surf_stab    = 0
 fstrain           = 1
 advection         = 1
 aniso             = 1
-aniso_fstrain     = 1 // finite strain anisotropy activated
 
 /**** SCALES ****/
 eta = 1
@@ -26,9 +25,9 @@ V   = 1
 T   = 1
 
 /**** SPACE ****/
-Nx      = 251
-Nz      = 251
-Nt      = 20
+Nx      = 51
+Nz      = 51
+Nt      = 50
 xmin    = -5.000000e-1
 zmin    = -5.000000e-1
 xmax    =  5.000000e-1
@@ -109,6 +108,7 @@ eta0 = 1e0
 npwl = 0.0
 Qpwl = 0
 aniso_angle  = 135.0
+ani_fstrain  = 1     / activates finite strain anisotropy
 ani_fac_v    = 1.0
 
 /**** PHASE 2 ****/

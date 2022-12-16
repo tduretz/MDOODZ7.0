@@ -75,7 +75,7 @@ typedef struct {
   // For Pips
   int      ProgReac, NoReturn, dens_var, Plith_trick, UnsplitDiffReac, kinetics;
   // Anisotropy
-  int      aniso, aniso_fstrain, oop, noise_bg;
+  int      aniso, oop, noise_bg; //aniso_fstrain
   int      eqn_state;
   int      residual_form;
   int      irestart, istep;
@@ -115,6 +115,7 @@ typedef struct {
   int    reac_soft[20], reac_phase[20];
   int    phase_mix[20], phase_two[20];
   double aniso_factor[20], aniso_angle[20], ani_fac_v[20], ani_fac_e[20], ani_fac_p[20];
+  int    ani_fstrain[20];
 } mat_prop;
 
 char                         *GetSetupFileName(int nargs, char *args[]);

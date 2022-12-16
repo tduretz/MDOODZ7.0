@@ -271,7 +271,7 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
     char  *compo, *compo_hr;
     float *Cxviz, *Czviz, *Cxviz_hr, *Czviz_hr, *Cxtopo, *Cztopo, *Cheight, *Ctopovx, *Ctopovz, *Ctopovx_mark, *Ctopovz_mark;
     double *P_total;
-    float  *Ccohesion, *Cfriction;
+    float  *Ccohesion, *Cfriction, *Cani_fac;
 
     P_total  = DoodzCalloc((model.Nx-1)*(model.Nz-1), sizeof(double));
 
@@ -555,6 +555,10 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
         Cnz = DoodzMalloc( sizeof(float)*(model.Nx-1)*(model.Nz-1));
         DoubleToFloat( nz, Cnz, (model.Nx-1)*(model.Nz-1) );
 
+        // aniso factor on centroids
+        Cani_fac = DoodzMalloc( sizeof(float)*(model.Nx-1)*(model.Nz-1));
+        DoubleToFloat( mesh->aniso_factor_n, Cani_fac, (model.Nx-1)*(model.Nz-1) );
+
     }
 
     if ( model.rec_T_P_x_z == 1 ) {
@@ -791,6 +795,7 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
     if (model.aniso == 1) {
         AddFieldToGroup( FileName, "Centers" , "nx", 'f', (model.Nx-1)*(model.Nz-1), Cnx, 1 );
         AddFieldToGroup( FileName, "Centers" , "nz", 'f', (model.Nx-1)*(model.Nz-1), Cnz, 1 );
+        AddFieldToGroup( FileName, "Centers" , "ani_fac", 'f', (model.Nx-1)*(model.Nz-1), Cani_fac, 1 );
     }
 
     if (model.rec_T_P_x_z == 1) {
@@ -906,6 +911,7 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
          DoodzFree( nz  );
          DoodzFree( Cnx );
          DoodzFree( Cnz );
+         DoodzFree( Cani_fac );
      }
 
     if ( model.rec_T_P_x_z == 1 ) {
