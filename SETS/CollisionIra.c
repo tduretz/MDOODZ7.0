@@ -32,28 +32,34 @@ int SetPhase(MdoodzInput *instance, Coordinates coordinates) {
           .angle   = 0,
   };
 
+  if (coordinates.z < -410e3 / instance->scaling.L) {
+    return 4;
+  }
 
-  // const double HOceanicPlate = 20e3 / instance->scaling.L;
   if (IsRectangleCoordinates(coordinates, westernContinent, instance->scaling.L)) {
     if (coordinates.z > -40e3 / instance->scaling.L) {
-      return 1;}
-    else {
-      return 2;
+      return 7;
+    } else {
+      if ((coordinates.x + 35e3 / instance->scaling.L) < coordinates.z) {
+        return 2;
+      }
     }
   } else if (IsRectangleCoordinates(coordinates, easternContinent, instance->scaling.L)) {
     if (coordinates.z > -30e3 / instance->scaling.L) {
-      return 1;}
-    else {
-      return 2;
+      return 7;
+    } else {
+      if ((coordinates.x - 35e3 / instance->scaling.L) > -coordinates.z) {
+        return 2;
+      }
     }
   } else if (IsRectangleCoordinates(coordinates, HOceanicPlate, instance->scaling.L)) {
     if (coordinates.z > -20e3 / instance->scaling.L) {
-      return 8;
+      return 1;
     } else {
       return 2;
     }
   }
-  return 6;
+  return 3;
 }
 
 double SetTemperature(MdoodzInput *instance, Coordinates coordinates) {
