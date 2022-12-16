@@ -33,7 +33,7 @@ int SetPhase(MdoodzInput *instance, Coordinates coordinates) {
   };
 
   if (coordinates.z < -410e3 / instance->scaling.L) {
-    return 4;
+    return 3;
   }
 
   if (IsRectangleCoordinates(coordinates, westernContinent, instance->scaling.L)) {
@@ -63,12 +63,23 @@ int SetPhase(MdoodzInput *instance, Coordinates coordinates) {
 }
 
 double SetTemperature(MdoodzInput *instance, Coordinates coordinates) {
+  Ellipse heatAnomaly = {
+          .radiusZ   = 40e3,
+          .radiusX   = 40e3,
+          .centreZ = -410e3,
+          .centreX = 0.0,
+          .angle   = 0,
+  };
+
   const double lithosphereThickness = instance->model.user1 / instance->scaling.L;
   const double surfaceTemperature   = 273.15 / instance->scaling.T;
   const double mantleTemperature    = (1330.0 + 273.15) / instance->scaling.T;
+  const double anomalyTemperature    = (1430.0 + 273.15) / instance->scaling.T;
   const double particleTemperature  = ((mantleTemperature - surfaceTemperature) / lithosphereThickness) * (-coordinates.z) + surfaceTemperature;
   if (particleTemperature > mantleTemperature) {
     return mantleTemperature;
+  } else if (IsEllipseCoordinates(coordinates, heatAnomaly, instance->scaling.L)) {
+    return anomalyTemperature;
   } else {
     return particleTemperature;
   }
