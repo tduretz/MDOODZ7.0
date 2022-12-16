@@ -1117,7 +1117,7 @@ Input ReadInputFile( char *fileName ) {
     model.NoReturn        = ReadInt2( fin, "NoReturn",        0 ); // Turns off retrogression if 1.0
     model.UnsplitDiffReac = ReadInt2( fin, "UnsplitDiffReac", 0 ); // Unsplit diffusion reaction
     model.kinetics        = ReadInt2( fin, "kinetics",        0 ); // Unsplit diffusion reaction
-    model.VolChangeReac   = ReadInt2( fin, "VolChangeReac",   0 ); // Turns on volume change due to reaction if 1
+    model.dens_var   = ReadInt2( fin, "dens_var",   0 ); // Turns on volume change due to reaction if 1
     model.Plith_trick     = ReadInt2( fin, "Plith_trick",     0 );
     model.DirectNeighbour = ReadInt2( fin, "DirectNeighbour", 0);
     model.Reseed          = ReadInt2( fin, "Reseed",          1); // Activates reseeding / particle injection

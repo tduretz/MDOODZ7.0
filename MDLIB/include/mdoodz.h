@@ -73,7 +73,7 @@ typedef struct {
   int      diffuse_X, diffuse_avg;
   double   diffusion_length;
   // For Pips
-  int      ProgReac, NoReturn, VolChangeReac, Plith_trick, UnsplitDiffReac, kinetics;
+  int      ProgReac, NoReturn, dens_var, Plith_trick, UnsplitDiffReac, kinetics;
   // Anisotropy
   int      aniso, aniso_fstrain, oop, noise_bg;
   int      eqn_state;

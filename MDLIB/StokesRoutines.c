@@ -1313,8 +1313,8 @@ void EvaluateRHS( grid* mesh, params model, scale scaling, double RHO_REF ) {
 
                 if (model.compressible == 1 ) {
                     if (mesh->comp_cells[c] == 1) {
-                        if ( model.VolChangeReac == 0 ) mesh->rhs_p[c] += mesh->p0_n[c]*mesh->bet_n[c]/model.dt;
-                        if ( model.VolChangeReac == 1 ) mesh->rhs_p[c] += log(mesh->rho0_n[c])/model.dt;
+                        if ( model.dens_var == 0 ) mesh->rhs_p[c] += mesh->p0_n[c]*mesh->bet_n[c]/model.dt;
+                        if ( model.dens_var == 1 ) mesh->rhs_p[c] += log(mesh->rho0_n[c])/model.dt;
                         if (model.adiab_heat > 0 ) {
                             mesh->rhs_p[c] += mesh->divth0_n[c];
                         }

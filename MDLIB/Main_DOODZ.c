@@ -595,7 +595,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
           }
 
             // Allocate and initialise solution and RHS vectors
-          SetBCs(*setup->SetBCs, &input, &mesh);
+            SetBCs(*setup->SetBCs, &input, &mesh);
 
             // Reset fields and BC values if needed
             //        if ( input.model.ispureshear_ale == 1 ) InitialiseSolutionFields( &mesh, &input.model );
@@ -723,8 +723,8 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                 if (input.model.decoupled_solve == 0 ) BuildStokesOperator           ( &mesh, input.model, 0, mesh.p_in, mesh.u_in, mesh.v_in, &Stokes, 1 );
                 if (input.model.decoupled_solve == 1 ) BuildStokesOperatorDecoupled  ( &mesh, input.model, 0, mesh.p_corr, mesh.p_in, mesh.u_in, mesh.v_in, &Stokes, &StokesA, &StokesB, &StokesC, &StokesD, 1 );
 
-                // Build discrete system of equations - Jacobian
-                RheologicalOperators( &mesh, &input.model, &input.materials, &input.scaling, 1 );
+                // Build discrete system of equations - Jacobian (do it also for densification since drhodp is needed)
+                if ( (IsFullNewton   == 1 && Nmodel.nit > 0) || input.model.dens_var == 1  ) RheologicalOperators( &mesh, &input.model, &input.materials, &input.scaling, 1 );
                 if ( IsJacobianUsed == 1 ) BuildJacobianOperatorDecoupled( &mesh, input.model, 0, mesh.p_corr, mesh.p_in, mesh.u_in, mesh.v_in,  &Jacob,  &JacobA,  &JacobB,  &JacobC,   &JacobD, 1 );
                 
                 // Diagonal input.scaling

@@ -804,7 +804,7 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
     if ( UnsplitDiffReac == 0 ) mesh->X_n[c0]        = 0.0;
     mesh->OverS_n[c0]    = 0.0;
 
-    if ( model->VolChangeReac == 1 ) {
+    if ( model->dens_var == 1 ) {
       mesh->rho_n[c0]  = 0.0;
       //            mesh->drhodp_n[c0] = 0.0;
     }
@@ -879,8 +879,8 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
           mesh->OverS_n[c0]     += mesh->phase_perc_n[p][c0] * OverS;
 
           // Volume changes
-          if ( model->VolChangeReac == 1 ) {
-            mesh->rho_n[c0]       += mesh->phase_perc_n[p][c0] * (rho);
+          if ( model->dens_var == 1 ) {
+            mesh->rho_n[c0]       += mesh->phase_perc_n[p][c0] * rho;
           }
         }
       }
