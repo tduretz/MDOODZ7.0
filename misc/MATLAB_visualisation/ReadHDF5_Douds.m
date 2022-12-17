@@ -5030,6 +5030,11 @@ for istep=istart:ijump:iend
             T = hdf5read(filename,'/Centers/T'); T = cast(T, 'double');
             T = reshape(T,params(4)-1,params(5)-1)';
             
+            
+            ani_fac = hdf5read(filename,'/Centers/ani_fac'); ani_fac = cast(ani_fac, 'double');
+            ani_fac = reshape(ani_fac,params(4)-1,params(5)-1)';
+            
+            
             ndx = hdf5read(filename,'/Centers/nx'); ndx = cast(ndx, 'double'); ndx = reshape(ndx,params(4)-1,params(5)-1)';
             ndz = hdf5read(filename,'/Centers/nz'); ndz = cast(ndz, 'double'); ndz = reshape(ndz,params(4)-1,params(5)-1)';
 
@@ -5043,14 +5048,16 @@ for istep=istart:ijump:iend
             hold on
             
             clf
-            colormap(map);
-            imagesc(VizGrid.x_plot_hr, VizGrid.z_plot_hr, VizGrid.ph_hr);
+%             colormap(map);
+%             imagesc(VizGrid.x_plot_hr, VizGrid.z_plot_hr, VizGrid.ph_hr);
+%             shading interp, caxis ([-1 size(map,1)-2])%, axis ij
+            imagesc(xc_plot, zc_plot, ani_fac);
+            shading interp,% caxis ([-1 size(map,1)-2])%, axis ij
             set(gca,'Ydir','Normal')
-            shading interp, caxis ([-1 size(map,1)-2])%, axis ij
             axis image
             title(['Time = ', num2str(time/1e6),' Myrs'], 'FontSize', 15, 'FontName', 'Myriad pro');
             
-            
+           
             % Isotherms
             hold on
             v = 200:200:2000;
