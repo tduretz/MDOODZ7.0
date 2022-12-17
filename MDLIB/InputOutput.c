@@ -1205,19 +1205,21 @@ Input ReadInputFile( char *fileName ) {
         if (materials.psi[k]>0.0 && model.compressible==0) { printf("Set compressible=1 to activate dilation\n"); exit(1); }
         materials.Slim[k] = ReadMatProps( fin, "Slim" ,k,  1.0e90 )  / scaling.S;
         // Read flow law parameters
-        materials.cstv[k]  = ReadMatProps( fin, "cstv",k,    1.0  );
-        materials.pwlv[k]  = ReadMatProps( fin, "pwlv",k,    0.0  );
-        materials.linv[k]  = ReadMatProps( fin, "linv",k,    0.0  );
-        materials.gbsv[k]  = ReadMatProps( fin, "gbsv",k,    0.0  );
-        materials.expv[k]  = ReadMatProps( fin, "expv",k,    0.0  );
-        gsel                = ReadMatProps( fin, "gsel",k,    0.0  );
-        materials.eta0[k]  = ReadMatProps( fin, "eta0",k, 1.0e20  );
-        materials.npwl[k]  = ReadMatProps( fin, "npwl",k,    1.0  );
-        materials.Qpwl[k]  = ReadMatProps( fin, "Qpwl",k,    0.0  );
-        materials.pref_pwl[k] = ReadMatProps( fin, "pref_pwl",k,    1.0 );    // weakening prefactor for power law
-        materials.gs[k]    = ReadMatProps( fin, "gs",    k,    0.0   );
-        materials.gs_ref[k]= ReadMatProps( fin, "gs_ref" ,k,  2.0e-3  ) /scaling.L;
-        materials.kin[k]   = ReadMatProps( fin, "kin",    k,    0.0   );
+        materials.cstv[k]     = ReadMatProps( fin,     "cstv", k,    1.0  );
+        materials.pwlv[k]     = ReadMatProps( fin,     "pwlv", k,    0.0  );
+        materials.linv[k]     = ReadMatProps( fin,     "linv", k,    0.0  );
+        materials.gbsv[k]     = ReadMatProps( fin,     "gbsv", k,    0.0  );
+        materials.expv[k]     = ReadMatProps( fin,     "expv", k,    0.0  );
+        gsel                  = ReadMatProps( fin,     "gsel", k,    0.0  );
+        materials.eps0[k]     = ReadMatProps( fin,     "eps0", k,  1e-14  ) / scaling.E;
+        materials.tau0[k]     = ReadMatProps( fin,     "tau0", k,    2e6  ) / scaling.S;
+        materials.eta0[k]     = ReadMatProps( fin,     "eta0", k, 1.0e20  ) / scaling.eta;
+        materials.npwl[k]     = ReadMatProps( fin,     "npwl", k,    1.0  );
+        materials.Qpwl[k]     = ReadMatProps( fin,     "Qpwl", k,    0.0  );
+        materials.pref_pwl[k] = ReadMatProps( fin, "pref_pwl", k,    1.0  );    // weakening prefactor for power law
+        materials.gs[k]       = ReadMatProps( fin,       "gs", k,    0.0  );
+        materials.gs_ref[k]   = ReadMatProps( fin,   "gs_ref", k, 2.0e-3  ) / scaling.L;
+        materials.kin[k]      = ReadMatProps( fin,      "kin", k,    0.0  );
         // Strain softening
         materials.coh_soft[k]   = (int)ReadMatProps( fin, "coh_soft",   k,    0.0   );
         materials.phi_soft[k]   = (int)ReadMatProps( fin, "phi_soft",   k,    0.0   );
@@ -1258,10 +1260,13 @@ Input ReadInputFile( char *fileName ) {
         // Anisotropy
         materials.aniso_factor[k]   =  ReadMatProps( fin, "aniso_factor", k,    1.0  ); // to be deleted
         materials.aniso_angle[k]    =  ReadMatProps( fin, "aniso_angle",  k,   90.0  )  * M_PI/ 180.0;
-        materials.ani_fac_v[k]      =  ReadMatProps( fin, "ani_fac_v",    k,    1.0  );
-        materials.ani_fac_e[k]      =  ReadMatProps( fin, "ani_fac_e",    k,    1.0  );
-        materials.ani_fac_p[k]      =  ReadMatProps( fin, "ani_fac_p",    k,    1.0  );
-        materials.ani_fstrain[k]    =  (int)ReadMatProps( fin, "ani_fstrain",    k,    0.0  );
+        materials.ani_fac_v[k]      =  ReadMatProps( fin, "ani_fac_v",    k,    1.0  );        // viscous anisotropy strength
+        materials.ani_fac_e[k]      =  ReadMatProps( fin, "ani_fac_e",    k,    1.0  );        // elastic anisotropy strength
+        materials.ani_fac_p[k]      =  ReadMatProps( fin, "ani_fac_p",    k,    1.0  );        // plastic anisotropy strength
+        materials.ani_fstrain[k]    =  (int)ReadMatProps( fin, "ani_fstrain",    k,    0.0  ); // strain dependent anisotropy per phase
+        materials.axx[k]            =  ReadMatProps( fin, "axx",    k,    1.0  );              // plastic directional factor xx
+        materials.azz[k]            =  ReadMatProps( fin, "azz",    k,    1.0  );              // plastic directional factor zz
+        materials.ayy[k]            =  ReadMatProps( fin, "ayy",    k,    1.0  );              // plastic directional factor yy
         // Check if any flow law is active
         int sum = abs(materials.cstv[k]) + abs(materials.pwlv[k]) + abs(materials.linv[k]) + abs(materials.gbsv[k]) + abs(materials.expv[k]);
         if ( sum == 0 ) {

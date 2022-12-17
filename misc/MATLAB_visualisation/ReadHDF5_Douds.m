@@ -5,46 +5,15 @@ clear
 clear all
 % close all
 clc
-
-DEBUG = 0;
-
-MarkSize=1e0 ;
-
-mdoodz6       = 1;
-
-path = '/Users/tduretz/REPO_GIT/MDOODZ6.0/SOURCE/Compression/';
-path = '/Users/tduretz/REPO_GIT/MDOODZ6.0/SOURCE/Shear_periodic_VEVP/';
-path = '/Users/tduretz/REPO_GIT/MDOODZ6.0/SOURCE/';
-path = '/Users/imac/REPO_GIT/MDOODZ6.0/SOURCE/Huismans_Reg2e20_noise/';
-path = '/Users/imac/REPO_GIT/MDOODZ6.0/SOURCE/Huismans_OS2e5_n1_5/';
-path = '/Users/imac/REPO_GIT/MDOODZ6.0/SOURCE/Huismans_Reg8e19_noise_NEW/';
-
-path = '/Users/tduretz/REPO_GIT/MDOODZ7.0/MDLIB/';
-
-
-% path = '/Users/imac/REPO_GIT/mdoodz4.5_repo/SOURCE/'
-% mdoodz6       = 0;
-
-
-% path = '/Volumes/Seagate4TB/Wedge_MD6/LR/'
-% path = '/Users/imac/REPO_GIT/MDOODZ6.0/SOURCE/RUN_Ridge_40/'
-% % path = '/Volumes/Seagate4TB/LithoScale/Ext_HR2_5e20/'
-% % path = '/Users/imac/REPO_GIT/MDOODZ6.0_beauty/SOURCE/'
-% path = '/Volumes/Seagate4TB/LithoScale/N3/Comp_HHR_2e20_Courant0.25/'
-% path = '/Volumes/Seagate4TB/LithoScale/N3/Comp_HHR_2e20_Courant0.25/'
-% path = '/Volumes/Seagate4TB/LithoScale/N3/Comp_HR_4e20/'
-
-% path = '/Users/imac/Downloads/MDoodz4.5_Plateau/'
-% mdoodz6       = 0;
-
-% path = '/Volumes/Passport/test_AL/G_1e12/'
-
+path = '~/REPO_GIT/MDOODZ7.0/MDLIB/';
 cd(path)
+DEBUG       = 0;
+mdoodz6     = 1;
 
 % Files
-istart = 0;
-ijump  = 10;
-iend   = 200;
+istart = 50;
+ijump  = 1;
+iend   = 50;
 
 %--------------------------------------------------
 % what do you want to plot:
@@ -75,7 +44,6 @@ Christmas_Tree  = 0;
 topo            = 0;
 topo_eta_plot   = 0;
 topo_SR_plot    = 0;
-
 topo_maps       = 0;
 phases_uplift   = 0;
 dt_time         = 0;
@@ -1425,7 +1393,7 @@ for istep=istart:ijump:iend
             else
                 subplot(2,1,1)
             end
-            colormap(turbo);
+%             colormap(turbo);
             imagesc( xc_plot, zc_plot, log10(eII) )
             hold on
             if Ccontours == 1; AddCompoContours( filename, VizGrid, crop, lim  ); end
@@ -1472,7 +1440,7 @@ for istep=istart:ijump:iend
         % plot stress and strain rate invariants evolution
         %--------------------------------------------------
         if ( stress_evol == 1 )
-            
+                       
             sxxd  = hdf5read(filename,'/Centers/sxxd'); sxxd = cast(sxxd, 'double');
             szzd  = hdf5read(filename,'/Centers/szzd'); szzd = cast(szzd, 'double');
             P     = hdf5read(filename,'/Centers/P');    P    = cast(P, 'double');
@@ -1512,7 +1480,7 @@ for istep=istart:ijump:iend
                 stress = 0;
             end
             figure(90), 
-            if istep==0, clf; end
+            if istep==0 || icount==1, clf; end
             subplot(211), hold on
             plot(time/1e3/3600/365/24, (stress), 'k.'), ylabel('Tii')
             subplot(212), hold on
@@ -5069,11 +5037,14 @@ for istep=istart:ijump:iend
             hv=quiver(xc_plot(1:step:end), zc_plot(1:step:end), ndx(1:step:end,1:step:end), ndz(1:step:end,1:step:end));
 %                         hv=quiver(xc_plot(100), zc_plot(100), ndx(100,100), ndz(100,100));
             set(hv, 'Color', 'k', 'LineWidth', 0.5);
-            set(hv, 'MaxHeadSize',2.0, 'AutoScaleFactor', 2);
+            set(hv, 'MaxHeadSize',2.0, 'AutoScaleFactor', 0.5);
            
             hv=quiver(xc_plot(1:step:end), zc_plot(1:step:end), ndz(1:step:end,1:step:end), -ndx(1:step:end,1:step:end));
-            set(hv, 'Color', 'w', 'LineWidth', 0.5);
-            set(hv, 'MaxHeadSize',2.0, 'AutoScaleFactor', 2, 'ShowArrowHead', 'off');
+            set(hv, 'Color', 'w', 'LineWidth', 2);
+            set(hv, 'MaxHeadSize',2.0, 'AutoScaleFactor', 0.5, 'ShowArrowHead', 'off');
+            hv=quiver(xc_plot(1:step:end), zc_plot(1:step:end), -ndz(1:step:end,1:step:end), ndx(1:step:end,1:step:end));
+            set(hv, 'Color', 'w', 'LineWidth', 2);
+            set(hv, 'MaxHeadSize',2.0, 'AutoScaleFactor', 0.5, 'ShowArrowHead', 'off');
               hold off
             
             colorbar('Location', 'SouthOutside')

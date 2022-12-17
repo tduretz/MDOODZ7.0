@@ -92,7 +92,7 @@ typedef struct {
 typedef struct {
   int    Nb_phases;
   double R;
-  double eta0[20], rho[20], mu[20], Cv[20], k[20], Qr[20], C[20], phi[20],
+  double  eps0[20], tau0[20], eta0[20], rho[20], mu[20], Cv[20], k[20], Qr[20], C[20], phi[20],
           psi[20], Slim[20], n[20], A[20], Ea[20], Va[20], alp[20], bet[20], Qm[20],
           T0[20], P0[20], drho[20], k_eff[20];
   double tpwl[20], Qpwl[20], Vpwl[20], npwl[20], mpwl[20], Apwl[20], apwl[20],
@@ -115,6 +115,7 @@ typedef struct {
   int    reac_soft[20], reac_phase[20];
   int    phase_mix[20], phase_two[20];
   double aniso_factor[20], aniso_angle[20], ani_fac_v[20], ani_fac_e[20], ani_fac_p[20];
+  double axx[20], azz[20], ayy[20];
   int    ani_fstrain[20];
 } mat_prop;
 

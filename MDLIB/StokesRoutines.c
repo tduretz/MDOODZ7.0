@@ -53,7 +53,7 @@ void RheologicalOperators( grid* mesh, params* model, mat_prop* materials, scale
   int Nx, Nz, Ncx, Ncz, k;
   Nx = mesh->Nx; Ncx = Nx-1;
   Nz = mesh->Nz; Ncz = Nz-1;
-  double nx, nz, ani, d1, d2, angle, nx2, nxnz;
+  double nx, nz, ani, d1, d2, angle, lx2, lxlz, lay_ang;
 //   int aniso_fstrain = model->aniso_fstrain;
   double eta_e, K, dt = model->dt;
   int comp = model->compressible;
@@ -150,7 +150,7 @@ void RheologicalOperators( grid* mesh, params* model, mat_prop* materials, scale
   if ( Jacobian==1 ) {
 
     // Loop on cell centers
-#pragma omp parallel for shared( mesh ) private ( d1, d2, angle, nx2, nxnz, eta_e, K, Da11, Da12, Da13, Da22, Da23, Da33, iDa11, iDa12, iDa13, iDa22, iDa23, iDa33, a11, a12, a13, a22, a23, a33, det, Exx, Ezz, Exz, gxz, Gxx, Gzz, Gxz ) firstprivate ( model, dt, comp )
+#pragma omp parallel for shared( mesh ) private ( d1, d2, angle, lay_ang, lx2, lxlz, eta_e, K, Da11, Da12, Da13, Da22, Da23, Da33, iDa11, iDa12, iDa13, iDa22, iDa23, iDa33, a11, a12, a13, a22, a23, a33, det, Exx, Ezz, Exz, gxz, Gxx, Gzz, Gxz ) firstprivate ( model, dt, comp )
     for (k=0; k<Ncx*Ncz; k++) {
 
       if ( mesh->BCp.type[k] != 30 && mesh->BCp.type[k] != 31 ) {
@@ -164,7 +164,7 @@ void RheologicalOperators( grid* mesh, params* model, mat_prop* materials, scale
         else                       K     = 0.;
         //----------------------------------------------------------//
         if ( model->aniso == 0 ) {
-          aniS_e = 0.; aniS_vep = 0.0; d1   = 0.0; d2   = 0.0; angle = 0.; nxnz = 0.; nx2 = 0.;
+          aniS_e = 0.; aniS_vep = 0.0; d1   = 0.0; d2   = 0.0; angle = 0.; lxlz = 0.; lx2 = 0.;
         }
         else {
           // Anisotropy
@@ -177,11 +177,14 @@ void RheologicalOperators( grid* mesh, params* model, mat_prop* materials, scale
         //   if ( model->aniso_fstrain  == 1 ) aniS_vep = 1.0 - 1.0 / mesh->FS_AR_n[k];
         //   if ( model->aniso_fstrain  == 0 ) aniS_e   = 1.0 - 1.0 / ani_e;
         //   if ( model->aniso_fstrain  == 1 ) aniS_e   = 1.0 - 1.0 / mesh->FS_AR_n[k];
-          d1   = mesh->d1_n[k];
-          d2   = mesh->d2_n[k];
-          angle = mesh->angle_n[k];
-          nxnz  = 0.5*d1;
-          nx2   = pow( cos(angle), 2);
+          d1      = mesh->d1_n[k];
+          d2      = mesh->d2_n[k];
+          angle   = mesh->angle_n[k];
+          lay_ang = angle - M_PI/2.0;
+          lxlz    = cos(lay_ang)*sin(lay_ang);
+          lx2     = cos(lay_ang)*cos(lay_ang);
+            // lxlz    = 0.5*d1;
+            // lx2     = pow( cos(angle), 2);
         }
         //----------------------------------------------------------//
         // Exx = mesh->exxd[k]; Ezz = mesh->ezzd[k]; Exz = mesh->exz_n[k];
@@ -198,7 +201,7 @@ void RheologicalOperators( grid* mesh, params* model, mat_prop* materials, scale
         double ddivpdexx=0., ddivpdezz=0., ddivpdgxz=0., ddivpdp=0.;
         double danidexx =0., danidezz =0., danidgxz =0., danidp =0.;
         double drhodp=0.;
-        DerivativesOnTheFly_n( &detadexx, &detadezz, &detadgxz, &detadp, &ddivpdexx, &ddivpdezz, &ddivpdgxz, &ddivpdp, &danidexx, &danidezz, &danidgxz, &danidp, &drhodp, k, Exx, Ezz, Exz, mesh->p_in[k], ani_fstrain, ani_e, d1, d2, angle, nx2, nxnz, mesh, materials, model, scaling );
+        DerivativesOnTheFly_n( &detadexx, &detadezz, &detadgxz, &detadp, &ddivpdexx, &ddivpdezz, &ddivpdgxz, &ddivpdp, &danidexx, &danidezz, &danidgxz, &danidp, &drhodp, k, Exx, Ezz, Exz, mesh->p_in[k], ani_fstrain, ani_e, d1, d2, angle, lx2, lxlz, mesh, materials, model, scaling );
         mesh->drhodp_n[k] = drhodp;
         //----------------------------------------------------------//
         mesh->D11_n[k] = 2.0*(1.0 - aniS_vep*d1)*eta_vep + 2.0*detadexx*Dxx - K*dt*ddivpdexx + 2.0*danidexx*Axx;
@@ -222,7 +225,7 @@ void RheologicalOperators( grid* mesh, params* model, mat_prop* materials, scale
     }
 
     // Loop on cell vertices
-#pragma omp parallel for shared( mesh )  private ( d1, d2, angle, nx2, nxnz, eta_e, Da11, Da12, Da13, Da22, Da23, Da33, iDa11, iDa12, iDa13, iDa22, iDa23, iDa33, a11, a12, a13, a22, a23, a33, det, Exx, Ezz, Exz, gxz, Gxx, Gzz, Gxz  ) firstprivate ( model)
+#pragma omp parallel for shared( mesh )  private ( d1, d2, angle, lay_ang, lx2, lxlz, eta_e, Da11, Da12, Da13, Da22, Da23, Da33, iDa11, iDa12, iDa13, iDa22, iDa23, iDa33, a11, a12, a13, a22, a23, a33, det, Exx, Ezz, Exz, gxz, Gxx, Gzz, Gxz  ) firstprivate ( model)
     for (k=0; k<Nx*Nz; k++) {
 
       if ( mesh->BCg.type[k] != 30 ) {
@@ -250,8 +253,11 @@ void RheologicalOperators( grid* mesh, params* model, mat_prop* materials, scale
           d1    = mesh->d1_s[k];
           d2    = mesh->d2_s[k];
           angle = mesh->angle_s[k];
-          nxnz  = 0.5*d1;
-          nx2   = pow( cos(angle), 2);
+          lay_ang = angle - M_PI/2.0;
+          lxlz    = cos(lay_ang)*sin(lay_ang);
+          lx2     = cos(lay_ang)*cos(lay_ang);
+        //      lxlz    = 0.5*d1;
+        // lx2     = pow( cos(angle), 2);
         }
         //----------------------------------------------------------//
         EffectiveStrainRate( &Exx, &Ezz, &Exz, mesh->exxd_s[k], mesh->ezzd_s[k], mesh->exz[k], mesh->sxxd0_s[k], mesh->szzd0_s[k], mesh->sxz0[k], d1, d2, aniS_e, eta_e, model->iselastic );
@@ -264,7 +270,7 @@ void RheologicalOperators( grid* mesh, params* model, mat_prop* materials, scale
         // Compute derivatives on the fly
         double detadexx=0., detadezz=0., detadgxz=0., detadp=0.;
         double danidexx =0., danidezz =0., danidgxz =0., danidp =0.;
-        DerivativesOnTheFly_s( &detadexx, &detadezz, &detadgxz, &detadp, &danidexx, &danidezz, &danidgxz, &danidp, k, Exx, Ezz, Exz, mesh->P_s[k], ani_fstrain, ani_e, d1, d2, angle, nx2, nxnz, mesh, materials, model, scaling );
+        DerivativesOnTheFly_s( &detadexx, &detadezz, &detadgxz, &detadp, &danidexx, &danidezz, &danidgxz, &danidp, k, Exx, Ezz, Exz, mesh->P_s[k], ani_fstrain, ani_e, d1, d2, angle, lx2, lxlz, mesh, materials, model, scaling );
 
         //----------------------------------------------------------//
         mesh->D31_s[k] =               - 2.0*aniS_vep*d2*eta_vep + 2.0*detadexx*Dxz + 2.0*danidexx*Axz;
