@@ -4,6 +4,9 @@
 #include "stdio.h"
 #include "stdlib.h"
 
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
 
 void BuildInitialTopography(BuildInitialTopography_ff buildInitialTopography, MdoodzInput *instance, markers *topo_chain) {
   for (int k = 0; k < topo_chain->Nb_part; k++) {
@@ -23,12 +26,20 @@ void BuildInitialTopography(BuildInitialTopography_ff buildInitialTopography, Md
          topo_chain->Nb_part);
 }
 
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
+
 void ValidatePhase(int phaseId, int phasesCount) {
   if (phaseId > phasesCount) {
     printf("Lazy bastard! Fix your particle phase ID! \n");
     exit(144);
   }
 }
+
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
 
 void SetParticles(SetParticles_ff setParticles, MdoodzInput *instance, markers *particles) {
   for (int np = 0; np < particles->Nb_part; np++) {
@@ -91,9 +102,21 @@ void SetParticles(SetParticles_ff setParticles, MdoodzInput *instance, markers *
     } else {
       particles->noise[np] = 0.0;
     }
+    double Fxx=1., Fxz=0., Fzx=0., Fzz=1.; 
+    if (setParticles.SetDefGrad) {
+      setParticles.SetDefGrad(&Fxx, &Fxz, &Fzx, &Fzz, instance, coordinates, particles->phase[np]);
+    }
+    particles->Fxx[np] = Fxx;
+    particles->Fxz[np] = Fxz;
+    particles->Fzx[np] = Fzx;
+    particles->Fzz[np] = Fzz;
     ValidatePhase(particles->phase[np], instance->model.Nb_phases);
   }
 }
+
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
 
 void ValidateInternalPoint(POSITION position, char bcType, Coordinates coordinates, char *setupFunctionName) {
   if (position == INTERNAL && bcType != -1) {
@@ -108,6 +131,10 @@ void ValidateInternalPoint(POSITION position, char bcType, Coordinates coordinat
     exit(144);
   }
 }
+
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
 
 void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
   /* --------------------------------------------------------------------------------------------------------*/
@@ -416,6 +443,10 @@ void ValidateSetup(MdoodzSetup *setup, MdoodzInput *instance) {
     }
     if (!setup->SetParticles->SetPressure) {
       warnings[warningsCount] = "SetParticles.SetPressure is not specified. SetPressure will be set to 0.0";
+      warningsCount++;
+    }
+    if (!setup->SetParticles->SetDefGrad) {
+      warnings[warningsCount] = "SetParticles.SetDefGrad is not specified. SetDefGrad will be set to 0.0";
       warningsCount++;
     }
   }

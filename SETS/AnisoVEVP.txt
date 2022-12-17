@@ -49,7 +49,7 @@ RK          = 4
 noisy        = 1
 penalty      = 1e5
 lsolver      = -1
-pc_type      = 1
+pc_type      = 0
 diag_scaling = 0
 abs_tol_div  = 1e-9
 rel_tol_div  = 1e-9
@@ -116,6 +116,9 @@ aniso_angle = 135.0
 ani_fac_v   = 3.0
 ani_fac_e   = 2.0
 ani_fac_p   = 4.0
+axx         = 2.0
+azz         = 0.5
+ayy         = 1.0
 
 /**** PHASE 2 ****/
 ID          = 1

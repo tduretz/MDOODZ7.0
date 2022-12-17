@@ -148,6 +148,7 @@ typedef double (*SetDensity_f)(MdoodzInput *input, Coordinates coordinates, int 
 typedef double (*SetXComponent_f)(MdoodzInput *input, Coordinates coordinates, int phase);
 typedef double (*SetPressure_f)(MdoodzInput *input, Coordinates coordinates, int phase);
 typedef double (*SetNoise_f)(MdoodzInput *input, Coordinates coordinates, int phase);
+typedef void   (*SetDefGrad_f)(double*, double*, double*, double*, MdoodzInput *input, Coordinates coordinates, int phase);
 
 typedef struct {
   SetHorizontalVelocity_f SetHorizontalVelocity;
@@ -161,6 +162,7 @@ typedef struct {
   SetPorosity_f           SetPorosity;
   SetDensity_f            SetDensity;
   SetXComponent_f         SetXComponent;
+  SetDefGrad_f            SetDefGrad;
 } SetParticles_ff;
 
 typedef enum {
