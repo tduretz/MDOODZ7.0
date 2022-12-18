@@ -106,10 +106,12 @@ void SetParticles(SetParticles_ff setParticles, MdoodzInput *instance, markers *
     if (setParticles.SetDefGrad) {
       setParticles.SetDefGrad(&Fxx, &Fxz, &Fzx, &Fzz, instance, coordinates, particles->phase[np]);
     }
-    particles->Fxx[np] = Fxx;
-    particles->Fxz[np] = Fxz;
-    particles->Fzx[np] = Fzx;
-    particles->Fzz[np] = Fzz;
+    if (instance->model.fstrain==1) {
+      particles->Fxx[np] = Fxx;
+      particles->Fxz[np] = Fxz;
+      particles->Fzx[np] = Fzx;
+      particles->Fzz[np] = Fzz;
+    }
     ValidatePhase(particles->phase[np], instance->model.Nb_phases);
   }
 }
