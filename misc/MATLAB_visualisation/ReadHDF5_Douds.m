@@ -11,9 +11,9 @@ DEBUG       = 0;
 mdoodz6     = 1;
 
 % Files
-istart = 50;
+istart = 10;
 ijump  = 1;
-iend   = 50;
+iend   = 10;
 
 %--------------------------------------------------
 % what do you want to plot:
@@ -28,7 +28,7 @@ vel_vectors     = 0;
 vel_divergence  = 0;
 pre_plot        = 0;
 dyna_pre        = 0;
-stress_inv      = 0;
+stress_inv      = 1;
 stress_evol     = 0;
 stress_plot     = 0;
 srate_plot      = 0;
@@ -47,7 +47,7 @@ topo_SR_plot    = 0;
 topo_maps       = 0;
 phases_uplift   = 0;
 dt_time         = 0;
-srate_add       = 0;
+srate_add       = 1;
 acc_strain_add  = 0;
 phase_temp      = 0;
 srate_add_perc  = 0;
