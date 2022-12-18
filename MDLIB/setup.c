@@ -52,8 +52,8 @@ void SetParticles(SetParticles_ff setParticles, MdoodzInput *instance, markers *
       particles->phase[np] = 0;
       particles->dual[np]  = 0;
     }
-    if (setParticles.SetDual) {
-      particles->dual[np] = setParticles.SetPhase(instance, coordinates);
+    if (setParticles.SetDualPhase) {
+      particles->dual[np] = setParticles.SetDualPhase(instance, coordinates, particles->phase[np]);
     } else {
       particles->dual[np] = particles->phase[np];
     }
@@ -415,8 +415,8 @@ void ValidateSetup(MdoodzSetup *setup, MdoodzInput *instance) {
       warnings[warningsCount] = "SetParticles.SetPhase is not specified. Model will be homogeneous with phase 0";
       warningsCount++;
     }
-    if (!setup->SetParticles->SetDual) {
-      warnings[warningsCount] = "SetParticles.SetDual is not specified. Phase value will be set";
+    if (!setup->SetParticles->SetDualPhase) {
+      warnings[warningsCount] = "SetParticles.SetDualPhase is not specified. Phase value will be set";
       warningsCount++;
     }
     if (!setup->SetParticles->SetTemperature) {
