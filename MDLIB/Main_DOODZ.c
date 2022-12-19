@@ -303,21 +303,21 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             P2Mastah( &input.model, particles, NULL, &mesh, mesh.d2_s,    mesh.BCg.type, -2, 0, interp, vert, input.model.itp_stencil);
             P2Mastah( &input.model, particles, NULL, &mesh, mesh.angle_s, mesh.BCg.type, -3, 0, interp, vert, input.model.itp_stencil);
             FiniteStrainAspectRatio ( &mesh, input.scaling, input.model, &particles );
-            P2Mastah( &input.model, particles, input.materials.aniso_factor,     &mesh, mesh.aniso_factor_n , mesh.BCp.type,  0, 0, interp, cent, input.model.itp_stencil);
-            P2Mastah( &input.model, particles, input.materials.aniso_factor,     &mesh, mesh.aniso_factor_s , mesh.BCg.type,  0, 0, interp, vert, input.model.itp_stencil);
         }
 
         printf("*************************************\n");
         printf("******* Initialize viscosity ********\n");
         printf("*************************************\n");
 
-        // Compute shear modulus, expansivity, compressibiulity, cohesion and friction angle on the grid
-        if (input.model.iselastic == 1 ) ShearModCompExpGrid( &mesh, input.materials, input.model, input.scaling );
+        // Compute shear modulus, expansivity, compressibility, cohesion and friction angle on the grid
+        if (input.model.iselastic == 1 ) ShearModCompExpGrid( &mesh, input.materials, &input.model, input.scaling );
         CohesionFrictionDilationGrid( &mesh, &particles, input.materials, input.model, input.scaling );
-        ShearModCompExpGrid( &mesh, input.materials, input.model, input.scaling );
+        ShearModCompExpGrid( &mesh, input.materials, &input.model, input.scaling );
         Interp_Grid2P_centroids2( particles, particles.P,    &mesh, mesh.p_in, mesh.xvz_coord,  mesh.zvx_coord,  mesh.Nx-1, mesh.Nz-1, mesh.BCp.type, &input.model );
         Interp_Grid2P_centroids2( particles, particles.T,    &mesh, mesh.T,    mesh.xvz_coord,  mesh.zvx_coord,  mesh.Nx-1, mesh.Nz-1, mesh.BCt.type, &input.model );
-        NonNewtonianViscosityGrid (     &mesh, &input.materials, &input.model, Nmodel, &input.scaling );
+        if (input.model.aniso==0) NonNewtonianViscosityGrid(      &mesh, &input.materials, &input.model, Nmodel, &input.scaling );
+        if (input.model.aniso==1) NonNewtonianViscosityGridAniso( &mesh, &input.materials, &input.model, Nmodel, &input.scaling );
+        printf("input.model.aniso %d\n", input.model.aniso);
 
         // Print informations!
         printf("Number of phases : %d\n", input.model.Nb_phases);
@@ -487,7 +487,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             InterpVerticesToCentroidsDouble( mesh.sxz0_n,  mesh.sxz0,  &mesh, &input.model );
 
             // Interpolate shear modulus
-            ShearModCompExpGrid( &mesh, input.materials, input.model, input.scaling );
+            ShearModCompExpGrid( &mesh, input.materials, &input.model, input.scaling );
         }
 
         // Director vector
@@ -499,8 +499,6 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             P2Mastah( &input.model, particles, NULL, &mesh, mesh.d2_s,    mesh.BCg.type, -2, 0, interp, vert, input.model.itp_stencil);
             P2Mastah( &input.model, particles, NULL, &mesh, mesh.angle_s, mesh.BCg.type, -3, 0, interp, vert, input.model.itp_stencil);
             FiniteStrainAspectRatio ( &mesh, input.scaling, input.model, &particles );
-            P2Mastah( &input.model, particles, input.materials.aniso_factor,     &mesh, mesh.aniso_factor_n , mesh.BCp.type,  0, 0, interp, cent, input.model.itp_stencil);
-            P2Mastah( &input.model, particles, input.materials.aniso_factor,     &mesh, mesh.aniso_factor_s , mesh.BCg.type,  0, 0, interp, vert, input.model.itp_stencil);
         }
 
         P2Mastah( &input.model, particles, particles.X,     &mesh, mesh.X0_n , mesh.BCp.type,  1, 0, interp, cent, input.model.itp_stencil);
@@ -567,8 +565,6 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             MinMaxArrayTag( mesh.rho_s, input.scaling.rho, (mesh.Nx)*(mesh.Nz),     "rho_s     ", mesh.BCg.type );
             MinMaxArrayTag( mesh.rho_n, input.scaling.rho, (mesh.Nx-1)*(mesh.Nz-1), "rho_n     ", mesh.BCp.type );
             MinMaxArrayTag( mesh.rho0_n, input.scaling.rho, (mesh.Nx-1)*(mesh.Nz-1), "rho0_n    ", mesh.BCp.type );
-            MinMaxArrayTag( mesh.X0_s, 1.0, (mesh.Nx)*(mesh.Nz),     "X0_s     ", mesh.BCg.type );
-            MinMaxArrayTag( mesh.X0_n, 1.0, (mesh.Nx-1)*(mesh.Nz-1), "X0_n     ", mesh.BCp.type );
 
             for (int p=0; p< input.model.Nb_phases; p++) {
                 printf("Phase number %d:\n", p);
@@ -579,29 +575,12 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             if ( input.model.aniso == 1 ) {
                 MinMaxArrayTag( mesh.FS_AR_n,  1.0,   (mesh.Nx-1)*(mesh.Nz-1), "FS_AR_n", mesh.BCp.type );
                 MinMaxArrayTag( mesh.FS_AR_s,  1.0,   (mesh.Nx)*(mesh.Nz),     "FS_AR_s", mesh.BCg.type );
-                MinMaxArrayTag( mesh.aniso_factor_n,  1.0,   (mesh.Nx-1)*(mesh.Nz-1), "aniso_factor_n", mesh.BCp.type );
-                MinMaxArrayTag( mesh.aniso_factor_s,  1.0,   (mesh.Nx)*(mesh.Nz),     "aniso_factor_s", mesh.BCg.type );
                 MinMaxArrayTag( mesh.angle_n,  180/M_PI,   (mesh.Nx-1)*(mesh.Nz-1), "angle_n", mesh.BCp.type );
                 MinMaxArrayTag( mesh.angle_s,  180/M_PI,   (mesh.Nx)*(mesh.Nz),     "angle_s", mesh.BCg.type );
             }
         }
 
         printf("** Time for particles interpolations I = %lf sec\n",  (double)((double)omp_get_wtime() - t_omp) );
-
-//        struct timespec begin, end;
-//        clock_gettime(CLOCK_REALTIME, &begin);
-//
-//        ViscosityDerivatives( &mesh, &input.materials, &input.model, Nmodel, &input.scaling );
-//
-//        // Stop measuring time and calculate the elapsed time
-//        clock_gettime(CLOCK_REALTIME, &end);
-//        long seconds = end.tv_sec - begin.tv_sec;
-//        long nanoseconds = end.tv_nsec - begin.tv_nsec;
-//        double elapsed = seconds + nanoseconds*1e-9;
-//
-//        printf("** Time for ViscosityDerivatives = %3f sec\n",  elapsed );
-//
-//        exit(0);
 
         if (input.model.ismechanical == 1 ) {
 
@@ -689,7 +668,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                 if (input.model.Newton == 1 || input.model.aniso == 1 ) IsJacobianUsed = 1;
 
                 printf("**********************************************\n");
-                if (input.model.Newton == 1 ) {
+                if ( IsNewtonStep == 1 ) {
                     printf("*** Newton it. %02d of %02d (step = %05d) ***\n", Nmodel.nit, Nmodel.nit_max, input.model.step);
                     Nmodel.LogIsNewtonStep[Nmodel.nit] = 1;
                 }
@@ -701,8 +680,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
                 // Update non-linear rheology
                 UpdateNonLinearity( &mesh, &particles, &topo_chain, &topo, input.materials, &input.model, &Nmodel, input.scaling, 0, 0.0 );
-                RheologicalOperators( &mesh, &input.model, &input.scaling, 0 );                               // ??????????? déjà fait dans UpdateNonLinearity
-                NonNewtonianViscosityGrid (     &mesh, &input.materials, &input.model, Nmodel, &input.scaling );    // ??????????? déjà fait dans UpdateNonLinearity
+                // RheologicalOperators( &mesh, &input.model, &input.materials,  &input.scaling, 0 );                              
 
                 if (input.model.noisy == 1 ) {
                     MinMaxArrayTag( mesh.T, input.scaling.T, (mesh.Nx-1)*(mesh.Nz-1), "T         ", mesh.BCt.type );
@@ -723,6 +701,10 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                     MinMaxArrayTag( mesh.rho_n, input.scaling.rho, (mesh.Nx-1)*(mesh.Nz-1), "rho_n     ", mesh.BCp.type );
                     MinMaxArrayTag( mesh.rho0_n, input.scaling.rho, (mesh.Nx-1)*(mesh.Nz-1), "rho0_n    ", mesh.BCp.type );
                     MinMaxArrayTag( mesh.d_n, input.scaling.L,   (mesh.Nx-1)*(mesh.Nz-1), "d         ", mesh.BCp.type );
+                    if (input.model.aniso==1) MinMaxArrayTag( mesh.aniso_factor_n,  1.0,   (mesh.Nx-1)*(mesh.Nz-1), "ani_fac_n ",   mesh.BCp.type );
+                    if (input.model.aniso==1) MinMaxArrayTag( mesh.aniso_factor_s,  1.0,   (mesh.Nx)*(mesh.Nz),     "ani_fac_s ",   mesh.BCg.type );
+                    if (input.model.aniso==1) MinMaxArrayTag( mesh.aniso_factor_e_n,  1.0, (mesh.Nx-1)*(mesh.Nz-1), "ani_fac_e_n ", mesh.BCp.type );
+                    if (input.model.aniso==1) MinMaxArrayTag( mesh.aniso_factor_e_s,  1.0, (mesh.Nx)*(mesh.Nz),     "ani_fac_e_s ", mesh.BCg.type );
                 }
 
                 if (input.model.write_debug == 1 ) {
@@ -735,34 +717,10 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                 if (input.model.decoupled_solve == 1 ) BuildStokesOperatorDecoupled  ( &mesh, input.model, 0, mesh.p_corr, mesh.p_in, mesh.u_in, mesh.v_in, &Stokes, &StokesA, &StokesB, &StokesC, &StokesD, 1 );
 
                 // Build discrete system of equations - Jacobian
-                ViscosityDerivatives( &mesh, &input.materials, &input.model, Nmodel, &input.scaling );
-                if ( IsFullNewton   == 1 && Nmodel.nit > 0 ) RheologicalOperators( &mesh, &input.model, &input.scaling, 1 );
+                // ViscosityDerivatives( &mesh, &input.materials, &input.model, &input.scaling );
+                if ( IsFullNewton   == 1 && Nmodel.nit > 0 ) RheologicalOperators( &mesh, &input.model, &input.materials, &input.scaling, 1 );
                 if ( IsJacobianUsed == 1 )                   BuildJacobianOperatorDecoupled( &mesh, input.model, 0, mesh.p_corr, mesh.p_in, mesh.u_in, mesh.v_in,  &Jacob,  &JacobA,  &JacobB,  &JacobC,   &JacobD, 1 );
                 
-                // IsNanArray2DFP(mesh.eta_n, (mesh.Nx-1)*(mesh.Nz-1));
-                // IsInfArray2DFP(mesh.eta_n, (mesh.Nx-1)*(mesh.Nz-1));
-
-                // IsNanArray2DFP(mesh.eta_s, (mesh.Nx-0)*(mesh.Nz));
-                // IsInfArray2DFP(mesh.eta_s, (mesh.Nx-0)*(mesh.Nz));
-                //                MinMaxArrayTag( mesh.detadexx_n,      input.scaling.eta, (mesh.Nx-1)*(mesh.Nz-1),     "detadexx_n     ", mesh.BCg.type );
-                //                MinMaxArrayTag( mesh.detadezz_n,      input.scaling.eta, (mesh.Nx-1)*(mesh.Nz-1),     "detadezz_n     ", mesh.BCg.type );
-                //                MinMaxArrayTag( mesh.detadexx_n,      input.scaling.eta, (mesh.Nx-1)*(mesh.Nz-1),     "detadgxz_n     ", mesh.BCg.type );
-                //                MinMaxArrayTag( mesh.detadexx_s,      input.scaling.eta, (mesh.Nx)*(mesh.Nz),     "detadexx_s     ", mesh.BCg.type );
-                //                MinMaxArrayTag( mesh.detadezz_s,      input.scaling.eta, (mesh.Nx)*(mesh.Nz),     "detadezz_s     ", mesh.BCg.type );
-                //                MinMaxArrayTag( mesh.detadgxz_s,      input.scaling.eta, (mesh.Nx)*(mesh.Nz),     "detadgxz_s     ", mesh.BCg.type );
-                // MinMaxArrayTag( mesh.D11_n,      input.scaling.eta, (mesh.Nx-1)*(mesh.Nz-1),     "D11_n     ", mesh.BCp.type );
-                // MinMaxArrayTag( mesh.D12_n,      input.scaling.eta, (mesh.Nx-1)*(mesh.Nz-1),     "D12_n     ", mesh.BCp.type );
-                // MinMaxArrayTag( mesh.D13_n,      input.scaling.eta, (mesh.Nx-1)*(mesh.Nz-1),     "D13_n     ", mesh.BCp.type );
-                // MinMaxArrayTag( mesh.D14_n,      input.scaling.eta, (mesh.Nx-1)*(mesh.Nz-1),     "D14_n     ", mesh.BCp.type );
-                // MinMaxArrayTag( mesh.D21_n,      input.scaling.eta, (mesh.Nx-1)*(mesh.Nz-1),     "D21_n     ", mesh.BCp.type );
-                // MinMaxArrayTag( mesh.D22_n,      input.scaling.eta, (mesh.Nx-1)*(mesh.Nz-1),     "D22_n     ", mesh.BCp.type );
-                // MinMaxArrayTag( mesh.D23_n,      input.scaling.eta, (mesh.Nx-1)*(mesh.Nz-1),     "D23_n     ", mesh.BCp.type );
-                // MinMaxArrayTag( mesh.D24_n,      input.scaling.eta, (mesh.Nx-1)*(mesh.Nz-1),     "D24_n     ", mesh.BCp.type );
-                // MinMaxArrayTag( mesh.D31_s,      input.scaling.eta, (mesh.Nx-0)*(mesh.Nz-0),     "D31_s     ", mesh.BCg.type );
-                // MinMaxArrayTag( mesh.D32_s,      input.scaling.eta, (mesh.Nx-0)*(mesh.Nz-0),     "D32_s     ", mesh.BCg.type );
-                // MinMaxArrayTag( mesh.D33_s,      input.scaling.eta, (mesh.Nx-0)*(mesh.Nz-0),     "D33_s     ", mesh.BCg.type );
-                // MinMaxArrayTag( mesh.D34_s,      input.scaling.eta, (mesh.Nx-0)*(mesh.Nz-0),     "D34_s     ", mesh.BCg.type );
-
                 // Diagonal input.scaling
                 if ( input.model.diag_scaling ) {
                     if (input.model.Newton          == 0 )  ExtractDiagonalScale( &StokesA, &StokesB, &StokesC, &StokesD );
@@ -774,7 +732,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
                 // Needs to be done after matrix assembly since diagonal input.scaling is used in there
                 printf("---- Non-linear residual ----\n");
-                RheologicalOperators( &mesh, &input.model, &input.scaling, 0 );
+                RheologicalOperators( &mesh, &input.model, &input.materials, &input.scaling, 0 );
                 if (input.model.decoupled_solve == 0 ) EvaluateStokesResidual( &Stokes, &Nmodel, &mesh, input.model, input.scaling, 0 );
                 if (input.model.decoupled_solve == 1 ) EvaluateStokesResidualDecoupled( &Stokes, &StokesA, &StokesB, &StokesC, &StokesD, &Nmodel, &mesh, input.model, input.scaling, 0 );
                 printf("---- Non-linear residual ----\n");
@@ -1236,6 +1194,8 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
     // Free char*'s
     free(input.model.import_file);
+    free(input.model.import_files_dir);
+    // free(input.model.description);
 
     NmodelFree(Nmodel);
 

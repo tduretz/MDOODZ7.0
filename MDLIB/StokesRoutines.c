@@ -48,6 +48,254 @@
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
+void RheologicalOperators( grid* mesh, params* model, mat_prop* materials, scale* scaling, int Jacobian ) {
+
+  int Nx, Nz, Ncx, Ncz, k;
+  Nx = mesh->Nx; Ncx = Nx-1;
+  Nz = mesh->Nz; Ncz = Nz-1;
+  double nx, nz, ani, d1, d2, angle, nx2, nxnz;
+  int aniso_fstrain = model->aniso_fstrain;
+  double eta_e, K, dt = model->dt;
+  int comp = model->compressible;
+  double Exx, Ezz, Exz, gxz, Gxx, Gzz, Gxz;
+  double Da11, Da12, Da13, Da22, Da23, Da33, iDa11, iDa12, iDa13, iDa22, iDa23, iDa33, a11, a12, a13, a22, a23, a33, det;
+
+  //---------------------------------------------------------------------------------------------------------//
+  //--------------------------------- Tangent operator (Picard linearised) ----------------------------------//
+  //---------------------------------------------------------------------------------------------------------//
+  if ( Jacobian==0 ) {
+
+    // printf("Computing isotropic/anisotropic viscosity tensor\n");
+
+    // Loop on cell centers
+#pragma omp parallel for shared( mesh ) private ( d1, d2 )  firstprivate ( model )
+    for (k=0; k<Ncx*Ncz; k++) {
+
+      if ( mesh->BCp.type[k] != 30 && mesh->BCp.type[k] != 31 ) {
+        const double eta_vep = mesh->eta_n[k];
+        double ani_vep  = 1.;
+        double aniS_vep = 0.;
+        //----------------------------------------------------------//
+        if ( model->aniso == 0 ) {
+          aniS_vep = 0.0; d1   = 0.0; d2   = 0.0;
+        }
+        else {
+          // Anisotropy
+          ani_vep     = mesh->aniso_factor_n[k];
+          if ( model->aniso_fstrain  == 0 ) aniS_vep = 1.0 - 1.0 / ani_vep;
+          if ( model->aniso_fstrain  == 1 ) aniS_vep = 1.0 - 1.0 / mesh->FS_AR_n[k];
+          d1   = mesh->d1_n[k];
+          d2   = mesh->d2_n[k];
+        }
+        //----------------------------------------------------------//
+        mesh->D11_n[k] = 2.0*mesh->eta_n[k] - 2.0*aniS_vep*d1*eta_vep;
+        mesh->D12_n[k] =                      2.0*aniS_vep*d1*eta_vep;
+        mesh->D13_n[k] =                     -2.0*aniS_vep*d2*eta_vep;
+        mesh->D14_n[k] =                      0.0;
+        //----------------------------------------------------------//
+        mesh->D21_n[k] =                      2.0*aniS_vep*d1*eta_vep;
+        mesh->D22_n[k] = 2.0*mesh->eta_n[k] - 2.0*aniS_vep*d1*eta_vep;
+        mesh->D23_n[k] =                      2.0*aniS_vep*d2*eta_vep;
+        mesh->D24_n[k] =                      0.0;
+        //----------------------------------------------------------//
+      }
+      else {
+        //----------------------------------------------------------//
+        mesh->D11_n[k] = 0.0; mesh->D12_n[k] = 0.0; mesh->D13_n[k] = 0.0; mesh->D14_n[k] = 0.0;
+        //----------------------------------------------------------//
+        mesh->D21_n[k] = 0.0; mesh->D22_n[k] = 0.0; mesh->D23_n[k] = 0.0; mesh->D24_n[k] = 0.0;
+        //----------------------------------------------------------//
+      }
+    }
+    // Loop on cell vertices
+#pragma omp parallel for shared( mesh )  private ( d1, d2 ) firstprivate ( model )
+    for (k=0; k<Nx*Nz; k++) {
+
+      if ( mesh->BCg.type[k] != 30 ) {
+        const double eta_vep = mesh->eta_s[k];
+        double ani_vep  = 1.;
+        double aniS_vep = 0.;
+        //----------------------------------------------------------//
+        if ( model->aniso == 0 ) {
+         aniS_vep = 0.0; d1   = 0.; d2   = 0.;
+        }
+        else {
+          // Anisotropy
+          ani_vep     = mesh->aniso_factor_s[k];
+          if ( model->aniso_fstrain  == 0 ) aniS_vep = 1.0 - 1.0 / ani_vep;
+          if ( model->aniso_fstrain  == 1 ) aniS_vep = 1.0 - 1.0 / mesh->FS_AR_s[k];
+          d1    = mesh->d1_s[k];
+          d2    = mesh->d2_s[k];
+        }
+        //----------------------------------------------------------//
+        mesh->D31_s[k] =          -2.0*aniS_vep*d2        *eta_vep;
+        mesh->D32_s[k] =           2.0*aniS_vep*d2        *eta_vep;
+        mesh->D33_s[k] = eta_vep + 2.0*aniS_vep*(d1 - 0.5)*eta_vep;
+        mesh->D34_s[k] =           0.0;
+        //----------------------------------------------------------//
+      }
+      else {
+        //----------------------------------------------------------//
+        mesh->D31_s[k] = 0.0; mesh->D32_s[k] = 0.0; mesh->D33_s[k] = 0.0; mesh->D34_s[k] = 0.0;
+        //----------------------------------------------------------//
+      }
+    }
+  }
+
+  //---------------------------------------------------------------------------------------------------------//
+  //--------------------------------- Tangent operator (Newton linearised) ----------------------------------//
+  //---------------------------------------------------------------------------------------------------------//
+  if ( Jacobian==1 ) {
+
+    // Loop on cell centers
+#pragma omp parallel for shared( mesh ) private ( d1, d2, angle, nx2, nxnz, eta_e, K, Da11, Da12, Da13, Da22, Da23, Da33, iDa11, iDa12, iDa13, iDa22, iDa23, iDa33, a11, a12, a13, a22, a23, a33, det, Exx, Ezz, Exz, gxz, Gxx, Gzz, Gxz ) firstprivate ( model, dt, comp )
+    for (k=0; k<Ncx*Ncz; k++) {
+
+      if ( mesh->BCp.type[k] != 30 && mesh->BCp.type[k] != 31 ) {
+        const double eta_vep = mesh->eta_n[k];
+        double ani_vep  = 1., ani_e  = 1., ani_fstrain = 1.;
+        double aniS_vep = 0., aniS_e = 0.;
+        //----------------------------------------------------------//
+        if ( model->iselastic==1 ) eta_e = model->dt*mesh->mu_n[k];
+        else                       eta_e = 1.; // set to arbitrary value to avoid division by 0.0
+        if ( comp==1 )             K     = 1./mesh->bet_n[k];
+        else                       K     = 0.;
+        //----------------------------------------------------------//
+        if ( model->aniso == 0 ) {
+          aniS_e = 0.; aniS_vep = 0.0; d1   = 0.0; d2   = 0.0; angle = 0.; nxnz = 0.; nx2 = 0.;
+        }
+        else {
+          // Anisotropy
+          ani_vep     = mesh->aniso_factor_n[k];
+          ani_e       = mesh->aniso_factor_e_n[k];
+          ani_fstrain = mesh->FS_AR_n[k];
+          if ( model->aniso_fstrain  == 0 ) aniS_vep = 1.0 - 1.0 / ani_vep;
+          if ( model->aniso_fstrain  == 1 ) aniS_vep = 1.0 - 1.0 / mesh->FS_AR_n[k];
+          if ( model->aniso_fstrain  == 0 ) aniS_e   = 1.0 - 1.0 / ani_e;
+          if ( model->aniso_fstrain  == 1 ) aniS_e   = 1.0 - 1.0 / mesh->FS_AR_n[k];
+          d1   = mesh->d1_n[k];
+          d2   = mesh->d2_n[k];
+          angle = mesh->angle_n[k];
+          nxnz  = 0.5*d1;
+          nx2   = pow( cos(angle), 2);
+        }
+        //----------------------------------------------------------//
+        // Exx = mesh->exxd[k]; Ezz = mesh->ezzd[k]; Exz = mesh->exz_n[k];
+        EffectiveStrainRate( &Exx, &Ezz, &Exz, mesh->exxd[k], mesh->ezzd[k], mesh->exz_n[k], mesh->sxxd0[k], mesh->szzd0[k], mesh->sxz0_n[k], d1, d2, aniS_e, eta_e, model->iselastic ); 
+        const double e_a2 = eta_vep/(ani_vep*ani_vep);      
+        const double Gxz = 2.0*Exz;
+        const double Dxx = Exx*(1.0 - aniS_vep*d1) + Ezz*aniS_vep*d1 - Gxz*aniS_vep*d2;
+        const double Dzz = Ezz*(1.0 - aniS_vep*d1) + Exx*aniS_vep*d1 + Gxz*aniS_vep*d2;
+        const double Axx = -Exx*d1*e_a2 + Ezz*d1*e_a2 - Gxz*d2*e_a2;
+        const double Azz =  Exx*d1*e_a2 - Ezz*d1*e_a2 + Gxz*d2*e_a2;
+
+        // Compute derivatives on the fly
+        double detadexx =0., detadezz =0., detadgxz =0., detadp =0.;
+        double ddivpdexx=0., ddivpdezz=0., ddivpdgxz=0., ddivpdp=0.;
+        double danidexx =0., danidezz =0., danidgxz =0., danidp =0.;
+        double drhodp=0.;
+        DerivativesOnTheFly_n( &detadexx, &detadezz, &detadgxz, &detadp, &ddivpdexx, &ddivpdezz, &ddivpdgxz, &ddivpdp, &danidexx, &danidezz, &danidgxz, &danidp, &drhodp, k, Exx, Ezz, Exz, mesh->p_in[k], ani_fstrain, ani_e, d1, d2, angle, nx2, nxnz, mesh, materials, model, scaling );
+        mesh->drhodp_n[k] = drhodp;
+        //----------------------------------------------------------//
+        mesh->D11_n[k] = 2.0*(1.0 - aniS_vep*d1)*eta_vep + 2.0*detadexx*Dxx - K*dt*ddivpdexx + 2.0*danidexx*Axx;
+        mesh->D12_n[k] =         2.0*aniS_vep*d1*eta_vep + 2.0*detadezz*Dxx - K*dt*ddivpdezz + 2.0*danidezz*Axx;
+        mesh->D13_n[k] =       - 2.0*aniS_vep*d2*eta_vep + 2.0*detadgxz*Dxx - K*dt*ddivpdgxz + 2.0*danidgxz*Axx;
+        mesh->D14_n[k] =                                   2.0*detadp  *Dxx - K*dt*ddivpdp   + 2.0*danidp  *Axx;
+        //----------------------------------------------------------//
+        mesh->D21_n[k] =        2.0*aniS_vep*d1 *eta_vep + 2.0*detadexx*Dzz - K*dt*ddivpdexx + 2.0*danidexx*Azz;
+        mesh->D22_n[k] = 2.0*(1.0 - aniS_vep*d1)*eta_vep + 2.0*detadezz*Dzz - K*dt*ddivpdezz + 2.0*danidezz*Azz;
+        mesh->D23_n[k] =        2.0*aniS_vep*d2 *eta_vep + 2.0*detadgxz*Dzz - K*dt*ddivpdgxz + 2.0*danidgxz*Azz;
+        mesh->D24_n[k] =                                   2.0*detadp  *Dzz - K*dt*ddivpdp   + 2.0*danidp  *Azz;
+        //----------------------------------------------------------//
+      }
+      else {
+        //----------------------------------------------------------//
+        mesh->D11_n[k] = 0.0; mesh->D12_n[k] = 0.0; mesh->D13_n[k] = 0.0; mesh->D14_n[k] = 0.0;
+        //----------------------------------------------------------//
+        mesh->D21_n[k] = 0.0; mesh->D22_n[k] = 0.0; mesh->D23_n[k] = 0.0; mesh->D24_n[k] = 0.0;
+        //----------------------------------------------------------//
+      }
+    }
+
+    // Loop on cell vertices
+#pragma omp parallel for shared( mesh )  private ( d1, d2, angle, nx2, nxnz, eta_e, Da11, Da12, Da13, Da22, Da23, Da33, iDa11, iDa12, iDa13, iDa22, iDa23, iDa33, a11, a12, a13, a22, a23, a33, det, Exx, Ezz, Exz, gxz, Gxx, Gzz, Gxz  ) firstprivate ( model)
+    for (k=0; k<Nx*Nz; k++) {
+
+      if ( mesh->BCg.type[k] != 30 ) {
+        const double eta_vep = mesh->eta_s[k];
+        double ani_vep  = 1., ani_e  = 1., ani_fstrain = 1.;
+        double aniS_vep = 0., aniS_e = 0.;
+        //----------------------------------------------------------//
+        if ( model->iselastic==1 ) eta_e = model->dt*mesh->mu_s[k];
+        else                       eta_e = 1.; // set to arbitrary value to avoid division by 0.0
+        //----------------------------------------------------------//
+        if ( model->aniso == 0 ) {
+          aniS_e = 0.; aniS_vep = 0.0; d1   = 0.; d2   = 0.;
+        }
+        else {
+          // Anisotropy
+          ani_vep     = mesh->aniso_factor_s[k];
+          ani_e       = mesh->aniso_factor_e_s[k];
+          ani_fstrain = mesh->FS_AR_s[k];
+          if ( model->aniso_fstrain  == 0 ) aniS_vep = 1.0 - 1.0 / ani_vep;
+          if ( model->aniso_fstrain  == 1 ) aniS_vep = 1.0 - 1.0 / mesh->FS_AR_s[k];
+          if ( model->aniso_fstrain  == 0 ) aniS_e   = 1.0 - 1.0 / ani_e;
+          if ( model->aniso_fstrain  == 1 ) aniS_e   = 1.0 - 1.0 / mesh->FS_AR_s[k];
+          d1    = mesh->d1_s[k];
+          d2    = mesh->d2_s[k];
+          angle = mesh->angle_s[k];
+          nxnz  = 0.5*d1;
+          nx2   = pow( cos(angle), 2);
+        }
+        //----------------------------------------------------------//
+        EffectiveStrainRate( &Exx, &Ezz, &Exz, mesh->exxd_s[k], mesh->ezzd_s[k], mesh->exz[k], mesh->sxxd0_s[k], mesh->szzd0_s[k], mesh->sxz0[k], d1, d2, aniS_e, eta_e, model->iselastic );
+        // Exx = mesh->exxd_s[k]; Ezz = mesh->ezzd_s[k]; Exz = mesh->exz[k];
+        const double e_a2 = eta_vep/(ani_vep*ani_vep);
+        const double Gxz  = 2.*Exz;
+        const double Dxz  = -Exx*aniS_vep*d2 + Ezz*aniS_vep*d2 + Gxz*(aniS_vep*(d1 - 0.5) + 0.5);  
+        const double Axz  = -Exx*d2*e_a2 + Ezz*d2*e_a2 + Gxz*e_a2*(d1-0.5);
+
+        // Compute derivatives on the fly
+        double detadexx=0., detadezz=0., detadgxz=0., detadp=0.;
+        double danidexx =0., danidezz =0., danidgxz =0., danidp =0.;
+        DerivativesOnTheFly_s( &detadexx, &detadezz, &detadgxz, &detadp, &danidexx, &danidezz, &danidgxz, &danidp, k, Exx, Ezz, Exz, mesh->P_s[k], ani_fstrain, ani_e, d1, d2, angle, nx2, nxnz, mesh, materials, model, scaling );
+
+        //----------------------------------------------------------//
+        mesh->D31_s[k] =               - 2.0*aniS_vep*d2*eta_vep + 2.0*detadexx*Dxz + 2.0*danidexx*Axz;
+        mesh->D32_s[k] =                 2.0*aniS_vep*d2*eta_vep + 2.0*detadezz*Dxz + 2.0*danidezz*Axz;
+        mesh->D33_s[k] = (2.0*aniS_vep*(d1 - 0.5) + 1.0)*eta_vep + 2.0*detadgxz*Dxz + 2.0*danidgxz*Axz;
+        mesh->D34_s[k] =                                           2.0*detadp  *Dxz + 2.0*danidp  *Axz;
+        //----------------------------------------------------------//
+      }
+      else {
+        //----------------------------------------------------------//
+        mesh->D31_s[k] = 0.0; mesh->D32_s[k] = 0.0; mesh->D33_s[k] = 0.0; mesh->D34_s[k] = 0.0;
+        //----------------------------------------------------------//
+      }
+      if (isnan(mesh->D34_s[k])) { printf("EXIT: D34 is NAN!\n"); exit(1); }
+      if (isinf(mesh->D34_s[k])) { printf("EXIT: D34 is INF!\n"); exit(1); }
+    }
+  }
+
+    // MinMaxArrayTag( mesh->D11_n,      scaling->eta, (mesh->Nx-1)*(mesh->Nz-1),     "D11_n     ", mesh->BCp.type );
+    // MinMaxArrayTag( mesh->D12_n,      scaling->eta, (mesh->Nx-1)*(mesh->Nz-1),     "D12_n     ", mesh->BCp.type );
+    // MinMaxArrayTag( mesh->D13_n,      scaling->eta, (mesh->Nx-1)*(mesh->Nz-1),     "D13_n     ", mesh->BCp.type );
+    // MinMaxArrayTag( mesh->D14_n,      scaling->eta, (mesh->Nx-1)*(mesh->Nz-1),     "D14_n     ", mesh->BCp.type );
+    // MinMaxArrayTag( mesh->D21_n,      scaling->eta, (mesh->Nx-1)*(mesh->Nz-1),     "D21_n     ", mesh->BCp.type );
+    // MinMaxArrayTag( mesh->D22_n,      scaling->eta, (mesh->Nx-1)*(mesh->Nz-1),     "D22_n     ", mesh->BCp.type );
+    // MinMaxArrayTag( mesh->D23_n,      scaling->eta, (mesh->Nx-1)*(mesh->Nz-1),     "D23_n     ", mesh->BCp.type );
+    // MinMaxArrayTag( mesh->D24_n,      scaling->eta, (mesh->Nx-1)*(mesh->Nz-1),     "D24_n     ", mesh->BCp.type );
+    // MinMaxArrayTag( mesh->D31_s,      scaling->eta, (mesh->Nx-0)*(mesh->Nz-0),     "D31_s     ", mesh->BCg.type );
+    // MinMaxArrayTag( mesh->D32_s,      scaling->eta, (mesh->Nx-0)*(mesh->Nz-0),     "D32_s     ", mesh->BCg.type );
+    // MinMaxArrayTag( mesh->D33_s,      scaling->eta, (mesh->Nx-0)*(mesh->Nz-0),     "D33_s     ", mesh->BCg.type );
+    // MinMaxArrayTag( mesh->D34_s,      scaling->eta, (mesh->Nx-0)*(mesh->Nz-0),     "D34_s     ", mesh->BCg.type );
+
+}
+
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
+
 void ApplyBC( grid* mesh, params* model ) {
 
     int nx=model->Nx, nz=model->Nz, nzvx=nz+1, nxvz=nx+1;
@@ -155,25 +403,43 @@ void ApplyBC( grid* mesh, params* model ) {
 /*--------------------------------------------------------------------------------------------------------------------*/
 
 void UpdateNonLinearity( grid* mesh, markers* particles, markers* topo_chain, surface *topo, mat_prop materials, params *model, Nparams *Nmodel, scale scaling, int mode, double h_contin ) {
-
+    
     // Strain rate component evaluation
     StrainRateComponents( mesh, scaling, model );
-    //    MinMaxArrayTag( mesh->exxd,      scaling.E, (mesh->Nx-1)*(mesh->Nz-1),     "exx     ", mesh->BCp.type );
 
-    //-----------------------------------------------//
+    // Stress update
+    if (model->aniso==0) NonNewtonianViscosityGrid(      mesh, &materials, model, *Nmodel, &scaling );
+    if (model->aniso==1) NonNewtonianViscosityGridAniso( mesh, &materials, model, *Nmodel, &scaling );
 
-    NonNewtonianViscosityGrid ( mesh, &materials, model, *Nmodel, &scaling );
 
-    //-----------------------------------------------//
+    // MinMaxArrayTag( mesh->T,    scaling.T, (mesh->Nx-1)*(mesh->Nz-1), "T         ", mesh->BCt.type );
+    // MinMaxArrayTag( mesh->p0_n, scaling.S, (mesh->Nx-1)*(mesh->Nz-1), "P old     ", mesh->BCp.type );
+    // MinMaxArrayTag( mesh->p_in, scaling.S, (mesh->Nx-1)*(mesh->Nz-1), "P         ", mesh->BCp.type );
+    // MinMaxArrayTag( mesh->div_u,scaling.E, (mesh->Nx-1)*(mesh->Nz-1), "div       ", mesh->BCp.type );
+    // MinMaxArrayTag( mesh->exxd, scaling.E, (mesh->Nx-1)*(mesh->Nz-1), "exxd      ", mesh->BCp.type );
+    // MinMaxArrayTag( mesh->ezzd, scaling.E, (mesh->Nx-1)*(mesh->Nz-1), "ezzd      ", mesh->BCp.type );
+    // MinMaxArrayTag( mesh->exz,  scaling.E, (mesh->Nx-0)*(mesh->Nz-0), "exz       ", mesh->BCg.type );
+    // MinMaxArrayTag( mesh->sxxd,       scaling.S,   (mesh->Nx-1)*(mesh->Nz-1), "sxxd      ", mesh->BCp.type );
+    // MinMaxArrayTag( mesh->szzd,       scaling.S,   (mesh->Nx-1)*(mesh->Nz-1), "szzd      ", mesh->BCp.type );
+    // MinMaxArrayTag( mesh->sxz,        scaling.S,   (mesh->Nx-0)*(mesh->Nz-0), "sxz       ", mesh->BCg.type );
+    // MinMaxArrayTag( mesh->eta_s,      scaling.eta, (mesh->Nx-0)*(mesh->Nz-0), "eta_s     ", mesh->BCg.type );
+    // MinMaxArrayTag( mesh->eta_n,      scaling.eta, (mesh->Nx-1)*(mesh->Nz-1), "eta_n     ", mesh->BCp.type );
+    // MinMaxArrayTag( mesh->eta_phys_s, scaling.eta, (mesh->Nx-0)*(mesh->Nz-0), "eta_phys_s", mesh->BCg.type );
+    // MinMaxArrayTag( mesh->eta_phys_n, scaling.eta, (mesh->Nx-1)*(mesh->Nz-1), "eta_phys_n", mesh->BCp.type );
+    // MinMaxArrayTag( mesh->rho_s,      scaling.rho, (mesh->Nx-0)*(mesh->Nz-0), "rho_s     ", mesh->BCg.type );
+    // MinMaxArrayTag( mesh->rho_n,      scaling.rho, (mesh->Nx-1)*(mesh->Nz-1), "rho_n     ", mesh->BCp.type );
+    // MinMaxArrayTag( mesh->rho0_n,     scaling.rho, (mesh->Nx-1)*(mesh->Nz-1), "rho0_n    ", mesh->BCp.type );
+    // MinMaxArrayTag( mesh->d_n,        scaling.L,   (mesh->Nx-1)*(mesh->Nz-1), "d         ", mesh->BCp.type );
+    // if (model->aniso==1) MinMaxArrayTag( mesh->aniso_factor_n,  1.0,   (mesh->Nx-1)*(mesh->Nz-1), "ani_fac_n ",   mesh->BCp.type );
+    // if (model->aniso==1) MinMaxArrayTag( mesh->aniso_factor_s,  1.0,   (mesh->Nx-0)*(mesh->Nz-0), "ani_fac_s ",   mesh->BCg.type );
+    // if (model->aniso==1) MinMaxArrayTag( mesh->aniso_factor_e_n,  1.0, (mesh->Nx-1)*(mesh->Nz-1), "ani_fac_e_n ", mesh->BCp.type );
+    // if (model->aniso==1) MinMaxArrayTag( mesh->aniso_factor_e_s,  1.0, (mesh->Nx-0)*(mesh->Nz-0), "ani_fac_e_s ", mesh->BCg.type );
 
     // Evaluate right hand side
     EvaluateRHS( mesh, *model, scaling, materials.rho[0] );
 
-    //-----------------------------------------------//
-
     // Fill up the rheological matrices arrays
-    RheologicalOperators( mesh, model, &scaling, 0 );
-
+    RheologicalOperators( mesh, model, &materials, &scaling, 0 );
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
@@ -184,7 +450,7 @@ void DetectCompressibleCells ( grid* mesh, params *model ) {
 
     int cc, nx=model->Nx, nz=model->Nz, nzvx=nz+1, nxvz=nx+1, ncx=nx-1, ncz=nz-1, kk=0;
 
-     printf("---> Detecting compressibles cells\n");
+     printf("---> Detecting compressible cells\n");
      for( cc=0; cc<ncx*ncz; cc++) {
 
          if ( mesh->BCp.type[cc] != 30 ) {
@@ -428,22 +694,20 @@ double LineSearchDecoupled( SparseMat *Stokes, SparseMat *StokesA, SparseMat *St
     Nmodel->stagnated = 0;
     residuals.nit = Nmodel->nit;
 
+    // ntry     = 1;
+    // minalpha = -1.0;
+    // maxalpha = -1.0;
+
     ntry     = 6;
     minalpha = -2.5;
     maxalpha = -min_step;
 
+    //    ntry     = 11;
+    //    minalpha = -2.25;
+    //    maxalpha = -0.25;
+
     if (model->Newton==1) minalpha = -1.0;
     if (model->Newton==0) maxalpha = -0.0;
-
-    //    ntry[0]     = 11;
-    //    minalpha[0] = -2.25;
-    //    maxalpha[0] = -0.25;
-
-    //    ntry[0]     = 1;
-    //    minalpha[0] = -1.0;
-    //    maxalpha[0] = -1.0;
-
-    //    printf("dalpha %lf %lf %d \n", maxalpha[0], minalpha[0], ntry[0]-1);
 
     t_omp = (double)omp_get_wtime();
 
@@ -478,44 +742,8 @@ double LineSearchDecoupled( SparseMat *Stokes, SparseMat *StokesA, SparseMat *St
             ArrayEqualArray( mesh->v_in, v, nxvz*nz );
             ArrayEqualArray( mesh->p_in, p, ncx*ncz );
 
-            // Test relaxed u-v-p solutions
-#pragma omp parallel for shared( mesh, dx, Stokes ) private( cc ) firstprivate( alpha, nzvx, nx )
-            for( cc=0; cc<nzvx*nx; cc++) {
-                if ( mesh->BCu.type[cc] != 30 && mesh->BCu.type[cc] != 0 && mesh->BCu.type[cc] != 11 && mesh->BCu.type[cc] != 13 && mesh->BCu.type[cc] != -12 ) {
-                    mesh->u_in[cc] += alpha*dx[Stokes->eqn_u[cc]];
-                }
-            }
-
-#pragma omp parallel for shared( mesh, dx, Stokes ) private( cc ) firstprivate( alpha, nz, nxvz )
-            for( cc=0; cc<nz*nxvz; cc++) {
-                if ( mesh->BCv.type[cc] != 30 && mesh->BCv.type[cc] != 0 && mesh->BCv.type[cc] != 11 && mesh->BCv.type[cc] != 13 && mesh->BCv.type[cc] != -12 ) {
-                    mesh->v_in[cc] += alpha*dx[Stokes->eqn_v[cc]];
-                }
-            }
-
-#pragma omp parallel for shared( mesh, dx, Stokes ) private( cc ) firstprivate( alpha, ncx, ncz )
-            for( cc=0; cc<ncz*ncx; cc++) {
-
-                if ( mesh->BCp.type[cc] != 30 && mesh->BCp.type[cc] != 0  && mesh->BCp.type[cc] != 31 ) {
-                    mesh->p_in[cc] += alpha*dx[Stokes->eqn_p[cc]];
-                }
-            }
-
-            // Apply Bc to Vx and Vz
-            ApplyBC( mesh, model );
-
-//            ArrayEqualArray( mesh->p_trial, mesh->p_in, ncx*ncz );
-
-//            MinMaxArray( mesh->u_in, 1, nx*nzvx, "u in");
-//            SumArray( mesh->u_in, 1, nx*nzvx, "u in");
-
-            //------------------------------------------------------------------------------------------------------
-
-            // Some stuff to be put on vertices                       < ---------------------- get P from centroids to vertices
-            InterpCentroidsToVerticesDouble( mesh->T,    mesh->T_s,   mesh, model );
-//            InterpCentroidsToVerticesDouble( mesh->p_in, mesh->P_s,   mesh, model );
-            InterpCentroidsToVerticesDouble( mesh->d0_n,   mesh->d0_s,  mesh, model );
-            InterpCentroidsToVerticesDouble( mesh->phi0_n,  mesh->phi0_s, mesh, model );
+            // Consistent solution extraction
+            ExtractSolutions2( Stokes, mesh, model, dx, alpha );
 
             // Update non-linearity
             UpdateNonLinearity( mesh, particles, topo_chain, topo, materials, model, Nmodel, scaling, 0, 1.0 );
@@ -523,21 +751,13 @@ double LineSearchDecoupled( SparseMat *Stokes, SparseMat *StokesA, SparseMat *St
             //------------------------------------------------------------------------------------------------------
 
             // Calculate residual
-            //            model->free_surf_stab = 0;
             EvaluateStokesResidualDecoupled( Stokes, StokesA, StokesB, StokesC, StokesD, &residuals, mesh, *model, scaling, 1 );
-            //            model->free_surf_stab = dummy;
 
             rx[kk] = residuals.resx;
             rz[kk] = residuals.resz;
             rp[kk] = residuals.resp;
-            //            printf("\e[1;34mAlpha\e[m = %lf --> rx = %2.6e rz = %2.6e rp = %2.6e\n", alpha, rx[kk]* (scaling.F/pow(scaling.L,3)), rz[kk]* (scaling.F/pow(scaling.L,3)), rp[kk]*scaling.E );
             printf("\e[1;34mAlpha\e[m = %lf --> rx = %2.4e rz = %2.4e rp = %2.4e\n", alpha, rx[kk], rz[kk], rp[kk]);
-
-
         }
-
-        
-        // SEARCH --- 1
 
         // Look for the minimum predicted residuals
         double r, minxzp, minxz, minz, fxz, fx, fz, fxzp;
@@ -674,7 +894,6 @@ void SolveStokesDefect( SparseMat *Stokes, DirectSolver *PardisoStokes, Nparams*
 
     // Return updated solution vector
     if ( Nmodel->stagnated == 0) {
-        printf( "Correct x\n");
         ArrayPlusScalarArray( Stokes->x, alpha, dx, Stokes->neq );
     }
 
@@ -711,20 +930,9 @@ void SolveStokesDecoupled( SparseMat *StokesA, SparseMat *StokesB, SparseMat *St
 void SolveStokesDefectDecoupled( SparseMat *StokesA, SparseMat *StokesB, SparseMat *StokesC, SparseMat *StokesD, SparseMat *Stokes, DirectSolver *PardisoStokes, Nparams* Nmodel, grid* mesh, params* model, markers* particles, markers* topo_chain, surface *topo, mat_prop materials, scale scaling, SparseMat *JacobA, SparseMat *JacobB, SparseMat *JacobC ) {
 
     printf("---- Solve Stokes in a decoupled/segregated fashion and defect correction mode, lsolver = %d ----\n", model->lsolver);
-
     double alpha = -1.0;
-    double *dx;//, *fu, *fp;
     clock_t t_omp;
-
-    dx = DoodzCalloc( Stokes->neq,      sizeof(double));
-//    fu = DoodzCalloc( Stokes->neq_mom,  sizeof(double));
-//    fp = DoodzCalloc( Stokes->neq_cont, sizeof(double));
-
-//    printf("NEQ %d \n", StokesA->neq );
-//    for (int i =0;i<StokesA->neq;i++) {
-//        if (fabs(StokesA->F[i])>1e5) printf("%2.2e \n", StokesA->F[i]);
-////        printf("%2.2e \n", StokesA->b[i]);
-//    }
+    double *dx = DoodzCalloc( Stokes->neq, sizeof(double));
 
     // Call direct solver
     t_omp = (double)omp_get_wtime();
@@ -734,40 +942,16 @@ void SolveStokesDefectDecoupled( SparseMat *StokesA, SparseMat *StokesB, SparseM
     if ( model->lsolver ==-1 ) DirectStokesDecoupledComp( StokesA, StokesB, StokesC, StokesD, PardisoStokes, StokesA->F, StokesC->F, dx, *model, mesh, scaling, Stokes );
     printf("** Time for direct Stokes solver = %lf sec\n", (double)((double)omp_get_wtime() - t_omp));
 
-    if ( model->diag_scaling == 1 ) {
-        ScaleVelocitiesRHSBack(StokesA, StokesD, dx);
-    }
+    // Scale back veolicities
+    if ( model->diag_scaling == 1 ) ScaleVelocitiesRHSBack(StokesA, StokesD, dx);
 
-    // Line search
-    if ( model->line_search == 1 ) {
-        alpha = LineSearchDecoupled( Stokes, StokesA, StokesB, StokesC, StokesD, dx, mesh, model, Nmodel, particles, topo_chain, topo, materials, scaling  );
-    }
-
+    // Run line search procedure (default value if alpha=-1.0)
+    if ( model->line_search == 1 ) alpha = LineSearchDecoupled( Stokes, StokesA, StokesB, StokesC, StokesD, dx, mesh, model, Nmodel, particles, topo_chain, topo, materials, scaling  );
+    
     // Same solution extraction than in line search - consistent
     ExtractSolutions2( Stokes, mesh, model, dx, alpha );
 
-//    InitialiseSolutionVector( mesh, Stokes, model );
-
-
-//    // Return updated solution vector
-//    if ( Nmodel->stagnated == 0) ArrayPlusScalarArray( Stokes->x, alpha, dx, Stokes->neq );
-//
-//    //    MinMaxArray( mesh->u_in, 1, mesh->Nx*(mesh->Nz+1), "u in");
-//    SumArray( mesh->u_in, 1, mesh->Nx*(mesh->Nz+1), "u in");
-//
-//    ExtractSolutions( Stokes, mesh, model );
-
-    //    MinMaxArray( mesh->u_in, 1, mesh->Nx*(mesh->Nz+1), "u in");
-//    SumArray( mesh->u_in, 1, mesh->Nx*(mesh->Nz+1), "u in");
-
-    //EvaluateStokesResidualDecoupled( Stokes, StokesA, StokesB, StokesC, StokesD, Nmodel, mesh, *model, scaling, 0 );
-
-
-//    exit(1);
-
     DoodzFree(dx);
-//    DoodzFree(fu);
-//    DoodzFree(fp);
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
@@ -858,9 +1042,9 @@ void EvaluateStokesResidualDecoupled( SparseMat *Stokes, SparseMat *StokesA, Spa
     double resp = 0.0;
 
     // Function evaluation
-    if ( model.aniso == 0 ) BuildStokesOperatorDecoupled( mesh, model, 0, mesh->p_corr, mesh->p_in,  mesh->u_in,  mesh->v_in, Stokes, StokesA, StokesB, StokesC, StokesD, 0 );
-    if ( model.aniso == 1 ) BuildJacobianOperatorDecoupled( mesh, model, 0, mesh->p_corr, mesh->p_in,  mesh->u_in,  mesh->v_in, Stokes, StokesA, StokesB, StokesC, StokesD, 0 );
-
+    BuildStokesOperatorDecoupled(   mesh, model, 0, mesh->p_corr, mesh->p_in,  mesh->u_in,  mesh->v_in, Stokes, StokesA, StokesB, StokesC, StokesD, 0 );
+    // if ( model.aniso == 0 ) BuildStokesOperatorDecoupled(   mesh, model, 0, mesh->p_corr, mesh->p_in,  mesh->u_in,  mesh->v_in, Stokes, StokesA, StokesB, StokesC, StokesD, 0 );
+    // if ( model.aniso == 1 ) BuildJacobianOperatorDecoupled( mesh, model, 0, mesh->p_corr, mesh->p_in,  mesh->u_in,  mesh->v_in, Stokes, StokesA, StokesB, StokesC, StokesD, 0 );
 
     // Integrate residuals
 #pragma omp parallel for shared( mesh, Stokes, StokesA ) private( cc ) firstprivate( nx, nzvx ) reduction(+:resx,ndofx)
@@ -874,6 +1058,10 @@ void EvaluateStokesResidualDecoupled( SparseMat *Stokes, SparseMat *StokesA, Spa
         }
     }
     Nmodel->resx = resx;
+    // Print2DArrayDouble( mesh->ru, nx, nzvx, 1.0 );
+    // Print2DArrayDouble( mesh->exz, nx, nz, 1.0 );
+    // Print2DArrayDouble( mesh->u_in, nxvz, nz, 1.0 );
+    // printf("%2.8e\n", resx);
 
 #pragma omp parallel for shared( mesh, Stokes, StokesA ) private( cc ) firstprivate( nz, nxvz ) reduction(+:resz,ndofz)
     for( cc=0; cc<nz*nxvz; cc++) {
