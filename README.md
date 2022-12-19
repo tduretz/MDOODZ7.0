@@ -191,6 +191,15 @@ cd cmake-exec/YourSetName
 ./YourSetName /path/to/setup.txt
 ```
 
+# Windows 
+
+## Setting up vcpkg
+
+1) Install vcpkg https://vcpkg.io/en/index.html
+2) By running vcpkg you will need to install HDF5 and SuiteSparse libraries by typing in 
+`vcpkg install hdf5:x64-windows-static` and `vcpkg install suitesparse:x64-windows-x64-static` in a terminal.
+3) Copy env.cmake.example to the same folder but without .example. Make sure that you have a correct path to vcpkg.cmake in a `CMAKE_TOOLCHAIN_FILE` param
+
 # Building and running MDOODZ7.0 using make
 
 It is possible to build MDOODZ7.0 using the [`makefile`](https://github.com/tduretz/MDOODZ7.0/blob/debug-strain-rate-pipo/MDLIB/makefile) which is located in the `MDLIB` folder. The `make` build does not install the necessary libraries, it is thus mandatory to manually install [SuiteSparse](https://github.com/DrTimothyAldenDavis/SuiteSparse) and [HDF5](https://www.hdfgroup.org/solutions/hdf5/) prior to building MDOODZ7.0 with make. These libraries are also available via package managers (e.g., Homebrew or MacPorts). For a successful build procedure, links to compiler, library and header files should be added to the current the environement (e.g. add to `PATH`, `LIBRARY_PATH`, `C_INCLUDE_PATH`...). The excutable file will be located directly in the `MDLIB` folder and the related `YourSetName.txt` fille will be automatically copied there.
@@ -216,3 +225,4 @@ Will clean and make a fresh build with optmisation level 3 and including OpenMP 
 make all SET=YourSetName OPT=yes OMP=yes
 ```
 Will update the build (compiles only modified files) with optmisation level 3 and including OpenMP parallelism.
+
