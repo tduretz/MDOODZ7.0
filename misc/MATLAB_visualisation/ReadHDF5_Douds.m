@@ -28,7 +28,7 @@ vel_vectors     = 0;
 vel_divergence  = 0;
 pre_plot        = 0;
 dyna_pre        = 0;
-stress_inv      = 0;
+stress_inv      = 1;
 stress_evol     = 0;
 stress_plot     = 0;
 srate_plot      = 0;
@@ -62,7 +62,7 @@ emergency_benoit = 0;
 fstrain          = 0;
 shear_heating    = 0;
 princi_stress    = 0;
-director_vector  = 1;
+director_vector  = 0;
 Pl_soft          = 0;
 Sole             = 0;
 overstress       = 0;
@@ -137,8 +137,8 @@ maxX = 1;
 minTxx = -11e0;
 maxTxx =  0.642;
 
-% minStr = 0.01;
-% maxStr = 0.4;
+minStr = 0.01;
+maxStr = 0.4;
 
 minPdyn = -1e8;
 maxPdyn =  5e8;
@@ -1379,7 +1379,9 @@ for istep=istart:ijump:iend
             HSc = 2*sxzc.*exzc + sxxd.*exx + szzd.*ezz;
             minHS=min(HSc(:));
             maxHS=max(HSc(:));
-                
+            
+            load('roma.mat')
+            
             if print2screen == 1
                 figCount = figCount +1;
                 figure(figCount), clf
