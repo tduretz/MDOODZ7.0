@@ -114,7 +114,7 @@ typedef struct {
   double Pr[20], tau_kin[20], dPr[20], k_chem[20];
   int    reac_soft[20], reac_phase[20];
   int    phase_mix[20], phase_two[20];
-  double aniso_factor[20], aniso_angle[20];
+  double aniso_factor[20], aniso_angle[20], ani_fac_v[20], ani_fac_e[20], ani_fac_p[20];
 } mat_prop;
 
 char                         *GetSetupFileName(int nargs, char *args[]);
