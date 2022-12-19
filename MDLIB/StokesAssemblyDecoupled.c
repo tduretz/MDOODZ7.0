@@ -812,13 +812,13 @@ void Continuity_InnerNodesDecoupled( SparseMat *Stokes, SparseMat *StokesC, Spar
         //        dlnrhodt = (log(rhoc) - log(rhoc0)) /dt;
         //        if comp==1, fp = -divc - dlnrhodt; resnlp = norm(fp(:))/length(fp); end
         //                                               = beta*(p - p0)/dt + div(v)
-    //    if ( model.VolChangeReac == 0 ) StokesC->F[eqn] =                      pc*p[c2] + uW*u[c1] + uE*u[c1+1] + vS*v[c3] + vN*v[c3+nxvz];
+    //    if ( model.dens_var == 0 ) StokesC->F[eqn] =                      pc*p[c2] + uW*u[c1] + uE*u[c1+1] + vS*v[c3] + vN*v[c3+nxvz];
     //    //                                               = d(ln(rho))/dt + div(v)
-    //    if ( model.VolChangeReac == 1 ) StokesC->F[eqn] = log(mesh->rho_n[c2])/model.dt + uW*u[c1] + uE*u[c1+1] + vS*v[c3] + vN*v[c3+nxvz];
+    //    if ( model.dens_var == 1 ) StokesC->F[eqn] = log(mesh->rho_n[c2])/model.dt + uW*u[c1] + uE*u[c1+1] + vS*v[c3] + vN*v[c3+nxvz];
     //    StokesC->F[eqn] -= StokesC->b[eqn];
         
-        if ( model.VolChangeReac == 0 )  StokesC->F[eqn] = comp_fact*mesh->bet_n[c2]*(mesh->p_in[c2] -  mesh->p0_n[c2] ) / model.dt + mesh->div_u[c2];
-        if ( model.VolChangeReac == 1 )  StokesC->F[eqn] = comp_fact*( log(mesh->rho_n[c2]) -  log(mesh->rho0_n[c2]) ) / model.dt + mesh->div_u[c2];
+        if ( model.dens_var == 0 )  StokesC->F[eqn] = comp_fact*mesh->bet_n[c2]*(mesh->p_in[c2] -  mesh->p0_n[c2] ) / model.dt + mesh->div_u[c2];
+        if ( model.dens_var == 1 )  StokesC->F[eqn] = comp_fact*( log(mesh->rho_n[c2]) -  log(mesh->rho0_n[c2]) ) / model.dt + mesh->div_u[c2];
         StokesC->F[eqn] *= celvol;
         StokesD->F[eqn] = StokesC->F[eqn] ;
 //        printf("fp = %2.2e p = %2.2e p0 = %2.2e, div = %2.2e, div = %2.2e, rp = %2.2e\n",  StokesD->F[eqn], mesh->p_in[eqn],  mesh->p0_n[eqn], uW*u[c1] + uE*u[c1+1] + vS*v[c3] + vN*v[c3+nxvz], mesh->div_u[eqn], mesh->bet_n[c2]/model.dt*(mesh->p_in[eqn] -  mesh->p0_n[eqn]) + mesh->div_u[eqn] );
@@ -860,13 +860,13 @@ void Continuity_InnerNodesDecoupled( SparseMat *Stokes, SparseMat *StokesC, Spar
         //        dlnrhodt = (log(rhoc) - log(rhoc0)) /dt;
         //        if comp==1, fp = -divc - dlnrhodt; resnlp = norm(fp(:))/length(fp); end
         //                                               = beta*(p - p0)/dt + div(v)
-    //    if ( model.VolChangeReac == 0 ) StokesC->F[eqn] =                      pc*p[c2] + uW*u[c1] + uE*u[c1+1] + vS*v[c3] + vN*v[c3+nxvz];
+    //    if ( model.dens_var == 0 ) StokesC->F[eqn] =                      pc*p[c2] + uW*u[c1] + uE*u[c1+1] + vS*v[c3] + vN*v[c3+nxvz];
     //    //                                               = d(ln(rho))/dt + div(v)
-    //    if ( model.VolChangeReac == 1 ) StokesC->F[eqn] = log(mesh->rho_n[c2])/model.dt + uW*u[c1] + uE*u[c1+1] + vS*v[c3] + vN*v[c3+nxvz];
+    //    if ( model.dens_var == 1 ) StokesC->F[eqn] = log(mesh->rho_n[c2])/model.dt + uW*u[c1] + uE*u[c1+1] + vS*v[c3] + vN*v[c3+nxvz];
     //    StokesC->F[eqn] -= StokesC->b[eqn];
         
-        if ( model.VolChangeReac == 0 )  StokesC->F[eqn] = comp_fact*mesh->bet_n[c2]*(mesh->p_in[c2] -  mesh->p0_n[c2] ) / model.dt + mesh->div_u[c2];
-        if ( model.VolChangeReac == 1 )  StokesC->F[eqn] = comp_fact*( log(mesh->rho_n[c2]) -  log(mesh->rho0_n[c2]) ) / model.dt + mesh->div_u[c2];
+        if ( model.dens_var == 0 )  StokesC->F[eqn] = comp_fact*mesh->bet_n[c2]*(mesh->p_in[c2] -  mesh->p0_n[c2] ) / model.dt + mesh->div_u[c2];
+        if ( model.dens_var == 1 )  StokesC->F[eqn] = comp_fact*( log(mesh->rho_n[c2]) -  log(mesh->rho0_n[c2]) ) / model.dt + mesh->div_u[c2];
         StokesC->F[eqn] *= celvol;
         StokesD->F[eqn] = StokesC->F[eqn] ;
 //        printf("fp = %2.2e p = %2.2e p0 = %2.2e, div = %2.2e, div = %2.2e, rp = %2.2e\n",  StokesD->F[eqn], mesh->p_in[eqn],  mesh->p0_n[eqn], uW*u[c1] + uE*u[c1+1] + vS*v[c3] + vN*v[c3+nxvz], mesh->div_u[eqn], mesh->bet_n[c2]/model.dt*(mesh->p_in[eqn] -  mesh->p0_n[eqn]) + mesh->div_u[eqn] );

@@ -413,7 +413,7 @@ void NonNewtonianViscosityGridAniso( grid *mesh, mat_prop *materials, params *mo
     mesh->aniso_factor_n[c0]   = 0.0;
     // mesh->aniso_factor_e_n[c0] = 0.0;
 
-    if ( model->VolChangeReac == 1 ) {
+    if ( model->dens_var == 1 ) {
       mesh->rho_n[c0]  = 0.0;
     }
 
@@ -515,7 +515,7 @@ void NonNewtonianViscosityGridAniso( grid *mesh, mat_prop *materials, params *mo
           mesh->OverS_n[c0]     += mesh->phase_perc_n[p][c0] * OverS;
 
           // Volume changes
-          if ( model->VolChangeReac == 1 ) {
+          if ( model->dens_var == 1 ) {
             mesh->rho_n[c0]     += mesh->phase_perc_n[p][c0] * (rho);
           }
         }

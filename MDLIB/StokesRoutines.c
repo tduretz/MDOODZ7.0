@@ -1085,6 +1085,15 @@ void EvaluateStokesResidualDecoupled( SparseMat *Stokes, SparseMat *StokesA, Spa
     }
     Nmodel->resp = resp;
 
+    // printf("rho0\n");
+    // Print2DArrayDouble( mesh->rho0_n,  ncx, ncz, scaling.rho );
+    // printf("rho\n");
+    // Print2DArrayDouble( mesh->rho_n,  ncx, ncz, scaling.rho );
+    // printf("div\n");
+    // Print2DArrayDouble( mesh->div_u,  ncx, ncz, scaling.E );
+    // printf("rp\n");
+    // Print2DArrayDouble( mesh->rp,  ncx, ncz, 1.0 );
+
     // Sqrt
     Nmodel->resx =  sqrt(Nmodel->resx/ndofx);
     Nmodel->resz =  sqrt(Nmodel->resz/ndofz);
@@ -1304,8 +1313,8 @@ void EvaluateRHS( grid* mesh, params model, scale scaling, double RHO_REF ) {
 
                 if (model.compressible == 1 ) {
                     if (mesh->comp_cells[c] == 1) {
-                        if ( model.VolChangeReac == 0 ) mesh->rhs_p[c] += mesh->p0_n[c]*mesh->bet_n[c]/model.dt;
-                        if ( model.VolChangeReac == 1 ) mesh->rhs_p[c] += log(mesh->rho0_n[c])/model.dt;
+                        if ( model.dens_var == 0 ) mesh->rhs_p[c] += mesh->p0_n[c]*mesh->bet_n[c]/model.dt;
+                        if ( model.dens_var == 1 ) mesh->rhs_p[c] += log(mesh->rho0_n[c])/model.dt;
                         if (model.adiab_heat > 0 ) {
                             mesh->rhs_p[c] += mesh->divth0_n[c];
                         }
