@@ -184,3 +184,12 @@ Setup `.txt` file will be automatically detected if it has a same name as the ex
 cd cmake-exec/YourSetName
 ./YourSetName /path/to/setup.txt
 ```
+
+# Windows 
+
+## Setting up vcpkg
+
+1) Install vcpkg https://vcpkg.io/en/index.html
+2) By running vcpkg you will need to install HDF5 and SuiteSparse libraries by typing in 
+`vcpkg install hdf5:x64-windows-static` and `vcpkg install suitesparse:x64-windows-x64-static` in a terminal.
+3) Copy env.cmake.example to the same folder but without .example. Make sure that you have a correct path to vcpkg.cmake in a `CMAKE_TOOLCHAIN_FILE` param

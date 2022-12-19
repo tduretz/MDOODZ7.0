@@ -34,15 +34,19 @@ endif()
 
 include(FindHDF5)
 find_package(HDF5 COMPONENTS C)
+
 if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
-    find_file(HDF5_LIBRARIES
-            NAMES 	libhdf5-0.dll libhdf.dll
-            PATHS 			/opt/local/lib${SuiteSparse_SEARCH_LIB_POSTFIX}
-            /usr/lib
-            /usr/local/lib
-            ${CMAKE_INSTALL_PREFIX}/lib
-            ${CMAKE_INSTALL_PREFIX}/bin
-            )
+    FIND_PACKAGE(SuiteSparse)
+    set(DEPENDENCIES
+            SuiteSparse::suitesparseconfig
+            SuiteSparse::amd
+            SuiteSparse::btf
+            SuiteSparse::camd
+            SuiteSparse::ccolamd
+            SuiteSparse::colamd
+            SuiteSparse::cholmod
+            SuiteSparse::cxsparse
+            SuiteSparse::umfpack)
 endif()
 
 set(DEPENDENCIES ${DEPENDENCIES} ${HDF5_LIBRARIES})
