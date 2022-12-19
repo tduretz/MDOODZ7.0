@@ -207,7 +207,6 @@ void AccumulatedStrainII( grid* mesh, scale scaling, params model, markers* part
     for (c1=0; c1<(mesh->Nx-1)*(mesh->Nz-1); c1++) {
         
         strain_inc[c1]     = model.dt*(mesh->eII_pl[c1]+mesh->eII_pwl[c1]+mesh->eII_exp[c1]+mesh->eII_lin[c1]+mesh->eII_gbs[c1]+mesh->eII_el[c1]+mesh->eII_cst[c1]);
-
         if (strain_inc[c1]<0) {
             printf("negative strain increment\n");
             printf("%2.2e %2.2e %2.2e %2.2e %2.2e %2.2e\n" ,mesh->eII_pl[c1],mesh->eII_pwl[c1],mesh->eII_exp[c1],mesh->eII_lin[c1],mesh->eII_gbs[c1],mesh->eII_el[c1]);
