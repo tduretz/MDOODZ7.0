@@ -345,9 +345,9 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
   int    ProgressiveReaction = materials->reac_soft[phase], NoReturn = model->NoReturn;
   double tau_kin = materials->tau_kin[phase], Pr = materials->Pr[phase], dPr = materials->dPr[phase];
   double divr = 0.0;
-  double alpha, rho_ref;
+  // double alpha, rho_ref;
 
-  alpha = materials->alp[phase];
+  // alpha = materials->alp[phase];
 
   if (model->diffuse_X == 0) constant_mix = 0;
 
@@ -474,7 +474,7 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
       }
     }
     // Parameters of end-members and averahing following Huet et al. (2014)
-    rho1   = materials->rho[phase];                rho2   = materials->rho[materials->reac_phase[phase]];
+    // rho1   = materials->rho[phase];                rho2   = materials->rho[materials->reac_phase[phase]];
     HuetAveragingModel( &B_pwl, &C_pwl, &n_pwl, phase, R, T, t_pwl, X, pre_factor, materials );
   }
 
@@ -634,8 +634,9 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
   // ----------------- Reaction volume changes, computation of updated density only on centroid nodes
   if ( centroid > 0 ) {
     if (ProgressiveReaction == 1) {
-      rho_ref      = (1.0-X)*rho1 + X*rho2;
-      *rho         = rho_ref * exp(P/K - alpha*T);
+      // rho_ref      = (1.0-X)*rho1 + X*rho2;
+      // *rho         = rho_ref * exp(P/K - alpha*T);
+      *rho = EvaluateDensity( phase, T, P, X, model, materials );
     }
     else {
       rho_eq = EvaluateDensity( phase, T, P, X, model, materials );
@@ -645,8 +646,6 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
         tau_kin       = log(1-0.6666666) * pow(-2*Skin*Vkin, -1);
         rho0          = EvaluateDensity( phase, T0, P0, X, model, materials );
         *rho          = 1.0/(tau_kin+dt) * (tau_kin*rho0 + dt*rho_eq);
-        //                printf("rho = %03f, rho0 =  %03f, T = %2.2e, P = %2.6e, dG = %2.6e, Vkin = %2.6e tau_kin = %2.6e\n", *rho*scaling->rho, rho0*scaling->rho, T*scaling->T, P*scaling->S, dG*scaling->J, Vkin*scaling->V, tau_kin*scaling->t);
-        //                printf("kkin = %2.6e\n", kkin*scaling->L/scaling->t/scaling->T);
       }
       else {
         *rho          = rho_eq;
@@ -672,7 +671,7 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
   // Deviatoric stress
   *Txx       = 2.0*(*etaVE)*Exx;
   *Tzz       = 2.0*(*etaVE)*Ezz;
-  *Txz       = 2.0*(*etaVE)*Exx;
+  *Txz       = 2.0*(*etaVE)*Exz;
 
   //-------- Post-Processing
   if ( post_process == 1) {
@@ -695,6 +694,8 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
     *Ezz_diss =  Ezz_pl + Ezz_lin +  Ezz_pwl + Ezz_exp + Ezz_gbs + Ezz_cst;
     *Exz_diss =  Exz_pl + Exz_lin +  Exz_pwl + Exz_exp + Exz_gbs + Exz_cst;
     *Eii_el   = (double)elastic* sqrt( 0.5*(pow(*Exx_el,2) + pow(*Ezz_el,2)) + pow(*Exz_el,2) );
+    // printf("%2.4e %2.4e %2.4e %2.4e %2.4e\n ", Tii, *Txx, *Tzz, *Txz, sqrt(0.5*(pow(*Txx,2) + pow(*Tzz,2) + pow(-*Txx - *Tzz,2)) + pow(*Txz,2)  ));
+    // printf("%2.4e %2.4e %2.4e %2.4e %2.4e %2.4e \n ", Exx, Ezz, Exz, Txx0, Tzz0, Txz0);
     *Eii_pwl  =  Tii/2.0/eta_pwl;
     *Eii_pl = gdot/2.0;
 
@@ -803,7 +804,7 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
     if ( UnsplitDiffReac == 0 ) mesh->X_n[c0]        = 0.0;
     mesh->OverS_n[c0]    = 0.0;
 
-    if ( model->VolChangeReac == 1 ) {
+    if ( model->dens_var == 1 ) {
       mesh->rho_n[c0]  = 0.0;
       //            mesh->drhodp_n[c0] = 0.0;
     }
@@ -878,8 +879,8 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
           mesh->OverS_n[c0]     += mesh->phase_perc_n[p][c0] * OverS;
 
           // Volume changes
-          if ( model->VolChangeReac == 1 ) {
-            mesh->rho_n[c0]       += mesh->phase_perc_n[p][c0] * (rho);
+          if ( model->dens_var == 1 ) {
+            mesh->rho_n[c0]       += mesh->phase_perc_n[p][c0] * rho;
           }
         }
       }
@@ -947,6 +948,9 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
       Exx = mesh->exxd_s[c1] + el*mesh->sxxd0_s[c1]/eta_e/2.0;
       Ezz = mesh->ezzd_s[c1] + el*mesh->szzd0_s[c1]/eta_e/2.0;
       Exz = mesh->exz[c1]    + el*mesh->sxz0[c1]   /eta_e/2.0;
+      // printf("-----\n");
+      // printf("%2.4e %2.4e  %2.4e \n", mesh->exxd_s[c1], mesh->ezzd_s[c1], mesh->exz[c1]);
+      // printf("%2.4e %2.4e  %2.4e \n", Exx, Ezz, Exz);
 
       // Loop on phases
       for ( p=0; p<model->Nb_phases; p++) {
@@ -1345,24 +1349,25 @@ void ShearModCompExpGrid( grid* mesh, mat_prop materials, params *model, scale s
 
 double EvaluateDensity( int p, double T, double P, double X, params *model, mat_prop *materials ) {
 
-  double rho, rho0, drho, T0, alpha, P0, beta;
-
+  double rho, rho_ref, rho1, rho2, drho, T0, alpha, P0, beta;
+  int    ProgressiveReaction = materials->reac_soft[p], NoReturn = model->NoReturn;
+  
   // Constant density
   if ( materials->density_model[p] == 0 ) {
-    rho0   = materials->rho[p];
-    rho    = rho0;
+    rho_ref = materials->rho[p];
+    rho     = rho_ref;
   }
 
   // T, P, X dependent density based on EOS
   if ( materials->density_model[p] == 1 ) {
-    rho0    = materials->rho[p];
+    rho_ref = materials->rho[p];
     drho    = materials->drho[p];
     T0      = materials->T0 [p];
     alpha   = materials->alp[p];
     P0      = materials->P0 [p];
     beta    = materials->bet[p];
     rho     = (1.0 -  alpha * (T - T0) ) * (1.0 +  beta * (P - P0) ); // EOS general
-    rho     = ((1.0-X)*rho0 + X*(rho0+drho))*rho;                     // Average density based on X
+    rho     = ((1.0-X)*rho_ref + X*(rho_ref+drho))*rho;                     // Average density based on X
   }
 
   // T and P dependent density based on phase diagrams
@@ -1372,11 +1377,21 @@ double EvaluateDensity( int p, double T, double P, double X, params *model, mat_
   }
 
   // P-T dependent density
-  if ( materials->density_model[p] == 3 ) {
-    rho0    = materials->rho[p];
+  if ( materials->density_model[p] == 3 && ProgressiveReaction == 0 ) {
+    rho_ref = materials->rho[p];
     beta    = materials->bet[p];
     alpha   = materials->alp[p];
-    rho     = rho0*exp(beta * P); //  - alpha * T
+    rho     = rho_ref*exp(beta*P  - alpha*T);
+  }
+
+  // P-T dependent density: models used for Yamato et al. (2022)
+  if ( materials->density_model[p] == 3  && ProgressiveReaction == 1) {
+    rho1    = materials->rho[p];
+    rho2    = materials->rho[materials->reac_phase[p]];
+    beta    = materials->bet[p];
+    alpha   = materials->alp[p];
+    rho_ref = (1.0-X)*rho1 + X*rho2;
+    rho     = rho_ref * exp(beta*P - alpha*T);
   }
 
   // P dependent density read from the 1D table
@@ -1395,10 +1410,10 @@ void UpdateDensity( grid* mesh, markers* particles, mat_prop *materials, params 
 
   int k, p, c0, Ncx=mesh->Nx-1, Ncz=mesh->Nz-1;
   int    phase_diag;
-  double rho, rhoold, epsi = 1e-13;
+  double rho, rho0, epsi = 1e-13;
   // printf("Update density fields on mesh\n");
 
-#pragma omp parallel for shared( mesh, materials ) private( rho, rhoold, c0, p) firstprivate(Ncx, Ncz, model, epsi)
+#pragma omp parallel for shared( mesh, materials ) private( rho, rho0, c0, p) firstprivate(Ncx, Ncz, model, epsi)
   for ( c0=0; c0<Ncx*Ncz; c0++ ) {
 
     // Initialise
@@ -1410,12 +1425,17 @@ void UpdateDensity( grid* mesh, markers* particles, mat_prop *materials, params 
 
       if ( fabs(mesh->phase_perc_n[p][c0])>epsi) {
         // Call density evaluation
-        rho    = EvaluateDensity( p, mesh->T[c0], mesh->p_in[c0], mesh->X_n[c0], model, materials );
-        rhoold = EvaluateDensity( p, mesh->T[c0], mesh->p0_n[c0], mesh->X_n[c0], model, materials );
+        rho  = EvaluateDensity( p, mesh->T[c0],    mesh->p_in[c0], mesh->X_n[c0],  model, materials );
+        rho0 = EvaluateDensity( p, mesh->T0_n[c0], mesh->p0_n[c0], mesh->X0_n[c0], model, materials );
+
+        // if (mesh->X0_n[c0]>0.002) {
+        //   printf("%2.6e\n", rho0*scaling->rho);
+        //             // printf("%2.6e\n", mesh->X0_n[c0]);
+        // }
 
         // Average density base on phase density and phase volume fraction
         if ( mesh->BCp.type[c0] != 30 ) mesh->rho_n[c0]  += mesh->phase_perc_n[p][c0] * rho;
-        if ( mesh->BCp.type[c0] != 30 ) mesh->rho0_n[c0] += mesh->phase_perc_n[p][c0] * rhoold;
+        if ( mesh->BCp.type[c0] != 30 ) mesh->rho0_n[c0] += mesh->phase_perc_n[p][c0] * rho0;
       }
     }
   }
@@ -1468,6 +1488,9 @@ void StrainRateComponents( grid* mesh, scale scaling, params* model ) {
       // Normal strain rates
       mesh->exxd[c0]  = dvxdx - 1.0/3.0*mesh->div_u[c0];
       mesh->ezzd[c0]  = dvzdz - 1.0/3.0*mesh->div_u[c0];
+
+      // printf("%2.2e %2.2e %2.2e\n", mesh->exxd[c0], mesh->ezzd[c0], mesh->div_u[c0]);
+
     }
   }
 
