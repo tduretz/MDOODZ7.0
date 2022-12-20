@@ -18,15 +18,15 @@ double SetDensity(MdoodzInput *input, Coordinates coordinates, int phase) {
   }
 }
 
-void SetDefGrad(double *Fxx, double *Fxz, double* Fzx, double *Fzz, MdoodzInput *input, Coordinates coordinates, int phase) {
+void SetDefGrad(MdoodzInput *input, Coordinates coordinates, int phase, Tensor2D* F) {
   const double radius = input->model.user1 / input->scaling.L;
-  *Fxx=1.; *Fxz=0.; *Fzx=0.; *Fzz=1.;
+  F->xx=1.; F->xz=0.; F->zx=0.; F->zz=1.;
   if (coordinates.x * coordinates.x + coordinates.z * coordinates.z < radius * radius) {
     // nothing special in the inclusion
   }
   else {
     // a bit more pure shear strain in the matrix
-    *Fxx=1.1; *Fxz=0.; *Fzx=0.; *Fzz=0.9;
+    F->xx=1.1; F->xz=0.; F->zx=0.; F->zz=0.9;
   }
 }
 

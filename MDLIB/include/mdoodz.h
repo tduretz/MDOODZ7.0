@@ -12,6 +12,16 @@ typedef enum { ARITHMETIC = 0,
                HARMONIC   = 1,
                GEOMETRIC  = 2 } ETA_AVG;
 
+// Tensor 2D
+typedef struct {
+   double xx, zz, yy, xz, zx, ii, ii2;
+} Tensor2D;
+
+// Vector 2D
+typedef struct {
+   double x, z;
+} Vector2D;
+
 // params contains the model parameters
 typedef struct {
   char   description[500];
@@ -148,7 +158,7 @@ typedef double (*SetDensity_f)(MdoodzInput *input, Coordinates coordinates, int 
 typedef double (*SetXComponent_f)(MdoodzInput *input, Coordinates coordinates, int phase);
 typedef double (*SetPressure_f)(MdoodzInput *input, Coordinates coordinates, int phase);
 typedef double (*SetNoise_f)(MdoodzInput *input, Coordinates coordinates, int phase);
-typedef void   (*SetDefGrad_f)(double*, double*, double*, double*, MdoodzInput *input, Coordinates coordinates, int phase);
+typedef void   (*SetDefGrad_f)(MdoodzInput *input, Coordinates coordinates, int phase, Tensor2D*);
 
 typedef struct {
   SetHorizontalVelocity_f SetHorizontalVelocity;

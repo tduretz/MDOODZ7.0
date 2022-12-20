@@ -29,6 +29,7 @@
 #include "math.h"
 #include "time.h"
 #include "mdoodz-private.h"
+#include "include/mdoodz.h"
 #include "RheologyDensity.h"
 
 #ifdef _OMP_
@@ -38,16 +39,6 @@
 #define omp_get_num_threads() 1
 #define omp_get_wtime() clock()/CLOCKS_PER_SEC
 #endif
-
-// Tensor 2D
-typedef struct {
-   double xx, zz, yy, xz, ii, ii2;
-} Tensor2D;
-
-// // Vector 2D
-// typedef struct {
-//    double x, z;
-// } Vector2D;
 
 // // Second invariant
 // void Invii( Tensor2D *T ) {
