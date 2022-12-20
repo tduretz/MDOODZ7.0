@@ -1,7 +1,6 @@
 add_library(mdoodz SHARED
         AdvectionRoutines.c
-        AnisotropyRoutines.c
-	BC.c
+        BC.c
         ChemicalRoutines.c
         FD_Jacobian.c
         FlowLaws.c

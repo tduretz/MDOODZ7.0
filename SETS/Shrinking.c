@@ -1,5 +1,8 @@
 #include "mdoodz.h"
+<<<<<<< HEAD
 #include "math.h"
+=======
+>>>>>>> main
 
 int SetPhase(MdoodzInput *input, Coordinates coordinates) {
   const double radius = 0.25 / input->scaling.L;
@@ -10,6 +13,7 @@ int SetPhase(MdoodzInput *input, Coordinates coordinates) {
   }
 }
 
+<<<<<<< HEAD
 int SetDualPhase(MdoodzInput *input, Coordinates coordinate, int phase) {
     
     int    dual_phase = phase;
@@ -34,6 +38,8 @@ int SetDualPhase(MdoodzInput *input, Coordinates coordinate, int phase) {
   return dual_phase;
 }
 
+=======
+>>>>>>> main
 double SetDensity(MdoodzInput *input, Coordinates coordinates, int phase) {
   const double T_init = (input->model.user0 + zeroC) / input->scaling.T;
   const double P_init = (input->model.PrBG         ) / input->scaling.S;
@@ -44,12 +50,32 @@ double SetDensity(MdoodzInput *input, Coordinates coordinates, int phase) {
   }
 }
 
+<<<<<<< HEAD
+=======
+void SetDefGrad(MdoodzInput *input, Coordinates coordinates, int phase, Tensor2D* F) {
+  const double radius = input->model.user1 / input->scaling.L;
+  F->xx=1.; F->xz=0.; F->zx=0.; F->zz=1.;
+  if (coordinates.x * coordinates.x + coordinates.z * coordinates.z < radius * radius) {
+    // nothing special in the inclusion
+  }
+  else {
+    // a bit more pure shear strain in the matrix
+    F->xx=1.1; F->xz=0.; F->zx=0.; F->zz=0.9;
+  }
+}
+
+>>>>>>> main
 int main() {
   MdoodzSetup setup = {
           .SetParticles  = &(SetParticles_ff){
                    .SetPhase              = SetPhase,
+<<<<<<< HEAD
                    .SetDualPhase          = SetDualPhase,
                    .SetDensity            = SetDensity,
+=======
+                   .SetDensity            = SetDensity,
+                   .SetDefGrad            = SetDefGrad,
+>>>>>>> main
           },
           .SetBCs = &(SetBCs_ff){
                   .SetBCVx = SetPureOrSimpleShearBCVx,

@@ -5,7 +5,44 @@ clear
 clear all
 % close all
 clc
+<<<<<<< HEAD
 path = '~/REPO_GIT/MDOODZ7.0/MDLIB/';
+=======
+
+DEBUG = 0;
+
+MarkSize=1e0 ;
+
+mdoodz6       = 1;
+
+path = '/Users/tduretz/REPO_GIT/MDOODZ6.0/SOURCE/Compression/';
+path = '/Users/tduretz/REPO_GIT/MDOODZ6.0/SOURCE/Shear_periodic_VEVP/';
+path = '/Users/tduretz/REPO_GIT/MDOODZ6.0/SOURCE/';
+path = '/Users/imac/REPO_GIT/MDOODZ6.0/SOURCE/Huismans_Reg2e20_noise/';
+path = '/Users/imac/REPO_GIT/MDOODZ6.0/SOURCE/Huismans_OS2e5_n1_5/';
+path = '/Users/imac/REPO_GIT/MDOODZ6.0/SOURCE/Huismans_Reg8e19_noise_NEW/';
+
+path = '/Users/imac/REPO_GIT/MDOODZ6.0/SOURCE//';
+
+
+% path = '/Users/imac/REPO_GIT/mdoodz4.5_repo/SOURCE/'
+% mdoodz6       = 0;
+
+
+% path = '/Volumes/Seagate4TB/Wedge_MD6/LR/'
+% path = '/Users/imac/REPO_GIT/MDOODZ6.0/SOURCE/RUN_Ridge_40/'
+% % path = '/Volumes/Seagate4TB/LithoScale/Ext_HR2_5e20/'
+% % path = '/Users/imac/REPO_GIT/MDOODZ6.0_beauty/SOURCE/'
+% path = '/Volumes/Seagate4TB/LithoScale/N3/Comp_HHR_2e20_Courant0.25/'
+% path = '/Volumes/Seagate4TB/LithoScale/N3/Comp_HHR_2e20_Courant0.25/'
+% path = '/Volumes/Seagate4TB/LithoScale/N3/Comp_HR_4e20/'
+
+% path = '/Users/imac/Downloads/MDoodz4.5_Plateau/'
+% mdoodz6       = 0;
+
+% path = '/Volumes/Passport/test_AL/G_1e12/'
+
+>>>>>>> main
 cd(path)
 DEBUG       = 0;
 mdoodz6     = 1;
@@ -62,7 +99,7 @@ emergency_benoit = 0;
 fstrain          = 0;
 shear_heating    = 0;
 princi_stress    = 0;
-director_vector  = 1;
+director_vector  = 0;
 Pl_soft          = 0;
 Sole             = 0;
 overstress       = 0;
@@ -137,8 +174,8 @@ maxX = 1;
 minTxx = -11e0;
 maxTxx =  0.642;
 
-% minStr = 0.01;
-% maxStr = 0.4;
+minStr = 0.01;
+maxStr = 0.4;
 
 minPdyn = -1e8;
 maxPdyn =  5e8;
@@ -1379,7 +1416,9 @@ for istep=istart:ijump:iend
             HSc = 2*sxzc.*exzc + sxxd.*exx + szzd.*ezz;
             minHS=min(HSc(:));
             maxHS=max(HSc(:));
-                
+            
+            load('roma.mat')
+            
             if print2screen == 1
                 figCount = figCount +1;
                 figure(figCount), clf
@@ -1393,7 +1432,11 @@ for istep=istart:ijump:iend
             else
                 subplot(2,1,1)
             end
+<<<<<<< HEAD
 %             colormap(turbo);
+=======
+            colormap(flipud(roma));
+>>>>>>> main
             imagesc( xc_plot, zc_plot, log10(eII) )
             hold on
             if Ccontours == 1; AddCompoContours( filename, VizGrid, crop, lim  ); end

@@ -499,7 +499,7 @@ void  Print2DArrayDouble( DoodzFP* arr, int nx, int nz, double scale ) {
             
             k = cx + cz*nx;
             //        printf("%.2lf ", arr[k]*scale);
-            printf("%.4e ", arr[k]*scale);
+            printf("%.2e ", arr[k]*scale);
         }
         printf("\n");
     }

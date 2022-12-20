@@ -46,6 +46,7 @@ endif
 
 #---------------------------------------------------#
 # Rules
+<<<<<<< HEAD
 FILES = AnisotropyRoutines.o Main_DOODZ.o FD_Jacobian.o  RheologyParticles.o ChemicalRoutines.o ParticleReseeding.o Solvers.o Routines_BEN.o StokesRoutines.o StokesAssemblyCoupled.o StokesAssemblyDecoupled.o AdvectionRoutines.o RheologyDensity.o HDF5Output.o SparseTools.o ThermalRoutines.o ThermalSolver.o ParticleRoutines.o free_surf.o FlowLaws.o MemoryAllocFree.o InputOutput.o MiscFunctions.o GridRoutines.o setup.o $(SET_PATH)/$(SET).o 
 
 
@@ -56,3 +57,15 @@ Doodzi_$(SET): ${FILES}
 clean:
 	cp $(SET_PATH)/$(SET).txt . 
 	rm -rf *o ./$(SET_PATH)/*.o $(SET) 
+=======
+FILES = Main_DOODZ.o FD_Jacobian.o  RheologyParticles.o ChemicalRoutines.o ParticleReseeding.o Solvers.o Routines_BEN.o StokesRoutines.o StokesAssemblyCoupled.o StokesAssemblyDecoupled.o AdvectionRoutines.o RheologyDensity.o HDF5Output.o SparseTools.o ThermalRoutines.o ThermalSolver.o ParticleRoutines.o free_surf.o FlowLaws.o MemoryAllocFree.o InputOutput.o MiscFunctions.o GridRoutines.o setup.o $(MODEL_PATH)/$(MODEL).o 
+
+
+all: Doodzi_$(MODEL) 
+Doodzi_$(MODEL): ${FILES}
+	cp $(MODEL_PATH)/$(MODEL).txt . 
+	$(CC) ${FILES} -o $(MODEL) ${LIBS}
+
+clean:
+	rm -rf *o ./$(MODEL_PATH)/*.o $(MODEL) 
+>>>>>>> main
