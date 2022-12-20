@@ -6,3 +6,4 @@ deps/
 .DS_Store
 env.cmake
 visualtests-out
+*.log
