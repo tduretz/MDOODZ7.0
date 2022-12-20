@@ -12,6 +12,16 @@ typedef enum { ARITHMETIC = 0,
                HARMONIC   = 1,
                GEOMETRIC  = 2 } ETA_AVG;
 
+// Tensor 2D
+typedef struct {
+   double xx, zz, yy, xz, zx, ii, ii2;
+} Tensor2D;
+
+// Vector 2D
+typedef struct {
+   double x, z;
+} Vector2D;
+
 // params contains the model parameters
 typedef struct {
   char   description[500];
@@ -75,7 +85,7 @@ typedef struct {
   // For Pips
   int      ProgReac, NoReturn, dens_var, Plith_trick, UnsplitDiffReac, kinetics;
   // Anisotropy
-  int      aniso, aniso_fstrain, oop, noise_bg;
+  int      aniso, oop, noise_bg; //aniso_fstrain
   int      eqn_state;
   int      residual_form;
   int      irestart, istep;
@@ -92,7 +102,7 @@ typedef struct {
 typedef struct {
   int    Nb_phases;
   double R;
-  double eta0[20], rho[20], mu[20], Cv[20], k[20], Qr[20], C[20], phi[20],
+  double  eps0[20], tau0[20], eta0[20], rho[20], mu[20], Cv[20], k[20], Qr[20], C[20], phi[20],
           psi[20], Slim[20], n[20], A[20], Ea[20], Va[20], alp[20], bet[20], Qm[20],
           T0[20], P0[20], drho[20], k_eff[20];
   double tpwl[20], Qpwl[20], Vpwl[20], npwl[20], mpwl[20], Apwl[20], apwl[20],
@@ -115,6 +125,8 @@ typedef struct {
   int    reac_soft[20], reac_phase[20];
   int    phase_mix[20], phase_two[20];
   double aniso_factor[20], aniso_angle[20], ani_fac_v[20], ani_fac_e[20], ani_fac_p[20];
+  double axx[20], azz[20], ayy[20];
+  int    ani_fstrain[20];
 } mat_prop;
 
 char                         *GetSetupFileName(int nargs, char *args[]);
@@ -138,20 +150,21 @@ typedef struct {
 typedef double (*SetHorizontalVelocity_f)(MdoodzInput *input, Coordinates coordinates);
 typedef double (*SetVerticalVelocity_f)(MdoodzInput *input, Coordinates coordinates);
 typedef double (*SetTemperature_f)(MdoodzInput *input, Coordinates coordinates);
-typedef int (*SetPhase_f)(MdoodzInput *input, Coordinates coordinates);
-typedef int (*SetDual_f)(MdoodzInput *input, Coordinates coordinates, int phase);
+typedef int    (*SetPhase_f)(MdoodzInput *input, Coordinates coordinates);
+typedef int    (*SetDualPhase_f)(MdoodzInput *input, Coordinates coordinates, int phase);
 typedef double (*SetGrainSize_f)(MdoodzInput *input, Coordinates coordinates, int phase);
 typedef double (*SetPorosity_f)(MdoodzInput *input, Coordinates coordinates, int phase);
 typedef double (*SetDensity_f)(MdoodzInput *input, Coordinates coordinates, int phase);
 typedef double (*SetXComponent_f)(MdoodzInput *input, Coordinates coordinates, int phase);
 typedef double (*SetPressure_f)(MdoodzInput *input, Coordinates coordinates, int phase);
 typedef double (*SetNoise_f)(MdoodzInput *input, Coordinates coordinates, int phase);
+typedef void   (*SetDefGrad_f)(MdoodzInput *input, Coordinates coordinates, int phase, Tensor2D*);
 
 typedef struct {
   SetHorizontalVelocity_f SetHorizontalVelocity;
   SetVerticalVelocity_f   SetVerticalVelocity;
   SetPhase_f              SetPhase;
-  SetDual_f               SetDual;
+  SetDualPhase_f          SetDualPhase;
   SetPressure_f           SetPressure;
   SetNoise_f              SetNoise;
   SetTemperature_f        SetTemperature;
@@ -159,6 +172,7 @@ typedef struct {
   SetPorosity_f           SetPorosity;
   SetDensity_f            SetDensity;
   SetXComponent_f         SetXComponent;
+  SetDefGrad_f            SetDefGrad;
 } SetParticles_ff;
 
 typedef enum {

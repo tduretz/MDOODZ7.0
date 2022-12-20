@@ -4,6 +4,9 @@
 #include "stdio.h"
 #include "stdlib.h"
 
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
 
 void BuildInitialTopography(BuildInitialTopography_ff buildInitialTopography, MdoodzInput *instance, markers *topo_chain) {
   for (int k = 0; k < topo_chain->Nb_part; k++) {
@@ -23,12 +26,20 @@ void BuildInitialTopography(BuildInitialTopography_ff buildInitialTopography, Md
          topo_chain->Nb_part);
 }
 
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
+
 void ValidatePhase(int phaseId, int phasesCount) {
   if (phaseId > phasesCount) {
     printf("Lazy bastard! Fix your particle phase ID! \n");
     exit(144);
   }
 }
+
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
 
 void SetParticles(SetParticles_ff setParticles, MdoodzInput *instance, markers *particles) {
   for (int np = 0; np < particles->Nb_part; np++) {
@@ -41,8 +52,8 @@ void SetParticles(SetParticles_ff setParticles, MdoodzInput *instance, markers *
       particles->phase[np] = 0;
       particles->dual[np]  = 0;
     }
-    if (setParticles.SetDual) {
-      particles->dual[np] = setParticles.SetPhase(instance, coordinates);
+    if (setParticles.SetDualPhase) {
+      particles->dual[np] = setParticles.SetDualPhase(instance, coordinates, particles->phase[np]);
     } else {
       particles->dual[np] = particles->phase[np];
     }
@@ -91,9 +102,24 @@ void SetParticles(SetParticles_ff setParticles, MdoodzInput *instance, markers *
     } else {
       particles->noise[np] = 0.0;
     }
+    Tensor2D F;
+    F.xx=1.; F.xz=0.; F.zx=0.; F.zz=1.; 
+    if (setParticles.SetDefGrad) {
+      setParticles.SetDefGrad(instance, coordinates, particles->phase[np], &F);
+    }
+    if (instance->model.fstrain==1) {
+      particles->Fxx[np] = F.xx;
+      particles->Fxz[np] = F.xz;
+      particles->Fzx[np] = F.zx;
+      particles->Fzz[np] = F.zz;
+    }
     ValidatePhase(particles->phase[np], instance->model.Nb_phases);
   }
 }
+
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
 
 void ValidateInternalPoint(POSITION position, char bcType, Coordinates coordinates, char *setupFunctionName) {
   if (position == INTERNAL && bcType != -1) {
@@ -108,6 +134,10 @@ void ValidateInternalPoint(POSITION position, char bcType, Coordinates coordinat
     exit(144);
   }
 }
+
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
 
 void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
   /* --------------------------------------------------------------------------------------------------------*/
@@ -386,8 +416,8 @@ void ValidateSetup(MdoodzSetup *setup, MdoodzInput *instance) {
       warnings[warningsCount] = "SetParticles.SetPhase is not specified. Model will be homogeneous with phase 0";
       warningsCount++;
     }
-    if (!setup->SetParticles->SetDual) {
-      warnings[warningsCount] = "SetParticles.SetDual is not specified. Phase value will be set";
+    if (!setup->SetParticles->SetDualPhase) {
+      warnings[warningsCount] = "SetParticles.SetDualPhase is not specified. Phase value will be set";
       warningsCount++;
     }
     if (!setup->SetParticles->SetTemperature) {
@@ -416,6 +446,10 @@ void ValidateSetup(MdoodzSetup *setup, MdoodzInput *instance) {
     }
     if (!setup->SetParticles->SetPressure) {
       warnings[warningsCount] = "SetParticles.SetPressure is not specified. SetPressure will be set to 0.0";
+      warningsCount++;
+    }
+    if (!setup->SetParticles->SetDefGrad) {
+      warnings[warningsCount] = "SetParticles.SetDefGrad is not specified. SetDefGrad will be set to 0.0";
       warningsCount++;
     }
   }

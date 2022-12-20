@@ -53,7 +53,6 @@ void ReadDataPowerLaw( mat_prop* mat, params* model, int k, int number, scale* s
             break;
             
         /****************** SPECIAL CASE: user-defined power law flow law ******************/
-            
         case 1 :
             printf("'Homemade' power law flow of the form: eta = eta0 * exp(-Q/n/R/T) * Eii^(1/n - 1):\n" );
             mat->tpwl[k] = 0.0;
@@ -69,28 +68,15 @@ void ReadDataPowerLaw( mat_prop* mat, params* model, int k, int number, scale* s
             break;
 
         case 2 :
-            printf("Maryland Diabase - Mackwell et al. (1998) Homemade Stronger:\n" );
-            mat->tpwl[k] = 1;
-            mat->npwl[k] = 4.7;
+            printf("'Homemade' power law flow with constrained reference stress (tau0)\n" );
+            mat->tpwl[k] = 0.0;
+            mat->npwl[k] = mat->npwl[k];
             mat->mpwl[k] = 0.0;
             mat->rpwl[k] = 0.0;
-            mat->Qpwl[k] = 485.0e3;
-            mat->Vpwl[k] = 0.0e-6;
-            mat->Apwl[k] = 0.11111111*5.0477e-28;
-            mat->fpwl[k] = 0.0;
-            mat->apwl[k] = 0.0;
-            success      = 1;
-            break;
-
-        case 3 :
-            printf("Maryland Diabase - Mackwell et al. (1998) Homemade Weaker:\n" );
-            mat->tpwl[k] = 1;
-            mat->npwl[k] = 4.7;
-            mat->mpwl[k] = 0.0;
-            mat->rpwl[k] = 0.0;
-            mat->Qpwl[k] = 485.0e3;
-            mat->Vpwl[k] = 0.0e-6;
-            mat->Apwl[k] = 0.05*5.0477e-28;
+            mat->Qpwl[k] = mat->Qpwl[k];
+            mat->Vpwl[k] = 0.0;
+            mat->Apwl[k] = pow( pow(2.0, mat->npwl[k]) * mat->eps0[k]/pow(mat->tau0[k], mat->npwl[k]), -mat->npwl[k]);//pow(mat->eta0[k], -mat->npwl[k]);
+            printf("pre exp = %2.2e\n", mat->Apwl[k]);
             mat->fpwl[k] = 0.0;
             mat->apwl[k] = 0.0;
             success      = 1;

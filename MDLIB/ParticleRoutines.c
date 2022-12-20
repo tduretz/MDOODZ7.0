@@ -3341,6 +3341,8 @@ void P2Mastah ( params *model, markers particles, DoodzFP* mat_prop, grid *mesh,
                 dzm = fabs( Z_vect[jp] - particles.z[k]);
                 
                 if ( prop == 0 ) {
+                    // Layer orientation
+                    double nx, nz;
                     // Get material properties (from particules or mat_prop array)
                     switch (flag) {
                         case 0:
@@ -3352,11 +3354,15 @@ void P2Mastah ( params *model, markers particles, DoodzFP* mat_prop, grid *mesh,
                             break;
                             
                         case -1: // Anisotropy: Anisotropy_v2.ipynb
-                            mark_val =  2.0*pow(particles.nx[k], 2.0)*pow(particles.nz[k], 2.0);
+                            nx = particles.nx[k];
+                            nz = particles.nz[k];
+                            mark_val =  2.0*pow(nx, 2.0)*pow(nz, 2.0);
                             break;
                             
                         case -2: // Anisotropy: Anisotropy_v2.ipynb
-                            mark_val = particles.nx[k]*particles.nz[k]*(-pow(particles.nx[k], 2.0) + pow(particles.nz[k], 2.0));
+                            nx = particles.nx[k];
+                            nz = particles.nz[k];
+                            mark_val = nx*nz*(-pow(nx, 2.0) + pow(nz, 2.0));
                             break;
 
                         case -3: // Anisotropy: angle of director

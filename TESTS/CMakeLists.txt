@@ -1,3 +1,9 @@
+if (VALGRIND)
+    find_program( MEMORYCHECK_COMMAND valgrind )
+    set( MEMORYCHECK_COMMAND_OPTIONS "--trace-children=yes --leak-check=full" )
+    message("Valgrind is ON for testing")
+endif()
+
 include(FetchContent)
 FetchContent_Declare(
         googletest

@@ -353,10 +353,10 @@ void            ExtractSolutions(SparseMat *, grid *, params *);
 void            InitialiseSolutionVector(grid *, SparseMat *, params *);
 
 // Viscoelastoplasticity
-void            RotateStresses(grid, markers *, params, scale *);
-void            UpdateParticleStress(grid *, markers *, params *, mat_prop *, scale *);
-void            ShearModCompExpGrid(grid *, mat_prop, params*, scale);
-void            CohesionFrictionDilationGrid(grid *, markers *, mat_prop, params, scale);
+void            RotateStresses(grid, markers*, params, scale*);
+void            UpdateParticleStress(grid*, markers*, params*, mat_prop*, scale*);
+void            ShearModCompExpGrid( grid*, mat_prop*, params*, scale);
+void            CohesionFrictionDilationGrid(grid*, markers*, mat_prop, params, scale);
 
 // Non-Newtonian rheology
 void            UpdateNonLinearity(grid *, markers *, markers *, surface *, mat_prop, params *, Nparams *, scale, int, double);
