@@ -2,17 +2,18 @@
 SHELL := /bin/bash
 
 # Compiler
-CC = /usr/local/Cellar/gcc/11.2.0_3/bin/gcc-11
+#CC = /usr/local/Cellar/gcc/11.2.0_3/bin/gcc-11
+CC =/opt/local/bin/gcc-mp-8
 
 # Path to setup file folder
-SET_PATH = ../SETS
+MODEL_PATH = 
 
 #---------------------------------------------------#
 # C flags
 CFLAGS = -std=c99 -D _UMFPACK_ -I ./include/ -I ./
 
 ifeq ($(OPT),yes)	
-	CFLAGS += -O3 -ftree-vectorize -funroll-loops -finline -fomit-frame-pointer -march=native
+	CFLAGS += -O3 -ftree-vectorize -funroll-loops -finline -fomit-frame-pointer -march=native -fopenmp -D _OMP_
 else
 	CFLAGS += -g -Wall  -O0 -fno-inline -fno-omit-frame-pointer
 endif
@@ -34,7 +35,7 @@ endif
 CFLAGS += -Wno-unused-variable  -Wno-comment
 #---------------------------------------------------#
 # Libraries
-LIBS = -lz -lhdf5
+LIBS = -lz -lhdf5 -lgomp
 
 # Related to SuiteSparse
 LIBS += -L /usr/lib/ -llapack -lcxsparse -lumfpack -lcblas -lamd -lcholmod -lcolamd -lbtf -lsuitesparseconfig -lblas
@@ -46,13 +47,12 @@ endif
 
 #---------------------------------------------------#
 # Rules
-FILES = AnisotropyRoutines.o Main_DOODZ.o FD_Jacobian.o  RheologyParticles.o ChemicalRoutines.o ParticleReseeding.o Solvers.o Routines_BEN.o StokesRoutines.o StokesAssemblyCoupled.o StokesAssemblyDecoupled.o AdvectionRoutines.o RheologyDensity.o HDF5Output.o SparseTools.o ThermalRoutines.o ThermalSolver.o ParticleRoutines.o free_surf.o FlowLaws.o MemoryAllocFree.o InputOutput.o MiscFunctions.o GridRoutines.o setup.o $(SET_PATH)/$(SET).o 
+FILES = test_anisotropy_v1.o 
 
 
-all: Doodzi_$(SET) 
-Doodzi_$(SET): ${FILES}
-	$(CC) ${FILES} -o $(SET) ${LIBS}
+all: Doodzi_$(MODEL) 
+Doodzi_$(MODEL): ${FILES}
+	$(CC) ${FILES} -o test_anisotropy ${LIBS}
 
 clean:
-	cp $(SET_PATH)/$(SET).txt . 
-	rm -rf *o ./$(SET_PATH)/*.o $(SET) 
+	rm -rf *o $(MODEL) 

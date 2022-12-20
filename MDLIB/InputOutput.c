@@ -1020,7 +1020,7 @@ Input ReadInputFile( char *fileName ) {
         exit(1);
     }
 
-    snprintf(model.description, sizeof(model.description), "%s", ReadChar( fin, "description", "no description"));
+    // snprintf(model.description, sizeof(model.description), "%s", ReadChar( fin, "description", "no description"));
 
     // Simulation start/restart from Breakpoint
     model.istep              = ReadInt2( fin, "istep", 0 );
@@ -1202,6 +1202,7 @@ Input ReadInputFile( char *fileName ) {
         materials.C[k]    = ReadMatProps( fin, "C",    k,   1.0e7 )  / scaling.S;
         materials.phi[k]  = ReadMatProps( fin, "phi",  k,    30.0 )  * M_PI/ 180.0;
         materials.psi[k]  = ReadMatProps( fin, "psi",  k,     0.0 )  * M_PI/ 180.0;
+        if (materials.psi[k]>0.0 && model.compressible==0) { printf("Set compressible=1 to activate dilation\n"); exit(1); }
         materials.Slim[k] = ReadMatProps( fin, "Slim" ,k,  1.0e90 )  / scaling.S;
         // Read flow law parameters
         materials.cstv[k]     = ReadMatProps( fin,     "cstv", k,    1.0  );
@@ -1223,6 +1224,7 @@ Input ReadInputFile( char *fileName ) {
         materials.coh_soft[k]   = (int)ReadMatProps( fin, "coh_soft",   k,    0.0   );
         materials.phi_soft[k]   = (int)ReadMatProps( fin, "phi_soft",   k,    0.0   );
         materials.psi_soft[k]   = (int)ReadMatProps( fin, "psi_soft",   k,    0.0   );
+        if (materials.psi_soft[k]>0 && model.compressible==0) { printf("Set compressible=1 to activate dilation softening\n"); exit(1); }
         materials.is_tensile[k] = (int)ReadMatProps( fin, "is_tensile", k,    0.0   );
         materials.C_end[k]     = ReadMatProps( fin, "Ce",     k,    materials.C[k]*scaling.S    ) / scaling.S;
         materials.phi_end[k]   = ReadMatProps( fin, "phie",   k,    materials.phi[k]*180.0/M_PI  ) * M_PI / 180.0;
@@ -1256,7 +1258,6 @@ Input ReadInputFile( char *fileName ) {
         materials.phase_mix[k]  = (int)ReadMatProps( fin, "phase_mix",k,          0.0  );
         materials.phase_two[k]  = (int)ReadMatProps( fin, "phase_mix",k,    (double)k  );
         // Anisotropy
-<<<<<<< HEAD
         materials.aniso_factor[k]   =  ReadMatProps( fin, "aniso_factor", k,    1.0  ); // to be deleted
         materials.aniso_angle[k]    =  ReadMatProps( fin, "aniso_angle",  k,   90.0  )  * M_PI/ 180.0;
         materials.ani_fac_v[k]      =  ReadMatProps( fin, "ani_fac_v",    k,    1.0  );        // viscous anisotropy strength
@@ -1266,10 +1267,6 @@ Input ReadInputFile( char *fileName ) {
         materials.axx[k]            =  ReadMatProps( fin, "axx",    k,    1.0  );              // plastic directional factor xx
         materials.azz[k]            =  ReadMatProps( fin, "azz",    k,    1.0  );              // plastic directional factor zz
         materials.ayy[k]            =  ReadMatProps( fin, "ayy",    k,    1.0  );              // plastic directional factor yy
-=======
-        materials.aniso_factor[k] =      ReadMatProps( fin, "aniso_factor", k,    1.0  );
-        materials.aniso_angle[k]  =      ReadMatProps( fin, "aniso_angle"  ,k,   90.0  )  * M_PI/ 180.0;
->>>>>>> main
         // Check if any flow law is active
         int sum = abs(materials.cstv[k]) + abs(materials.pwlv[k]) + abs(materials.linv[k]) + abs(materials.gbsv[k]) + abs(materials.expv[k]);
         if ( sum == 0 ) {
