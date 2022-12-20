@@ -1205,7 +1205,7 @@ void CohesionFrictionDilationGrid( grid* mesh, markers* particles, mat_prop mate
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-void ShearModCompExpGrid( grid* mesh, mat_prop materials, params *model, scale scaling ) {
+void ShearModCompExpGrid( grid* mesh, mat_prop *materials, params *model, scale scaling ) {
 
   int p, k, l, Nx, Nz, Ncx, Ncz, c0, c1;
   int average = 1;//%model.eta_avg; // SHOULD NOT BE ALLOWED TO BE ELSE THAN 1
@@ -1236,25 +1236,34 @@ void ShearModCompExpGrid( grid* mesh, mat_prop materials, params *model, scale s
 
           // Arithmetic
           if (average == 0) {
-            mesh->mu_n[c0]  += mesh->phase_perc_n[p][c0] * materials.mu[p];
-            mesh->bet_n[c0] += mesh->phase_perc_n[p][c0] * materials.bet[p];
-            if ( model->aniso == 1 ) mesh->aniso_factor_e_n[c0] += mesh->phase_perc_n[p][c0] * materials.ani_fac_e[p];
+            mesh->mu_n[c0]  += mesh->phase_perc_n[p][c0] * materials->mu[p];
+            mesh->bet_n[c0] += mesh->phase_perc_n[p][c0] * materials->bet[p];
+            if ( model->aniso == 1 ) {
+              if (materials->ani_fstrain[p]==0) mesh->aniso_factor_e_n[c0] += mesh->phase_perc_n[p][c0] * materials->ani_fac_e[p];
+              if (materials->ani_fstrain[p]==1) mesh->aniso_factor_e_n[c0] += mesh->phase_perc_n[p][c0] * mesh->FS_AR_n[c0];
+            }
           }
           // Harmonic
           if (average == 1) {
-            mesh->mu_n[c0]  += mesh->phase_perc_n[p][c0] *  1.0/materials.mu[p];
-            mesh->bet_n[c0] += mesh->phase_perc_n[p][c0] *  1.0/materials.bet[p];
-            if ( model->aniso == 1 ) mesh->aniso_factor_e_n[c0] += mesh->phase_perc_n[p][c0] * 1.0/materials.ani_fac_e[p];
+            mesh->mu_n[c0]  += mesh->phase_perc_n[p][c0] *  1.0/materials->mu[p];
+            mesh->bet_n[c0] += mesh->phase_perc_n[p][c0] *  1.0/materials->bet[p];
+            if ( model->aniso == 1 ) {
+              if (materials->ani_fstrain[p]==0) mesh->aniso_factor_e_n[c0] += mesh->phase_perc_n[p][c0] * 1.0/materials->ani_fac_e[p];
+              if (materials->ani_fstrain[p]==1) mesh->aniso_factor_e_n[c0] += mesh->phase_perc_n[p][c0] * 1.0/mesh->FS_AR_n[c0];
+            }
           }
           // Geometric
           if (average == 2) {
-            mesh->mu_n[c0]  += mesh->phase_perc_n[p][c0] *  log(materials.mu[p]);
-            mesh->bet_n[c0] += mesh->phase_perc_n[p][c0] *  log(materials.bet[p]);
-            if ( model->aniso == 1 ) mesh->aniso_factor_e_n[c0] += mesh->phase_perc_n[p][c0] * log(materials.ani_fac_e[p]);
+            mesh->mu_n[c0]  += mesh->phase_perc_n[p][c0] *  log(materials->mu[p]);
+            mesh->bet_n[c0] += mesh->phase_perc_n[p][c0] *  log(materials->bet[p]);
+            if ( model->aniso == 1 ) {
+              if (materials->ani_fstrain[p]==0) mesh->aniso_factor_e_n[c0] += mesh->phase_perc_n[p][c0] * log(materials->ani_fac_e[p]);
+              if (materials->ani_fstrain[p]==1) mesh->aniso_factor_e_n[c0] += mesh->phase_perc_n[p][c0] * log(mesh->FS_AR_n[c0]);
+            }
           }
 
           // Standard arithmetic interpolation
-          mesh->alp  [c0] += mesh->phase_perc_n[p][c0] * materials.alp[p];
+          mesh->alp  [c0] += mesh->phase_perc_n[p][c0] * materials->alp[p];
 
         }
         // Post-process for geometric/harmonic averages
@@ -1289,21 +1298,30 @@ void ShearModCompExpGrid( grid* mesh, mat_prop materials, params *model, scale s
 
           // Arithmetic
           if (average == 0) {
-            mesh->mu_s[c1]  += mesh->phase_perc_s[p][c1] * materials.mu[p];
-            mesh->bet_s[c1] += mesh->phase_perc_s[p][c1] * materials.bet[p];
-            if ( model->aniso == 1 ) mesh->aniso_factor_e_s[c1] += mesh->phase_perc_s[p][c1] * materials.ani_fac_e[p];
+            mesh->mu_s[c1]  += mesh->phase_perc_s[p][c1] * materials->mu[p];
+            mesh->bet_s[c1] += mesh->phase_perc_s[p][c1] * materials->bet[p];
+            if ( model->aniso == 1 ) {
+              if (materials->ani_fstrain[p]==0) mesh->aniso_factor_e_s[c1] += mesh->phase_perc_s[p][c1] * materials->ani_fac_e[p];
+              if (materials->ani_fstrain[p]==1) mesh->aniso_factor_e_s[c1] += mesh->phase_perc_s[p][c1] * mesh->FS_AR_s[c1];
+            }
           }
           // Harmonic
           if (average == 1) {
-            mesh->mu_s[c1]  += mesh->phase_perc_s[p][c1] *  1.0/materials.mu[p];
-            mesh->bet_s[c1] += mesh->phase_perc_s[p][c1] *  1.0/materials.bet[p];
-            if ( model->aniso == 1 ) mesh->aniso_factor_e_s[c1] += mesh->phase_perc_s[p][c1] *  1.0/materials.ani_fac_e[p];
+            mesh->mu_s[c1]  += mesh->phase_perc_s[p][c1] *  1.0/materials->mu[p];
+            mesh->bet_s[c1] += mesh->phase_perc_s[p][c1] *  1.0/materials->bet[p];
+            if ( model->aniso == 1 ) {
+              if (materials->ani_fstrain[p]==0) mesh->aniso_factor_e_s[c1] += mesh->phase_perc_s[p][c1] *  1.0/materials->ani_fac_e[p];
+              if (materials->ani_fstrain[p]==1) mesh->aniso_factor_e_s[c1] += mesh->phase_perc_s[p][c1] *  1.0/mesh->FS_AR_s[c1];
+            }
           }
           // Geometric
           if (average == 2) {
-            mesh->mu_s[c1]  += mesh->phase_perc_s[p][c1] *  log(materials.mu[p]);
-            mesh->bet_s[c1] += mesh->phase_perc_s[p][c1] *  log(materials.bet[p]);
-            if ( model->aniso == 1 ) mesh->aniso_factor_e_s[c1] += mesh->phase_perc_s[p][c1] *  log(materials.ani_fac_e[p]);
+            mesh->mu_s[c1]  += mesh->phase_perc_s[p][c1] *  log(materials->mu[p]);
+            mesh->bet_s[c1] += mesh->phase_perc_s[p][c1] *  log(materials->bet[p]);
+            if ( model->aniso == 1 ) {
+              if (materials->ani_fstrain[p]==0) mesh->aniso_factor_e_s[c1] += mesh->phase_perc_s[p][c1] *  log(materials->ani_fac_e[p]);
+              if (materials->ani_fstrain[p]==1) mesh->aniso_factor_e_s[c1] += mesh->phase_perc_s[p][c1] *  log(mesh->FS_AR_s[c1]);
+            }
           }
 
         }

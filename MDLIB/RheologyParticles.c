@@ -1211,12 +1211,12 @@ firstprivate( model )
             txx   = mesh->sxxd[k1];
             tzz   = mesh->szzd[k1];
             txz   = txz_n[k1];
-            if (model->StressRotation==1) { // Jaumann rate
+            if (model->StressRotation==1 && model->advection==1) { // Jaumann rate
                 angle = dt*om_n[k1];
                 mesh->sxxd[k1] = (txx*cos(angle) - txz*sin(angle))*cos(angle) - (txz*cos(angle) - tzz*sin(angle))*sin(angle);
                 mesh->szzd[k1] = (txx*sin(angle) + txz*cos(angle))*sin(angle) + (txz*sin(angle) + tzz*cos(angle))*cos(angle);
             }
-            if (model->StressRotation==2) { // Upper convected rate
+            if (model->StressRotation==2 && model->advection==1) { // Upper convected rate
                 mesh->sxxd[k1] = mesh->sxxd[k1] - dt * mesh->VE_n[k1] * ( -2.0*txx*dudx_n[k1] - 2.0*txz*dudz_n[k1]);
                 mesh->szzd[k1] = mesh->szzd[k1] - dt * mesh->VE_n[k1] * ( -2.0*tzz*dvdz_n[k1] - 2.0*txz*dvdx_n[k1]);
             }        
@@ -1230,18 +1230,18 @@ firstprivate( model )
             txx   = txx_s[k1];
             tzz   = tzz_s[k1];
             txz   = mesh->sxz[k1];
-            if (model->StressRotation==1) { // Jaumann rate
+            if (model->StressRotation==1 && model->advection==1) { // Jaumann rate
                 angle = dt*om_s[k1];
                 mesh->sxz[k1] = (txx*cos(angle) - txz*sin(angle))*sin(angle) + (txz*cos(angle) - tzz*sin(angle))*cos(angle);
             }
-            if (model->StressRotation==2) { // Upper convected rate
+            if (model->StressRotation==2 && model->advection==1) { // Upper convected rate
                 mesh->sxz[k1] = mesh->sxz[k1] - dt * mesh->VE_s[k1] * (      txx*dudz_s[k1] -     txx*dvdx_s[k1] - txz*(dudx_s[k1]+ dvdz_s[k1]) );
             }
         }
     }
     
     // Rotate director directly on particles
-    if ( model->aniso == 1 ) {
+    if ( model->aniso == 1 && model->advection==1) {
 
 #pragma omp parallel for shared( particles, mesh ) firstprivate( dt, model ) private( k )
         for ( k=0; k<particles->Nb_part; k++ ) {
