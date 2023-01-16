@@ -1,6 +1,7 @@
 #include "math.h"
 #include "mdoodz.h"
 #include "stdlib.h"
+#include "stdio.h"
 
 static bool isPerturbationInitialised = false;
 
@@ -26,8 +27,8 @@ void        InitialisePerturbation(MdoodzInput *input) {
 
     // Generate perturbed contours
     for (int ic = 30; ic < ncx - 30; ic++) {
-      input->pert_lo[il][ic] = 1 * A * (double) rand() / RAND_MAX - A / 2;
-      input->pert_up[il][ic] = 1 * A * (double) rand() / RAND_MAX - A / 2;
+      input->pert_lo[il][ic] = 1 * A * (double) arc4random() / UINT32_MAX - A / 2;
+      input->pert_up[il][ic] = 1 * A * (double) arc4random() / UINT32_MAX - A / 2;
     }
 
     // Smooth contours with diffusion
