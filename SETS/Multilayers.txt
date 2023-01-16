@@ -73,10 +73,9 @@ shear_style     = 0
 isperiodic_x    = 0
 ispureshear_ALE = 1
 EpsBG           = 1
-user0           = 1     / temperature [°C]
-user1           = 0.05  / inclusion radius [m]
-user2           = 0.1
-user3           = 0
+user0           = 0.1   / layer height
+user1           = 1.0   / spacing
+user2           = 9     / n layers
 
 /**** GRAVITY ****/
 gx = 0.0000

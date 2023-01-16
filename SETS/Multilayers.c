@@ -44,16 +44,15 @@ void        InitialisePerturbation(MdoodzInput *input) {
 }
 
 int SetPhase(MdoodzInput *input, Coordinates coordinates) {
-  int    nlayers = 9;
-  double H       = input->model.user2 / input->scaling.L;
-  double Lz      = (double) (input->model.zmax - input->model.zmin);
+  int    nlayers = (int) input->model.user2;
+  double H       = input->model.user0 / input->scaling.L;
   int    ncx     = input->model.Nx - 1;
 
   if (!isPerturbationInitialised) {
     InitialisePerturbation(input);
   }
 
-  double spacing = (Lz - nlayers * H - 2 * 6 / input->scaling.L) / 8;
+  double spacing = -input->model.user1 / input->scaling.L;
   for (int il = 0; il < nlayers; il++) {
 
     double layer_bottom = input->model.zmin + 6 / input->scaling.L + il * (H + spacing);
@@ -72,14 +71,7 @@ int SetPhase(MdoodzInput *input, Coordinates coordinates) {
       return il + 1;
     }
   }
-
-
-  const double radius = input->model.user1 / input->scaling.L;
-  if (coordinates.x * coordinates.x + coordinates.z * coordinates.z < radius * radius) {
-    return 1;
-  } else {
-    return 0;
-  }
+  return 0;
 }
 
 double SetDensity(MdoodzInput *input, Coordinates coordinates, int phase) {
