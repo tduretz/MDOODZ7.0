@@ -250,7 +250,6 @@ struct MdoodzInput {
   scale              scaling;
   CrazyConductivity *crazyConductivity;
   Geometry          *geometry;
-  double **pert_lo, **pert_up;
 };
 
 void  RunMDOODZ(char *inputFileName, MdoodzSetup *setup);
