@@ -21,7 +21,7 @@ void        InitialisePerturbation(MdoodzInput *input) {
     input->pert_up[il] = calloc(ncx, sizeof(double));
   }
 
-  double A = 100.0e-2 / input->scaling.L;
+  double A = 0.5 / input->scaling.L;
 
   for (int il = 0; il < nlayers; il++) {
 
