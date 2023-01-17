@@ -6,7 +6,7 @@ static bool isPerturbationInitialised = false;
 static double **pert_lo, **pert_up;
 
 void        InitialisePerturbation(MdoodzInput *input) {
-  int      nlayers  = 9;
+  int      nlayers  = (int) input->model.user2;
   int      ncx      = input->model.Nx - 1;
   double **pert_lo0 = calloc(nlayers, sizeof(double *));
   double **pert_up0 = calloc(nlayers, sizeof(double *));
