@@ -448,10 +448,6 @@ void ValidateSetup(MdoodzSetup *setup, MdoodzInput *instance) {
       warnings[warningsCount] = "SetParticles.SetPressure is not specified. SetPressure will be set to 0.0";
       warningsCount++;
     }
-    if (!setup->SetParticles->SetDefGrad) {
-      warnings[warningsCount] = "SetParticles.SetDefGrad is not specified. SetDefGrad will be set to 0.0";
-      warningsCount++;
-    }
   }
 
   if (!setup->SetBCs) {
