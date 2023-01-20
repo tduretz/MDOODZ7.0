@@ -24,10 +24,14 @@ void        InitialisePerturbation(MdoodzInput *input) {
 
   for (int il = 0; il < nlayers; il++) {
     for (int ic = 30; ic < ncx - 30; ic++) {
+#ifdef __APPLE__
       pert_lo[il][ic] = 1 * A * (double) arc4random() / UINT32_MAX - A / 2;
       pert_up[il][ic] = 1 * A * (double) arc4random() / UINT32_MAX - A / 2;
+#else
+      pert_lo[il][ic] = 1 * A * (double) rand() / RAND_MAX - A / 2;
+      pert_up[il][ic] = 1 * A * (double) rand() / RAND_MAX - A / 2;
+#endif
     }
-
     double D = 0.4;
     for (int it = 0; it < ncx; it++) {
       for (int ic = 0; ic < ncx - 0; ic++) {
