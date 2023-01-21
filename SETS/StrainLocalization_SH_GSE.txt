@@ -1,10 +1,10 @@
 **** RESTART ****/
-istep =00001
+istep =00010
 irestart = 0
 
 /**** OUTPUT FILES ****/
 writer = 1
-writer_step = 1
+writer_step = 5
 writer_markers = 0
 writer_debug   = 0
 
@@ -17,7 +17,7 @@ T   = 100
 /**** SPACE-TIME ****/
 Nx          = 101
 Nz          = 51
-Nt          = 5    / 5 steps ~ 5% strain as in Fig 2. Panel B 
+Nt          = 20    / 5 steps ~ 5% strain as in Fig 2. Panel B 
 xmin        = -35e3
 xmax        =  35e3
 zmin        = -0e3
@@ -62,7 +62,7 @@ maxeta  = 1e26
 /**** SETUP DEPENDANT ****/
 EpsBG           = 5e-14 /Background strain rate
 PrBG            = 0     
-user0           = 400 / background T
+user0           = 500 / background T
 user1           = 3e3 / radius of perturbation
 user2           = 0
 user3           = 0
@@ -92,11 +92,13 @@ alp  = 10.0e-6
 bet  = 1e-11
 drho = 0
 cstv = 0             / constant visc law
-pwlv = -12            / disloc. creep
-linv = 0             / diff. creep
+pwlv = 40            / disloc. creep
+force_act_vol_ast = 1
+act_vol_dis_ast   = 0.0
+act_vol_dif_ast   = 0.0
+linv = 40            / diff. creep
 gbsv = 0             / grain boundary sliding
 expv = 0             / peierls creep
-gsel = 0             / grain size evo.
 eta0 = 1e22
 npwl = 1
 Qpwl = 0
@@ -121,7 +123,6 @@ pwlv = -10            / disloc. creep
 linv = 0             / diff. creep
 gbsv = 0             / grain boundary sliding
 expv = 0             / peierls creep
-gsel = 0             / grain size evo.
 eta0 = 1e22
 npwl = 1
 Qpwl = 0
