@@ -36,6 +36,7 @@ typedef struct {
   int    constant;
   int    gbs;
   int    phase;
+  int    noisy;
   double d;
 } LocalIterationParams;
 

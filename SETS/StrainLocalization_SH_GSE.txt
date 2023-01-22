@@ -1,5 +1,5 @@
 **** RESTART ****/
-istep =00010
+istep =00030
 irestart = 0
 
 /**** OUTPUT FILES ****/
@@ -14,17 +14,19 @@ L   = 1e4
 V   = 1e-9
 T   = 100
  
-/**** SPACE-TIME ****/
+/**** SPACE ****/
 Nx          = 101
 Nz          = 51
-Nt          = 20    / 5 steps ~ 5% strain as in Fig 2. Panel B 
 xmin        = -35e3
 xmax        =  35e3
 zmin        = -0e3
 zmax        =  30e3
+
+/**** TIME ****/
+Nt          = 30  
 dt          = 1.2623e+11
-Courant     = 0.5
-dt_constant = 0
+Courant     = 0.5  
+dt_constant = 0 
 RK          = 4
 
 /**** SWITCHES ****/
@@ -32,9 +34,8 @@ ismechanical    = 1
 isperiodic_x    = 0
 ispureshear_ALE = 1
 isinertial      = 0
-iselastic       = 0
+iselastic       = 1
 isthermal       = 1
-line_search     = 1
 free_surf       = 0
 free_surf_stab  = 0
 eqn_state       = 0
@@ -47,22 +48,32 @@ surf_processes  = 0
 shear_style     = 0 / 0:pure shear --- 1: simple shear
 
 /**** LINEAR SOLVER ****/
-lsolver      = 0
+lsolver      = 1
 penalty      = 1e6
 diag_scaling = 0
+abs_tol_div  = 1e-9
+rel_tol_div  = 1e-9
+abs_tol_mom  = 1e-9
+rel_tol_mom  = 1e-9
 
-/**** NON-LINEAR ITERATIONS ****/
-Newton  = 1
-nit_max = 10
-tol_u   = 5e-8
-tol_p   = 5e-8
-mineta  = 1e-6
-maxeta  = 1e26
+/**** NON-LINEAR SOLVER ****/
+Newton      = 1
+line_search = 1
+nit_max     = 10
+rel_tol_KSP = 1e-4
+abs_tol_u   = 1e-9
+rel_tol_u   = 1e-9
+abs_tol_p   = 1e-9
+rel_tol_p   = 1e-9
+
+/**** VISCOSITY CUT-OFF ****/
+mineta          = 1e16
+maxeta          = 1e26
  
 /**** SETUP DEPENDANT ****/
-EpsBG           = 5e-14 /Background strain rate
+EpsBG           = 1e-14 /Background strain rate
 PrBG            = 0     
-user0           = 500 / background T
+user0           = 700 / background T
 user1           = 3e3 / radius of perturbation
 user2           = 0
 user3           = 0
@@ -93,11 +104,13 @@ bet  = 1e-11
 drho = 0
 cstv = 0             / constant visc law
 pwlv = 40            / disloc. creep
+linv = 40            / diff. creep
+gbsv = 0             / grain boundary sliding
 force_act_vol_ast = 1
 act_vol_dis_ast   = 0.0
 act_vol_dif_ast   = 0.0
-linv = 40            / diff. creep
-gbsv = 0             / grain boundary sliding
+gs    = 40
+gs_ref = 6.15e-6
 expv = 0             / peierls creep
 eta0 = 1e22
 npwl = 1
