@@ -381,9 +381,9 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
 
 void ValidateSetup(MdoodzSetup *setup, MdoodzInput *instance) {
   int   errorsCount   = 0;
-  char *errors[10]    = {};
+  char *errors[20]    = {};
   int   warningsCount = 0;
-  char *warnings[10]  = {};
+  char *warnings[20]  = {};
   if (instance->model.free_surf) {
     if (!setup->BuildInitialTopography) {
       errors[errorsCount] = "If Free Surface mode is ON and BuildInitialTopography MUST be specified. Please set free_surf = 0 or set BuildInitialTopography";
