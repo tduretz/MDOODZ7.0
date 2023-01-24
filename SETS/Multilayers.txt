@@ -1,5 +1,5 @@
 /**** RESTART ****/
-istep = 000050
+istep = 000120
 irestart = 0
 
 /**** OUTPUT FILES ****/
@@ -17,8 +17,8 @@ V   = 1
 T   = 1
 
 /**** SPACE ****/
-Nx      = 301
-Nz      = 301
+Nx      = 201
+Nz      = 201
 Nt      = 500
 xmin    = -3.500000
 zmin    = -3.500000
@@ -49,7 +49,7 @@ rel_tol_mom  = 1e-11
 
 /**** NON-LINEAR SOLVER ****/
 Newton      = 0    / set to 1 only for accurate/production runs
-line_search = 0    / same   
+line_search = 0    / same
 nit_max     = 1    / more than 1 for accurate/production runs
 rel_tol_KSP = 1e-4
 abs_tol_u   = 1e-9
@@ -84,7 +84,7 @@ gx = 0.0000
 gz = 0.000
 
 /**** MAT PROPERTIES ****/
-Nb_phases = 10
+Nb_phases = 2
 
 /**** PHASE 1 ****/
 ID   = 0
@@ -113,182 +113,6 @@ ani_fac_e = 1.0
 
 /**** PHASE 2 ****/
 ID   = 1
-rho  = 2700.00 / inclusion
-mu   = 1
-Cv   = 1050
-k    = 2.5
-Qr   = 0
-C    = 1e90
-phi  = 30
-Slim = 500e9
-alp  = 10.0e-6
-bet  = 1e-11
-drho = 0
-cstv = 0             / constant visc law
-pwlv = 1             / disloc. creep
-linv = 0             / diff. creep
-gbsv = 0             / grain boundary sliding
-expv = 0             / peierls creep
-gsel = 0             / grain size evo.
-eta0 = 1e2
-npwl = 5
-Qpwl = 0
-
-ID   = 2
-rho  = 2700.00 / inclusion
-mu   = 1
-Cv   = 1050
-k    = 2.5
-Qr   = 0
-C    = 1e90
-phi  = 30
-Slim = 500e9
-alp  = 10.0e-6
-bet  = 1e-11
-drho = 0
-cstv = 0             / constant visc law
-pwlv = 1             / disloc. creep
-linv = 0             / diff. creep
-gbsv = 0             / grain boundary sliding
-expv = 0             / peierls creep
-gsel = 0             / grain size evo.
-eta0 = 1e2
-npwl = 5
-Qpwl = 0
-
-ID   = 3
-rho  = 2700.00 / inclusion
-mu   = 1
-Cv   = 1050
-k    = 2.5
-Qr   = 0
-C    = 1e90
-phi  = 30
-Slim = 500e9
-alp  = 10.0e-6
-bet  = 1e-11
-drho = 0
-cstv = 0             / constant visc law
-pwlv = 1             / disloc. creep
-linv = 0             / diff. creep
-gbsv = 0             / grain boundary sliding
-expv = 0             / peierls creep
-gsel = 0             / grain size evo.
-eta0 = 1e2
-npwl = 5
-Qpwl = 0
-
-ID   = 4
-rho  = 2700.00 / inclusion
-mu   = 1
-Cv   = 1050
-k    = 2.5
-Qr   = 0
-C    = 1e90
-phi  = 30
-Slim = 500e9
-alp  = 10.0e-6
-bet  = 1e-11
-drho = 0
-cstv = 0             / constant visc law
-pwlv = 1             / disloc. creep
-linv = 0             / diff. creep
-gbsv = 0             / grain boundary sliding
-expv = 0             / peierls creep
-gsel = 0             / grain size evo.
-eta0 = 1e2
-npwl = 5
-Qpwl = 0
-
-ID   = 5
-rho  = 2700.00 / inclusion
-mu   = 1
-Cv   = 1050
-k    = 2.5
-Qr   = 0
-C    = 1e90
-phi  = 30
-Slim = 500e9
-alp  = 10.0e-6
-bet  = 1e-11
-drho = 0
-cstv = 0             / constant visc law
-pwlv = 1             / disloc. creep
-linv = 0             / diff. creep
-gbsv = 0             / grain boundary sliding
-expv = 0             / peierls creep
-gsel = 0             / grain size evo.
-eta0 = 1e2
-npwl = 5
-Qpwl = 0
-
-ID   = 6
-rho  = 2700.00 / inclusion
-mu   = 1
-Cv   = 1050
-k    = 2.5
-Qr   = 0
-C    = 1e90
-phi  = 30
-Slim = 500e9
-alp  = 10.0e-6
-bet  = 1e-11
-drho = 0
-cstv = 0             / constant visc law
-pwlv = 1             / disloc. creep
-linv = 0             / diff. creep
-gbsv = 0             / grain boundary sliding
-expv = 0             / peierls creep
-gsel = 0             / grain size evo.
-eta0 = 1e2
-npwl = 5
-Qpwl = 0
-
-ID   = 7
-rho  = 2700.00 / inclusion
-mu   = 1
-Cv   = 1050
-k    = 2.5
-Qr   = 0
-C    = 1e90
-phi  = 30
-Slim = 500e9
-alp  = 10.0e-6
-bet  = 1e-11
-drho = 0
-cstv = 0             / constant visc law
-pwlv = 1             / disloc. creep
-linv = 0             / diff. creep
-gbsv = 0             / grain boundary sliding
-expv = 0             / peierls creep
-gsel = 0             / grain size evo.
-eta0 = 1e2
-npwl = 5
-Qpwl = 0
-
-ID   = 8
-rho  = 2700.00 / inclusion
-mu   = 1
-Cv   = 1050
-k    = 2.5
-Qr   = 0
-C    = 1e90
-phi  = 30
-Slim = 500e9
-alp  = 10.0e-6
-bet  = 1e-11
-drho = 0
-cstv = 0             / constant visc law
-pwlv = 1             / disloc. creep
-linv = 0             / diff. creep
-gbsv = 0             / grain boundary sliding
-expv = 0             / peierls creep
-gsel = 0             / grain size evo.
-eta0 = 1e2
-npwl = 5
-Qpwl = 0
-
-ID   = 9
 rho  = 2700.00 / inclusion
 mu   = 1
 Cv   = 1050
