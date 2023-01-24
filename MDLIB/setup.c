@@ -115,6 +115,40 @@ void SetParticles(SetParticles_ff setParticles, MdoodzInput *instance, markers *
     }
     ValidatePhase(particles->phase[np], instance->model.Nb_phases);
   }
+
+  FILE *file;
+  if (instance->model.save_initial_markers == 1) {
+        printf("Write initial particle distribution\n");
+        if (fopen(instance->model.initial_markers_file, "wb")!=NULL){
+            file = fopen(instance->model.initial_markers_file, "wb");
+            printf("Writing %d particles from file %s...\n", particles->Nb_part, instance->model.initial_markers_file);
+        }
+        else {
+            printf("Cannot open file %s, check if the file exists in the current location !\n Exiting", instance->model.initial_markers_file);
+            exit(1);
+        }
+        fwrite( particles->x, sizeof(double), particles->Nb_part, file);
+        fwrite( particles->z, sizeof(double), particles->Nb_part, file);
+        fwrite( particles->phase, sizeof(int), particles->Nb_part, file);
+        fclose(file);
+    }
+    
+    if (instance->model.load_initial_markers == 1) {
+        
+        printf("Read initial particle distribution\n");
+        if (fopen(instance->model.initial_markers_file, "rb")!=NULL){
+            file = fopen(instance->model.initial_markers_file, "rb");
+            printf("Loading %d particles from file %s...\n", particles->Nb_part, instance->model.initial_markers_file);
+        }
+        else {
+            printf("Cannot open file %s, check if the file exists in the current location !\n Exiting", instance->model.initial_markers_file);
+            exit(1);
+        }
+        fread( particles->x, sizeof(double), particles->Nb_part, file);
+        fread( particles->z, sizeof(double), particles->Nb_part, file);
+        fread( particles->phase, sizeof(int), particles->Nb_part, file);
+        fclose(file);
+    }
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
