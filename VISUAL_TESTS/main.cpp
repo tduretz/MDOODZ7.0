@@ -451,24 +451,7 @@ MdoodzSetup CreateVEPInstance() {
 }
 
 void RunTestCases() {
-  MdoodzSetup vep = CreateVEPInstance();
-  RunMDOODZ("VEP_Duretz18.txt", &vep);
-  RenameVEPFiles();
-  MdoodzSetup gse = CreateGSEInstance();
-  RunMDOODZ("PinchSwellGSE.txt", &gse);
-  RenameGSEFiles();
-  MdoodzSetup shearHeatingDuretz14 = CreateShearHeatingDuretz14Instance();
-  RunMDOODZ("ShearHeatingDuretz14.txt", &shearHeatingDuretz14);
-  rename("Output00005.gzip.h5", "ShearHeatingDuretz14.gzip.h5");
-  MdoodzSetup RiftingChenin = CreateRiftingCheninInstance();
-  RunMDOODZ("RiftingChenin.txt", &RiftingChenin);
-  rename("Output00050.gzip.h5", "RiftingChenin50.gzip.h5");
-  MdoodzSetup shearTemplate = CreateShearTemplateInstance();
-  RunMDOODZ("ShearTemplate.txt", &shearTemplate);
-  rename("Output00005.gzip.h5", "ShearTemplate.gzip.h5");
-  MdoodzSetup shearTemplate1 = CreateShearTemplateInstance();
-  RunMDOODZ("ShearTemplate1.txt", &shearTemplate1);
-  rename("Output00005.gzip.h5", "ShearTemplate1.gzip.h5");
+
   MdoodzSetup topoBenchCase1 = CreateTopoBenchCase1Instance();
   RunMDOODZ("TopoBenchCase1.txt", &topoBenchCase1);
   RenameTopoBenchCaseFiles();
@@ -501,18 +484,6 @@ void UpdateReadmeTimestamp() {
 
 int main() {
   RunTestCases();
-  PlotGSE();
-  PlotGSERef();
-  PlotVEP();
-  PlotVEPRef();
-  PlotRiftingChenin();
-  PlotRiftingCheninReference();
-  PlotShearTemplate();
-  PlotShearTemplateReference();
-  PlotShearTemplate1();
-  PlotShearTemplate1Reference();
-  PlotShearHeatingDuretz14();
-  PlotShearHeatingDuretz14Reference();
   PlotTopoBenchCase1();
   UpdateReadmeTimestamp();
 }

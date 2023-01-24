@@ -26,7 +26,8 @@ dt_constant = 1
 dt          = 5e9
 
 /**** LINEAR SOLVER ****/
-abs_tol_div     = 1e-9
+abs_tol_div     = 1e-14
+abs_tol_mom     = 1e-14
 rel_tol_div     = 1e-9
 penalty         = 1e3
 residual_form   = 0
