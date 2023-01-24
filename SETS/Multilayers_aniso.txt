@@ -1,5 +1,5 @@
 /**** RESTART ****/
-istep = 000150
+istep = 000080
 irestart = 0
 
 /**** OUTPUT FILES ****/
@@ -10,6 +10,11 @@ writer_debug      = 0
 writer_energies   = 0
 GNUplot_residuals = 0
 
+/**** SAVE INITIAL MARKERS ****/
+save_initial_markers = 0
+load_initial_markers = 0
+initial_markers_file = Multilayers_markers.bin
+
 /**** SCALES ****/
 eta = 1
 L   = 1
@@ -17,8 +22,8 @@ V   = 1
 T   = 1
 
 /**** SPACE ****/
-Nx      = 151
-Nz      = 151
+Nx      = 201
+Nz      = 201
 xmin    = -3.500000
 zmin    = -3.500000
 xmax    =  3.500000
@@ -38,7 +43,7 @@ RK          = 4
 
 /**** LINEAR SOLVER ****/
 noisy           = 1
-penalty         = 1e7
+penalty         = 1e6
 lsolver         = -1
 abs_tol_div     = 1e-9
 rel_tol_div     = 1e-9
