@@ -91,6 +91,8 @@ typedef struct {
   int      irestart, istep;
   int      writer, writerStep;
   const char     *writerSubfolder;
+  int      save_initial_markers, load_initial_markers;
+  char    *initial_markers_file;
 } params;
 
 // Stucture scale contains scaling parameters
