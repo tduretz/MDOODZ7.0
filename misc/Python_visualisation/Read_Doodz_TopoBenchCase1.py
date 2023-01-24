@@ -5,12 +5,12 @@ from os.path import expanduser
 home = expanduser("~")
 
 # Path relative to your home directory
-path = "/REPO_GIT/MDOODZ7.0_OK/SOURCE/"
+path = "/REPO_GIT/MDOODZ7.0/MDLIB/"
 
 # File numbers
 file_start = 0
 file_step  = 10
-file_end   = 250
+file_end   = 100
 
 # Allocate arrays for logs
 num_files  = int( (file_end-file_start)/file_step + 1)
