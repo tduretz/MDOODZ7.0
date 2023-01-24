@@ -1,6 +1,7 @@
 #include "math.h"
 #include "mdoodz.h"
 #include "stdlib.h"
+#include "stdio.h"
 
 static bool isPerturbationInitialised = false;
 static double **pert_lo, **pert_up;
@@ -76,7 +77,16 @@ int SetPhase(MdoodzInput *input, Coordinates coordinates) {
 }
 
 
-int main() {
+int main(int nargs, char *args[]) {
+  // Input file name
+  char *input_file;
+  if ( nargs < 2 ) {
+    asprintf(&input_file, "Multilayers.txt"); // Default
+  }
+  else {
+    asprintf(&input_file, "%s", args[1]);     // Custom
+  }
+  printf("Running MDoodz7.0 using %s\n", input_file);
   MdoodzSetup setup = {
           .SetParticles = &(SetParticles_ff){
                   .SetPhase   = SetPhase,
@@ -86,5 +96,6 @@ int main() {
                   .SetBCVz = SetPureOrSimpleShearBCVz,
           },
   };
-  RunMDOODZ("Multilayers.txt", &setup);
+  RunMDOODZ(input_file, &setup);
+  free(input_file);
 }

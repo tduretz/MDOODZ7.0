@@ -39,6 +39,10 @@
 #define omp_get_wtime() clock()/CLOCKS_PER_SEC
 #endif
 
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
+
 void EffectiveStrainRate( double* Exx, double* Ezz, double* Exz, double exx, double ezz, double exz, double Txx, double Tzz, double Txz, double d1, double d2, double ani, double eta_e, int elastic ) {
   if (elastic) {
     const double Da11  = 2.0 - 2.0*ani*d1;
@@ -308,7 +312,7 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
   double TmaxPeierls = (1200.0 + zeroC) / scaling->T;// max. T for Peierls
 
   // Parameters for deformation map calculations
-  int    it, nitmax = 20, noisy = 0;
+  int    it, nitmax = 20, noisy = 1;
   int    plastic = 0, constant = 0, dislocation = 0, peierls = 0, diffusion = 0, gbs = 0, elastic = model->iselastic, kinetics = 0;
   double tol = 1.0e-11, res_pl = 0.0, Tii = 0.0, Tii0 = sqrt(Txx0 * Txx0 + Txz0 * Txz0);
   double eta_up = 0.0, eta_ve = 0.0;
@@ -517,8 +521,8 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
   Tii    = 2.0 * eta_ve * Eii;
   if (gs == 1) *d1 = d;
 
-  //  printf("%2.2e %2.2e %2.2e %2.2e %2.2e %2.2e\n", eta_el*scaling->eta, eta_cst*scaling->eta, eta_pwl*scaling->eta, eta_lin*scaling->eta, eta_lo*scaling->eta, eta_up*scaling->eta);
-
+  // printf("%d %2.2e\n", constant, materials->eta0[phase]*scaling->eta);
+  // printf("%d %2.2e %2.2e %2.2e  %2.2e %2.2e\n", phase, eta_el*scaling->eta, eta_cst*scaling->eta, eta_pwl*scaling->eta, eta_lin*scaling->eta, eta_up*scaling->eta);
 
   LocalIterationParams params = {
           .Eii         = Eii,
