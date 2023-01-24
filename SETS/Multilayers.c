@@ -70,7 +70,7 @@ int SetPhase(MdoodzInput *input, Coordinates coordinates) {
     const double pert_lo_c = pert_lo[il][ic];
     const double pert_up_c = pert_up[il][ic];
     if (coordinates.z > layer_bottom + pert_lo_c && coordinates.z < layer_bottom + H + pert_up_c) {
-      return il + 1;
+      return 1;
     }
   }
   return 0;
