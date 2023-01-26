@@ -312,7 +312,7 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
   double TmaxPeierls = (1200.0 + zeroC) / scaling->T;// max. T for Peierls
 
   // Parameters for deformation map calculations
-  int    it, nitmax = 20, noisy = 1;
+  int    it, nitmax = 20, noisy = 0;
   int    plastic = 0, constant = 0, dislocation = 0, peierls = 0, diffusion = 0, gbs = 0, elastic = model->iselastic, kinetics = 0;
   double tol = 1.0e-11, res_pl = 0.0, Tii = 0.0, Tii0 = sqrt(Txx0 * Txx0 + Txz0 * Txz0);
   double eta_up = 0.0, eta_ve = 0.0;
