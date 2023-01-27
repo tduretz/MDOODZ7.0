@@ -144,7 +144,7 @@ class RiftingChenin {
             .MutateInput = RPMutateInput};
     RunMDOODZ("RiftingChenin.txt", &riftingCheninModel);
   }
-}
+};
 
 class TopoBenchCase1 {
   static double TBCSetSurfaceZCoord(MdoodzInput *instance, double x_coord) {
@@ -444,9 +444,6 @@ class GSE {
   }
 };
 
-
-
-
 class VEP_Duretz18 {
   static int VEPSetPhase(MdoodzInput *input, Coordinates coordinates) {
     const double radius = input->model.user1 / input->scaling.L;
@@ -558,6 +555,7 @@ class Shrinking {
 };
 
 void RunTestCases() {
+  /*
   (*new VEP_Duretz18).run();
   RenameVEPFiles();
   (*new GSE).run();
@@ -572,6 +570,7 @@ void RunTestCases() {
   rename("Output00005.gzip.h5", "ShearTemplate1.gzip.h5");
   (*new TopoBenchCase1).run();
   RenameTopoBenchCaseFiles();
+   */
   (*new Shrinking).run();
 }
 
@@ -602,5 +601,6 @@ void UpdateReadmeTimestamp() {
 
 int main() {
   RunTestCases();
+  PlotShrinkingGif();
   UpdateReadmeTimestamp();
 }
