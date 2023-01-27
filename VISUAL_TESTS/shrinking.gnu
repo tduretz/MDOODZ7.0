@@ -2,7 +2,7 @@ reset
 set terminal gif animate delay 40
 set contour
 unset surface
-set cntrparam levels incr -3,1,0
+set cntrparam levels incr -3,0.4,0
 set output filename
 set ylabel "{/:Italic z} [m]"
 set xlabel "{/:Italic x} [m]"
@@ -24,7 +24,7 @@ set key center tmargin
 do for [i=0:9] {
     set dgrid3d 50,50,1
     set table $COUNTOUR
-    splot data u 1:2:4
+    splot data u 1:2:4 index i
     unset table
     unset key
     set style textbox noborder
