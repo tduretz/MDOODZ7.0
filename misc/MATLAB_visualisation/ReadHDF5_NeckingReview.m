@@ -7,14 +7,16 @@ clear all
 clc
 path = '~/REPO_GIT/MDOODZ7.0/MDLIB/MLPS_run_ani/';
 path = '~/REPO_GIT/MDOODZ7.0/MDLIB//';
+path = '~/REPO_GIT/MDOODZ7.0/RUNS/NR02_Newt/';
+
 cd(path)
 DEBUG       = 0;
 mdoodz6     = 1;
 
 % Files
-istart = 250;
+istart = 00;
 ijump  = 10;
-iend   = 250;
+iend   = 00;
 
 %--------------------------------------------------
 % what do you want to plot:
@@ -137,11 +139,11 @@ maxPdyn =  5e8;
 mindiv  =-0.25e-14;
 maxdiv  = 0.25e-14;
 
-minEii = -6;
-maxEii = 3;
+minEii = -17;
+maxEii = -13;
 
-minSii = 0;
-maxSii = 150;
+minSii = 1e6;
+maxSii = 250e6;
 
 % Size of the window
 crop       = 0;
@@ -601,19 +603,31 @@ for istep=istart:ijump:iend
             
             %%%%%%%%%%%%%
             eII_pl = hdf5read(filename,'/Centers/eII_pl');
+%             eII_pl = hdf5read(filename,'/Centers/strain_pl');
             eII_pl = cast(eII_pl , 'double');
             eII_pl = reshape(eII_pl,params(4)-1,params(5)-1)';
             
+            eII_el = hdf5read(filename,'/Centers/eII_el');
+%             eII_el = hdf5read(filename,'/Centers/strain_el');
+            eII_el = cast(eII_el , 'double');
+            eII_el = reshape(eII_el,params(4)-1,params(5)-1)';
+            
             eII_pwl = hdf5read(filename,'/Centers/eII_pwl');
+%             eII_pwl = hdf5read(filename,'/Centers/strain_pwl');
             eII_pwl = cast(eII_pwl , 'double');
             eII_pwl = reshape(eII_pwl,params(4)-1,params(5)-1)';
             
             BDc     = zeros(size(eII_pl,2),1);
+            BDuc    = zeros(size(eII_pl,2),1);
+            BDlc    = zeros(size(eII_pl,2),1);
             BDm     = zeros(size(eII_pl,2),1);
             BDc_sum = zeros(size(eII_pl,2),1);
             BDm_sum = zeros(size(eII_pl,2),1);
             
-            BD = eII_pl > eII_pwl;
+            % Elasto-plastic VS viscous
+            BD = (eII_pl > eII_pwl) | (eII_el > eII_pwl);
+%             % Plastic VS visco-elastic
+%             BD = (eII_pl > eII_pwl) | (eII_pl > eII_el);
             VizGrid = PhaseMap( filename, VizGrid );
             
             
@@ -630,11 +644,10 @@ for istep=istart:ijump:iend
                 all_uc  = sum( VizGrid.ph(:,ix)==0 | VizGrid.ph(:,ix)==(0+4) );
                 brit_uc = sum( VizGrid.ph(:,ix)==0 | VizGrid.ph(:,ix)==(0+4) & BD(:,ix)==1 );
                 
-
-                BDc(ix) = (brit_lc+brit_uc)/(all_lc+all_uc);
-                
-%                 BDm(ix) = (brit_lc+brit_uc+brit)/(all_lc+all_uc+all);
-%                 
+                BDuc(ix) = (brit_uc)/(all_uc);
+                BDlc(ix) = (brit_lc)/(all_lc);
+                BDc(ix)  = (brit_lc+brit_uc)/(all_lc+all_uc);
+                               
             end
             
             
@@ -697,16 +710,31 @@ for istep=istart:ijump:iend
                 end
             end
             
-            figure(2), clf
+            %%%%%%%%%%%%%%%%%%%%%%%%%
+            
+            if print2screen == 1
+                figCount = figCount +1;
+                figure(figCount), clf
+            else
+                figure('Visible', 'Off')
+            end
             subplot(211), hold on
-            plot(VizGrid.x_plot_hr, 1 - (Huc+Hlc)/Hc_ini )
+             plot(VizGrid.x_plot_hr, 1 - (Huc)/(Hc_ini/2) )
+             plot(VizGrid.x_plot_hr, 1 - (Hlc)/(Hc_ini/2) )
             plot(VizGrid.x_plot_hr, 1 - (Hml)/(Hl_ini-Hc_ini) )
-            legend('Crust thinning', 'Mantle thinning' )
+            legend('Upper crust thinning', 'Lower crust thinning', 'Mantle thinning' )
+%             plot(VizGrid.x_plot_hr, 1 - (Huc+Hlc)/Hc_ini )
+%             plot(VizGrid.x_plot_hr, 1 - (Hml)/(Hl_ini-Hc_ini) )
+%             legend('Crust thinning', 'Mantle thinning' )
             
             subplot(212), hold on
-            plot(VizGrid.x_plot, BDc )
-            plot(VizGrid.x_plot, BDm )
-            legend('Crust B/D ratio', 'Mantle B/D ratio' )
+            plot(VizGrid.x_plot, BDuc )
+            plot(VizGrid.x_plot, BDlc )
+            plot(VizGrid.x_plot, BDm  )
+            legend('Upper crust B/D ratio', 'Lower crust B/D ratio', 'Mantle B/D ratio' )
+%             plot(VizGrid.x_plot, BDc )
+%             plot(VizGrid.x_plot, BDm )
+%             legend('Crust B/D ratio', 'Mantle B/D ratio' )
 
             clear VizGrid.ph VizGrid.x VizGrid.z
             
