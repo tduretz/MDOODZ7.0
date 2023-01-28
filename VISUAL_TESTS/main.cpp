@@ -602,5 +602,19 @@ void UpdateReadmeTimestamp() {
 int main() {
   RunTestCases();
   PlotShrinkingGif();
+  PlotShrinkingGifRef();
+  PlotGSE();
+  PlotGSERef();
+  PlotVEP();
+  PlotVEPRef();
+  PlotRiftingChenin();
+  PlotRiftingCheninReference();
+  PlotShearTemplate();
+  PlotShearTemplateReference();
+  PlotShearTemplate1();
+  PlotShearTemplate1Reference();
+  PlotShearHeatingDuretz14();
+  PlotShearHeatingDuretz14Reference();
+  PlotTopoBenchCase1();
   UpdateReadmeTimestamp();
 }

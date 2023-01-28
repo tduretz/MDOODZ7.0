@@ -68,3 +68,13 @@ void PlotShrinkingGif() {
   }
   BuildShrinkingChart(outputFiles, "");
 }
+
+void PlotShrinkingGifRef() {
+  std::string path = "./Shrinking_REF";
+  set<fs::path> outputFiles;
+  for (const auto & entry : fs::directory_iterator(path)) {
+    std::string filePath = entry.path();
+    outputFiles.insert(entry.path());
+  }
+  BuildShrinkingChart(outputFiles, "Ref");
+}
