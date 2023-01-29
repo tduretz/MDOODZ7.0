@@ -136,8 +136,11 @@ double ViscosityConciseAniso( int phase, double lxlz, double lx2, double angle, 
     // Construct initial guess for viscosity: Isolated viscosities 
     I2_v     = I2( &E_rot, ani_fac_v ); 
     if (constant)    eta_cst  = materials->eta0[phase];
-    if (dislocation) eta_pwl  = pow( B_pwl, -1.0/n_pwl ) * pow( I2_v, 0.5*(1-n_pwl)/n_pwl );
+    // if (dislocation) eta_pwl  = pow( B_pwl, -1.0/n_pwl ) * pow( I2_v, 0.5*(1-n_pwl)/n_pwl );
+    if (dislocation) eta_pwl  = B_pwl * pow( I2_v, 0.5*(1-n_pwl)/n_pwl );
     if (elastic)     eta_el   = G*dt; 
+      // printf("%2.2e %2.2e %2.2e\n", B_pwl, n_pwl, sqrt(I2_v)); // DELETE
+
 
     // printf("Exx=%2.4e Ezz = %2.2e Exz=%2.4e\n", Exx, Ezz, Exz);
     // printf("Exx=%2.4e Ezz = %2.2e Exz=%2.4e\n", E_rot.xx, E_rot.zz, E_rot.xz);
@@ -167,7 +170,9 @@ double ViscosityConciseAniso( int phase, double lxlz, double lx2, double angle, 
     eta_ve_n = eta_up_n;
     eta_ve_s = eta_up_s;
     // Iterations for visco-elastic trial
-    if (noisy) printf("Start local VE iterations (cst: %d --- el: %d --- pwl: %d)\n", constant, elastic, dislocation);
+    if (noisy) printf("Start local VE iterations for phase %d (cst: %d --- el: %d --- pwl: %d)\n", phase, constant, elastic, dislocation);
+    // if (noisy) printf("ani_fac_v = %1.1f  ani_fac_p = %1.1f\n", ani_fac_v, ani_fac_p );    // DELETE
+    // if (noisy) printf("e_n=%2.2e e_s=%2.2e eta_pwl=%2.2e\n", eta_ve_n, eta_ve_s, eta_pwl); // DELETE
     for (int it = 0; it < nitmax; it++) {
       // Compute stress in principal plane
       T_rot.xx = 2.0 * eta_ve_n * E_rot.xx;
@@ -180,7 +185,8 @@ double ViscosityConciseAniso( int phase, double lxlz, double lx2, double angle, 
       if (dislocation) *Eii_pwl = C_pwl * pow(Y2_v, 0.5*n_pwl);
       Eii_vis = *Eii_pwl + *Eii_cst;
       // ---------- Viscosities
-      eta_pwl = pow( B_pwl, -1.0/n_pwl ) * pow( *Eii_pwl, (1-n_pwl)/n_pwl );
+      // eta_pwl = pow( B_pwl, -1.0/n_pwl ) * pow( *Eii_pwl, (1-n_pwl)/n_pwl );
+      eta_pwl = B_pwl * pow( *Eii_pwl, (1-n_pwl)/n_pwl );
       // ---------- Residuals
       f_n = 1.0; f_s = 1.0;
       if (constant)    { f_n -= eta_ve_n/eta_cst; f_s -= eta_ve_s/(eta_cst/ani_fac_v); }
@@ -220,9 +226,15 @@ double ViscosityConciseAniso( int phase, double lxlz, double lx2, double angle, 
       // Coupled update of normal and shear viscosities
       eta_ve_n -= deta_n;
       eta_ve_s -= deta_s;
+      // if (noisy) printf("dfnden = %2.2e --- dfndes = %2.2e\n", dfnden, dfndes); DELETE
+      // if (noisy) printf("dfsden = %2.2e --- dfsdes = %2.2e\n", dfsden, dfsdes); DELETE
+      // if (noisy) printf("e_n=%2.2e e_s=%2.2e\n", eta_ve_n, eta_ve_s); DELETE
     }
     *eta_vep = eta_ve_n;
     *ani_vep = eta_ve_n/eta_ve_s;
+
+    // if (phase==1) exit(1);  // DELETE
+
     // Iterations for visco-elasto-viscoplastic correction
     double eta_vp0 = materials->eta_vp[phase], n_vp = materials->n_vp[phase], eta_vp = materials->eta_vp[phase];
     double a1=materials->axx[phase], a2=materials->azz[phase], a3=materials->ayy[phase];

@@ -457,10 +457,12 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         // Interp P --> p0_n , p0_s
         P2Mastah( &input.model, particles, particles.P,     &mesh, mesh.p0_n,   mesh.BCp.type,  1, 0, interp, cent, input.model.itp_stencil);
 
-        // Free surface - subgrid density correction
-        if (input.model.free_surf == 1 ) {
-            SurfaceDensityCorrection( &mesh, input.model, topo, input.scaling  );
-        }
+        // UpdateDensity( &mesh, &particles, &input.materials, &input.model, &input.scaling );
+
+        // // Free surface - subgrid density correction
+        // if (input.model.free_surf == 1 ) { // TODO: include into UpdateDensity
+        //     SurfaceDensityCorrection( &mesh, input.model, topo, input.scaling  );
+        // }
 
         // Lithostatic pressure
         int          Ncx = mesh.Nx - 1 , Ncz =  mesh.Nz - 1;
@@ -535,8 +537,13 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         // // Detect compressible cells
         // if (input.model.compressible == 1) DetectCompressibleCells ( &mesh, &input.model );
 
-        // Get physical properties that are constant throughout each timestep
+        // // Get physical properties that are constant throughout each timestep
         UpdateDensity( &mesh, &particles, &input.materials, &input.model, &input.scaling );
+
+        // Free surface - subgrid density correction
+        if (input.model.free_surf == 1 ) {
+            SurfaceDensityCorrection( &mesh, input.model, topo, input.scaling  );
+        }
 
         // Min/Max interpolated fields
         if (input.model.noisy == 1 ) {
