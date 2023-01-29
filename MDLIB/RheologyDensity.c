@@ -78,19 +78,18 @@ void EffectiveStrainRate( double* Exx, double* Ezz, double* Exz, double exx, dou
 void LocalIterationViscoElastic(LocalIterationMutables mutables, LocalIterationParams params) {
   const int    nitmax = 20;
   const double tol    = 1.0e-11;
-
-  double       eta_ve = *mutables.eta;
+  double eta_ve  = *mutables.eta;
+  double Tii     = *mutables.Tii;
+  double Eii_cst = 0., Eii_pwl = 0., Eii_gbs = 0., Eii_exp = 0., Eii_lin = 0.;
   for (int it = 0; it < nitmax; it++) {
     // Function evaluation at current effective viscosity
-    const double Tii     = 2.0 * eta_ve * params.Eii;
-    double       Eii_cst = 0, Eii_pwl = 0, Eii_gbs = 0, Eii_exp = 0, Eii_lin = 0;
+    Tii     = 2.0 * eta_ve * params.Eii;
     if (params.constant)    Eii_cst = Tii  / 2.0 / params.eta_cst;
     if (params.dislocation) Eii_pwl = params.C_pwl * pow(Tii, params.n_pwl);
     if (params.gbs)         Eii_gbs = params.C_gbs * pow(Tii, params.n_gbs);
     if (params.peierls)     Eii_exp = params.C_exp * pow(Tii, params.ST + params.n_exp);                     // Peierls - power law
     if (params.diffusion)   Eii_lin = params.C_lin * pow(Tii, params.n_lin) * pow(params.d, -params.m_lin); // !!! gs - dependence !!!
     const double            Eii_vis = Eii_pwl + Eii_exp + Eii_lin + Eii_gbs + Eii_cst;
-
     // Residual check
     const double r_eta_ve = params.Eii - params.elastic * Tii  / (2.0 * params.eta_el) - Eii_vis;
     const double res_eta  = fabs(r_eta_ve / params.Eii);
@@ -102,7 +101,6 @@ void LocalIterationViscoElastic(LocalIterationMutables mutables, LocalIterationP
       printf("Visco-Elastic iterations failed!\n");
       exit(0);
     }
-
     // Analytical derivative of function
     double dfdeta = 0.0;
     if (params.elastic)     dfdeta += -params.Eii / params.eta_el;
@@ -110,12 +108,17 @@ void LocalIterationViscoElastic(LocalIterationMutables mutables, LocalIterationP
     if (params.diffusion)   dfdeta += -(Eii_lin) *params.n_lin / eta_ve;
     if (params.dislocation) dfdeta += -(Eii_pwl) *params.n_pwl / eta_ve;
     if (params.constant)    dfdeta += -params.Eii / params.eta_cst;
-
     // Update viscosity
     eta_ve -= r_eta_ve / dfdeta;
   }
 
-  *mutables.eta  = eta_ve;
+  *mutables.eta     = eta_ve;
+  *mutables.Tii     = Tii;
+  *mutables.Eii_cst = Eii_cst;
+  *mutables.Eii_exp = Eii_exp;
+  *mutables.Eii_gbs = Eii_gbs;
+  *mutables.Eii_pwl = Eii_pwl;
+  *mutables.Eii_lin = Eii_lin;
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
@@ -123,23 +126,22 @@ void LocalIterationViscoElastic(LocalIterationMutables mutables, LocalIterationP
 /*--------------------------------------------------------------------------------------------------------------------*/
 
 void LocalIterationViscoElasticGrainSize(LocalIterationMutables mutables, LocalIterationParams params) {
-  const int    nitmax = 200;
-  const double tol    = 1.0e-11;
-
   // Local iterations
-  double       eta_ve = *mutables.eta;
-  double       d_ve   = *mutables.d1;
+  const int    nitmax = 20;
+  const double tol    = 1.0e-11;
+  double d_ve    = *mutables.d1;
+  double eta_ve  = *mutables.eta;
+  double Tii     = *mutables.Tii;
+  double Eii_cst = 0., Eii_pwl = 0., Eii_gbs = 0., Eii_exp = 0., Eii_lin = 0.;
   for (int it = 0; it < nitmax; it++) {
     // Function evaluation at current effective viscosity
-    const double Tii     = 2.0 * eta_ve * params.Eii;
-    double       Eii_cst = 0, Eii_pwl = 0, Eii_gbs = 0, Eii_exp = 0, Eii_lin = 0;
+    Tii     = 2.0 * eta_ve * params.Eii;
     if (params.constant)    Eii_cst = Tii  / 2.0 / params.eta_cst;
     if (params.dislocation) Eii_pwl = params.C_pwl * pow(Tii, params.n_pwl);
     if (params.gbs)         Eii_gbs = params.C_gbs * pow(Tii, params.n_gbs);
     if (params.peierls)     Eii_exp = params.C_exp * pow(Tii, params.ST + params.n_exp);                 // Peierls - power law
     if (params.diffusion)   Eii_lin = params.C_lin * pow(Tii, params.n_lin) * pow(d_ve, -params.m_lin);// !!! gs - dependence !!!
     const double            Eii_vis  = Eii_pwl + Eii_exp + Eii_lin + Eii_gbs + Eii_cst;
-
     // Residual check
     const double r_eta_ve = params.Eii - params.elastic * Tii  / (2.0 * params.eta_el) - Eii_vis;
     const double d_it     = exp(log(params.Ag * params.gam / (params.lam * (1.0 / params.cg) * Tii * (Eii_pwl) *params.pg)) / (1.0 + params.pg));
@@ -154,7 +156,6 @@ void LocalIterationViscoElasticGrainSize(LocalIterationMutables mutables, LocalI
       printf("Visco-Elastic iterations failed!\n");
       exit(0);
     }
-
     // Analytical derivative of function
     double dr_eta_deta = 0.0;
     if (params.elastic)     dr_eta_deta += -params.Eii / params.eta_el;
@@ -165,22 +166,26 @@ void LocalIterationViscoElasticGrainSize(LocalIterationMutables mutables, LocalI
     const double dr_eta_dd = Eii_lin * params.m_lin / (d_ve);
     const double dr_d_dd   = 1.0;
     const double dr_d_deta = -2.0 * params.Eii * (Eii_pwl) *d_it * eta_ve * params.lam * params.pg * (-0.5 * params.Ag * params.cg * params.gam * params.n_pwl / (params.Eii * (Eii_pwl) *pow(eta_ve, 2) * params.lam * params.pg) - 0.5 * params.Ag * params.cg * params.gam / (params.Eii * (Eii_pwl) *pow(eta_ve, 2) * params.lam * params.pg)) / (params.Ag * params.cg * params.gam * (params.pg + 1.0));
-
     // Inverse of the Jacobian: TODO: call function Solve2x2()
-    const double det       = dr_eta_deta * dr_d_dd - dr_eta_dd * dr_d_deta;// determinant
-    const double ai        = 1.0 / det * dr_d_dd;                          // inverse matrix components
+    const double det       = dr_eta_deta * dr_d_dd - dr_eta_dd * dr_d_deta; // determinant
+    const double ai        =  1.0 / det * dr_d_dd;                          // inverse matrix components
     const double bi        = -1.0 / det * dr_eta_dd;
     const double ci        = -1.0 / det * dr_d_deta;
-    const double di        = 1.0 / det * dr_eta_deta;
+    const double di        =  1.0 / det * dr_eta_deta;
     const double deta      = (ai * r_eta_ve + bi * r_d);// inverse times rhs
     const double dd        = (ci * r_eta_ve + di * r_d);
-
     // Coupled update of viscosity and grain size
     eta_ve -= deta;
     d_ve    -= dd;
   }
-  *mutables.eta = eta_ve;
-  *mutables.d1 = d_ve;
+  *mutables.eta     = eta_ve;
+  *mutables.d1      = d_ve;
+  *mutables.Tii     = Tii;
+  *mutables.Eii_cst = Eii_cst;
+  *mutables.Eii_exp = Eii_exp;
+  *mutables.Eii_gbs = Eii_gbs;
+  *mutables.Eii_pwl = Eii_pwl;
+  *mutables.Eii_lin = Eii_lin;
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
@@ -561,18 +566,13 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
           .d           = d,
           .n_gbs       = n_gbs};
   if (gs) {
-    LocalIterationViscoElasticGrainSize((LocalIterationMutables){.eta = &eta_ve, .d1 = d1}, params);
+    LocalIterationViscoElasticGrainSize((LocalIterationMutables){.eta = &eta_ve, .Tii = &Tii, .Eii_cst=Eii_cst, .Eii_lin=Eii_lin, .Eii_gbs=Eii_gbs, .Eii_pwl=Eii_pwl, .Eii_exp=Eii_exp, .d1 = d1}, params);
   } else {
-    LocalIterationViscoElastic((LocalIterationMutables){.eta = &eta_ve}, params);
+    LocalIterationViscoElastic((LocalIterationMutables){.eta = &eta_ve, .Tii = &Tii, .Eii_cst=Eii_cst, .Eii_lin=Eii_lin, .Eii_gbs=Eii_gbs, .Eii_pwl=Eii_pwl, .Eii_exp=Eii_exp}, params);
   }
-
-  // Recalculate stress components
-  Tii = 2.0 * eta_ve * Eii;
-  if (noisy) printf("d  = %2.2e, Tii = %2.2e \n", *d1*scaling->L, Tii*scaling->S);
-
+  if (noisy) printf("d  = %2.2e, Tii = %2.2e \n", *d1*scaling->L, Tii*scaling->S);  //------------------------------------------------------------------------//
 
   //------------------------------------------------------------------------//
-
   if (plastic == 1) {
     // Check yield stress
     F_trial = Tii - Tyield;
@@ -670,8 +670,6 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
     (*div_pl)   = divp;
   }
 
-  // printf("%d %2.2e %2.2e %2.2e %2.2e %2.2e %2.2e %2.2e %2.2e\n",is_pl, *etaVE, eta_ve, eta_el*scaling->eta, eta_cst*scaling->eta, eta_pwl*scaling->eta, eta_lin*scaling->eta, eta_lo*scaling->eta, eta_up*scaling->eta);
-
   /*----------------------------------------------------*/
   /*----------------------------------------------------*/
   /*----------------------------------------------------*/
@@ -685,27 +683,38 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
   if ( post_process == 1) {
 
     // Strain rates: VEP partitioning
-    eta_pwl  = pow(2.0*C_pwl,-1.0) * pow(Tii, 1.0-n_pwl);
-
+    if ( dislocation == 1 )              eta_pwl  = B_pwl * pow( *Eii_pwl, 1.0/n_pwl - 1.0 ); 
+    if ( diffusion   == 1 )              eta_lin  = B_lin * pow( *Eii_lin, 1.0/n_lin - 1.0 ) * pow(d, m_lin/n_lin);
+    if ( gbs         == 1 )              eta_gbs  = B_gbs * pow( *Eii_gbs, 1.0/n_gbs - 1.0 ); 
+    if ( peierls     == 1 )              eta_exp  = B_exp * pow( *Eii_exp, 1.0 / (ST + n_exp) - 1.0); 
     *Exx_el =  (double)elastic*( *Txx-Txx0)/2.0/eta_el;
     *Ezz_el =  (double)elastic*( *Tzz-Tzz0)/2.0/eta_el;
     *Exz_el =  (double)elastic*( *Txz-Txz0)/2.0/eta_el;
-    Exx_pl = gdot*dQdtxx    ;
-    Ezz_pl = gdot*dQdtzz    ;
-    Exz_pl = gdot*dQdtxz/2.0;
-    Exx_pwl = *Txx/2.0/eta_pwl;
-    Ezz_pwl = *Tzz/2.0/eta_pwl;
-    Exz_pwl = *Txz/2.0/eta_pwl;
+    Exx_pl  = gdot*dQdtxx    ;
+    Ezz_pl  = gdot*dQdtzz    ;
+    Exz_pl  = gdot*dQdtxz/2.0;
+    if ( constant    == 1 ) Exx_cst = *Txx/2.0/eta_cst;
+    if ( constant    == 1 ) Ezz_cst = *Tzz/2.0/eta_cst;
+    if ( constant    == 1 ) Exz_cst = *Txz/2.0/eta_cst;
+    if ( dislocation == 1 ) Exx_pwl = *Txx/2.0/eta_pwl;
+    if ( dislocation == 1 ) Ezz_pwl = *Tzz/2.0/eta_pwl;
+    if ( dislocation == 1 ) Exz_pwl = *Txz/2.0/eta_pwl;
+    if ( diffusion   == 1 ) Exx_lin = *Txx/2.0/eta_lin;
+    if ( diffusion   == 1 ) Ezz_lin = *Tzz/2.0/eta_lin;
+    if ( diffusion   == 1 ) Exz_lin = *Txz/2.0/eta_lin;
+    if ( peierls     == 1 ) Exx_exp = *Txx/2.0/eta_exp;
+    if ( peierls     == 1 ) Ezz_exp = *Tzz/2.0/eta_exp;
+    if ( peierls     == 1 ) Exz_exp = *Txz/2.0/eta_exp;
+    if ( gbs         == 1 ) Exx_gbs = *Txx/2.0/eta_gbs;
+    if ( gbs         == 1 ) Ezz_gbs = *Tzz/2.0/eta_gbs;
+    if ( gbs         == 1 ) Exz_gbs = *Txz/2.0/eta_gbs;
 
     // Compute dissipative strain rate components
     *Exx_diss =  Exx_pl + Exx_lin +  Exx_pwl + Exx_exp + Exx_gbs + Exx_cst;
     *Ezz_diss =  Ezz_pl + Ezz_lin +  Ezz_pwl + Ezz_exp + Ezz_gbs + Ezz_cst;
     *Exz_diss =  Exz_pl + Exz_lin +  Exz_pwl + Exz_exp + Exz_gbs + Exz_cst;
     *Eii_el   = (double)elastic* sqrt( 0.5*(pow(*Exx_el,2) + pow(*Ezz_el,2)) + pow(*Exz_el,2) );
-    // printf("%2.4e %2.4e %2.4e %2.4e %2.4e\n ", Tii, *Txx, *Tzz, *Txz, sqrt(0.5*(pow(*Txx,2) + pow(*Tzz,2) + pow(-*Txx - *Tzz,2)) + pow(*Txz,2)  ));
-    // printf("%2.4e %2.4e %2.4e %2.4e %2.4e %2.4e \n ", Exx, Ezz, Exz, Txx0, Tzz0, Txz0);
-    *Eii_pwl  =  Tii/2.0/eta_pwl;
-    *Eii_pl = gdot/2.0;
+    *Eii_pl   = gdot/2.0;
 
     // Partitioning of volumetric strain
     *div_pl  = divp;

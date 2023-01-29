@@ -1,6 +1,6 @@
 **** RESTART ****/
 istep =00030
-irestart = 0
+irestart = 1
 
 /**** OUTPUT FILES ****/
 writer = 1
@@ -73,7 +73,7 @@ maxeta          = 1e26
 /**** SETUP DEPENDANT ****/
 EpsBG           = 1e-14 /Background strain rate
 PrBG            = 0     
-user0           = 700 / background T
+user0           = 550 / background T
 user1           = 3e3 / radius of perturbation
 user2           = 0
 user3           = 0
@@ -111,7 +111,7 @@ act_vol_dis_ast   = 0.0
 act_vol_dif_ast   = 0.0
 gs    = 40
 gs_ref = 6.15e-6
-expv = 0             / peierls creep
+expv = 40             / peierls creep
 eta0 = 1e22
 npwl = 1
 Qpwl = 0
