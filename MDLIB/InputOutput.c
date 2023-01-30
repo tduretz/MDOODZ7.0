@@ -1038,8 +1038,12 @@ Input ReadInputFile( char *fileName ) {
     model.writerSubfolder = ReadChar( fin, "writerSubfolder", "");
 
     // Input
-    model.import_files_dir    = ReadChar( fin, "import_files_dir", "../../IMPORT");
-    model.import_file         = ReadChar( fin, "import_file", "blah.bin");
+    model.import_files_dir     = ReadChar( fin, "import_files_dir", "../../IMPORT");
+    model.import_file          = ReadChar( fin, "import_file", "blah.bin");
+    model.save_initial_markers = ReadInt2( fin, "save_initial_markers",          0 );
+    model.load_initial_markers = ReadInt2( fin, "load_initial_markers",          0 );
+
+    model.initial_markers_file = ReadChar( fin, "initial_markers_file", "markers.bin");
 
     // Read scales for non-dimensionalisation
     scale scaling             = (scale){
@@ -1301,11 +1305,6 @@ Input ReadInputFile( char *fileName ) {
         if ( abs(materials.expv[k])>0 ) ReadDataExponential( &materials, &model, k, materials.expv[k], &scaling );
         if ( abs(materials.gs[k])  >0 ) ReadDataGSE        ( &materials, &model, k, materials.gs[k],   &scaling );
         if ( abs(materials.kin[k]) >0 ) ReadDataKinetics   ( &materials, &model, k, materials.kin[k],  &scaling );
-
-        if ( abs(materials.cstv[k])>0 ) {
-            materials.eta0[k]  /= scaling.eta;
-            printf("eta0 = %2.2e Pa.s\n", materials.eta0[k]*scaling.eta);
-        }
     }
 
     materials.R = Rg / (scaling.J/scaling.T);

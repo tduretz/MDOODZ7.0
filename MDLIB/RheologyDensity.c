@@ -39,6 +39,10 @@
 #define omp_get_wtime() clock()/CLOCKS_PER_SEC
 #endif
 
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
+
 void EffectiveStrainRate( double* Exx, double* Ezz, double* Exz, double exx, double ezz, double exz, double Txx, double Tzz, double Txz, double d1, double d2, double ani, double eta_e, int elastic ) {
   if (elastic) {
     const double Da11  = 2.0 - 2.0*ani*d1;
@@ -537,6 +541,7 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
   }
 
   // printf("%2.2e %2.2e %2.2e %2.2e %2.2e\n", eta_el*scaling->eta, eta_cst*scaling->eta, eta_pwl*scaling->eta, eta_lin*scaling->eta, eta_up*scaling->eta);
+
 
   LocalIterationParams params = {
           .noisy       = noisy,

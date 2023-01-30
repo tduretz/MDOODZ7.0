@@ -115,6 +115,40 @@ void SetParticles(SetParticles_ff setParticles, MdoodzInput *instance, markers *
     }
     ValidatePhase(particles->phase[np], instance->model.Nb_phases);
   }
+
+  FILE *file;
+  if (instance->model.save_initial_markers == 1) {
+        printf("Write initial particle distribution\n");
+        if (fopen(instance->model.initial_markers_file, "wb")!=NULL){
+            file = fopen(instance->model.initial_markers_file, "wb");
+            printf("Writing %d particles from file %s...\n", particles->Nb_part, instance->model.initial_markers_file);
+        }
+        else {
+            printf("Cannot open file %s, check if the file exists in the current location !\n Exiting", instance->model.initial_markers_file);
+            exit(1);
+        }
+        fwrite( particles->x, sizeof(double), particles->Nb_part, file);
+        fwrite( particles->z, sizeof(double), particles->Nb_part, file);
+        fwrite( particles->phase, sizeof(int), particles->Nb_part, file);
+        fclose(file);
+    }
+    
+    if (instance->model.load_initial_markers == 1) {
+        
+        printf("Read initial particle distribution\n");
+        if (fopen(instance->model.initial_markers_file, "rb")!=NULL){
+            file = fopen(instance->model.initial_markers_file, "rb");
+            printf("Loading %d particles from file %s...\n", particles->Nb_part, instance->model.initial_markers_file);
+        }
+        else {
+            printf("Cannot open file %s, check if the file exists in the current location !\n Exiting", instance->model.initial_markers_file);
+            exit(1);
+        }
+        fread( particles->x, sizeof(double), particles->Nb_part, file);
+        fread( particles->z, sizeof(double), particles->Nb_part, file);
+        fread( particles->phase, sizeof(int), particles->Nb_part, file);
+        fclose(file);
+    }
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
@@ -381,9 +415,9 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
 
 void ValidateSetup(MdoodzSetup *setup, MdoodzInput *instance) {
   int   errorsCount   = 0;
-  char *errors[10]    = {};
+  char *errors[20]    = {};
   int   warningsCount = 0;
-  char *warnings[10]  = {};
+  char *warnings[20]  = {};
   if (instance->model.free_surf) {
     if (!setup->BuildInitialTopography) {
       errors[errorsCount] = "If Free Surface mode is ON and BuildInitialTopography MUST be specified. Please set free_surf = 0 or set BuildInitialTopography";
@@ -446,10 +480,6 @@ void ValidateSetup(MdoodzSetup *setup, MdoodzInput *instance) {
     }
     if (!setup->SetParticles->SetPressure) {
       warnings[warningsCount] = "SetParticles.SetPressure is not specified. SetPressure will be set to 0.0";
-      warningsCount++;
-    }
-    if (!setup->SetParticles->SetDefGrad) {
-      warnings[warningsCount] = "SetParticles.SetDefGrad is not specified. SetDefGrad will be set to 0.0";
       warningsCount++;
     }
   }

@@ -19,5 +19,6 @@ else()
     add_set(SimpleShearAnisoHomo)
     add_set(ShearInclusionAniso)
     add_set(VEP_Duretz18)
+    add_set(Multilayers)
 endif()
 

@@ -160,7 +160,7 @@ make build SET=RiftingPauline
 To explicitly set OPT (optimisation) and OMP (OpenMP). If not stated, it's OFF by default
 
 ```bash
-make build-dev OMP=ON OPT=ON SET=RiftingPauline
+make build-dev OMP=ON OPT=ON SET=RiftingChenin
 ```
 
 Build files will be located at the `cmake-build/` directory.
