@@ -93,7 +93,7 @@ typedef struct {
   int     *kvx, *lvx, *kvz, *lvz, *kp, *lp, *kn, *ln;
   double **phase_perc_n, **phase_perc_s, **phase_eta_n,
           **phase_eta_s;// TODO: refactor to _c and _v
-  double *sxxd0_s, *szzd0_s, *sxz0_n, *exxd_s, *ezzd_s, *exz_n, *sxz_n;
+  double *sxxd0_s, *szzd0_s, *sxz0_n, *exxd_s, *ezzd_s, *exz_n, *sxz_n;   
   double *rho0_n;
   double  Uthermal, Uelastic, Work, Tii_mean, Eii_mean, T_mean, P_mean;
   double *Work_time, *Uelastic_time, *Uthermal_time, *Time_time, *Short_time,
@@ -102,7 +102,7 @@ typedef struct {
   double *eII_el, *eII_pl, *eII_pl_s, *eII_pwl, *eII_exp, *eII_lin, *eII_gbs,
           *eII_cst;
   double *eII_pwl_s;
-  double *exx_el, *ezz_el, *exz_el, *exx_diss, *ezz_diss, *exz_diss;
+  double *exx_el, *ezz_el, *exz_el, *exx_diss, *ezz_diss, *exz_diss;    // TODO: DELETE
   int    *comp_cells;
   // For Newton iterations
   double *D11_n, *D12_n, *D13_n, *D14_n;
@@ -555,8 +555,9 @@ void            DerivativesOnTheFly_n( double*, double*, double*, double*, doubl
 void            DerivativesOnTheFly_s( double*, double*, double*, double*, double*, double*, double*, double*, int, double, double, double, double, double, double, double, double, double, double, double, grid*, mat_prop*, params*, scale* );
 void            ViscosityDerivatives(grid *, mat_prop *, params *, scale *);
 void            EffectiveStrainRate( double*, double*, double*, double, double, double, double, double, double, double, double d2, double, double, int );
-double          ViscosityConcise(int, double, double, double, double, double, double, double, double, double, double, double, double, mat_prop *, params *, scale *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double, double, double, double, double, double, double *, double *, double *, double *, double, double, double *, double *, double *, int, int);
-double          ViscosityConciseAniso(int, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, mat_prop *, params *, scale *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double, double, double, double, double, double, double *, double *, double *, double *, double, double, double *, double *, double *, int, int);
+double          ViscosityConcise(int, double, double, double, double, double, double, double, double, double, double, double, double, mat_prop *, params *, scale *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double, double, double, double, double, double, double *, double *, double *, double *, double, double, double *, double *, double *, double *, double *, double *, int, int);
+double          ViscosityConciseAniso(int, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, mat_prop *, params *, scale *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double, double, double, double, double, double, double *, double *, double *, double *, double, double, double *, double *, double *, double *, double *, double *, int, int);
+
 double          EvaluateDensity(int, double, double, double, params *, mat_prop *);
 void            ComputeMeanQuantitesForTimeSeries(grid *mesh);
 void            LogTimeSeries(grid *, params, scale);

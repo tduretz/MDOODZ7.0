@@ -452,15 +452,15 @@ grid GridAlloc(params *model) {
 
   mesh.sxxd0         = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
   mesh.szzd0         = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
-  mesh.sxz0          = DoodzCalloc((Nx) * (Nz), sizeof(double));
-  mesh.sxxd0_s       = DoodzCalloc((Nx) * (Nz), sizeof(double));
-  mesh.szzd0_s       = DoodzCalloc((Nx) * (Nz), sizeof(double));
-  mesh.sxz0_n        = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  mesh.sxz0          = DoodzCalloc((Nx) * (Nz), sizeof(double)); 
+  mesh.sxxd0_s       = DoodzCalloc((Nx) * (Nz), sizeof(double));  
+  mesh.szzd0_s       = DoodzCalloc((Nx) * (Nz), sizeof(double));    
+  mesh.sxz0_n        = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));   
 
-  mesh.exxd_s        = DoodzCalloc((Nx) * (Nz), sizeof(double));
-  mesh.ezzd_s        = DoodzCalloc((Nx) * (Nz), sizeof(double));
-  mesh.exz_n         = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
-  mesh.sxz_n         = DoodzCalloc((Nx) * (Nz), sizeof(double));
+  mesh.exxd_s        = DoodzCalloc((Nx) * (Nz), sizeof(double));   
+  mesh.ezzd_s        = DoodzCalloc((Nx) * (Nz), sizeof(double));  
+  mesh.exz_n         = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));   
+  mesh.sxz_n         = DoodzCalloc((Nx) * (Nz), sizeof(double));  
 
   mesh.u_adv         = DoodzCalloc(Nx * NzVx, sizeof(double));
   mesh.v_adv         = DoodzCalloc(NxVz * Nz, sizeof(double));
@@ -553,14 +553,14 @@ grid GridAlloc(params *model) {
   mesh.divth0_n      = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
   mesh.dT            = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
   mesh.eII_el        = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
-  mesh.exx_el        = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
-  mesh.ezz_el        = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
-  mesh.exz_el        = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double));
-  mesh.exx_diss      = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
-  mesh.ezz_diss      = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
-  mesh.exz_diss      = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double));
-  mesh.exz_n_el      = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double));
-  mesh.exz_n_diss    = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double));
+  mesh.exx_el        = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double)); // TODO: DELETE
+  mesh.ezz_el        = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double)); // TODO: DELETE
+  mesh.exz_el        = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double)); // TODO: DELETE
+  mesh.exx_diss      = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double)); // TODO: DELETE
+  mesh.ezz_diss      = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double)); // TODO: DELETE
+  mesh.exz_diss      = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double)); // TODO: DELETE
+  mesh.exz_n_el      = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double)); // TODO: DELETE
+  mesh.exz_n_diss    = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double)); // TODO: DELETE
   mesh.comp_cells    = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
   mesh.eII_pl        = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
   mesh.eII_pwl       = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
