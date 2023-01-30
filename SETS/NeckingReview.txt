@@ -1,0 +1,188 @@
+/**** RESTART ****/
+istep = 00000250
+irestart = 0
+
+/**** OUTPUT FILES ****/
+writer = 1
+writer_step = 10
+writer_markers = 0
+writer_debug   = 0 
+
+/**** SCALES ****/ Scaling parameters for
+eta = 1.e+22      /viscosity
+L   = 30.e4       /length
+V   = 1.5e-8     /velocity
+T   = 1.e+02      /temperature
+ 
+/**** SPACE-TIME ****/
+Nx      = 150
+Nz      = 100 
+Nt      = 250
+xmin    = -125.000000e3
+xmax    =  175.000000e3
+zmin    = -200.000000e3
+zmax    = 10.000000e3 
+dt      = 1.2623e+11
+Courant = 0.45
+penalty = 1e2
+eta_avg = 0
+itp_stencil = 1
+
+/**** SWITCHES ****/
+ismechanical    = 1
+dt_constant     = 0
+RK              = 4
+isperiodic_x    = 0
+ispureshear_ALE = 1  /1: box stretched at constant strain rate; -1 box of constant size
+isinertial      = 0
+iselastic       = 1
+isthermal       = 1
+isPl_soft       = 0
+free_surf       = 1
+free_surf_stab  = 1
+eqn_state       = 1
+thermal_eq      = 1
+subgrid_diff    = 2
+shear_heat      = 1
+adiab_heat      = 0
+surf_remesh     = 1
+surf_processes  = 1 /0 = none; 1 = diffusion only; 2 = fills instantaneously the basin up to the base level;  3 = diffusion + source term
+surf_diff       = 5.0e-6 /topography diffusion coefficient
+surf_ised1      = 4 /sediment phase indices 
+surf_ised2      = 5
+surf_sedirate   = 0.0 / sedimentation rate [m/s]:3.1688e-12 <-> 0.01 cm/yr
+surf_baselev    = 0.0e3 / base level for sedimentation
+rec_T_P_x_z     = 1 / initial P and T field record
+polar           = 0
+aniso           = 0
+
+/**** SETUP DEPENDANT ****/
+noise_bg        = 1
+EpsBG           = -1e-15 /Background strain rate [s-1] => extension rate = 1 cm/yr
+user0           = 0.0e3     /Radius of perturbation [m]
+user1           = 125.0e3   /Initial lithosphere thickness [m]
+user2           = 35.0e3    /Initial crust thickness [m]
+user3           = -2.0e3    /Initial basin amplitude [m]
+user4           = 25e3      /lateral shift of pertubation         
+user5           = 0
+user6           = 0
+user7           = 0
+
+/**** GRAVITY ****/
+gx = 0.0000
+gz = -9.81
+
+/**** PHASE PROPERTIES ****/
+Nb_phases = 4 
+
+ID   = 0
+rho  = 2800.00 / Upper Crust - Westerly granite
+mu   = 1.0e10
+Cv   = 1050.0
+k    = 2.5
+Qr   = 1.0e-6
+C    = 5.0e7
+phi  = 30.0
+Slim = 500.0e9
+alp  = 32.0e-6
+bet  = 1.5e-11
+cstv = 0
+pwlv = 10
+linv = 0
+gbsv = 0
+expv = 0
+aniso_factor = 1.0
+aniso_angle  = 45
+coh_soft = 1
+Ce       = 1e6
+plss     = 0.5
+plse     = 1.5
+
+ID   = 1
+rho  = 2800.00 / Lower crust
+mu   = 1.0e10
+Cv   = 1050.0
+k    = 2.5
+Qr   = 1.0e-6
+C    = 5.0e7
+phi  = 30.0
+Slim = 500.0e9
+alp  = 32.0e-6
+bet  = 1.5e-11
+cstv = 0
+pwlv = 10
+linv = 0
+gbsv = 0
+expv = 0
+Ce       = 1e6
+cohe     = 1e6
+plss     = 0.5
+plse     = 1.5
+
+ID   = 2
+rho  = 3330.00 / lithospheric mantle - Dry Olivine
+alp  = 32.0e-6
+bet  = 1.5e-11
+mu   = 1.0e10
+Cv   = 1050.0
+k    = 3.0
+Qr   = 0.0
+C    = 5.0e7
+phi  = 30.0
+Slim = 500.0e9
+cstv = 0
+pwlv = 40
+linv = 40
+gbsv = 0
+expv = 40
+Ce       = 1e6
+cohe     = 1e6
+plss     = 0.5
+plse     = 1.5
+
+ID   = 3
+rho  = 3330.00 / asthenosphere 
+alp  = 32.0e-6
+bet  = 1.5e-11
+mu   = 1.0e10
+Cv   = 1050.0
+k    = 3.0
+Qr   = 0.0
+C    = 5.0e7
+phi  = 30.0
+Slim = 500.0e9
+cstv = 0
+pwlv = 40
+linv = 40
+gbsv = 0
+expv = 40
+coh_soft = 1
+Ce       = 1e6
+plss     = 0.5
+plse     = 1.5
+
+/**** DEFMAPS ****/
+nT    =    200      / Temperature resolution []
+nE    =    200      / Strain rate resolution []
+nd    =    6        / Grain size resolution []
+Tmin  =    127.0      / Temperature minimum [°C]
+Tmax  =    1827.0     / Temperature maximum [°C]
+Emin  =    -50      / Strain rate minimum log_10 [1/s]
+Emax  =    5        / Strain rate maximum log_10 [1/s]
+dmin  =    -7       / Grain size minimum log_10 [m]
+dmax  =    -2       / Grain size maximum log_10 [m]
+Pn    =  1.0e9        / Pressure [Pa]
+
+/**** PARTICLES ****/
+Nx_part  = 4
+Nz_part  = 4
+min_part_cell = 16
+
+/**** NON-LINEAR ITERATIONS ****/
+Newton      = 0
+nit_max     = 1 // for high resolution use from 10 to 20
+line_search = 0
+abs_tol_u   = 5.0e-8
+abs_tol_p   = 5.0e-8
+mineta      = 5.0e18
+maxeta      = 1.0e25
