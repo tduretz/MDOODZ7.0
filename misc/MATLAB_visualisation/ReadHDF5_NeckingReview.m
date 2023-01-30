@@ -2,9 +2,7 @@
 function Main
 
 clear
-clear all
 % close all
-
 clc
 path = '~/REPO_GIT/MDOODZ7.0/MDLIB/MLPS_run_ani/';
 path = '~/REPO_GIT/MDOODZ7.0/MDLIB//';
@@ -725,7 +723,6 @@ for istep=istart:ijump:iend
                 Hlc(ix)    = (ilc_top-ilc_bot-1)*dz/2/1e3;
                 Hml(ix)    = (iml_top-iml_bot-1)*dz/2/1e3;
             end
-
             
             %%%%%%%%%%%%%
             eII_pl = hdf5read(filename,'/Centers/eII_pl');
