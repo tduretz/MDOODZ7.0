@@ -4,6 +4,12 @@
 typedef struct {
   double *eta;
   double *d1;
+  double *Eii_cst;
+  double *Eii_lin;
+  double *Eii_gbs;
+  double *Eii_pwl;
+  double *Eii_exp;
+  double *Tii;
 } LocalIterationMutables;
 
 
@@ -36,6 +42,7 @@ typedef struct {
   int    constant;
   int    gbs;
   int    phase;
+  int    noisy;
   double d;
 } LocalIterationParams;
 

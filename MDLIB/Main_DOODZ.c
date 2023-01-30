@@ -59,7 +59,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
       setup->MutateInput(&input, setup->mutateInputParams);
     }
 
-    ValidateSetup(setup, &input);
+    // ValidateSetup(setup, &input);
     input.model.L0 = input.model.xmax - input.model.xmin;
 
     printf("*************************************\n");

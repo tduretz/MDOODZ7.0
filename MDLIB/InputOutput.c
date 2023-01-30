@@ -1065,9 +1065,9 @@ Input ReadInputFile( char *fileName ) {
     model.dt              = ReadDou2( fin, "dt",    0.0  ) / scaling.t;
     model.Courant         = ReadDou2( fin, "Courant",       0.5 );
     model.penalty         = ReadDou2( fin, "penalty",      1.0e10 );
-    model.abs_tol_div     = ReadDou2( fin, "abs_tol_div", 1.0e-12 );
+    model.abs_tol_div     = ReadDou2( fin, "abs_tol_div", 1.0e-9 );
     model.rel_tol_div     = ReadDou2( fin, "rel_tol_div",  1.0e-5 );
-    model.abs_tol_mom     = ReadDou2( fin, "abs_tol_mom", 1.0e-12 );
+    model.abs_tol_mom     = ReadDou2( fin, "abs_tol_mom", 1.0e-9 );
     model.rel_tol_mom     = ReadDou2( fin, "rel_tol_mom",  1.0e-5 );
     model.auto_penalty    = ReadDou2( fin, "auto_penalty",    0.0  );
     model.decoupled_solve = ReadInt2( fin, "decoupled_solve",    1 );
@@ -1152,9 +1152,9 @@ Input ReadInputFile( char *fileName ) {
     model.therm_pert_rad  = ReadDou2( fin, "therm_pert_rad",  0.0 ) / scaling.L;
     model.therm_pert_dT   = ReadDou2( fin, "therm_pert_dT" ,  0.0 ) / scaling.T;
     // For rheological database reasons...
-    model.force_act_vol_ast = ReadInt2( fin, "force_act_vol_ast",   0 );
-    model.act_vol_dis_ast   = ReadDou2( fin, "act_vol_dis_ast" ,  0.0 );
-    model.act_vol_dif_ast   = ReadDou2( fin, "act_vol_dif_ast" ,  0.0 );
+    model.force_act_vol_ast = ReadInt2( fin, "force_act_vol_ast",   0 ); // if 1 then:
+    model.act_vol_dis_ast   = ReadDou2( fin, "act_vol_dis_ast" ,  0.0 ); // ... set dislocation creep to value
+    model.act_vol_dif_ast   = ReadDou2( fin, "act_vol_dif_ast" ,  0.0 ); // ... set diffusion creep to value
     // Model user's delights
     model.user0           = ReadDou2( fin, "user0",           0.0 );
     model.user1           = ReadDou2( fin, "user1",           0.0 );
