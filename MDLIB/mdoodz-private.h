@@ -102,7 +102,6 @@ typedef struct {
   double *eII_el, *eII_pl, *eII_pl_s, *eII_pwl, *eII_exp, *eII_lin, *eII_gbs,
           *eII_cst;
   double *eII_pwl_s;
-  double *exx_el, *ezz_el, *exz_el, *exx_diss, *ezz_diss, *exz_diss;    // TODO: DELETE
   int    *comp_cells;
   // For Newton iterations
   double *D11_n, *D12_n, *D13_n, *D14_n;

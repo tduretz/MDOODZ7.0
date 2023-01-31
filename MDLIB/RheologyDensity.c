@@ -639,10 +639,8 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
       *Pcorr  = Pc;
       eta_vep = Tiic / (2.0*Eii);
       Tii     = Tiic;
-      //        if (Pc<0) printf("%2.2e\n", eta_vep*scaling->eta);
     }
   }
-
 
   // ----------------- Reaction volume changes, computation of updated density only on centroid nodes
   if ( centroid > 0 ) {
@@ -695,8 +693,8 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
     if ( peierls     == 1 )              eta_exp  = B_exp * pow( *Eii_exp, 1.0 / (ST + n_exp) - 1.0); 
 
     // Compute dissipative strain rate components
-    *Eii_el   = Tii*Tii/(4*eta_el*eta_el);
-    *Eii_pl   = gdot/2.0;
+    if (elastic) *Eii_el   = Tii*Tii/(4*eta_el*eta_el);
+    if (is_pl)   *Eii_pl   = gdot/2.0;
 
     // Partitioning of volumetric strain
     *div_pl  = divp;
@@ -931,12 +929,9 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
     l  = mesh->ln[k1];
     c1 = k + l*Nx;
 
-    mesh->VE_s[c1]       = 0.0;
     mesh->sxz[c1]        = 0.0;
     mesh->eta_phys_s[c1] = 0.0;
     mesh->eta_s[c1]      = 0.0;
-    mesh->exz_el[c1]     = 0.0;
-    mesh->exz_diss[c1]   = 0.0;
 
     if (UnsplitDiffReac == 0) mesh->X_s[c1]        = 0.0;
 
