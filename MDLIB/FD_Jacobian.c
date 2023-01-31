@@ -203,7 +203,6 @@ void DerivativesOnTheFly_n( double* detadexx, double* detadezz, double* detadgxz
         *detadgxz *= mesh->eta_n[c0];
         *detadp   *= mesh->eta_n[c0];
     }
-    // printf("drhodp = %2.2e\n", *drhodp);
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/

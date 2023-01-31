@@ -725,21 +725,12 @@ void NonNewtonianViscosityGridAniso( grid *mesh, mat_prop *materials, params *mo
       // Shear stress
       mesh->sxz[c1]  = 2.0 * mesh->eta_s[c1] * Dxz;
 
+      // if (l==0) printf("Exx = %2.2f, Ezz = %2.2f, Exz = %2.2f\n", Exx, Ezz, Exz);
+        
+
+
     }
   }
-  // exit(1);
-//     printf("Txx:\n");
-//    Print2DArrayDouble( mesh->sxxd,  mesh->Nx-1, mesh->Nz-1, scaling->S );
-//      printf("Tzz:\n");
-//    Print2DArrayDouble( mesh->szzd,  mesh->Nx-1, mesh->Nz-1, scaling->S );
-//   printf("Txz:\n");
-//    Print2DArrayDouble( mesh->sxz,  mesh->Nx, mesh->Nz, scaling->S );
-//    printf("eta_s:\n");
-//    Print2DArrayDouble( mesh->eta_s,  mesh->Nx, mesh->Nz, scaling->eta );
-
-//       printf("eta_n:\n");
-//    Print2DArrayDouble( mesh->eta_n,  mesh->Nx-1, mesh->Nz-1, scaling->eta );
-
 
 }
 

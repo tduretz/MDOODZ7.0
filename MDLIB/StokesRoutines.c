@@ -272,11 +272,15 @@ void RheologicalOperators( grid* mesh, params* model, mat_prop* materials, scale
         double danidexx =0., danidezz =0., danidgxz =0., danidp =0.;
         DerivativesOnTheFly_s( &detadexx, &detadezz, &detadgxz, &detadp, &danidexx, &danidezz, &danidgxz, &danidp, k, Exx, Ezz, Exz, mesh->P_s[k], ani_fstrain, ani_e, d1, d2, angle, lx2, lxlz, mesh, materials, model, scaling );
 
+    //      int ix  = mesh->kn[k];
+    // // l  = mesh->ln[k1]
+    // if (ix>0) {
         //----------------------------------------------------------//
         mesh->D31_s[k] =               - 2.0*aniS_vep*d2*eta_vep + 2.0*detadexx*Dxz + 2.0*danidexx*Axz;
         mesh->D32_s[k] =                 2.0*aniS_vep*d2*eta_vep + 2.0*detadezz*Dxz + 2.0*danidezz*Axz;
         mesh->D33_s[k] = (2.0*aniS_vep*(d1 - 0.5) + 1.0)*eta_vep + 2.0*detadgxz*Dxz + 2.0*danidgxz*Axz;
         mesh->D34_s[k] =                                           2.0*detadp  *Dxz + 2.0*danidp  *Axz;
+    // }
         //----------------------------------------------------------//
       }
       else {
