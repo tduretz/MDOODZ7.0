@@ -670,7 +670,7 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
 
     // Generate file name
     asprintf( &FileName, "%s%05d%s",txtout, model.step, ".gzip.h5");
-    if (strcmp(model.writerSubfolder, "")) {
+    if (model.writerSubfolder && strcmp(model.writerSubfolder, "")) {
       CreateDir(model.writerSubfolder);
       asprintf( &FileName, "%s/%s", model.writerSubfolder, FileName);
     }

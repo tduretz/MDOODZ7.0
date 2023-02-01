@@ -3,12 +3,12 @@ istep = 000001
 irestart = 0
 
 /**** OUTPUT FILES ****/
-writer            = 1
+writer            = 0
 writer_step       = 1
 writer_markers    = 0
 writer_debug      = 0
 writer_energies   = 0
-GNUplot_residuals = 1
+GNUplot_residuals = 0
 
 /**** SCALES ****/
 eta = 1
@@ -17,8 +17,8 @@ V   = 1
 T   = 1
 
 /**** SPACE ****/
-Nx      = 41
-Nz      = 41
+Nx      = 21
+Nz      = 21
 xmin    = -5.000000e-1
 zmin    = -5.000000e-1
 xmax    =  5.000000e-1

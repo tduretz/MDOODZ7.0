@@ -667,9 +667,8 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
             while ( Nmodel.nit <= Nmax_picard && nstag< input.model.nstagmax) {
 
-                printf("input.model.Newton = %d --- %d\n", input.model.Newton, Nmodel.rp_rel[Nmodel.nit-1] < Nmodel.Pic2NewtCond);
-
                 if ( Nmodel.nit > 0 && Nmodel.Picard2Newton == 1 ) {
+                    printf("input.model.Newton = %d --- %d\n", input.model.Newton, Nmodel.rp_rel[Nmodel.nit-1] < Nmodel.Pic2NewtCond);
                     if ( Nmodel.rx_rel[Nmodel.nit-1] < Nmodel.Pic2NewtCond || Nmodel.rz_rel[Nmodel.nit-1] < Nmodel.Pic2NewtCond || Nmodel.rp_rel[Nmodel.nit-1] < Nmodel.Pic2NewtCond || Nmodel.nit>= Nmodel.nit_Pic_max) {
                         if ( IsFirstNewtonStep == 0 ) CholmodSolver.Analyze = 0;
                         if ( IsFirstNewtonStep == 1 ) {
@@ -1213,6 +1212,8 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
     // Free char*'s
     free(input.model.import_file);
     free(input.model.import_files_dir);
+    free(input.model.writerSubfolder);
+    free(input.model.initial_markers_file);
     // free(input.model.description);
 
     NmodelFree(Nmodel);
