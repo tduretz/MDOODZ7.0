@@ -86,7 +86,7 @@ class ShearTemplate : public ::testing::Test {
     input->model.writerSubfolder = mutateInputParams->str1;
     const int matrixPhase        = 0;
     if (mutateInputParams->int2) { // aniso = 1
-      input->materials.ani_fac_v[matrixPhase] = 2.0;
+      input->materials.ani_fac_v[matrixPhase] = 3.0;
       input->model.aniso                         = 1;
       input->materials.aniso_angle[matrixPhase] = 30;
     } else {
