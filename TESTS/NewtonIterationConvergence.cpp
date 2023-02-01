@@ -88,9 +88,11 @@ class ShearTemplate : public ::testing::Test {
     if (mutateInputParams->int2) { // aniso = 1
       input->materials.ani_fac_v[matrixPhase] = 2.0;
       input->model.aniso                         = 1;
+      input->materials.aniso_angle[matrixPhase] = 30;
     } else {
       input->materials.ani_fac_v[matrixPhase] = 1.0;
       input->model.aniso                         = 0;
+      input->materials.aniso_angle[matrixPhase] = 0;
     }
     if (mutateInputParams->int4) { // nonlinear = 1
       input->materials.npwl[matrixPhase] = 3.0;
