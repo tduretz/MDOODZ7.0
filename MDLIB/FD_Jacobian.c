@@ -50,7 +50,7 @@ void PhaseRheologyLoop_v1( int is_centroid, double sign, double denom, double Ex
                double* detadE, double* ddivpdE, double* danidE, double* drhodP, double**eta_phase ) {
         
     double txx1, tzz1, txz1, eta_vep, VEcoeff, eII_el, eII_pl, eII_pwl, eII_exp, eII_lin, eII_gbs, eII_cst, dnew, detadp, Xreac, OverS, Pcorr, rho, div_el, div_pl, div_r, Wtot, Wel, Wdiss;
-    double ani_vep;
+    double ani_vep=1.0;
     // Loop on phases
     for (int p=0; p<model->Nb_phases; p++) {
 
