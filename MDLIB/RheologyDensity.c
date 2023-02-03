@@ -183,7 +183,7 @@ void LocalIterationViscoElasticGrainSize(LocalIterationMutables mutables, LocalI
     d_ve    -= dd;
   }
 
-  if isnan(eta_ve) {
+  if (isnan(eta_ve)) {
     printf("Local iterations from grain size and viscoisity exploded -  guess is probably incorrect");
   }
 
