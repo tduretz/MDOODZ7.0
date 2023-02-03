@@ -1,6 +1,6 @@
 # Visual Tests
 
-Last run date: 2023-01-26.13:42:33
+Last run date: 2023-01-28.12:51:52
 
 ## Usage 
 
@@ -82,6 +82,16 @@ which yields to upper estimates of the temperature  increase due to shear heatin
 | Result  | Reference                   |
 | ------------- |-----------------------------|
 | ![](img/ShearHeatingDuretz14.png)  | ![](img/ShearHeatingDuretz14Reference.png) |
+
+### Shrinking
+
+Based on [Yamato et. al., 2022](https://www.sciencedirect.com/science/article/abs/pii/S0012821X2200156X).
+Figure show the evolution of shear stress for an inclusion submitted to positive density change 
+(compressible mechanical code with linear viscous material fitting the analytical solution).
+
+| Result                 | Reference                 |
+|------------------------|---------------------------|
+| ![](img/Shrinking.gif) | ![](img/ShrinkingRef.gif) |
 
 
 ### TopoBenchCase1 Result with Analytical solution
