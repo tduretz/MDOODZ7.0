@@ -9,7 +9,7 @@ writer_markers    = 0
 writer_debug      = 0
 writer_energies   = 0
 GNUplot_residuals = 0
-writerSubfolder = test
+writerSubfolder = NonLinearSimpleshearAnisotropic
 
 /**** SCALES ****/
 eta = 1
