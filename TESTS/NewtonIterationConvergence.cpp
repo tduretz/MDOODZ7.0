@@ -118,14 +118,15 @@ int getStepsCount(char *hdf5FileName) {
   return stepsCount;
 }
 
+
 TEST_F(ShearTemplate, LinearPureshearIsotropic) {
   const char        *testName          = testing::UnitTest::GetInstance()->current_test_info()->name();
   MutateInputParams *mutateInputParams = (MutateInputParams *) malloc(sizeof(MutateInputParams));
   setup.mutateInputParams              = mutateInputParams;
-  mutateInputParams->int2              = 0;// matrix aniso
-  mutateInputParams->int4              = 0;// non-linear
   mutateInputParams->str1              = testName;
-  RunMDOODZ("ShearTemplate.txt", &setup);
+  char *inputName;
+  asprintf(&inputName, "ShearTemplate/%s.txt", testName);
+  RunMDOODZ(inputName, &setup);
   char *fileName;
   asprintf(&fileName, "%s/%s", testName, "Output00001.gzip.h5");
   int stepsCount = getStepsCount(fileName);
@@ -136,10 +137,10 @@ TEST_F(ShearTemplate, LinearSimpleshearIsotropic) {
   const char        *testName          = testing::UnitTest::GetInstance()->current_test_info()->name();
   MutateInputParams *mutateInputParams = (MutateInputParams *) malloc(sizeof(MutateInputParams));
   setup.mutateInputParams              = mutateInputParams;
-  mutateInputParams->int2              = 0;// matrix aniso
-  mutateInputParams->int4              = 0;// non-linear
   mutateInputParams->str1              = testName;
-  RunMDOODZ("ShearTemplate1.txt", &setup);
+  char *inputName;
+  asprintf(&inputName, "ShearTemplate/%s.txt", testName);
+  RunMDOODZ(inputName, &setup);
   char *fileName;
   asprintf(&fileName, "%s/%s", testName, "Output00001.gzip.h5");
   int stepsCount = getStepsCount(fileName);
@@ -151,10 +152,10 @@ TEST_F(ShearTemplate, LinearPureshearAnisotropic) {
   const char        *testName          = testing::UnitTest::GetInstance()->current_test_info()->name();
   MutateInputParams *mutateInputParams = (MutateInputParams *) malloc(sizeof(MutateInputParams));
   setup.mutateInputParams              = mutateInputParams;
-  mutateInputParams->int2              = 1;// matrix aniso
-  mutateInputParams->int4              = 0;// non-linear
   mutateInputParams->str1              = testName;
-  RunMDOODZ("ShearTemplate.txt", &setup);
+  char *inputName;
+  asprintf(&inputName, "ShearTemplate/%s.txt", testName);
+  RunMDOODZ(inputName, &setup);
   char *fileName;
   asprintf(&fileName, "%s/%s", testName, "Output00001.gzip.h5");
   int stepsCount = getStepsCount(fileName);
@@ -165,10 +166,10 @@ TEST_F(ShearTemplate, LinearSimpleshearAnisotropic) {
   const char        *testName          = testing::UnitTest::GetInstance()->current_test_info()->name();
   MutateInputParams *mutateInputParams = (MutateInputParams *) malloc(sizeof(MutateInputParams));
   setup.mutateInputParams              = mutateInputParams;
-  mutateInputParams->int2              = 1;// matrix aniso
-  mutateInputParams->int4              = 0;// non-linear
   mutateInputParams->str1              = testName;
-  RunMDOODZ("ShearTemplate1.txt", &setup);
+  char *inputName;
+  asprintf(&inputName, "ShearTemplate/%s.txt", testName);
+  RunMDOODZ(inputName, &setup);
   char *fileName;
   asprintf(&fileName, "%s/%s", testName, "Output00001.gzip.h5");
   int stepsCount = getStepsCount(fileName);
@@ -180,10 +181,10 @@ TEST_F(ShearTemplate, NonLinearPureshearIsotropic) {
   const char        *testName          = testing::UnitTest::GetInstance()->current_test_info()->name();
   MutateInputParams *mutateInputParams = (MutateInputParams *) malloc(sizeof(MutateInputParams));
   setup.mutateInputParams              = mutateInputParams;
-  mutateInputParams->int2              = 0;// matrix aniso
-  mutateInputParams->int4              = 1;// non-linear
   mutateInputParams->str1              = testName;
-  RunMDOODZ("ShearTemplate.txt", &setup);
+  char *inputName;
+  asprintf(&inputName, "ShearTemplate/%s.txt", testName);
+  RunMDOODZ(inputName, &setup);
   char *fileName;
   asprintf(&fileName, "%s/%s", testName, "Output00001.gzip.h5");
   int stepsCount = getStepsCount(fileName);
@@ -195,10 +196,10 @@ TEST_F(ShearTemplate, NonLinearSimpleshearIsotropic) {
   const char        *testName          = testing::UnitTest::GetInstance()->current_test_info()->name();
   MutateInputParams *mutateInputParams = (MutateInputParams *) malloc(sizeof(MutateInputParams));
   setup.mutateInputParams              = mutateInputParams;
-  mutateInputParams->int2              = 0;// matrix aniso
-  mutateInputParams->int4              = 1;// non-linear
   mutateInputParams->str1              = testName;
-  RunMDOODZ("ShearTemplate1.txt", &setup);
+  char *inputName;
+  asprintf(&inputName, "ShearTemplate/%s.txt", testName);
+  RunMDOODZ(inputName, &setup);
   char *fileName;
   asprintf(&fileName, "%s/%s", testName, "Output00001.gzip.h5");
   int stepsCount = getStepsCount(fileName);
@@ -210,10 +211,10 @@ TEST_F(ShearTemplate, NonLinearPureshearAnisotropic) {
   const char        *testName          = testing::UnitTest::GetInstance()->current_test_info()->name();
   MutateInputParams *mutateInputParams = (MutateInputParams *) malloc(sizeof(MutateInputParams));
   setup.mutateInputParams              = mutateInputParams;
-  mutateInputParams->int2              = 1;// matrix aniso
-  mutateInputParams->int4              = 1;// non-linear
   mutateInputParams->str1              = testName;
-  RunMDOODZ("ShearTemplate.txt", &setup);
+  char *inputName;
+  asprintf(&inputName, "ShearTemplate/%s.txt", testName);
+  RunMDOODZ(inputName, &setup);
   char *fileName;
   asprintf(&fileName, "%s/%s", testName, "Output00001.gzip.h5");
   int stepsCount = getStepsCount(fileName);
@@ -225,10 +226,10 @@ TEST_F(ShearTemplate, NonLinearSimpleshearAnisotropic) {
   const char        *testName          = testing::UnitTest::GetInstance()->current_test_info()->name();
   MutateInputParams *mutateInputParams = (MutateInputParams *) malloc(sizeof(MutateInputParams));
   setup.mutateInputParams              = mutateInputParams;
-  mutateInputParams->int2              = 1;// matrix aniso
-  mutateInputParams->int4              = 1;// non-linear
   mutateInputParams->str1              = testName;
-  RunMDOODZ("ShearTemplate1.txt", &setup);
+  char *inputName;
+  asprintf(&inputName, "ShearTemplate/%s.txt", testName);
+  RunMDOODZ(inputName, &setup);
   char *fileName;
   asprintf(&fileName, "%s/%s", testName, "Output00001.gzip.h5");
   int stepsCount = getStepsCount(fileName);
