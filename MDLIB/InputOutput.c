@@ -1035,7 +1035,7 @@ Input ReadInputFile( char *fileName ) {
     model.writerStep      = ReadInt2( fin, "writer_step",     1 );
     model.write_markers   = ReadInt2( fin, "writer_markers",  0 );
     model.write_debug     = ReadInt2( fin, "writer_debug",    0 );
-    model.writerSubfolder = ReadChar( fin, "writerSubfolder", "");
+    model.writerSubfolder = ReadChar( fin, "writerSubfolder", "./");
 
     // Input
     model.import_files_dir     = ReadChar( fin, "import_files_dir", "../../IMPORT");
@@ -1202,7 +1202,7 @@ Input ReadInputFile( char *fileName ) {
         materials.T0[k]   = (zeroC) / (scaling.T); // +20
         materials.P0[k]   = 1e5 / (scaling.S);
         // Read plasticity parameters
-        materials.plast[k]= ReadMatProps( fin, "plast",k,     1.0 );
+        materials.plast[k]= (int)ReadMatProps( fin, "plast",k,     1.0 );
         materials.C[k]    = ReadMatProps( fin, "C",    k,   1.0e7 )  / scaling.S;
         materials.phi[k]  = ReadMatProps( fin, "phi",  k,    30.0 )  * M_PI/ 180.0;
         materials.psi[k]  = ReadMatProps( fin, "psi",  k,     0.0 )  * M_PI/ 180.0;

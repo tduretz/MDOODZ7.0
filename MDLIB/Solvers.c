@@ -1223,7 +1223,7 @@ void KillerSolver( SparseMat *matA,  SparseMat *matB,  SparseMat *matC,  SparseM
 
     t_omp = (double)omp_get_wtime();
     cholmod_factorize( Lcml, Lfact, &c);
-    printf("** Time for Cholesky factorization = %lf sec\n", (double)((double)omp_get_wtime() - t_omp));
+    // printf("** Time for Cholesky factorization = %lf sec\n", (double)((double)omp_get_wtime() - t_omp));
 
     if (c.status==1) { // Here the code should not continue running and start producings Nans!
         printf("CHOLDMOD failed because the matrix is not positive definite...\n");

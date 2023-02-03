@@ -555,7 +555,6 @@ class Shrinking {
 };
 
 void RunTestCases() {
-  /*
   (*new VEP_Duretz18).run();
   RenameVEPFiles();
   (*new GSE).run();
@@ -570,7 +569,6 @@ void RunTestCases() {
   rename("Output00005.gzip.h5", "ShearTemplate1.gzip.h5");
   (*new TopoBenchCase1).run();
   RenameTopoBenchCaseFiles();
-   */
   (*new Shrinking).run();
 }
 
