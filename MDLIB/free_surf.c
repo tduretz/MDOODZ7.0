@@ -469,9 +469,9 @@ void ProjectTopography( surface *topo, markers *topo_chain, params model, grid m
     int k, in, Nx=mesh.Nx;
     double dx=mesh.dx, distance, dxm, mark_val, *Xc_virtual, *Wm, *BmWm;
 
-   Wm              = DoodzCalloc ( Nx-1, sizeof(double));
-   BmWm            = DoodzCalloc ( Nx-1, sizeof(double));
-   double *heightc = DoodzCalloc ( Nx-1, sizeof(double));
+   Wm               = DoodzCalloc ( Nx-1, sizeof(double));
+   BmWm             = DoodzCalloc ( Nx-1, sizeof(double));
+   double *Dheightc = DoodzCalloc ( Nx-1, sizeof(double));
 
    for (k=0;k<topo_chain->Nb_part;k++) {
 
@@ -480,7 +480,7 @@ void ProjectTopography( surface *topo, markers *topo_chain, params model, grid m
             distance = ( topo_chain->x[k] - mesh.xc_coord[0] );
             in   = ceil( (distance/dx) + 0.5) - 1;
             dxm = 2.0*fabs( mesh.xc_coord[in] - topo_chain->x[k]);
-            mark_val = topo_chain->z[k];
+            mark_val = topo_chain->z[k]-topo_chain->z0[k];
 
             Wm[in]   += (1.0-(dxm/dx));
             BmWm[in] += mark_val*(1.0-(dxm/dx));
@@ -489,11 +489,16 @@ void ProjectTopography( surface *topo, markers *topo_chain, params model, grid m
    }
 
    for (k=0;k<Nx-1;k++) {
-       heightc[k] += BmWm[k]/Wm[k];
+       if (Wm[k]==0.0){
+           Dheightc[k]+= 0.0;
+       }
+       else{
+           Dheightc[k]+= BmWm[k]/Wm[k];
+       }
    }
 
    for (k=1;k<Nx-1;k++) {
-        topo->height[k] = 0.5*(heightc[k]+heightc[k-1]);
+        topo->height[k] += 0.5*(Dheightc[k] + Dheightc[k-1]);
     }
    topo->height[0]=topo->height[1];
    topo->height[Nx-1]=topo->height[Nx-2];
@@ -603,12 +608,9 @@ void ProjectTopography( surface *topo, markers *topo_chain, params model, grid m
 //    if (fabs(sym_check*scaling.L)>1e-3) exit(19);
 
     // Free memory
-//    DoodzFree(Xc_virtual);
     DoodzFree(Wm);
     DoodzFree(BmWm);
-    DoodzFree(heightc);
-//    DoodzFree(npn);
-//    DoodzFree(NumMarkCell);
+    DoodzFree(Dheightc);
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
