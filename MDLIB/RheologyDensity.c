@@ -182,6 +182,11 @@ void LocalIterationViscoElasticGrainSize(LocalIterationMutables mutables, LocalI
     eta_ve -= deta;
     d_ve    -= dd;
   }
+
+  if isnan(eta_ve) {
+    printf("Local iterations from grain size and viscoisity exploded -  guess is probably incorrect");
+  }
+
   *mutables.eta     = eta_ve;
   *mutables.d1      = d_ve;
   *mutables.Tii     = Tii;
@@ -534,8 +539,8 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
     const double Eii_pwl     = Tii/2.0/eta_pwl;
     const double d_it        = exp(log(Ag * gam / (lam * (1.0 / cg) * Tii * (Eii_pwl) *pg)) / (1.0 + pg));
 
-    // *d1 = d;
-    *d1 = d_it;
+    *d1 = d;
+    // *d1 = d_it;
     // *d1 = 6.15e-6/scaling->L;
     if (noisy) printf("d guess = %2.2e, Tii = %2.2e Eiipwl=%2.2e\n", d_it*scaling->L, Tii*scaling->S, Eii_pwl*scaling->E);
   }
@@ -851,6 +856,11 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
               mesh->eta_phys_n[c0] += mesh->phase_perc_n[p][c0] * log(eta);
               break;
           }
+
+      //  if isnan(mesh->eta_n[c0]) {
+      //   printf("%2.2e %2.2e %2.2e %2.2e\n",mesh->eta_n[c0],Exx,mesh->sxxd[c0], etaVE);
+      //   exit(1);
+      // }
 
           mesh->VE_n[c0]       += mesh->phase_perc_n[p][c0] * VEcoeff;
           mesh->eII_el[c0]     += mesh->phase_perc_n[p][c0] * eII_el;
