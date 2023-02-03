@@ -85,9 +85,9 @@ which yields to upper estimates of the temperature  increase due to shear heatin
 
 ### Shrinking
 
-Based on [Yamato et. al., 2022](https://www.sciencedirect.com/science/article/abs/pii/S0012821X2200156X) 
-model and shows deformation and shows alteration of the x component in the inclusion 
-and change of the total stress field.
+Based on [Yamato et. al., 2022](https://www.sciencedirect.com/science/article/abs/pii/S0012821X2200156X).
+Figure show the evolution of shear stress for an inclusion submitted to positive density change 
+(compressible mechanical code with linear viscous material fitting the analytical solution).
 
 | Result                 | Reference                 |
 |------------------------|---------------------------|
