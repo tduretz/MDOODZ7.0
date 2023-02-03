@@ -20,5 +20,6 @@ else()
     add_set(ShearInclusionAniso)
     add_set(VEP_Duretz18)
     add_set(Multilayers)
+    add_set(Shrinking)
 endif()
 

@@ -14,5 +14,7 @@ void PlotGSE();
 void PlotGSERef();
 void PlotVEP();
 void PlotVEPRef();
+void PlotShrinkingGif();
+void PlotShrinkingGifRef();
 
 #endif
