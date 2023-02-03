@@ -10,242 +10,264 @@ extern "C" {
 using namespace std;
 namespace fs = filesystem;
 
+class RiftingChenin {
+  static double RPSetSurfaceZCoord(MdoodzInput *instance, double x_coord) {
+    const double TopoLevel = -0.0e3 / instance->scaling.L;
+    const double h_pert    = instance->model.user3 / instance->scaling.L;
+    return TopoLevel + h_pert * (3330.0 - 2800.0) / 2800.0 * cos(2 * M_PI * x_coord / (instance->model.xmax - instance->model.xmin));
+  }
 
-double RPSetSurfaceZCoord(MdoodzInput *instance, double x_coord) {
-  const double TopoLevel = -0.0e3 / instance->scaling.L;
-  const double h_pert    = instance->model.user3 / instance->scaling.L;
-  return TopoLevel + h_pert * (3330.0 - 2800.0) / 2800.0 * cos(2 * M_PI * x_coord / (instance->model.xmax - instance->model.xmin));
-}
+  static int RPSetPhase(MdoodzInput *instance, Coordinates coordinates) {
+    const double lithosphereThickness  = instance->model.user1 / instance->scaling.L;
+    const double crustThickness        = instance->model.user2 / instance->scaling.L;
+    const double perturbationAmplitude = instance->model.user3 / instance->scaling.L;
+    const double mohoLevel             = -crustThickness - perturbationAmplitude * cos(2 * M_PI * coordinates.x / (instance->model.xmax - instance->model.xmin));
+    const bool   isBelowLithosphere    = coordinates.z < -lithosphereThickness;
+    const bool   isAboveMoho           = coordinates.z > mohoLevel;
 
-int RPSetPhase(MdoodzInput *instance, Coordinates coordinates) {
-  const double lithosphereThickness  = instance->model.user1 / instance->scaling.L;
-  const double crustThickness        = instance->model.user2 / instance->scaling.L;
-  const double perturbationAmplitude = instance->model.user3 / instance->scaling.L;
-  const double mohoLevel             = -crustThickness - perturbationAmplitude * cos(2 * M_PI * coordinates.x / (instance->model.xmax - instance->model.xmin));
-  const bool   isBelowLithosphere    = coordinates.z < -lithosphereThickness;
-  const bool   isAboveMoho           = coordinates.z > mohoLevel;
-
-  if (instance->model.user4 && isAboveMoho) {
-    const bool is2500MAboveMoho = coordinates.z > mohoLevel + 2500 / instance->scaling.L;
-    const bool is4500MAboveMoho = coordinates.z > mohoLevel + 4500 / instance->scaling.L;
-    const bool is7000MAboveMoho = coordinates.z > mohoLevel + 7000 / instance->scaling.L;
-    const bool is9000MAboveMoho = coordinates.z > mohoLevel + 9000 / instance->scaling.L;
-    if (is2500MAboveMoho && !is4500MAboveMoho) {
-      return 7;
-    } else if (is7000MAboveMoho && !is9000MAboveMoho) {
-      return 8;
-    } else {
+    if (instance->model.user4 && isAboveMoho) {
+      const bool is2500MAboveMoho = coordinates.z > mohoLevel + 2500 / instance->scaling.L;
+      const bool is4500MAboveMoho = coordinates.z > mohoLevel + 4500 / instance->scaling.L;
+      const bool is7000MAboveMoho = coordinates.z > mohoLevel + 7000 / instance->scaling.L;
+      const bool is9000MAboveMoho = coordinates.z > mohoLevel + 9000 / instance->scaling.L;
+      if (is2500MAboveMoho && !is4500MAboveMoho) {
+        return 7;
+      } else if (is7000MAboveMoho && !is9000MAboveMoho) {
+        return 8;
+      } else {
+        return 1;
+      }
+    } else if (isAboveMoho) {
       return 1;
+    } else if (isBelowLithosphere) {
+      return 3;
+    } else {
+      return 2;
     }
-  } else if (isAboveMoho) {
-    return 1;
-  } else if (isBelowLithosphere) {
-    return 3;
-  } else {
-    return 2;
   }
-}
 
-double RPSetTemperature(MdoodzInput *instance, Coordinates coordinates) {
-  const double lithosphereThickness = instance->model.user1 / instance->scaling.L;
-  const double surfaceTemperature   = 273.15 / instance->scaling.T;
-  const double mantleTemperature    = (1330.0 + 273.15) / instance->scaling.T;
-  const double particleTemperature  = ((mantleTemperature - surfaceTemperature) / lithosphereThickness) * (-coordinates.z) + surfaceTemperature;
-  if (particleTemperature > mantleTemperature) {
-    return mantleTemperature;
-  } else {
-    return particleTemperature;
+  static double RPSetTemperature(MdoodzInput *instance, Coordinates coordinates) {
+    const double lithosphereThickness = instance->model.user1 / instance->scaling.L;
+    const double surfaceTemperature   = 273.15 / instance->scaling.T;
+    const double mantleTemperature    = (1330.0 + 273.15) / instance->scaling.T;
+    const double particleTemperature  = ((mantleTemperature - surfaceTemperature) / lithosphereThickness) * (-coordinates.z) + surfaceTemperature;
+    if (particleTemperature > mantleTemperature) {
+      return mantleTemperature;
+    } else {
+      return particleTemperature;
+    }
   }
-}
 
-double RPSetGrainSize(MdoodzInput *instance, Coordinates coordinates, int phase) {
-  const int astenospherePhase = 3;
-  return instance->materials.gs_ref[astenospherePhase];
-}
-
-double RPSetHorizontalVelocity(MdoodzInput *instance, Coordinates coordinates) {
-  return -coordinates.x * instance->model.EpsBG;
-}
-
-double RPSetVerticalVelocity(MdoodzInput *instance, Coordinates coordinates) {
-  return coordinates.z * instance->model.EpsBG;
-}
-
-char RPSetBCPType(MdoodzInput *instance, POSITION position) {
-  if (position == NE || position == NW) {
-    return 0;
-  } else {
-    return -1;
+  static double RPSetGrainSize(MdoodzInput *instance, Coordinates coordinates, int phase) {
+    const int astenospherePhase = 3;
+    return instance->materials.gs_ref[astenospherePhase];
   }
-}
 
-SetBC RPSetBCT(MdoodzInput *instance, POSITION position, double particleTemperature) {
-  SetBC  bc;
-  double surfaceTemperature = zeroC / instance->scaling.T;
-  if (position == FREE_SURFACE) {
-    bc.value = surfaceTemperature;
-    bc.type  = 1;
-  } else {
-    bc.value = 0.0;
-    bc.type  = 0;
+  static double RPSetHorizontalVelocity(MdoodzInput *instance, Coordinates coordinates) {
+    return -coordinates.x * instance->model.EpsBG;
   }
-  return bc;
-}
 
-SetBC RPSetBCTNew(MdoodzInput *instance, POSITION position, double particleTemperature) {
-  SetBC  bc;
-  double surfaceTemperature = zeroC / instance->scaling.T;
-  double mantleTemperature  = (1330. + zeroC) / instance->scaling.T;
-  if (position == S || position == SE || position == SW) {
-    bc.value = particleTemperature;
-    bc.type  = 1;
-  } else if (position == N || position == NE || position == NW) {
-    bc.value = surfaceTemperature;
-    bc.type  = 1;
-  } else if (position == W || position == E) {
-    bc.value = mantleTemperature;
-    bc.type  = 0;
-  } else {
-    bc.value = 0;
-    bc.type  = 0;
+  static double RPSetVerticalVelocity(MdoodzInput *instance, Coordinates coordinates) {
+    return coordinates.z * instance->model.EpsBG;
   }
-  return bc;
-}
 
-void RPMutateInput(MdoodzInput *instance, MutateInputParams *params) {
-  int *astenospherePhases     = (int *) malloc(sizeof(int));
-  astenospherePhases[0]       = {3};
-  instance->crazyConductivity = new CrazyConductivity{
-          .multiplier = 1000,
-          .phases     = astenospherePhases,
-          .nPhases    = 1,
-  };
-}
-
-MdoodzSetup CreateRiftingCheninInstance() {
-  return (MdoodzSetup){
-          .BuildInitialTopography = new BuildInitialTopography_ff{
-                  .SetSurfaceZCoord = RPSetSurfaceZCoord,
-          },
-          .SetParticles = new SetParticles_ff{
-                  .SetHorizontalVelocity = RPSetHorizontalVelocity,
-                  .SetVerticalVelocity   = RPSetVerticalVelocity,
-                  .SetPhase              = RPSetPhase,
-                  .SetTemperature        = RPSetTemperature,
-                  .SetGrainSize          = RPSetGrainSize,
-          },
-          .SetBCs = new SetBCs_ff{
-                  .SetBCVx    = SetPureShearBCVx,
-                  .SetBCVz    = SetPureShearBCVz,
-                  .SetBCT     = RPSetBCT,
-                  .SetBCPType = RPSetBCPType,
-                  .SetBCTNew  = RPSetBCTNew,
-          },
-          .MutateInput = RPMutateInput};
-}
-
-double TBCSetSurfaceZCoord(MdoodzInput *instance, double x_coord) {
-  double Amplitude  = 7e3 / instance->scaling.L;
-  double Wavelength = 2800e3 / instance->scaling.L;
-  return -Amplitude * cos(2.0 * M_PI * x_coord / Wavelength);
-}
-
-int TBCSetPhase(MdoodzInput *instance, Coordinates coordinates) {
-  double lithosphereBottomDepth = -100.0e3 / instance->scaling.L;
-  if (coordinates.z > lithosphereBottomDepth) {
-    return 1;
-  } else {
-    return 0;
+  static char RPSetBCPType(MdoodzInput *instance, POSITION position) {
+    if (position == NE || position == NW) {
+      return 0;
+    } else {
+      return -1;
+    }
   }
-}
 
-SetBC TBCSetBCVx(MdoodzInput *instance, POSITION position, Coordinates coordinates) {
-  SetBC bc;
-  if (position == S || position == SW || position == SE) {
-    bc.value = 0.0;
-    bc.type  = 11;
-  } else if (position == N || position == NW || position == NE) {
-    bc.value = 0.0;
-    bc.type  = 13;
-  } else if (position == W || position == E) {
-    bc.value = 0.0;
-    bc.type  = 0;
-  } else {
-    bc.value = 0.0;
-    bc.type  = -1;
+  static SetBC RPSetBCT(MdoodzInput *instance, POSITION position, double particleTemperature) {
+    SetBC  bc;
+    double surfaceTemperature = zeroC / instance->scaling.T;
+    if (position == FREE_SURFACE) {
+      bc.value = surfaceTemperature;
+      bc.type  = 1;
+    } else {
+      bc.value = 0.0;
+      bc.type  = 0;
+    }
+    return bc;
   }
-  return bc;
-}
 
-SetBC TBCSetBCVz(MdoodzInput *instance, POSITION position, Coordinates coordinates) {
-  SetBC bc;
-  if (position == W || position == E || position == SW || position == SE || position == NW || position == NE) {
-    bc.value = 0.0;
-    bc.type  = 13;
-  } else if (position == S || position == N) {
-    bc.value = 0.0;
-    bc.type  = 0;
-  } else {
-    bc.value = 0.0;
-    bc.type  = -1;
+  static SetBC RPSetBCTNew(MdoodzInput *instance, POSITION position, double particleTemperature) {
+    SetBC  bc;
+    double surfaceTemperature = zeroC / instance->scaling.T;
+    double mantleTemperature  = (1330. + zeroC) / instance->scaling.T;
+    if (position == S || position == SE || position == SW) {
+      bc.value = particleTemperature;
+      bc.type  = 1;
+    } else if (position == N || position == NE || position == NW) {
+      bc.value = surfaceTemperature;
+      bc.type  = 1;
+    } else if (position == W || position == E) {
+      bc.value = mantleTemperature;
+      bc.type  = 0;
+    } else {
+      bc.value = 0;
+      bc.type  = 0;
+    }
+    return bc;
   }
-  return bc;
-}
 
-char TBCSetBCPType(MdoodzInput *instance, POSITION position) {
-  if (position == NE || position == NW) {
-    return 0;
-  } else {
-    return -1;
+  static void RPMutateInput(MdoodzInput *instance, MutateInputParams *params) {
+    int *astenospherePhases     = (int *) malloc(sizeof(int));
+    astenospherePhases[0]       = {3};
+    instance->crazyConductivity = new CrazyConductivity{
+            .multiplier = 1000,
+            .phases     = astenospherePhases,
+            .nPhases    = 1,
+    };
   }
-}
 
-MdoodzSetup CreateTopoBenchCase1Instance() {
-  return (MdoodzSetup){
-          .BuildInitialTopography = new BuildInitialTopography_ff{
-                  .SetSurfaceZCoord = TBCSetSurfaceZCoord,
-          },
-          .SetParticles = new SetParticles_ff{
-                  .SetPhase = TBCSetPhase,
-          },
-          .SetBCs = new SetBCs_ff{
-                  .SetBCVx    = TBCSetBCVx,
-                  .SetBCVz    = TBCSetBCVz,
-                  .SetBCPType = TBCSetBCPType,
-          },
-  };
-}
-
-int STSetPhase(MdoodzInput *instance, Coordinates coordinates) {
-  const double radius = instance->model.user1 / instance->scaling.L;
-  if (coordinates.x * coordinates.x + coordinates.z * coordinates.z < radius * radius) {
-    return 1;
-  } else {
-    return 0;
+  public: void run() {
+    MdoodzSetup riftingCheninModel = {
+            .BuildInitialTopography = new BuildInitialTopography_ff{
+                    .SetSurfaceZCoord = RPSetSurfaceZCoord,
+            },
+            .SetParticles = new SetParticles_ff{
+                    .SetHorizontalVelocity = RPSetHorizontalVelocity,
+                    .SetVerticalVelocity   = RPSetVerticalVelocity,
+                    .SetPhase              = RPSetPhase,
+                    .SetTemperature        = RPSetTemperature,
+                    .SetGrainSize          = RPSetGrainSize,
+            },
+            .SetBCs = new SetBCs_ff{
+                    .SetBCVx    = SetPureShearBCVx,
+                    .SetBCVz    = SetPureShearBCVz,
+                    .SetBCT     = RPSetBCT,
+                    .SetBCPType = RPSetBCPType,
+                    .SetBCTNew  = RPSetBCTNew,
+            },
+            .MutateInput = RPMutateInput};
+    RunMDOODZ("RiftingChenin.txt", &riftingCheninModel);
   }
-}
+};
 
-double STSetDensity(MdoodzInput *instance, Coordinates coordinates, int phase) {
-  const double T_init = (instance->model.user0 + zeroC) / instance->scaling.T;
-  if (instance->model.eqn_state > 0) {
-    return instance->materials.rho[phase] * (1 - instance->materials.alp[phase] * (T_init - instance->materials.T0[phase]));
-  } else {
-    return instance->materials.rho[phase];
+class TopoBenchCase1 {
+  static double TBCSetSurfaceZCoord(MdoodzInput *instance, double x_coord) {
+    double Amplitude  = 7e3 / instance->scaling.L;
+    double Wavelength = 2800e3 / instance->scaling.L;
+    return -Amplitude * cos(2.0 * M_PI * x_coord / Wavelength);
   }
-}
 
-MdoodzSetup CreateShearTemplateInstance() {
-  return (MdoodzSetup){
-          .SetParticles = new SetParticles_ff{
-                  .SetPhase   = STSetPhase,
-                  .SetDensity = STSetDensity,
-          },
-          .SetBCs = new SetBCs_ff{
-                  .SetBCVx = SetPureOrSimpleShearBCVx,
-                  .SetBCVz = SetPureOrSimpleShearBCVz,
-          },
-  };
-}
+  static int TBCSetPhase(MdoodzInput *instance, Coordinates coordinates) {
+    double lithosphereBottomDepth = -100.0e3 / instance->scaling.L;
+    if (coordinates.z > lithosphereBottomDepth) {
+      return 1;
+    } else {
+      return 0;
+    }
+  }
+
+  static SetBC TBCSetBCVx(MdoodzInput *instance, POSITION position, Coordinates coordinates) {
+    SetBC bc;
+    if (position == S || position == SW || position == SE) {
+      bc.value = 0.0;
+      bc.type  = 11;
+    } else if (position == N || position == NW || position == NE) {
+      bc.value = 0.0;
+      bc.type  = 13;
+    } else if (position == W || position == E) {
+      bc.value = 0.0;
+      bc.type  = 0;
+    } else {
+      bc.value = 0.0;
+      bc.type  = -1;
+    }
+    return bc;
+  }
+
+  static SetBC TBCSetBCVz(MdoodzInput *instance, POSITION position, Coordinates coordinates) {
+    SetBC bc;
+    if (position == W || position == E || position == SW || position == SE || position == NW || position == NE) {
+      bc.value = 0.0;
+      bc.type  = 13;
+    } else if (position == S || position == N) {
+      bc.value = 0.0;
+      bc.type  = 0;
+    } else {
+      bc.value = 0.0;
+      bc.type  = -1;
+    }
+    return bc;
+  }
+
+  static char TBCSetBCPType(MdoodzInput *instance, POSITION position) {
+    if (position == NE || position == NW) {
+      return 0;
+    } else {
+      return -1;
+    }
+  }
+
+  public:  void run() {
+    MdoodzSetup topoBenchCaseModel = {
+            .BuildInitialTopography = new BuildInitialTopography_ff{
+                    .SetSurfaceZCoord = TBCSetSurfaceZCoord,
+            },
+            .SetParticles = new SetParticles_ff{
+                    .SetPhase = TBCSetPhase,
+            },
+            .SetBCs = new SetBCs_ff{
+                    .SetBCVx    = TBCSetBCVx,
+                    .SetBCVz    = TBCSetBCVz,
+                    .SetBCPType = TBCSetBCPType,
+            },
+    };
+    RunMDOODZ("TopoBenchCase1.txt", &topoBenchCaseModel);
+  }
+};
+
+class ShearTemplate {
+  static int STSetPhase(MdoodzInput *instance, Coordinates coordinates) {
+    const double radius = instance->model.user1 / instance->scaling.L;
+    if (coordinates.x * coordinates.x + coordinates.z * coordinates.z < radius * radius) {
+      return 1;
+    } else {
+      return 0;
+    }
+  }
+
+  static double STSetDensity(MdoodzInput *instance, Coordinates coordinates, int phase) {
+    const double T_init = (instance->model.user0 + zeroC) / instance->scaling.T;
+    if (instance->model.eqn_state > 0) {
+      return instance->materials.rho[phase] * (1 - instance->materials.alp[phase] * (T_init - instance->materials.T0[phase]));
+    } else {
+      return instance->materials.rho[phase];
+    }
+  }
+
+  public: void run() {
+    MdoodzSetup shearTemplate = {
+            .SetParticles = new SetParticles_ff{
+                    .SetPhase   = STSetPhase,
+                    .SetDensity = STSetDensity,
+            },
+            .SetBCs = new SetBCs_ff{
+                    .SetBCVx = SetPureOrSimpleShearBCVx,
+                    .SetBCVz = SetPureOrSimpleShearBCVz,
+            },
+    };
+    RunMDOODZ("ShearTemplate.txt", &shearTemplate);
+  }
+
+  public: void run1() {
+    MdoodzSetup shearTemplate = {
+            .SetParticles = new SetParticles_ff{
+                    .SetPhase   = STSetPhase,
+                    .SetDensity = STSetDensity,
+            },
+            .SetBCs = new SetBCs_ff{
+                    .SetBCVx = SetPureOrSimpleShearBCVx,
+                    .SetBCVz = SetPureOrSimpleShearBCVz,
+            },
+    };
+    RunMDOODZ("ShearTemplate1.txt", &shearTemplate);
+  }
+};
 
 void RenameTopoBenchCaseFiles() {
   rename("Output00000.gzip.h5", "TopoBenchCase00000.gzip.h5");
@@ -292,186 +314,264 @@ void RenameVEPFiles() {
   fs::copy("Output00030.gzip.h5", "VEP/VEP00030.gzip.h5", copyOptions);
 }
 
-int SHD14SetPhase(MdoodzInput *instance, Coordinates coordinates) {
-  const double radius = instance->model.user1 / instance->scaling.L;
-  if (coordinates.x * coordinates.x + coordinates.z * coordinates.z < radius * radius) {
-    return 1;
-  } else {
-    return 0;
+class ShearHeatingDuretz14 {
+  static int SHD14SetPhase(MdoodzInput *instance, Coordinates coordinates) {
+    const double radius = instance->model.user1 / instance->scaling.L;
+    if (coordinates.x * coordinates.x + coordinates.z * coordinates.z < radius * radius) {
+      return 1;
+    } else {
+      return 0;
+    }
   }
-}
 
-double SHD14SetTemperature(MdoodzInput *instance, Coordinates coordinates) {
-  return (instance->model.user0 + zeroC) / instance->scaling.T;
-}
+  static double SHD14SetTemperature(MdoodzInput *instance, Coordinates coordinates) {
+    return (instance->model.user0 + zeroC) / instance->scaling.T;
+  }
 
-double SHD14SetDensity(MdoodzInput *instance, Coordinates coordinates, int phase) {
-  const double T_init = (instance->model.user0 + zeroC) / instance->scaling.T;
-  if (instance->model.eqn_state > 0) {
-    return instance->materials.rho[phase] * (1 - instance->materials.alp[phase] * (T_init - instance->materials.T0[phase]));
-  } else {
+  static double SHD14SetDensity(MdoodzInput *instance, Coordinates coordinates, int phase) {
+    const double T_init = (instance->model.user0 + zeroC) / instance->scaling.T;
+    if (instance->model.eqn_state > 0) {
+      return instance->materials.rho[phase] * (1 - instance->materials.alp[phase] * (T_init - instance->materials.T0[phase]));
+    } else {
+      return instance->materials.rho[phase];
+    }
+  }
+
+  static SetBC SHD14SetBCT(MdoodzInput *instance, POSITION position, double particleTemperature) {
+    SetBC bc;
+    if (position == W || position == E || position == S || position == N || position == SE || position == SW || position == NE || position == NW) {
+      bc.type  = 0;
+      bc.value = 0.0;
+    } else {
+      bc.type  = -1;
+      bc.value = 0.0;
+    }
+    return bc;
+  }
+
+
+  static SetBC SHD14SetBCTNew(MdoodzInput *instance, POSITION position, double particleTemperature) {
+    SetBC bc;
+    if (position == W || position == E || position == S || position == N || position == SE || position == SW || position == NE || position == NW) {
+      bc.type  = 0;
+      bc.value = 0.0;
+    } else {
+      bc.type  = -1;
+      bc.value = 0.0;
+    }
+    return bc;
+  }
+
+  public: void run() {
+    MdoodzSetup shearHeatingDuretzModel = {
+            .SetParticles = new (SetParticles_ff){
+                    .SetPhase       = SHD14SetPhase,
+                    .SetTemperature = SHD14SetTemperature,
+                    .SetDensity     = SHD14SetDensity,
+            },
+            .SetBCs = new SetBCs_ff{
+                    .SetBCVx   = SetPureOrSimpleShearBCVx,
+                    .SetBCVz   = SetPureOrSimpleShearBCVz,
+                    .SetBCT    = SHD14SetBCT,
+                    .SetBCTNew = SHD14SetBCTNew,
+            },
+    };
+    RunMDOODZ("ShearHeatingDuretz14.txt", &shearHeatingDuretzModel);
+  }
+};
+
+class GSE {
+  static int GSESetPhase(MdoodzInput *instance, Coordinates coordinates) {
+    const double A          = 2e-3 / instance->scaling.L;
+    const double layer_bot0 = -5e-2 / instance->scaling.L;
+    const double layer_top0 = 5e-2 / instance->scaling.L;
+    const double Lx         = (instance->model.xmax - instance->model.xmin);
+    const double layer_top  = layer_top0 - A * cos(coordinates.x * 2.0 * M_PI / Lx);
+    const double layer_bot  = layer_bot0 + A * cos(coordinates.x * 2.0 * M_PI / Lx);
+    if (coordinates.z > layer_bot && coordinates.z < layer_top) {
+      return 1;
+    } else {
+      return 0;
+    }
+  }
+
+  static double GSESetGrainSize(MdoodzInput *instance, Coordinates coordinates, int phase) {
+    return instance->materials.gs_ref[phase];
+  }
+
+  static double GSESetDensity(MdoodzInput *instance, Coordinates coordinates, int phase) {// phase
     return instance->materials.rho[phase];
   }
-}
 
-SetBC SHD14SetBCT(MdoodzInput *instance, POSITION position, double particleTemperature) {
-  SetBC bc;
-  if (position == W || position == E || position == S || position == N || position == SE || position == SW || position == NE || position == NW) {
-    bc.type  = 0;
-    bc.value = 0.0;
-  } else {
-    bc.type  = -1;
-    bc.value = 0.0;
+  static double GSESetTemperature(MdoodzInput *instance, Coordinates coordinates) {
+    const double T = (instance->model.user0 + zeroC) / instance->scaling.T;
+    return T;
   }
-  return bc;
-}
+
+  //----------------------------- THERMAL SetBC -----------------------------//
 
 
-SetBC SHD14SetBCTNew(MdoodzInput *instance, POSITION position, double particleTemperature) {
-  SetBC bc;
-  if (position == W || position == E || position == S || position == N || position == SE || position == SW || position == NE || position == NW) {
-    bc.type  = 0;
-    bc.value = 0.0;
-  } else {
-    bc.type  = -1;
-    bc.value = 0.0;
+  static SetBC GSESetBCT(MdoodzInput *instance, POSITION position, double gridTemperature) {
+    return {
+            .value = gridTemperature,
+            .type  = 0,
+    };
   }
-  return bc;
-}
 
-MdoodzSetup CreateShearHeatingDuretz14Instance() {
-  return (MdoodzSetup){
-          .SetParticles = new (SetParticles_ff){
-                  .SetPhase       = SHD14SetPhase,
-                  .SetTemperature = SHD14SetTemperature,
-                  .SetDensity     = SHD14SetDensity,
-          },
-          .SetBCs = new SetBCs_ff{
-                  .SetBCVx   = SetPureOrSimpleShearBCVx,
-                  .SetBCVz   = SetPureOrSimpleShearBCVz,
-                  .SetBCT    = SHD14SetBCT,
-                  .SetBCTNew = SHD14SetBCTNew,
-          },
-  };
-}
-
-int GSESetPhase(MdoodzInput *instance, Coordinates coordinates) {
-  const double A          = 2e-3 / instance->scaling.L;
-  const double layer_bot0 = -5e-2 / instance->scaling.L;
-  const double layer_top0 = 5e-2 / instance->scaling.L;
-  const double Lx         = (instance->model.xmax - instance->model.xmin);
-  const double layer_top  = layer_top0 - A * cos(coordinates.x * 2.0 * M_PI / Lx);
-  const double layer_bot  = layer_bot0 + A * cos(coordinates.x * 2.0 * M_PI / Lx);
-  if (coordinates.z > layer_bot && coordinates.z < layer_top) {
-    return 1;
-  } else {
-    return 0;
+  static SetBC GSESetBCTNew(MdoodzInput *instance, POSITION position, double gridTemperature) {
+    return {
+            .value = gridTemperature,
+            .type  = 0,
+    };
   }
-}
-double GSESetGrainSize(MdoodzInput *instance, Coordinates coordinates, int phase) {
-  return instance->materials.gs_ref[phase];
-}
 
-double GSESetDensity(MdoodzInput *instance, Coordinates coordinates, int phase) {// phase
-  return instance->materials.rho[phase];
-}
-
-double GSESetTemperature(MdoodzInput *instance, Coordinates coordinates) {
-  const double T = (instance->model.user0 + zeroC) / instance->scaling.T;
-  return T;
-}
-
-//----------------------------- THERMAL SetBC -----------------------------//
-
-
-SetBC GSESetBCT(MdoodzInput *instance, POSITION position, double gridTemperature) {
-  return {
-          .value = gridTemperature,
-          .type  = 0,
-  };
-}
-
-SetBC GSESetBCTNew(MdoodzInput *instance, POSITION position, double gridTemperature) {
-  return {
-          .value = gridTemperature,
-          .type  = 0,
-  };
-}
-
-MdoodzSetup CreateGSEInstance() {
-  return (MdoodzSetup){
-          .SetParticles = new (SetParticles_ff){
-                  .SetPhase       = GSESetPhase,
-                  .SetTemperature = GSESetTemperature,
-                  .SetGrainSize   = GSESetGrainSize,
-                  .SetDensity     = GSESetDensity,
-          },
-          .SetBCs = new SetBCs_ff{
-                  .SetBCVx   = SetPureShearBCVx,
-                  .SetBCVz   = SetPureShearBCVz,
-                  .SetBCT    = GSESetBCT,
-                  .SetBCTNew = GSESetBCTNew,
-          },
-  };
-}
-
-
-int VEPSetPhase(MdoodzInput *input, Coordinates coordinates) {
-  const double radius = input->model.user1 / input->scaling.L;
-  if (coordinates.x * coordinates.x + coordinates.z * coordinates.z < radius * radius) {
-    return 1;
-  } else {
-    return 0;
+  public: void run() {
+    MdoodzSetup gseModel = {
+            .SetParticles = new (SetParticles_ff){
+                    .SetPhase       = GSESetPhase,
+                    .SetTemperature = GSESetTemperature,
+                    .SetGrainSize   = GSESetGrainSize,
+                    .SetDensity     = GSESetDensity,
+            },
+            .SetBCs = new SetBCs_ff{
+                    .SetBCVx   = SetPureShearBCVx,
+                    .SetBCVz   = SetPureShearBCVz,
+                    .SetBCT    = GSESetBCT,
+                    .SetBCTNew = GSESetBCTNew,
+            },
+    };
+    RunMDOODZ("PinchSwellGSE.txt", &gseModel);
   }
-}
+};
 
-double VEPSetDensity(MdoodzInput *input, Coordinates coordinates, int phase) {
-  const double T_init = (input->model.user0 + zeroC) / input->scaling.T;
-  if (input->model.eqn_state > 0) {
-    return input->materials.rho[phase] * (1 - input->materials.alp[phase] * (T_init - input->materials.T0[phase]));
-  } else {
-    return input->materials.rho[phase];
+class VEP_Duretz18 {
+  static int VEPSetPhase(MdoodzInput *input, Coordinates coordinates) {
+    const double radius = input->model.user1 / input->scaling.L;
+    if (coordinates.x * coordinates.x + coordinates.z * coordinates.z < radius * radius) {
+      return 1;
+    } else {
+      return 0;
+    }
   }
-}
 
+  static double VEPSetDensity(MdoodzInput *input, Coordinates coordinates, int phase) {
+    const double T_init = (input->model.user0 + zeroC) / input->scaling.T;
+    if (input->model.eqn_state > 0) {
+      return input->materials.rho[phase] * (1 - input->materials.alp[phase] * (T_init - input->materials.T0[phase]));
+    } else {
+      return input->materials.rho[phase];
+    }
+  }
 
-MdoodzSetup CreateVEPInstance() {
-  return (MdoodzSetup){
-          .SetParticles = new (SetParticles_ff){
-                  .SetPhase       = VEPSetPhase,
-                  .SetDensity = VEPSetDensity,
-          },
-          .SetBCs = new SetBCs_ff{
-                  .SetBCVx   = SetPureShearBCVx,
-                  .SetBCVz   = SetPureShearBCVz,
-                  .SetBCT    = GSESetBCT,
-                  .SetBCTNew = GSESetBCTNew,
-          },
-  };
-}
+  static SetBC GSESetBCT(MdoodzInput *instance, POSITION position, double gridTemperature) {
+    return {
+            .value = gridTemperature,
+            .type  = 0,
+    };
+  }
+
+  static SetBC GSESetBCTNew(MdoodzInput *instance, POSITION position, double gridTemperature) {
+    return {
+            .value = gridTemperature,
+            .type  = 0,
+    };
+  }
+
+  public: void run() {
+    MdoodzSetup vepDuretzModel = {
+            .SetParticles = new (SetParticles_ff){
+                    .SetPhase       = VEPSetPhase,
+                    .SetDensity = VEPSetDensity,
+            },
+            .SetBCs = new SetBCs_ff{
+                    .SetBCVx   = SetPureShearBCVx,
+                    .SetBCVz   = SetPureShearBCVz,
+                    .SetBCT    = GSESetBCT,
+                    .SetBCTNew = GSESetBCTNew,
+            },
+    };
+    RunMDOODZ("VEP_Duretz18.txt", &vepDuretzModel);
+  }
+};
+
+class Shrinking {
+  static int SetPhase(MdoodzInput *input, Coordinates coordinates) {
+    const double radius = 0.25 / input->scaling.L;
+    if (coordinates.x * coordinates.x + coordinates.z * coordinates.z < radius * radius) {
+      return 1;
+    } else {
+      return 0;
+    }
+  }
+
+  static int SetDualPhase(MdoodzInput *input, Coordinates coordinate, int phase) {
+
+    int    dual_phase = phase;
+    double Lx = input->model.xmax - input->model.xmin;
+    double Lz = input->model.zmax - input->model.zmin;
+    double Ax, Az;
+
+    // Set checkerboard for phase 0
+    Ax = cos( 6.0*2.0*M_PI*coordinate.x / Lx  );
+    Az = sin( 6.0*2.0*M_PI*coordinate.z / Lz  );
+    if ( ( (Az<0.0 && Ax<0.0) || (Az>0.0 && Ax>0.0) ) && dual_phase==0 ) {
+      dual_phase += input->model.Nb_phases;
+    }
+
+    // Set checkerboard for phase 1
+    Ax = cos( 24.0*2.0*M_PI*coordinate.x / Lx  );
+    Az = sin( 24.0*2.0*M_PI*coordinate.z / Lz  );
+    if ( ( (Az<0.0 && Ax<0.0) || (Az>0.0 && Ax>0.0) ) && dual_phase==1 ) {
+      dual_phase += input->model.Nb_phases;
+    }
+
+    return dual_phase;
+  }
+
+  static double SetDensity(MdoodzInput *input, Coordinates coordinates, int phase) {
+    const double T_init = (input->model.user0 + zeroC) / input->scaling.T;
+    const double P_init = (input->model.PrBG         ) / input->scaling.S;
+    if (input->model.eqn_state > 0) {
+      return input->materials.rho[phase] * exp(input->materials.bet[phase]*P_init -  input->materials.alp[phase] * T_init);
+    } else {
+      return input->materials.rho[phase];
+    }
+  }
+
+  public: int run() {
+    MdoodzSetup setup = {
+            .SetParticles  = new SetParticles_ff{
+                    .SetPhase              = SetPhase,
+                    .SetDualPhase          = SetDualPhase,
+                    .SetDensity            = SetDensity,
+            },
+            .SetBCs = new SetBCs_ff {
+                    .SetBCVx = SetPureOrSimpleShearBCVx,
+                    .SetBCVz = SetPureOrSimpleShearBCVz,
+            },
+    };
+    RunMDOODZ("Shrinking.txt", &setup);
+  }
+};
 
 void RunTestCases() {
-  MdoodzSetup vep = CreateVEPInstance();
-  RunMDOODZ("VEP_Duretz18.txt", &vep);
+  /*
+  (*new VEP_Duretz18).run();
   RenameVEPFiles();
-  MdoodzSetup gse = CreateGSEInstance();
-  RunMDOODZ("PinchSwellGSE.txt", &gse);
+  (*new GSE).run();
   RenameGSEFiles();
-  MdoodzSetup shearHeatingDuretz14 = CreateShearHeatingDuretz14Instance();
-  RunMDOODZ("ShearHeatingDuretz14.txt", &shearHeatingDuretz14);
+  (*new ShearHeatingDuretz14).run();
   rename("Output00005.gzip.h5", "ShearHeatingDuretz14.gzip.h5");
-  MdoodzSetup RiftingChenin = CreateRiftingCheninInstance();
-  RunMDOODZ("RiftingChenin.txt", &RiftingChenin);
+  (*new RiftingChenin).run();
   rename("Output00050.gzip.h5", "RiftingChenin50.gzip.h5");
-  MdoodzSetup shearTemplate = CreateShearTemplateInstance();
-  RunMDOODZ("ShearTemplate.txt", &shearTemplate);
+  (*new ShearTemplate).run();
   rename("Output00005.gzip.h5", "ShearTemplate.gzip.h5");
-  MdoodzSetup shearTemplate1 = CreateShearTemplateInstance();
-  RunMDOODZ("ShearTemplate1.txt", &shearTemplate1);
+  (*new ShearTemplate).run1();
   rename("Output00005.gzip.h5", "ShearTemplate1.gzip.h5");
-  MdoodzSetup topoBenchCase1 = CreateTopoBenchCase1Instance();
-  RunMDOODZ("TopoBenchCase1.txt", &topoBenchCase1);
+  (*new TopoBenchCase1).run();
   RenameTopoBenchCaseFiles();
+   */
+  (*new Shrinking).run();
 }
 
 string currentDateTime() {
@@ -501,6 +601,8 @@ void UpdateReadmeTimestamp() {
 
 int main() {
   RunTestCases();
+  PlotShrinkingGif();
+  PlotShrinkingGifRef();
   PlotGSE();
   PlotGSERef();
   PlotVEP();
