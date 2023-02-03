@@ -58,6 +58,7 @@ class ShearTemplate : public ::testing::Test {
                            .SetBCVx = SetPureOrSimpleShearBCVx,
                            .SetBCVz = SetPureOrSimpleShearBCVz,
             },
+                   .MutateInput = MutateInput,
     };
   }
 
@@ -78,6 +79,10 @@ class ShearTemplate : public ::testing::Test {
       return instance->materials.rho[phase];
     }
   }
+
+  static void MutateInput(MdoodzInput *input, MutateInputParams *mutateInputParams) {
+    input->model.writerSubfolder = mutateInputParams->str1;
+  }
 };
 
 int getStepsCount(char *hdf5FileName) {
@@ -96,6 +101,9 @@ int getStepsCount(char *hdf5FileName) {
 
 TEST_F(ShearTemplate, LinearPureshearIsotropic) {
   const char        *testName          = testing::UnitTest::GetInstance()->current_test_info()->name();
+  MutateInputParams *mutateInputParams = (MutateInputParams *) malloc(sizeof(MutateInputParams));
+  setup.mutateInputParams              = mutateInputParams;
+  mutateInputParams->str1              = testName;
   char *inputName;
   asprintf(&inputName, "ShearTemplate/%s.txt", testName);
   RunMDOODZ(inputName, &setup);
@@ -107,6 +115,9 @@ TEST_F(ShearTemplate, LinearPureshearIsotropic) {
 
 TEST_F(ShearTemplate, LinearSimpleshearIsotropic) {
   const char        *testName          = testing::UnitTest::GetInstance()->current_test_info()->name();
+  MutateInputParams *mutateInputParams = (MutateInputParams *) malloc(sizeof(MutateInputParams));
+  setup.mutateInputParams              = mutateInputParams;
+  mutateInputParams->str1              = testName;
   char *inputName;
   asprintf(&inputName, "ShearTemplate/%s.txt", testName);
   RunMDOODZ(inputName, &setup);
@@ -119,6 +130,9 @@ TEST_F(ShearTemplate, LinearSimpleshearIsotropic) {
 
 TEST_F(ShearTemplate, LinearPureshearAnisotropic) {
   const char        *testName          = testing::UnitTest::GetInstance()->current_test_info()->name();
+  MutateInputParams *mutateInputParams = (MutateInputParams *) malloc(sizeof(MutateInputParams));
+  setup.mutateInputParams              = mutateInputParams;
+  mutateInputParams->str1              = testName;
   char *inputName;
   asprintf(&inputName, "ShearTemplate/%s.txt", testName);
   RunMDOODZ(inputName, &setup);
@@ -130,6 +144,9 @@ TEST_F(ShearTemplate, LinearPureshearAnisotropic) {
 
 TEST_F(ShearTemplate, LinearSimpleshearAnisotropic) {
   const char        *testName          = testing::UnitTest::GetInstance()->current_test_info()->name();
+  MutateInputParams *mutateInputParams = (MutateInputParams *) malloc(sizeof(MutateInputParams));
+  setup.mutateInputParams              = mutateInputParams;
+  mutateInputParams->str1              = testName;
   char *inputName;
   asprintf(&inputName, "ShearTemplate/%s.txt", testName);
   RunMDOODZ(inputName, &setup);
@@ -142,6 +159,9 @@ TEST_F(ShearTemplate, LinearSimpleshearAnisotropic) {
 
 TEST_F(ShearTemplate, NonLinearPureshearIsotropic) {
   const char        *testName          = testing::UnitTest::GetInstance()->current_test_info()->name();
+  MutateInputParams *mutateInputParams = (MutateInputParams *) malloc(sizeof(MutateInputParams));
+  setup.mutateInputParams              = mutateInputParams;
+  mutateInputParams->str1              = testName;
   char *inputName;
   asprintf(&inputName, "ShearTemplate/%s.txt", testName);
   RunMDOODZ(inputName, &setup);
@@ -154,6 +174,9 @@ TEST_F(ShearTemplate, NonLinearPureshearIsotropic) {
 
 TEST_F(ShearTemplate, NonLinearSimpleshearIsotropic) {
   const char        *testName          = testing::UnitTest::GetInstance()->current_test_info()->name();
+  MutateInputParams *mutateInputParams = (MutateInputParams *) malloc(sizeof(MutateInputParams));
+  setup.mutateInputParams              = mutateInputParams;
+  mutateInputParams->str1              = testName;
   char *inputName;
   asprintf(&inputName, "ShearTemplate/%s.txt", testName);
   RunMDOODZ(inputName, &setup);
@@ -166,6 +189,9 @@ TEST_F(ShearTemplate, NonLinearSimpleshearIsotropic) {
 
 TEST_F(ShearTemplate, NonLinearPureshearAnisotropic) {
   const char        *testName          = testing::UnitTest::GetInstance()->current_test_info()->name();
+  MutateInputParams *mutateInputParams = (MutateInputParams *) malloc(sizeof(MutateInputParams));
+  setup.mutateInputParams              = mutateInputParams;
+  mutateInputParams->str1              = testName;
   char *inputName;
   asprintf(&inputName, "ShearTemplate/%s.txt", testName);
   RunMDOODZ(inputName, &setup);
@@ -178,6 +204,9 @@ TEST_F(ShearTemplate, NonLinearPureshearAnisotropic) {
 
 TEST_F(ShearTemplate, NonLinearSimpleshearAnisotropic) {
   const char        *testName          = testing::UnitTest::GetInstance()->current_test_info()->name();
+  MutateInputParams *mutateInputParams = (MutateInputParams *) malloc(sizeof(MutateInputParams));
+  setup.mutateInputParams              = mutateInputParams;
+  mutateInputParams->str1              = testName;
   char *inputName;
   asprintf(&inputName, "ShearTemplate/%s.txt", testName);
   RunMDOODZ(inputName, &setup);
