@@ -271,7 +271,6 @@ void RheologicalOperators( grid* mesh, params* model, mat_prop* materials, scale
         double detadexx=0., detadezz=0., detadgxz=0., detadp=0.;
         double danidexx =0., danidezz =0., danidgxz =0., danidp =0.;
         DerivativesOnTheFly_s( &detadexx, &detadezz, &detadgxz, &detadp, &danidexx, &danidezz, &danidgxz, &danidp, k, Exx, Ezz, Exz, mesh->P_s[k], ani_fstrain, ani_e, d1, d2, angle, lx2, lxlz, mesh, materials, model, scaling );
-
         //----------------------------------------------------------//
         mesh->D31_s[k] =               - 2.0*aniS_vep*d2*eta_vep + 2.0*detadexx*Dxz + 2.0*danidexx*Axz;
         mesh->D32_s[k] =                 2.0*aniS_vep*d2*eta_vep + 2.0*detadezz*Dxz + 2.0*danidezz*Axz;
@@ -1064,6 +1063,10 @@ void EvaluateStokesResidualDecoupled( SparseMat *Stokes, SparseMat *StokesA, Spa
         if ( mesh->BCu.type[cc] != 0 && mesh->BCu.type[cc] != 30 && mesh->BCu.type[cc] != 11 && mesh->BCu.type[cc] != 13 && mesh->BCu.type[cc] != -12) {
             ndofx++;
             resx                          += StokesA->F[Stokes->eqn_u[cc]]*StokesA->F[Stokes->eqn_u[cc]];
+        //     if (isnan(resx)) {
+        //         printf("%2.2e %2.2e \n", StokesA->F[Stokes->eqn_u[cc]], StokesA->F[Stokes->eqn_u[cc]]*StokesA->F[Stokes->eqn_u[cc]]);
+        //         exit(1);
+        // }
             mesh->ru[cc]                   = StokesA->F[Stokes->eqn_u[cc]];
             StokesA->F[Stokes->eqn_u[cc]] *= StokesA->d[Stokes->eqn_u[cc]]; // Need to scale the residual here for Defect Correction formulation (F is the RHS)
 //            if ( fabs(StokesA->F[Stokes->eqn_u[cc]]) > 1e5 ) printf( "%2.2e %2.2e %2.2e\n", StokesA->F[Stokes->eqn_u[cc]], StokesA->d[Stokes->eqn_u[cc]], mesh->ru[cc] );
