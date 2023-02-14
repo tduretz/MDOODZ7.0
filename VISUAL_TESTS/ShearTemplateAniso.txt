@@ -24,6 +24,7 @@ ispureshear_ALE = 1
 EpsBG           = 1
 
 /**** SWITCHES ****/
+aniso           = 1
 advection       = 0
 
 /**** USER-DEFINED ****/
@@ -43,6 +44,8 @@ cstv      = 1            / constant visc law
 pwlv      = 1            / disloc. creep
 eta0      = 1
 npwl      = 3.0
+ani_fac_v = 10.0
+aniso_angle = 30
 
 /**** PHASE 2 ****/
 ID   = 1
