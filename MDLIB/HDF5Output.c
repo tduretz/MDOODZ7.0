@@ -46,7 +46,11 @@
 void CreateDir(const char *dirName) {
   struct stat st = {0};
   if (stat(dirName, &st) == -1) {
+#ifdef _WIN32
+    mkdir(dirName);
+#else
     mkdir(dirName, 0700);
+#endif
   }
 }
 
