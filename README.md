@@ -17,10 +17,10 @@ To run the simulation `MdoodzInput` must be passed to `RunMDOODZ(MdoodzInput *in
 
 ### Examples:
 
-1) Simple or Pure Shear: [ShearTemplate](SETS/ShearTemplate.c)
-2) A free surface model: [TopoBenchCase1](SETS/TopoBenchCase1.c)
-3) A free surface and thermal solution model: [RiftingPauline](SETS/RiftingChenin.c)
-4) Grain size evolution model: [PinchSwellGSE](SETS/PinchSwellGSE.c)
+1) Setting models with pure or simple or shear boundary conditions: [ShearTemplate](SETS/ShearTemplate.c)
+2) Viscous relaxation of a free surface: [TopoBenchCase1](SETS/TopoBenchCase1.c)
+3) A continental rifting and thermal solution model: [RiftingPauline](SETS/RiftingChenin.c)
+4) Grain size evolution model and necking in calcite: [PinchSwellGSE](SETS/PinchSwellGSE.c)
 5) Quartz-Coesite inclusion density change in Garnet: [QuartzCoesite](SETS/QuartzCoesite.c)
 
 
