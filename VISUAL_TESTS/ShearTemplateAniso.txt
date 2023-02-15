@@ -50,7 +50,6 @@ gz = 0.000
 /**** PHASE 1 ****/
 ID        = 0
 cstv      = 1            / constant visc law
-pwlv      = 1            / disloc. creep
 eta0      = 1
 npwl      = 3.0
 ani_fac_v = 10.0
@@ -60,4 +59,4 @@ aniso_angle = 30
 ID   = 1
 cstv = 1             / constant visc law
 eta0 = 1e1
-npwl = 3.0
+npwl = 3
