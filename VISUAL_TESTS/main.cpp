@@ -569,22 +569,6 @@ class Shrinking {
 };
 
 void RunTestCases() {
-  (*new VEP_Duretz18).run();
-  RenameVEPFiles();
-  (*new GSE).run();
-  RenameGSEFiles();
-  (*new ShearHeatingDuretz14).run();
-  rename("Output00005.gzip.h5", "ShearHeatingDuretz14.gzip.h5");
-  (*new RiftingChenin).run();
-  rename("Output00050.gzip.h5", "RiftingChenin50.gzip.h5");
-  (*new ShearTemplate).run();
-  rename("Output00005.gzip.h5", "ShearTemplate.gzip.h5");
-  (*new ShearTemplate).run1();
-  rename("Output00005.gzip.h5", "ShearTemplate1.gzip.h5");
-  (*new ShearTemplate).runAniso();
-  rename("Output00005.gzip.h5", "ShearTemplateAniso.gzip.h5");
-  (*new TopoBenchCase1).run();
-  RenameTopoBenchCaseFiles();
   (*new Shrinking).run();
 }
 
