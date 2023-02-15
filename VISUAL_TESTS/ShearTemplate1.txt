@@ -42,11 +42,10 @@ mineta      = 1e-3
 maxeta      = 1e6
 
 /**** PHASE 1 ****/
-ID        = 0
-cstv      = 1            / constant visc law
-pwlv      = 1            / disloc. creep
-eta0      = 1
-npwl      = 3.0
+ID   = 0
+cstv = 1
+eta0 = 1
+npwl = 3.0
 
 /**** PHASE 2 ****/
 ID   = 1
