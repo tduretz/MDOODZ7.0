@@ -367,18 +367,25 @@ void LoadBreakpointParticles( markers *particles, grid* mesh, markers *topo_chai
 //    MinMaxArray(mesh->BCg.val, 1.0, Nx *Nz, "mesh->BCg.val");
 
 
-     // Phase proportions
+        // Phase proportions
         printf("Loading phase proportions - Nb_phases = %d:\n", model->Nb_phases);
-//        fread( &model->Nb_phases,  s1,        1,   file );
         for ( k=0; k<  model->Nb_phases; k++ ) { //model->Nb_phases
             fread( mesh->phase_perc_n[k], s3,  Ncx*Ncz,   file );
             fread( mesh->phase_perc_s[k], s3,  Nx *Nz ,   file );
-//            printf("phase %02d:\n", k);
-//            MinMaxArray(mesh->phase_perc_n[k], 1.0, Ncx*Ncz, "phase_perc_n");
-//            MinMaxArray(mesh->phase_perc_s[k], 1.0, Nx *Nz , "phase_perc_s");
         }
         fread( mesh->nb_part_cell, s1,  Ncx*Ncz,   file );
         fread( mesh->nb_part_vert, s1,  Nx *Nz ,   file );
+
+        // Timeseries
+        fread( mesh->Time_time,     s3,   model->Nt+1 ,   file );
+        fread( mesh->Short_time,    s3,   model->Nt+1 ,   file );
+        fread( mesh->Work_time,     s3,   model->Nt+1 ,   file );
+        fread( mesh->Uthermal_time, s3,   model->Nt+1 ,   file );
+        fread( mesh->Uelastic_time, s3,   model->Nt+1 ,   file );
+        fread( mesh->T_mean_time,   s3,   model->Nt+1 ,   file );
+        fread( mesh->P_mean_time,   s3,   model->Nt+1 ,   file );
+        fread( mesh->Tii_mean_time, s3,   model->Nt+1 ,   file );
+        fread( mesh->Eii_mean_time, s3,   model->Nt+1 ,   file );
 
 
     fclose(file);
@@ -394,6 +401,18 @@ void LoadBreakpointParticles( markers *particles, grid* mesh, markers *topo_chai
     model->xmax /= scaling.L;
     model->zmin /= scaling.L;
     model->zmax /= scaling.L;
+
+    for ( k=0; k<model->Nt+1; k++ ) {
+        mesh->Time_time[k]     /= scaling.t;
+        mesh->Short_time[k]    /= 1.0;
+        mesh->Work_time[k]     /= (scaling.rhoE*scaling.L*scaling.L);
+        mesh->Uthermal_time[k] /= (scaling.rhoE*scaling.L*scaling.L);
+        mesh->Uelastic_time[k] /= (scaling.rhoE*scaling.L*scaling.L);
+        mesh->T_mean_time[k]   /= scaling.T;
+        mesh->P_mean_time[k]   /= scaling.S;
+        mesh->Tii_mean_time[k] /= scaling.S;
+        mesh->Eii_mean_time[k] /= scaling.E;
+    }
 
 #pragma omp parallel for shared( particles, model, scaling )
     for ( k=0; k<particles->Nb_part; k++ ) {
@@ -544,6 +563,18 @@ void MakeBreakpointParticles( markers *particles,  grid* mesh, markers *topo_cha
     model.xmax *= scaling.L;
     model.zmin *= scaling.L;
     model.zmax *= scaling.L;
+
+    for ( k=0; k<model.Nt+1; k++ ) {
+        mesh->Time_time[k]     *= scaling.t;
+        mesh->Short_time[k]    *= 1.0;
+        mesh->Work_time[k]     *= (scaling.rhoE*scaling.L*scaling.L);
+        mesh->Uthermal_time[k] *= (scaling.rhoE*scaling.L*scaling.L);
+        mesh->Uelastic_time[k] *= (scaling.rhoE*scaling.L*scaling.L);
+        mesh->T_mean_time[k]   *= scaling.T;
+        mesh->P_mean_time[k]   *= scaling.S;
+        mesh->Tii_mean_time[k] *= scaling.S;
+        mesh->Eii_mean_time[k] *= scaling.E;
+    }
 
 #pragma omp parallel for shared( particles, model, scaling )
     for ( k=0; k<particles->Nb_part; k++ ) {
@@ -840,21 +871,26 @@ void MakeBreakpointParticles( markers *particles,  grid* mesh, markers *topo_cha
     fwrite( mesh->BCv.val,   s3,  (Nx+1)*Nz, file );
     fwrite( mesh->BCg.val,      s3,  Nx *Nz ,   file );
 
-//     MinMaxArray(mesh->BCg.val, 1.0, Nx *Nz, "mesh->BCg.val");
-
     // Phase proportions
     printf("Loading phase proportions - Nb_phases = %d:\n", model.Nb_phases);
 //    fwrite( &model.Nb_phases, s1,        1,   file );
     for ( k=0; k< model.Nb_phases; k++ ) {
         fwrite( mesh->phase_perc_n[k], s3,  Ncx*Ncz,   file );
         fwrite( mesh->phase_perc_s[k], s3,  Nx *Nz ,   file );
-//        printf("phase %02d:\n", k);
-//        MinMaxArray(mesh->phase_perc_n[k], 1.0, Ncx*Ncz, "phase_perc_n");
-//        MinMaxArray(mesh->phase_perc_s[k], 1.0, Nx *Nz, "phase_perc_s");
     }
     fwrite( mesh->nb_part_cell, s1,  Ncx*Ncz,   file );
     fwrite( mesh->nb_part_vert, s1,  Nx *Nz ,   file );
-    //    }
+
+    // Timeseries
+    fwrite( mesh->Time_time,     s3,   model.Nt+1 ,   file );
+    fwrite( mesh->Short_time,    s3,   model.Nt+1 ,   file );
+    fwrite( mesh->Work_time,     s3,   model.Nt+1 ,   file );
+    fwrite( mesh->Uthermal_time, s3,   model.Nt+1 ,   file );
+    fwrite( mesh->Uelastic_time, s3,   model.Nt+1 ,   file );
+    fwrite( mesh->T_mean_time,   s3,   model.Nt+1 ,   file );
+    fwrite( mesh->P_mean_time,   s3,   model.Nt+1 ,   file );
+    fwrite( mesh->Tii_mean_time, s3,   model.Nt+1 ,   file );
+    fwrite( mesh->Eii_mean_time, s3,   model.Nt+1 ,   file );
 
     fclose(file);
     free(name);
@@ -869,6 +905,18 @@ void MakeBreakpointParticles( markers *particles,  grid* mesh, markers *topo_cha
     model.xmax /= scaling.L;
     model.zmin /= scaling.L;
     model.zmax /= scaling.L;
+
+    for ( k=0; k<model.Nt+1; k++ ) {
+        mesh->Time_time[k]     /= scaling.t;
+        mesh->Short_time[k]    /= 1.0;
+        mesh->Work_time[k]     /= (scaling.rhoE*scaling.L*scaling.L);
+        mesh->Uthermal_time[k] /= (scaling.rhoE*scaling.L*scaling.L);
+        mesh->Uelastic_time[k] /= (scaling.rhoE*scaling.L*scaling.L);
+        mesh->T_mean_time[k]   /= scaling.T;
+        mesh->P_mean_time[k]   /= scaling.S;
+        mesh->Tii_mean_time[k] /= scaling.S;
+        mesh->Eii_mean_time[k] /= scaling.E;
+    }
 
 #pragma omp parallel for shared( particles, model, scaling )
     for ( k=0; k<particles->Nb_part; k++ ) {
