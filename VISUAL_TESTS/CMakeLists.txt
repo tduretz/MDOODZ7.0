@@ -26,6 +26,8 @@ configure_file("${PROJECT_SOURCE_DIR}/VISUAL_TESTS/RiftingChenin.gnu" "${PROJECT
 configure_file("${PROJECT_SOURCE_DIR}/VISUAL_TESTS/RiftingCheninReference.h5" "${PROJECT_SOURCE_DIR}/visualtests-out/RiftingCheninReference.h5" COPYONLY)
 configure_file("${PROJECT_SOURCE_DIR}/VISUAL_TESTS/ShearTemplate.txt" "${PROJECT_SOURCE_DIR}/visualtests-out/ShearTemplate.txt" COPYONLY)
 configure_file("${PROJECT_SOURCE_DIR}/VISUAL_TESTS/ShearTemplate1.txt" "${PROJECT_SOURCE_DIR}/visualtests-out/ShearTemplate1.txt" COPYONLY)
+configure_file("${PROJECT_SOURCE_DIR}/VISUAL_TESTS/ShearTemplateAniso.txt" "${PROJECT_SOURCE_DIR}/visualtests-out/ShearTemplateAniso.txt" COPYONLY)
+configure_file("${PROJECT_SOURCE_DIR}/VISUAL_TESTS/ShearTemplateAnisoReference.h5" "${PROJECT_SOURCE_DIR}/visualtests-out/ShearTemplateAnisoReference.h5" COPYONLY)
 configure_file("${PROJECT_SOURCE_DIR}/VISUAL_TESTS/ShearTemplate.gnu" "${PROJECT_SOURCE_DIR}/visualtests-out/ShearTemplate.gnu" COPYONLY)
 configure_file("${PROJECT_SOURCE_DIR}/VISUAL_TESTS/ShearTemplateReference.h5" "${PROJECT_SOURCE_DIR}/visualtests-out/ShearTemplateReference.h5" COPYONLY)
 configure_file("${PROJECT_SOURCE_DIR}/VISUAL_TESTS/ShearTemplate1Reference.h5" "${PROJECT_SOURCE_DIR}/visualtests-out/ShearTemplate1Reference.h5" COPYONLY)
