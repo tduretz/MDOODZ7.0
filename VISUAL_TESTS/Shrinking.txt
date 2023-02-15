@@ -7,6 +7,10 @@ writer          = 1
 writer_step     = 1
 writerSubfolder = Shrinking
 
+/**** SCALES ****/
+eta = 1e15
+V   = 1.0e-10
+
 /**** SPACE-TIME ****/
 Nx      = 51
 Nz      = 51
@@ -33,28 +37,14 @@ nstagmax          = 10
 IncrementalUpdateGrid = 1
 StressUpdate    = 0
 
-abs_tol_div       = 1e-10
-rel_tol_div       = 1e-10
-abs_tol_mom       = 1e-10  / momentum tolerance (new in MD7.0)
-rel_tol_mom       = 1e-10
-
 /**** SWITCHES ****/
 compressible    = 1
 iselastic       = 1
-ismechanical    = 1
-RK              = 4
-isperiodic_x    = 0
-ispureshear_ALE = 0
-isthermal       = 0
 line_search     = 1
-free_surf       = 0
-free_surf_stab  = 0
 eqn_state       = 3
-thermal_eq      = 0
 subgrid_diff    = 2
 shear_heat      = 0
 adiab_heat      = 0
-fstrain         = 0
 
 /*** CHEMICAL ***/
 ProgReac        = 1  / !!!!
@@ -66,14 +56,7 @@ UnsplitDiffReac = 0
 shear_style     = 0
 EpsBG           = 0.0
 PrBG            = 2.0e9
-user0           = 680.0     / temperature [°C]
-user1           = 3.1558e9
-user2           = 10.0
-user3           = 0
-
-/**** GRAVITY ****/
-gx = 0.0000
-gz = 0.0000
+user0           = 680.0
 
 /**** MAT PROPERTIES ****/
 Nb_phases = 4
@@ -92,16 +75,9 @@ n_vp   = 1.0
 Slim = 500e9
 alp  = 0.0e-6
 bet  = 1.25e-11    / (K=80e9)
-drho = 0
 cstv = 0             / constant visc law
 pwlv = 1             / disloc. creep
-linv = 0             / diff. creep
-gbsv = 0             / grain boundary sliding
-expv = 0             / peierls creep
-gsel = 0             / grain size evo.
 eta0 = 1.0e22
-npwl = 1.0
-Qpwl = 0
 reac_soft  = 1
 reac_phase = 0
 Pr   = 1.0e80
@@ -124,15 +100,9 @@ n_vp   = 1.0
 Slim = 500e9
 alp  = 0.0e-6
 bet  = 1.25e-11    / (K=80e9)
-drho = 0
 cstv = 0             / constant visc law
 pwlv = 1            / disloc. creep
-linv = 0             / diff. creep
-gbsv = 0             / grain boundary sliding
-expv = 0             / peierls creep
-gsel = 0             / grain size evo.
 eta0 = 1.0e22
-npwl = 1.0
 Qpwl = 0
 reac_soft  = 1
 reac_phase = 3
@@ -156,16 +126,9 @@ n_vp   = 1.0
 Slim = 500e9
 alp  = 0.0e-6
 bet  = 1.25e-11    / (K=80e9)
-drho = 0
 cstv = 0             / constant visc law
 pwlv = 1            / disloc. creep
-linv = 0             / diff. creep
-gbsv = 0             / grain boundary sliding
-expv = 0             / peierls creep
-gsel = 0             / grain size evo.
 eta0 = 1.0e22
-npwl = 1.0
-Qpwl = 0
 reac_soft  = 1
 reac_phase = 2
 Pr   = 1.0e80
@@ -191,13 +154,7 @@ bet  = 1.25e-11    / (K=80e9)
 drho = 0
 cstv = 0             / constant visc law
 pwlv = 1            / disloc. creep
-linv = 0             / diff. creep
-gbsv = 0             / grain boundary sliding
-expv = 0             / peierls creep
-gsel = 0             / grain size evo.
 eta0 = 1.0e22
-npwl = 1.0
-Qpwl = 0
 reac_soft  = 0
 reac_phase = 3
 Pr   = 1.0e80
@@ -206,34 +163,10 @@ tau_kin = 3.1558e9
 k_chem  = 5.0e-26
 density_model = 3
 
-/**** DEFMAPS ****/
-nT    =    51      / Temperature resolutin []
-nE    =    51      / Strain rate resolution []
-nd    =    2        / Grain size resolution []
-Tmin  =    240      / Temperature minimum [°C]
-Tmax  =    2000     / Temperature maximum [°C]
-Emin  =    -50      / Strain rate minimum log_10 [1/s]
-Emax  =    5        / Strain rate maximum log_10 [1/s]
-dmin  =    -7       / Grain size minimum log_10 [m]
-dmax  =    -2       / Grain size maximum log_10 [m]
-Pn    =  1e9        / Pressure [Pa]
-
-/**** PARTICLES ****/
-Nx_part  = 4
-Nz_part  = 4
-min_part_cell = 16
 
 /**** NON-LINEAR ITERATIONS ****/
 Newton        = 1
-let_res_grow  = 0
-line_search_min = 0.0 
 Picard2Newton = 1
-Pic2NewtCond  = 2e-1
 nit_max       = 30
-rel_tol_KSP   = 5e-4
-abs_tol_u     = 1e-9
-abs_tol_p     = 1e-9
-rel_tol_u     = 1e-9
-rel_tol_p     = 1e-9
 mineta        = 1e10
 maxeta        = 1e30
