@@ -1,0 +1,152 @@
+/**** Original name: StefanBending.txt ****/
+/**** RESTART ****/
+istep = 00000010
+irestart = 0
+
+/**** OUTPUT FILES ****/
+writer = 1
+writer_step = 10
+writer_markers = 0
+writer_debug   = 0 
+
+/**** SCALES ****/ Scaling parameters for
+eta = 1e23
+L   = 1e6
+V   = 1e-9
+T   = 100
+ 
+/**** SPACE ****/
+Nx      = 400
+Nz      = 250
+xmin    = -9.959000e5
+xmax    =  9.959000e5
+zmin    =  5969400     / model bottom 
+zmax    =  6.400000e6  / Earth surface
+
+/**** TIME ****/
+Nt      = 500
+dt      = 1.2623e+11
+Courant = 0.45
+
+/**** SWITCHES ****/
+penalty         = 1e3
+eta_avg         = 1
+itp_stencil     = 9
+ismechanical    = 1
+dt_constant     = 0
+RK              = 4
+isperiodic_x    = 0
+ispureshear_ALE = 0  /1: box stretched at constant strain rate; -1 box of constant size
+isinertial      = 0
+iselastic       = 1
+isthermal       = 1
+isPl_soft       = 0
+free_surf       = 1
+free_surf_stab  = 1
+eqn_state       = 0
+thermal_eq      = 1
+subgrid_diff    = 2
+shear_heat      = 1
+adiab_heat      = 0
+polar           = 1
+aniso           = 0
+StressRotation  = 2
+
+/**** NON-LINEAR ITERATIONS ****/
+Newton      = 0 
+nit_max     = 1
+rel_tol_KSP = 1e-4
+abs_tol_u   = 1e-10
+abs_tol_p   = 1e-10
+rel_tol_u   = 1e-10
+rel_tol_p   = 1e-10
+mineta      = 1e17
+maxeta      = 1e25
+
+/**** SETUP DEPENDANT ****/
+EpsBG       =  1e-15
+user0       = -35e3   / Moho depth [m]
+user1       = -150e3  / LAB depth [m]
+user2       = -200e3  / depth of compression [m] 
+user3       =  1400   / Mantle temperature [C]
+user4       =  0      / 0:Bottom outflow / 1:Lateral outflow 
+user5       =  10e3   / radius perturbation [m]
+
+/**** GRAVITY ****/
+gx = 0.0000
+gz = -9.81
+
+/**** MAT PROPERTIES ****/
+Nb_phases = 3
+
+/**** PHASE 0 ****/
+ID   = 0
+rho  = 2800.00 / Crust
+mu   = 3e10
+Cv   = 1050
+k    = 2.5
+Qr   = 1e-6
+C    = 5e7
+phi  = 30
+eta_vp = 1e21
+Slim = 500e9
+alp  = 10.0e-6
+bet  = 1e-11
+drho = 0
+cstv = 0             / constant visc law
+pwlv = 10            / disloc. creep
+linv = 0             / diff. creep
+gbsv = 0             / grain boundary sliding
+expv = 0             / peierls creep
+gsel = 0             / grain size evo.
+eta0 = 1e23
+npwl = 1
+Qpwl = 0
+
+/**** PHASE 1 ****/
+ID   = 1
+rho  = 3300.00 / Mantle lithosphere
+mu   = 3e10
+Cv   = 1050
+k    = 2.5
+Qr   = 0
+C    = 5e7
+phi  = 30
+eta_vp = 1e21
+Slim = 500e9
+alp  = 10.0e-6
+bet  = 1e-11
+drho = 0
+cstv = 0             / constant visc law
+pwlv = 40            / disloc. creep
+linv = 0             / diff. creep
+gbsv = 0             / grain boundary sliding
+expv = 0             / peierls creep
+gsel = 0             / grain size evo.
+eta0 = 1e22
+npwl = 1
+Qpwl = 0
+
+/**** PHASE 2 ****/
+ID   = 2
+rho  = 3300.00 / Astehenosphere
+mu   = 3e10
+Cv   = 1050
+k    = 2.5
+Qr   = 0
+C    = 5e7
+phi  = 30
+eta_vp = 1e21
+Slim = 500e9
+alp  = 10.0e-6
+bet  = 1e-11
+drho = 0
+cstv = 0             / constant visc law
+pwlv = 40            / disloc. creep
+linv = 0             / diff. creep
+gbsv = 0             / grain boundary sliding
+expv = 0             / peierls creep
+gsel = 0             / grain size evo.
+eta0 = 5e21
+npwl = 1
+Qpwl = 0
