@@ -52,7 +52,7 @@ shear_style     = 1
 fstrain         = 1
 
 /**** ANISOTROPY ****/
-aniso           = 1
+anisotropy           = 1
 aniso_fstrain   = 1 // finite strain anisotropy activated
  
 /**** SETUP DEPENDANT ****/
@@ -95,7 +95,7 @@ gsel = 0
 eta0 = 1e0
 npwl = 1
 Qpwl = 0
-aniso        = 1
+anisotropy        = 1
 aniso_angle  = 45
 aniso_factor = 10
 
@@ -120,7 +120,7 @@ gsel = 0
 eta0 = 1e0
 npwl = 1
 Qpwl = 0
-aniso        = 1
+anisotropy        = 1
 aniso_angle  = 45
 aniso_factor = 10
 
@@ -145,7 +145,7 @@ gsel = 0
 eta0 = 1e0
 npwl = 1
 Qpwl = 0
-aniso        = 1
+anisotropy        = 1
 aniso_angle  = 45
 aniso_factor = 10
 
@@ -170,7 +170,7 @@ gsel = 0
 eta0 = 1e0
 npwl = 1
 Qpwl = 0
-aniso        = 1
+anisotropy        = 1
 aniso_angle  = 45
 aniso_factor = 10
 

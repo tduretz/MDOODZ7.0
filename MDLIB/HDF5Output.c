@@ -541,7 +541,7 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
         DoubleToFloat( Fzz, CFzz, (model.Nx-1)*(model.Nz-1) );
     }
 
-    if ( model.aniso == 1 ) {
+    if ( model.anisotropy == 1 ) {
 
         // nx
         nx  = DoodzCalloc((model.Nx-1)*(model.Nz-1),sizeof(double));
@@ -555,7 +555,7 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
         Cnz = DoodzMalloc( sizeof(float)*(model.Nx-1)*(model.Nz-1));
         DoubleToFloat( nz, Cnz, (model.Nx-1)*(model.Nz-1) );
 
-        // aniso factor on centroids
+        // anisotropy factor on centroids
         Cani_fac = DoodzMalloc( sizeof(float)*(model.Nx-1)*(model.Nz-1));
         DoubleToFloat( mesh->aniso_factor_n, Cani_fac, (model.Nx-1)*(model.Nz-1) );
 
@@ -792,7 +792,7 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
         AddFieldToGroup( FileName, "Centers" , "Fzz", 'f', (model.Nx-1)*(model.Nz-1), CFzz, 1 );
     }
 
-    if (model.aniso == 1) {
+    if (model.anisotropy == 1) {
         AddFieldToGroup( FileName, "Centers" , "nx", 'f', (model.Nx-1)*(model.Nz-1), Cnx, 1 );
         AddFieldToGroup( FileName, "Centers" , "nz", 'f', (model.Nx-1)*(model.Nz-1), Cnz, 1 );
         AddFieldToGroup( FileName, "Centers" , "ani_fac", 'f', (model.Nx-1)*(model.Nz-1), Cani_fac, 1 );
@@ -906,7 +906,7 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
         DoodzFree( CFzz );
     }
 
-     if ( model.aniso == 1 ) {
+     if ( model.anisotropy == 1 ) {
          DoodzFree( nx  );
          DoodzFree( nz  );
          DoodzFree( Cnx );

@@ -244,7 +244,7 @@ markers PartAlloc(ParticlesInput particlesInput, params *model) {
     particles.Pmax = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
   }
 
-  if (model->aniso == 1) {
+  if (model->anisotropy == 1) {
     particles.nx = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
     particles.nz = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
   }
@@ -313,7 +313,7 @@ void PartFree( markers *particles, params* model ) {
         DoodzFree(particles->Pmax);
     }
 
-    if (model->aniso == 1) {
+    if (model->anisotropy == 1) {
         DoodzFree(particles->nx);
         DoodzFree(particles->nz);
     }
@@ -618,24 +618,24 @@ grid GridAlloc(params *model) {
   mesh.P_s           = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double));
 
   // Anisotropy 
-  if (model->aniso == 1) mesh.d1_n = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
-  if (model->aniso == 1) mesh.d1_s = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double));
-  if (model->aniso == 1) mesh.d2_n = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
-  if (model->aniso == 1) mesh.d2_s = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double));
-  if (model->aniso == 1) mesh.angle_n = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
-  if (model->aniso == 1) mesh.angle_s = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double));
-  if (model->aniso == 1) mesh.FS_AR_n = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
-  if (model->aniso == 1) mesh.FS_AR_s = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double));
-  if (model->aniso == 1) Initialise1DArrayDouble(mesh.FS_AR_n, (Nx - 1) * (Nz - 1), 1.0);
-  if (model->aniso == 1) Initialise1DArrayDouble(mesh.FS_AR_s, (Nx - 0) * (Nz - 0), 1.0);
-  if (model->aniso == 1) mesh.aniso_factor_n = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double)); // To delete
-  if (model->aniso == 1) mesh.aniso_factor_s = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double)); // To delete
-  if (model->aniso == 1) mesh.aniso_factor_v_n = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
-  if (model->aniso == 1) mesh.aniso_factor_v_s = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double));
-  if (model->aniso == 1) mesh.aniso_factor_e_n = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
-  if (model->aniso == 1) mesh.aniso_factor_e_s = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double)); 
-  if (model->aniso == 1) mesh.aniso_factor_p_n = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
-  if (model->aniso == 1) mesh.aniso_factor_p_s = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double));
+  if (model->anisotropy == 1) mesh.d1_n = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  if (model->anisotropy == 1) mesh.d1_s = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double));
+  if (model->anisotropy == 1) mesh.d2_n = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  if (model->anisotropy == 1) mesh.d2_s = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double));
+  if (model->anisotropy == 1) mesh.angle_n = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  if (model->anisotropy == 1) mesh.angle_s = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double));
+  if (model->anisotropy == 1) mesh.FS_AR_n = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  if (model->anisotropy == 1) mesh.FS_AR_s = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double));
+  if (model->anisotropy == 1) Initialise1DArrayDouble(mesh.FS_AR_n, (Nx - 1) * (Nz - 1), 1.0);
+  if (model->anisotropy == 1) Initialise1DArrayDouble(mesh.FS_AR_s, (Nx - 0) * (Nz - 0), 1.0);
+  if (model->anisotropy == 1) mesh.aniso_factor_n = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double)); // To delete
+  if (model->anisotropy == 1) mesh.aniso_factor_s = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double)); // To delete
+  if (model->anisotropy == 1) mesh.aniso_factor_v_n = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  if (model->anisotropy == 1) mesh.aniso_factor_v_s = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double));
+  if (model->anisotropy == 1) mesh.aniso_factor_e_n = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  if (model->anisotropy == 1) mesh.aniso_factor_e_s = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double)); 
+  if (model->anisotropy == 1) mesh.aniso_factor_p_n = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  if (model->anisotropy == 1) mesh.aniso_factor_p_s = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double));
   // Compressibility
   mesh.p0_n    = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
   mesh.p0_s    = DoodzCalloc((Nx) * (Nz), sizeof(double));
@@ -956,22 +956,22 @@ void GridFree(grid *mesh, params *model) {
     DoodzFree(mesh->P_s);
 
     // Anisotropy
-    if ( model->aniso == 1 ) DoodzFree(mesh->d1_n);
-    if ( model->aniso == 1 ) DoodzFree(mesh->d1_s);
-    if ( model->aniso == 1 ) DoodzFree(mesh->d2_n);
-    if ( model->aniso == 1 ) DoodzFree(mesh->d2_s);
-    if ( model->aniso == 1 ) DoodzFree(mesh->angle_n);
-    if ( model->aniso == 1 ) DoodzFree(mesh->angle_s);
-    if ( model->aniso == 1 ) DoodzFree(mesh->FS_AR_n);
-    if ( model->aniso == 1 ) DoodzFree(mesh->FS_AR_s);
-    if ( model->aniso == 1 ) DoodzFree(mesh->aniso_factor_n);
-    if ( model->aniso == 1 ) DoodzFree(mesh->aniso_factor_s);
-    if ( model->aniso == 1 ) DoodzFree(mesh->aniso_factor_v_n);
-    if ( model->aniso == 1 ) DoodzFree(mesh->aniso_factor_v_s);
-    if ( model->aniso == 1 ) DoodzFree(mesh->aniso_factor_e_n);
-    if ( model->aniso == 1 ) DoodzFree(mesh->aniso_factor_e_s);
-    if ( model->aniso == 1 ) DoodzFree(mesh->aniso_factor_p_n);
-    if ( model->aniso == 1 ) DoodzFree(mesh->aniso_factor_p_s);
+    if ( model->anisotropy == 1 ) DoodzFree(mesh->d1_n);
+    if ( model->anisotropy == 1 ) DoodzFree(mesh->d1_s);
+    if ( model->anisotropy == 1 ) DoodzFree(mesh->d2_n);
+    if ( model->anisotropy == 1 ) DoodzFree(mesh->d2_s);
+    if ( model->anisotropy == 1 ) DoodzFree(mesh->angle_n);
+    if ( model->anisotropy == 1 ) DoodzFree(mesh->angle_s);
+    if ( model->anisotropy == 1 ) DoodzFree(mesh->FS_AR_n);
+    if ( model->anisotropy == 1 ) DoodzFree(mesh->FS_AR_s);
+    if ( model->anisotropy == 1 ) DoodzFree(mesh->aniso_factor_n);
+    if ( model->anisotropy == 1 ) DoodzFree(mesh->aniso_factor_s);
+    if ( model->anisotropy == 1 ) DoodzFree(mesh->aniso_factor_v_n);
+    if ( model->anisotropy == 1 ) DoodzFree(mesh->aniso_factor_v_s);
+    if ( model->anisotropy == 1 ) DoodzFree(mesh->aniso_factor_e_n);
+    if ( model->anisotropy == 1 ) DoodzFree(mesh->aniso_factor_e_s);
+    if ( model->anisotropy == 1 ) DoodzFree(mesh->aniso_factor_p_n);
+    if ( model->anisotropy == 1 ) DoodzFree(mesh->aniso_factor_p_s);
     // Compressibility
     DoodzFree(mesh->p0_n);
     DoodzFree(mesh->p0_s);

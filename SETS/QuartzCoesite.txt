@@ -50,7 +50,7 @@ shear_heat      = 1
 adiab_heat      = 0
 fstrain         = 1
 advection       = 1
-GNUplot_residuals = 0
+gnuplot_log_res = 0
 kinetics          = 1
 
 /**** SETUP DEPENDANT ****/

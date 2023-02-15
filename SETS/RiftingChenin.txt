@@ -58,7 +58,7 @@ surf_sedirate   = 0.0 / sedimentation rate [m/s]:3.1688e-12 <-> 0.01 cm/yr
 surf_baselev    = 0.0e3 / base level for sedimentation
 rec_T_P_x_z     = 1 / initial P and T field record
 polar           = 0
-aniso           = 0
+anisotropy           = 0
 
 /**** SETUP DEPENDANT ****/
 EpsBG           = -1.056e-15 /Background strain rate [s-1] => extension rate = 1 cm/yr

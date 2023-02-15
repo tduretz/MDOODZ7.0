@@ -43,7 +43,7 @@ iselastic       = 1
 isthermal       = 0
 isPl_soft       = 0
 line_search     = 1
-aniso           = 1
+anisotropy           = 1
 
 /**** SETUP DEPENDANT ****/
 EpsBG           = 1.056e-15 /Background strain rate [s-1] => extension rate = 1 cm/yr

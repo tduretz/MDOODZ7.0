@@ -1011,35 +1011,20 @@ void UpdateParticleEnergy( grid* mesh, scale scaling, params model, markers* par
 void UpdateParticlePressure( grid* mesh, scale scaling, params model, markers* particles, mat_prop* materials ) {
     
     DoodzFP *P_inc_mark;
-    int Nx, Nz, Ncx, Ncz, k, c0, p, ptrick=model.Plith_trick;
+    int Nx, Nz, Ncx, Ncz, k, c0, p;
     double d=1.0, dtm;
     int    cent=1, vert=0, prop=1, interp=0;
     Nx = mesh->Nx; Ncx = Nx-1;
     Nz = mesh->Nz; Ncz = Nz-1;
     
     // Compute increment
-#pragma omp parallel for shared(mesh) private(c0) firstprivate( ptrick )
+#pragma omp parallel for shared(mesh) private(c0) 
     for ( c0=0; c0<Ncx*Ncz; c0++ ) {
         mesh->dp[c0] = 0.0;
         if (mesh->BCp.type[c0] != 30 ) {
-            if ( ptrick == 1 ) mesh->dp[c0] = (mesh->p_in[c0] - mesh->p_lith[c0]) - (mesh->p0_n[c0] - mesh->p_lith0[c0]); // dp dynamic pressure
-            if ( ptrick == 0 ) mesh->dp[c0] = (mesh->p_in[c0]-mesh->p0_n[c0]);
+            mesh->dp[c0] = (mesh->p_in[c0]-mesh->p0_n[c0]);
         }
     }
-    
-    
-    //    double *p_s = DoodzCalloc(Nx*Nz, sizeof(DoodzFP));
-    //    double *dp = DoodzCalloc(Nx*Nz, sizeof(DoodzFP));
-    //    InterpCentroidsToVerticesDouble( mesh->p_in, p_s,mesh, &model );
-    //
-    //    // Compute increment
-    //    #pragma omp parallel for shared(mesh) private(c0) firstprivate( ptrick )
-    //        for ( c0=0; c0<Nx*Nz; c0++ ) {
-    //            dp[c0] = 0.0;
-    //            if (mesh->BCg.type[c0] != 30 ) {
-    //                dp[c0] = (p_s[c0]-mesh->p0_s[c0]);
-    //            }
-    //        }
     
     if ( model.subgrid_diff >= 2 ) {
         
@@ -1056,10 +1041,9 @@ void UpdateParticlePressure( grid* mesh, scale scaling, params model, markers* p
         
         /* -------------- */
         // Old Pressure grid
-#pragma omp parallel for shared(mesh, Pg0) private(c0) firstprivate(Ncx,Ncz) firstprivate( ptrick )
+#pragma omp parallel for shared(mesh, Pg0) private(c0) firstprivate(Ncx,Ncz)
         for ( c0=0; c0<Ncx*Ncz; c0++ ) {
-            if (mesh->BCt.type[c0] != 30 && ptrick == 1 ) Pg0[c0] = mesh->p0_n[c0] - mesh->p_lith0[c0];
-            if (mesh->BCt.type[c0] != 30 && ptrick == 0 ) Pg0[c0] = mesh->p0_n[c0];
+            if (mesh->BCt.type[c0] != 30) Pg0[c0] = mesh->p0_n[c0];
         }
         Interp_Grid2P_centroids2( *particles, Pm0, mesh, Pg0, mesh->xvz_coord,  mesh->zvx_coord, Nx-1, Nz-1, mesh->BCp.type, &model  );
         /* -------------- */
@@ -1136,7 +1120,6 @@ void UpdateParticleStress( grid* mesh, markers* particles, params* model, mat_pr
     double *dudx_n, *dvdz_n, *dudz_s, *dvdx_s, *om_s, *om_n, *dudz_n, *dvdx_n, *dudx_s, *dvdz_s;
     double angle, tzz, txx, txz, dx, dz, dt;
     double *txz_n, *txx_s, *tzz_s, *dtxxg0, *dtzzg0, *dtxzg0;
-    int style = model->StressUpdate;
     int    cent=1, vert=0, prop=1, interp=0;
     
     Nx = model->Nx;
@@ -1211,12 +1194,12 @@ firstprivate( model )
             txx   = mesh->sxxd[k1];
             tzz   = mesh->szzd[k1];
             txz   = txz_n[k1];
-            if (model->StressRotation==1 && model->advection==1) { // Jaumann rate
+            if (model->stress_rotation==1 && model->advection==1) { // Jaumann rate
                 angle = dt*om_n[k1];
                 mesh->sxxd[k1] = (txx*cos(angle) - txz*sin(angle))*cos(angle) - (txz*cos(angle) - tzz*sin(angle))*sin(angle);
                 mesh->szzd[k1] = (txx*sin(angle) + txz*cos(angle))*sin(angle) + (txz*sin(angle) + tzz*cos(angle))*cos(angle);
             }
-            if (model->StressRotation==2 && model->advection==1) { // Upper convected rate
+            if (model->stress_rotation==2 && model->advection==1) { // Upper convected rate
                 mesh->sxxd[k1] = mesh->sxxd[k1] - dt * mesh->VE_n[k1] * ( -2.0*txx*dudx_n[k1] - 2.0*txz*dudz_n[k1]);
                 mesh->szzd[k1] = mesh->szzd[k1] - dt * mesh->VE_n[k1] * ( -2.0*tzz*dvdz_n[k1] - 2.0*txz*dvdx_n[k1]);
             }        
@@ -1230,18 +1213,18 @@ firstprivate( model )
             txx   = txx_s[k1];
             tzz   = tzz_s[k1];
             txz   = mesh->sxz[k1];
-            if (model->StressRotation==1 && model->advection==1) { // Jaumann rate
+            if (model->stress_rotation==1 && model->advection==1) { // Jaumann rate
                 angle = dt*om_s[k1];
                 mesh->sxz[k1] = (txx*cos(angle) - txz*sin(angle))*sin(angle) + (txz*cos(angle) - tzz*sin(angle))*cos(angle);
             }
-            if (model->StressRotation==2 && model->advection==1) { // Upper convected rate
+            if (model->stress_rotation==2 && model->advection==1) { // Upper convected rate
                 mesh->sxz[k1] = mesh->sxz[k1] - dt * mesh->VE_s[k1] * (      txx*dudz_s[k1] -     txx*dvdx_s[k1] - txz*(dudx_s[k1]+ dvdz_s[k1]) );
             }
         }
     }
     
     // Rotate director directly on particles
-    if ( model->aniso == 1 && model->advection==1) {
+    if ( model->anisotropy == 1 && model->advection==1) {
 
 #pragma omp parallel for shared( particles, mesh ) firstprivate( dt, model ) private( k )
         for ( k=0; k<particles->Nb_part; k++ ) {
@@ -1356,7 +1339,7 @@ firstprivate( model )
             Interp_Grid2P(           *particles, dtxzmr, mesh, dtxzgr, mesh->xg_coord,  mesh->zg_coord, Nx  , Nz  , mesh->BCg.type         );
             
             // Final stresses update on markers
-#pragma omp parallel for shared(particles,dtxxms,dtzzms,dtxzms,dtxxmr,dtzzmr,dtxzmr) private(k) firstprivate(style)
+#pragma omp parallel for shared(particles,dtxxms,dtzzms,dtxzms,dtxxmr,dtzzmr,dtxzmr) private(k) 
             for ( k=0; k<particles->Nb_part; k++ ) {
                 if (particles->phase[k] != -1) particles->sxxd[k]  = particles->sxxd[k] + dtxxms[k] + dtxxmr[k];
                 if (particles->phase[k] != -1) particles->szzd[k]  = particles->szzd[k] + dtzzms[k] + dtzzmr[k];

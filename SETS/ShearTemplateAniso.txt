@@ -62,7 +62,7 @@ free_surf         = 0
 free_surf_stab    = 0
 fstrain           = 1
 advection         = 0
-GNUplot_residuals = 0
+gnuplot_log_res = 0
 
 /**** SETUP-DEPENDANT ****/
 shear_style     = 1

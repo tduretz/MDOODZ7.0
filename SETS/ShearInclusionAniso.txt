@@ -54,10 +54,10 @@ subgrid_diff    = 2
 shear_heat      = 1
 adiab_heat      = 0
 fstrain         = 1
-GNUplot_residuals = 0
+gnuplot_log_res = 0
 
 /**** ANISOTROPY ****/
-aniso           = 1
+anisotropy           = 1
 aniso_fstrain   = 0 // finite strain anisotropy activated
 
 /**** SETUP DEPENDANT ****/

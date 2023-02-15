@@ -76,7 +76,7 @@ void RheologicalOperators( grid* mesh, params* model, mat_prop* materials, scale
         double ani_vep  = 1.;
         double aniS_vep = 0.;
         //----------------------------------------------------------//
-        if ( model->aniso == 0 ) {
+        if ( model->anisotropy == 0 ) {
           aniS_vep = 0.0; d1   = 0.0; d2   = 0.0;
         }
         else {
@@ -117,7 +117,7 @@ void RheologicalOperators( grid* mesh, params* model, mat_prop* materials, scale
         double ani_vep  = 1.;
         double aniS_vep = 0.;
         //----------------------------------------------------------//
-        if ( model->aniso == 0 ) {
+        if ( model->anisotropy == 0 ) {
          aniS_vep = 0.0; d1   = 0.; d2   = 0.;
         }
         else {
@@ -163,7 +163,7 @@ void RheologicalOperators( grid* mesh, params* model, mat_prop* materials, scale
         if ( comp==1 )             K     = 1./mesh->bet_n[k];
         else                       K     = 0.;
         //----------------------------------------------------------//
-        if ( model->aniso == 0 ) {
+        if ( model->anisotropy == 0 ) {
           aniS_e = 0.; aniS_vep = 0.0; d1   = 0.0; d2   = 0.0; angle = 0.; lxlz = 0.; lx2 = 0.;
         }
         else {
@@ -236,7 +236,7 @@ void RheologicalOperators( grid* mesh, params* model, mat_prop* materials, scale
         if ( model->iselastic==1 ) eta_e = model->dt*mesh->mu_s[k];
         else                       eta_e = 1.; // set to arbitrary value to avoid division by 0.0
         //----------------------------------------------------------//
-        if ( model->aniso == 0 ) {
+        if ( model->anisotropy == 0 ) {
           aniS_e = 0.; aniS_vep = 0.0; d1   = 0.; d2   = 0.;
         }
         else {
@@ -419,8 +419,8 @@ void UpdateNonLinearity( grid* mesh, markers* particles, markers* topo_chain, su
     StrainRateComponents( mesh, scaling, model );
 
     // Stress update
-    if (model->aniso==0) NonNewtonianViscosityGrid(      mesh, &materials, model, *Nmodel, &scaling );
-    if (model->aniso==1) NonNewtonianViscosityGridAniso( mesh, &materials, model, *Nmodel, &scaling );
+    if (model->anisotropy==0) NonNewtonianViscosityGrid(      mesh, &materials, model, *Nmodel, &scaling );
+    if (model->anisotropy==1) NonNewtonianViscosityGridAniso( mesh, &materials, model, *Nmodel, &scaling );
 
 
     // MinMaxArrayTag( mesh->T,    scaling.T, (mesh->Nx-1)*(mesh->Nz-1), "T         ", mesh->BCt.type );
@@ -441,10 +441,10 @@ void UpdateNonLinearity( grid* mesh, markers* particles, markers* topo_chain, su
     // MinMaxArrayTag( mesh->rho_n,      scaling.rho, (mesh->Nx-1)*(mesh->Nz-1), "rho_n     ", mesh->BCp.type );
     // MinMaxArrayTag( mesh->rho0_n,     scaling.rho, (mesh->Nx-1)*(mesh->Nz-1), "rho0_n    ", mesh->BCp.type );
     // MinMaxArrayTag( mesh->d_n,        scaling.L,   (mesh->Nx-1)*(mesh->Nz-1), "d         ", mesh->BCp.type );
-    // if (model->aniso==1) MinMaxArrayTag( mesh->aniso_factor_n,  1.0,   (mesh->Nx-1)*(mesh->Nz-1), "ani_fac_n ",   mesh->BCp.type );
-    // if (model->aniso==1) MinMaxArrayTag( mesh->aniso_factor_s,  1.0,   (mesh->Nx-0)*(mesh->Nz-0), "ani_fac_s ",   mesh->BCg.type );
-    // if (model->aniso==1) MinMaxArrayTag( mesh->aniso_factor_e_n,  1.0, (mesh->Nx-1)*(mesh->Nz-1), "ani_fac_e_n ", mesh->BCp.type );
-    // if (model->aniso==1) MinMaxArrayTag( mesh->aniso_factor_e_s,  1.0, (mesh->Nx-0)*(mesh->Nz-0), "ani_fac_e_s ", mesh->BCg.type );
+    // if (model->anisotropy==1) MinMaxArrayTag( mesh->aniso_factor_n,  1.0,   (mesh->Nx-1)*(mesh->Nz-1), "ani_fac_n ",   mesh->BCp.type );
+    // if (model->anisotropy==1) MinMaxArrayTag( mesh->aniso_factor_s,  1.0,   (mesh->Nx-0)*(mesh->Nz-0), "ani_fac_s ",   mesh->BCg.type );
+    // if (model->anisotropy==1) MinMaxArrayTag( mesh->aniso_factor_e_n,  1.0, (mesh->Nx-1)*(mesh->Nz-1), "ani_fac_e_n ", mesh->BCp.type );
+    // if (model->anisotropy==1) MinMaxArrayTag( mesh->aniso_factor_e_s,  1.0, (mesh->Nx-0)*(mesh->Nz-0), "ani_fac_e_s ", mesh->BCg.type );
 
     // Evaluate right hand side
     EvaluateRHS( mesh, *model, scaling, materials.rho[0] );
@@ -1054,8 +1054,8 @@ void EvaluateStokesResidualDecoupled( SparseMat *Stokes, SparseMat *StokesA, Spa
 
     // Function evaluation
     BuildStokesOperatorDecoupled(   mesh, model, 0, mesh->p_corr, mesh->p_in,  mesh->u_in,  mesh->v_in, Stokes, StokesA, StokesB, StokesC, StokesD, 0 );
-    // if ( model.aniso == 0 ) BuildStokesOperatorDecoupled(   mesh, model, 0, mesh->p_corr, mesh->p_in,  mesh->u_in,  mesh->v_in, Stokes, StokesA, StokesB, StokesC, StokesD, 0 );
-    // if ( model.aniso == 1 ) BuildJacobianOperatorDecoupled( mesh, model, 0, mesh->p_corr, mesh->p_in,  mesh->u_in,  mesh->v_in, Stokes, StokesA, StokesB, StokesC, StokesD, 0 );
+    // if ( model.anisotropy == 0 ) BuildStokesOperatorDecoupled(   mesh, model, 0, mesh->p_corr, mesh->p_in,  mesh->u_in,  mesh->v_in, Stokes, StokesA, StokesB, StokesC, StokesD, 0 );
+    // if ( model.anisotropy == 1 ) BuildJacobianOperatorDecoupled( mesh, model, 0, mesh->p_corr, mesh->p_in,  mesh->u_in,  mesh->v_in, Stokes, StokesA, StokesB, StokesC, StokesD, 0 );
 
     // Integrate residuals
 #pragma omp parallel for shared( mesh, Stokes, StokesA ) private( cc ) firstprivate( nx, nzvx ) reduction(+:resx,ndofx)
@@ -1328,8 +1328,8 @@ void EvaluateRHS( grid* mesh, params model, scale scaling, double RHO_REF ) {
 
                 if (model.compressible == 1 ) {
                     if (mesh->comp_cells[c] == 1) {
-                        if ( model.dens_var == 0 ) mesh->rhs_p[c] += mesh->p0_n[c]*mesh->bet_n[c]/model.dt;
-                        if ( model.dens_var == 1 ) mesh->rhs_p[c] += log(mesh->rho0_n[c])/model.dt;
+                        if ( model.density_change == 0 ) mesh->rhs_p[c] += mesh->p0_n[c]*mesh->bet_n[c]/model.dt;
+                        if ( model.density_change == 1 ) mesh->rhs_p[c] += log(mesh->rho0_n[c])/model.dt;
                         if (model.adiab_heat > 0 ) {
                             mesh->rhs_p[c] += mesh->divth0_n[c];
                         }

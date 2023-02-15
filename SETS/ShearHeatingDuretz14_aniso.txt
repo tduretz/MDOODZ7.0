@@ -69,7 +69,7 @@ mineta          = 1e16
 maxeta          = 1e26
  
 /**** SETUP DEPENDANT ****/
-aniso           = 1
+anisotropy           = 1
 EpsBG           = 5e-14 /Background strain rate
 PrBG            = 0     
 user0           = 400 / background T

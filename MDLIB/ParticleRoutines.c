@@ -606,7 +606,7 @@ reduction(+:npW,npE )
                         particles->z[Nb_part] = particles->z[k];
                         // Assign new marker point properties
                         AssignMarkerProperties ( particles, Nb_part, k, &model, mesh, 1 );
-//                        AssignMarkerProperties ( particles, Nb_part, k, &model, mesh, model.DirectNeighbour );
+//                        AssignMarkerProperties ( particles, Nb_part, k, &model, mesh, model.direct_neighbour );
                         Nb_part++;
                     }
                     else {
@@ -625,7 +625,7 @@ reduction(+:npW,npE )
                         particles->z[Nb_part] = particles->z[k];
                         // Assign new marker point properties
                         AssignMarkerProperties ( particles, Nb_part, k, &model, mesh, 1 );
-//                        AssignMarkerProperties ( particles, Nb_part, k, &model, mesh, model.DirectNeighbour );
+//                        AssignMarkerProperties ( particles, Nb_part, k, &model, mesh, model.direct_neighbour );
                         Nb_part++;
                     }
                     else {
@@ -647,7 +647,7 @@ reduction(+:npW,npE )
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-void AssignMarkerProperties (markers* particles, int new_ind, int min_index, params *model, grid* mesh, int DirectNeighbour ) {
+void AssignMarkerProperties (markers* particles, int new_ind, int min_index, params *model, grid* mesh, int direct_neighbour ) {
     
     particles->phase[new_ind]         = particles->phase[min_index];
     particles->dual[new_ind]          = particles->dual[min_index];
@@ -662,7 +662,7 @@ void AssignMarkerProperties (markers* particles, int new_ind, int min_index, par
     particles->strain_lin[new_ind]    = particles->strain_lin[min_index];
     particles->strain_gbs[new_ind]    = particles->strain_gbs[min_index];
     particles->divth[new_ind]         = particles->divth[min_index]; // to be changed
-    if ( DirectNeighbour == 1 ) {
+    if ( direct_neighbour == 1 ) {
         particles->d[new_ind]             = particles->d[min_index];
         particles->T[new_ind]             = particles->T[min_index];
         particles->P[new_ind]             = particles->P[min_index];
@@ -682,7 +682,7 @@ void AssignMarkerProperties (markers* particles, int new_ind, int min_index, par
 
    
 //    //    particles->generation[new_ind]    = particles->generation[min_index];
-    if ( DirectNeighbour == 1 ) {
+    if ( direct_neighbour == 1 ) {
         particles->sxxd[new_ind]          = particles->sxxd[min_index];
         particles->szzd[new_ind]          = particles->szzd[min_index];
         particles->sxz[new_ind]           = particles->sxz[min_index];
@@ -721,7 +721,7 @@ void AssignMarkerProperties (markers* particles, int new_ind, int min_index, par
         particles->Tmax[new_ind]         = particles->Tmax[min_index];
         particles->Pmax[new_ind]         = particles->Pmax[min_index];
     }
-    if (model->aniso == 1) {
+    if (model->anisotropy == 1) {
         particles->nx[new_ind]           = particles->nx[min_index];
         particles->nz[new_ind]           = particles->nz[min_index];
     }
@@ -831,7 +831,7 @@ void FindClosestPhase( markers* particles, int ic, int jc, grid mesh, int *ind_l
     }
 
     // Assign new marker point properties
-    AssignMarkerProperties ( particles, new_ind, min_index, model, &mesh, model->DirectNeighbour );
+    AssignMarkerProperties ( particles, new_ind, min_index, model, &mesh, model->direct_neighbour );
 
 }
 
@@ -881,7 +881,7 @@ int FindClosestPhase2( markers* particles, double *newx, double* newz, int ic, i
     return min_index;
 
     // Assign new marker point properties
-    // AssignMarkerProperties ( particles, new_ind, min_index, &mesh, model->DirectNeighbour );
+    // AssignMarkerProperties ( particles, new_ind, min_index, &mesh, model->direct_neighbour );
 }
 
 
@@ -917,7 +917,7 @@ void FindClosestPhaseVertex( markers* particles, int ic, int jc, grid mesh, int 
     }
 
     // Assign new marker point properties
-    AssignMarkerProperties ( particles, new_ind, min_index, model, &mesh, model->DirectNeighbour );
+    AssignMarkerProperties ( particles, new_ind, min_index, model, &mesh, model->direct_neighbour );
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
@@ -4363,7 +4363,7 @@ void CountPartCell ( markers* particles, grid *mesh, params model, surface topo,
                     particles->x[k]          = newx[ith][ip];
                     particles->z[k]          = newz[ith][ip];
                     particles->generation[k] = 1;
-                    AssignMarkerProperties( particles, k, newi[ith][ip], &model, mesh, model.DirectNeighbour );
+                    AssignMarkerProperties( particles, k, newi[ith][ip], &model, mesh, model.direct_neighbour );
                 }
             }
         }

@@ -8,7 +8,7 @@ writer_step     = 10
 writer_markers  = 0
 writer_debug    = 0
 writer_energies = 0
-GNUplot_residuals = 0
+gnuplot_log_res = 0
 
 /**** SCALES ****/
 eta = 1
@@ -64,7 +64,7 @@ itp_stencil = 9
 eta_avg     = 1
 
 /**** SWITCHES ****/
-aniso             = 0
+anisotropy             = 0
 iselastic         = 0
 free_surf         = 0
 free_surf_stab    = 0

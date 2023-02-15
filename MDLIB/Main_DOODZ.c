@@ -78,9 +78,9 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
     // Initialise data for logs of iterations
     Nparams Nmodel = NmodelAlloc(inputFile.Nmodel);
 
-    //input.model.Newton = input.model.aniso  == 1; // this statement is incorrect, Newton should also work for isotropic case
+    //input.model.Newton = input.model.anisotropy  == 1; // this statement is incorrect, Newton should also work for isotropic case
     int IsFullNewton = input.model.Newton == 1;
-    if (input.model.aniso  == 1) input.model.Newton = 1; // activate Newton context is anisotropy is activated
+    if (input.model.anisotropy  == 1) input.model.Newton = 1; // activate Newton context is anisotropy is activated
     int IsNewtonStep = input.model.Newton == 1;
 
     printf("*************************************\n");
@@ -215,8 +215,6 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         SetBCs(*setup->SetBCs, &input, &mesh);
         if (input.model.thermal_eq == 1 ) ThermalSteps( &mesh, input.model,  mesh.T,  mesh.dT,  mesh.rhs_t, mesh.T, &particles, input.model.cooling_time, input.scaling );
         if (input.model.therm_pert == 1 ) SetThermalPert( &mesh, input.model, input.scaling );
-        //            Interp_Grid2P_centroids ( particles, particles.T,    &mesh, mesh.T, mesh.xc_coord,  mesh.zc_coord,  mesh.Nx-1, mesh.Nz-1, mesh.BCt.type, &input.model );
-
         Interp_Grid2P_centroids2( particles, particles.T,    &mesh, mesh.T, mesh.xvz_coord,  mesh.zvx_coord,  mesh.Nx-1, mesh.Nz-1, mesh.BCt.type, &input.model );
         ArrayEqualArray( mesh.T0_n, mesh.T, (mesh.Nx-1)*(mesh.Nz-1) );
 
@@ -294,7 +292,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         P2Mastah( &input.model, particles, particles.X,     &mesh, mesh.X0_n , mesh.BCp.type,  1, 0, interp, cent, input.model.itp_stencil);
         P2Mastah( &input.model, particles, particles.X,     &mesh, mesh.X0_s , mesh.BCg.type,  1, 0, interp, vert, input.model.itp_stencil);
 
-        if (input.model.aniso == 1 ) {
+        if (input.model.anisotropy == 1 ) {
             InitialiseDirectorVector ( &mesh, &particles, &input.model, &input.materials );
             P2Mastah( &input.model, particles, NULL, &mesh, mesh.d1_n,    mesh.BCp.type, -1, 0, interp, cent, input.model.itp_stencil);
             P2Mastah( &input.model, particles, NULL, &mesh, mesh.d2_n,    mesh.BCp.type, -2, 0, interp, cent, input.model.itp_stencil);
@@ -315,9 +313,9 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         ShearModCompExpGrid( &mesh, &input.materials, &input.model, input.scaling );
         Interp_Grid2P_centroids2( particles, particles.P,    &mesh, mesh.p_in, mesh.xvz_coord,  mesh.zvx_coord,  mesh.Nx-1, mesh.Nz-1, mesh.BCp.type, &input.model );
         Interp_Grid2P_centroids2( particles, particles.T,    &mesh, mesh.T,    mesh.xvz_coord,  mesh.zvx_coord,  mesh.Nx-1, mesh.Nz-1, mesh.BCt.type, &input.model );
-        if (input.model.aniso==0) NonNewtonianViscosityGrid(      &mesh, &input.materials, &input.model, Nmodel, &input.scaling );
-        if (input.model.aniso==1) NonNewtonianViscosityGridAniso( &mesh, &input.materials, &input.model, Nmodel, &input.scaling );
-        printf("input.model.aniso %d\n", input.model.aniso);
+        if (input.model.anisotropy==0) NonNewtonianViscosityGrid(      &mesh, &input.materials, &input.model, Nmodel, &input.scaling );
+        if (input.model.anisotropy==1) NonNewtonianViscosityGridAniso( &mesh, &input.materials, &input.model, Nmodel, &input.scaling );
+        printf("input.model.anisotropy %d\n", input.model.anisotropy);
 
         // Print informations!
         printf("Number of phases : %d\n", input.model.Nb_phases);
@@ -399,7 +397,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
     input.model.step += 1;
 
     FILE        *GNUplotPipe;
-    if (input.model.GNUplot_residuals == 1 ) GNUplotPipe = popen ("gnuplot -persistent", "w");
+    if (input.model.gnuplot_log_res == 1 ) GNUplotPipe = popen ("gnuplot -persistent", "w");
 
     SparseMat    Stokes, Jacob;
     SparseMat    StokesA, StokesB, StokesC, StokesD;
@@ -477,13 +475,9 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         if  (input.model.iselastic == 1 ) {
 
             // Get old stresses from particles
-            if (input.model.StressUpdate==1)                     OldDeviatoricStressesPressure( &mesh, &particles, input.scaling, &input.model );
-
-            if (input.model.StressUpdate==0){
-                P2Mastah( &input.model, particles, particles.sxxd,    &mesh, mesh.sxxd0, mesh.BCp.type,  1, 0, interp, cent, input.model.itp_stencil);
-                P2Mastah( &input.model, particles, particles.szzd,    &mesh, mesh.szzd0, mesh.BCp.type,  1, 0, interp, cent, input.model.itp_stencil);
-                P2Mastah( &input.model, particles, particles.sxz,     &mesh, mesh.sxz0,  mesh.BCg.type,  1, 0, interp, vert, input.model.itp_stencil);
-            }
+            P2Mastah( &input.model, particles, particles.sxxd,    &mesh, mesh.sxxd0, mesh.BCp.type,  1, 0, interp, cent, input.model.itp_stencil);
+            P2Mastah( &input.model, particles, particles.szzd,    &mesh, mesh.szzd0, mesh.BCp.type,  1, 0, interp, cent, input.model.itp_stencil);
+            P2Mastah( &input.model, particles, particles.sxz,     &mesh, mesh.sxz0,  mesh.BCg.type,  1, 0, interp, vert, input.model.itp_stencil);
 
             InterpCentroidsToVerticesDouble( mesh.sxxd0, mesh.sxxd0_s, &mesh, &input.model );
             InterpCentroidsToVerticesDouble( mesh.szzd0, mesh.szzd0_s, &mesh, &input.model );
@@ -495,7 +489,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
 
         // Director vector
-        if (input.model.aniso == 1 ) {
+        if (input.model.anisotropy == 1 ) {
             P2Mastah( &input.model, particles, NULL, &mesh, mesh.d1_n,    mesh.BCp.type, -1, 0, interp, cent, input.model.itp_stencil);
             P2Mastah( &input.model, particles, NULL, &mesh, mesh.d2_n,    mesh.BCp.type, -2, 0, interp, cent, input.model.itp_stencil);
             P2Mastah( &input.model, particles, NULL, &mesh, mesh.angle_n, mesh.BCp.type, -3, 0, interp, cent, input.model.itp_stencil);
@@ -586,7 +580,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                 MinMaxArrayTag( mesh.phase_perc_s[p],    1.0, (mesh.Nx-0)*(mesh.Nz-0), "ph_s      ", mesh.BCg.type );
             }
 
-            if ( input.model.aniso == 1 ) {
+            if ( input.model.anisotropy == 1 ) {
                 MinMaxArrayTag( mesh.FS_AR_n,  1.0,   (mesh.Nx-1)*(mesh.Nz-1), "FS_AR_n", mesh.BCp.type );
                 MinMaxArrayTag( mesh.FS_AR_s,  1.0,   (mesh.Nx)*(mesh.Nz),     "FS_AR_s", mesh.BCg.type );
                 MinMaxArrayTag( mesh.angle_n,  180/M_PI,   (mesh.Nx-1)*(mesh.Nz-1), "angle_n", mesh.BCp.type );
@@ -682,7 +676,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                 }
 
                 // Determine whether Jacobian matrix should be assembled
-                if (input.model.Newton == 1 || input.model.aniso == 1 ) IsJacobianUsed = 1;
+                if (input.model.Newton == 1 || input.model.anisotropy == 1 ) IsJacobianUsed = 1;
 
                 printf("**********************************************\n");
                 if ( IsNewtonStep == 1 ) {
@@ -719,10 +713,10 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                     MinMaxArrayTag( mesh.d_n, input.scaling.L,   (mesh.Nx-1)*(mesh.Nz-1), "d         ", mesh.BCp.type );
                     MinMaxArrayTag( mesh.X_s, 1.0, (mesh.Nx)*(mesh.Nz),     "X_s     ", mesh.BCg.type );
                     MinMaxArrayTag( mesh.X_n, 1.0, (mesh.Nx-1)*(mesh.Nz-1), "X_n     ", mesh.BCp.type );
-                    if (input.model.aniso==1) MinMaxArrayTag( mesh.aniso_factor_n,  1.0,   (mesh.Nx-1)*(mesh.Nz-1), "ani_fac_n ",   mesh.BCp.type );
-                    if (input.model.aniso==1) MinMaxArrayTag( mesh.aniso_factor_s,  1.0,   (mesh.Nx)*(mesh.Nz),     "ani_fac_s ",   mesh.BCg.type );
-                    if (input.model.aniso==1) MinMaxArrayTag( mesh.aniso_factor_e_n,  1.0, (mesh.Nx-1)*(mesh.Nz-1), "ani_fac_e_n ", mesh.BCp.type );
-                    if (input.model.aniso==1) MinMaxArrayTag( mesh.aniso_factor_e_s,  1.0, (mesh.Nx)*(mesh.Nz),     "ani_fac_e_s ", mesh.BCg.type );
+                    if (input.model.anisotropy==1) MinMaxArrayTag( mesh.aniso_factor_n,  1.0,   (mesh.Nx-1)*(mesh.Nz-1), "ani_fac_n ",   mesh.BCp.type );
+                    if (input.model.anisotropy==1) MinMaxArrayTag( mesh.aniso_factor_s,  1.0,   (mesh.Nx)*(mesh.Nz),     "ani_fac_s ",   mesh.BCg.type );
+                    if (input.model.anisotropy==1) MinMaxArrayTag( mesh.aniso_factor_e_n,  1.0, (mesh.Nx-1)*(mesh.Nz-1), "ani_fac_e_n ", mesh.BCp.type );
+                    if (input.model.anisotropy==1) MinMaxArrayTag( mesh.aniso_factor_e_s,  1.0, (mesh.Nx)*(mesh.Nz),     "ani_fac_e_s ", mesh.BCg.type );
                 }
 
                 if (input.model.write_debug == 1 ) {
@@ -735,7 +729,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                 if (input.model.decoupled_solve == 1 ) BuildStokesOperatorDecoupled  ( &mesh, input.model, 0, mesh.p_corr, mesh.p_in, mesh.u_in, mesh.v_in, &Stokes, &StokesA, &StokesB, &StokesC, &StokesD, 1 );
 
                 // Build discrete system of equations - Jacobian (do it also for densification since drhodp is needed)
-                if ( (IsFullNewton   == 1 && Nmodel.nit > 0) || input.model.dens_var == 1  ) RheologicalOperators( &mesh, &input.model, &input.materials, &input.scaling, 1 );
+                if ( (IsFullNewton   == 1 && Nmodel.nit > 0) || input.model.density_change == 1  ) RheologicalOperators( &mesh, &input.model, &input.materials, &input.scaling, 1 );
                 if ( IsJacobianUsed == 1 ) BuildJacobianOperatorDecoupled( &mesh, input.model, 0, mesh.p_corr, mesh.p_in, mesh.u_in, mesh.v_in,  &Jacob,  &JacobA,  &JacobB,  &JacobC,   &JacobD, 1 );
                 
                 // Diagonal input.scaling
@@ -754,7 +748,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                 if (input.model.decoupled_solve == 1 ) EvaluateStokesResidualDecoupled( &Stokes, &StokesA, &StokesB, &StokesC, &StokesD, &Nmodel, &mesh, input.model, input.scaling, 0 );
                 printf("---- Non-linear residual ----\n");
 
-                if (input.model.Newton == 1 && input.model.aniso == 0 ) {
+                if (input.model.Newton == 1 && input.model.anisotropy == 0 ) {
                     ArrayEqualArray( JacobA.F, StokesA.F,  StokesA.neq );
                     ArrayEqualArray( JacobC.F, StokesC.F,  StokesC.neq );
                 }
@@ -853,7 +847,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             printf("--------------------------------------------------------------\n");
 
             // plot residuals
-            if (input.model.GNUplot_residuals == 1 ) { // && input.model.step % writer_step == 0
+            if (input.model.gnuplot_log_res == 1 ) { // && input.model.step % writer_step == 0
 
                 printf("DOING GNU PLOTTING!\n");
 
@@ -883,10 +877,8 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         }
         // THIS IS ACTIVATED JUST FOR TOPO.VX IN OUTPUT FILE
 
-        if (input.model.StressUpdate==1) TotalStresses( &mesh, &particles, input.scaling, &input.model );
-
         // Update stresses on markers
-        if (input.model.StressUpdate==0) UpdateParticleStress(  &mesh, &particles, &input.model, &input.materials, &input.scaling );
+        UpdateParticleStress(  &mesh, &particles, &input.model, &input.materials, &input.scaling );
 
         // Update pressure on markers
         UpdateParticlePressure( &mesh, input.scaling, input.model, &particles, &input.materials );
@@ -928,7 +920,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
         //--------------------------------------------------------------------------------------------------------------------------------//
 
-        if (input.model.ProgReac == 1 ) {
+        if (input.model.progress_transform == 1 ) {
 
             printf("*************************************\n");
             printf("********** Chemical solver **********\n");
@@ -1109,10 +1101,10 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                 t_omp = (double)omp_get_wtime();
                 if (input.model.cpc ==-1)                       CountPartCell_BEN( &particles, &mesh, input.model, topo, 0, input.scaling );
                 if (input.model.cpc == 0)                       CountPartCell_Old( &particles, &mesh, input.model, topo, 0, input.scaling );
-                if (input.model.cpc == 1 && input.model.Reseed == 1 ) CountPartCell    ( &particles, &mesh, input.model, topo, topo_ini, 1, input.scaling );
+                if (input.model.cpc == 1 && input.model.reseed == 1 ) CountPartCell    ( &particles, &mesh, input.model, topo, topo_ini, 1, input.scaling );
                 if (input.model.cpc == 1)                       CountPartCell    ( &particles, &mesh, input.model, topo, topo_ini, 0, input.scaling );
 
-                if (input.model.cpc == 2 && input.model.Reseed == 1 ) CountPartCell2   ( &particles, &mesh, input.model, topo, topo_ini, 1, input.scaling );
+                if (input.model.cpc == 2 && input.model.reseed == 1 ) CountPartCell2   ( &particles, &mesh, input.model, topo, topo_ini, 1, input.scaling );
                 if (input.model.cpc == 2)                       CountPartCell2   ( &particles, &mesh, input.model, topo, topo_ini, 0, input.scaling );
 
                 printf("After re-seeding :\n");
@@ -1194,7 +1186,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
     //------------------------------------------------------------------------------------------------------------------------------//
     //------------------------------------------------------------------------------------------------------------------------------//
 
-    if (input.model.GNUplot_residuals == 1) pclose(GNUplotPipe);
+    if (input.model.gnuplot_log_res == 1) pclose(GNUplotPipe);
 
     //    // Free markers chains
     if (input.model.free_surf == 1 )    FreeMarkerChain( &topo,     &topo_chain     );

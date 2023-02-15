@@ -356,7 +356,7 @@ void RogerGuntherII( markers *particles, params model, grid mesh, int precise, s
     double dudxA, dvdzA, dudzA, dvdxA, dudxB, dvdzB, dudzB, dvdxB, dudxC, dvdzC, dudzC, dvdxC, dudxD, dvdzD, dudzD, dvdxD, VEA,VEB,VEC,VED;
     double nx, nz, ndotx, ndotz, w12, norm;
 
-    int new = model.ConservInterp; // DO NOT activate Taras trick: so far it is a source of asymmetry (conservative interpolation)
+    int new = model.conserv_interp; // DO NOT activate Taras trick: so far it is a source of asymmetry (conservative interpolation)
     dx = mesh.dx;
     dz = mesh.dz;
 
@@ -399,7 +399,7 @@ firstprivate( model, dx, dz, new )
         isoutPart( particles, &model, k );
     }
 
-    printf("** Time for Roger Gunther = %lf sec --- using conservative interpolation: %0d\n",  (double)((double)omp_get_wtime() - t_omp), model.ConservInterp );
+    printf("** Time for Roger Gunther = %lf sec --- using conservative interpolation: %0d\n",  (double)((double)omp_get_wtime() - t_omp), model.conserv_interp );
 
 }
 
@@ -633,7 +633,7 @@ void EvaluateCourantCriterion( double* Vx, double* Vz, params *model, scale scal
         }
         
         // If timestep is adaptive: Chemical limitation
-        if ( model->dt_constant != 1 && model->ProgReac == 1 && dt_reac<model->dt ) {
+        if ( model->dt_constant != 1 && model->progress_transform == 1 && dt_reac<model->dt ) {
                 printf("EvaluateCourantCriterion: --> min_tau_kin = %2.2e s \n", min_tau_kin*scaling.t);
                 printf("Timestep limited by Chemical Reaction\n");
                 model->dt = dt_reac;

@@ -548,7 +548,7 @@ firstprivate( ncx, mesh ) schedule( static )
                             }
                         }
 
-                        AssignMarkerProperties ( particles, new_index, min_index, &model, mesh, model.DirectNeighbour );
+                        AssignMarkerProperties ( particles, new_index, min_index, &model, mesh, model.direct_neighbour );
                         Np_add++;
                         //
                         //                             // SW
@@ -573,7 +573,7 @@ firstprivate( ncx, mesh ) schedule( static )
                         //                                     min_index = neigh;
                         //                             }
                         //
-                        //                             AssignMarkerProperties ( particles, new_index, min_index, &model, mesh, model.DirectNeighbour );
+                        //                             AssignMarkerProperties ( particles, new_index, min_index, &model, mesh, model.direct_neighbour );
                         //                             Np_add++;
                         //
                         //                             // SE
@@ -598,7 +598,7 @@ firstprivate( ncx, mesh ) schedule( static )
                         //                                     min_index = neigh;
                         //                             }
                         //
-                        //                             AssignMarkerProperties ( particles, new_index, min_index, &model, mesh, model.DirectNeighbour );
+                        //                             AssignMarkerProperties ( particles, new_index, min_index, &model, mesh, model.direct_neighbour );
                         //                             Np_add++;
                         //
                         //                             // NW
@@ -623,7 +623,7 @@ firstprivate( ncx, mesh ) schedule( static )
                         //                                     min_index = neigh;
                         //                             }
                         //
-                        //                             AssignMarkerProperties ( particles, new_index, min_index, &model, mesh, model.DirectNeighbour );
+                        //                             AssignMarkerProperties ( particles, new_index, min_index, &model, mesh, model.direct_neighbour );
                         //                             Np_add++;
                         //
                         //                            // NE
@@ -648,7 +648,7 @@ firstprivate( ncx, mesh ) schedule( static )
                         //                                     min_index = neigh;
                         //                             }
                         //
-                        //                             AssignMarkerProperties ( particles, new_index, min_index, &model, mesh, model.DirectNeighbour );
+                        //                             AssignMarkerProperties ( particles, new_index, min_index, &model, mesh, model.direct_neighbour );
                         //                             Np_add++;
 
                         DoodzFree(ind_list);

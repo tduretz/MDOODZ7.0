@@ -290,7 +290,7 @@ void LoadBreakpointParticles( markers *particles, grid* mesh, markers *topo_chai
         fread( particles->Fzz         , s3, particles->Nb_part, file);
     }
 
-    if (model->aniso == 1) {
+    if (model->anisotropy == 1) {
         fread( particles->nx         , s3, particles->Nb_part, file);
         fread( particles->nz         , s3, particles->Nb_part, file);
     }
@@ -758,7 +758,7 @@ void MakeBreakpointParticles( markers *particles,  grid* mesh, markers *topo_cha
         fwrite( particles->Fzz         , s3, particles->Nb_part, file);
     }
 
-    if (model.aniso == 1) {
+    if (model.anisotropy == 1) {
         fwrite( particles->nx         , s3, particles->Nb_part, file);
         fwrite( particles->nz         , s3, particles->Nb_part, file);
     }
@@ -1079,7 +1079,7 @@ Input ReadInputFile( char *fileName ) {
     model.noisy           = ReadInt2( fin, "noisy",         1 );  // Prints a lot of info to standard output
     model.eqn_state       = ReadInt2( fin, "eqn_state",       0 );
 
-    // Switches
+    // Switches // remove is ? from ParaMeter --> para_meter
     model.initial_part    = ReadInt2( fin, "initial_part",    1 ); // Initial particule distribution, 0: MD4.5 style, 1: MD6.0 style
     model.initial_noise   = ReadInt2( fin, "initial_noise",   0 ); // Add noise on initial marker locations
     model.ismechanical    = ReadInt2( fin, "ismechanical",    1 ); // Activates mechanical solver
@@ -1109,30 +1109,28 @@ Input ReadInputFile( char *fileName ) {
     model.rec_T_P_x_z     = ReadInt2( fin, "rec_T_P_x_z",     0 );
     model.delete_breakpoints = ReadInt2( fin, "delete_breakpoints",        1 );
     model.topografix      = ReadInt2( fin, "topografix",      0 );
-    model.aniso           = ReadInt2( fin, "aniso",           0 ); // Turns on anisotropy
+    model.anisotropy         = ReadInt2( fin, "anisotropy",         0 ); // Turns on anisotropy
     // model.aniso_fstrain   = ReadInt2( fin, "aniso_fstrain",   0 ); // Make anisotropy factor dependent on finite strain aspect ratio
-    model.compressible    = ReadInt2( fin, "compressible",    0 ); // Turns on compressibility
-    model.GNUplot_residuals = ReadInt2( fin, "GNUplot_residuals",    0 ); // Activate GNU plot residuals visualisation
-    model.shear_style     = ReadInt2( fin, "shear_style",     0 ); // 0: pure shear, 2: periodic simple shear
-    model.StressRotation  = ReadInt2( fin, "StressRotation",  1 ); // 0: no stress rotation, 1: analytic rotation, 2: upper convected rate
-    model.StressUpdate    = ReadInt2( fin, "StressUpdate",    0 );
-    model.polar           = ReadInt2( fin, "polar",           0 ); // Activate polar-Cartesian coordinates
-    model.ProgReac        = ReadInt2( fin, "ProgReac",        0 ); // Activate progressive reactions
-    model.NoReturn        = ReadInt2( fin, "NoReturn",        0 ); // Turns off retrogression if 1.0
-    model.UnsplitDiffReac = ReadInt2( fin, "UnsplitDiffReac", 0 ); // Unsplit diffusion reaction
-    model.kinetics        = ReadInt2( fin, "kinetics",        0 ); // Unsplit diffusion reaction
-    model.dens_var   = ReadInt2( fin, "dens_var",   0 ); // Turns on volume change due to reaction if 1
-    model.Plith_trick     = ReadInt2( fin, "Plith_trick",     0 );
-    model.DirectNeighbour = ReadInt2( fin, "DirectNeighbour", 0);
-    model.Reseed          = ReadInt2( fin, "Reseed",          1); // Activates reseeding / particle injection
-    model.ConservInterp   = ReadInt2( fin, "ConservInterp",   0); // Activates Taras conservative interpolation
-    model.SmoothSoftening = ReadInt2( fin, "SmoothSoftening", 1); // Activates smooth explicit kinematic softening function
-    model.oop             = ReadInt2( fin, "oop",             0); // Out-of-plane strain
-    model.noise_bg        = ReadInt2( fin, "noise_bg",        0); // Background noise generated on the particles --> mesh (used for cohesion)
-    model.residual_form   = ReadInt2( fin, "residual_form",   1); // form of residual - TODO: delete if our models work with new default value (1)
+    model.compressible       = ReadInt2( fin, "compressible",       0 ); // Turns on compressibility
+    model.gnuplot_log_res    = ReadInt2( fin, "gnuplot_log_res",    0 ); // Activate GNU plot residuals visualisation
+    model.shear_style        = ReadInt2( fin, "shear_style",        0 ); // 0: pure shear, 2: periodic simple shear
+    model.stress_rotation    = ReadInt2( fin, "stress_rotation",    1 ); // 0: no stress rotation, 1: analytic rotation, 2: upper convected rate
+    model.polar              = ReadInt2( fin, "polar",              0 ); // Activate polar-Cartesian coordinates
+    model.progress_transform = ReadInt2( fin, "progress_transform", 0 ); // Activate progressive reactions
+    model.no_return          = ReadInt2( fin, "no_return",          0 ); // Turns off retrogression if 1.0
+    model.unsplit_diff_reac  = ReadInt2( fin, "unsplit_diff_reac",  0 ); // Unsplit diffusion reaction
+    model.kinetics           = ReadInt2( fin, "kinetics",           0 ); // Unsplit diffusion reaction
+    model.density_change     = ReadInt2( fin, "density_change",     0 ); // Turns on volume change due to reaction if 1
+    model.direct_neighbour   = ReadInt2( fin, "direct_neighbour",   0 ); // Direct neighbour interpolation
+    model.reseed             = ReadInt2( fin, "reseed",             1 ); // Activates reseeding / particle injection
+    model.conserv_interp     = ReadInt2( fin, "conserv_interp",     0 ); // Activates Taras conservative interpolation
+    model.smooth_softening   = ReadInt2( fin, "smooth_softening",   1 ); // Activates smooth explicit kinematic softening function
+    model.oop                = ReadInt2( fin, "oop",                0 ); // Out-of-plane strain
+    model.noise_bg           = ReadInt2( fin, "noise_bg",           0 ); // Background noise generated on the particles --> mesh (used for cohesion)
+    model.residual_form      = ReadInt2( fin, "residual_form",      1 ); // form of residual - TODO: delete if our models work with new default value (1)
     if ( model.shear_style == 1 ) model.isperiodic_x  = 1;
-    if ( model.shear_style == 0 ) model.isperiodic_x  = 0;
-    if ( model.aniso       == 1 ) model.fstrain       = 1;
+        if ( model.shear_style == 0 ) model.isperiodic_x  = 0;
+    if ( model.anisotropy       == 1 ) model.fstrain       = 1;
     // Setup dependant
     model.EpsBG           = ReadDou2( fin, "EpsBG",         1e-30 ) / scaling.E; // Background tectonic rate, defaut is close to zero to avoid any Nans of Infs in rheology
     model.DivBG           = ReadDou2( fin, "DivBG",           0.0 ) / scaling.E;
@@ -1629,7 +1627,7 @@ Input ReadInputFile( char *fileName ) {
 
     // Direct solver parameters
     model.lsolver          = ReadInt2( fin, "lsolver", 2 );
-    if ( model.lsolver == 0 || model.Newton == 1 || model.aniso == 1) {
+    if ( model.lsolver == 0 || model.Newton == 1 || model.anisotropy == 1) {
         printf("WARNING!! Changing from solver type 0 to solver type 2!!! That's the new standard in MDOODZ 6.0.\n");
         model.lsolver = 2;
     }

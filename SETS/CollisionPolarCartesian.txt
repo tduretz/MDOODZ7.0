@@ -49,8 +49,8 @@ subgrid_diff    = 2
 shear_heat      = 1
 adiab_heat      = 0
 polar           = 1
-aniso           = 0
-StressRotation  = 2
+anisotropy           = 0
+stress_rotation  = 2
 
 /**** NON-LINEAR ITERATIONS ****/
 Newton      = 0 

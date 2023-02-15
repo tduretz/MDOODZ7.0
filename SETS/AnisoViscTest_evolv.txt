@@ -8,7 +8,7 @@ writer_step     = 10
 writer_markers  = 0
 writer_debug    = 0
 writer_energies = 0
-GNUplot_residuals = 0
+gnuplot_log_res = 0
 
 /**** SWITCHES ****/
 iselastic         = 0
@@ -16,7 +16,7 @@ free_surf         = 0
 free_surf_stab    = 0
 fstrain           = 1
 advection         = 1
-aniso             = 1
+anisotropy             = 1
 
 /**** SCALES ****/
 eta = 1
