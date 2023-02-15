@@ -52,3 +52,4 @@ npwl      = 3.0
 ID   = 1
 cstv = 1             / constant visc law
 eta0 = 1e1
+npwl = 3
