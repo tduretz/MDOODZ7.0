@@ -24,18 +24,11 @@ dt                = 1e7
 dt_constant       = 0
 Courant           = 0.2
 penalty           = 1e2
-lsolver           = 2
 diag_scaling      = 0
-GNUplot_residuals = 0
 pc_type           = 1
-eta_avg           = 0
-num_deriv         = 0
-StressRotation    = 1
 safe_mode         = 1
 safe_dt_div       = 2.0
 nstagmax          = 10
-IncrementalUpdateGrid = 1
-StressUpdate    = 0
 
 /**** SWITCHES ****/
 compressible    = 1
@@ -48,15 +41,20 @@ adiab_heat      = 0
 
 /*** CHEMICAL ***/
 ProgReac        = 1  / !!!!
-NoReturn        = 0 
-dens_var        = 1  / renamed in MD7.0 (VolChangeReac)    
-UnsplitDiffReac = 0
+dens_var        = 1  / renamed in MD7.0 (VolChangeReac)
 
 /**** SETUP DEPENDANT ****/
 shear_style     = 0
 EpsBG           = 0.0
 PrBG            = 2.0e9
 user0           = 680.0
+
+/**** NON-LINEAR ITERATIONS ****/
+Newton        = 1
+Picard2Newton = 1
+nit_max       = 30
+mineta        = 1e10
+maxeta        = 1e30
 
 /**** MAT PROPERTIES ****/
 Nb_phases = 4
@@ -84,7 +82,6 @@ Pr   = 1.0e80
 dPr  = 700.0e6
 tau_kin = 3.1558e9
 k_chem  = 5.0e-26
-density_model = 3
 
 /**** PHASE 1 ****/
 ID   = 1
@@ -110,7 +107,6 @@ Pr         = 1.5e9
 dPr        = 700.0e6
 tau_kin    = 3.1558e9
 k_chem     = 5.0e-26
-density_model = 3
 
 /**** PHASE 2 ****/
 ID   = 2
@@ -135,7 +131,6 @@ Pr   = 1.0e80
 dPr  = 700.0e6
 tau_kin = 3.1558e9
 k_chem  = 5.0e-26
-density_model = 3
 
 /**** PHASE 3 ****/
 ID   = 3
@@ -161,12 +156,3 @@ Pr   = 1.0e80
 dPr  = 700.0e6
 tau_kin = 3.1558e9
 k_chem  = 5.0e-26
-density_model = 3
-
-
-/**** NON-LINEAR ITERATIONS ****/
-Newton        = 1
-Picard2Newton = 1
-nit_max       = 30
-mineta        = 1e10
-maxeta        = 1e30
