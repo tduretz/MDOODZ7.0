@@ -14,7 +14,7 @@ gnuplot_log_res = 0
 iselastic         = 0
 free_surf         = 0
 free_surf_stab    = 0
-fstrain           = 1
+finite_strain           = 1
 advection         = 1
 anisotropy             = 1
 

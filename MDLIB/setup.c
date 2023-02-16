@@ -107,7 +107,7 @@ void SetParticles(SetParticles_ff setParticles, MdoodzInput *instance, markers *
     if (setParticles.SetDefGrad) {
       setParticles.SetDefGrad(instance, coordinates, particles->phase[np], &F);
     }
-    if (instance->model.fstrain==1) {
+    if (instance->model.finite_strain==1) {
       particles->Fxx[np] = F.xx;
       particles->Fxz[np] = F.xz;
       particles->Fzx[np] = F.zx;

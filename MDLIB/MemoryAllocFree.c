@@ -226,7 +226,7 @@ markers PartAlloc(ParticlesInput particlesInput, params *model) {
 
   particles.intag      = DoodzCalloc(particles.Nb_part_max, sizeof(int));
 
-  if (model->fstrain == 1) {
+  if (model->finite_strain == 1) {
     particles.Fxx = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
     particles.Fxz = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
     particles.Fzx = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
@@ -235,7 +235,7 @@ markers PartAlloc(ParticlesInput particlesInput, params *model) {
     Initialise1DArrayDouble(particles.Fzz, particles.Nb_part_max, 1.0);
   }
 
-  if (model->rec_T_P_x_z == 1) {
+  if (model->track_T_P_x_z == 1) {
     particles.T0   = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
     particles.P0   = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
     particles.z0   = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
@@ -297,14 +297,14 @@ void PartFree( markers *particles, params* model ) {
 
     DoodzFree(particles->intag);
 
-    if (model->fstrain == 1) {
+    if (model->finite_strain == 1) {
         DoodzFree(particles->Fxx);
         DoodzFree(particles->Fxz);
         DoodzFree(particles->Fzx);
         DoodzFree(particles->Fzz);
     }
 
-    if (model->rec_T_P_x_z == 1) {
+    if (model->track_T_P_x_z == 1) {
         DoodzFree(particles->T0);
         DoodzFree(particles->P0);
         DoodzFree(particles->x0);

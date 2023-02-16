@@ -550,7 +550,7 @@ void ParticleInflowCheck ( markers* particles, grid *mesh, params model, surface
     
     int k, Nb_part=particles->Nb_part, npW=0, npE=0;
     double xW, xE, dx2=model.dx/2.0;
-    int finite_strain = model.fstrain;
+    int finite_strain = model.finite_strain;
     
     clock_t t_omp = (double)omp_get_wtime();
     
@@ -706,14 +706,14 @@ void AssignMarkerProperties (markers* particles, int new_ind, int min_index, par
 //    particles->dphi[new_ind]          = particles->dphi[min_index];
 //    particles->dX[new_ind]            = particles->dX[min_index];
     
-    if (model->fstrain == 1) {
+    if (model->finite_strain == 1) {
         // do not set default to 0 beause then it can not accumulate, better to identify which markers are new and start to accumulate as we do for the general case (fxx=fyy=1, fxz=fzx=0).
         particles->Fxx[new_ind]           = particles->Fxx[min_index];
         particles->Fxz[new_ind]           = particles->Fxz[min_index];
         particles->Fzx[new_ind]           = particles->Fzx[min_index];
         particles->Fzz[new_ind]           = particles->Fzz[min_index];
     }
-    if (model->rec_T_P_x_z == 1) {
+    if (model->track_T_P_x_z == 1) {
         particles->T0[new_ind]           = particles->T0[min_index];
         particles->P0[new_ind]           = particles->P0[min_index];
         particles->x0[new_ind]           = particles->x0[min_index];
@@ -795,7 +795,7 @@ void PartInit( markers *particles, params* model ) {
         particles->progress[k]   = 0.0;
 
         // Finite strain - deformation gradient tensor
-        if ( model->fstrain == 1 ) {
+        if ( model->finite_strain == 1 ) {
             particles->Fxx[k]   = 1.0;
             particles->Fxz[k]   = 0.0;
             particles->Fzx[k]   = 0.0;
@@ -3127,7 +3127,7 @@ void Interp_Phase2VizGrid ( markers particles, int* PartField, grid *mesh, char*
 //
 //    int k, Nb_part=particles->Nb_part, npW=0, npE=0;
 //    double xW, xE, dx2=model.dx/2.0;
-//    int finite_strain = model.fstrain;
+//    int finite_strain = model.finite_strain;
 //
 //    clock_t t_omp = (double)omp_get_wtime();
 //
@@ -3182,7 +3182,7 @@ void Interp_Phase2VizGrid ( markers particles, int* PartField, grid *mesh, char*
 //                        particles->x[Nb_part] = particles->x[k]-dx2;
 //                        particles->z[Nb_part] = particles->z[k];
 //                        // Assign new marker point properties
-//                        AssignMarkerProperties ( particles, Nb_part, k, finite_strain, model.rec_T_P_x_z );
+//                        AssignMarkerProperties ( particles, Nb_part, k, finite_strain, model.track_T_P_x_z );
 //                        Nb_part++;
 //                    }
 //                    else {
@@ -3201,7 +3201,7 @@ void Interp_Phase2VizGrid ( markers particles, int* PartField, grid *mesh, char*
 //                        particles->z[Nb_part] = particles->z[k];
 //                        //                        printf("Adding on E\n");
 //                        // Assign new marker point properties
-//                        AssignMarkerProperties ( particles, Nb_part, k, finite_strain, model.rec_T_P_x_z );
+//                        AssignMarkerProperties ( particles, Nb_part, k, finite_strain, model.track_T_P_x_z );
 //                        Nb_part++;
 //                    }
 //                    else {
@@ -3578,8 +3578,8 @@ void CountPartCell ( markers* particles, grid *mesh, params model, surface topo,
     int Nb_part=particles->Nb_part;
     int Ncx=Nx-1, Ncz=Nz-1, nxl;
     double dx = model.dx, dz = model.dz, distance, weight, dxm, dzm;
-    int finite_strain = model.fstrain;
-    int rec_T_P_x_z   = model.rec_T_P_x_z;
+    int finite_strain = model.finite_strain;
+    int track_T_P_x_z   = model.track_T_P_x_z;
 
     int sed_phase=model.surf_ised1;
     int time_My = floor(model.time*scaling.t / (3600*365.25*24*1e6));
@@ -4510,7 +4510,7 @@ void CountPartCell ( markers* particles, grid *mesh, params model, surface topo,
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-void CountPartCell_Old( markers* particles, grid *mesh, params model, surface topo, int reseed, scale scaling  ) {
+void CountPartCell_Old( markers* particles, grid *mesh, params model, surface topo, int reseed_markers, scale scaling  ) {
 
     // This function counts the number of particle that are currently in each cell of the domain.
     // The function detects cells that are lacking of particle and call the particle re-seeding routine.
@@ -4671,7 +4671,7 @@ firstprivate( ncx, mesh ) schedule( static )
         }
     }
 
-    //    if (reseed==0) {
+    //    if (reseed_markers==0) {
     //        mesh->P2N = DoodzMalloc(sizeof(int*)*(mesh->Nx[0]) * (mesh->Nz[0]));
     //        // Loop on cells and allocate the required number of particles
     //        for (k=0; k<(mesh->Nx[0]) * (mesh->Nz[0]); k++) {
@@ -4687,7 +4687,7 @@ firstprivate( ncx, mesh ) schedule( static )
 
     //-------------------------------------------------------------------------------------------------------------------------//
 
-    if (reseed == 1) {
+    if (reseed_markers == 1) {
 
         // LOOP ON NODES - RESEED PARTICLES IF NEEDED
         for (k=0; k<mesh->Nx; k++) {
@@ -5032,7 +5032,7 @@ firstprivate( ncx, mesh ) schedule( static )
         }
     }
 
-    //    if (reseed==0) {
+    //    if (reseed_markers==0) {
     //
     //        mesh->P2C = DoodzMalloc(sizeof(int*)*(mesh->Nx[0]-1) * (mesh->Nz[0]-1));
     //        // Loop on cells and allocate the required number of particles
@@ -5051,7 +5051,7 @@ firstprivate( ncx, mesh ) schedule( static )
 
     int *ind_list, neighs, oo, nb;
 
-    if (reseed == 1) {
+    if (reseed_markers == 1) {
 
         // Loop on cells and add particles
         for (k=0; k<ncx; k++) {

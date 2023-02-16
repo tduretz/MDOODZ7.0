@@ -515,7 +515,7 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
     Cstrain_gbs  = DoodzMalloc( sizeof(float)*(model.Nx-1)*(model.Nz-1));
     DoubleToFloat( strain_gbs, Cstrain_gbs, (model.Nx-1)*(model.Nz-1) );
 
-    if ( model.fstrain == 1 ) {
+    if ( model.finite_strain == 1 ) {
         // Fxx
         Fxx  = DoodzCalloc((model.Nx-1)*(model.Nz-1), sizeof(double));
         P2Mastah( &model, *particles, particles->Fxx,     mesh, Fxx,   mesh->BCp.type,  1, 0, interp, cent, model.itp_stencil);
@@ -561,7 +561,7 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
 
     }
 
-    if ( model.rec_T_P_x_z == 1 ) {
+    if ( model.track_T_P_x_z == 1 ) {
 
         // T0
         T0  = DoodzCalloc((model.Nx-1)*(model.Nz-1), sizeof(double));
@@ -785,7 +785,7 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
     AddFieldToGroup( FileName, "Centers" , "friction", 'f', (model.Nx-1)*(model.Nz-1), Cfriction, 1 );
     AddFieldToGroup( FileName, "Centers" , "cohesion", 'f', (model.Nx-1)*(model.Nz-1), Ccohesion, 1 );
 
-    if (model.fstrain == 1) {
+    if (model.finite_strain == 1) {
         AddFieldToGroup( FileName, "Centers" , "Fxx", 'f', (model.Nx-1)*(model.Nz-1), CFxx, 1 );
         AddFieldToGroup( FileName, "Centers" , "Fxz", 'f', (model.Nx-1)*(model.Nz-1), CFxz, 1 );
         AddFieldToGroup( FileName, "Centers" , "Fzx", 'f', (model.Nx-1)*(model.Nz-1), CFzx, 1 );
@@ -798,7 +798,7 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
         AddFieldToGroup( FileName, "Centers" , "ani_fac", 'f', (model.Nx-1)*(model.Nz-1), Cani_fac, 1 );
     }
 
-    if (model.rec_T_P_x_z == 1) {
+    if (model.track_T_P_x_z == 1) {
         AddFieldToGroup( FileName, "Centers" , "T0", 'f', (model.Nx-1)*(model.Nz-1), CT0, 1 );
         AddFieldToGroup( FileName, "Centers" , "P0", 'f', (model.Nx-1)*(model.Nz-1), CP0, 1 );
         AddFieldToGroup( FileName, "Centers" , "Tmax", 'f', (model.Nx-1)*(model.Nz-1), CTmax, 1 );
@@ -895,7 +895,7 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
     DoodzFree( compo    );
     DoodzFree( compo_hr );
 
-    if ( model.fstrain == 1 ) {
+    if ( model.finite_strain == 1 ) {
         DoodzFree( Fxx  );
         DoodzFree( Fxz  );
         DoodzFree( Fzx  );
@@ -914,7 +914,7 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
          DoodzFree( Cani_fac );
      }
 
-    if ( model.rec_T_P_x_z == 1 ) {
+    if ( model.track_T_P_x_z == 1 ) {
         DoodzFree( T0 );
         DoodzFree( P0 );
         DoodzFree( Tmax );

@@ -68,7 +68,7 @@ anisotropy             = 0
 iselastic         = 0
 free_surf         = 0
 free_surf_stab    = 0
-fstrain           = 1
+finite_strain           = 1
 
 /**** SETUP-DEPENDANT ****/
 shear_style     = 0

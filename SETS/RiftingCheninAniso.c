@@ -127,7 +127,7 @@ void AddCrazyConductivity(MdoodzInput *input) {
 void AddAnisotropy(MdoodzInput *input, MutateInputParams *mutateInputParams) {
   AddCrazyConductivity(input);
   input->model.anisotropy                              = 1;
-  input->model.fstrain                            = 1;
+  input->model.finite_strain                            = 1;
   const int crustalPhase                          = 1;
   input->materials.aniso_factor[crustalPhase]     = mutateInputParams->double1;
   input->materials.aniso_angle[crustalPhase]      = mutateInputParams->double2;

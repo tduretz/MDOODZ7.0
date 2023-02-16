@@ -60,7 +60,7 @@ maxeta      = 1e6
 iselastic         = 0
 free_surf         = 0
 free_surf_stab    = 0
-fstrain           = 1
+finite_strain           = 1
 advection         = 0
 gnuplot_log_res = 0
 

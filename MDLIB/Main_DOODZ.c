@@ -149,10 +149,10 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         if (input.model.free_surf == 1 ) CleanUpSurfaceParticles( &particles, &mesh, topo, input.scaling );
 
         // Create phase percentage arrays
-        if (input.model.cpc==-1) CountPartCell_BEN( &particles, &mesh, input.model, topo, 0, input.scaling );
-        if (input.model.cpc== 0) CountPartCell_Old( &particles, &mesh, input.model, topo, 0, input.scaling  );
-        if (input.model.cpc== 1) CountPartCell    ( &particles, &mesh, input.model, topo, topo_ini, 0, input.scaling  );
-        if (input.model.cpc== 2) CountPartCell2    ( &particles, &mesh, input.model, topo, topo_ini, 0, input.scaling  );
+        if (input.model.count_markers==-1) CountPartCell_BEN( &particles, &mesh, input.model, topo, 0, input.scaling );
+        if (input.model.count_markers== 0) CountPartCell_Old( &particles, &mesh, input.model, topo, 0, input.scaling  );
+        if (input.model.count_markers== 1) CountPartCell    ( &particles, &mesh, input.model, topo, topo_ini, 0, input.scaling  );
+        if (input.model.count_markers== 2) CountPartCell2    ( &particles, &mesh, input.model, topo, topo_ini, 0, input.scaling  );
 
         P2Mastah( &input.model, particles, input.materials.eta0, &mesh, mesh.eta_s, mesh.BCg.type,  0, 0, interp, vert, input.model.itp_stencil);
         P2Mastah( &input.model, particles, input.materials.eta0, &mesh, mesh.eta_n, mesh.BCp.type,  0, 0, interp, cent, input.model.itp_stencil);
@@ -214,7 +214,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
         SetBCs(*setup->SetBCs, &input, &mesh);
         if (input.model.thermal_eq == 1 ) ThermalSteps( &mesh, input.model,  mesh.T,  mesh.dT,  mesh.rhs_t, mesh.T, &particles, input.model.cooling_time, input.scaling );
-        if (input.model.therm_pert == 1 ) SetThermalPert( &mesh, input.model, input.scaling );
+        if (input.model.thermal_perturb == 1 ) SetThermalPert( &mesh, input.model, input.scaling );
         Interp_Grid2P_centroids2( particles, particles.T,    &mesh, mesh.T, mesh.xvz_coord,  mesh.zvx_coord,  mesh.Nx-1, mesh.Nz-1, mesh.BCt.type, &input.model );
         ArrayEqualArray( mesh.T0_n, mesh.T, (mesh.Nx-1)*(mesh.Nz-1) );
 
@@ -351,7 +351,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
         DefineInitialTimestep( &input.model, &mesh, particles, input.materials, input.scaling );
 
-        if (input.model.rec_T_P_x_z == 1 ) {
+        if (input.model.track_T_P_x_z == 1 ) {
             ArrayEqualArray( particles.T0,   particles.T, particles.Nb_part );
             ArrayEqualArray( particles.P0,   particles.P, particles.Nb_part );
             ArrayEqualArray( particles.x0,   particles.x, particles.Nb_part );
@@ -934,7 +934,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         //--------------------------------------------------------------------------------------------------------------------------------//
 
         // Update maximum pressure and temperature on markers
-        if (input.model.rec_T_P_x_z == 1 )  UpdateMaxPT(input.scaling, input.model, &particles );
+        if (input.model.track_T_P_x_z == 1 )  UpdateMaxPT(input.scaling, input.model, &particles );
 
         ComputeMeanQuantitesForTimeSeries( &mesh );
         LogTimeSeries( &mesh, input.model, input.scaling );
@@ -1009,7 +1009,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                 AccumulatedStrainII( &mesh, input.scaling, input.model, &particles,  mesh.xc_coord,  mesh.zc_coord, mesh.Nx-1, mesh.Nz-1, mesh.BCp.type );
 
                 // Update deformation gradient tensor components
-                if (input.model.fstrain == 1 ) DeformationGradient( mesh, input.scaling, input.model, &particles );
+                if (input.model.finite_strain == 1 ) DeformationGradient( mesh, input.scaling, input.model, &particles );
 
                 if (input.model.write_debug == 1 ) {
                     WriteOutputHDF5( &mesh, &particles, &topo, &topo_chain, input.model, Nmodel, "Output_BeforeSurfRemesh", input.materials, input.scaling );
@@ -1061,9 +1061,9 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                     // Sedimentation
                     if (input.model.surf_processes >= 2 ) {
                         AddPartSed( &particles, input.materials, &topo_chain, &topo, input.model, input.scaling, &mesh);
-                        if (input.model.cpc==-1) CountPartCell_BEN( &particles, &mesh, input.model, topo, 0, input.scaling );
-                        if (input.model.cpc== 0) CountPartCell_Old( &particles, &mesh, input.model, topo, 0, input.scaling );
-                        if (input.model.cpc== 1) CountPartCell    ( &particles, &mesh, input.model, topo, topo_ini, 0, input.scaling );
+                        if (input.model.count_markers==-1) CountPartCell_BEN( &particles, &mesh, input.model, topo, 0, input.scaling );
+                        if (input.model.count_markers== 0) CountPartCell_Old( &particles, &mesh, input.model, topo, 0, input.scaling );
+                        if (input.model.count_markers== 1) CountPartCell    ( &particles, &mesh, input.model, topo, topo_ini, 0, input.scaling );
                     }
 
                     if (input.model.write_debug == 1 ) {
@@ -1099,13 +1099,13 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
                 // Count the number of particle per cell
                 t_omp = (double)omp_get_wtime();
-                if (input.model.cpc ==-1)                       CountPartCell_BEN( &particles, &mesh, input.model, topo, 0, input.scaling );
-                if (input.model.cpc == 0)                       CountPartCell_Old( &particles, &mesh, input.model, topo, 0, input.scaling );
-                if (input.model.cpc == 1 && input.model.reseed == 1 ) CountPartCell    ( &particles, &mesh, input.model, topo, topo_ini, 1, input.scaling );
-                if (input.model.cpc == 1)                       CountPartCell    ( &particles, &mesh, input.model, topo, topo_ini, 0, input.scaling );
+                if (input.model.count_markers ==-1)                       CountPartCell_BEN( &particles, &mesh, input.model, topo, 0, input.scaling );
+                if (input.model.count_markers == 0)                       CountPartCell_Old( &particles, &mesh, input.model, topo, 0, input.scaling );
+                if (input.model.count_markers == 1 && input.model.reseed_markers == 1 ) CountPartCell    ( &particles, &mesh, input.model, topo, topo_ini, 1, input.scaling );
+                if (input.model.count_markers == 1)                       CountPartCell    ( &particles, &mesh, input.model, topo, topo_ini, 0, input.scaling );
 
-                if (input.model.cpc == 2 && input.model.reseed == 1 ) CountPartCell2   ( &particles, &mesh, input.model, topo, topo_ini, 1, input.scaling );
-                if (input.model.cpc == 2)                       CountPartCell2   ( &particles, &mesh, input.model, topo, topo_ini, 0, input.scaling );
+                if (input.model.count_markers == 2 && input.model.reseed_markers == 1 ) CountPartCell2   ( &particles, &mesh, input.model, topo, topo_ini, 1, input.scaling );
+                if (input.model.count_markers == 2)                       CountPartCell2   ( &particles, &mesh, input.model, topo, topo_ini, 0, input.scaling );
 
                 printf("After re-seeding :\n");
                 printf("Initial number of particles = %d\n", particles.Nb_part_ini);

@@ -15,7 +15,7 @@ compressible      = 1
 iselastic         = 1
 free_surf         = 0
 free_surf_stab    = 0
-fstrain           = 1
+finite_strain           = 1
 advection         = 0
 anisotropy             = 1
 

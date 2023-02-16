@@ -62,7 +62,7 @@ thermal_eq      = 0
 subgrid_diff    = 2
 shear_heat      = 0
 adiab_heat      = 0
-fstrain         = 0
+finite_strain         = 0
 
 /*** CHEMICAL ***/
 progress_transform        = 1  / !!!!

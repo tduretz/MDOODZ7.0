@@ -57,7 +57,7 @@ surf_ised1      = 4 /sediment phase indices
 surf_ised2      = 5
 surf_sedirate   = 0.0 / sediementation rate [m/s]:3.1688e-12 <-> 0.01 cm/yr
 surf_baselev    = 0.0e3 / base level for sedimentation
-rec_T_P_x_z     = 1 / initial P and T field record
+track_T_P_x_z     = 1 / initial P and T field record
 polar           = 0
 
 /**** SETUP DEPENDANT ****/

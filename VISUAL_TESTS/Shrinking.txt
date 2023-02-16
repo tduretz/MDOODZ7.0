@@ -31,16 +31,16 @@ Courant           = 0.2
 penalty           = 1e2
 lsolver           = 2
 diag_scaling      = 0
-GNUplot_residuals = 0
+gnuplot_log_res = 0
 pc_type           = 1
 eta_avg           = 0
 num_deriv         = 0
-StressRotation    = 1
+stress_rotation    = 1
 safe_mode         = 1
 safe_dt_div       = 2.0
 nstagmax          = 10
 IncrementalUpdateGrid = 1
-StressUpdate    = 0
+
 
 abs_tol_div       = 1e-10
 rel_tol_div       = 1e-10
@@ -63,13 +63,13 @@ thermal_eq      = 0
 subgrid_diff    = 2
 shear_heat      = 0
 adiab_heat      = 0
-fstrain         = 0
+finite_strain         = 0
 
 /*** CHEMICAL ***/
-ProgReac        = 1  / !!!!
-NoReturn        = 0 
-dens_var        = 1  / renamed in MD7.0 (VolChangeReac)    
-UnsplitDiffReac = 0
+progress_transform        = 1  / !!!!
+no_return        = 0 
+density_change        = 1  / renamed in MD7.0 (VolChangeReac)    
+unsplit_diff_reac = 0
 
 /**** SETUP DEPENDANT ****/
 shear_style     = 0

@@ -26,8 +26,8 @@ dt   = 1e11
 Courant = 0.50
 penalty = 1e5
 eta_avg = 0
-cpc     = 1
-GNUplot_residuals = 0
+count_markers     = 1
+gnuplot_log_res = 0
 
 /**** SWITCHES ****/
 ismechanical    = 1

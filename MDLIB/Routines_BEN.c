@@ -450,7 +450,7 @@ void AddPartVert_BEN( markers *particles, grid mesh, int ic, int jc, int* ind_li
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-void CountPartCell_BEN ( markers* particles, grid *mesh, params model, surface topo, int reseed, scale scaling  ) {
+void CountPartCell_BEN ( markers* particles, grid *mesh, params model, surface topo, int reseed_markers, scale scaling  ) {
     
     // This function counts the number of particle that are currently in each cell of the domain.
     // The function detects cells that are lacking of particle and call the particle re-seeding routine.
@@ -632,7 +632,7 @@ firstprivate( ncx, mesh ) schedule( static )
     
     //-------------------------------------------------------------------------------------------------------------------------//
     
-    if (reseed == 1) {
+    if (reseed_markers == 1) {
     
     // LOOP ON NODES - RESEED PARTICLES IF NEEDED
     for (k=0; k<mesh->Nx; k++) {
@@ -1011,7 +1011,7 @@ firstprivate( ncx, mesh ) schedule( static )
     
     int *ind_list, neighs, oo, nb;
     
-     if (reseed == 1) {
+     if (reseed_markers == 1) {
     
     // Loop on cells and add particles
     for (k=0; k<ncx; k++) {

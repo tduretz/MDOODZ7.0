@@ -49,7 +49,7 @@ adiab_heat      = 0
 isPl_soft       = 0
 surf_processes  = 0
 shear_style     = 1
-fstrain         = 1
+finite_strain         = 1
 
 /**** ANISOTROPY ****/
 anisotropy           = 1

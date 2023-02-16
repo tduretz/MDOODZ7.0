@@ -53,7 +53,7 @@ thermal_eq      = 0
 subgrid_diff    = 2
 shear_heat      = 1
 adiab_heat      = 0
-fstrain         = 1
+finite_strain         = 1
 gnuplot_log_res = 0
 
 /**** ANISOTROPY ****/
