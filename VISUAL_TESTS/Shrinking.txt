@@ -9,7 +9,9 @@ writerSubfolder = Shrinking
 
 /**** SCALES ****/
 eta = 1e15
+L   = 2.0
 V   = 1.0e-10
+T   = 700
 
 /**** SPACE-TIME ****/
 Nx      = 51
