@@ -1,128 +1,54 @@
 /**** RESTART ****/
-istep = 00001
-irestart = 0
+istep = 000001
 
 /**** OUTPUT FILES ****/
 writer          = 1
 writer_step     = 5
-writer_markers  = 0
-writer_debug    = 0
-writer_energies = 0
-
-/**** SCALES ****/
-eta = 1
-L   = 1
-V   = 1
-T   = 1
 
 /**** SPACE ****/
 Nx      = 101
 Nz      = 101
-Nt      = 5
 xmin    = -5.000000e-1
-zmin    = -5.000000e-1 
+zmin    = -5.000000e-1
 xmax    =  5.000000e-1
 zmax    =  5.000000e-1
 
-/**** PARTICLES ****/
-Nx_part = 4
-Nz_part = 4
-
 /**** TIME ****/
+Nt          = 5
 dt_constant = 1
-Courant     = 0.3
 dt          = 0.5
-RK          = 4
 
-/**** LINEAR SOLVER ****/
-noisy        = 0
-penalty      = 1e5
-lsolver      = -1
-diag_scaling = 0
-abs_tol_div  = 1e-8
-rel_tol_div  = 1e-8
+/**** KINEMATICS ****/
+shear_style     = 1
+ispureshear_ALE = 1
+EpsBG           = 1
+
+/**** SWITCHES ****/
+advection       = 0
+
+/**** USER-DEFINED ****/
+user0           = 1     / temperature [°C]
+user1           = 0.05  / inclusion radius [m]
+
+/**** MATERIAL PROPERTIES ****/
+Nb_phases = 2
 
 /**** NON-LINEAR SOLVER ****/
-Newton      = 1 
-line_search = 1
-nit_max     = 100
-rel_tol_KSP = 1e-4
-abs_tol_u   = 1e-8
-abs_tol_u   = 1e-8
-rel_tol_p   = 1e-8
-rel_tol_p   = 1e-8
+Newton    = 1
+nit_max   = 10
 
-/**** VISCOSITY CUT-OFF ****/
+/**** VISCOSITY LIMITS ****/
 mineta      = 1e-3
 maxeta      = 1e6
 
-/**** SWITCHES ****/
-iselastic         = 0
-free_surf         = 0
-free_surf_stab    = 0
-fstrain           = 1
-advection         = 0
-GNUplot_residuals = 0
-
-/**** SETUP-DEPENDANT ****/
-shear_style     = 1
-isperiodic_x    = 0
-ispureshear_ALE = 1
-EpsBG           = 1
-user0           = 1     / temperature [°C]
-user1           = 0.05  / inclusion radius [m]
-user2           = 0
-user3           = 0
-
-/**** GRAVITY ****/
-gx = 0.0000
-gz = 0.000
-
-/**** MAT PROPERTIES ****/
-Nb_phases = 2
-
 /**** PHASE 1 ****/
 ID   = 0
-rho  = 2700.00 / matrix
-mu   = 1
-Cv   = 1050
-k    = 2.5
-Qr   = 0
-C    = 1e90
-phi  = 30
-Slim = 500e9
-alp  = 10.0e-6
-bet  = 1e-11
-drho = 0
-cstv = 1             / constant visc law
-pwlv = 0            / disloc. creep
-linv = 0             / diff. creep
-gbsv = 0             / grain boundary sliding
-expv = 0             / peierls creep
-gsel = 0             / grain size evo.
+cstv = 1
 eta0 = 1
-npwl = 30
-Qpwl = 0
+npwl = 3.0
 
 /**** PHASE 2 ****/
 ID   = 1
-rho  = 2700.00 / inclusion
-mu   = 1
-Cv   = 1050
-k    = 2.5
-Qr   = 0
-C    = 1e90
-phi  = 30
-Slim = 500e9
-alp  = 10.0e-6
-bet  = 1e-11
-drho = 0
 cstv = 1             / constant visc law
-pwlv = 0             / disloc. creep
-linv = 0             / diff. creep
-gbsv = 0             / grain boundary sliding
-expv = 0             / peierls creep
-gsel = 0             / grain size evo.
 eta0 = 1e1
 npwl = 3
-Qpwl = 0
