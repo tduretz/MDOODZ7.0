@@ -1,11 +1,10 @@
 /**** RESTART ****/
-istep = 00001
+istep = 00010
 irestart = 0
 
 /**** OUTPUT FILES ****/
 writer          = 1
 writer_step     = 1
-writerSubfolder = Shrinking
 
 /**** SCALES ****/
 eta = 1e15
@@ -54,7 +53,13 @@ user0           = 680.0
 /**** NON-LINEAR ITERATIONS ****/
 Newton        = 1
 Picard2Newton = 1
+Pic2NewtCond  = 2e-1
 nit_max       = 30
+rel_tol_KSP   = 5e-4
+abs_tol_u     = 1e-9
+abs_tol_p     = 1e-9
+rel_tol_u     = 1e-9
+rel_tol_p     = 1e-9
 mineta        = 1e10
 maxeta        = 1e30
 
