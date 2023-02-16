@@ -81,7 +81,7 @@ double ViscosityConciseAniso( int phase, double lxlz, double lx2, double angle, 
     // !!!!!!!!!!!!!!!!!!!!!!!!
     // General paramaters
     const double tol    = 1.0e-11, R = materials->R, dt = model->dt, minEta = model->mineta, maxEta = model->maxeta;
-    const int    nitmax = 20, noisy = 0;
+    const int    nitmax = 20, noisy = 1;
     double eta = 0.0, eta_el, eta_cst;
     int    plastic = 0, constant = 0, dislocation = 0, peierls = 0, diffusion = 0, gbs = 0, elastic = model->iselastic, kinetics = 0, is_pl = 0;
     double eta_pwl = 0.0, B_pwl = 0.0, C_pwl = 0.0, Q_pwl = materials->Qpwl[phase], V_pwl = materials->Vpwl[phase], n_pwl = materials->npwl[phase], m_pwl = materials->mpwl[phase], r_pwl = materials->rpwl[phase], A_pwl = materials->Apwl[phase], f_pwl = materials->fpwl[phase], a_pwl = materials->apwl[phase], F_pwl = materials->Fpwl[phase], pre_factor = materials->pref_pwl[phase], t_pwl = materials->tpwl[phase];
@@ -163,8 +163,8 @@ double ViscosityConciseAniso( int phase, double lxlz, double lx2, double angle, 
     eta_ve_s = eta_up_s;
     // Iterations for visco-elastic trial
     if (noisy) printf("Start local VE iterations for phase %d (cst: %d --- el: %d --- pwl: %d)\n", phase, constant, elastic, dislocation);
-    // if (noisy) printf("ani_fac_v = %1.1f  ani_fac_p = %1.1f\n", ani_fac_v, ani_fac_p );    // DELETE
-    // if (noisy) printf("e_n=%2.2e e_s=%2.2e eta_pwl=%2.2e\n", eta_ve_n, eta_ve_s, eta_pwl); // DELETE
+    if (noisy) printf("ani_fac_v = %1.1f  ani_fac_p = %1.1f\n", ani_fac_v, ani_fac_p );    // DELETE
+    if (noisy) printf("e_n=%2.2e e_s=%2.2e eta_pwl=%2.2e\n", eta_ve_n, eta_ve_s, eta_pwl); // DELETE
     for (int it = 0; it < nitmax; it++) {
       // Compute stress in principal plane
       T_rot.xx = 2.0 * eta_ve_n * E_rot.xx;
@@ -188,7 +188,7 @@ double ViscosityConciseAniso( int phase, double lxlz, double lx2, double angle, 
       W_s       = 2.0*E_rot.xz*T_rot.xz;
       ieta_pwl  = 1.0 / eta_pwl;
       // Make some noise!!!!!
-      if (noisy) printf("It. %02d: f_n = %2.2e --- f_s = %2.2e\n", it, f_n, f_s);
+      if (noisy) printf("VE It. %02d: f_n = %2.2e --- f_s = %2.2e\n", it, f_n, f_s);
       // Exit criteria
       if ( fabs(f_n) < tol / 100 && fabs(f_s) < tol / 100 ) {
         if (it > 10) printf("V-E L.I. Warnung: more that 10 local iterations, there might be a problem...\n");
@@ -230,7 +230,9 @@ double ViscosityConciseAniso( int phase, double lxlz, double lx2, double angle, 
     double Y2_p = Y2( &T_rot, ani_fac_p);
     double Ft   = sqrt(Y2_p) - Coh - P*sin(fric)/3*(a1+a2+a3) +  sin(fric)/3.0*( a1*T_rot.xx + a2*T_rot.zz + a3*T_rot.yy);
     double Fc = Ft;
-    double ap_n, ap_s, eta_ve=eta_ve_n, gdot=0.0, a_ve=sqrt(eta_ve_n/eta_ve_s), eta_pl, divp;
+    double ap_n, ap_s, eta_ve=eta_ve_n; 
+    double gdot=sqrt(I2_v)/1000; 
+    double a_ve=sqrt(eta_ve_n/eta_ve_s), eta_pl, divp;
     double Y1_p_c, Y2_p_c, dFdgdot;
     double txx = T_rot.xx, tzz=T_rot.zz, tyy=T_rot.yy, txz=T_rot.xz;
     double Pc = P;
@@ -261,7 +263,7 @@ double ViscosityConciseAniso( int phase, double lxlz, double lx2, double angle, 
         // double txz1 = sqrt(pow(ap_s, 2)*pow(txz, 2));
 
         // Make some noise!!!!!
-        if (noisy) printf("It. %02d: f_n = %2.2e\n", it, fabs(Fc/Ft));
+        if (noisy) printf(" VP It. %02d: f_n abs. = %2.2e |f_n rel.| = %2.2e\n", it, Fc*scaling->S, fabs(Fc/Ft));
         // printf("It. %02d: f_n = %2.2e\n", it, fabs(Fc/Ft));
 
         if ( fabs(Fc/Ft) < 1e-8 ) {
