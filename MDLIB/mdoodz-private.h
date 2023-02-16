@@ -369,6 +369,7 @@ void            UpdateParticleX(grid *, scale, params, markers *, mat_prop *);
 void            UpdateParticlePhi(grid *, scale, params, markers *, mat_prop *);
 // Anisotropy
 void            NonNewtonianViscosityGridAniso(grid *, mat_prop *, params *, Nparams, scale *);
+double          AnisoFactorEvolv( double FS_AR, double aniso_fac_max );
 
 // Advection
 void            DefineInitialTimestep(params *, grid *, markers, mat_prop, scale);

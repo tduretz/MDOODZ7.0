@@ -587,10 +587,10 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             }
 
             if ( input.model.aniso == 1 ) {
-                MinMaxArrayTag( mesh.FS_AR_n,  1.0,   (mesh.Nx-1)*(mesh.Nz-1), "FS_AR_n", mesh.BCp.type );
-                MinMaxArrayTag( mesh.FS_AR_s,  1.0,   (mesh.Nx)*(mesh.Nz),     "FS_AR_s", mesh.BCg.type );
-                MinMaxArrayTag( mesh.angle_n,  180/M_PI,   (mesh.Nx-1)*(mesh.Nz-1), "angle_n", mesh.BCp.type );
-                MinMaxArrayTag( mesh.angle_s,  180/M_PI,   (mesh.Nx)*(mesh.Nz),     "angle_s", mesh.BCg.type );
+                MinMaxArrayTag( mesh.FS_AR_n,  1.0,      (mesh.Nx-1)*(mesh.Nz-1), "FS_AR_n", mesh.BCp.type );
+                MinMaxArrayTag( mesh.FS_AR_s,  1.0,      (mesh.Nx)*(mesh.Nz),     "FS_AR_s", mesh.BCg.type );
+                MinMaxArrayTag( mesh.angle_n,  180/M_PI, (mesh.Nx-1)*(mesh.Nz-1), "angle_n", mesh.BCp.type );
+                MinMaxArrayTag( mesh.angle_s,  180/M_PI, (mesh.Nx)*(mesh.Nz),     "angle_s", mesh.BCg.type );
             }
         }
 

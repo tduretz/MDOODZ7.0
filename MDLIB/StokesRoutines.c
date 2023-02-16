@@ -54,7 +54,6 @@ void RheologicalOperators( grid* mesh, params* model, mat_prop* materials, scale
   Nx = mesh->Nx; Ncx = Nx-1;
   Nz = mesh->Nz; Ncz = Nz-1;
   double nx, nz, ani, d1, d2, angle, lx2, lxlz, lay_ang;
-//   int aniso_fstrain = model->aniso_fstrain;
   double eta_e, K, dt = model->dt;
   int comp = model->compressible;
   double Exx, Ezz, Exz, gxz, Gxx, Gzz, Gxz;
@@ -83,8 +82,6 @@ void RheologicalOperators( grid* mesh, params* model, mat_prop* materials, scale
           // Anisotropy
           ani_vep     = mesh->aniso_factor_n[k];
           aniS_vep = 1.0 - 1.0 / ani_vep;
-        //   if ( model->aniso_fstrain  == 0 ) aniS_vep = 1.0 - 1.0 / ani_vep;
-        //   if ( model->aniso_fstrain  == 1 ) aniS_vep = 1.0 - 1.0 / mesh->FS_AR_n[k];
           d1   = mesh->d1_n[k];
           d2   = mesh->d2_n[k];
         }
@@ -124,8 +121,6 @@ void RheologicalOperators( grid* mesh, params* model, mat_prop* materials, scale
           // Anisotropy
           ani_vep     = mesh->aniso_factor_s[k];
           aniS_vep    = 1.0 - 1.0 / ani_vep;
-        //   if ( model->aniso_fstrain  == 0 ) aniS_vep = 1.0 - 1.0 / ani_vep;
-        //   if ( model->aniso_fstrain  == 1 ) aniS_vep = 1.0 - 1.0 / mesh->FS_AR_s[k];
           d1    = mesh->d1_s[k];
           d2    = mesh->d2_s[k];
         }
@@ -173,21 +168,14 @@ void RheologicalOperators( grid* mesh, params* model, mat_prop* materials, scale
           ani_fstrain = mesh->FS_AR_n[k];
           aniS_vep = 1.0 - 1.0 / ani_vep;
           aniS_e   = 1.0 - 1.0 / ani_e;
-        //   if ( model->aniso_fstrain  == 0 ) aniS_vep = 1.0 - 1.0 / ani_vep;
-        //   if ( model->aniso_fstrain  == 1 ) aniS_vep = 1.0 - 1.0 / mesh->FS_AR_n[k];
-        //   if ( model->aniso_fstrain  == 0 ) aniS_e   = 1.0 - 1.0 / ani_e;
-        //   if ( model->aniso_fstrain  == 1 ) aniS_e   = 1.0 - 1.0 / mesh->FS_AR_n[k];
           d1      = mesh->d1_n[k];
           d2      = mesh->d2_n[k];
           angle   = mesh->angle_n[k];
           lay_ang = angle - M_PI/2.0;
           lxlz    = cos(lay_ang)*sin(lay_ang);
           lx2     = cos(lay_ang)*cos(lay_ang);
-            // lxlz    = 0.5*d1;
-            // lx2     = pow( cos(angle), 2);
         }
         //----------------------------------------------------------//
-        // Exx = mesh->exxd[k]; Ezz = mesh->ezzd[k]; Exz = mesh->exz_n[k];
         EffectiveStrainRate( &Exx, &Ezz, &Exz, mesh->exxd[k], mesh->ezzd[k], mesh->exz_n[k], mesh->sxxd0[k], mesh->szzd0[k], mesh->sxz0_n[k], d1, d2, aniS_e, eta_e, model->iselastic ); 
         const double e_a2 = eta_vep/(ani_vep*ani_vep);      
         const double Gxz = 2.0*Exz;
@@ -246,18 +234,12 @@ void RheologicalOperators( grid* mesh, params* model, mat_prop* materials, scale
           ani_fstrain = mesh->FS_AR_s[k];
           aniS_vep = 1.0 - 1.0 / ani_vep;
           aniS_e   = 1.0 - 1.0 / ani_e;
-        //   if ( model->aniso_fstrain  == 0 ) aniS_vep = 1.0 - 1.0 / ani_vep;
-        //   if ( model->aniso_fstrain  == 1 ) aniS_vep = 1.0 - 1.0 / mesh->FS_AR_s[k];
-        //   if ( model->aniso_fstrain  == 0 ) aniS_e   = 1.0 - 1.0 / ani_e;
-        //   if ( model->aniso_fstrain  == 1 ) aniS_e   = 1.0 - 1.0 / mesh->FS_AR_s[k];
           d1    = mesh->d1_s[k];
           d2    = mesh->d2_s[k];
           angle = mesh->angle_s[k];
           lay_ang = angle - M_PI/2.0;
           lxlz    = cos(lay_ang)*sin(lay_ang);
           lx2     = cos(lay_ang)*cos(lay_ang);
-        //      lxlz    = 0.5*d1;
-        // lx2     = pow( cos(angle), 2);
         }
         //----------------------------------------------------------//
         EffectiveStrainRate( &Exx, &Ezz, &Exz, mesh->exxd_s[k], mesh->ezzd_s[k], mesh->exz[k], mesh->sxxd0_s[k], mesh->szzd0_s[k], mesh->sxz0[k], d1, d2, aniS_e, eta_e, model->iselastic );

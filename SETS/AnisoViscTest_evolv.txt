@@ -27,7 +27,7 @@ T   = 1
 /**** SPACE ****/
 Nx      = 51
 Nz      = 51
-Nt      = 50
+Nt      = 250
 xmin    = -5.000000e-1
 zmin    = -5.000000e-1
 xmax    =  5.000000e-1
@@ -110,6 +110,7 @@ Qpwl = 0
 aniso_angle  = 135.0
 ani_fstrain  = 1     / activates finite strain anisotropy
 ani_fac_v    = 1.0
+ani_fac_max  = 1.5
 
 /**** PHASE 2 ****/
 ID   = 1

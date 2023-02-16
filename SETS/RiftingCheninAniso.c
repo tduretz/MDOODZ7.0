@@ -129,10 +129,10 @@ void AddAnisotropy(MdoodzInput *input, MutateInputParams *mutateInputParams) {
   input->model.aniso                              = 1;
   input->model.fstrain                            = 1;
   const int crustalPhase                          = 1;
-  input->materials.aniso_factor[crustalPhase]     = mutateInputParams->double1;
+  input->materials.ani_fac_v[crustalPhase]        = mutateInputParams->double1;
   input->materials.aniso_angle[crustalPhase]      = mutateInputParams->double2;
   const int crustalPhase2                         = 9;
-  input->materials.aniso_factor[crustalPhase2]    = mutateInputParams->double3;
+  input->materials.ani_fac_v[crustalPhase2]       = mutateInputParams->double3;
   input->materials.aniso_angle[crustalPhase2]     = mutateInputParams->double4;
 
   snprintf(input->model.description, sizeof(input->model.description), "CrustalPhase: {cstv: %i, aniso_factor: %f, aniso_angle: %f}, UpperMantlePhase: {cstv: %i, aniso_factor: %f, aniso_angle: %f}}", mutateInputParams->int1, mutateInputParams->double1, mutateInputParams->double2, mutateInputParams->int2, mutateInputParams->double3, mutateInputParams->double4);
