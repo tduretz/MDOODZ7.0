@@ -24,6 +24,7 @@ ispureshear_ALE = 1
 EpsBG           = 1
 
 /**** SWITCHES ****/
+aniso           = 1
 advection       = 0
 
 /**** USER-DEFINED ****/
@@ -41,12 +42,18 @@ nit_max   = 10
 mineta      = 1e-3
 maxeta      = 1e6
 
+/**** GRAVITY ****/
+gx = 0.0000
+gz = 0.000
+
 
 /**** PHASE 1 ****/
-ID   = 0
-cstv = 1
-eta0 = 1
-npwl = 3.0
+ID        = 0
+cstv      = 1            / constant visc law
+eta0      = 1
+npwl      = 3.0
+ani_fac_v = 10.0
+aniso_angle = 30
 
 /**** PHASE 2 ****/
 ID   = 1

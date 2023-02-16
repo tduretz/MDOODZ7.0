@@ -267,6 +267,20 @@ class ShearTemplate {
     };
     RunMDOODZ("ShearTemplate1.txt", &shearTemplate);
   }
+
+  public: void runAniso() {
+    MdoodzSetup shearTemplate = {
+            .SetParticles = new SetParticles_ff{
+                    .SetPhase   = STSetPhase,
+                    .SetDensity = STSetDensity,
+            },
+            .SetBCs = new SetBCs_ff{
+                    .SetBCVx = SetPureOrSimpleShearBCVx,
+                    .SetBCVz = SetPureOrSimpleShearBCVz,
+            },
+    };
+    RunMDOODZ("ShearTemplateAniso.txt", &shearTemplate);
+  }
 };
 
 void RenameTopoBenchCaseFiles() {
@@ -567,6 +581,8 @@ void RunTestCases() {
   rename("Output00005.gzip.h5", "ShearTemplate.gzip.h5");
   (*new ShearTemplate).run1();
   rename("Output00005.gzip.h5", "ShearTemplate1.gzip.h5");
+  (*new ShearTemplate).runAniso();
+  rename("Output00005.gzip.h5", "ShearTemplateAniso.gzip.h5");
   (*new TopoBenchCase1).run();
   RenameTopoBenchCaseFiles();
   (*new Shrinking).run();
@@ -611,6 +627,8 @@ int main() {
   PlotShearTemplateReference();
   PlotShearTemplate1();
   PlotShearTemplate1Reference();
+  PlotShearTemplateAniso();
+  PlotShearTemplateAnisoReference();
   PlotShearHeatingDuretz14();
   PlotShearHeatingDuretz14Reference();
   PlotTopoBenchCase1();
