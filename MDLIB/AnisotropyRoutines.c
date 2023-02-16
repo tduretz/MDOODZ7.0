@@ -42,8 +42,12 @@
 
 // Compute finite strain anisotropy factor
 double AnisoFactorEvolv( double FS_AR, double aniso_fac_max ) {
-  // harmonic mean up to saturation at a maximum anisotropy factor
-    return 1.0 / ( (1.0/FS_AR) + (1.0/aniso_fac_max) );
+  // saturation at a maximum anisotropy factor 
+  // (for details see Matlab script)
+  const double delta_ratio = aniso_fac_max / 4.0;
+  const double FS_AR_crit  = aniso_fac_max / 2.0;
+  const double x = 0.5*erfc((FS_AR - FS_AR_crit) / delta_ratio);
+  return x * FS_AR + (1.0-x) * aniso_fac_max;
 }
 
 // Squared second invariant of deviatoric stress
