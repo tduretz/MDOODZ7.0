@@ -156,12 +156,11 @@ To build library, tests and executables with OpenMP and in optimised mode:
 ```bash
 make build SET=RiftingChenin
 ```
-Specify an .txt input file from SETS folder with TXT:
+An alternative `.txt` input file located in the `SETS/` folder can be used if specified as `TXT`. If not stated, the default `.txt` input file will be taken.
 
 ```bash
-make build SET=RiftingChenin TXT=RiftingChenin_specific.txt
+make build SET=RiftingChenin TXT=RiftingChenin_alternative.txt
 ```
-If no input file with TXT is specified, it will take the default .txt with the same name as your SET.
 
 To explicitly set OPT (optimisation) and OMP (OpenMP). If not stated, it's OFF by default
 
