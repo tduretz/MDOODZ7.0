@@ -377,15 +377,21 @@ void LoadBreakpointParticles( markers *particles, grid* mesh, markers *topo_chai
         fread( mesh->nb_part_vert, s1,  Nx *Nz ,   file );
 
         // Timeseries
-        fread( mesh->Time_time,     s3,   model->Nt+1 ,   file );
-        fread( mesh->Short_time,    s3,   model->Nt+1 ,   file );
-        fread( mesh->Work_time,     s3,   model->Nt+1 ,   file );
-        fread( mesh->Uthermal_time, s3,   model->Nt+1 ,   file );
-        fread( mesh->Uelastic_time, s3,   model->Nt+1 ,   file );
-        fread( mesh->T_mean_time,   s3,   model->Nt+1 ,   file );
-        fread( mesh->P_mean_time,   s3,   model->Nt+1 ,   file );
-        fread( mesh->Tii_mean_time, s3,   model->Nt+1 ,   file );
-        fread( mesh->Eii_mean_time, s3,   model->Nt+1 ,   file );
+        fread( mesh->Time_time      , s3,   model->Nt+1 ,   file );
+        fread( mesh->Short_time     , s3,   model->Nt+1 ,   file );
+        fread( mesh->Work_time      , s3,   model->Nt+1 ,   file );
+        fread( mesh->Uthermal_time  , s3,   model->Nt+1 ,   file );
+        fread( mesh->Uelastic_time  , s3,   model->Nt+1 ,   file );
+        fread( mesh->T_mean_time    , s3,   model->Nt+1 ,   file );
+        fread( mesh->P_mean_time    , s3,   model->Nt+1 ,   file );
+        fread( mesh->sxxd_mean_time , s3,   model->Nt+1 ,   file );
+        fread( mesh->szzd_mean_time , s3,   model->Nt+1 ,   file );
+        fread( mesh->sxz_mean_time  , s3,   model->Nt+1 ,   file );
+        fread( mesh->Tii_mean_time  , s3,   model->Nt+1 ,   file );
+        fread( mesh->exxd_mean_time , s3,   model->Nt+1 ,   file );
+        fread( mesh->ezzd_mean_time , s3,   model->Nt+1 ,   file );
+        fread( mesh->exz_mean_time  , s3,   model->Nt+1 ,   file );
+        fread( mesh->Eii_mean_time  , s3,   model->Nt+1 ,   file );
 
 
     fclose(file);
@@ -403,15 +409,21 @@ void LoadBreakpointParticles( markers *particles, grid* mesh, markers *topo_chai
     model->zmax /= scaling.L;
 
     for ( k=0; k<model->Nt+1; k++ ) {
-        mesh->Time_time[k]     /= scaling.t;
-        mesh->Short_time[k]    /= 1.0;
-        mesh->Work_time[k]     /= (scaling.rhoE*scaling.L*scaling.L);
-        mesh->Uthermal_time[k] /= (scaling.rhoE*scaling.L*scaling.L);
-        mesh->Uelastic_time[k] /= (scaling.rhoE*scaling.L*scaling.L);
-        mesh->T_mean_time[k]   /= scaling.T;
-        mesh->P_mean_time[k]   /= scaling.S;
-        mesh->Tii_mean_time[k] /= scaling.S;
-        mesh->Eii_mean_time[k] /= scaling.E;
+        mesh->Time_time[k]      /= scaling.t;
+        mesh->Short_time[k]     /= 1.0;
+        mesh->Work_time[k]      /= (scaling.rhoE*scaling.L*scaling.L);
+        mesh->Uthermal_time[k]  /= (scaling.rhoE*scaling.L*scaling.L);
+        mesh->Uelastic_time[k]  /= (scaling.rhoE*scaling.L*scaling.L);
+        mesh->T_mean_time[k]    /= scaling.T;
+        mesh->P_mean_time[k]    /= scaling.S;
+        mesh->sxxd_mean_time[k] /= scaling.S;
+        mesh->szzd_mean_time[k] /= scaling.S;
+        mesh->sxz_mean_time[k]  /= scaling.S;
+        mesh->Tii_mean_time[k]  /= scaling.S;
+        mesh->exxd_mean_time[k] /= scaling.E;
+        mesh->ezzd_mean_time[k] /= scaling.E;
+        mesh->exz_mean_time[k]  /= scaling.E;
+        mesh->Eii_mean_time[k]  /= scaling.E;
     }
 
 #pragma omp parallel for shared( particles, model, scaling )
@@ -565,15 +577,21 @@ void MakeBreakpointParticles( markers *particles,  grid* mesh, markers *topo_cha
     model.zmax *= scaling.L;
 
     for ( k=0; k<model.Nt+1; k++ ) {
-        mesh->Time_time[k]     *= scaling.t;
-        mesh->Short_time[k]    *= 1.0;
-        mesh->Work_time[k]     *= (scaling.rhoE*scaling.L*scaling.L);
-        mesh->Uthermal_time[k] *= (scaling.rhoE*scaling.L*scaling.L);
-        mesh->Uelastic_time[k] *= (scaling.rhoE*scaling.L*scaling.L);
-        mesh->T_mean_time[k]   *= scaling.T;
-        mesh->P_mean_time[k]   *= scaling.S;
-        mesh->Tii_mean_time[k] *= scaling.S;
-        mesh->Eii_mean_time[k] *= scaling.E;
+        mesh->Time_time[k]      *= scaling.t;
+        mesh->Short_time[k]     *= 1.0;
+        mesh->Work_time[k]      *= (scaling.rhoE*scaling.L*scaling.L);
+        mesh->Uthermal_time[k]  *= (scaling.rhoE*scaling.L*scaling.L);
+        mesh->Uelastic_time[k]  *= (scaling.rhoE*scaling.L*scaling.L);
+        mesh->T_mean_time[k]    *= scaling.T;
+        mesh->P_mean_time[k]    *= scaling.S;
+        mesh->sxxd_mean_time[k] *= scaling.S;
+        mesh->szzd_mean_time[k] *= scaling.S;
+        mesh->sxz_mean_time[k]  *= scaling.S;
+        mesh->Tii_mean_time[k]  *= scaling.S;
+        mesh->exxd_mean_time[k] *= scaling.E;
+        mesh->ezzd_mean_time[k] *= scaling.E;
+        mesh->exz_mean_time[k]  *= scaling.E;
+        mesh->Eii_mean_time[k]  *= scaling.E;
     }
 
 #pragma omp parallel for shared( particles, model, scaling )
@@ -882,15 +900,21 @@ void MakeBreakpointParticles( markers *particles,  grid* mesh, markers *topo_cha
     fwrite( mesh->nb_part_vert, s1,  Nx *Nz ,   file );
 
     // Timeseries
-    fwrite( mesh->Time_time,     s3,   model.Nt+1 ,   file );
-    fwrite( mesh->Short_time,    s3,   model.Nt+1 ,   file );
-    fwrite( mesh->Work_time,     s3,   model.Nt+1 ,   file );
-    fwrite( mesh->Uthermal_time, s3,   model.Nt+1 ,   file );
-    fwrite( mesh->Uelastic_time, s3,   model.Nt+1 ,   file );
-    fwrite( mesh->T_mean_time,   s3,   model.Nt+1 ,   file );
-    fwrite( mesh->P_mean_time,   s3,   model.Nt+1 ,   file );
-    fwrite( mesh->Tii_mean_time, s3,   model.Nt+1 ,   file );
-    fwrite( mesh->Eii_mean_time, s3,   model.Nt+1 ,   file );
+    fwrite( mesh->Time_time      , s3,   model.Nt+1 ,   file );
+    fwrite( mesh->Short_time     , s3,   model.Nt+1 ,   file );
+    fwrite( mesh->Work_time      , s3,   model.Nt+1 ,   file );
+    fwrite( mesh->Uthermal_time  , s3,   model.Nt+1 ,   file );
+    fwrite( mesh->Uelastic_time  , s3,   model.Nt+1 ,   file );
+    fwrite( mesh->T_mean_time    , s3,   model.Nt+1 ,   file );
+    fwrite( mesh->P_mean_time    , s3,   model.Nt+1 ,   file );
+    fwrite( mesh->sxxd_mean_time , s3,   model.Nt+1 ,   file );
+    fwrite( mesh->szzd_mean_time , s3,   model.Nt+1 ,   file );
+    fwrite( mesh->sxz_mean_time  , s3,   model.Nt+1 ,   file );
+    fwrite( mesh->Tii_mean_time  , s3,   model.Nt+1 ,   file );
+    fwrite( mesh->exxd_mean_time , s3,   model.Nt+1 ,   file );
+    fwrite( mesh->ezzd_mean_time , s3,   model.Nt+1 ,   file );
+    fwrite( mesh->exz_mean_time  , s3,   model.Nt+1 ,   file );
+    fwrite( mesh->Eii_mean_time  , s3,   model.Nt+1 ,   file );
 
     fclose(file);
     free(name);
@@ -907,15 +931,21 @@ void MakeBreakpointParticles( markers *particles,  grid* mesh, markers *topo_cha
     model.zmax /= scaling.L;
 
     for ( k=0; k<model.Nt+1; k++ ) {
-        mesh->Time_time[k]     /= scaling.t;
-        mesh->Short_time[k]    /= 1.0;
-        mesh->Work_time[k]     /= (scaling.rhoE*scaling.L*scaling.L);
-        mesh->Uthermal_time[k] /= (scaling.rhoE*scaling.L*scaling.L);
-        mesh->Uelastic_time[k] /= (scaling.rhoE*scaling.L*scaling.L);
-        mesh->T_mean_time[k]   /= scaling.T;
-        mesh->P_mean_time[k]   /= scaling.S;
-        mesh->Tii_mean_time[k] /= scaling.S;
-        mesh->Eii_mean_time[k] /= scaling.E;
+        mesh->Time_time[k]      /= scaling.t;
+        mesh->Short_time[k]     /= 1.0;
+        mesh->Work_time[k]      /= (scaling.rhoE*scaling.L*scaling.L);
+        mesh->Uthermal_time[k]  /= (scaling.rhoE*scaling.L*scaling.L);
+        mesh->Uelastic_time[k]  /= (scaling.rhoE*scaling.L*scaling.L);
+        mesh->T_mean_time[k]    /= scaling.T;
+        mesh->P_mean_time[k]    /= scaling.S;
+        mesh->sxxd_mean_time[k] /= scaling.S;
+        mesh->szzd_mean_time[k] /= scaling.S;
+        mesh->sxz_mean_time[k]  /= scaling.S;
+        mesh->Tii_mean_time[k]  /= scaling.S;
+        mesh->exxd_mean_time[k] /= scaling.E;
+        mesh->ezzd_mean_time[k] /= scaling.E;
+        mesh->exz_mean_time[k]  /= scaling.E;
+        mesh->Eii_mean_time[k]  /= scaling.E;
     }
 
 #pragma omp parallel for shared( particles, model, scaling )

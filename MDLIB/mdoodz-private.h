@@ -95,9 +95,14 @@ typedef struct {
           **phase_eta_s;// TODO: refactor to _c and _v
   double *sxxd0_s, *szzd0_s, *sxz0_n, *exxd_s, *ezzd_s, *exz_n, *sxz_n;   
   double *rho0_n;
-  double  Uthermal, Uelastic, Work, Tii_mean, Eii_mean, T_mean, P_mean;
+  double  Uthermal, Uelastic, Work, 
+          P_mean, T_mean,
+          sxxd_mean, szzd_mean, sxz_mean, Tii_mean, 
+          exxd_mean, ezzd_mean, exz_mean, Eii_mean;
   double *Work_time, *Uelastic_time, *Uthermal_time, *Time_time, *Short_time,
-          *P_mean_time, *T_mean_time, *Tii_mean_time, *Eii_mean_time;
+          *P_mean_time, *T_mean_time, 
+          *sxxd_mean_time, *szzd_mean_time, *sxz_mean_time, *Tii_mean_time, 
+          *exxd_mean_time, *ezzd_mean_time, *exz_mean_time, *Eii_mean_time;
   double *T, *dT, *d_n, *d0_n, *phi_n, *phi0_n;
   double *eII_el, *eII_pl, *eII_pl_s, *eII_pwl, *eII_exp, *eII_lin, *eII_gbs,
           *eII_cst;

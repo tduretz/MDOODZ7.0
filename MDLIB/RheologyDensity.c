@@ -1793,15 +1793,21 @@ void GenerateDeformationMaps( grid* mesh, mat_prop *materials, params *model, Np
 
 void LogTimeSeries( grid* mesh, params model, scale scaling ) {
 
-  mesh->Uthermal_time[model.step] = mesh->Uthermal*scaling.S*scaling.L*scaling.L;
-  mesh->Uelastic_time[model.step] = mesh->Uelastic*scaling.S*scaling.L*scaling.L;
-  mesh->Work_time[model.step]     = mesh->Work*scaling.S*scaling.L*scaling.L;
-  mesh->Time_time[model.step]     = model.time*scaling.t;
-  mesh->Short_time[model.step]    = (model.L0-(model.xmax - model.xmin))/model.L0 * 100.0;
-  mesh->P_mean_time[model.step]   = mesh->P_mean*scaling.S;
-  mesh->T_mean_time[model.step]   = mesh->T_mean*scaling.T;
-  mesh->Tii_mean_time[model.step] = mesh->Tii_mean*scaling.S;
-  mesh->Eii_mean_time[model.step] = mesh->Tii_mean*scaling.E;
+  mesh->Uthermal_time[model.step]  = mesh->Uthermal*scaling.S*scaling.L*scaling.L;
+  mesh->Uelastic_time[model.step]  = mesh->Uelastic*scaling.S*scaling.L*scaling.L;
+  mesh->Work_time[model.step]      = mesh->Work*scaling.S*scaling.L*scaling.L;
+  mesh->Time_time[model.step]      = model.time*scaling.t;
+  mesh->Short_time[model.step]     = (model.L0-(model.xmax - model.xmin))/model.L0 * 100.0;
+  mesh->P_mean_time[model.step]    = mesh->P_mean*scaling.S;
+  mesh->T_mean_time[model.step]    = mesh->T_mean*scaling.T;
+  mesh->sxxd_mean_time[model.step] = mesh->sxxd_mean*scaling.S;
+  mesh->szzd_mean_time[model.step] = mesh->szzd_mean*scaling.S;
+  mesh->sxz_mean_time[model.step]  = mesh->sxz_mean*scaling.S;
+  mesh->Tii_mean_time[model.step]  = mesh->Tii_mean*scaling.S;
+  mesh->exxd_mean_time[model.step] = mesh->exxd_mean*scaling.E;
+  mesh->ezzd_mean_time[model.step] = mesh->ezzd_mean*scaling.E;
+  mesh->exz_mean_time[model.step]  = mesh->exz_mean*scaling.E;
+  mesh->Eii_mean_time[model.step]  = mesh->Eii_mean*scaling.E;
 
 }
 
@@ -1812,7 +1818,9 @@ void LogTimeSeries( grid* mesh, params model, scale scaling ) {
 void ComputeMeanQuantitesForTimeSeries( grid *mesh ) {
 
   int k1, k, l, cell, N=0;
-  double T_mean=0.0, P_mean=0.0, Eii_mean=0.0, Tii_mean=0.0;
+  double T_mean=0.0, P_mean=0.0;
+  double exxd_mean=0.0, ezzd_mean=0.0, exz_mean=0.0, Eii_mean=0.0;
+  double sxxd_mean=0.0, szzd_mean=0.0, sxz_mean=0.0, Tii_mean=0.0;
   double Txzc, Exzc, Tiic, Eiic; // Interpolated from vertices to cell centers
   int vertSW, vertSE, vertNW, vertNE;
   int Nvx = mesh->Nx;
@@ -1820,7 +1828,7 @@ void ComputeMeanQuantitesForTimeSeries( grid *mesh ) {
   int Ncx = mesh->Nx-1;
   int Ncz = mesh->Nz-1;
 
-#pragma omp parallel for shared( mesh ) firstprivate( Nvx,Ncx,Ncz ) private( k1,k,l,cell,vertSW,vertSE,vertNW,vertNE,Exzc,Txzc,Eiic,Tiic) reduction( +:Tii_mean,Eii_mean,T_mean,P_mean,N )
+#pragma omp parallel for shared( mesh ) firstprivate( Nvx,Ncx,Ncz ) private( k1,k,l,cell,vertSW,vertSE,vertNW,vertNE,Exzc,Txzc,Eiic,Tiic) reduction( +:sxxd_mean,szzd_mean,sxz_mean,Tii_mean,exxd_mean,ezzd_mean,exz_mean,Eii_mean,T_mean,P_mean,N )
   for ( k1=0; k1<Ncx*Ncz; k1++ ) {
 
     k      = mesh->kp[k1];
@@ -1840,19 +1848,31 @@ void ComputeMeanQuantitesForTimeSeries( grid *mesh ) {
       Eiic = sqrt( 0.5*(pow(mesh->exxd[cell], 2) + pow(mesh->ezzd[cell], 2) ) + pow( Exzc, 2) );
       Tiic = sqrt( 0.5*(pow(mesh->sxxd[cell], 2) + pow(mesh->szzd[cell], 2) ) + pow( Txzc, 2) );
       // Reduce
-      Tii_mean += Tiic;
-      Eii_mean += Eiic;
-      T_mean   += mesh->T[cell];
-      P_mean   += mesh->p_in[cell];
+      sxxd_mean += mesh->sxxd[cell];
+      szzd_mean += mesh->szzd[cell];
+      sxz_mean  += Txzc;
+      Tii_mean  += Tiic;
+      exxd_mean += mesh->exxd[cell];
+      ezzd_mean += mesh->ezzd[cell];
+      exz_mean  += Exzc;
+      Eii_mean  += Eiic;
+      T_mean    += mesh->T[cell];
+      P_mean    += mesh->p_in[cell];
       N++;
     }
   }
 
   // Divide by number of active cells
-  mesh->T_mean   = T_mean/N;
-  mesh->P_mean   = P_mean/N;
-  mesh->Eii_mean = Eii_mean/N;
-  mesh->Tii_mean = Tii_mean/N;
+  mesh->T_mean    = T_mean    /N;
+  mesh->P_mean    = P_mean    /N;
+  mesh->exxd_mean = exxd_mean /N;
+  mesh->ezzd_mean = ezzd_mean /N;
+  mesh->exz_mean  = exz_mean  /N;
+  mesh->Eii_mean  = Eii_mean  /N;
+  mesh->sxxd_mean = sxxd_mean /N;
+  mesh->szzd_mean = szzd_mean /N;
+  mesh->sxz_mean  = sxz_mean  /N;
+  mesh->Tii_mean  = Tii_mean  /N;
 
 }
 
