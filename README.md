@@ -19,7 +19,7 @@ To run the simulation `MdoodzInput` must be passed to `RunMDOODZ(MdoodzInput *in
 
 1) Setting models with pure or simple or shear boundary conditions: [ShearTemplate](SETS/ShearTemplate.c)
 2) Viscous relaxation of a free surface: [TopoBenchCase1](SETS/TopoBenchCase1.c)
-3) A continental rifting and thermal solution model: [RiftingPauline](SETS/RiftingChenin.c)
+3) A continental rifting and thermal solution model: [RiftingChenin](SETS/RiftingChenin.c)
 4) Grain size evolution model and necking in calcite: [PinchSwellGSE](SETS/PinchSwellGSE.c)
 5) Quartz-Coesite inclusion density change in Garnet: [QuartzCoesite](SETS/QuartzCoesite.c)
 
@@ -154,7 +154,12 @@ Makefile related to cmake is located in a root directory
 To build library, tests and executables with OpenMP and in optimised mode:
 
 ```bash
-make build SET=RiftingPauline
+make build SET=RiftingChenin
+```
+An alternative `.txt` input file located in the `SETS/` folder can be used if specified as `TXT`. If not stated, the default `.txt` input file will be taken.
+
+```bash
+make build SET=RiftingChenin TXT=RiftingChenin_alternative.txt
 ```
 
 To explicitly set OPT (optimisation) and OMP (OpenMP). If not stated, it's OFF by default
