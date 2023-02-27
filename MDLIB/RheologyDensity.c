@@ -1275,6 +1275,8 @@ void ShearModCompExpGrid( grid* mesh, mat_prop *materials, params *model, scale 
         if ( average==2 ) mesh->bet_n[c0] = exp(mesh->bet_n[c0]);
         if ( average==1 && model->aniso == 1 ) mesh->aniso_factor_e_n[c0] = 1.0/mesh->aniso_factor_e_n[c0];
         if ( average==2 && model->aniso == 1 ) mesh->aniso_factor_e_n[c0] = exp(mesh->aniso_factor_e_n[c0]);
+        // printf("%02d %02d %02f %02f %d\n", materials->ani_fstrain[p], (materials->ani_fstrain[p]==1), mesh->aniso_factor_e_n[c0], mesh->FS_AR_n[c0], c0);
+
       }
     }
   }
@@ -1356,10 +1358,11 @@ void ShearModCompExpGrid( grid* mesh, mat_prop *materials, params *model, scale 
         av = 0.5*(mesh->aniso_factor_e_s[c1] + mesh->aniso_factor_e_s[l*Nx]);
         mesh->aniso_factor_e_s[c1] = av; mesh->aniso_factor_e_s[l*Nx] = av;
       }
-
       
     }
   }
+
+  
 
 }
 

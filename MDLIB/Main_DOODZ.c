@@ -315,9 +315,10 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         ShearModCompExpGrid( &mesh, &input.materials, &input.model, input.scaling );
         Interp_Grid2P_centroids2( particles, particles.P,    &mesh, mesh.p_in, mesh.xvz_coord,  mesh.zvx_coord,  mesh.Nx-1, mesh.Nz-1, mesh.BCp.type, &input.model );
         Interp_Grid2P_centroids2( particles, particles.T,    &mesh, mesh.T,    mesh.xvz_coord,  mesh.zvx_coord,  mesh.Nx-1, mesh.Nz-1, mesh.BCt.type, &input.model );
+        
         if (input.model.aniso==0) NonNewtonianViscosityGrid(      &mesh, &input.materials, &input.model, Nmodel, &input.scaling );
         if (input.model.aniso==1) NonNewtonianViscosityGridAniso( &mesh, &input.materials, &input.model, Nmodel, &input.scaling );
-        printf("input.model.aniso %d\n", input.model.aniso);
+        // exit(1);
 
         // Print informations!
         printf("Number of phases : %d\n", input.model.Nb_phases);
@@ -337,7 +338,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             MinMaxArrayTag( mesh.rho_s, input.scaling.rho, (mesh.Nx-0)*(mesh.Nz-0), "rho_s     ", mesh.BCg.type );
             MinMaxArrayTag( mesh.rho_n, input.scaling.rho, (mesh.Nx-1)*(mesh.Nz-1), "rho_n     ", mesh.BCp.type );
             
-             MinMaxArray(particles.noise, 1.0, particles.Nb_part, "noise p" );
+            MinMaxArray(particles.noise, 1.0, particles.Nb_part, "noise p" );
             if (input.model.noise_bg == 1) MinMaxArrayTag( mesh.noise_s, 1.0, (mesh.Nx-0)*(mesh.Nz-0), "noise_s     ", mesh.BCg.type );
             if (input.model.noise_bg == 1) MinMaxArrayTag( mesh.noise_n, 1.0, (mesh.Nx-1)*(mesh.Nz-1), "noise_n     ", mesh.BCp.type );
             for (int p=0; p< input.model.Nb_phases; p++) {
@@ -484,13 +485,9 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                 P2Mastah( &input.model, particles, particles.szzd,    &mesh, mesh.szzd0, mesh.BCp.type,  1, 0, interp, cent, input.model.itp_stencil);
                 P2Mastah( &input.model, particles, particles.sxz,     &mesh, mesh.sxz0,  mesh.BCg.type,  1, 0, interp, vert, input.model.itp_stencil);
             }
-
             InterpCentroidsToVerticesDouble( mesh.sxxd0, mesh.sxxd0_s, &mesh, &input.model );
             InterpCentroidsToVerticesDouble( mesh.szzd0, mesh.szzd0_s, &mesh, &input.model );
             InterpVerticesToCentroidsDouble( mesh.sxz0_n,  mesh.sxz0,  &mesh, &input.model );
-
-            // Interpolate shear modulus
-            ShearModCompExpGrid( &mesh, &input.materials, &input.model, input.scaling );
         }
 
 
@@ -503,6 +500,10 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             P2Mastah( &input.model, particles, NULL, &mesh, mesh.d2_s,    mesh.BCg.type, -2, 0, interp, vert, input.model.itp_stencil);
             P2Mastah( &input.model, particles, NULL, &mesh, mesh.angle_s, mesh.BCg.type, -3, 0, interp, vert, input.model.itp_stencil);
             FiniteStrainAspectRatio ( &mesh, input.scaling, input.model, &particles );
+            if (input.model.aniso==1) MinMaxArrayTag( mesh.aniso_factor_e_n,  1.0, (mesh.Nx-1)*(mesh.Nz-1), "ani_fac_e_n ", mesh.BCp.type );
+            if (input.model.aniso==1) MinMaxArrayTag( mesh.aniso_factor_e_s,  1.0, (mesh.Nx)*(mesh.Nz),     "ani_fac_e_s ", mesh.BCg.type );
+            MinMaxArrayTag( mesh.FS_AR_n,  1.0,   (mesh.Nx-1)*(mesh.Nz-1), "FS_AR_n", mesh.BCp.type );
+            MinMaxArrayTag( mesh.FS_AR_s,  1.0,   (mesh.Nx)*(mesh.Nz),     "FS_AR_s", mesh.BCg.type );
         }
 
         P2Mastah( &input.model, particles, particles.X,     &mesh, mesh.X0_n , mesh.BCp.type,  1, 0, interp, cent, input.model.itp_stencil);
@@ -529,19 +530,16 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
         //-------------------------------------------------------------------------------------------------------------
 
+        // Interpolate shear modulus
+        if  (input.model.iselastic == 1 ) ShearModCompExpGrid( &mesh, &input.materials, &input.model, input.scaling );
+
         // Compute cohesion and friction angle on the grid
         CohesionFrictionDilationGrid( &mesh, &particles, input.materials, input.model, input.scaling );
 
         // Detect compressible cells
         if (input.model.compressible == 1 ) DetectCompressibleCells ( &mesh, &input.model );
 
-        // // Compute cohesion and friction angle on the grid
-        // CohesionFrictionDilationGrid( &mesh, &particles, input.materials, input.model, input.scaling );
-
-        // // Detect compressible cells
-        // if (input.model.compressible == 1) DetectCompressibleCells ( &mesh, &input.model );
-
-        // // Get physical properties that are constant throughout each timestep
+        // Get physical properties that are constant throughout each timestep
         UpdateDensity( &mesh, &particles, &input.materials, &input.model, &input.scaling );
 
         // Free surface - subgrid density correction
@@ -694,7 +692,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                     Nmodel.LogIsNewtonStep[Nmodel.nit] = 0;
                 }
                 printf("**********************************************\n");
-
+ 
                 // Update non-linear rheology
                 UpdateNonLinearity( &mesh, &particles, &topo_chain, &topo, input.materials, &input.model, &Nmodel, input.scaling, 0, 0.0 );
 

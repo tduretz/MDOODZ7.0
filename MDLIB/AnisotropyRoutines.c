@@ -81,7 +81,7 @@ double ViscosityConciseAniso( int phase, double lxlz, double lx2, double angle, 
     // !!!!!!!!!!!!!!!!!!!!!!!!
     // General paramaters
     const double tol    = 1.0e-11, R = materials->R, dt = model->dt, minEta = model->mineta, maxEta = model->maxeta;
-    const int    nitmax = 20, noisy = 1;
+    const int    nitmax = 10, noisy = 0;
     double eta = 0.0, eta_el, eta_cst;
     int    plastic = 0, constant = 0, dislocation = 0, peierls = 0, diffusion = 0, gbs = 0, elastic = model->iselastic, kinetics = 0, is_pl = 0;
     double eta_pwl = 0.0, B_pwl = 0.0, C_pwl = 0.0, Q_pwl = materials->Qpwl[phase], V_pwl = materials->Vpwl[phase], n_pwl = materials->npwl[phase], m_pwl = materials->mpwl[phase], r_pwl = materials->rpwl[phase], A_pwl = materials->Apwl[phase], f_pwl = materials->fpwl[phase], a_pwl = materials->apwl[phase], F_pwl = materials->Fpwl[phase], pre_factor = materials->pref_pwl[phase], t_pwl = materials->tpwl[phase];
@@ -106,7 +106,9 @@ double ViscosityConciseAniso( int phase, double lxlz, double lx2, double angle, 
      // Turn of elasticity for the initialisation step  (viscous flow stress)
     if ( model->step    == 0                         ) elastic     = 0;
     // Visco-plastic incompressible limit
+    double K = 1.0 / beta;
     if ( elastic==0                 ) { G = 1e1; dil = 0.0;}; //K = 1e1;
+    if ( model->compressible==0     ) K = 0.0;
     // Zero C limit
     if ( T< zeroC/scaling->T        ) T = zeroC/scaling->T;
      // Precomputations
@@ -224,31 +226,54 @@ double ViscosityConciseAniso( int phase, double lxlz, double lx2, double angle, 
     *ani_vep = eta_ve_n/eta_ve_s;
 
     // Iterations for visco-elasto-viscoplastic correction
-    double eta_vp0 = materials->eta_vp[phase], n_vp = materials->n_vp[phase], eta_vp = materials->eta_vp[phase];
-    double a1=materials->axx[phase], a2=materials->azz[phase], a3=materials->ayy[phase];
-    double Coh = C, K = 1.0 / beta;
-    double Y2_p = Y2( &T_rot, ani_fac_p);
-    double Ft   = sqrt(Y2_p) - Coh - P*sin(fric)/3*(a1+a2+a3) +  sin(fric)/3.0*( a1*T_rot.xx + a2*T_rot.zz + a3*T_rot.yy);
-    double Fc = Ft;
+    const double txx = T_rot.xx, tzz=T_rot.zz, tyy=T_rot.yy, txz=T_rot.xz;
+    const double eta_vp0 = materials->eta_vp[phase], n_vp = materials->n_vp[phase], eta_vp = materials->eta_vp[phase];
+    const double a1 = materials->axx[phase], a2 = materials->azz[phase], a3 = materials->ayy[phase];
+    const double am = (a1+a2+a3)/3.0, a_ve = sqrt(eta_ve_n/eta_ve_s);
+
+    const double Y2_p    = Y2( &T_rot, ani_fac_p);
+    const double Tn2     = txx*txx + tyy*tyy + tzz*tzz;
+    const double Ts2     = 2*txz*txz;
+    const double Y1      = sin(fric)/3.0*( a1*txx + a2*tzz + a3*tyy);
+    const double ani_rat = a_p*a_p/(a_ve*a_ve);
+    const double Ft      = sqrt(Y2_p) - C*cos(fric) - am*P*sin(fric) +  Y1;
+    
+    double Fc = Ft, Pc = P;
     double ap_n, ap_s, eta_ve=eta_ve_n; 
-    double gdot=sqrt(I2_v)/1000; 
-    double a_ve=sqrt(eta_ve_n/eta_ve_s), eta_pl, divp;
-    double Y1_p_c, Y2_p_c, dFdgdot;
-    double txx = T_rot.xx, tzz=T_rot.zz, tyy=T_rot.yy, txz=T_rot.xz;
-    double Pc = P;
+    double gdot = 0.0* Ft / eta_ve_n; 
+    double eta_pl, divp;
+    double Y1c, Y2c, dFdgdot, dapndgdot, dapsdgdot;
+   
+
     if (Ft>1e-17) {
       is_pl = 1;
-      if (noisy) printf("Start local VP iterations (cst: %d --- el: %d --- pwl: %d)\n", constant, elastic, dislocation);
-      // printf("Start local VP iterations (cst: %d --- el: %d --- pwl: %d)\n", constant, elastic, dislocation);
-      // printf("Plastic!! Ft = %2.4e --- Y2_v = %2.4e Y2_p = %2.4e\n", Ft, Y2_v, Y2_p);  
+      Tii   = sqrt(Y2_p);
+      if (noisy) {
+      printf("Start local VP iterations (cst: %d --- el: %d --- pwl: %d --- comp = %02f\n", constant, elastic, dislocation, model->compressible);
+      printf("K = %2.2e; fric=%02f; dil = %02f\n", K*scaling->S, fric, dil);
+      printf("Ft = %2.4e; Y2_v = %2.4e; Y2_p = %2.4e; eta_vp = %2.2e\n", Ft, Y2_v, Y2_p, eta_vp);  
+      printf("a_ve = %2.6e; eta_ve = %2.6e; G = %2.6e;  dt = %2.6e\n", a_ve, eta_ve, G, dt);
+      printf("a_e = %02f; a_v = %02f; a_p = %02f\n", a_e, a_v, a_p);
+      printf("Txx = %2.6e; Tyy = %2.6e; Tzz = %2.6e; Txy = %2.6e; P = %2.6e\n", txx, tzz, tyy, txz, P);
+      printf("gdot = %2.6e\n", gdot);
+      printf("C = %2.6e; fric = %2.6e\n", C, fric);
+      printf("a1 = %2.6e; a2 = %2.6e; a3 = %2.6e\n", a1, a2, a3);
+      }
       for (int it = 0; it < nitmax; it++) {
 
-        ap_n   = 1 - eta_ve*gdot/sqrt(Y2_p);
-        ap_s   = 1 - pow(a_p, 2)*eta_ve*gdot/(sqrt(Y2_p)*pow(a_ve, 2));
-        Y1_p_c = a1*ap_n*txx + a2*ap_n*tzz + a3*(-ap_n*txx - ap_n*tzz);
-        Y2_p_c = pow(a_p, 2)*pow(ap_s, 2)*pow(txz, 2) + (1.0/2.0)*pow(ap_n, 2)*pow(txx, 2) + (1.0/2.0)*pow(ap_n, 2)*pow(tyy, 2) + (1.0/2.0)*pow(ap_n, 2)*pow(tzz, 2);
-        Pc     = P + K*dt*gdot*sin(dil)/3.*(a1+a2+a3);
-        Fc     = -Coh - 1.0/3.0*Pc*(a1 + a2 + a3)*sin(fric) + (1.0/3.0)*Y1_p_c*sin(fric) + sqrt(Y2_p_c) - eta_vp*gdot;
+        if (noisy) printf( "------- It. %02d -------\n", it);
+        Pc     = P + am*K*dt*gdot*sin(dil);
+       
+        ap_n   = 1.0 - eta_ve*gdot/Tii;
+        ap_s   = 1.0 - eta_ve*gdot/Tii*ani_rat;
+        // printf("%2.2f %2.6f\n", ap_n, ap_s);
+
+        Y1c   = ap_n*Y1;
+        Y2c   = 0.5*( Tn2*pow(ap_n,2) + pow(a_p,2)*Ts2*pow(ap_s,2));
+        Fc    = sqrt(Y2c) - C*cos(fric) - am*Pc*sin(fric) + Y1c - eta_vp*gdot;
+        // printf("%2.2f %2.6f\n", Tn2*pow(ap_n,2) , Ts2*pow(ap_s,2));
+        // printf("%2.4f %2.4f %2.4f\n", Y1c, Y2c, Fc);
+        // printf("%2.4f %2.4f %2.4f %2.4f %2.4f\n", sqrt(Y2c),  C*cos(fric), am*Pc*sin(fric), Y1c, eta_vp*gdot);
 
         // double exxp      = gdot*( (a1/3-a3/3)*sin(fric) + txx/sqrt(Y2_p)/2);
         // double ezzp      = gdot*( (a2/3-a3/3)*sin(fric) + tzz/sqrt(Y2_p)/2);
@@ -275,8 +300,17 @@ double ViscosityConciseAniso( int phase, double lxlz, double lx2, double angle, 
           exit(0);
         }
         // Newton update
-        dFdgdot = -1.0/9.0*K*dt*pow(a1 + a2 + a3, 2)*sin(dil)*sin(fric) - eta_vp + (1.0/3.0)*(a3*(eta_ve*txx/sqrt(Y2_p) + eta_ve*tzz/sqrt(Y2_p)) - a1*eta_ve*txx/sqrt(Y2_p) - a2*eta_ve*tzz/sqrt(Y2_p))*sin(fric) + (-pow(a_p, 4)*ap_s*eta_ve*pow(txz, 2)/(sqrt(Y2_p)*pow(a_ve, 2)) - 1.0/2.0*ap_n*eta_ve*pow(txx, 2)/sqrt(Y2_p) - 1.0/2.0*ap_n*eta_ve*pow(tyy, 2)/sqrt(Y2_p) - 1.0/2.0*ap_n*eta_ve*pow(tzz, 2)/sqrt(Y2_p))/sqrt(Y2_p_c);
-        gdot    -= Fc/dFdgdot;
+        dapndgdot = -eta_ve/Tii;
+        dapsdgdot = dapndgdot*ani_rat;
+        dFdgdot   = -eta_vp + 1.0/2.0/sqrt(Y2c) * ( pow(a_p,2)*Ts2*ap_s*dapsdgdot + Tn2*ap_n*dapndgdot ) - pow(am,2)*K*dt*sin(dil)*sin(fric) + dapndgdot*Y1;
+       
+        // dFdgdot = -1.0/9.0*K*dt*pow(a1 + a2 + a3, 2)*sin(dil)*sin(fric) - eta_vp + (1.0/3.0)*(-2*a1*eta_ve*((1.0/3.0)*a1*sin(fric) + (1.0/2.0)*txx/sqrt(Y2_p)) - 2*a2*eta_ve*((1.0/3.0)*a2*sin(fric) + (1.0/2.0)*tzz/sqrt(Y2_p)) + a3*(2*eta_ve*((1.0/3.0)*a1*sin(fric) + (1.0/2.0)*txx/sqrt(Y2_p)) + 2*eta_ve*((1.0/3.0)*a2*sin(fric) + (1.0/2.0)*tzz/sqrt(Y2_p))))*sin(fric) + (-eta_ve*((1.0/3.0)*a1*sin(fric) + (1.0/2.0)*txx/sqrt(Y2_p))*(-2*eta_ve*gdot*((1.0/3.0)*a1*sin(fric) + (1.0/2.0)*txx/sqrt(Y2_p)) + txx) - eta_ve*((1.0/3.0)*a2*sin(fric) + (1.0/2.0)*tzz/sqrt(Y2_p))*(-2*eta_ve*gdot*((1.0/3.0)*a2*sin(fric) + (1.0/2.0)*tzz/sqrt(Y2_p)) + tzz) - eta_ve*((1.0/3.0)*a3*sin(fric) + (1.0/2.0)*tyy/sqrt(Y2_p))*(-2*eta_ve*gdot*((1.0/3.0)*a3*sin(fric) + (1.0/2.0)*tyy/sqrt(Y2_p)) + tyy) - pow(a_p, 4)*ap_s*eta_ve*pow(txz, 2)/(sqrt(Y2_p)*pow(a_ve, 2)))/sqrt(Y2_p_c);
+
+        // dFdgdot =  0.5* eta_vp;
+        // dFdgdot = -1.0/9.0*K*dt*pow(a1 + a2 + a3, 2)*sin(dil)*sin(fric) - eta_vp + (1.0/3.0)*(a3*(eta_ve*txx/sqrt(Y2_p) + eta_ve*tzz/sqrt(Y2_p)) - a1*eta_ve*txx/sqrt(Y2_p) - a2*eta_ve*tzz/sqrt(Y2_p))*sin(fric) + (-pow(a_p, 4)*ap_s*eta_ve*pow(txz, 2)/(sqrt(Y2_p)*pow(a_ve, 2)) - 1.0/2.0*ap_n*eta_ve*pow(txx, 2)/sqrt(Y2_p) - 1.0/2.0*ap_n*eta_ve*pow(tyy, 2)/sqrt(Y2_p) - 1.0/2.0*ap_n*eta_ve*pow(tzz, 2)/sqrt(Y2_p))/sqrt(Y2_p_c);
+       if (noisy)  printf( "dFdgdot = %2.6f\n", dFdgdot);
+       gdot    -=  Fc/dFdgdot;
+       if (noisy)  printf( "gdot = %2.6f\n", gdot);
       }
   
       // Y2_p_c   = Y2(&T_rot, ani_fac_p);
@@ -481,7 +515,8 @@ void NonNewtonianViscosityGridAniso( grid *mesh, mat_prop *materials, params *mo
         if ( fabs(mesh->phase_perc_n[p][c0])>min_fraction ) is_phase_active = true;
 
         if ( is_phase_active ) {
-          eta =  ViscosityConciseAniso( p, lxlz, lx2, angle, mesh->FS_AR_n[c0], mesh->aniso_factor_e_n[c0], mesh->mu_n[c0], mesh->T[c0], mesh->p_in[c0], mesh->d0_n[c0], mesh->phi0_n[c0], mesh->X0_n[c0], Exx, Ezz, Exz, mesh->sxxd0[c0], mesh->szzd0[c0], mesh->sxz0_n[c0], materials    , model, scaling, &txx1, &tzz1, &txz1, &eta_vep, &ani_vep, &eII_el, &eII_pl, &eII_pwl, &eII_exp, &eII_lin, &eII_gbs, &eII_cst, &dnew, mesh->strain_n[c0], mesh->dil_n[c0], mesh->fric_n[c0], mesh->C_n[c0], mesh->p0_n[c0], mesh->T0_n[c0], &Xreac, &OverS, &Pcorr, &rho, mesh->bet_n[c0], mesh->div_u[c0], &div_el, &div_pl, &div_r, &Wtot, &Wel, &Wdiss, 1, 1 );
+          // eta =  ViscosityConciseAniso( p, lxlz, lx2, angle, mesh->FS_AR_n[c0],          mesh->aniso_factor_e_n[c0], mesh->mu_n[c0], mesh->T[c0], mesh->p_in[c0], mesh->d0_n[c0], mesh->phi0_n[c0], mesh->X0_n[c0], Exx, Ezz, Exz, mesh->sxxd0[c0], mesh->szzd0[c0], mesh->sxz0_n[c0], materials    , model, scaling, &txx1, &tzz1, &txz1, &eta_vep, &ani_vep, &eII_el, &eII_pl, &eII_pwl, &eII_exp, &eII_lin, &eII_gbs, &eII_cst, &dnew, mesh->strain_n[c0], mesh->dil_n[c0], mesh->fric_n[c0], mesh->C_n[c0], mesh->p0_n[c0], mesh->T0_n[c0], &Xreac, &OverS, &Pcorr, &rho, mesh->bet_n[c0], mesh->div_u[c0], &div_el, &div_pl, &div_r, &Wtot, &Wel, &Wdiss, 1, 1 );
+          eta =  ViscosityConciseAniso( p, lxlz, lx2, angle, mesh->aniso_factor_e_n[c0], mesh->aniso_factor_e_n[c0], mesh->mu_n[c0], mesh->T[c0], mesh->p_in[c0], mesh->d0_n[c0], mesh->phi0_n[c0], mesh->X0_n[c0], Exx, Ezz, Exz, mesh->sxxd0[c0], mesh->szzd0[c0], mesh->sxz0_n[c0], materials    , model, scaling, &txx1, &tzz1, &txz1, &eta_vep, &ani_vep, &eII_el, &eII_pl, &eII_pwl, &eII_exp, &eII_lin, &eII_gbs, &eII_cst, &dnew, mesh->strain_n[c0], mesh->dil_n[c0], mesh->fric_n[c0], mesh->C_n[c0], mesh->p0_n[c0], mesh->T0_n[c0], &Xreac, &OverS, &Pcorr, &rho, mesh->bet_n[c0], mesh->div_u[c0], &div_el, &div_pl, &div_r, &Wtot, &Wel, &Wdiss, 1, 1 );
           mesh->phase_eta_n[p][c0] = eta_vep;
 
           switch ( average ) {
@@ -658,7 +693,8 @@ void NonNewtonianViscosityGridAniso( grid *mesh, mat_prop *materials, params *mo
 
         if ( is_phase_active ) {
 
-          eta =  ViscosityConciseAniso( p, lxlz, lx2, angle, mesh->FS_AR_s[c1], mesh->aniso_factor_e_s[c1], mesh->mu_s[c1], mesh->T_s[c1], mesh->P_s[c1], mesh->d0_s[c1], mesh->phi0_s[c1], mesh->X0_s[c1], Exx, Ezz, Exz, mesh->sxxd0_s[c1], mesh->szzd0_s[c1], mesh->sxz0[c1], materials, model, scaling, &txx1, &tzz1, &txz1, &eta_vep, &ani_vep, &eII_el, &eII_pl, &eII_pwl, &eII_exp, &eII_lin, &eII_gbs, &eII_cst, &dnew, mesh->strain_s[c1], mesh->dil_s[c1], mesh->fric_s[c1], mesh->C_s[c1], mesh->p0_s[c1], 0.0, &Xreac, &OverS, &Pcorr, &rho, mesh->bet_s[c1], mesh->div_u_s[c1], &div_el, &div_pl, &div_r, &Wtot, &Wel, &Wdiss, 1, 0 );
+          // eta =  ViscosityConciseAniso( p, lxlz, lx2, angle, mesh->FS_AR_s[c1], mesh->aniso_factor_e_s[c1], mesh->mu_s[c1], mesh->T_s[c1], mesh->P_s[c1], mesh->d0_s[c1], mesh->phi0_s[c1], mesh->X0_s[c1], Exx, Ezz, Exz, mesh->sxxd0_s[c1], mesh->szzd0_s[c1], mesh->sxz0[c1], materials, model, scaling, &txx1, &tzz1, &txz1, &eta_vep, &ani_vep, &eII_el, &eII_pl, &eII_pwl, &eII_exp, &eII_lin, &eII_gbs, &eII_cst, &dnew, mesh->strain_s[c1], mesh->dil_s[c1], mesh->fric_s[c1], mesh->C_s[c1], mesh->p0_s[c1], 0.0, &Xreac, &OverS, &Pcorr, &rho, mesh->bet_s[c1], mesh->div_u_s[c1], &div_el, &div_pl, &div_r, &Wtot, &Wel, &Wdiss, 1, 0 );
+          eta =  ViscosityConciseAniso( p, lxlz, lx2, angle, mesh->aniso_factor_e_s[c1], mesh->aniso_factor_e_s[c1], mesh->mu_s[c1], mesh->T_s[c1], mesh->P_s[c1], mesh->d0_s[c1], mesh->phi0_s[c1], mesh->X0_s[c1], Exx, Ezz, Exz, mesh->sxxd0_s[c1], mesh->szzd0_s[c1], mesh->sxz0[c1], materials, model, scaling, &txx1, &tzz1, &txz1, &eta_vep, &ani_vep, &eII_el, &eII_pl, &eII_pwl, &eII_exp, &eII_lin, &eII_gbs, &eII_cst, &dnew, mesh->strain_s[c1], mesh->dil_s[c1], mesh->fric_s[c1], mesh->C_s[c1], mesh->p0_s[c1], 0.0, &Xreac, &OverS, &Pcorr, &rho, mesh->bet_s[c1], mesh->div_u_s[c1], &div_el, &div_pl, &div_r, &Wtot, &Wel, &Wdiss, 1, 0 );
           mesh->phase_eta_s[p][c1] = eta_vep;
 
           switch ( average ) {

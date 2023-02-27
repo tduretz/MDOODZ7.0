@@ -6,7 +6,7 @@ include("./fcts_VE_trial.jl")
 # Adding creep mechanisms would result in adding new isolated viscosities (ηcst, ηlin...)
 # To avoid this, I try to formulate the local iteration in terms of ηve_normal and ηve_shear
 visu       = true
-plasticity = false
+plasticity = true
 showMD7    = true
 
 function main() 
@@ -14,8 +14,8 @@ function main()
     # Parameters
     R         = 0*8.314
     εbg       = 1.0
-    Δt        = 0.1
-    nt        = 10
+    Δt        = 0.001
+    nt        = 20
     My        = 1e6*365.25*24*3600
     PS        = 1
     
@@ -23,12 +23,12 @@ function main()
     ani_fac_v = 3.0
     ani_fac_e = 2.0
     ani_fac_p = 1.0
-    a1 = 1.0; a2 = 1.0; a3 = 1.0 # friction angle anisotropy
+    a1 = 1.0; a2 = 1.0/2; a3 = 1.0 # friction angle anisotropy
     a_v       = sqrt(ani_fac_v)  # VISCOUS anisotropy strength in Ray's formulation a_v = sqrt(η_n/η_s)
     a_e       = sqrt(ani_fac_e)  # ELASTIC anisotropy strength -------------------- a_e = sqrt(G_n/G_s)
     a_p       =     (ani_fac_p)  # PLASTIC anisotropy strength                      a_p = τxx/τxy
-    # aniso_ang = LinRange( 0.0, π/2, 11 )
-    aniso_ang = 135*π/180.0
+    aniso_ang = LinRange( 0.0, π/2, 11 )
+    # aniso_ang = 0.0
     layer_ang = aniso_ang .- π/2 # in 2D the layers are orthogonal to the director
     
     # Numerics
@@ -39,7 +39,7 @@ function main()
     # Ambient conditions
     # Total strain rate
     εxx  = PS*εbg
-    εyy  = -εxx*1.0 # Introduce a bit of compaction
+    εyy  = -εxx*1.5 # Introduce a bit of compaction
     εzz  = -εxx-εyy
     εxy  = (1.0-PS)*εbg
     # Volumetric and deviatoric strain rates
@@ -47,7 +47,7 @@ function main()
     εxxd = εxx - 1.0/3.0*div
     εyyd = εyy - 1.0/3.0*div
     ezzd = -εxxd - εyyd
-    P_ini = 50.0e6
+    P_ini = 0.0
     T     = 1.
     
     # Power law flow params
@@ -59,18 +59,19 @@ function main()
     if abs(τbg - τ_chk)/τbg > 1e-6 error("Power-law breaks down") end
     C      = (2*B^(-1/npwl))^(-npwl)
     G      = 1e1
-    K      = 7.0e10
+    K      = 2.0e1
     ηe     = G*Δt
-    Coh    = 7.0e7  
+    Coh    = 0.1
     fric   = 1*30*π/180.0
     dil    = 1*10*π/180.0
-    ηvp    = 1e18
+    ηvp    = 0*1e18
     
     # Storage/visualisation
     τii_Ray = zeros(nt, length(aniso_ang))
     τxx_Ray = zeros(nt, length(aniso_ang))
     τyy_Ray = zeros(nt, length(aniso_ang))
     τxy_Ray = zeros(nt, length(aniso_ang))
+    p_Ray   = zeros(nt, length(aniso_ang))
     τii_MD7 = zeros(nt, length(aniso_ang))
     τxx_MD7 = zeros(nt, length(aniso_ang))
     τyy_MD7 = zeros(nt, length(aniso_ang))
@@ -84,7 +85,7 @@ function main()
         τxx = 0.; τyy = 0.; τxy = 0.; P = P_ini;
 
         for it=1:nt
-            if noisy>0 @printf("****** Time step %03d ******\n", it) end
+            if noisy>0 @printf("****** Time step %03d - layer angle = %02f ******\n", it, layer_ang[i]) end
             
             # Swap old deviatoric stresses
             τxx0 = τxx; τyy0 = τyy; τxy0 = τxy; P0 = P
@@ -124,6 +125,7 @@ function main()
             @printf("VE:  ani_ve   = %2.2e\n", a_ve^2)
             ηvep    = ηve
             a_vep   = a_ve
+            Pc      = P
             ############### PLASTIC CORRECTION
             if plasticity == true
                 # Check yield condition
@@ -131,6 +133,7 @@ function main()
                 J2t     = J2
                 J2_corr = J2
                 F       = sqrt(J2) - Coh - P*sin(fric)/3*(a1+a2+a3) +  sin(fric)/3*( a1*τxx + a2*τyy + a3*τzz)
+                @printf("Plasticity:  F   = %2.2e\n", F)
                 # Initial guess 
                 γ̇  = 0.
                 Fc    = 0.
@@ -144,44 +147,71 @@ function main()
                         Txy    = τxy
                         Tyx    = τxy
                         gdot   = γ̇
-                        ap_n   = (1 - eta_ve .* gdot ./ sqrt(J2))
-                        ap_s   = (1 - a_p .^ 2 .* eta_ve .* gdot ./ (sqrt(J2) .* a_ve .^ 2))
+                        ap_n   = 1 -             eta_ve .* gdot ./  sqrt(J2)
+                        ap_s   = 1 - a_p .^ 2 .* eta_ve .* gdot ./ (sqrt(J2) .* a_ve .^ 2)
                         Jii    = J2
                         dt     = Δt
                         eta_vp = ηvp
-                        J1     = a1*Txx + a2*Tyy + a3*Tzz
+                        # J1     = a1*Txx + a2*Tyy + a3*Tzz
                         # J2_corr = 1.0 * Txx .^ 2 .* (-eta_ve .* gdot ./ sqrt(Txx .^ 2 + Txy .^ 2 .* a_p .^ 2 + Tyx .^ 2 .* a_p .^ 2 + Tyy .^ 2) + 0.707106781186547) .^ 2 + 1.0 * Txy .^ 2 .* a_p .^ 2 .* (-a_p .^ 2 .* eta_ve .* gdot ./ (a_ve .^ 2 .* sqrt(Txx .^ 2 + Txy .^ 2 .* a_p .^ 2 + Tyx .^ 2 .* a_p .^ 2 + Tyy .^ 2)) + 0.707106781186547) .^ 2 + 1.0 * Tyx .^ 2 .* a_p .^ 2 .* (-a_p .^ 2 .* eta_ve .* gdot ./ (a_ve .^ 2 .* sqrt(Txx .^ 2 + Txy .^ 2 .* a_p .^ 2 + Tyx .^ 2 .* a_p .^ 2 + Tyy .^ 2)) + 0.707106781186547) .^ 2 + 1.0 * Tyy .^ 2 .* (-eta_ve .* gdot ./ sqrt(Txx .^ 2 + Txy .^ 2 .* a_p .^ 2 + Tyx .^ 2 .* a_p .^ 2 + Tyy .^ 2) + 0.707106781186547) .^ 2;
                         # Fc = -Coh - P .* (a1 + a2 + a3) .* sin(fric) / 3 + (Txx .* a1 + Tyy .* a2 + a3 .* (-Txx - Tyy)) .* sin(fric) / 3 + 1.0 * sqrt(Txx .^ 2 .* (-eta_ve .* gdot ./ sqrt(Txx .^ 2 + Txy .^ 2 .* a_p .^ 2 + Tyx .^ 2 .* a_p .^ 2 + Tyy .^ 2) + 0.707106781186547) .^ 2 + Txy .^ 2 .* a_p .^ 2 .* (-a_p .^ 2 .* eta_ve .* gdot ./ (a_ve .^ 2 .* sqrt(Txx .^ 2 + Txy .^ 2 .* a_p .^ 2 + Tyx .^ 2 .* a_p .^ 2 + Tyy .^ 2)) + 0.707106781186547) .^ 2 + Tyx .^ 2 .* a_p .^ 2 .* (-a_p .^ 2 .* eta_ve .* gdot ./ (a_ve .^ 2 .* sqrt(Txx .^ 2 + Txy .^ 2 .* a_p .^ 2 + Tyx .^ 2 .* a_p .^ 2 + Tyy .^ 2)) + 0.707106781186547) .^ 2 + Tyy .^ 2 .* (-eta_ve .* gdot ./ sqrt(Txx .^ 2 + Txy .^ 2 .* a_p .^ 2 + Tyx .^ 2 .* a_p .^ 2 + Tyy .^ 2) + 0.707106781186547) .^ 2);
                         # dFdgdot = 1.0 * (-Txx .^ 2 .* eta_ve .* (-eta_ve .* gdot ./ sqrt(Txx .^ 2 + Txy .^ 2 .* a_p .^ 2 + Tyx .^ 2 .* a_p .^ 2 + Tyy .^ 2) + 0.707106781186547) ./ sqrt(Txx .^ 2 + Txy .^ 2 .* a_p .^ 2 + Tyx .^ 2 .* a_p .^ 2 + Tyy .^ 2) - Txy .^ 2 .* a_p .^ 4 .* eta_ve .* (-a_p .^ 2 .* eta_ve .* gdot ./ (a_ve .^ 2 .* sqrt(Txx .^ 2 + Txy .^ 2 .* a_p .^ 2 + Tyx .^ 2 .* a_p .^ 2 + Tyy .^ 2)) + 0.707106781186547) ./ (a_ve .^ 2 .* sqrt(Txx .^ 2 + Txy .^ 2 .* a_p .^ 2 + Tyx .^ 2 .* a_p .^ 2 + Tyy .^ 2)) - Tyx .^ 2 .* a_p .^ 4 .* eta_ve .* (-a_p .^ 2 .* eta_ve .* gdot ./ (a_ve .^ 2 .* sqrt(Txx .^ 2 + Txy .^ 2 .* a_p .^ 2 + Tyx .^ 2 .* a_p .^ 2 + Tyy .^ 2)) + 0.707106781186547) ./ (a_ve .^ 2 .* sqrt(Txx .^ 2 + Txy .^ 2 .* a_p .^ 2 + Tyx .^ 2 .* a_p .^ 2 + Tyy .^ 2)) - Tyy .^ 2 .* eta_ve .* (-eta_ve .* gdot ./ sqrt(Txx .^ 2 + Txy .^ 2 .* a_p .^ 2 + Tyx .^ 2 .* a_p .^ 2 + Tyy .^ 2) + 0.707106781186547) ./ sqrt(Txx .^ 2 + Txy .^ 2 .* a_p .^ 2 + Tyx .^ 2 .* a_p .^ 2 + Tyy .^ 2)) ./ sqrt(Txx .^ 2 .* (-eta_ve .* gdot ./ sqrt(Txx .^ 2 + Txy .^ 2 .* a_p .^ 2 + Tyx .^ 2 .* a_p .^ 2 + Tyy .^ 2) + 0.707106781186547) .^ 2 + Txy .^ 2 .* a_p .^ 2 .* (-a_p .^ 2 .* eta_ve .* gdot ./ (a_ve .^ 2 .* sqrt(Txx .^ 2 + Txy .^ 2 .* a_p .^ 2 + Tyx .^ 2 .* a_p .^ 2 + Tyy .^ 2)) + 0.707106781186547) .^ 2 + Tyx .^ 2 .* a_p .^ 2 .* (-a_p .^ 2 .* eta_ve .* gdot ./ (a_ve .^ 2 .* sqrt(Txx .^ 2 + Txy .^ 2 .* a_p .^ 2 + Tyx .^ 2 .* a_p .^ 2 + Tyy .^ 2)) + 0.707106781186547) .^ 2 + Tyy .^ 2 .* (-eta_ve .* gdot ./ sqrt(Txx .^ 2 + Txy .^ 2 .* a_p .^ 2 + Tyx .^ 2 .* a_p .^ 2 + Tyy .^ 2) + 0.707106781186547) .^ 2);
-                        J2_corr = Txx .^ 2 .* (1 - eta_ve .* gdot ./ sqrt(J2)) .^ 2 / 2 + Txy .^ 2 .* a_p .^ 2 .* (1 - a_p .^ 2 .* eta_ve .* gdot ./ (sqrt(J2) .* a_ve .^ 2)) .^ 2 / 2 + Tyx .^ 2 .* a_p .^ 2 .* (1 - a_p .^ 2 .* eta_ve .* gdot ./ (sqrt(J2) .* a_ve .^ 2)) .^ 2 / 2 + Tyy .^ 2 .* (1 - eta_ve .* gdot ./ sqrt(J2)) .^ 2 / 2;
-                        Fc = -Coh + sqrt(J2_corr) - P .* (a1 + a2 + a3) .* sin(fric) / 3 + (Txx .* a1 + Tyy .* a2 + a3 .* (-Txx - Tyy)) .* sin(fric) / 3;
-                        dFdgdot = (-Txx .^ 2 .* eta_ve .* (1 - eta_ve .* gdot ./ sqrt(J2)) ./ (2 * sqrt(J2)) - Txy .^ 2 .* a_p .^ 4 .* eta_ve .* (1 - a_p .^ 2 .* eta_ve .* gdot ./ (sqrt(J2) .* a_ve .^ 2)) ./ (2 * sqrt(J2) .* a_ve .^ 2) - Tyx .^ 2 .* a_p .^ 4 .* eta_ve .* (1 - a_p .^ 2 .* eta_ve .* gdot ./ (sqrt(J2) .* a_ve .^ 2)) ./ (2 * sqrt(J2) .* a_ve .^ 2) - Tyy .^ 2 .* eta_ve .* (1 - eta_ve .* gdot ./ sqrt(J2)) ./ (2 * sqrt(J2))) ./ sqrt(J2_corr);
+                        # J2_corr = Txx .^ 2 .* (1 - eta_ve .* gdot ./ sqrt(J2)) .^ 2 / 2 + Txy .^ 2 .* a_p .^ 2 .* (1 - a_p .^ 2 .* eta_ve .* gdot ./ (sqrt(J2) .* a_ve .^ 2)) .^ 2 / 2 + Tyx .^ 2 .* a_p .^ 2 .* (1 - a_p .^ 2 .* eta_ve .* gdot ./ (sqrt(J2) .* a_ve .^ 2)) .^ 2 / 2 + Tyy .^ 2 .* (1 - eta_ve .* gdot ./ sqrt(J2)) .^ 2 / 2;
+                        # Fc = -Coh + sqrt(J2_corr) - P .* (a1 + a2 + a3) .* sin(fric) / 3 + (Txx .* a1 + Tyy .* a2 + a3 .* (-Txx - Tyy)) .* sin(fric) / 3;
+                        # dFdgdot = (-Txx .^ 2 .* eta_ve .* (1 - eta_ve .* gdot ./ sqrt(J2)) ./ (2 * sqrt(J2)) - Txy .^ 2 .* a_p .^ 4 .* eta_ve .* (1 - a_p .^ 2 .* eta_ve .* gdot ./ (sqrt(J2) .* a_ve .^ 2)) ./ (2 * sqrt(J2) .* a_ve .^ 2) - Tyx .^ 2 .* a_p .^ 4 .* eta_ve .* (1 - a_p .^ 2 .* eta_ve .* gdot ./ (sqrt(J2) .* a_ve .^ 2)) ./ (2 * sqrt(J2) .* a_ve .^ 2) - Tyy .^ 2 .* eta_ve .* (1 - eta_ve .* gdot ./ sqrt(J2)) ./ (2 * sqrt(J2))) ./ sqrt(J2_corr);
                         
-                        J2_corr = Txx .^ 2 .* ap_n .^ 2 / 2 + Txy .^ 2 .* a_p .^ 2 .* ap_s .^ 2 / 2 + Tyx .^ 2 .* a_p .^ 2 .* ap_s .^ 2 / 2 + Tyy .^ 2 .* ap_n .^ 2 / 2;
-                        Fc = -Coh + sqrt(J2_corr) - P .* (a1 + a2 + a3) .* sin(fric) / 3 + (Txx .* a1 + Tyy .* a2 + a3 .* (-Txx - Tyy)) .* sin(fric) / 3;
-                        dFdgdot = (-Txx .^ 2 .* ap_n .* eta_ve ./ (2 * sqrt(Jii)) - Txy .^ 2 .* a_p .^ 4 .* ap_s .* eta_ve ./ (2 * sqrt(Jii) .* a_ve .^ 2) - Tyx .^ 2 .* a_p .^ 4 .* ap_s .* eta_ve ./ (2 * sqrt(Jii) .* a_ve .^ 2) - Tyy .^ 2 .* ap_n .* eta_ve ./ (2 * sqrt(Jii))) ./ sqrt(J2_corr);
+                        # J2_corr = Txx .^ 2 .* ap_n .^ 2 / 2 + Txy .^ 2 .* a_p .^ 2 .* ap_s .^ 2 / 2 + Tyx .^ 2 .* a_p .^ 2 .* ap_s .^ 2 / 2 + Tyy .^ 2 .* ap_n .^ 2 / 2;
+                        # Fc = -Coh + sqrt(J2_corr) - P .* (a1 + a2 + a3) .* sin(fric) / 3 + (Txx .* a1 + Tyy .* a2 + a3 .* (-Txx - Tyy)) .* sin(fric) / 3;
+                        # dFdgdot = (-Txx .^ 2 .* ap_n .* eta_ve ./ (2 * sqrt(Jii)) - Txy .^ 2 .* a_p .^ 4 .* ap_s .* eta_ve ./ (2 * sqrt(Jii) .* a_ve .^ 2) - Tyx .^ 2 .* a_p .^ 4 .* ap_s .* eta_ve ./ (2 * sqrt(Jii) .* a_ve .^ 2) - Tyy .^ 2 .* ap_n .* eta_ve ./ (2 * sqrt(Jii))) ./ sqrt(J2_corr);
                         
                         # With out of plane
                         Pc   = P + K*Δt*γ̇*sin(dil)/3*(a1+a2+a3)
 
+                        # ap_n = 1 - eta_ve .* gdot ./ sqrt(Jii);
+
+                        # ap_s = 1 - a_p .^ 2 .* eta_ve .* gdot ./ (sqrt(Jii) .* a_ve .^ 2);
+                        
+                        # J1_corr = Txx .* a1 .* ap_n + Tyy .* a2 .* ap_n + a3 .* (-Txx .* ap_n - Tyy .* ap_n);
+                        
+                        # J2_corr = Txx .^ 2 .* ap_n .^ 2 / 2 + Txy .^ 2 .* a_p .^ 2 .* ap_s .^ 2 / 2 + Tyx .^ 2 .* a_p .^ 2 .* ap_s .^ 2 / 2 + Tyy .^ 2 .* ap_n .^ 2 / 2 + Tzz .^ 2 .* ap_n .^ 2 / 2;
+                        
+                        # Fc = -Coh + J1_corr .* sin(fric) / 3 + sqrt(J2_corr) - Pc .* (a1 + a2 + a3) .* sin(fric) / 3 - eta_vp .* gdot;
+                        
+                        # dFdgdot = -K .* dt .* (a1 + a2 + a3) .^ 2 .* sin(dil) .* sin(fric) / 9 - eta_vp + (a3 .* (Txx .* eta_ve ./ sqrt(Jii) + Tyy .* eta_ve ./ sqrt(Jii)) - Txx .* a1 .* eta_ve ./ sqrt(Jii) - Tyy .* a2 .* eta_ve ./ sqrt(Jii)) .* sin(fric) / 3 + (-Txx .^ 2 .* ap_n .* eta_ve ./ (2 * sqrt(Jii)) - Txy .^ 2 .* a_p .^ 4 .* ap_s .* eta_ve ./ (2 * sqrt(Jii) .* a_ve .^ 2) - Tyx .^ 2 .* a_p .^ 4 .* ap_s .* eta_ve ./ (2 * sqrt(Jii) .* a_ve .^ 2) - Tyy .^ 2 .* ap_n .* eta_ve ./ (2 * sqrt(Jii)) - Tzz .^ 2 .* ap_n .* eta_ve ./ (2 * sqrt(Jii))) ./ sqrt(J2_corr);
+                        # @printf("J1=%2.4e J2=%2.4e\n", J1_corr, J2_corr)
+
+                        
+                        # #----------- JULIA VERSIONS -----------#
+                        # ap_n = 1 - eta_ve .* gdot ./ sqrt(Jii);
+
+                        # ap_s = 1 - a_p .^ 2 .* eta_ve .* gdot ./ (sqrt(Jii) .* a_ve .^ 2);
+
+                        # J1_corr = a1 .* (Txx - 2 * eta_ve .* gdot .* (a1 .* sin(fric) / 3 + Txx ./ (2 * sqrt(Jii)))) + a2 .* (Tyy - 2 * eta_ve .* gdot .* (a2 .* sin(fric) / 3 + Tyy ./ (2 * sqrt(Jii)))) + a3 .* (-Txx - Tyy + 2 * eta_ve .* gdot .* (a1 .* sin(fric) / 3 + Txx ./ (2 * sqrt(Jii))) + 2 * eta_ve .* gdot .* (a2 .* sin(fric) / 3 + Tyy ./ (2 * sqrt(Jii))));
+
+                        # J2_corr = Txy .^ 2 .* a_p .^ 2 .* ap_s .^ 2 / 2 + Tyx .^ 2 .* a_p .^ 2 .* ap_s .^ 2 / 2 + (Txx - 2 * eta_ve .* gdot .* (a1 .* sin(fric) / 3 + Txx ./ (2 * sqrt(Jii)))) .^ 2 / 2 + (Tyy - 2 * eta_ve .* gdot .* (a2 .* sin(fric) / 3 + Tyy ./ (2 * sqrt(Jii)))) .^ 2 / 2 + (Tzz - 2 * eta_ve .* gdot .* (a3 .* sin(fric) / 3 + Tzz ./ (2 * sqrt(Jii)))) .^ 2 / 2;
+
+                        # Fc = -Coh + J1_corr .* sin(fric) / 3 + sqrt(J2_corr) - Pc .* (a1 + a2 + a3) .* sin(fric) / 3 - eta_vp .* gdot;
+
+                        # dFdgdot = -K .* dt .* (a1 + a2 + a3) .^ 2 .* sin(dil) .* sin(fric) / 9 - eta_vp + (-2 * a1 .* eta_ve .* (a1 .* sin(fric) / 3 + Txx ./ (2 * sqrt(Jii))) - 2 * a2 .* eta_ve .* (a2 .* sin(fric) / 3 + Tyy ./ (2 * sqrt(Jii))) + a3 .* (2 * eta_ve .* (a1 .* sin(fric) / 3 + Txx ./ (2 * sqrt(Jii))) + 2 * eta_ve .* (a2 .* sin(fric) / 3 + Tyy ./ (2 * sqrt(Jii))))) .* sin(fric) / 3 + (-eta_ve .* (Txx - 2 * eta_ve .* gdot .* (a1 .* sin(fric) / 3 + Txx ./ (2 * sqrt(Jii)))) .* (a1 .* sin(fric) / 3 + Txx ./ (2 * sqrt(Jii))) - eta_ve .* (Tyy - 2 * eta_ve .* gdot .* (a2 .* sin(fric) / 3 + Tyy ./ (2 * sqrt(Jii)))) .* (a2 .* sin(fric) / 3 + Tyy ./ (2 * sqrt(Jii))) - eta_ve .* (Tzz - 2 * eta_ve .* gdot .* (a3 .* sin(fric) / 3 + Tzz ./ (2 * sqrt(Jii)))) .* (a3 .* sin(fric) / 3 + Tzz ./ (2 * sqrt(Jii))) - Txy .^ 2 .* a_p .^ 4 .* ap_s .* eta_ve ./ (2 * sqrt(Jii) .* a_ve .^ 2) - Tyx .^ 2 .* a_p .^ 4 .* ap_s .* eta_ve ./ (2 * sqrt(Jii) .* a_ve .^ 2)) ./ sqrt(J2_corr);
+
+                        #----------- JULIA VERSIONS -----------#
                         ap_n = 1 - eta_ve .* gdot ./ sqrt(Jii);
 
                         ap_s = 1 - a_p .^ 2 .* eta_ve .* gdot ./ (sqrt(Jii) .* a_ve .^ 2);
-                        
-                        J1_corr = Txx .* a1 .* ap_n + Tyy .* a2 .* ap_n + a3 .* (-Txx .* ap_n - Tyy .* ap_n);
-                        
-                        J2_corr = Txx .^ 2 .* ap_n .^ 2 / 2 + Txy .^ 2 .* a_p .^ 2 .* ap_s .^ 2 / 2 + Tyx .^ 2 .* a_p .^ 2 .* ap_s .^ 2 / 2 + Tyy .^ 2 .* ap_n .^ 2 / 2 + Tzz .^ 2 .* ap_n .^ 2 / 2;
-                        
+
+                        J1_corr = a1 .* (Txx - 2 * eta_ve .* gdot .* (a1 .* sin(fric) / 3 + Txx ./ (2 * sqrt(Jii)))) + a2 .* (Tyy - 2 * eta_ve .* gdot .* (a2 .* sin(fric) / 3 + Tyy ./ (2 * sqrt(Jii)))) + a3 .* (-Txx - Tyy + 2 * eta_ve .* gdot .* (a1 .* sin(fric) / 3 + Txx ./ (2 * sqrt(Jii))) + 2 * eta_ve .* gdot .* (a2 .* sin(fric) / 3 + Tyy ./ (2 * sqrt(Jii))));
+
+                        J2_corr = Txy .^ 2 .* a_p .^ 2 .* ap_s .^ 2 / 2 + Tyx .^ 2 .* a_p .^ 2 .* ap_s .^ 2 / 2 + (Txx - 2 * eta_ve .* gdot .* (a1 .* sin(fric) / 3 + Txx ./ (2 * sqrt(Jii)))) .^ 2 / 2 + (Tyy - 2 * eta_ve .* gdot .* (a2 .* sin(fric) / 3 + Tyy ./ (2 * sqrt(Jii)))) .^ 2 / 2 + (Tzz - 2 * eta_ve .* gdot .* (a3 .* sin(fric) / 3 + Tzz ./ (2 * sqrt(Jii)))) .^ 2 / 2;
+
                         Fc = -Coh + J1_corr .* sin(fric) / 3 + sqrt(J2_corr) - Pc .* (a1 + a2 + a3) .* sin(fric) / 3 - eta_vp .* gdot;
-                        
-                        dFdgdot = -K .* dt .* (a1 + a2 + a3) .^ 2 .* sin(dil) .* sin(fric) / 9 - eta_vp + (a3 .* (Txx .* eta_ve ./ sqrt(Jii) + Tyy .* eta_ve ./ sqrt(Jii)) - Txx .* a1 .* eta_ve ./ sqrt(Jii) - Tyy .* a2 .* eta_ve ./ sqrt(Jii)) .* sin(fric) / 3 + (-Txx .^ 2 .* ap_n .* eta_ve ./ (2 * sqrt(Jii)) - Txy .^ 2 .* a_p .^ 4 .* ap_s .* eta_ve ./ (2 * sqrt(Jii) .* a_ve .^ 2) - Tyx .^ 2 .* a_p .^ 4 .* ap_s .* eta_ve ./ (2 * sqrt(Jii) .* a_ve .^ 2) - Tyy .^ 2 .* ap_n .* eta_ve ./ (2 * sqrt(Jii)) - Tzz .^ 2 .* ap_n .* eta_ve ./ (2 * sqrt(Jii))) ./ sqrt(J2_corr);
-                        @printf("J1=%2.4e J2=%2.4e\n", J1_corr, J2_corr)
+
+                        dFdgdot = -K .* dt .* (a1 + a2 + a3) .^ 2 .* sin(dil) .* sin(fric) / 9 - eta_vp + (-2 * a1 .* eta_ve .* (a1 .* sin(fric) / 3 + Txx ./ (2 * sqrt(Jii))) - 2 * a2 .* eta_ve .* (a2 .* sin(fric) / 3 + Tyy ./ (2 * sqrt(Jii))) + a3 .* (2 * eta_ve .* (a1 .* sin(fric) / 3 + Txx ./ (2 * sqrt(Jii))) + 2 * eta_ve .* (a2 .* sin(fric) / 3 + Tyy ./ (2 * sqrt(Jii))))) .* sin(fric) / 3 + (-eta_ve .* (Txx - 2 * eta_ve .* gdot .* (a1 .* sin(fric) / 3 + Txx ./ (2 * sqrt(Jii)))) .* (a1 .* sin(fric) / 3 + Txx ./ (2 * sqrt(Jii))) - eta_ve .* (Tyy - 2 * eta_ve .* gdot .* (a2 .* sin(fric) / 3 + Tyy ./ (2 * sqrt(Jii)))) .* (a2 .* sin(fric) / 3 + Tyy ./ (2 * sqrt(Jii))) - eta_ve .* (Tzz - 2 * eta_ve .* gdot .* (a3 .* sin(fric) / 3 + Tzz ./ (2 * sqrt(Jii)))) .* (a3 .* sin(fric) / 3 + Tzz ./ (2 * sqrt(Jii))) - Txy .^ 2 .* a_p .^ 4 .* ap_s .* eta_ve ./ (2 * sqrt(Jii) .* a_ve .^ 2) - Tyx .^ 2 .* a_p .^ 4 .* ap_s .* eta_ve ./ (2 * sqrt(Jii) .* a_ve .^ 2)) ./ sqrt(J2_corr);
 
                         εxx_p      = γ̇*( (a1/3-a3/3)*sin(fric) + τxx/sqrt(J2)/2)
                         txx1 = 2*ηve*(εxx_eff-εxx_p)
                         txx2 = sqrt(Txx .^ 2 .* ap_n .^ 2)
 
-                        @printf("%2.4e %2.4e\n", txx1, txx2)
+                        # @printf("%2.4e %2.4e\n", txx1, txx2)
                         # @show (J2_corr1-J2_corr)/J2_corr
                         # @show (Fc-Fc1)/Fc
                         # @show (dFdgdot1-dFdgdot)/dFdgdot
@@ -243,6 +273,7 @@ function main()
             τxx_Ray[it,i] = τxx
             τyy_Ray[it,i] = τyy
             τxy_Ray[it,i] = τxy
+            p_Ray[it,i]   = Pc
     
             # ###################################################################
             # THIS IS WHAT WILL HAPPEN IN MDOODZ: It still uses the C_ANI business we derived earlier...
@@ -278,7 +309,7 @@ function main()
             τxx_MD7[it,i] = τ_MD7_v1[1]
             τyy_MD7[it,i] = τ_MD7_v1[2]
             τxy_MD7[it,i] = τ_MD7_v1[3]
-            p_MD7[it,i]   = P
+            p_MD7[it,i]   = Pc
     
         end
     end
@@ -314,6 +345,19 @@ function main()
         end
         p2=plot!(xlabel="t [My]", ylabel="τII [MPa]")
 
+        i1 = 1  # angle 1
+        i2 = Int64(floor(  length(aniso_ang)*1/2))  # angle 2
+        i3 = Int64(floor(  length(aniso_ang)*2/3))  # angle 2
+        p3=plot( [1:nt].*(Δt/My), p_Ray[:,i1], color=:red,   label=@sprintf("n angle %2.2f°", aniso_ang[i1]*180/π) )
+        p3=plot!([1:nt].*(Δt/My), p_Ray[:,i2], color=:blue,  label=@sprintf("n angle %2.2f°", aniso_ang[i2]*180/π) )
+        p3=plot!([1:nt].*(Δt/My), p_Ray[:,i3], color=:green, label=@sprintf("n angle %2.2f°", aniso_ang[i3]*180/π) )
+        if showMD7
+        p3=plot!([1:nt].*(Δt/My), p_MD7[:,i1], linewidth=0, marker =:circle, color=:red,    label=:none)
+        p3=plot!([1:nt].*(Δt/My), p_MD7[:,i2], linewidth=0, marker =:circle, color=:blue,   label=:none)
+        p3=plot!([1:nt].*(Δt/My), p_MD7[:,i3], linewidth=0, marker =:circle, color=:green,  label=:none)
+        end
+        p3=plot!(xlabel="t [My]", ylabel="p [MPa]")
+
         p4=plot(  aniso_ang.*(180/π), τxx_Ray[st3,:], color=:blue,  label="τxx Ray")
         p4=plot!( aniso_ang.*(180/π), τyy_Ray[st3,:], color=:green, label="τyy Ray")
         p4=plot!( aniso_ang.*(180/π), τxy_Ray[st3,:], color=:red,   label="τxy Ray")
@@ -322,7 +366,7 @@ function main()
         p4=plot!( aniso_ang.*(180/π), τyy_MD7[st3,:], linewidth=0, marker =:circle, color=:green, label="τyy MD7")
         p4=plot!( aniso_ang.*(180/π), τxy_MD7[st3,:], linewidth=0, marker =:circle, color=:red,   label="τxy MD7")
         end
-        display(plot(p1,p2,p4, size=(1200,900), legend=:none))
+        display(plot(p1,p2,p4,p3, size=(1200,900), legend=:none))
         end
     end
     

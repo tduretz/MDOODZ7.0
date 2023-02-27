@@ -6,7 +6,7 @@ clear
 clc
 path = '~/REPO_GIT/MDOODZ7.0/MDLIB/MLPS_run_ani/';
 path = '~/REPO_GIT/MDOODZ7.0/MDLIB//';
-path = '~/REPO_GIT/MDOODZ7.0/RUNS/NR02_Newt/';
+path = '~/REPO_GIT/MDOODZ7.0/RUNS/NR08/';
 
 cd(path)
 DEBUG       = 0;
@@ -16,15 +16,15 @@ Hc_ini = 35;
 Hl_ini = 125;
 
 % Files
-istart = 1750;
+istart = 0;
 ijump  = 10;
-iend   = 1750;
+iend   = 0;
 
 %--------------------------------------------------
 % what do you want to plot:
 %--------------------------------------------------
-pure_simple_shear = 1;
-thinning        = 1;
+pure_simple_shear = 0;
+thinning        = 0;
 phase_on_grid   = 0;
 phase_temp2     = 0;
 vel_plot        = 0;
@@ -32,12 +32,12 @@ vel_vectors     = 0;
 vel_divergence  = 0;
 pre_plot        = 0;
 dyna_pre        = 0;
-stress_inv      = 1;
+stress_inv      = 0;
 stress_evol     = 0;
 stress_plot     = 0;
 srate_plot      = 0;
 acc_strain      = 0;
-temperature     = 0;
+temperature     = 1;
 temp_evol       = 0;
 Stefan          = 0;
 paper           = 0;

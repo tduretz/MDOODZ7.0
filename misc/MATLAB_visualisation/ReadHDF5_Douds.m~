@@ -11,9 +11,9 @@ DEBUG       = 0;
 mdoodz6     = 1;
 
 % Files
-istart = 100;
+istart = 60;
 ijump  = 1;
-iend   = 100;
+iend   = 60;
 
 %--------------------------------------------------
 % what do you want to plot:
@@ -28,7 +28,7 @@ vel_vectors     = 0;
 vel_divergence  = 0;
 pre_plot        = 0;
 dyna_pre        = 0;
-stress_inv      = 1;
+stress_inv      = 0;
 stress_evol     = 0;
 stress_plot     = 0;
 srate_plot      = 0;
@@ -5012,36 +5012,42 @@ for istep=istart:ijump:iend
             else
                 figure('Visible', 'Off')
             end
+
+            hold on
             
             clf
+%             colormap(map);
+%             imagesc(VizGrid.x_plot_hr, VizGrid.z_plot_hr, VizGrid.ph_hr);
+%             shading interp, caxis ([-1 size(map,1)-2])%, axis ij
             imagesc(xc_plot, zc_plot, ani_fac);
             shading interp,% caxis ([-1 size(map,1)-2])%, axis ij
             set(gca,'Ydir','Normal')
             axis image
             title(['Time = ', num2str(time/1e6),' Myrs'], 'FontSize', 15, 'FontName', 'Myriad pro');
-            caxis([0 20])
-           
-            % Isotherms
-            hold on
-            v = 200:200:2000;
-            [c, h] = contour(VizGrid.x_plot, VizGrid.z_plot, T-273, v);
-            set(h, 'Color', 'w', 'LineWidth', 1.0);
-          
             
-            % Director
-            hv=quiver(xc_plot(1:step:end), zc_plot(1:step:end), ndx(1:step:end,1:step:end), ndz(1:step:end,1:step:end));
-%                         hv=quiver(xc_plot(100), zc_plot(100), ndx(100,100), ndz(100,100));
-            set(hv, 'Color', 'k', 'LineWidth', 0.5);
-            set(hv, 'MaxHeadSize',2.0, 'AutoScaleFactor', 0.5);
            
-            hv=quiver(xc_plot(1:step:end), zc_plot(1:step:end), ndz(1:step:end,1:step:end), -ndx(1:step:end,1:step:end));
-            set(hv, 'Color', 'w', 'LineWidth', 2);
-            set(hv, 'MaxHeadSize',2.0, 'AutoScaleFactor', 0.5, 'ShowArrowHead', 'off');
-            hv=quiver(xc_plot(1:step:end), zc_plot(1:step:end), -ndz(1:step:end,1:step:end), ndx(1:step:end,1:step:end));
-            set(hv, 'Color', 'w', 'LineWidth', 2);
-            set(hv, 'MaxHeadSize',2.0, 'AutoScaleFactor', 0.5, 'ShowArrowHead', 'off');
+%             % Isotherms
+%             hold on
+%             v = 200:200:2000;
+%             [c, h] = contour(VizGrid.x_plot, VizGrid.z_plot, T-273, v);
+%             set(h, 'Color', 'w', 'LineWidth', 1.0);
+%           
+%             
+%             % Director
+%             hv=quiver(xc_plot(1:step:end), zc_plot(1:step:end), ndx(1:step:end,1:step:end), ndz(1:step:end,1:step:end));
+% %                         hv=quiver(xc_plot(100), zc_plot(100), ndx(100,100), ndz(100,100));
+%             set(hv, 'Color', 'k', 'LineWidth', 0.5);
+%             set(hv, 'MaxHeadSize',2.0, 'AutoScaleFactor', 0.5);
+%            
+%             hv=quiver(xc_plot(1:step:end), zc_plot(1:step:end), ndz(1:step:end,1:step:end), -ndx(1:step:end,1:step:end));
+%             set(hv, 'Color', 'w', 'LineWidth', 2);
+%             set(hv, 'MaxHeadSize',2.0, 'AutoScaleFactor', 0.5, 'ShowArrowHead', 'off');
+%             hv=quiver(xc_plot(1:step:end), zc_plot(1:step:end), -ndz(1:step:end,1:step:end), ndx(1:step:end,1:step:end));
+%             set(hv, 'Color', 'w', 'LineWidth', 2);
+%             set(hv, 'MaxHeadSize',2.0, 'AutoScaleFactor', 0.5, 'ShowArrowHead', 'off');
             
-%             imagesc(xc_plot, zc_plot, ani_fac, 'Visible', 'Off');
+            imagesc(xc_plot, zc_plot, ani_fac, 'Visible', 'Off');
+    caxis([0 50])
             hold off
 
             

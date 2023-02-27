@@ -1,6 +1,6 @@
 /**** Original name: StefanBending.txt ****/
 /**** RESTART ****/
-istep = 00000010
+istep = 00000100
 irestart = 0
 
 /**** OUTPUT FILES ****/
@@ -24,7 +24,7 @@ zmin    =  5969400     / model bottom
 zmax    =  6.400000e6  / Earth surface
 
 /**** TIME ****/
-Nt      = 10
+Nt      = 100
 dt      = 1.2623e+11
 Courant = 0.45
 
@@ -126,12 +126,12 @@ gsel = 0             / grain size evo.
 eta0 = 1e22
 npwl = 1
 Qpwl = 0
-ani_fac_v = 2.0
+ani_fstrain = 1
 aniso_angle = 45.0
 
 /**** PHASE 2 ****/
 ID   = 2
-rho  = 3300.00 / Astehenosphere
+rho  = 3300.00 / Asthenosphere
 mu   = 3e10
 Cv   = 1050
 k    = 2.5
@@ -152,5 +152,3 @@ gsel = 0             / grain size evo.
 eta0 = 5e21
 npwl = 1
 Qpwl = 0
-ani_fac_v = 1.0
-aniso_angle = 45.0
