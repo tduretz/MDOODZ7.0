@@ -1,4 +1,6 @@
 #include "mdoodz.h"
+#include "math.h"
+
 
 int SetPhase(MdoodzInput *input, Coordinates coordinates) {
   const double radius = input->model.user1 / input->scaling.L;
@@ -34,13 +36,31 @@ double SetAnisoAngle(MdoodzInput *input, Coordinates coordinates, int phase) {
   const double radius = input->model.user1 / input->scaling.L;
   if (coordinates.x * coordinates.x + coordinates.z * coordinates.z < radius * radius) {
     // nothing special in the inclusion
-    return 0.0;
+    return 135.0;
   }
   else {
-    // a bit more pure shear strain in the matrix
-    return 0.0;
+    // radial anisotropy in the matrix
+    if (coordinates.x >= 0) {
+      if (coordinates.z >= 0) {
+        // x>0, y>0
+        return atan(coordinates.z/coordinates.x) * 180.0 / M_PI;
+        } else {
+          // x>0, y<0
+          return 270.0 + atan(coordinates.x/-coordinates.z) * 180.0 / M_PI;
+        }
+      }
+      else {
+            if (coordinates.z >= 0) {
+              // x<0, y>0
+              return 90.0 + atan(-coordinates.x/coordinates.z) * 180.0 / M_PI;
+      } else {
+        // x<0, y<0
+        return 180.0 + atan(coordinates.z/coordinates.x) * 180.0 / M_PI;        
+      }
+    }
   }
 }
+  
 
 int main() {
   MdoodzSetup setup = {
@@ -48,7 +68,7 @@ int main() {
                    .SetPhase              = SetPhase,
                    .SetDensity            = SetDensity,
                    .SetDefGrad            = SetDefGrad,
-                   //.SetAnisoAngle         = SetAnisoAngle,
+                   .SetAnisoAngle         = SetAnisoAngle,
           },
           .SetBCs = &(SetBCs_ff){
                   .SetBCVx = SetPureOrSimpleShearBCVx,

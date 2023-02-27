@@ -114,7 +114,7 @@ void SetParticles(SetParticles_ff setParticles, MdoodzInput *instance, markers *
       particles->Fzz[np] = F.zz;
     }
     if (setParticles.SetAnisoAngle) {
-      particles->aniso_angle[np] = setParticles.SetAnisoAngle(instance, coordinates, particles->phase[np]);
+      particles->aniso_angle[np] = setParticles.SetAnisoAngle(instance, coordinates, particles->phase[np]) *M_PI / 180;
     } else {
       particles->aniso_angle[np] = 0.0;
     }
