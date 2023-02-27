@@ -750,7 +750,11 @@ void InitialiseDirectorVector (grid* mesh, markers* particles, params* model, ma
     if ( particles->phase[k] != -1 ) {
 
       // Set up director vector
-      angle             = materials->aniso_angle[particles->phase[k]];
+      if (model->particle_aniso_angle) {
+        angle           = particles->aniso_angle[k];
+      } else {
+        angle           = materials->aniso_angle[particles->phase[k]];
+      }
       particles->nx[k]  = cos(angle);
       particles->nz[k]  = sin(angle);
       norm              = sqrt(particles->nx[k]*particles->nx[k] + particles->nz[k]*particles->nz[k]);

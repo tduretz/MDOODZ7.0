@@ -105,7 +105,7 @@ void SetParticles(SetParticles_ff setParticles, MdoodzInput *instance, markers *
     Tensor2D F;
     F.xx=1.; F.xz=0.; F.zx=0.; F.zz=1.; 
     if (setParticles.SetDefGrad) {
-      setParticles.SetDefGrad(instance, coordinates, particles->phase[np], &F);
+      F = setParticles.SetDefGrad(instance, coordinates, particles->phase[np]);
     }
     if (instance->model.fstrain==1) {
       particles->Fxx[np] = F.xx;

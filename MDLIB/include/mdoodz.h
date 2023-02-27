@@ -93,6 +93,7 @@ typedef struct {
   const char     *writerSubfolder;
   int      save_initial_markers, load_initial_markers;
   char    *initial_markers_file;
+  int     particle_aniso_angle;
 } params;
 
 // Stucture scale contains scaling parameters
@@ -160,7 +161,8 @@ typedef double (*SetDensity_f)(MdoodzInput *input, Coordinates coordinates, int 
 typedef double (*SetXComponent_f)(MdoodzInput *input, Coordinates coordinates, int phase);
 typedef double (*SetPressure_f)(MdoodzInput *input, Coordinates coordinates, int phase);
 typedef double (*SetNoise_f)(MdoodzInput *input, Coordinates coordinates, int phase);
-typedef void   (*SetDefGrad_f)(MdoodzInput *input, Coordinates coordinates, int phase, Tensor2D*);
+typedef double (*SetAnisoAngle_f)(MdoodzInput *input, Coordinates coordinates, int phase);
+typedef Tensor2D (*SetDefGrad_f)(MdoodzInput *input, Coordinates coordinates, int phase);
 
 typedef struct {
   SetHorizontalVelocity_f SetHorizontalVelocity;
@@ -175,6 +177,7 @@ typedef struct {
   SetDensity_f            SetDensity;
   SetXComponent_f         SetXComponent;
   SetDefGrad_f            SetDefGrad;
+  SetAnisoAngle_f         SetAnisoAngle;
 } SetParticles_ff;
 
 typedef enum {

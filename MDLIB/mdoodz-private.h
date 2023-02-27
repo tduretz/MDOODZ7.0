@@ -34,6 +34,7 @@ typedef struct {
   double *T0, *P0, *x0, *z0, *Tmax, *Pmax, *divth;
   double *dsxxd, *dszzd, *dsxz;
   double *noise, *rho;
+  double *aniso_angle;
 } markers;
 
 

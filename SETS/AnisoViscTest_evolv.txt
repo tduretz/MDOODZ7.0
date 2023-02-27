@@ -17,6 +17,7 @@ free_surf_stab    = 0
 fstrain           = 1
 advection         = 1
 aniso             = 1
+particle_aniso_angle = 1
 
 /**** SCALES ****/
 eta = 1
@@ -25,8 +26,8 @@ V   = 1
 T   = 1
 
 /**** SPACE ****/
-Nx      = 51
-Nz      = 51
+Nx      = 151
+Nz      = 151
 Nt      = 50
 xmin    = -5.000000e-1
 zmin    = -5.000000e-1
@@ -107,7 +108,7 @@ gsel = 0             / grain size evo.
 eta0 = 1e0
 npwl = 0.0
 Qpwl = 0
-aniso_angle  = 135.0
+aniso_angle  = 120.0
 ani_fstrain  = 1     / activates finite strain anisotropy
 ani_fac_v    = 1.0
 
@@ -133,5 +134,5 @@ gsel = 0             / grain size evo.
 eta0 = 1e-1
 npwl = 0
 Qpwl = 0
-aniso_angle  = 135.0
+aniso_angle  = 120.0
 ani_fac_v    = 1.0
