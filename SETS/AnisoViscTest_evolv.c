@@ -34,11 +34,11 @@ double SetAnisoAngle(MdoodzInput *input, Coordinates coordinates, int phase) {
   const double radius = input->model.user1 / input->scaling.L;
   if (coordinates.x * coordinates.x + coordinates.z * coordinates.z < radius * radius) {
     // nothing special in the inclusion
-    return 90.0;
+    return 0.0;
   }
   else {
     // a bit more pure shear strain in the matrix
-    return 135.0;
+    return 0.0;
   }
 }
 
@@ -48,7 +48,7 @@ int main() {
                    .SetPhase              = SetPhase,
                    .SetDensity            = SetDensity,
                    .SetDefGrad            = SetDefGrad,
-                   .SetAnisoAngle         = SetAnisoAngle,
+                   //.SetAnisoAngle         = SetAnisoAngle,
           },
           .SetBCs = &(SetBCs_ff){
                   .SetBCVx = SetPureOrSimpleShearBCVx,
