@@ -247,7 +247,9 @@ markers PartAlloc(ParticlesInput particlesInput, params *model) {
   if (model->aniso == 1) {
     particles.nx          = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
     particles.nz          = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
-    particles.aniso_angle = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
+    if (model->particle_aniso_angle) {
+      particles.aniso_angle = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
+    }
   }
   return particles;
 }
@@ -317,7 +319,9 @@ void PartFree( markers *particles, params* model ) {
     if (model->aniso == 1) {
         DoodzFree(particles->nx);
         DoodzFree(particles->nz);
-        DoodzFree(particles->aniso_angle);
+        if (model->particle_aniso_angle) {
+          DoodzFree(particles->aniso_angle);
+        }
     }
     
 //    DoodzFree(particles->ddivth);
