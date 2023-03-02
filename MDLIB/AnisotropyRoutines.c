@@ -81,7 +81,7 @@ double ViscosityConciseAniso( int phase, double lxlz, double lx2, double angle, 
     // !!!!!!!!!!!!!!!!!!!!!!!!
     // General paramaters
     const double tol    = 1.0e-11, R = materials->R, dt = model->dt, minEta = model->mineta, maxEta = model->maxeta;
-    const int    nitmax = 10, noisy = 0;
+    const int    nitmax = 10, noisy = 1;
     double eta = 0.0, eta_el, eta_cst;
     int    plastic = 0, constant = 0, dislocation = 0, peierls = 0, diffusion = 0, gbs = 0, elastic = model->iselastic, kinetics = 0, is_pl = 0;
     double eta_pwl = 0.0, B_pwl = 0.0, C_pwl = 0.0, Q_pwl = materials->Qpwl[phase], V_pwl = materials->Vpwl[phase], n_pwl = materials->npwl[phase], m_pwl = materials->mpwl[phase], r_pwl = materials->rpwl[phase], A_pwl = materials->Apwl[phase], f_pwl = materials->fpwl[phase], a_pwl = materials->apwl[phase], F_pwl = materials->Fpwl[phase], pre_factor = materials->pref_pwl[phase], t_pwl = materials->tpwl[phase];
@@ -114,17 +114,30 @@ double ViscosityConciseAniso( int phase, double lxlz, double lx2, double angle, 
      // Precomputations
     if ( dislocation == 1 ) {
       B_pwl = pre_factor * F_pwl * pow(A_pwl,-1.0/n_pwl) * exp( (Q_pwl + P*V_pwl)/R/n_pwl/T ) * pow(d0, m_pwl/n_pwl) * pow(f_pwl, -r_pwl/n_pwl) * exp(-a_pwl*phi/n_pwl);
-      C_pwl   = pow(2.0*B_pwl, -n_pwl);
+      C_pwl = pow(2.0*B_pwl, -n_pwl);
     }
     // Isolated anisotropy factors
     if ( materials->ani_fstrain[phase] == 0 ) {
         ani_fac_v = materials->ani_fac_v[phase];
-        ani_fac_p = materials->ani_fac_p[phase];
+        ani_fac_p = materials->ani_fac_p[phase]; //materials->ani_fac_p[phase];
+        ani_fac_e = materials->ani_fac_e[phase]; // nothing
     }
     else {
         ani_fac_v = ani_fstrain;
         ani_fac_p = ani_fstrain;
+        ani_fac_e = ani_fstrain; // nothing
     }
+    // // Isolated anisotropy factors
+    // if ( materials->ani_fstrain[phase] == 0 ) {
+    //     ani_fac_v = materials->ani_fac_v[phase];
+    //     ani_fac_p = materials->ani_fac_v[phase]; //materials->ani_fac_p[phase];
+    //     ani_fac_e = materials->ani_fac_v[phase]; // nothing
+    // }
+    // else {
+    //     ani_fac_v = ani_fstrain;
+    //     ani_fac_p = ani_fstrain;
+    //     ani_fac_e = ani_fstrain; // nothing
+    // }
     a_e = sqrt(ani_fac_e), a_v = sqrt(ani_fac_v), a_p = sqrt(ani_fac_p);
     // Transform strain rate: Q*E*Qt
     const double nz2 = 1.0-lx2;
@@ -179,7 +192,6 @@ double ViscosityConciseAniso( int phase, double lxlz, double lx2, double angle, 
       if (dislocation) *Eii_pwl = C_pwl * pow(Y2_v, 0.5*n_pwl);
       Eii_vis = *Eii_pwl + *Eii_cst;
       // ---------- Viscosities
-      // eta_pwl = pow( B_pwl, -1.0/n_pwl ) * pow( *Eii_pwl, (1-n_pwl)/n_pwl );
       eta_pwl = B_pwl * pow( *Eii_pwl, (1-n_pwl)/n_pwl );
       // ---------- Residuals
       f_n = 1.0; f_s = 1.0;
