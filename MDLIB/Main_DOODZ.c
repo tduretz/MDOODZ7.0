@@ -295,7 +295,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         P2Mastah( &input.model, particles, particles.X,     &mesh, mesh.X0_s , mesh.BCg.type,  1, 0, interp, vert, input.model.itp_stencil);
 
         if (input.model.aniso == 1 ) {
-            InitialiseDirectorVector ( &mesh, &particles, &input.model, &input.materials );
+            InitialiseDirectorVector ( &mesh, &particles, &input.model, &input.materials, input.scaling.L);
             P2Mastah( &input.model, particles, NULL, &mesh, mesh.d1_n,    mesh.BCp.type, -1, 0, interp, cent, input.model.itp_stencil);
             P2Mastah( &input.model, particles, NULL, &mesh, mesh.d2_n,    mesh.BCp.type, -2, 0, interp, cent, input.model.itp_stencil);
             P2Mastah( &input.model, particles, NULL, &mesh, mesh.angle_n, mesh.BCp.type, -3, 0, interp, cent, input.model.itp_stencil);

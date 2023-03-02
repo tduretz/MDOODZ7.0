@@ -738,11 +738,12 @@ void NonNewtonianViscosityGridAniso( grid *mesh, mat_prop *materials, params *mo
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-void InitialiseDirectorVector (grid* mesh, markers* particles, params* model, mat_prop* materials ) {
+void InitialiseDirectorVector (grid* mesh, markers* particles, params* model, mat_prop* materials, double scaling_L) {
 
   int    cent=1, vert=0, prop=1, interp=0;
   int k;
   double angle, norm;
+  const double Earth_radius = 6370e3/scaling_L;
 
 #pragma omp parallel for shared( particles ) private( angle, norm )
   for (k=0; k<particles->Nb_part; k++) {
@@ -750,7 +751,14 @@ void InitialiseDirectorVector (grid* mesh, markers* particles, params* model, ma
     if ( particles->phase[k] != -1 ) {
 
       // Set up director vector
-      angle             = materials->aniso_angle[particles->phase[k]];
+      if (model->particle_aniso_angle) {
+        angle           = particles->aniso_angle[k];
+      } else {
+        angle           = materials->aniso_angle[particles->phase[k]];
+      }
+      if (model->polar == 1 ) {
+        angle = angle - atan(particles->x[k] / (particles->z[k] ));
+      }
       particles->nx[k]  = cos(angle);
       particles->nz[k]  = sin(angle);
       norm              = sqrt(particles->nx[k]*particles->nx[k] + particles->nz[k]*particles->nz[k]);
