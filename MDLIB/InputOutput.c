@@ -1159,6 +1159,7 @@ Input ReadInputFile( char *fileName ) {
     model.topografix      = ReadInt2( fin, "topografix",      0 );
     model.aniso           = ReadInt2( fin, "aniso",           0 ); // Turns on anisotropy
     // model.aniso_fstrain   = ReadInt2( fin, "aniso_fstrain",   0 ); // Make anisotropy factor dependent on finite strain aspect ratio
+    model.particle_aniso_angle = ReadInt2( fin, "particle_aniso_angle", 0 ); // Enables setting anisotropy angle per particles rather than phases
     model.compressible    = ReadInt2( fin, "compressible",    0 ); // Turns on compressibility
     model.GNUplot_residuals = ReadInt2( fin, "GNUplot_residuals",    0 ); // Activate GNU plot residuals visualisation
     model.shear_style     = ReadInt2( fin, "shear_style",     0 ); // 0: pure shear, 2: periodic simple shear
