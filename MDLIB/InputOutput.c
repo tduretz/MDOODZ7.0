@@ -1155,7 +1155,7 @@ Input ReadInputFile( char *fileName ) {
     model.track_T_P_x_z      = ReadInt2( fin, "track_T_P_x_z",      0 ); // Tracks initial T, P, x and z on particles 
     model.delete_breakpoints = ReadInt2( fin, "delete_breakpoints", 1 ); // Progressively deletes breakpoint files
     model.anisotropy         = ReadInt2( fin, "anisotropy",         0 ); // Turns on anisotropy
-    model.particle_aniso_angle = ReadInt2( fin, "particle_aniso_angle", 0 ); // Enables setting anisotropy angle per particles rather than phases
+    model.marker_aniso_angle = ReadInt2( fin, "marker_aniso_angle", 0 ); // Enables setting anisotropy angle per particles rather than phases
     model.compressible       = ReadInt2( fin, "compressible",       0 ); // Turns on compressibility
     model.gnuplot_log_res    = ReadInt2( fin, "gnuplot_log_res",    0 ); // Activate GNU plot residuals visualisation
     model.shear_style        = ReadInt2( fin, "shear_style",        0 ); // BC type: 0: pure shear, 2: periodic simple shear
@@ -1167,7 +1167,7 @@ Input ReadInputFile( char *fileName ) {
     model.kinetics           = ReadInt2( fin, "kinetics",           0 ); // Activates reaction kinetics
     model.density_change     = ReadInt2( fin, "density_change",     0 ); // Turns on volume change due to reaction if 1
     model.direct_neighbour   = ReadInt2( fin, "direct_neighbour",   0 ); // Direct neighbour interpolation
-    model.reseed_markers             = ReadInt2( fin, "reseed_markers",             1 ); // Activates reseeding / particle injection
+    model.reseed_markers     = ReadInt2( fin, "reseed_markers",     1 ); // Activates reseeding / particle injection
     model.conserv_interp     = ReadInt2( fin, "conserv_interp",     0 ); // Activates Taras conservative interpolation
     model.smooth_softening   = ReadInt2( fin, "smooth_softening",   1 ); // Activates smooth explicit kinematic softening function
     model.oop                = ReadInt2( fin, "oop",                0 ); // Out-of-plane strain

@@ -751,7 +751,7 @@ void InitialiseDirectorVector (grid* mesh, markers* particles, params* model, ma
     if ( particles->phase[k] != -1 ) {
 
       // Set up director vector
-      if (model->particle_aniso_angle) {
+      if (model->marker_aniso_angle) {
         angle           = particles->aniso_angle[k];
       } else {
         angle           = materials->aniso_angle[particles->phase[k]];

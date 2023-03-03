@@ -93,7 +93,7 @@ typedef struct {
   const char     *writerSubfolder;
   int      save_initial_markers, load_initial_markers;
   char    *initial_markers_file;
-  int     particle_aniso_angle;
+  int     marker_aniso_angle;
 } params;
 
 // Stucture scale contains scaling parameters

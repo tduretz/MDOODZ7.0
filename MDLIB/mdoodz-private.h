@@ -423,7 +423,7 @@ void            EvaluateStokesResidualDecoupled(SparseMat *, SparseMat *, Sparse
 void            BuildStokesOperatorDecoupled(grid *, params, int, double *, double *, double *, double *, SparseMat *, SparseMat *, SparseMat *, SparseMat *, SparseMat *, int);
 void            SolveStokesDecoupled(SparseMat *, SparseMat *, SparseMat *, SparseMat *, SparseMat *, DirectSolver *, params, grid *, scale);
 void            SolveStokesDefectDecoupled(SparseMat *, SparseMat *, SparseMat *, SparseMat *, SparseMat *, DirectSolver *, Nparams *, grid *, params *, markers *, markers *, surface *, mat_prop, scale, SparseMat *, SparseMat *, SparseMat *);
-void            AddCoeff2(int *, double *, int, int, int *, double, int, double, double *);
+void            AddCoeff3(int *, double *, int, int, int *, double, int, double, double *);
 void            MergeParallelMatrix(SparseMat *, double **, int **, int **, grid *, int *, int *, int *, int *, int *, int, char *, int *);
 void            DirectStokesDecoupled(SparseMat *, SparseMat *, SparseMat *, SparseMat *, DirectSolver *, double *, double *, double *, params, grid *, scale, SparseMat *);
 void            DirectStokesDecoupledComp(SparseMat *, SparseMat *, SparseMat *, SparseMat *, DirectSolver *, double *, double *, double *, params, grid *, scale, SparseMat *);

@@ -17,7 +17,7 @@ free_surf_stab    = 0
 finite_strain     = 1
 advection         = 1
 anisotropy        = 1
-particle_aniso_angle = 1
+marker_aniso_angle = 1
 
 /**** SCALES ****/
 eta = 1

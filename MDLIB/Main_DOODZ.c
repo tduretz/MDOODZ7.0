@@ -149,10 +149,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         if (input.model.free_surf == 1 ) CleanUpSurfaceParticles( &particles, &mesh, topo, input.scaling );
 
         // Create phase percentage arrays
-        if (input.model.count_markers==-1) CountPartCell_BEN( &particles, &mesh, input.model, topo, 0, input.scaling );
-        if (input.model.count_markers== 0) CountPartCell_Old( &particles, &mesh, input.model, topo, 0, input.scaling  );
-        if (input.model.count_markers== 1) CountPartCell    ( &particles, &mesh, input.model, topo, topo_ini, 0, input.scaling  );
-        if (input.model.count_markers== 2) CountPartCell2    ( &particles, &mesh, input.model, topo, topo_ini, 0, input.scaling  );
+        CountPartCell( &particles, &mesh, input.model, topo, topo_ini, 0, input.scaling  );
 
         P2Mastah( &input.model, particles, input.materials.eta0, &mesh, mesh.eta_s, mesh.BCg.type,  0, 0, interp, vert, input.model.itp_stencil);
         P2Mastah( &input.model, particles, input.materials.eta0, &mesh, mesh.eta_n, mesh.BCp.type,  0, 0, interp, cent, input.model.itp_stencil);
@@ -725,8 +722,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                 }
 
                 // Build discrete system of equations - Linearised Picard
-                if (input.model.decoupled_solve == 0 ) BuildStokesOperator           ( &mesh, input.model, 0, mesh.p_in, mesh.u_in, mesh.v_in, &Stokes, 1 );
-                if (input.model.decoupled_solve == 1 ) BuildStokesOperatorDecoupled  ( &mesh, input.model, 0, mesh.p_corr, mesh.p_in, mesh.u_in, mesh.v_in, &Stokes, &StokesA, &StokesB, &StokesC, &StokesD, 1 );
+                BuildStokesOperatorDecoupled  ( &mesh, input.model, 0, mesh.p_corr, mesh.p_in, mesh.u_in, mesh.v_in, &Stokes, &StokesA, &StokesB, &StokesC, &StokesD, 1 );
 
                 // Build discrete system of equations - Jacobian (do it also for densification since drhodp is needed)
                 if ( (IsFullNewton   == 1 && Nmodel.nit > 0) || input.model.density_change == 1  ) RheologicalOperators( &mesh, &input.model, &input.materials, &input.scaling, 1 );
@@ -744,8 +740,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                 // Needs to be done after matrix assembly since diagonal input.scaling is used in there
                 printf("---- Non-linear residual ----\n");
                 RheologicalOperators( &mesh, &input.model, &input.materials, &input.scaling, 0 );
-                if (input.model.decoupled_solve == 0 ) EvaluateStokesResidual( &Stokes, &Nmodel, &mesh, input.model, input.scaling, 0 );
-                if (input.model.decoupled_solve == 1 ) EvaluateStokesResidualDecoupled( &Stokes, &StokesA, &StokesB, &StokesC, &StokesD, &Nmodel, &mesh, input.model, input.scaling, 0 );
+                EvaluateStokesResidualDecoupled( &Stokes, &StokesA, &StokesB, &StokesC, &StokesD, &Nmodel, &mesh, input.model, input.scaling, 0 );
                 printf("---- Non-linear residual ----\n");
 
                 if (input.model.Newton == 1 && input.model.anisotropy == 0 ) {
@@ -770,20 +765,17 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
                 // Direct solve
                 t_omp = (double)omp_get_wtime();
-                if (input.model.decoupled_solve == 0 ) SolveStokesDefect( &Stokes, &CholmodSolver, &Nmodel, &mesh, &input.model, &particles, &topo_chain, &topo, input.materials, input.scaling );
-                if (input.model.decoupled_solve == 1 ) {
-                    
-                    if ( IsJacobianUsed==1 ) SolveStokesDefectDecoupled( &StokesA, &StokesB, &StokesC, &StokesD, &Stokes, &CholmodSolver, &Nmodel, &mesh, &input.model, &particles, &topo_chain, &topo, input.materials, input.scaling,  &JacobA,  &JacobB,  &JacobC );
-                    else                     SolveStokesDefectDecoupled( &StokesA, &StokesB, &StokesC, &StokesD, &Stokes, &CholmodSolver, &Nmodel, &mesh, &input.model, &particles, &topo_chain, &topo, input.materials, input.scaling, &StokesA, &StokesB, &StokesC );
+                if ( IsJacobianUsed==1 ) SolveStokesDefectDecoupled( &StokesA, &StokesB, &StokesC, &StokesD, &Stokes, &CholmodSolver, &Nmodel, &mesh, &input.model, &particles, &topo_chain, &topo, input.materials, input.scaling,  &JacobA,  &JacobB,  &JacobC );
+                else                     SolveStokesDefectDecoupled( &StokesA, &StokesB, &StokesC, &StokesD, &Stokes, &CholmodSolver, &Nmodel, &mesh, &input.model, &particles, &topo_chain, &topo, input.materials, input.scaling, &StokesA, &StokesB, &StokesC );
 
-                    if ( Nmodel.stagnated == 1 && input.model.safe_mode <= 0 ) {
-                        printf( "Non-linear solver stagnated to res_u = %2.2e res_z = %2.2e\n", Nmodel.resx_f, Nmodel.resz_f );
-                        printf( "You may want to try setting line_search_min > 0.0\n Good luck good man!\n");
-                        FreeSparseSystems( IsJacobianUsed, input.model.decoupled_solve, &Stokes, &StokesA, &StokesB, &StokesC, &StokesD, &JacobA, &JacobB, &JacobC, &JacobD );
-                        break;
-                    }
+                if ( Nmodel.stagnated == 1 && input.model.safe_mode <= 0 ) {
+                    printf( "Non-linear solver stagnated to res_u = %2.2e res_z = %2.2e\n", Nmodel.resx_f, Nmodel.resz_f );
+                    printf( "You may want to try setting line_search_min > 0.0\n Good luck good man!\n");
+                    FreeSparseSystems( IsJacobianUsed, input.model.decoupled_solve, &Stokes, &StokesA, &StokesB, &StokesC, &StokesD, &JacobA, &JacobB, &JacobC, &JacobD );
+                    break;
                 }
-
+                
+                // Check for stagnation and apply safety restrictions is requested and required
                 if ( Nmodel.stagnated == 1 && input.model.iselastic == 1 && input.model.safe_mode == 1 ) {
                     printf( "\e[1;31mWARNING : Non-linear solver stagnated (abs_tol_u = %2.2e abs_tol_p = %2.2e)\e[m\n", Nmodel.abs_tol_u, Nmodel.abs_tol_p );
                     printf( "\e[1;31mWARNING : Non-linear solver stagnated (rel_tol_u = %2.2e rel_tol_p = %2.2e)\e[m\n", Nmodel.rel_tol_u, Nmodel.rel_tol_p );
@@ -1048,9 +1040,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                     // Sedimentation
                     if (input.model.surface_processes >= 2 ) {
                         AddPartSed( &particles, input.materials, &topo_chain, &topo, input.model, input.scaling, &mesh);
-                        if (input.model.count_markers==-1) CountPartCell_BEN( &particles, &mesh, input.model, topo, 0, input.scaling );
-                        if (input.model.count_markers== 0) CountPartCell_Old( &particles, &mesh, input.model, topo, 0, input.scaling );
-                        if (input.model.count_markers== 1) CountPartCell    ( &particles, &mesh, input.model, topo, topo_ini, 0, input.scaling );
+                        CountPartCell( &particles, &mesh, input.model, topo, topo_ini, 0, input.scaling );
                     }
 
                     if (input.model.write_debug == 1 ) {
@@ -1086,13 +1076,8 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
                 // Count the number of particle per cell
                 t_omp = (double)omp_get_wtime();
-                if (input.model.count_markers ==-1)                       CountPartCell_BEN( &particles, &mesh, input.model, topo, 0, input.scaling );
-                if (input.model.count_markers == 0)                       CountPartCell_Old( &particles, &mesh, input.model, topo, 0, input.scaling );
-                if (input.model.count_markers == 1 && input.model.reseed_markers == 1 ) CountPartCell    ( &particles, &mesh, input.model, topo, topo_ini, 1, input.scaling );
-                if (input.model.count_markers == 1)                       CountPartCell    ( &particles, &mesh, input.model, topo, topo_ini, 0, input.scaling );
-
-                if (input.model.count_markers == 2 && input.model.reseed_markers == 1 ) CountPartCell2   ( &particles, &mesh, input.model, topo, topo_ini, 1, input.scaling );
-                if (input.model.count_markers == 2)                       CountPartCell2   ( &particles, &mesh, input.model, topo, topo_ini, 0, input.scaling );
+                if ( input.model.reseed_markers == 1 ) CountPartCell( &particles, &mesh, input.model, topo, topo_ini, 1, input.scaling );
+                CountPartCell( &particles, &mesh, input.model, topo, topo_ini, 0, input.scaling );
 
                 printf("After re-seeding :\n");
                 printf("Initial number of particles = %d\n", particles.Nb_part_ini);
