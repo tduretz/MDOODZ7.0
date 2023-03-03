@@ -5,6 +5,7 @@ irestart = 0
 /**** OUTPUT FILES ****/
 writer          = 1
 writer_step     = 1
+writer_subfolder = Shrinking
 
 /**** SCALES ****/
 eta = 1e15
