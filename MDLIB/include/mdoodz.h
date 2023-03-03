@@ -38,7 +38,7 @@ typedef struct {
   double free_surf_stab;
   int    dt_constant, RK, line_search, thermal_eq, subgrid_diff, adiab_heat,
           shear_heat, advection, finite_strain, conserv_interp;
-  int surface_processes, count_markers, loc_iter, thermal_perturb, surf_ised1,
+  int surface_processes, loc_iter, thermal_perturb, surf_ised1,
           surf_ised2, MantleID, topografix, reseed_markers, smooth_softening;
   double EpsBG, DivBG, user0, user1, user2, user3, user4, user5, user6, user7,
           user8;
@@ -50,7 +50,7 @@ typedef struct {
   // Particles
   int    initial_noise, initial_part;
   // Linear solver
-  int    decoupled_solve, lsolver, diag_scaling, pc_type;
+  int    lsolver, diag_scaling, pc_type;
   double penalty, abs_tol_div, rel_tol_div, abs_tol_mom, rel_tol_mom, auto_penalty, compressible,
           rel_tol_KSP;
   // Non-linear solver

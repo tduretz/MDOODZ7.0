@@ -607,12 +607,10 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             if ( IsNewtonStep == 1 ) EvalNumberOfEquations( &mesh, &Jacob  );
             SAlloc( &Stokes,  Stokes.neq );
             if ( IsNewtonStep == 1 ) SAlloc(  &Jacob,   Jacob.neq );
-            if (input.model.decoupled_solve == 1 ) {
-                SAlloc( &StokesA, Stokes.neq_mom );
-                SAlloc( &StokesB, Stokes.neq_mom );
-                SAlloc( &StokesC, Stokes.neq_cont);
-                SAlloc( &StokesD, Stokes.neq_cont );
-            }
+            SAlloc( &StokesA, Stokes.neq_mom );
+            SAlloc( &StokesB, Stokes.neq_mom );
+            SAlloc( &StokesC, Stokes.neq_cont);
+            SAlloc( &StokesD, Stokes.neq_cont );
             if ( IsNewtonStep == 1 ) {
                 SAlloc( &JacobA, Stokes.neq_mom );
                 SAlloc( &JacobB, Stokes.neq_mom );
@@ -637,17 +635,12 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             ArrayEqualArray( mesh.p_start,    mesh.p_in,      (mesh.Nx-1)*(mesh.Nz-1) );
             ArrayEqualArray( mesh.u_start,    mesh.u_in,      (mesh.Nx)  *(mesh.Nz+1) );
             ArrayEqualArray( mesh.v_start,    mesh.v_in,      (mesh.Nx+1)*(mesh.Nz)   );
-            //            ArrayEqualArray( topo_ini.height0, topo_ini.height, mesh.Nx );
 
             // Set up solver context
-            if (input.model.decoupled_solve == 1 ) {
-                cholmod_start( &CholmodSolver.c );
-                if ( Nmodel.nit==0 ) CholmodSolver.Analyze = 1;
-                printf("Run CHOLMOD analysis yes/no: %d \n", CholmodSolver.Analyze);
-            }
-
+            cholmod_start( &CholmodSolver.c );
+            if ( Nmodel.nit==0 ) CholmodSolver.Analyze = 1;
+            printf("Run CHOLMOD analysis yes/no: %d \n", CholmodSolver.Analyze);
             int Nmax_picard = Nmodel.nit_max;
-
             int IsFirstNewtonStep;
             // If Picard 2 Newton is activated: force initial Newton step
             if ( IsNewtonStep == 1 && Nmodel.Picard2Newton == 1 ) {
@@ -759,7 +752,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                 // if pass --> clear matrix break
                 if ( (Nmodel.resx < Nmodel.abs_tol_u || Nmodel.resx/Nmodel.resx0 < Nmodel.rel_tol_u) && (Nmodel.resz < Nmodel.abs_tol_u || Nmodel.resz/Nmodel.resz0 < Nmodel.rel_tol_u) && (Nmodel.resp < Nmodel.abs_tol_p || Nmodel.resp/Nmodel.resp0 < Nmodel.rel_tol_p) ) {
                     printf( "Non-linear solver converged to abs_tol_u = %2.2e abs_tol_p = %2.2e rel_tol_u = %2.2e rel_tol_p = %2.2e\n", Nmodel.abs_tol_u, Nmodel.abs_tol_p, Nmodel.rel_tol_u, Nmodel.rel_tol_p );
-                    FreeSparseSystems( IsJacobianUsed, input.model.decoupled_solve, &Stokes, &StokesA, &StokesB, &StokesC, &StokesD, &JacobA, &JacobB, &JacobC, &JacobD );
+                    FreeSparseSystems( IsJacobianUsed, 1, &Stokes, &StokesA, &StokesB, &StokesC, &StokesD, &JacobA, &JacobB, &JacobC, &JacobD );
                     break;
                 }
 
@@ -771,7 +764,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                 if ( Nmodel.stagnated == 1 && input.model.safe_mode <= 0 ) {
                     printf( "Non-linear solver stagnated to res_u = %2.2e res_z = %2.2e\n", Nmodel.resx_f, Nmodel.resz_f );
                     printf( "You may want to try setting line_search_min > 0.0\n Good luck good man!\n");
-                    FreeSparseSystems( IsJacobianUsed, input.model.decoupled_solve, &Stokes, &StokesA, &StokesB, &StokesC, &StokesD, &JacobA, &JacobB, &JacobC, &JacobD );
+                    FreeSparseSystems( IsJacobianUsed, 1, &Stokes, &StokesA, &StokesB, &StokesC, &StokesD, &JacobA, &JacobB, &JacobC, &JacobD );
                     break;
                 }
                 
@@ -800,13 +793,13 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                     //-----------------------
                     }
                 }
-                FreeSparseSystems( IsJacobianUsed, input.model.decoupled_solve, &Stokes, &StokesA, &StokesB, &StokesC, &StokesD, &JacobA, &JacobB, &JacobC, &JacobD );
+                FreeSparseSystems( IsJacobianUsed, 1, &Stokes, &StokesA, &StokesB, &StokesC, &StokesD, &JacobA, &JacobB, &JacobC, &JacobD );
                 Nmodel.nit++;
                 input.model.nit = Nmodel.nit;
             }
 
             // Clean solver context
-            if (input.model.decoupled_solve == 1 && Nmodel.nit>0 ) {
+            if ( Nmodel.nit>0 ) {
                 printf("Cleaning up Cholesky factors --- nit = %02d\n",  Nmodel.nit);
                 cholmod_free_factor ( &CholmodSolver.Lfact, &CholmodSolver.c);
                 cholmod_finish( &CholmodSolver.c );
@@ -1100,12 +1093,10 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         // Free solution arrays
         SFree( &Stokes );
         if ( IsNewtonStep == 1 ) SFree( &Jacob );
-        if (input.model.decoupled_solve == 1 ) {
-            SFree( &StokesA );
-            SFree( &StokesB );
-            SFree( &StokesC );
-            SFree( &StokesD );
-        }
+        SFree( &StokesA );
+        SFree( &StokesB );
+        SFree( &StokesC );
+        SFree( &StokesD );
         if ( IsNewtonStep == 1 ) {
             SFree( &JacobA );
             SFree( &JacobB );
