@@ -61,17 +61,17 @@ void PhaseRheologyLoop_v1( int is_centroid, double sign, double denom, double Ex
 
         if ( is_phase_active==true ) {
 
-            if (model->aniso==0) ViscosityConcise(      p,                                           G[c], T[c], P, gs0[c], phi0[c], X0[c], Exx, Ezz, Exz, txx0[c], tzz0[c], txz0[c], materials, model, scaling, &txx1, &tzz1, &txz1, &eta_vep, &VEcoeff, &eII_el, &eII_pl, &eII_pwl, &eII_exp, &eII_lin, &eII_gbs, &eII_cst, &dnew, strain[c], dil[c], fric[c], C[c], P0[c], T0, &Xreac, &OverS, &Pcorr, &rho, beta[c], div[c], &div_el, &div_pl, &div_r, &Wtot, &Wel, &Wdiss, 0, is_centroid );
-            if (model->aniso==1) ViscosityConciseAniso( p, lxlz, lx2, angle, ani_fstrain, ani_fac_e, G[c], T[c], P, gs0[c], phi0[c], X0[c], Exx, Ezz, Exz, txx0[c], tzz0[c], txz0[c], materials, model, scaling, &txx1, &tzz1, &txz1, &eta_vep, &ani_vep, &eII_el, &eII_pl, &eII_pwl, &eII_exp, &eII_lin, &eII_gbs, &eII_cst, &dnew, strain[c], dil[c], fric[c], C[c], P0[c], T0, &Xreac, &OverS, &Pcorr, &rho, beta[c], div[c], &div_el, &div_pl, &div_r, &Wtot, &Wel, &Wdiss, 0, is_centroid );
-            if ( model->eta_avg == ARITHMETIC) {
+            if (model->anisotropy==0) ViscosityConcise(      p,                                           G[c], T[c], P, gs0[c], phi0[c], X0[c], Exx, Ezz, Exz, txx0[c], tzz0[c], txz0[c], materials, model, scaling, &txx1, &tzz1, &txz1, &eta_vep, &VEcoeff, &eII_el, &eII_pl, &eII_pwl, &eII_exp, &eII_lin, &eII_gbs, &eII_cst, &dnew, strain[c], dil[c], fric[c], C[c], P0[c], T0, &Xreac, &OverS, &Pcorr, &rho, beta[c], div[c], &div_el, &div_pl, &div_r, &Wtot, &Wel, &Wdiss, 0, is_centroid );
+            if (model->anisotropy==1) ViscosityConciseAniso( p, lxlz, lx2, angle, ani_fstrain, ani_fac_e, G[c], T[c], P, gs0[c], phi0[c], X0[c], Exx, Ezz, Exz, txx0[c], tzz0[c], txz0[c], materials, model, scaling, &txx1, &tzz1, &txz1, &eta_vep, &ani_vep, &eII_el, &eII_pl, &eII_pwl, &eII_exp, &eII_lin, &eII_gbs, &eII_cst, &dnew, strain[c], dil[c], fric[c], C[c], P0[c], T0, &Xreac, &OverS, &Pcorr, &rho, beta[c], div[c], &div_el, &div_pl, &div_r, &Wtot, &Wel, &Wdiss, 0, is_centroid );
+            if ( model->eta_average == ARITHMETIC) {
                 *detadE      += sign*vol[p][c] * eta_vep/(denom); 
             }
             
-            if ( model->eta_avg == HARMONIC) {
+            if ( model->eta_average == HARMONIC) {
                 *detadE      += sign*vol[p][c] * eta_vep/(denom) / pow(eta_phase[p][c],2.0);
             }
             
-            if ( model->eta_avg == GEOMETRIC) {
+            if ( model->eta_average == GEOMETRIC) {
                 *detadE      += sign*vol[p][c] * eta_vep/(denom) / eta_phase[p][c];
             }
 
@@ -191,13 +191,13 @@ void DerivativesOnTheFly_n( double* detadexx, double* detadezz, double* detadgxz
                         detadp, ddivpdp, danidp, drhodp, mesh->phase_eta_n );
 
     // ----------------------------------------------------------------------------------------------------------------------------------------------------//
-    if ( model->eta_avg == HARMONIC ) {
+    if ( model->eta_average == HARMONIC ) {
         *detadexx *= pow(mesh->eta_n[c0] , 2);
         *detadezz *= pow(mesh->eta_n[c0] , 2);
         *detadgxz *= pow(mesh->eta_n[c0] , 2);
         *detadp   *= pow(mesh->eta_n[c0] , 2);
     }
-    if ( model->eta_avg == GEOMETRIC ) {
+    if ( model->eta_average == GEOMETRIC ) {
         *detadexx *= mesh->eta_n[c0];
         *detadezz *= mesh->eta_n[c0];
         *detadgxz *= mesh->eta_n[c0];
@@ -304,13 +304,13 @@ void DerivativesOnTheFly_s( double* detadexx, double* detadezz, double* detadgxz
                         detadp, NULL, danidp, NULL, mesh->phase_eta_s );
 
     //----------------------------------------------------------------------------------------------------------------------------------------------------//
-    if ( model->eta_avg == HARMONIC ) {
+    if ( model->eta_average == HARMONIC ) {
         *detadexx *= pow(mesh->eta_s[c1] , 2);
         *detadezz *= pow(mesh->eta_s[c1] , 2);
         *detadgxz *= pow(mesh->eta_s[c1] , 2);
         *detadp   *= pow(mesh->eta_s[c1] , 2);
     }
-    if ( model->eta_avg == GEOMETRIC ) {
+    if ( model->eta_average == GEOMETRIC ) {
         *detadexx *= mesh->eta_s[c1];
         *detadezz *= mesh->eta_s[c1];
         *detadgxz *= mesh->eta_s[c1];
@@ -341,17 +341,17 @@ void PhaseRheologyLoop( int is_centroid, double sign, double denom, double Exx, 
 
         if ( is_phase_active==true ) {
 
-            if (model->aniso==0) ViscosityConcise(      p,                                      G[c], T[c], P, gs0[c], phi0[c], X0[c], Exx, Ezz, Exz, txx0[c], tzz0[c], txz0[c], materials, model, scaling, &txx1, &tzz1, &txz1, &eta_vep,   &VEcoeff, &eII_el, &eII_pl, &eII_pwl, &eII_exp, &eII_lin, &eII_gbs, &eII_cst, &exx_el, &ezz_el, &exz_el, &exx_diss, &ezz_diss, &exz_diss, &dnew, strain[c], dil[c], fric[c], C[c], P0[c], T0, &Xreac, &OverS, &Pcorr, &rho, beta[c], div[c], &div_el, &div_pl, &div_r, 0, is_centroid );
-            // if (model->aniso==1) ViscosityConciseAniso( p, lxlz, lx2, angle, ani_fstrain, G[c], T[c], P, gs0[c], phi0[c], X0[c], Exx, Ezz, Exz, txx0[c], tzz0[c], txz0[c], materials, model, scaling, &txx1, &tzz1, &txz1, &eta_vep, &ani_vep, &ani_e, &eII_el, &eII_pl, &eII_pwl, &eII_exp, &eII_lin, &eII_gbs, &eII_cst, &exx_el, &ezz_el, &exz_el, &exx_diss, &ezz_diss, &exz_diss, &dnew, strain[c], dil[c], fric[c], C[c], P0[c], T0, &Xreac, &OverS, &Pcorr, &rho, beta[c], div[c], &div_el, &div_pl, &div_r, 0, is_centroid );
-            if ( model->eta_avg == ARITHMETIC) {
+            if (model->anisotropy==0) ViscosityConcise(      p,                                      G[c], T[c], P, gs0[c], phi0[c], X0[c], Exx, Ezz, Exz, txx0[c], tzz0[c], txz0[c], materials, model, scaling, &txx1, &tzz1, &txz1, &eta_vep,   &VEcoeff, &eII_el, &eII_pl, &eII_pwl, &eII_exp, &eII_lin, &eII_gbs, &eII_cst, &exx_el, &ezz_el, &exz_el, &exx_diss, &ezz_diss, &exz_diss, &dnew, strain[c], dil[c], fric[c], C[c], P0[c], T0, &Xreac, &OverS, &Pcorr, &rho, beta[c], div[c], &div_el, &div_pl, &div_r, 0, is_centroid );
+            // if (model->anisotropy==1) ViscosityConciseAniso( p, lxlz, lx2, angle, ani_fstrain, G[c], T[c], P, gs0[c], phi0[c], X0[c], Exx, Ezz, Exz, txx0[c], tzz0[c], txz0[c], materials, model, scaling, &txx1, &tzz1, &txz1, &eta_vep, &ani_vep, &ani_e, &eII_el, &eII_pl, &eII_pwl, &eII_exp, &eII_lin, &eII_gbs, &eII_cst, &exx_el, &ezz_el, &exz_el, &exx_diss, &ezz_diss, &exz_diss, &dnew, strain[c], dil[c], fric[c], C[c], P0[c], T0, &Xreac, &OverS, &Pcorr, &rho, beta[c], div[c], &div_el, &div_pl, &div_r, 0, is_centroid );
+            if ( model->eta_average == ARITHMETIC) {
                 detadE[c]      += sign*vol[p][c] * eta_vep/(denom); 
             }
             
-            if ( model->eta_avg == HARMONIC) {
+            if ( model->eta_average == HARMONIC) {
                 detadE[c]      += sign*vol[p][c] * eta_vep/(denom) / pow(eta_phase[p][c],2.0);
             }
             
-            if ( model->eta_avg == GEOMETRIC) {
+            if ( model->eta_average == GEOMETRIC) {
                 detadE[c]      += sign*vol[p][c] * eta_vep/(denom) / eta_phase[p][c];
             }
 
@@ -380,7 +380,7 @@ void ViscosityDerivatives0( grid *mesh, mat_prop *materials, params *model, scal
     int p, k, l, Nx, Nz, Ncx, Ncz, c0, c1, k1, cond;
     double eta, txx1, tzz1, txz1, Pn, Tn, eta_vep, VEcoeff=0.0, eII_el, eII_pl, eII_pwl, eII_exp, eII_lin, eII_gbs, eII_cst, dnew, div_el, div_pl, div_r;
     double exx_pwl, exz_pwl, exx_el, ezz_el, exz_el, exx_diss, ezz_diss, exz_diss;
-    int average = model->eta_avg, UnsplitDiffReac = model->UnsplitDiffReac;
+    int average = model->eta_average, unsplit_diff_reac = model->unsplit_diff_reac;
     double detadexx, detadezz, detadexz, detadp;
     double Xreac;
     double OverS;
@@ -401,7 +401,7 @@ void ViscosityDerivatives0( grid *mesh, mat_prop *materials, params *model, scal
     InterpCentroidsToVerticesDouble( mesh->phi0_n,  mesh->phi0_s,  mesh, model ); // ACHTUNG NOT FRICTION ANGLE
 
     // Evaluate cell center viscosities
-#pragma omp parallel for shared( mesh  ) private( cond, k, l, k1, p, eta, c1, c0, txx1, tzz1, txz1, eta_vep, VEcoeff, eII_el, eII_pl, eII_pwl, eII_exp, eII_lin, eII_gbs, eII_cst, dnew, exx_el, ezz_el, exz_el, exx_diss, ezz_diss, exz_diss, Xreac, OverS, Pcorr, rho, div_el, div_pl, div_r, Exx, Ezz, Exz, el, etae, ani, d1, d2, nx, nz, Da11, Da12, Da13, Da22, Da23, Da33, iDa11, iDa12, iDa13, iDa22, iDa23, iDa33, a11, a12, a13, a22, a23, a33, det, angle, lxlz, lx2 ) firstprivate( UnsplitDiffReac, materials, scaling, average, model, Ncx, Ncz, tol )
+#pragma omp parallel for shared( mesh  ) private( cond, k, l, k1, p, eta, c1, c0, txx1, tzz1, txz1, eta_vep, VEcoeff, eII_el, eII_pl, eII_pwl, eII_exp, eII_lin, eII_gbs, eII_cst, dnew, exx_el, ezz_el, exz_el, exx_diss, ezz_diss, exz_diss, Xreac, OverS, Pcorr, rho, div_el, div_pl, div_r, Exx, Ezz, Exz, el, etae, ani, d1, d2, nx, nz, Da11, Da12, Da13, Da22, Da23, Da33, iDa11, iDa12, iDa13, iDa22, iDa23, iDa33, a11, a12, a13, a22, a23, a33, det, angle, lxlz, lx2 ) firstprivate( unsplit_diff_reac, materials, scaling, average, model, Ncx, Ncz, tol )
     for ( k1=0; k1<Ncx*Ncz; k1++ ) {
 
         k      = mesh->kp[k1];
@@ -423,10 +423,10 @@ void ViscosityDerivatives0( grid *mesh, mat_prop *materials, params *model, scal
         if ( mesh->BCp.type[c0] != 30 && mesh->BCp.type[c0] != 31 ) {
             
             //----------------------------------------------------------//
-            if ( model->iselastic==1 ) etae      = model->dt*mesh->mu_n[c0];
+            if ( model->elastic==1 ) etae      = model->dt*mesh->mu_n[c0];
             else                       etae      = 1.0; // set to arbitrary value to avoid division by 0.0
             //----------------------------------------------------------//
-            if ( model->aniso == 0 ) {
+            if ( model->anisotropy == 0 ) {
                 ani = 0.0; d1   = 0.0; d2   = 0.0; angle = 0.0; lxlz = 0.0; lx2 = 0.0;
             }
             else {
@@ -567,13 +567,13 @@ void ViscosityDerivatives0( grid *mesh, mat_prop *materials, params *model, scal
             // }
 
             //----------------------------------------------------------------------------------------------------------------------------------------------------//
-            if ( model->eta_avg == HARMONIC ) {
+            if ( model->eta_average == HARMONIC ) {
                 mesh->detadexx_n[c0] *= pow(mesh->eta_n[c0] , 2);
                 mesh->detadezz_n[c0] *= pow(mesh->eta_n[c0] , 2);
                 mesh->detadgxz_n[c0] *= pow(mesh->eta_n[c0] , 2);
                 mesh->detadp_n[c0]   *= pow(mesh->eta_n[c0] , 2);
             }
-            if ( model->eta_avg == GEOMETRIC ) {
+            if ( model->eta_average == GEOMETRIC ) {
                 mesh->detadexx_n[c0] *= mesh->eta_n[c0];
                 mesh->detadezz_n[c0] *= mesh->eta_n[c0];
                 mesh->detadgxz_n[c0] *= mesh->eta_n[c0];
@@ -583,7 +583,7 @@ void ViscosityDerivatives0( grid *mesh, mat_prop *materials, params *model, scal
         }
     }
 
-    #pragma omp parallel for shared( mesh ) private( cond, k, l, k1, p, eta, c1, c0, txx1, tzz1, txz1, eta_vep, VEcoeff, eII_el, eII_pl, eII_pwl, eII_exp, eII_lin, eII_gbs, eII_cst, dnew, exx_el, ezz_el, exz_el, exx_diss, ezz_diss, exz_diss, detadexx, detadezz, detadexz, detadp, Xreac, OverS, Pcorr, rho, div_el, div_pl, div_r, Exx, Ezz, Exz, el, etae, ani, d1, d2, nx, nz, Da11, Da12, Da13, Da22, Da23, Da33, iDa11, iDa12, iDa13, iDa22, iDa23, iDa33, a11, a12, a13, a22, a23, a33, det, angle, lxlz, lx2 ) firstprivate( UnsplitDiffReac, materials, scaling, average, model, Nx, Nz, tol )
+    #pragma omp parallel for shared( mesh ) private( cond, k, l, k1, p, eta, c1, c0, txx1, tzz1, txz1, eta_vep, VEcoeff, eII_el, eII_pl, eII_pwl, eII_exp, eII_lin, eII_gbs, eII_cst, dnew, exx_el, ezz_el, exz_el, exx_diss, ezz_diss, exz_diss, detadexx, detadezz, detadexz, detadp, Xreac, OverS, Pcorr, rho, div_el, div_pl, div_r, Exx, Ezz, Exz, el, etae, ani, d1, d2, nx, nz, Da11, Da12, Da13, Da22, Da23, Da33, iDa11, iDa12, iDa13, iDa22, iDa23, iDa33, a11, a12, a13, a22, a23, a33, det, angle, lxlz, lx2 ) firstprivate( unsplit_diff_reac, materials, scaling, average, model, Nx, Nz, tol )
     for ( k1=0; k1<Nx*Nz; k1++ ) {
 
         k  = mesh->kn[k1];
@@ -599,10 +599,10 @@ void ViscosityDerivatives0( grid *mesh, mat_prop *materials, params *model, scal
         if ( mesh->BCg.type[c1] != 30 ) {
 
             //----------------------------------------------------------//
-            if ( model->iselastic==1   ) etae      = model->dt*mesh->mu_s[c1];
+            if ( model->elastic==1   ) etae      = model->dt*mesh->mu_s[c1];
             else           etae      = 1.0; // set to arbitrary value to avoid division by 0.0
             //----------------------------------------------------------//
-            if ( model->aniso == 0 ) {
+            if ( model->anisotropy == 0 ) {
                 ani = 0.0; d1   = 0.0; d2   = 0.0; angle = 0.0; lxlz = 0.0; lx2 = 0.0;
             }
             else {
@@ -735,13 +735,13 @@ void ViscosityDerivatives0( grid *mesh, mat_prop *materials, params *model, scal
                               mesh->detadp_s, NULL, NULL, mesh->phase_eta_s );
 
             //----------------------------------------------------------------------------------------------------------------------------------------------------//
-            if ( model->eta_avg == HARMONIC ) {
+            if ( model->eta_average == HARMONIC ) {
                 mesh->detadexx_s[c1] *= pow(mesh->eta_s[c1] , 2);
                 mesh->detadezz_s[c1] *= pow(mesh->eta_s[c1] , 2);
                 mesh->detadgxz_s[c1] *= pow(mesh->eta_s[c1] , 2);
                 mesh->detadp_s[c1]   *= pow(mesh->eta_s[c1] , 2);
             }
-            if ( model->eta_avg == GEOMETRIC ) {
+            if ( model->eta_average == GEOMETRIC ) {
                 mesh->detadexx_s[c1] *= mesh->eta_s[c1];
                 mesh->detadezz_s[c1] *= mesh->eta_s[c1];
                 mesh->detadgxz_s[c1] *= mesh->eta_s[c1];
@@ -763,7 +763,7 @@ void ViscosityDerivatives( grid *mesh, mat_prop *materials, params *model, scale
     int p, k, l, Nx, Nz, Ncx, Ncz, c0, c1, k1, cond;
     double eta, txx1, tzz1, txz1, Pn, Tn, eta_vep, VEcoeff=0.0, eII_el, eII_pl, eII_pwl, eII_exp, eII_lin, eII_gbs, eII_cst, dnew, div_el, div_pl, div_r;
     double exx_pwl, exz_pwl, exx_el, ezz_el, exz_el, exx_diss, ezz_diss, exz_diss;
-    int average = model->eta_avg, UnsplitDiffReac = model->UnsplitDiffReac;
+    int average = model->eta_average, unsplit_diff_reac = model->unsplit_diff_reac;
     double detadexx, detadezz, detadexz, detadp;
     double Xreac;
     double OverS;
@@ -784,7 +784,7 @@ void ViscosityDerivatives( grid *mesh, mat_prop *materials, params *model, scale
     InterpCentroidsToVerticesDouble( mesh->phi0_n,  mesh->phi0_s,  mesh, model ); // ACHTUNG NOT FRICTION ANGLE
 
     // Evaluate cell center viscosities
-#pragma omp parallel for shared( mesh  ) private( cond, k, l, k1, p, eta, c1, c0, txx1, tzz1, txz1, eta_vep, VEcoeff, eII_el, eII_pl, eII_pwl, eII_exp, eII_lin, eII_gbs, eII_cst, dnew, exx_el, ezz_el, exz_el, exx_diss, ezz_diss, exz_diss, Xreac, OverS, Pcorr, rho, div_el, div_pl, div_r, Exx, Ezz, Exz, el, etae, ani, d1, d2, nx, nz, Da11, Da12, Da13, Da22, Da23, Da33, iDa11, iDa12, iDa13, iDa22, iDa23, iDa33, a11, a12, a13, a22, a23, a33, det, angle, lxlz, lx2 ) firstprivate( UnsplitDiffReac, materials, scaling, average, model, Ncx, Ncz, tol )
+#pragma omp parallel for shared( mesh  ) private( cond, k, l, k1, p, eta, c1, c0, txx1, tzz1, txz1, eta_vep, VEcoeff, eII_el, eII_pl, eII_pwl, eII_exp, eII_lin, eII_gbs, eII_cst, dnew, exx_el, ezz_el, exz_el, exx_diss, ezz_diss, exz_diss, Xreac, OverS, Pcorr, rho, div_el, div_pl, div_r, Exx, Ezz, Exz, el, etae, ani, d1, d2, nx, nz, Da11, Da12, Da13, Da22, Da23, Da33, iDa11, iDa12, iDa13, iDa22, iDa23, iDa33, a11, a12, a13, a22, a23, a33, det, angle, lxlz, lx2 ) firstprivate( unsplit_diff_reac, materials, scaling, average, model, Ncx, Ncz, tol )
     for ( k1=0; k1<Ncx*Ncz; k1++ ) {
 
         k      = mesh->kp[k1];
@@ -806,10 +806,10 @@ void ViscosityDerivatives( grid *mesh, mat_prop *materials, params *model, scale
         if ( mesh->BCp.type[c0] != 30 && mesh->BCp.type[c0] != 31 ) {
             
             //----------------------------------------------------------//
-            if ( model->iselastic==1 ) etae      = model->dt*mesh->mu_n[c0];
+            if ( model->elastic==1 ) etae      = model->dt*mesh->mu_n[c0];
             else                       etae      = 1.0; // set to arbitrary value to avoid division by 0.0
             //----------------------------------------------------------//
-            if ( model->aniso == 0 ) {
+            if ( model->anisotropy == 0 ) {
                 ani = 0.0; d1   = 0.0; d2   = 0.0; angle = 0.0; lxlz = 0.0; lx2 = 0.0;
             }
             else {
@@ -868,7 +868,7 @@ void ViscosityDerivatives( grid *mesh, mat_prop *materials, params *model, scale
         }
     }
 
-    #pragma omp parallel for shared( mesh ) private( cond, k, l, k1, p, eta, c1, c0, txx1, tzz1, txz1, eta_vep, VEcoeff, eII_el, eII_pl, eII_pwl, eII_exp, eII_lin, eII_gbs, eII_cst, dnew, exx_el, ezz_el, exz_el, exx_diss, ezz_diss, exz_diss, detadexx, detadezz, detadexz, detadp, Xreac, OverS, Pcorr, rho, div_el, div_pl, div_r, Exx, Ezz, Exz, el, etae, ani, d1, d2, nx, nz, Da11, Da12, Da13, Da22, Da23, Da33, iDa11, iDa12, iDa13, iDa22, iDa23, iDa33, a11, a12, a13, a22, a23, a33, det, angle, lxlz, lx2 ) firstprivate( UnsplitDiffReac, materials, scaling, average, model, Nx, Nz, tol )
+    #pragma omp parallel for shared( mesh ) private( cond, k, l, k1, p, eta, c1, c0, txx1, tzz1, txz1, eta_vep, VEcoeff, eII_el, eII_pl, eII_pwl, eII_exp, eII_lin, eII_gbs, eII_cst, dnew, exx_el, ezz_el, exz_el, exx_diss, ezz_diss, exz_diss, detadexx, detadezz, detadexz, detadp, Xreac, OverS, Pcorr, rho, div_el, div_pl, div_r, Exx, Ezz, Exz, el, etae, ani, d1, d2, nx, nz, Da11, Da12, Da13, Da22, Da23, Da33, iDa11, iDa12, iDa13, iDa22, iDa23, iDa33, a11, a12, a13, a22, a23, a33, det, angle, lxlz, lx2 ) firstprivate( unsplit_diff_reac, materials, scaling, average, model, Nx, Nz, tol )
     for ( k1=0; k1<Nx*Nz; k1++ ) {
 
         k  = mesh->kn[k1];
@@ -884,10 +884,10 @@ void ViscosityDerivatives( grid *mesh, mat_prop *materials, params *model, scale
         if ( mesh->BCg.type[c1] != 30 ) {
 
             //----------------------------------------------------------//
-            if ( model->iselastic==1   ) etae      = model->dt*mesh->mu_s[c1];
+            if ( model->elastic==1   ) etae      = model->dt*mesh->mu_s[c1];
             else           etae      = 1.0; // set to arbitrary value to avoid division by 0.0
             //----------------------------------------------------------//
-            if ( model->aniso == 0 ) {
+            if ( model->anisotropy == 0 ) {
                 ani = 0.0; d1   = 0.0; d2   = 0.0; angle = 0.0; lxlz = 0.0; lx2 = 0.0;
             }
             else {

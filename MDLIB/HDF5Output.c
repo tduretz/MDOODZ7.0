@@ -321,7 +321,7 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
     Interp_Phase2VizGrid ( *particles, particles->dual, mesh, compo_hr, xviz_hr, zviz_hr, nxviz_hr, nzviz_hr, model, *topo );
     // ---------------------------------------------------------
     // Smooth rheological contrasts
-    if (model.diffuse_X) P2Mastah( &model, *particles, particles->X,     mesh, mesh->X_n,   mesh->BCp.type,  1, 0, interp, cent, model.itp_stencil);
+    if (model.diffuse_X) P2Mastah( &model, *particles, particles->X,     mesh, mesh->X_n,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil);
     // ---------------------------------------------------------
     // Cast grid arrays
     Crho_s  = DoodzMalloc( sizeof(float)*model.Nx*model.Nz);
@@ -479,97 +479,97 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
 
     // Total strain
     strain  = DoodzCalloc((model.Nx-1)*(model.Nz-1), sizeof(double));
-    P2Mastah( &model, *particles, particles->strain,     mesh, strain,   mesh->BCp.type,  1, 0, interp, cent, model.itp_stencil);
+    P2Mastah( &model, *particles, particles->strain,     mesh, strain,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil);
     Cstrain  = DoodzMalloc( sizeof(float)*(model.Nx-1)*(model.Nz-1));
     DoubleToFloat( strain, Cstrain, (model.Nx-1)*(model.Nz-1) );
 
     // Elastic strain
     strain_el  = DoodzCalloc((model.Nx-1)*(model.Nz-1),sizeof(double));
-    P2Mastah( &model, *particles, particles->strain_el,     mesh, strain_el,   mesh->BCp.type,  1, 0, interp, cent, model.itp_stencil);
+    P2Mastah( &model, *particles, particles->strain_el,     mesh, strain_el,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil);
     Cstrain_el  = DoodzMalloc( sizeof(float)*(model.Nx-1)*(model.Nz-1));
     DoubleToFloat( strain_el, Cstrain_el, (model.Nx-1)*(model.Nz-1) );
 
     // Plastic strain
     strain_pl  = DoodzCalloc((model.Nx-1)*(model.Nz-1), sizeof(double));
-    P2Mastah( &model, *particles, particles->strain_pl,     mesh, strain_pl,   mesh->BCp.type,  1, 0, interp, cent, model.itp_stencil);
+    P2Mastah( &model, *particles, particles->strain_pl,     mesh, strain_pl,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil);
     Cstrain_pl  = DoodzMalloc( sizeof(float)*(model.Nx-1)*(model.Nz-1));
     DoubleToFloat( strain_pl, Cstrain_pl, (model.Nx-1)*(model.Nz-1) );
 
     // Power-law strain
     strain_pwl  = DoodzCalloc((model.Nx-1)*(model.Nz-1), sizeof(double));
-    P2Mastah( &model, *particles, particles->strain_pwl,     mesh, strain_pwl,   mesh->BCp.type,  1, 0, interp, cent, model.itp_stencil);
+    P2Mastah( &model, *particles, particles->strain_pwl,     mesh, strain_pwl,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil);
     Cstrain_pwl  = DoodzMalloc( sizeof(float)*(model.Nx-1)*(model.Nz-1));
     DoubleToFloat( strain_pwl, Cstrain_pwl, (model.Nx-1)*(model.Nz-1) );
 
     // Exponential flow strain
     strain_exp  = DoodzCalloc((model.Nx-1)*(model.Nz-1), sizeof(double));
-    P2Mastah( &model, *particles, particles->strain_exp,     mesh, strain_exp,   mesh->BCp.type,  1, 0, interp, cent, model.itp_stencil);
+    P2Mastah( &model, *particles, particles->strain_exp,     mesh, strain_exp,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil);
     Cstrain_exp  = DoodzMalloc( sizeof(float)*(model.Nx-1)*(model.Nz-1));
     DoubleToFloat( strain_exp, Cstrain_exp, (model.Nx-1)*(model.Nz-1) );
 
     // Linear flow strain
     strain_lin  = DoodzCalloc((model.Nx-1)*(model.Nz-1), sizeof(double));
-    P2Mastah( &model, *particles, particles->strain_lin,     mesh, strain_lin,   mesh->BCp.type,  1, 0, interp, cent, model.itp_stencil);
+    P2Mastah( &model, *particles, particles->strain_lin,     mesh, strain_lin,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil);
     Cstrain_lin  = DoodzMalloc( sizeof(float)*(model.Nx-1)*(model.Nz-1));
     DoubleToFloat( strain_lin, Cstrain_lin, (model.Nx-1)*(model.Nz-1) );
 
     // GBS flow strain
     strain_gbs  = DoodzCalloc((model.Nx-1)*(model.Nz-1), sizeof(double));
-    P2Mastah( &model, *particles, particles->strain_gbs,     mesh, strain_gbs,   mesh->BCp.type,  1, 0, interp, cent, model.itp_stencil);
+    P2Mastah( &model, *particles, particles->strain_gbs,     mesh, strain_gbs,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil);
     Cstrain_gbs  = DoodzMalloc( sizeof(float)*(model.Nx-1)*(model.Nz-1));
     DoubleToFloat( strain_gbs, Cstrain_gbs, (model.Nx-1)*(model.Nz-1) );
 
-    if ( model.fstrain == 1 ) {
+    if ( model.finite_strain == 1 ) {
         // Fxx
         Fxx  = DoodzCalloc((model.Nx-1)*(model.Nz-1), sizeof(double));
-        P2Mastah( &model, *particles, particles->Fxx,     mesh, Fxx,   mesh->BCp.type,  1, 0, interp, cent, model.itp_stencil);
+        P2Mastah( &model, *particles, particles->Fxx,     mesh, Fxx,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil);
         CFxx  = DoodzMalloc( sizeof(float)*(model.Nx-1)*(model.Nz-1));
         DoubleToFloat( Fxx, CFxx, (model.Nx-1)*(model.Nz-1) );
 
         // Fxz
         Fxz  = DoodzCalloc((model.Nx-1)*(model.Nz-1),sizeof(double));
-        P2Mastah( &model, *particles, particles->Fxz,     mesh, Fxz,   mesh->BCp.type,  1, 0, interp, cent, model.itp_stencil);
+        P2Mastah( &model, *particles, particles->Fxz,     mesh, Fxz,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil);
         CFxz  = DoodzMalloc( sizeof(float)*(model.Nx-1)*(model.Nz-1));
         DoubleToFloat( Fxz, CFxz, (model.Nx-1)*(model.Nz-1) );
 
         // Fzx
         Fzx  = DoodzCalloc((model.Nx-1)*(model.Nz-1), sizeof(double));
-        P2Mastah( &model, *particles, particles->Fzx,     mesh, Fzx,   mesh->BCp.type,  1, 0, interp, cent, model.itp_stencil);
+        P2Mastah( &model, *particles, particles->Fzx,     mesh, Fzx,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil);
         CFzx  = DoodzMalloc( sizeof(float)*(model.Nx-1)*(model.Nz-1));
         DoubleToFloat( Fzx, CFzx, (model.Nx-1)*(model.Nz-1) );
 
         // Fzz
         Fzz  = DoodzCalloc((model.Nx-1)*(model.Nz-1),sizeof(double));
-        P2Mastah( &model, *particles, particles->Fzz,     mesh, Fzz,   mesh->BCp.type,  1, 0, interp, cent, model.itp_stencil);
+        P2Mastah( &model, *particles, particles->Fzz,     mesh, Fzz,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil);
         CFzz = DoodzMalloc( sizeof(float)*(model.Nx-1)*(model.Nz-1));
         DoubleToFloat( Fzz, CFzz, (model.Nx-1)*(model.Nz-1) );
     }
 
-    if ( model.aniso == 1 ) {
+    if ( model.anisotropy == 1 ) {
 
         // nx
         nx  = DoodzCalloc((model.Nx-1)*(model.Nz-1),sizeof(double));
-        P2Mastah( &model, *particles, particles->nx,     mesh, nx,   mesh->BCp.type,  1, 0, interp, cent, model.itp_stencil);
+        P2Mastah( &model, *particles, particles->nx,     mesh, nx,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil);
         Cnx = DoodzMalloc( sizeof(float)*(model.Nx-1)*(model.Nz-1));
         DoubleToFloat( nx, Cnx, (model.Nx-1)*(model.Nz-1) );
 
         // nz
         nz  = DoodzCalloc((model.Nx-1)*(model.Nz-1), sizeof(double));
-        P2Mastah( &model, *particles, particles->nz,     mesh, nz,   mesh->BCp.type,  1, 0, interp, cent, model.itp_stencil);
+        P2Mastah( &model, *particles, particles->nz,     mesh, nz,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil);
         Cnz = DoodzMalloc( sizeof(float)*(model.Nx-1)*(model.Nz-1));
         DoubleToFloat( nz, Cnz, (model.Nx-1)*(model.Nz-1) );
 
-        // aniso factor on centroids
+        // anisotropy factor on centroids
         Cani_fac = DoodzMalloc( sizeof(float)*(model.Nx-1)*(model.Nz-1));
         DoubleToFloat( mesh->aniso_factor_n, Cani_fac, (model.Nx-1)*(model.Nz-1) );
 
     }
 
-    if ( model.rec_T_P_x_z == 1 ) {
+    if ( model.track_T_P_x_z == 1 ) {
 
         // T0
         T0  = DoodzCalloc((model.Nx-1)*(model.Nz-1), sizeof(double));
-        P2Mastah( &model, *particles, particles->T0,     mesh, T0,   mesh->BCp.type,  1, 0, interp, cent, model.itp_stencil);
+        P2Mastah( &model, *particles, particles->T0,     mesh, T0,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil);
         for (k=0; k<(mesh->Nx-1)*(mesh->Nz-1); k++) {
             if ( mesh->BCt.type[k] == 30 ) T0[k]   = zeroC/scaling.T;
         }
@@ -579,7 +579,7 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
 
         // P0
         P0  = DoodzCalloc((model.Nx-1)*(model.Nz-1), sizeof(double));
-        P2Mastah( &model, *particles, particles->P0,     mesh, P0,   mesh->BCp.type,  1, 0, interp, cent, model.itp_stencil);
+        P2Mastah( &model, *particles, particles->P0,     mesh, P0,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil);
         for (k=0; k<(mesh->Nx-1)*(mesh->Nz-1); k++) {
             if ( mesh->BCt.type[k] == 30 ) P0[k]   = 0.0;
         }
@@ -589,7 +589,7 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
 
         // Tmax
         Tmax  = DoodzCalloc((model.Nx-1)*(model.Nz-1), sizeof(double));
-        P2Mastah( &model, *particles, particles->Tmax,     mesh, Tmax,   mesh->BCp.type,  1, 0, interp, cent, model.itp_stencil);
+        P2Mastah( &model, *particles, particles->Tmax,     mesh, Tmax,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil);
         for (k=0; k<(mesh->Nx-1)*(mesh->Nz-1); k++) {
             if ( mesh->BCt.type[k] == 30 ) Tmax[k] = zeroC/scaling.T;
         }
@@ -599,7 +599,7 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
 
         // Pmax
         Pmax  = DoodzCalloc((model.Nx-1)*(model.Nz-1),sizeof(double));
-        P2Mastah( &model, *particles, particles->Pmax,     mesh, Pmax,   mesh->BCp.type,  1, 0, interp, cent, model.itp_stencil);
+        P2Mastah( &model, *particles, particles->Pmax,     mesh, Pmax,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil);
         for (k=0; k<(mesh->Nx-1)*(mesh->Nz-1); k++) {
             if ( mesh->BCt.type[k] == 30 ) Pmax[k] = 0.0;
         }
@@ -610,14 +610,14 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
 
         // x0
         x0  = DoodzCalloc((model.Nx-1)*(model.Nz-1), sizeof(double));
-        P2Mastah( &model, *particles, particles->x0,     mesh, x0,   mesh->BCp.type,  1, 0, interp, cent, model.itp_stencil);
+        P2Mastah( &model, *particles, particles->x0,     mesh, x0,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil);
         Cx0  = DoodzMalloc( sizeof(float)*(model.Nx-1)*(model.Nz-1));
         DoubleToFloat( x0, Cx0, (model.Nx-1)*(model.Nz-1) );
         ScaleBack( Cx0, scaling.L, (model.Nx-1)*(model.Nz-1) );
 
         // z0
         z0  = DoodzCalloc((model.Nx-1)*(model.Nz-1), sizeof(double));
-        P2Mastah( &model, *particles, particles->z0,     mesh, z0,   mesh->BCp.type,  1, 0, interp, cent, model.itp_stencil);
+        P2Mastah( &model, *particles, particles->z0,     mesh, z0,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil);
         Cz0 = DoodzMalloc( sizeof(float)*(model.Nx-1)*(model.Nz-1));
         DoubleToFloat( z0, Cz0, (model.Nx-1)*(model.Nz-1) );
         ScaleBack( Cz0, scaling.L, (model.Nx-1)*(model.Nz-1) );
@@ -640,7 +640,7 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
     //---------------------------------------------------
 
     // Topography
-    if ( model.free_surf == 1 ) {
+    if ( model.free_surface == 1 ) {
 
         Cxtopo = DoodzMalloc( sizeof(float)*topo_chain->Nb_part);
         DoubleToFloat( topo_chain->x, Cxtopo, topo_chain->Nb_part );
@@ -674,9 +674,9 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
 
     // Generate file name
     asprintf( &FileName, "%s%05d%s",txtout, model.step, ".gzip.h5");
-    if (model.writerSubfolder && strcmp(model.writerSubfolder, "")) {
-      CreateDir(model.writerSubfolder);
-      asprintf( &FileName, "%s/%s", model.writerSubfolder, FileName);
+    if (model.writer_subfolder && strcmp(model.writer_subfolder, "")) {
+      CreateDir(model.writer_subfolder);
+      asprintf( &FileName, "%s/%s", model.writer_subfolder, FileName);
     }
     CreateOutputHDF5( FileName );
 
@@ -775,7 +775,7 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
     AddFieldToGroup( FileName, "Centers" , "X" , 'f', (model.Nx-1)*(model.Nz-1), CX, 1 );
     AddFieldToGroup( FileName, "Centers" , "OverS",'f', (model.Nx-1)*(model.Nz-1), COverS, 1 );
 
-    if ( model.free_surf == 1 ) {
+    if ( model.free_surface == 1 ) {
         AddFieldToGroup( FileName, "Topo", "z_grid" , 'f', (model.Nx), Cheight, 1 );
         AddFieldToGroup( FileName, "Topo", "Vx_grid" , 'f', (model.Nx), Ctopovx, 1 );
         AddFieldToGroup( FileName, "Topo", "Vz_grid" , 'f', (model.Nx+1), Ctopovz, 1 );
@@ -789,20 +789,20 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
     AddFieldToGroup( FileName, "Centers" , "friction", 'f', (model.Nx-1)*(model.Nz-1), Cfriction, 1 );
     AddFieldToGroup( FileName, "Centers" , "cohesion", 'f', (model.Nx-1)*(model.Nz-1), Ccohesion, 1 );
 
-    if (model.fstrain == 1) {
+    if (model.finite_strain == 1) {
         AddFieldToGroup( FileName, "Centers" , "Fxx", 'f', (model.Nx-1)*(model.Nz-1), CFxx, 1 );
         AddFieldToGroup( FileName, "Centers" , "Fxz", 'f', (model.Nx-1)*(model.Nz-1), CFxz, 1 );
         AddFieldToGroup( FileName, "Centers" , "Fzx", 'f', (model.Nx-1)*(model.Nz-1), CFzx, 1 );
         AddFieldToGroup( FileName, "Centers" , "Fzz", 'f', (model.Nx-1)*(model.Nz-1), CFzz, 1 );
     }
 
-    if (model.aniso == 1) {
+    if (model.anisotropy == 1) {
         AddFieldToGroup( FileName, "Centers" , "nx", 'f', (model.Nx-1)*(model.Nz-1), Cnx, 1 );
         AddFieldToGroup( FileName, "Centers" , "nz", 'f', (model.Nx-1)*(model.Nz-1), Cnz, 1 );
         AddFieldToGroup( FileName, "Centers" , "ani_fac", 'f', (model.Nx-1)*(model.Nz-1), Cani_fac, 1 );
     }
 
-    if (model.rec_T_P_x_z == 1) {
+    if (model.track_T_P_x_z == 1) {
         AddFieldToGroup( FileName, "Centers" , "T0", 'f', (model.Nx-1)*(model.Nz-1), CT0, 1 );
         AddFieldToGroup( FileName, "Centers" , "P0", 'f', (model.Nx-1)*(model.Nz-1), CP0, 1 );
         AddFieldToGroup( FileName, "Centers" , "Tmax", 'f', (model.Nx-1)*(model.Nz-1), CTmax, 1 );
@@ -883,7 +883,7 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
     DoodzFree( Cdivu_th );
     DoodzFree( Cdivu_r );
 
-    if ( model.free_surf == 1 ) {
+    if ( model.free_surface == 1 ) {
         DoodzFree( Cxtopo );
         DoodzFree( Cztopo );
         DoodzFree( Cheight );
@@ -899,7 +899,7 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
     DoodzFree( compo    );
     DoodzFree( compo_hr );
 
-    if ( model.fstrain == 1 ) {
+    if ( model.finite_strain == 1 ) {
         DoodzFree( Fxx  );
         DoodzFree( Fxz  );
         DoodzFree( Fzx  );
@@ -910,7 +910,7 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
         DoodzFree( CFzz );
     }
 
-     if ( model.aniso == 1 ) {
+     if ( model.anisotropy == 1 ) {
          DoodzFree( nx  );
          DoodzFree( nz  );
          DoodzFree( Cnx );
@@ -918,7 +918,7 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
          DoodzFree( Cani_fac );
      }
 
-    if ( model.rec_T_P_x_z == 1 ) {
+    if ( model.track_T_P_x_z == 1 ) {
         DoodzFree( T0 );
         DoodzFree( P0 );
         DoodzFree( Tmax );
@@ -1023,7 +1023,7 @@ void WriteOutputHDF5Particles( grid *mesh, markers *particles, surface *topo, ma
     ScaleBack( part_sxz,   scaling.S, Nb_part_viz );
 
     // Topography
-    if ( model.free_surf == 1 ) {
+    if ( model.free_surface == 1 ) {
 
         // Real topo
         Cxtopo = DoodzMalloc( sizeof(float)*topo_chain->Nb_part);
@@ -1134,7 +1134,7 @@ void WriteOutputHDF5Particles( grid *mesh, markers *particles, surface *topo, ma
     AddFieldToGroup( FileName, "Particles", "sxxd", 'f', Nb_part_viz, part_sxxd,    1 );
     AddFieldToGroup( FileName, "Particles", "sxz",  'f', Nb_part_viz, part_sxz,    1 );
 
-    if ( model.free_surf == 1 ) {
+    if ( model.free_surface == 1 ) {
         AddFieldToGroup( FileName, "Topo", "height" , 'f', (model.Nx), Cheight, 1 );
         AddFieldToGroup( FileName, "Topo", "vxsurf" , 'f', (model.Nx), Cvxsurf, 1 );
         AddFieldToGroup( FileName, "Topo", "vzsurf" , 'f', (model.Nx+1), Cvzsurf, 1 );
@@ -1169,7 +1169,7 @@ void WriteOutputHDF5Particles( grid *mesh, markers *particles, surface *topo, ma
     DoodzFree( part_index  ); // Tracer: clean
     //------------//
 
-    if ( model.free_surf == 1 ) {
+    if ( model.free_surface == 1 ) {
         DoodzFree( Cxtopo );
         DoodzFree( Cztopo );
         DoodzFree( Cvxtopo );

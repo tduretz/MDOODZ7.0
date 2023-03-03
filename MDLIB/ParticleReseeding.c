@@ -41,7 +41,7 @@
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-void CountPartCell2 ( markers* particles, grid *mesh, params model, surface topo, surface topo_ini, int reseed, scale scaling ) {
+void CountPartCell2 ( markers* particles, grid *mesh, params model, surface topo, surface topo_ini, int reseed_markers, scale scaling ) {
 
     // This function counts the number of particle that are currently in each cell of the domain.
     // The function detects cells that are lacking of particle and call the particle re-seeding routine.
@@ -380,7 +380,7 @@ firstprivate( ncx, mesh ) schedule( static )
 
     int Np_add  = 0;
 
-    if (reseed == 1) {
+    if (reseed_markers == 1) {
 
 
 
@@ -548,7 +548,7 @@ firstprivate( ncx, mesh ) schedule( static )
                             }
                         }
 
-                        AssignMarkerProperties ( particles, new_index, min_index, &model, mesh, model.DirectNeighbour );
+                        AssignMarkerProperties ( particles, new_index, min_index, &model, mesh, model.direct_neighbour );
                         Np_add++;
                         //
                         //                             // SW
@@ -573,7 +573,7 @@ firstprivate( ncx, mesh ) schedule( static )
                         //                                     min_index = neigh;
                         //                             }
                         //
-                        //                             AssignMarkerProperties ( particles, new_index, min_index, &model, mesh, model.DirectNeighbour );
+                        //                             AssignMarkerProperties ( particles, new_index, min_index, &model, mesh, model.direct_neighbour );
                         //                             Np_add++;
                         //
                         //                             // SE
@@ -598,7 +598,7 @@ firstprivate( ncx, mesh ) schedule( static )
                         //                                     min_index = neigh;
                         //                             }
                         //
-                        //                             AssignMarkerProperties ( particles, new_index, min_index, &model, mesh, model.DirectNeighbour );
+                        //                             AssignMarkerProperties ( particles, new_index, min_index, &model, mesh, model.direct_neighbour );
                         //                             Np_add++;
                         //
                         //                             // NW
@@ -623,7 +623,7 @@ firstprivate( ncx, mesh ) schedule( static )
                         //                                     min_index = neigh;
                         //                             }
                         //
-                        //                             AssignMarkerProperties ( particles, new_index, min_index, &model, mesh, model.DirectNeighbour );
+                        //                             AssignMarkerProperties ( particles, new_index, min_index, &model, mesh, model.direct_neighbour );
                         //                             Np_add++;
                         //
                         //                            // NE
@@ -648,7 +648,7 @@ firstprivate( ncx, mesh ) schedule( static )
                         //                                     min_index = neigh;
                         //                             }
                         //
-                        //                             AssignMarkerProperties ( particles, new_index, min_index, &model, mesh, model.DirectNeighbour );
+                        //                             AssignMarkerProperties ( particles, new_index, min_index, &model, mesh, model.direct_neighbour );
                         //                             Np_add++;
 
                         DoodzFree(ind_list);

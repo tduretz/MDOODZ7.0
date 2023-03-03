@@ -60,12 +60,12 @@ void SetParticles(SetParticles_ff setParticles, MdoodzInput *instance, markers *
     if (setParticles.SetHorizontalVelocity) {
       particles->Vx[np] = setParticles.SetHorizontalVelocity(instance, coordinates);
     } else {
-      particles->Vx[np] = -coordinates.x * instance->model.EpsBG;
+      particles->Vx[np] = -coordinates.x * instance->model.bkg_strain_rate;
     }
     if (setParticles.SetVerticalVelocity) {
       particles->Vz[np] = setParticles.SetVerticalVelocity(instance, coordinates);
     } else {
-      particles->Vz[np] = coordinates.z * instance->model.EpsBG;
+      particles->Vz[np] = coordinates.z * instance->model.bkg_strain_rate;
     }
     if (setParticles.SetGrainSize) {
       particles->d[np] = setParticles.SetGrainSize(instance, coordinates, particles->phase[np]);
@@ -107,13 +107,13 @@ void SetParticles(SetParticles_ff setParticles, MdoodzInput *instance, markers *
     if (setParticles.SetDefGrad) {
       F = setParticles.SetDefGrad(instance, coordinates, particles->phase[np]);
     }
-    if (instance->model.fstrain==1) {
+    if (instance->model.finite_strain==1) {
       particles->Fxx[np] = F.xx;
       particles->Fxz[np] = F.xz;
       particles->Fzx[np] = F.zx;
       particles->Fzz[np] = F.zz;
     }
-    if (instance->model.particle_aniso_angle && setParticles.SetAnisoAngle) {
+    if (instance->model.marker_aniso_angle && setParticles.SetAnisoAngle) {
       particles->aniso_angle[np] = setParticles.SetAnisoAngle(instance, coordinates, particles->phase[np]) *M_PI / 180;
     }
     ValidatePhase(particles->phase[np], instance->model.Nb_phases);
@@ -325,7 +325,7 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
       } else if (l == NCZ - 1) {
         position = N;
       } else if ((mesh->BCp.type[c] == -1 || mesh->BCp.type[c] == 1 || mesh->BCp.type[c] == 0) && mesh->BCp.type[c + NCX] == 30) {
-        position = FREE_SURFACE;
+        position = free_surfaceACE;
       } else {
         position = INTERNAL;
       }
@@ -376,7 +376,7 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
       } else if (l == NCZ - 1) {
         position = N;
       } else if ((mesh->BCt.type[c] == -1 || mesh->BCt.type[c] == 1 || mesh->BCt.type[c] == 0) && mesh->BCt.type[c + NCX] == 30) {
-        position = FREE_SURFACE;
+        position = free_surfaceACE;
       } else {
         position = INTERNAL;
       }
@@ -421,9 +421,9 @@ void ValidateSetup(MdoodzSetup *setup, MdoodzInput *instance) {
   char *errors[20]    = {};
   int   warningsCount = 0;
   char *warnings[20]  = {};
-  if (instance->model.free_surf) {
+  if (instance->model.free_surface) {
     if (!setup->BuildInitialTopography) {
-      errors[errorsCount] = "If Free Surface mode is ON and BuildInitialTopography MUST be specified. Please set free_surf = 0 or set BuildInitialTopography";
+      errors[errorsCount] = "If Free Surface mode is ON and BuildInitialTopography MUST be specified. Please set free_surface = 0 or set BuildInitialTopography";
       errorsCount++;
     } else {
       if (!setup->BuildInitialTopography->SetSurfaceZCoord) {
@@ -442,11 +442,11 @@ void ValidateSetup(MdoodzSetup *setup, MdoodzInput *instance) {
     errorsCount++;
   } else {
     if (!setup->SetParticles->SetHorizontalVelocity) {
-      warnings[warningsCount] = "SetParticles.SetHorizontalVelocity is not specified. Horizontal velocity will be (-x * EpsBG)";
+      warnings[warningsCount] = "SetParticles.SetHorizontalVelocity is not specified. Horizontal velocity will be (-x * bkg_strain_rate)";
       warningsCount++;
     }
     if (!setup->SetParticles->SetVerticalVelocity) {
-      warnings[warningsCount] = "SetParticles.SetVerticalVelocity is not specified. Horizontal velocity will be (z * EpsBG)";
+      warnings[warningsCount] = "SetParticles.SetVerticalVelocity is not specified. Horizontal velocity will be (z * bkg_strain_rate)";
       warningsCount++;
     }
     if (!setup->SetParticles->SetPhase) {
@@ -503,13 +503,13 @@ void ValidateSetup(MdoodzSetup *setup, MdoodzInput *instance) {
       warnings[warningsCount] = "SetBCs.SetBCPType is not specified. BCP type will be set to -1";
       warningsCount++;
     }
-    if (instance->model.isthermal) {
+    if (instance->model.thermal) {
       if (!setup->SetBCs->SetBCTNew) {
-        errors[errorsCount] = "SetBCs.SetBCTNew MUST be specified for Thermal model. Please set isthermal = 0 or specify SetBCTTypeNew";
+        errors[errorsCount] = "SetBCs.SetBCTNew MUST be specified for Thermal model. Please set thermal = 0 or specify SetBCTTypeNew";
         errorsCount++;
       }
       if (!setup->SetBCs->SetBCT) {
-        errors[errorsCount] = "SetBCs.SetBCT MUST be specified for Thermal model. Please set isthermal = 0 or specify SetBCTType (will be deprecated)";
+        errors[errorsCount] = "SetBCs.SetBCT MUST be specified for Thermal model. Please set thermal = 0 or specify SetBCTType (will be deprecated)";
         errorsCount++;
       }
     }
@@ -545,7 +545,7 @@ SetBC SetPureShearBCVx(MdoodzInput *input, POSITION position, Coordinates coordi
     bc.value = 0;
     bc.type  = 13;
   } else if (position == W || position == E) {
-    bc.value = -coordinates.x * input->model.EpsBG;
+    bc.value = -coordinates.x * input->model.bkg_strain_rate;
     bc.type  = 0;
   } else {
     bc.value = 0.0;
@@ -562,10 +562,10 @@ SetBC SetSimpleShearBCVx(MdoodzInput *input, POSITION position, Coordinates coor
   SetBC        bc;
   const double Lz = (double) (input->model.zmax - input->model.zmin);
   if (position == S || position == SE || position == SW) {
-    bc.value = -input->model.EpsBG * Lz;
+    bc.value = -input->model.bkg_strain_rate * Lz;
     bc.type  = 11;
   } else if (position == N || position == NE || position == NW) {
-    bc.value = input->model.EpsBG * Lz;
+    bc.value = input->model.bkg_strain_rate * Lz;
     bc.type  = 11;
   } else if (position == E) {
     bc.value = 0.0;
@@ -602,7 +602,7 @@ SetBC SetPureShearBCVz(MdoodzInput *input, POSITION position, Coordinates coordi
     bc.value = 0;
     bc.type  = 13;
   } else if (position == S || position == N) {
-    bc.value = coordinates.z * input->model.EpsBG;
+    bc.value = coordinates.z * input->model.bkg_strain_rate;
     bc.type  = 0;
   } else {
     bc.value = 0;

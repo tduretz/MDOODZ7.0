@@ -147,9 +147,9 @@ void ChemicalDirectSolve( grid *mesh, params model, markers *particles, mat_prop
         if ( mesh->BCc.type[c2] != 30 ) {
             
             // Contribution from transient term
-            if ( model.UnsplitDiffReac == 0 ) b[eqn]  = transient * mesh->X_n[c2]/ dt;
+            if ( model.unsplit_diff_reac == 0 ) b[eqn]  = transient * mesh->X_n[c2]/ dt;
             
-            if ( model.UnsplitDiffReac == 1 ) {
+            if ( model.unsplit_diff_reac == 1 ) {
                 b[eqn]  = transient * mesh->X0_n[c2]/ dt;
 
                 // Pr, dPr, tau_kin depends on phases
@@ -169,7 +169,7 @@ void ChemicalDirectSolve( grid *mesh, params model, markers *particles, mat_prop
                 Xeq     = 0.5*erfc((-mesh->p_in[c2] + Pr)/dPr) ;
                 
                 if (Xeq >= mesh->X0_n[c2]                      ) prod[c2] = 1.0;
-                if (Xeq <  mesh->X0_n[c2] && model.NoReturn==1 ) prod[c2] = 0.0;
+                if (Xeq <  mesh->X0_n[c2] && model.no_return==1 ) prod[c2] = 0.0;
 
     //           printf("Xeq = %2.2e p_in = %2.2e Pr = %2.2e dPr = %2.2e\n", Xeq, mesh->p_in[c2]*scaling.S, Pr*scaling.S, dPr*scaling.S);
 
@@ -228,8 +228,8 @@ void ChemicalDirectSolve( grid *mesh, params model, markers *particles, mat_prop
                 }
                 
                 // ----------------- Center point ----------------- //
-                if ( model.UnsplitDiffReac == 1 ) val = transient/dt + prod[c2]/tau_kin[c2];
-                if ( model.UnsplitDiffReac == 0 ) val = transient/dt;
+                if ( model.unsplit_diff_reac == 1 ) val = transient/dt + prod[c2]/tau_kin[c2];
+                if ( model.unsplit_diff_reac == 0 ) val = transient/dt;
                 
                 // Average conductivity for surface values (avoid zero conductivity)
                 ks = 0.25*(AE+AW+AN+AS);

@@ -148,13 +148,13 @@ struct _SparseMat {
 typedef struct _n_params Nparams;
 struct _n_params {
   int     nit, nit_max, stagnated;
-  double  abs_tol_u, rel_tol_u, abs_tol_p, rel_tol_p;
+  double  nonlin_abs_mom, nonlin_rel_mom, nonlin_abs_div, nonlin_rel_div;
   double  resx, resz, resp, rest;
   double  resx0, resz0, resp0;
   double  resx_f, resz_f, resp_f;
   double  vrlx, prlx, trlx;
-  int     Picard2Newton, let_res_grow, nit_Pic_max, *LogIsNewtonStep;
-  double  Pic2NewtCond;
+  int     Picard2Newton, let_res_grow, max_Pic_its, *LogIsNewtonStep;
+  double  Picard2Newton_tol;
   double *rx_abs, *rz_abs, *rp_abs, *rx_rel, *rz_rel, *rp_rel;
 };
 
@@ -423,7 +423,7 @@ void            EvaluateStokesResidualDecoupled(SparseMat *, SparseMat *, Sparse
 void            BuildStokesOperatorDecoupled(grid *, params, int, double *, double *, double *, double *, SparseMat *, SparseMat *, SparseMat *, SparseMat *, SparseMat *, int);
 void            SolveStokesDecoupled(SparseMat *, SparseMat *, SparseMat *, SparseMat *, SparseMat *, DirectSolver *, params, grid *, scale);
 void            SolveStokesDefectDecoupled(SparseMat *, SparseMat *, SparseMat *, SparseMat *, SparseMat *, DirectSolver *, Nparams *, grid *, params *, markers *, markers *, surface *, mat_prop, scale, SparseMat *, SparseMat *, SparseMat *);
-void            AddCoeff2(int *, double *, int, int, int *, double, int, double, double *);
+void            AddCoeff3(int *, double *, int, int, int *, double, int, double, double *);
 void            MergeParallelMatrix(SparseMat *, double **, int **, int **, grid *, int *, int *, int *, int *, int *, int, char *, int *);
 void            DirectStokesDecoupled(SparseMat *, SparseMat *, SparseMat *, SparseMat *, DirectSolver *, double *, double *, double *, params, grid *, scale, SparseMat *);
 void            DirectStokesDecoupledComp(SparseMat *, SparseMat *, SparseMat *, SparseMat *, DirectSolver *, double *, double *, double *, params, grid *, scale, SparseMat *);
@@ -466,8 +466,6 @@ void            AssignMarkerProperties(markers *, int, int, params *, grid *, in
 
 
 // GLOBAL
-//void Interp_P2G( markers, DoodzFP*, grid*, double*, double*, double*, int, int, double, double, int, int, params*, char*  );
-
 void            AdvectFreeSurf_BEN(markers *, params, scale);
 void            BuildInitialTopography_BEN(surface *, markers *, params, grid, scale);
 void            SetTopoChainHorizontalCoords_BEN(surface *, markers *, params, grid, scale);
@@ -539,7 +537,6 @@ void            Print2DArrayInt(int*, int, int, double);
 void            OldDeviatoricStressesPressure(grid *, markers *, scale, params *);
 void            TotalStresses(grid *, markers *, scale, params *);
 
-void            Interp_P2G(markers *, DoodzFP *, grid *, double *, double *, double *, int, int, params *, char *, int, int);
 void            Interp_Grid2P_centroids(markers, DoodzFP *, grid *, double *, double *, double *, int, int, char *, params *);
 void            Interp_Grid2P_centroids2(markers, DoodzFP *, grid *, double *, double *, double *, int, int, char *, params *);
 void            ExpandCentroidArray(double *, double *, grid *, params *);

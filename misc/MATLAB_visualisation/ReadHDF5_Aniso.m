@@ -73,8 +73,8 @@ maxTxx =  0.642;
 % minPdyn = -1e9;
 % maxPdyn =  1e9;
 
-% minEta = 19;
-% maxEta = 25;
+% min_eta = 19;
+% max_eta = 25;
 
 % minEii = -16;
 % maxEii = -13.5;
