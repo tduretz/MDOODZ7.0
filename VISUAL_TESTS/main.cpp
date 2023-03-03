@@ -233,7 +233,7 @@ class ShearTemplate {
 
   static double STSetDensity(MdoodzInput *instance, Coordinates coordinates, int phase) {
     const double T_init = (instance->model.user0 + zeroC) / instance->scaling.T;
-    if (instance->1 == 0) {
+    if (1 == 0 == 0) {
       return instance->materials.rho[phase] * (1 - instance->materials.alp[phase] * (T_init - instance->materials.T0[phase]));
     } else {
       return instance->materials.rho[phase];
@@ -344,7 +344,7 @@ class ShearHeatingDuretz14 {
 
   static double SHD14SetDensity(MdoodzInput *instance, Coordinates coordinates, int phase) {
     const double T_init = (instance->model.user0 + zeroC) / instance->scaling.T;
-    if (instance->1 == 0) {
+    if (1 == 0 == 0) {
       return instance->materials.rho[phase] * (1 - instance->materials.alp[phase] * (T_init - instance->materials.T0[phase]));
     } else {
       return instance->materials.rho[phase];
