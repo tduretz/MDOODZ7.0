@@ -1283,7 +1283,7 @@ void EvaluateRHS( grid* mesh, params model, scale scaling, double RHO_REF ) {
                     mesh->roger_z[c]  = - gz * rhoVz;
 
 //                    // Additional stabilisation term from surface processes
-//                    if (model.surf_processes >= 1 && ( mesh->BCp.type[iPrS] == 30 || mesh->BCp.type[iPrS] == 31 || mesh->BCp.type[iPrN] == 30 || mesh->BCp.type[iPrN] == 31 ) ) {
+//                    if (model.surface_processes >= 1 && ( mesh->BCp.type[iPrS] == 30 || mesh->BCp.type[iPrS] == 31 || mesh->BCp.type[iPrN] == 30 || mesh->BCp.type[iPrN] == 31 ) ) {
 //                        drhodz = ( mesh->rho_n[iPrN] - mesh->rho_n[iPrS] ) / dz;
 //                        if ( fabs(mesh->xvz_coord[k]) <= 0.5*Wvalley ) {
 //                            mesh->roger_z[c]  += -1.0*om*Vinc*model.dt*gz*drhodz;

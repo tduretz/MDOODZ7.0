@@ -49,7 +49,7 @@ StressRotation  = 0
 subgrid_diff    = 0
 StressUpdate    = 1
 IncrementalUpdateGrid = 0
-Reseed = 0
+reseed_markers = 0
 
 /**** SETUP DEPENDANT ****/
 EpsBG           =-5e-140

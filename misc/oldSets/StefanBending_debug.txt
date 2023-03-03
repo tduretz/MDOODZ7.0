@@ -63,7 +63,7 @@ eta_avg         = 1
 advection       = 1
 polar           = 1
 StressRotation  = 2
-surf_remesh     = 1
+
 
 /**** SETUP DEPENDANT ****/
 EpsBG           = 1e-15

@@ -47,7 +47,7 @@ subgrid_diff    = 0
 shear_heat      = 0
 adiab_heat      = 0
 isPl_soft       = 0
-surf_processes  = 0
+surface_processes  = 0
 shear_style     = 1
 finite_strain         = 1
 

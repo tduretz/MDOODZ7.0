@@ -62,7 +62,7 @@ subgrid_diff   = 2
 line_search_min = 0.1
 nexp_radial_basis = 2.0
 Plith_trick     = 0
-Reseed =1
+reseed_markers =1
 
 /**** SETUP DEPENDANT ****/
 EpsBG           = 1e-15

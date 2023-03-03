@@ -1011,7 +1011,7 @@ void AddPartCell2( int *pidx, int *Nb_part_thread, markers *particles, grid mesh
                 (*Nb_part_thread)++;
 
                 sedim = 0;
-                if (model.surf_processes>0 && new_z > h_ini ) sedim = 1;
+                if (model.surface_processes>0 && new_z > h_ini ) sedim = 1;
 
                 // Add 4 particules
                 newx[(*nnewp)] = new_x;
@@ -3568,7 +3568,7 @@ void P2Mastah ( params *model, markers particles, DoodzFP* mat_prop, grid *mesh,
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-void CountPartCell ( markers* particles, grid *mesh, params model, surface topo, surface topo_ini, int RESEED, scale scaling ) {
+void CountPartCell ( markers* particles, grid *mesh, params model, surface topo, surface topo_ini, int reseed_markers, scale scaling ) {
 
     // This function counts the number of particle that are currently in each cell of the domain.
     // The function detects cells that are lacking of particle and call the particle re-seeding routine.
@@ -3587,7 +3587,7 @@ void CountPartCell ( markers* particles, grid *mesh, params model, surface topo,
     else                   sed_phase = model.surf_ised2;
 
     printf("USING NEW PART IN CELL\n");
-    if (RESEED==1) printf("OLD NUMBER OF MARKERS = %02d\n", particles->Nb_part);
+    if (reseed_markers==1) printf("OLD NUMBER OF MARKERS = %02d\n", particles->Nb_part);
     
     // First operation - compute phase proportions on centroids and vertices
     int cent=1, vert=0, prop=1, interp=0;
@@ -3956,7 +3956,7 @@ void CountPartCell ( markers* particles, grid *mesh, params model, surface topo,
 
         // ------------------------------------ RE-SEEDING ------------------------------------ //
         // Re-seeding on a double resolution grid
-        if (RESEED==1) {
+        if (reseed_markers==1) {
 
             newi[ith]   = DoodzCalloc( npart[ith]  , sizeof(int));
             newx[ith]   = DoodzCalloc( npart[ith]  , sizeof(double));
@@ -4303,7 +4303,7 @@ void CountPartCell ( markers* particles, grid *mesh, params model, surface topo,
     }
 
     // Generate particle indices
-    if (RESEED==1) {
+    if (reseed_markers==1) {
         int dummy1 = 0;
         int dummy2 = 0;
         
@@ -4386,7 +4386,7 @@ void CountPartCell ( markers* particles, grid *mesh, params model, surface topo,
 //    printf("dum1 = %d\n", dum1);
 //    //________________________________________
     
-    if (RESEED==1) printf("NEW NUMBER OF MARKERS = %02d\n", particles->Nb_part);
+    if (reseed_markers==1) printf("NEW NUMBER OF MARKERS = %02d\n", particles->Nb_part);
 
     IsNanArray2DFP(mesh->phase_perc_s[0], Nx*Nz);
     IsInfArray2DFP(mesh->phase_perc_s[0], Nx*Nz);
@@ -4456,12 +4456,12 @@ void CountPartCell ( markers* particles, grid *mesh, params model, surface topo,
         DoodzFree( npvolv[ith]);
         DoodzFree( npvolc[ith]);
         DoodzFree( mpc[ith]);
-        if (RESEED==1) DoodzFree( ipreuse[ith]);
+        if (reseed_markers==1) DoodzFree( ipreuse[ith]);
         for (k=0; k<model.Nb_phases; k++) {
             DoodzFree( phv[ith][k] );
             DoodzFree( phc[ith][k] );
         }
-        if (RESEED==1) {
+        if (reseed_markers==1) {
             for (k=0;k<4*(ncx_e[ith]+0)*ncz_e;k++) { // This was a leak --- for (k=0; k<4*(ncx[ith]+1)*Ncz; k++) {
                 DoodzFree( ipcell[ith][k] );
             }
@@ -4472,9 +4472,9 @@ void CountPartCell ( markers* particles, grid *mesh, params model, surface topo,
         DoodzFree( phc[ith] );
         //        DoodzFree( flag[ith]);
 
-        if (RESEED==1) DoodzFree( newi[ith]);
-        if (RESEED==1) DoodzFree( newx[ith]);
-        if (RESEED==1) DoodzFree( newz[ith]);
+        if (reseed_markers==1) DoodzFree( newi[ith]);
+        if (reseed_markers==1) DoodzFree( newx[ith]);
+        if (reseed_markers==1) DoodzFree( newz[ith]);
         //        DoodzFree( ind_list[ith]);
     }
 
@@ -4689,7 +4689,7 @@ firstprivate( ncx, mesh ) schedule( static )
 
     if (reseed_markers == 1) {
 
-        // LOOP ON NODES - RESEED PARTICLES IF NEEDED
+        // LOOP ON NODES - reseed_markers PARTICLES IF NEEDED
         for (k=0; k<mesh->Nx; k++) {
             for (l=0; l<mesh->Nz; l++) {
                 ic = k + l * (mesh->Nx);

@@ -62,7 +62,7 @@ subgrid_diff   = 2
 line_search_min = 0.1
 nexp_radial_basis = 2.0
 Plith_trick     = 0
-surf_processes = 0
+surface_processes = 0
 ConservInterp  = 0
 
 /**** erosion parameters ****/

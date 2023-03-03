@@ -1018,32 +1018,19 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
                 if (input.model.free_surf == 1 ) {
 
-                    //                    for (int k=0;k<topo_chain.Nb_part;k++) {
-                    //
-                    //                        if (fabs(topo_chain.x[k]) < 0.5*input.model.surf_Winc ) {
-                    //                            topo_chain.z[k] -= input.model.dt*input.model.surf_Vinc;
-                    //                        }
-                    //                    }
-                    //
+                    // Get current topography
+                    ProjectTopography( &topo,     &topo_chain, input.model, mesh, input.scaling, mesh.xg_coord, 0 );
+                    ProjectTopography( &topo_ini, &topo_chain_ini, input.model, mesh, input.scaling, mesh.xg_coord, 0 );
+                    MarkerChainPolyFit( &topo,     &topo_chain, input.model, mesh );
+                    MarkerChainPolyFit( &topo_ini, &topo_chain_ini, input.model, mesh );
 
-                    if (input.model.surf_remesh == 1 ) {
-                        // Get current topography
-                        ProjectTopography( &topo,     &topo_chain, input.model, mesh, input.scaling, mesh.xg_coord, 0 );
-                        ProjectTopography( &topo_ini, &topo_chain_ini, input.model, mesh, input.scaling, mesh.xg_coord, 0 );
-                        MarkerChainPolyFit( &topo,     &topo_chain, input.model, mesh );
-                        MarkerChainPolyFit( &topo_ini, &topo_chain_ini, input.model, mesh );
-
-                        // Remesh free surface I
-                        RemeshMarkerChain( &topo_chain,     &topo, input.model, input.scaling, &mesh, 1 );
-                        RemeshMarkerChain( &topo_chain_ini, &topo_ini, input.model, input.scaling, &mesh, 1 );
-                    }
-
+                    // Remesh free surface I
+                    RemeshMarkerChain( &topo_chain,     &topo, input.model, input.scaling, &mesh, 1 );
+                    RemeshMarkerChain( &topo_chain_ini, &topo_ini, input.model, input.scaling, &mesh, 1 );
 
                     // Project topography on vertices
                     ProjectTopography( &topo,     &topo_chain, input.model, mesh, input.scaling, mesh.xg_coord, 0 );
                     ProjectTopography( &topo_ini, &topo_chain_ini, input.model, mesh, input.scaling, mesh.xg_coord, 0 );
-                    //                    ArrayEqualArray( topo.height0, topo.height, mesh.Nx );
-                    //                    ArrayEqualArray( topo_ini.height0, topo_ini.height, mesh.Nx );
 
                     if (input.model.write_debug == 1 ) {
                         WriteOutputHDF5( &mesh, &particles, &topo, &topo_chain, input.model, Nmodel, "Output_AfterSurfRemesh", input.materials, input.scaling );
@@ -1051,7 +1038,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                     }
 
                     // Diffuse topography
-                    if (input.model.surf_processes >= 1 )  DiffuseAlongTopography( &mesh, input.model, input.scaling, topo.height, topo.height, mesh.Nx, 0.0, input.model.dt );
+                    if (input.model.surface_processes >= 1 )  DiffuseAlongTopography( &mesh, input.model, input.scaling, topo.height, topo.height, mesh.Nx, 0.0, input.model.dt );
 
                     // Marker chain polynomial fit
                     MarkerChainPolyFit( &topo,     &topo_chain, input.model, mesh );
@@ -1059,7 +1046,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                     MarkerChainPolyFit( &topo_ini, &topo_chain_ini, input.model, mesh );
 
                     // Sedimentation
-                    if (input.model.surf_processes >= 2 ) {
+                    if (input.model.surface_processes >= 2 ) {
                         AddPartSed( &particles, input.materials, &topo_chain, &topo, input.model, input.scaling, &mesh);
                         if (input.model.count_markers==-1) CountPartCell_BEN( &particles, &mesh, input.model, topo, 0, input.scaling );
                         if (input.model.count_markers== 0) CountPartCell_Old( &particles, &mesh, input.model, topo, 0, input.scaling );

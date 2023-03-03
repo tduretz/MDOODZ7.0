@@ -37,9 +37,9 @@ typedef struct {
           isthermal, ispureshear_ale, free_surf, write_markers, write_debug;
   double free_surf_stab;
   int    dt_constant, RK, line_search, thermal_eq, subgrid_diff, adiab_heat,
-          shear_heat, advection, fstrain, conserv_interp;
-  int surf_processes, cpc, surf_remesh, loc_iter, therm_pert, surf_ised1,
-          surf_ised2, MantleID, topografix, reseed, smooth_softening;
+          shear_heat, advection, finite_strain, conserv_interp;
+  int surface_processes, count_markers, loc_iter, thermal_perturb, surf_ised1,
+          surf_ised2, MantleID, topografix, reseed_markers, smooth_softening;
   double EpsBG, DivBG, user0, user1, user2, user3, user4, user5, user6, user7,
           user8;
   char  *import_file;
@@ -75,7 +75,7 @@ typedef struct {
   int      kin_nP, kin_nT;
   double  *kin_dG, kin_Tmin, kin_Tmax, kin_Pmin, kin_Pmax;
   // Visualisation
-  int      rec_T_P_x_z, delete_breakpoints, gnuplot_log_res;
+  int      track_T_P_x_z, delete_breakpoints, gnuplot_log_res;
   // Boundary conditions type
   int      BC_setup_type, shear_style, polar;
   int      stress_rotation, direct_neighbour;

@@ -1147,10 +1147,9 @@ Input ReadInputFile( char *fileName ) {
     model.cooling_time    = ReadDou2( fin, "cooling_time", 1000e6*365.25*3600*24/scaling.t);
     model.subgrid_diff    = ReadInt2( fin, "subgrid_diff",    0 );
     model.shear_heat      = ReadInt2( fin, "shear_heat",      1 );
-    model.adiab_heat      = ReadInt2( fin, "adiab_heat",      0 );
-    model.surf_processes  = ReadInt2( fin, "surf_processes",  0 ); // 1 = diffusion; 2 = diffusion + sedimentation
-    model.surf_remesh     = ReadInt2( fin, "surf_remesh",     1 );
-    model.count_markers             = ReadInt2( fin, "count_markers",             1 );
+    model.adiab_heat      = ReadInt2( fin, "adiab_heat",      0 ); // 0: zero, 1: lithostatic P assumption, 2: full derivative
+    model.surface_processes  = ReadInt2( fin, "surface_processes",  0 ); // 1: diffusion; 2: diffusion + sedimentation
+    model.count_markers      = ReadInt2( fin, "count_markers",      1 );
     model.thermal_perturb    = ReadInt2( fin, "thermal_perturb",    0 ); // Includes user defined initial thermal perbation
     model.finite_strain      = ReadInt2( fin, "finite_strain",      0 ); // Integrates finite stran and save deformation gradient tensor
     model.track_T_P_x_z      = ReadInt2( fin, "track_T_P_x_z",      0 ); // Tracks initial T, P, x and z on particles 
@@ -1168,7 +1167,7 @@ Input ReadInputFile( char *fileName ) {
     model.kinetics           = ReadInt2( fin, "kinetics",           0 ); // Activates reaction kinetics
     model.density_change     = ReadInt2( fin, "density_change",     0 ); // Turns on volume change due to reaction if 1
     model.direct_neighbour   = ReadInt2( fin, "direct_neighbour",   0 ); // Direct neighbour interpolation
-    model.reseed             = ReadInt2( fin, "reseed",             1 ); // Activates reseeding / particle injection
+    model.reseed_markers             = ReadInt2( fin, "reseed_markers",             1 ); // Activates reseeding / particle injection
     model.conserv_interp     = ReadInt2( fin, "conserv_interp",     0 ); // Activates Taras conservative interpolation
     model.smooth_softening   = ReadInt2( fin, "smooth_softening",   1 ); // Activates smooth explicit kinematic softening function
     model.oop                = ReadInt2( fin, "oop",                0 ); // Out-of-plane strain

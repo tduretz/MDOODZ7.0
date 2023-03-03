@@ -64,7 +64,7 @@ nexp_radial_basis = 2.0
 Plith_trick     = 0
 
 /**** erosion parameters ****/
-surf_processes = 5
+surface_processes = 5
 surf_diff      = 5.0e-6
 surf_Winc      = 4.0e3
 surf_Vinc      = 1.5844e-11

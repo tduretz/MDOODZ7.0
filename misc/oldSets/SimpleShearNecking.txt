@@ -51,7 +51,7 @@ subgrid_diff    = 0
 shear_heat      = 1
 adiab_heat      = 1
 isPl_soft       = 0
-surf_processes  = 0
+surface_processes  = 0
 initial_noise   = 0
 IncrementalUpdateGrid = 0
  

@@ -611,7 +611,7 @@ void EvaluateCourantCriterion( double* Vx, double* Vz, params *model, scale scal
         printf("Courant number = %2.2e --- dtc     = %2.2e\n", C, dtc*scaling.t);
         
         // Surface dt
-        if ( model->surf_processes>0 ) {
+        if ( model->surface_processes>0 ) {
             dt_surf = C * dmin / fabs(Vinc);
             printf("Courant number = %2.2e --- dt_surf = %2.2e\n", C, dt_surf*scaling.t);
         }
@@ -626,7 +626,7 @@ void EvaluateCourantCriterion( double* Vx, double* Vz, params *model, scale scal
         if ( model->dt_constant != 1 ) {
             printf("Timestep limited by advection\n");
             model->dt = dtc;
-            if ( model->surf_processes>0 && dt_surf<model->dt) {
+            if ( model->surface_processes>0 && dt_surf<model->dt) {
                 printf("Timestep limited by surface processes\n");
                 model->dt = dt_surf;
             }

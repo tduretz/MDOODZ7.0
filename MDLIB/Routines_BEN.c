@@ -634,7 +634,7 @@ firstprivate( ncx, mesh ) schedule( static )
     
     if (reseed_markers == 1) {
     
-    // LOOP ON NODES - RESEED PARTICLES IF NEEDED
+    // LOOP ON NODES - reseed_markers PARTICLES IF NEEDED
     for (k=0; k<mesh->Nx; k++) {
         for (l=0; l<mesh->Nz; l++) {
             ic = k + l * (mesh->Nx);

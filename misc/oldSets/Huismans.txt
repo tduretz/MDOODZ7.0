@@ -64,7 +64,7 @@ isPl_soft       = 1
 SmoothSoftening = 0
 ConservInterp   = 1
 initial_noise   = 1
-Reseed = 1
+reseed_markers = 1
 IncrementalUpdateGrid = 1
 
 /**** SETUP DEPENDANT ****/

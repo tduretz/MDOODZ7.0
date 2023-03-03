@@ -50,14 +50,14 @@ thermal_eq      = 1
 subgrid_diff    = 2
 shear_heat      = 1
 adiab_heat      = 0
-surf_remesh     = 1
-surf_processes  = 1 /0 = none; 1 = diffusion only; 2 = fills instantaneously the basin up to the base level;  3 = diffusion + source term
+
+surface_processes  = 1 /0 = none; 1 = diffusion only; 2 = fills instantaneously the basin up to the base level;  3 = diffusion + source term
 surf_diff       = 5.0e-6 /topography diffusion coefficient
 surf_ised1      = 4 /sediment phase indices 
 surf_ised2      = 5
 surf_sedirate   = 0.0 / sediementation rate [m/s]:3.1688e-12 <-> 0.01 cm/yr
 surf_baselev    = 0.0e3 / base level for sedimentation
-rec_T_P_x_z     = 1 / initial P and T field record
+track_T_P_x_z     = 1 / initial P and T field record
 polar           = 0
 
 /**** SETUP DEPENDANT ****/

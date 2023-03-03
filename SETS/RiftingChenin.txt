@@ -49,8 +49,8 @@ thermal_eq      = 1
 subgrid_diff    = 2
 shear_heat      = 1
 adiab_heat      = 0
-surf_remesh     = 1
-surf_processes  = 1 /0 = none; 1 = diffusion only; 2 = fills instantaneously the basin up to the base level;  3 = diffusion + source term
+
+surface_processes  = 1 /0 = none; 1 = diffusion only; 2 = fills instantaneously the basin up to the base level;  3 = diffusion + source term
 surf_diff       = 5.0e-6 /topography diffusion coefficient
 surf_ised1      = 4 /sediment phase indices 
 surf_ised2      = 5

@@ -61,11 +61,11 @@ StressRotation = 0
 subgrid_diff   = 0
 line_search_min = 0.1
 Plith_trick     = 0
-surf_processes = 0
+surface_processes = 0
 ConservInterp  = 0
 IncrementalUpdateGrid = 0
 StressUpdate  = 1
-Reseed = 0
+reseed_markers = 0
 
 /**** erosion parameters ****/
 surf_diff  = 8e-6

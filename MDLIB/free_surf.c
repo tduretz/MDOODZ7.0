@@ -190,147 +190,118 @@ void RemeshMarkerChain( markers *topo_chain, surface *topo, params model, scale 
     
     int    k, Ncx=model.Nx-1,count=0, ip, ic, fact=4;
     double dxm=model.dx/(fact+1), xmin = model.xmin + model.dx/2.0;
-    int    remesh = model.surf_remesh, Nb_part0=topo_chain->Nb_part, *NumMarkCell;
+    int    Nb_part0=topo_chain->Nb_part, *NumMarkCell;
     double distance, dx=model.dx, grid_topo, mismax = 0.01;
     int    in, minPartCell=4, NewInd, inc = 0;
     int    res = 2;
     
     printf("Remesh surface markers, step %d \n", mode);
+  
+    // Here the marker chain is not remeshed but new marker points are added in deficient locations
+    NumMarkCell = DoodzCalloc( res*Ncx, sizeof(int) );
     
-    if ( remesh == 0 ) {
-        // Here the entire topography is interpolated from advected marker chain to the remeshed chain
-        // This procedure is likely diffusive
-        // For each cell
+    if ( mode == 1 ) {
         
-        fact = 23;
-        xmin = model.xmin + model.dx/2.0;
-        dx   = model.dx/fact;
-        topo_chain->Nb_part = model.Nx*fact - (fact-1) - 2;
-        
-        for ( k=0; k<topo_chain->Nb_part; k++ ) {
+        int nout=0;
+        // Find to which cell each marker contribute / find number of topo. markers per FINE cell column (DX/res)
+        for (k=0;k<topo_chain->Nb_part;k++) {
             
-            // Reset x coordinate
-            topo_chain->x[k]     = model.xmin + k*dx + dx;
-            distance=fabs(topo_chain->x[k] - xmin);
-            ic = ceil((distance/model.dx)+0.5) - 1;
+            if (topo_chain->x[k]>model.xmax || topo_chain->x[k]<model.xmin  ) topo_chain->phase[k] = -1;
+            else topo_chain->phase[k]=0;
             
-            if ( ic<0)          ic = 0;
-            if ( ic>model.Nx-1) ic =model.Nx-1;
-            topo_chain->z[k]     = (topo->b[ic] + topo->a[ic] * ( topo_chain->x[k] ));
-        }
-        
-        topo_chain->x[topo_chain->Nb_part] = topo_chain->x[topo_chain->Nb_part-1];
-        topo_chain->z[topo_chain->Nb_part] = topo_chain->z[topo_chain->Nb_part-1];
-        
-        printf( "Surface remesher 0: Topographic chain remeshed with %d markers\n", topo_chain->Nb_part );
-    }
-    else {
-        
-        // Here the marker chain is not remeshed but new marker points are added in deficient locations
-        NumMarkCell = DoodzCalloc( res*Ncx, sizeof(int) );
-        
-        if ( mode == 1 ) {
-            
-            int nout=0;
-            // Find to which cell each marker contribute / find number of topo. markers per FINE cell column (DX/res)
-            for (k=0;k<topo_chain->Nb_part;k++) {
-                
-                if (topo_chain->x[k]>model.xmax || topo_chain->x[k]<model.xmin  ) topo_chain->phase[k] = -1;
-                else topo_chain->phase[k]=0;
-                
-                // Index of the fine grid column
-                distance             = topo_chain->x[k] - (model.xmin + dx/2.0/res);
-                in                   = ceil((distance/dx*res)+0.5) - 1;
-                if (in<0        ) in = 0;
-                if (in>res*Ncx-1) in = res*Ncx-1;
-                if (topo_chain->phase[k]!=-1) NumMarkCell[in]++;
-                // NEW
-                if (topo_chain->phase[k]== -1) nout++;
-                
-            }
-            
+            // Index of the fine grid column
+            distance             = topo_chain->x[k] - (model.xmin + dx/2.0/res);
+            in                   = ceil((distance/dx*res)+0.5) - 1;
+            if (in<0        ) in = 0;
+            if (in>res*Ncx-1) in = res*Ncx-1;
+            if (topo_chain->phase[k]!=-1) NumMarkCell[in]++;
             // NEW
-            int ii=0;
-            int *reuse = DoodzCalloc( nout, sizeof(int) );
-            for (k=0;k<topo_chain->Nb_part;k++) {
-                if (topo_chain->phase[k]== -1) {
-                    reuse[ii] = k;
-                    ii++;
-                }
-            }
-            int recycle = 0;
+            if (topo_chain->phase[k]== -1) nout++;
             
-            ii = 0;
-            if (nout>0) recycle = 1;
-            printf("%d surface markers are out, so recycle is %d\n", nout, recycle);
-            
-            for ( k=0; k<res*Ncx; k++ ) {
-                
-                if ( NumMarkCell[k]<minPartCell ) {
-                    //                printf("Adding topo. markers in cell %d who owns %d markers --  xc = %2.4lf\n", k, NumMarkCell[k], (model.xmin + k*dx/res + dx/2/res)*scaling.L);
-                    // check for possibility of adding markers
-                    if( topo_chain->Nb_part+1<topo_chain->Nb_part_max && topo_chain->Nb_part+2<topo_chain->Nb_part_max) {
-                        // Add one particle on the WEST side of the fine column
-                        if (recycle==0) NewInd                = topo_chain->Nb_part;
-                        if (recycle==0) topo_chain->Nb_part++;
-                        if (recycle==1) NewInd                = reuse[ii];
-                        if (recycle==1) ii++;
-                        if (  ii>=nout) recycle=0;
-                        // Local x coordinate:  1.0*dx/4.0/res
-                        topo_chain->x[NewInd] = model.xmin + k*dx/res + dx/4.0/res;
-                        // Index of the coarse grid column
-                        distance        = (topo_chain->x[NewInd]-model.xmin-dx/2.0);
-                        in              = ceil((distance/dx)+0.5) - 1;
-                        if (in<0)    in = 0;
-                        if (in>Ncx-1)in = Ncx-1;
-                        // Topography computed from the coarse grid column
-                        topo_chain->z[NewInd] = (topo->b[in] + topo->a[in] * ( topo_chain->x[NewInd] ));
-                        // Add one particle on the EAST side of the fine column
-                        if (recycle==0) NewInd                = topo_chain->Nb_part;
-                        if (recycle==0) topo_chain->Nb_part++;
-                        if (recycle==1) NewInd                = reuse[ii];
-                        if (recycle==1) ii++;
-                        if (  ii>=nout) recycle=0;
-                        // Local x coordinate:  3.0*dx/4.0/res
-                        topo_chain->x[NewInd] = model.xmin + k*dx/res + 3.0*dx/4.0/res;
-                        // Index of the coarse grid column
-                        distance        = (topo_chain->x[NewInd]-model.xmin-dx/2.0);
-                        in              = ceil((distance/dx)+0.5) - 1;
-                        if (in<0)    in = 0;
-                        if (in>Ncx-1)in = Ncx-1;
-                        // Topography computed from the coarse grid column
-                        topo_chain->z[NewInd] = (topo->b[in] + topo->a[in] * ( topo_chain->x[NewInd] ));
-                    }
-                    else {
-                        printf("The max. number of topographic particles (currently %d) needs to be increased (number of particles %d)\n", topo_chain->Nb_part_max, topo_chain->Nb_part);
-                        exit(45);
-                    }
-                }
-            }
-            DoodzFree(reuse);
         }
         
-        if (mode==2) {
-            // Check if marker topography is too different than grid topography - reset to topo
-#pragma omp parallel for shared( topo_chain, topo ) private( k, distance, in, grid_topo ) firstprivate( model, dx, Ncx, mismax ) reduction(+ :inc)
-            for (k=0;k<topo_chain->Nb_part;k++) {
-                // Index of the coarse grid column
-                distance        = (topo_chain->x[k]-model.xmin-dx/2.0);
-                in              = ceil((distance/dx)+0.5) - 1;
-                if (in<0)    in = 0;
-                if (in>Ncx-1)in = Ncx-1;
-                grid_topo       = (topo->b[in] + topo->a[in] * ( topo_chain->x[k] ));
-                if ( fabs((grid_topo-topo_chain->z[k]) / grid_topo) > mismax) {
-                    topo_chain->z[k]   = grid_topo;
-                    inc++;
+        // NEW
+        int ii=0;
+        int *reuse = DoodzCalloc( nout, sizeof(int) );
+        for (k=0;k<topo_chain->Nb_part;k++) {
+            if (topo_chain->phase[k]== -1) {
+                reuse[ii] = k;
+                ii++;
+            }
+        }
+        int recycle = 0;
+        
+        ii = 0;
+        if (nout>0) recycle = 1;
+        printf("%d surface markers are out, so recycle is %d\n", nout, recycle);
+        
+        for ( k=0; k<res*Ncx; k++ ) {
+            
+            if ( NumMarkCell[k]<minPartCell ) {
+                //                printf("Adding topo. markers in cell %d who owns %d markers --  xc = %2.4lf\n", k, NumMarkCell[k], (model.xmin + k*dx/res + dx/2/res)*scaling.L);
+                // check for possibility of adding markers
+                if( topo_chain->Nb_part+1<topo_chain->Nb_part_max && topo_chain->Nb_part+2<topo_chain->Nb_part_max) {
+                    // Add one particle on the WEST side of the fine column
+                    if (recycle==0) NewInd                = topo_chain->Nb_part;
+                    if (recycle==0) topo_chain->Nb_part++;
+                    if (recycle==1) NewInd                = reuse[ii];
+                    if (recycle==1) ii++;
+                    if (  ii>=nout) recycle=0;
+                    // Local x coordinate:  1.0*dx/4.0/res
+                    topo_chain->x[NewInd] = model.xmin + k*dx/res + dx/4.0/res;
+                    // Index of the coarse grid column
+                    distance        = (topo_chain->x[NewInd]-model.xmin-dx/2.0);
+                    in              = ceil((distance/dx)+0.5) - 1;
+                    if (in<0)    in = 0;
+                    if (in>Ncx-1)in = Ncx-1;
+                    // Topography computed from the coarse grid column
+                    topo_chain->z[NewInd] = (topo->b[in] + topo->a[in] * ( topo_chain->x[NewInd] ));
+                    // Add one particle on the EAST side of the fine column
+                    if (recycle==0) NewInd                = topo_chain->Nb_part;
+                    if (recycle==0) topo_chain->Nb_part++;
+                    if (recycle==1) NewInd                = reuse[ii];
+                    if (recycle==1) ii++;
+                    if (  ii>=nout) recycle=0;
+                    // Local x coordinate:  3.0*dx/4.0/res
+                    topo_chain->x[NewInd] = model.xmin + k*dx/res + 3.0*dx/4.0/res;
+                    // Index of the coarse grid column
+                    distance        = (topo_chain->x[NewInd]-model.xmin-dx/2.0);
+                    in              = ceil((distance/dx)+0.5) - 1;
+                    if (in<0)    in = 0;
+                    if (in>Ncx-1)in = Ncx-1;
+                    // Topography computed from the coarse grid column
+                    topo_chain->z[NewInd] = (topo->b[in] + topo->a[in] * ( topo_chain->x[NewInd] ));
+                }
+                else {
+                    printf("The max. number of topographic particles (currently %d) needs to be increased (number of particles %d)\n", topo_chain->Nb_part_max, topo_chain->Nb_part);
+                    exit(45);
                 }
             }
-            printf("Had to correct %d marker topographies for a mismax of %lf\n", inc, mismax);
         }
-        
-        printf( "Surface remesher 1: old number of marker %d --> New number of markers %d \n", Nb_part0, topo_chain->Nb_part );
-        DoodzFree( NumMarkCell );
+        DoodzFree(reuse);
     }
+    
+    if (mode==2) {
+        // Check if marker topography is too different than grid topography - reset to topo
+#pragma omp parallel for shared( topo_chain, topo ) private( k, distance, in, grid_topo ) firstprivate( model, dx, Ncx, mismax ) reduction(+ :inc)
+        for (k=0;k<topo_chain->Nb_part;k++) {
+            // Index of the coarse grid column
+            distance        = (topo_chain->x[k]-model.xmin-dx/2.0);
+            in              = ceil((distance/dx)+0.5) - 1;
+            if (in<0)    in = 0;
+            if (in>Ncx-1)in = Ncx-1;
+            grid_topo       = (topo->b[in] + topo->a[in] * ( topo_chain->x[k] ));
+            if ( fabs((grid_topo-topo_chain->z[k]) / grid_topo) > mismax) {
+                topo_chain->z[k]   = grid_topo;
+                inc++;
+            }
+        }
+        printf("Had to correct %d marker topographies for a mismax of %lf\n", inc, mismax);
+    }
+    
+    printf( "Surface remesher 1: old number of marker %d --> New number of markers %d \n", Nb_part0, topo_chain->Nb_part );
+    DoodzFree( NumMarkCell );
+    
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
@@ -928,9 +899,9 @@ void DiffuseAlongTopography( grid *mesh, params model, scale scaling, double *ar
     printf("Kero       = %2.2e m2.s-1\n", diff*(pow(scaling.L,2.0)/scaling.t));
     printf("Sed. rate  = %2.2e m/y with base level: %2.2e m\n", model.surf_sedirate*scaling.V*3600.0*365.0*24.0, base_level*scaling.L);
 
-    if ( model.surf_processes == 1 || model.surf_processes == 3 || model.surf_processes == 5 ) {
+    if ( model.surface_processes == 1 || model.surface_processes == 3 || model.surface_processes == 5 ) {
 
-        if ( model.surf_processes == 5 ) {
+        if ( model.surface_processes == 5 ) {
         
             // Compute volume of cells in the valley region
             int ncell = 0;
@@ -967,7 +938,7 @@ void DiffuseAlongTopography( grid *mesh, params model, scale scaling, double *ar
                 s = 0.0;
                 e = 0.0;
                 
-                if ( model.surf_processes == 5 && fabs(mesh->xg_coord[i] ) < 0.5*Wvalley) {
+                if ( model.surface_processes == 5 && fabs(mesh->xg_coord[i] ) < 0.5*Wvalley) {
                     e = dtr*Vinc_num;
                 }
                 
@@ -981,7 +952,7 @@ void DiffuseAlongTopography( grid *mesh, params model, scale scaling, double *ar
     }
     
     // Instantaneous basin filling
-    if (model.surf_processes == 2) {
+    if (model.surface_processes == 2) {
         
         for (i=0; i<size; i++) {
             if (array[i]<base_level)
