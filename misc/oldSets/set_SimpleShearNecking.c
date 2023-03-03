@@ -155,7 +155,7 @@ void SetParticles( markers *particles, scale scaling, params model, mat_prop *ma
 //
 //
 //        // here we define the initial particules velocity that should comply with the background homogeneous shear conditions
-//        particles->Vx[np]    = -0.5*model.EpsBG*(particles->z[np] + (model.zmax-model.zmin)/2);
+//        particles->Vx[np]    = -0.5*model.bkg_strain_rate*(particles->z[np] + (model.zmax-model.zmin)/2);
 //        particles->Vz[np]    = 0;
 //        particles->rho[np]   = materials->rho[particles->phase[np]];
 
@@ -188,7 +188,7 @@ void SetBCs( grid *mesh, params *model, scale scaling, markers* particles, mat_p
     double *X, *Z, *XC, *ZC;
     int   NX, NZ, NCX, NCZ, NXVZ, NZVX;
     double dmin, VzBC, width = 1 / scaling.L, eta = 1e4 / scaling.eta ;
-    double Lx, Lz, T1, T2, rate=model->EpsBG,  z_comp=-140e3/scaling.L;
+    double Lx, Lz, T1, T2, rate=model->bkg_strain_rate,  z_comp=-140e3/scaling.L;
     double Vx_r, Vx_l, Vz_b, Vz_t, Vx_tot, Vz_tot;
     double Lxinit = 1400e3/scaling.L, ShortSwitchV0 = 0.40;
     double Vfix = (50.0/(1000.0*365.25*24.0*3600.0))/(scaling.L/scaling.t); // [50.0 == 5 cm/yr]
@@ -259,13 +259,13 @@ void SetBCs( grid *mesh, params *model, scale scaling, markers* particles, mat_p
                     // Matching BC nodes WEST
                     if (k==0 ) {
                         mesh->BCu.type[c] = 0;
-                        mesh->BCu.val[c]  = -mesh->xg_coord[k] * model->EpsBG;
+                        mesh->BCu.val[c]  = -mesh->xg_coord[k] * model->bkg_strain_rate;
                     }
                     
                     // Matching BC nodes EAST
                     if (k==mesh->Nx-1 ) {
                         mesh->BCu.type[c] = 0;
-                        mesh->BCu.val[c]  = -mesh->xg_coord[k] * model->EpsBG;
+                        mesh->BCu.val[c]  = -mesh->xg_coord[k] * model->bkg_strain_rate;
                     }
                     
                     // Free slip SOUTH
@@ -286,25 +286,25 @@ void SetBCs( grid *mesh, params *model, scale scaling, markers* particles, mat_p
                     // Matching BC nodes WEST
                     if (k==0 ) {
                         mesh->BCu.type[c] = -2;
-                        mesh->BCu.val[c]  = 0.0*model->EpsBG*Lx;
+                        mesh->BCu.val[c]  = 0.0*model->bkg_strain_rate*Lx;
                     }
                     
                     // Matching BC nodes EAST
                     if (k==mesh->Nx-1 ) {
                         mesh->BCu.type[c] =  -12;
-                        mesh->BCu.val[c]  = -0.0*model->EpsBG*Lx;
+                        mesh->BCu.val[c]  = -0.0*model->bkg_strain_rate*Lx;
                     }
                     
                     // Free slip S
                     if (l==0 ) { //&& (k>0 && k<NX-1) ) {
                         mesh->BCu.type[c] =  11;
-                        mesh->BCu.val[c]  = -1*model->EpsBG*Lz;
+                        mesh->BCu.val[c]  = -1*model->bkg_strain_rate*Lz;
                     }
                     
                     // Free slip N
                     if ( l==mesh->Nz) {// && (k>0 && k<NX-1)) {
                         mesh->BCu.type[c] =  11;
-                        mesh->BCu.val[c]  =  1*model->EpsBG*Lz;
+                        mesh->BCu.val[c]  =  1*model->bkg_strain_rate*Lz;
                     }
                     
                 }
@@ -349,13 +349,13 @@ void SetBCs( grid *mesh, params *model, scale scaling, markers* particles, mat_p
                     // Matching BC nodes SOUTH
                     if (l==0 ) {
                         mesh->BCv.type[c] = 0;
-                        mesh->BCv.val[c]  = mesh->zg_coord[l] * model->EpsBG;
+                        mesh->BCv.val[c]  = mesh->zg_coord[l] * model->bkg_strain_rate;
                     }
                     
                     // Matching BC nodes NORTH
                     if (l==mesh->Nz-1 ) {
                         mesh->BCv.type[c] = 0;
-                        mesh->BCv.val[c]  = mesh->zg_coord[l] * model->EpsBG;
+                        mesh->BCv.val[c]  = mesh->zg_coord[l] * model->bkg_strain_rate;
                     }
                     
                     // Non-matching boundary WEST
@@ -376,13 +376,13 @@ void SetBCs( grid *mesh, params *model, scale scaling, markers* particles, mat_p
                     // Matching BC nodes SOUTH
                     if (l==0 ) {
                         mesh->BCv.type[c] = 0;
-                        mesh->BCv.val[c]  = -0.0*model->EpsBG*Lz;
+                        mesh->BCv.val[c]  = -0.0*model->bkg_strain_rate*Lz;
                     }
                     
                     // Matching BC nodes NORTH
                     if (l==mesh->Nz-1 ) {
                         mesh->BCv.type[c] = 0;
-                        mesh->BCv.val[c]  = 0.0*model->EpsBG*Lz;
+                        mesh->BCv.val[c]  = 0.0*model->bkg_strain_rate*Lz;
                     }
                     
                     // Non-matching boundary points
@@ -444,7 +444,7 @@ void SetBCs( grid *mesh, params *model, scale scaling, markers* particles, mat_p
     /* -------------------------------------------------------------------------------------------------------*/
     
     double Ttop = 273.15/scaling.T;
-    double Tbot, Tleft, Tright, Tbg=(model->user2+zeroC)/scaling.T;
+    double Tbot, Tleft, Tright, bkg_temperature=(model->user2+zeroC)/scaling.T;
     
     
     NX  = mesh->Nx;
@@ -465,28 +465,28 @@ void SetBCs( grid *mesh, params *model, scale scaling, markers* particles, mat_p
                 if ( k==0 ) {
                     mesh->BCt.type[c] = 1;
                     mesh->BCt.typW[l] = 1;
-                    mesh->BCt.valW[l] = Tbg;
+                    mesh->BCt.valW[l] = bkg_temperature;
                 }
                 
                 // RIGHT
                 if ( k==NCX-1 ) {
                     mesh->BCt.type[c] = 1;
                     mesh->BCt.typE[l] = 1;
-                    mesh->BCt.valE[l] = Tbg;
+                    mesh->BCt.valE[l] = bkg_temperature;
                 }
                 
                 // BOT
                 if ( l==0 ) {
                     mesh->BCt.type[c] = 1;
                     mesh->BCt.typS[k] = 1;
-                    mesh->BCt.valS[k] = Tbg;
+                    mesh->BCt.valS[k] = bkg_temperature;
                 }
                 
                 // TOP
                 if ( l==NCZ-1 ) {
                     mesh->BCt.type[c] = 1;
                     mesh->BCt.typN[k] = 1;
-                    mesh->BCt.valN[k] = Tbg;
+                    mesh->BCt.valN[k] = bkg_temperature;
                 }
                 // FREE SURFACE
                 else {

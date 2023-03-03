@@ -61,11 +61,11 @@ double SetGrainSize(MdoodzInput *instance, Coordinates coordinates, int phase) {
 }
 
 double SetHorizontalVelocity(MdoodzInput *instance, Coordinates coordinates) {
-  return -coordinates.x * instance->model.EpsBG;
+  return -coordinates.x * instance->model.bkg_strain_rate;
 }
 
 double SetVerticalVelocity(MdoodzInput *instance, Coordinates coordinates) {
-  return coordinates.z * instance->model.EpsBG;
+  return coordinates.z * instance->model.bkg_strain_rate;
 }
 
 char SetBCPType(MdoodzInput *instance, POSITION position) {
@@ -79,7 +79,7 @@ char SetBCPType(MdoodzInput *instance, POSITION position) {
 SetBC SetBCT(MdoodzInput *instance, POSITION position, double particleTemperature) {
   SetBC     bc;
   double surfaceTemperature = zeroC / instance->scaling.T;
-  if (position == FREE_SURFACE) {
+  if (position == free_surfaceACE) {
     bc.value = surfaceTemperature;
     bc.type  = 1;
   } else {

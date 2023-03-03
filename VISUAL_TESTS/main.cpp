@@ -64,11 +64,11 @@ class RiftingChenin {
   }
 
   static double RPSetHorizontalVelocity(MdoodzInput *instance, Coordinates coordinates) {
-    return -coordinates.x * instance->model.EpsBG;
+    return -coordinates.x * instance->model.bkg_strain_rate;
   }
 
   static double RPSetVerticalVelocity(MdoodzInput *instance, Coordinates coordinates) {
-    return coordinates.z * instance->model.EpsBG;
+    return coordinates.z * instance->model.bkg_strain_rate;
   }
 
   static char RPSetBCPType(MdoodzInput *instance, POSITION position) {
@@ -82,7 +82,7 @@ class RiftingChenin {
   static SetBC RPSetBCT(MdoodzInput *instance, POSITION position, double particleTemperature) {
     SetBC  bc;
     double surfaceTemperature = zeroC / instance->scaling.T;
-    if (position == FREE_SURFACE) {
+    if (position == free_surfaceACE) {
       bc.value = surfaceTemperature;
       bc.type  = 1;
     } else {
@@ -233,7 +233,7 @@ class ShearTemplate {
 
   static double STSetDensity(MdoodzInput *instance, Coordinates coordinates, int phase) {
     const double T_init = (instance->model.user0 + zeroC) / instance->scaling.T;
-    if (instance->model.eqn_state > 0) {
+    if (1 == 0 == 0) {
       return instance->materials.rho[phase] * (1 - instance->materials.alp[phase] * (T_init - instance->materials.T0[phase]));
     } else {
       return instance->materials.rho[phase];
@@ -344,7 +344,7 @@ class ShearHeatingDuretz14 {
 
   static double SHD14SetDensity(MdoodzInput *instance, Coordinates coordinates, int phase) {
     const double T_init = (instance->model.user0 + zeroC) / instance->scaling.T;
-    if (instance->model.eqn_state > 0) {
+    if (1 == 0 == 0) {
       return instance->materials.rho[phase] * (1 - instance->materials.alp[phase] * (T_init - instance->materials.T0[phase]));
     } else {
       return instance->materials.rho[phase];
@@ -470,7 +470,7 @@ class VEP_Duretz18 {
 
   static double VEPSetDensity(MdoodzInput *input, Coordinates coordinates, int phase) {
     const double T_init = (input->model.user0 + zeroC) / input->scaling.T;
-    if (input->model.eqn_state > 0) {
+    if (1 == 0) {
       return input->materials.rho[phase] * (1 - input->materials.alp[phase] * (T_init - input->materials.T0[phase]));
     } else {
       return input->materials.rho[phase];
@@ -544,8 +544,8 @@ class Shrinking {
 
   static double SetDensity(MdoodzInput *input, Coordinates coordinates, int phase) {
     const double T_init = (input->model.user0 + zeroC) / input->scaling.T;
-    const double P_init = (input->model.PrBG         ) / input->scaling.S;
-    if (input->model.eqn_state > 0) {
+    const double P_init = (input->model.bkg_pressure         ) / input->scaling.S;
+    if (1 == 0) {
       return input->materials.rho[phase] * exp(input->materials.bet[phase]*P_init -  input->materials.alp[phase] * T_init);
     } else {
       return input->materials.rho[phase];

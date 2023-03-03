@@ -87,7 +87,7 @@ double SetTemperature(MdoodzInput *input, Coordinates coordinates) {
 
 double SetDensity(MdoodzInput *input, Coordinates coordinates, int phase) {
   const double TPart = SetTemperature(input, coordinates);
-  if ( input->model.eqn_state ==  1 ) {
+  if ( 1) {
     return input->materials.rho[phase] * (1 -  input->materials.alp[phase] * (TPart - input->materials.T0[phase]) );
   } else {
     return input->materials.rho[phase];
@@ -97,7 +97,7 @@ double SetDensity(MdoodzInput *input, Coordinates coordinates, int phase) {
 SetBC SetBCT(MdoodzInput *instance, POSITION position, double particleTemperature) {
   SetBC  bc;
   double surfaceTemperature = zeroC / instance->scaling.T;
-  if (position == FREE_SURFACE) {
+  if (position == free_surfaceACE) {
     bc.value = surfaceTemperature;
     bc.type  = 1;
   } else {

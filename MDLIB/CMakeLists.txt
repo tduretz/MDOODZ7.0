@@ -5,7 +5,7 @@ add_library(mdoodz SHARED
         ChemicalRoutines.c
         FD_Jacobian.c
         FlowLaws.c
-        free_surf.c
+        FreeSurface.c
         GridRoutines.c
         HDF5Output.c
         InputOutput.c
@@ -16,10 +16,8 @@ add_library(mdoodz SHARED
         ParticleRoutines.c
         RheologyDensity.c
         RheologyParticles.c
-        Routines_BEN.c
         Solvers.c
         SparseTools.c
-        StokesAssemblyCoupled.c
         StokesAssemblyDecoupled.c
         StokesRoutines.c
         ThermalRoutines.c

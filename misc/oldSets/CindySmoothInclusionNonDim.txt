@@ -30,33 +30,33 @@ Courant     = 0.49
 
 /**** Solver ****/
 penalty     = 1e3
-abs_tol_div = 1e-14
+lin_abs_div = 1e-14
 
 /**** SWITCHES ****/
-ismechanical    = 1
-dt_constant     = 1
+mechanical    = 1
+constant_dt     = 1
 RK              = 4
 advection       = 0
-isperiodic_x    = 0
-ispureshear_ALE = 0
-isinertial      = 0
-iselastic       = 0
-isthermal       = 0
+periodic_x    = 0
+pure_shear_ALE = 0
+
+elastic       = 0
+thermal       = 0
 line_search     = 0
-free_surf       = 0
-free_surf_stab  = 0
-eqn_state       = 0
-thermal_eq      = 0
-subgrid_diff    = 0
-shear_heat      = 0
-adiab_heat      = 0
+free_surface       = 0
+free_surface_stab  = 0
+
+initial_cooling      = 0
+subgrid_diffusion    = 0
+shear_heating      = 0
+adiab_heating      = 0
 
 /**** SMOOTH COUNTOUR ****/
 diffuse_X        = 1
 diffusion_length = 1e-2
 
 /**** SETUP DEPENDANT ****/
-EpsBG           = 1e-0   / Background strain rate (positive in compression)
+bkg_strain_rate           = 1e-0   / Background strain rate (positive in compression)
 user0           = 0      / Dirichlet (0) or Neumann (1) for normal components 
 user1           = 4e-1   / semi major axis of ellipse [m]
 user2           = 5e-2	 / semi minor axis of ellipse [m]
@@ -71,7 +71,7 @@ Nb_phases = 2
 
 ID   = 0
 rho  = 3300 / matrix
-mu   = 1
+G   = 1
 Cv   = 1050
 k    = 2.5
 Qr   = 0
@@ -96,7 +96,7 @@ Reac      = 1
 
 ID   = 1
 rho  = 2700.00 / inclusion
-mu   = 1
+G   = 1
 Cv   = 1050
 k    = 2.5
 Qr   = 0
@@ -125,6 +125,6 @@ min_part_cell = 16
 nit_max = 0
 tol_u   = 5e-6
 tol_p   = 5e-6
-mineta  = 1e-3
-maxeta  = 1e3
+min_eta  = 1e-3
+max_eta  = 1e3
 

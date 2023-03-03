@@ -57,7 +57,7 @@ Some of those functions must be implemented, but others if not implemented will 
 ### BuildInitialTopography
 
 Aggregates pointers to functions for setting up topography chain properties. 
-Must have if `model.free_surf == 1`.
+Must have if `model.free_surface == 1`.
 
 
 - `SetSurfaceZCoord` describes an altitude in relation to the x coordinate. Default value is `1.0e3 / input->scaling.L`:  flat surface will be generated
@@ -69,8 +69,8 @@ Aggregates pointers to functions for setting up particle properties.
 Must have.
 
 
-- `SetHorizontalVelocity` describes a particle Horizontal Velocity (Vx) in relation to coordinates. Default value is `-coordinates.x * input->model.EpsBG`
-- `SetVerticalVelocity` describes a particle Vertical Velocity (Vz) in relation to coordinates. Default value is `coordinates.z * input->model.EpsBG`
+- `SetHorizontalVelocity` describes a particle Horizontal Velocity (Vx) in relation to coordinates. Default value is `-coordinates.x * input->model.bkg_strain_rate`
+- `SetVerticalVelocity` describes a particle Vertical Velocity (Vz) in relation to coordinates. Default value is `coordinates.z * input->model.bkg_strain_rate`
 - `SetPhase` describes a particle phase id in relation to coordinates. Default value is `0`: model will be homogeneous
 - `SetTemperature` describes a particle temperature in relation to coordinates. Default value is `273.15 / input->scaling.T`: model is 0°C
 - `SetGrainSize` describes a particle grain size in relation to coordinates. Default value is `0.0`
@@ -88,8 +88,8 @@ Must have.
 - `SetBCVx` describes the type and value of the Vx point. Must be implemented. Pre-made functions from mdoodz library can be used: `SetPureShearBCVx`, `SetSimpleShearBCVx`, `SetPureOrSimpleShearBCVx` (depends on `shear_style` input parameter)
 - `SetBCVz` describes the type and value of the Vz point. Must be implemented. Pre-made functions from mdoodz library can be used: `SetPureShearBCVz`, `SetSimpleShearBCVz`, `SetPureOrSimpleShearBCVz` (depends on `shear_style` input parameter)
 - `SetBCPType` describes the type of the Pressure Boundary conditions point. Default one is `-1`
-- `SetBCT` describes the Temperature Boundary type and value. Must be implemented if `model.isthermal == 1`
-- `SetBCTNew` describes the Temperature Boundary type and value on 1d boundary array. Must be implemented if `model.isthermal == 1`. Will be deprecated
+- `SetBCT` describes the Temperature Boundary type and value. Must be implemented if `model.thermal == 1`
+- `SetBCTNew` describes the Temperature Boundary type and value on 1d boundary array. Must be implemented if `model.thermal == 1`. Will be deprecated
 
 # How to build and run MDOODZ7.0?
 

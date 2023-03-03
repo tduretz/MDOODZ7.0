@@ -63,8 +63,8 @@ void SetParticles( markers *particles, scale scaling, params model, mat_prop *ma
     for( np=0; np<particles->Nb_part; np++ ) {
         
         // Standart initialisation of particles
-        particles->Vx[np]    = -particles->x[np]*model.EpsBG; // set initial particle velocity (unused)
-        particles->Vz[np]    =  particles->z[np]*model.EpsBG; // set initial particle velocity (unused)
+        particles->Vx[np]    = -particles->x[np]*model.bkg_strain_rate; // set initial particle velocity (unused)
+        particles->Vz[np]    =  particles->z[np]*model.bkg_strain_rate; // set initial particle velocity (unused)
         particles->phase[np] = 0;                             // same phase number everywhere
         particles->phi[np]   = 0.0;                           // zero porosity everywhere
         
@@ -127,7 +127,7 @@ void SetParticles( markers *particles, scale scaling, params model, mat_prop *ma
         
         //--------------------------//
         // DENSITY
-        if ( model.eqn_state > 0 ) {
+        if ( 1 == 0 ) {
             particles->rho[np] = materials->rho[particles->phase[np]] * (1 -  materials->alp[particles->phase[np]] * (Tpart - materials->T0[particles->phase[np]]) );
         }
         else {
@@ -267,7 +267,7 @@ void SetBCs( grid *mesh, params *model, scale scaling, markers* particles, mat_p
                     if (k==0 ) {
                         mesh->BCu.type[c] = 0;
                         mesh->BCu.val[c]  = 0.0;
-//                        mesh->BCu.val[c]  = -mesh->xg_coord[k] * model->EpsBG;
+//                        mesh->BCu.val[c]  = -mesh->xg_coord[k] * model->bkg_strain_rate;
 //                        if (mesh->zvx_coord[l] < zlabW && mesh->zvx_coord[l] > zW  ) {
 //                            V                 = dVdzW * (mesh->zvx_coord[l] - zlabW);
 //                            mesh->BCu.val[c]  = V*cos(dip);
@@ -387,15 +387,15 @@ void SetBCs( grid *mesh, params *model, scale scaling, markers* particles, mat_p
                     // Matching BC nodes SOUTH
                     if (l==0 ) {
                         mesh->BCv.type[c] = 0;
-                        mesh->BCv.val[c]  = 0.0;//mesh->zg_coord[l] * model->EpsBG;
-                        mesh->BCv.val[c]  = mesh->zg_coord[l] * model->EpsBG;
+                        mesh->BCv.val[c]  = 0.0;//mesh->zg_coord[l] * model->bkg_strain_rate;
+                        mesh->BCv.val[c]  = mesh->zg_coord[l] * model->bkg_strain_rate;
                     }
                     
                     // Matching BC nodes NORTH
                     if (l==mesh->Nz-1 ) {
                         mesh->BCv.type[c] = 0;
-                        mesh->BCv.val[c]  = 0.0;//mesh->zg_coord[l] * model->EpsBG;
-                                                mesh->BCv.val[c]  = mesh->zg_coord[l] * model->EpsBG;
+                        mesh->BCv.val[c]  = 0.0;//mesh->zg_coord[l] * model->bkg_strain_rate;
+                                                mesh->BCv.val[c]  = mesh->zg_coord[l] * model->bkg_strain_rate;
                     }
                     
                     // Non-matching boundary WEST

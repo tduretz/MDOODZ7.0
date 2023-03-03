@@ -29,24 +29,24 @@ zmax    = 170.000000e3
 dt      = 2.2623e+11
 Courant = 0.45
 penalty = 1e2
-eta_avg = 0
-itp_stencil = 1
+eta_average = 0
+interp_stencil = 1
 
 /**** SWITCHES ****/
-ismechanical    = 1
-dt_constant     = 0
+mechanical    = 1
+constant_dt     = 0
 RK              = 4
-isperiodic_x    = 0
-ispureshear_ALE = 1  /1: box stretched at constant strain rate; -1 box of constant size
-isinertial      = 0
-iselastic       = 1
-isthermal       = 0
+periodic_x    = 0
+pure_shear_ALE = 1  /1: box stretched at constant strain rate; -1 box of constant size
+
+elastic       = 1
+thermal       = 0
 isPl_soft       = 0
 line_search     = 1
-aniso           = 1
+anisotropy           = 1
 
 /**** SETUP DEPENDANT ****/
-EpsBG           = 1.056e-15 /Background strain rate [s-1] => extension rate = 1 cm/yr
+bkg_strain_rate           = 1.056e-15 /Background strain rate [s-1] => extension rate = 1 cm/yr
 
 /**** GRAVITY ****/
 gx = 0.0000
@@ -59,7 +59,7 @@ ID   = 0       / Seed
 rho  = 2700.00 / ref. density
 alp  = 32.0e-6 / thermal expansivity
 bet  = 1e-11   / compressibility
-mu   = 1e10    / shear modulus
+G   = 1e10    / shear modulus
 Cv   = 1050    / heat capacity
 k    = 2       / thermal conductivity
 Qr   = 1e-6    / radiogenic heat production
@@ -75,7 +75,7 @@ aniso_factor = 10
 
 ID   = 1
 rho  = 2800.00 / Crust - Maryland Diabase
-mu   = 1.0e10
+G   = 1.0e10
 Cv   = 1050.0
 k    = 2.5
 Qr   = 1.0e-6
@@ -112,5 +112,5 @@ Newton  = 0
 nit_max = 1 // for high resolution use from 10 to 20
 tol_u   = 5.0e-8
 tol_p   = 5.0e-8
-mineta  = 5.0e18
-maxeta  = 1.0e25
+min_eta  = 5.0e18
+max_eta  = 1.0e25

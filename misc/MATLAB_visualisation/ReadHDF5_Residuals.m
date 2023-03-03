@@ -119,7 +119,7 @@ for istep=istart:ijump:iend
 %         title(['Viscosity (log10) at' TimeLabel])
 %         xlabel(xLabel), ylabel(zLabel);
 %         if crop == 1 xlim([lim.xmin lim.xmax]); ylim([lim.zmin lim.zmax]); end
-%         if exist('minEta', 'var') caxis([minEta maxEta]); end
+%         if exist('min_eta', 'var') caxis([min_eta max_eta]); end
 %                  
 %         subplot(212)
 %         hold on
@@ -145,7 +145,7 @@ for istep=istart:ijump:iend
 %         title(['Density s at' TimeLabel])
 %         xlabel(xLabel), ylabel(zLabel);
 %         if crop == 1 xlim([lim.xmin lim.xmax]); ylim([lim.zmin lim.zmax]); end
-%         if exist('minEta', 'var') caxis([minEta maxEta]); end
+%         if exist('min_eta', 'var') caxis([min_eta max_eta]); end
 %                  
 %         subplot(212)
 %         hold on

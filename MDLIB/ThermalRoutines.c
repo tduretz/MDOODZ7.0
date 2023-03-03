@@ -69,7 +69,7 @@ void AddCoeffThermal( int* J, double*A, int neq, int jeq, int *nnzc, double coef
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-void EnergyDirectSolve( grid *mesh, params model, double *rhoE, double *drhoE, double *rhs_t, double *rhoE0, markers *particles, double dt, int shear_heating, int adiab_heating, scale scaling, int nit ) {
+void EnergyDirectSolve( grid *mesh, params model, double *rhoE, double *drhoE, double *rhs_t, double *rhoE0, markers *particles, double dt, int shear_heatinging, int adiab_heatinging, scale scaling, int nit ) {
 
     // Energy matrix
     double  *A;
@@ -141,7 +141,7 @@ void EnergyDirectSolve( grid *mesh, params model, double *rhoE, double *drhoE, d
         //----------------------------------------------------//
 
         // Build right-hand side
-#pragma omp parallel for shared ( b, Hs, Ha, eqn_t, mesh ) private ( l, k, c1, c2, c3, eqn, rhoCp, dexx_el, dexx_th, dexx_tot, dezz_el, dezz_th, dezz_tot, deyy_el, deyy_th, deyy_tot, dexz_el, dexz_th, dexz_tot, Wth, Wel, Wtot, syyd, eyyd, eyyd_el, eyyd_diss  ) firstprivate ( nx, ncx, nxvz, shear_heating, adiab_heating, model, transient, dt, Hr, diss_limit, scaling ) reduction( +:dUe, dW )
+#pragma omp parallel for shared ( b, Hs, Ha, eqn_t, mesh ) private ( l, k, c1, c2, c3, eqn, rhoCp, dexx_el, dexx_th, dexx_tot, dezz_el, dezz_th, dezz_tot, deyy_el, deyy_th, deyy_tot, dexz_el, dexz_th, dexz_tot, Wth, Wel, Wtot, syyd, eyyd, eyyd_el, eyyd_diss  ) firstprivate ( nx, ncx, nxvz, shear_heatinging, adiab_heatinging, model, transient, dt, Hr, diss_limit, scaling ) reduction( +:dUe, dW )
         for( c2=0; c2<ncz*ncx; c2++) {
                 k   = mesh->kp[c2];
                 l   = mesh->lp[c2];
@@ -159,15 +159,15 @@ void EnergyDirectSolve( grid *mesh, params model, double *rhoE, double *drhoE, d
                     b[eqn] += Hr*mesh->Qr[c2];
 
                     // Contribution from dissipation
-                    if ( shear_heating == 1 ) {
+                    if ( shear_heatinging == 1 ) {
                         b[eqn] += mesh->Wdiss[c2];
                         Hs[c2]  = mesh->Wdiss[c2];
                     }
 
                     // Contribution from adiabatic heat
-                    if ( adiab_heating == 1 ) Ha[c2]  = mesh->T[c2]*mesh->alp[c2]*0.5*(mesh->v_in[c3+1]+mesh->v_in[c3+1+nxvz])*model.gz*mesh->rho_n[c2];
-                    if ( adiab_heating == 2 ) Ha[c2]  = mesh->T[c2]*mesh->alp[c2]*(mesh->p_in[c2] - mesh->p0_n[c2])/model.dt; //mesh->T[c2]*mesh->alp[c2]*(mesh->dp[c2])/model.dt;
-                    if ( adiab_heating  > 0 ) b[eqn] += Ha[c2];
+                    if ( adiab_heatinging == 1 ) Ha[c2]  = mesh->T[c2]*mesh->alp[c2]*0.5*(mesh->v_in[c3+1]+mesh->v_in[c3+1+nxvz])*model.gz*mesh->rho_n[c2];
+                    if ( adiab_heatinging == 2 ) Ha[c2]  = mesh->T[c2]*mesh->alp[c2]*(mesh->p_in[c2] - mesh->p0_n[c2])/model.dt; //mesh->T[c2]*mesh->alp[c2]*(mesh->dp[c2])/model.dt;
+                    if ( adiab_heatinging  > 0 ) b[eqn] += Ha[c2];
 
                 }
 
@@ -556,8 +556,8 @@ void ThermalSteps( grid *mesh, params model, double *rhoE, double *drhoE, double
 //     if ( noisy==1 ) {
 //         printf("Thermal energy = %2.8e\n",  mesh->Uthermal*scaling.S*scaling.L*scaling.L );
 //         printf("Mechnical work = %2.8e\n",  mesh->Work *scaling.S*scaling.L*scaling.L );
-//         if (model.iselastic == 1) printf("Elastic energy = %2.8e\n", mesh->Uelastic*scaling.S*scaling.L*scaling.L );
-//         if (model.iselastic == 1) printf("Remainder      = %2.8e\n", (mesh->Work - mesh->Uthermal - mesh->Uelastic)/mesh->Work );
+//         if (model.elastic == 1) printf("Elastic energy = %2.8e\n", mesh->Uelastic*scaling.S*scaling.L*scaling.L );
+//         if (model.elastic == 1) printf("Remainder      = %2.8e\n", (mesh->Work - mesh->Uthermal - mesh->Uelastic)/mesh->Work );
 //         else {
 //             if (noisy==1) printf("Difference     = %2.8e\n", (mesh->Work - mesh->Uthermal)/mesh->Work );
 //         }
@@ -590,7 +590,7 @@ void SetThermalPert( grid* mesh, params model, scale scaling ) {
 
     double x, z;
     int    k, l, c2, nx, nz, ncx, ncz;
-    double pert = model.therm_pert_dT, x0 = model.therm_pert_x0, z0 = model.therm_pert_z0, rad = model.therm_pert_rad;
+    double pert = model.therm_perturb_dT, x0 = model.therm_perturb_x0, z0 = model.therm_perturb_z0, rad = model.therm_perturb_rad;
 
     nx   = mesh->Nx;
     nz   = mesh->Nz;

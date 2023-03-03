@@ -88,7 +88,7 @@ void SetBCs( grid *mesh, params *model, scale scaling, markers* particles, mat_p
             // West & East boundary
             if ( i == 0 || i == Nx-1) { 
                 mesh->BCu.type[c] = 0;
-                mesh->BCu.val[c]  = -mesh->xg_coord[i] * model->EpsBG;
+                mesh->BCu.val[c]  = -mesh->xg_coord[i] * model->bkg_strain_rate;
             }
 
             // North & South boundary
@@ -112,7 +112,7 @@ void SetBCs( grid *mesh, params *model, scale scaling, markers* particles, mat_p
         // North & South boundary
         if (j == 0 || j == (Nz - 1)) {
           mesh->BCv.type[c] = 0;
-          mesh->BCv.val[c] = mesh->zg_coord[j] * model->EpsBG; // corrected valgrind!
+          mesh->BCv.val[c] = mesh->zg_coord[j] * model->bkg_strain_rate; // corrected valgrind!
         }
 
         // West & East boundary
