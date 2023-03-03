@@ -2575,7 +2575,7 @@ void Interp_Phase2VizGrid ( markers particles, int* PartField, grid *mesh, char*
 /*--------------------------------------------------------------------------------------------------------------------*/
 
 // Particles to reference nodes
-void P2Mastah ( params *model, markers particles, DoodzFP* mat_prop, grid *mesh, double* NodeField, char* NodeType, int flag, int avg, int prop, int centroid, int itp_stencil) {
+void P2Mastah ( params *model, markers particles, DoodzFP* mat_prop, grid *mesh, double* NodeField, char* NodeType, int flag, int avg, int prop, int centroid, int interp_stencil) {
     
     // flag == 0 --> interpolate from material properties structure
     // flag == 1 --> interpolate straight from the particle arrays
@@ -2621,10 +2621,10 @@ void P2Mastah ( params *model, markers particles, DoodzFP* mat_prop, grid *mesh,
     Np = particles.Nb_part;
     dx = mesh->dx;
     dz = mesh->dz;
-    if (itp_stencil==1) dx_itp =     dx/2.0; // 1-cell
-    if (itp_stencil==1) dz_itp =     dz/2.0; // 1-cell
-    if (itp_stencil==9) dx_itp = 3.0*dx/2.0; // 9-cell
-    if (itp_stencil==9) dz_itp = 3.0*dz/2.0; // 9-cell
+    if (interp_stencil==1) dx_itp =     dx/2.0; // 1-cell
+    if (interp_stencil==1) dz_itp =     dz/2.0; // 1-cell
+    if (interp_stencil==9) dx_itp = 3.0*dx/2.0; // 9-cell
+    if (interp_stencil==9) dz_itp = 3.0*dz/2.0; // 9-cell
     
     // Initialisation
     if ( prop == 1 ) {
@@ -2741,7 +2741,7 @@ void P2Mastah ( params *model, markers particles, DoodzFP* mat_prop, grid *mesh,
                 // --------------------------
                 
                 // Case for 9 Cell
-                if ( itp_stencil==9 ) {
+                if ( interp_stencil==9 ) {
                 
                     // N
                     if ( jp<Nz-1 ){
@@ -2942,8 +2942,8 @@ void CountPartCell ( markers* particles, grid *mesh, params model, surface topo,
     
     // First operation - compute phase proportions on centroids and vertices
     int cent=1, vert=0, prop=1, interp=0;
-    P2Mastah ( &model, *particles, NULL, mesh, NULL, mesh->BCp.type,  0, 0, prop, cent, model.itp_stencil);
-    P2Mastah ( &model, *particles, NULL, mesh, NULL, mesh->BCg.type,  0, 0, prop, vert, model.itp_stencil);
+    P2Mastah ( &model, *particles, NULL, mesh, NULL, mesh->BCp.type,  0, 0, prop, cent, model.interp_stencil);
+    P2Mastah ( &model, *particles, NULL, mesh, NULL, mesh->BCg.type,  0, 0, prop, vert, model.interp_stencil);
     
     // Split the domain in N threads in x direction
 #pragma omp parallel
@@ -3144,7 +3144,7 @@ void CountPartCell ( markers* particles, grid *mesh, params model, surface topo,
 //
 //                weight = 1.0;
 //
-//                if (model.itp_stencil==1) {
+//                if (model.interp_stencil==1) {
 //                    dxm = 1.0*fabs( xg[ith][ic] - particles->x[k]);
 //                    dzm = 1.0*fabs( mesh->zg_coord[jc] - particles->z[k]);
 //                    weight = (1.0-dxm/(dx/2.0))*(1.0-dzm/(dz/2.0));
@@ -3184,20 +3184,20 @@ void CountPartCell ( markers* particles, grid *mesh, params model, surface topo,
 //
 //                    weight = 1.0;
 //
-//                    if (model.itp_stencil==1) {
+//                    if (model.interp_stencil==1) {
 //                        dxm    = 1.0*fabs( xc[ith][ic] - particles->x[k]);
 //                        dzm    = 1.0*fabs( mesh->zc_coord[jc] - particles->z[k]);
 //                        weight = (1.0-dxm/(dx/2.0))*(1.0-dzm/(dz/2.0));
 //                    }
 //                    // If particles are around the nodes: count them
-//                    if ( particles -> phase[k]>=0 )  { //&& (model.itp_stencil==0 || model.itp_stencil==1
+//                    if ( particles -> phase[k]>=0 )  { //&& (model.interp_stencil==0 || model.interp_stencil==1
 //                        npc[ith][ic + jc * (nx[ith]-1)]++;
 //                        npvolc[ith][ic + jc * (nx[ith]-1)]+=weight;
 //                        phc[ith][particles->phase[k]][ic + jc * (nx[ith]-1)]+=weight;
 ////                        phc[ith][particles->phase[k]][ic + jc * (nx[ith]-1)]+=1.0;
 //                    }
 //
-////                    if ( particles -> phase[k]>=0 && model.itp_stencil==4) {
+////                    if ( particles -> phase[k]>=0 && model.interp_stencil==4) {
 ////
 ////                        // Global cell index in x direction
 ////                        igc = ancrage_cell + ic;

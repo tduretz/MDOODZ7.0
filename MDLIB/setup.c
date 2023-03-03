@@ -60,12 +60,12 @@ void SetParticles(SetParticles_ff setParticles, MdoodzInput *instance, markers *
     if (setParticles.SetHorizontalVelocity) {
       particles->Vx[np] = setParticles.SetHorizontalVelocity(instance, coordinates);
     } else {
-      particles->Vx[np] = -coordinates.x * instance->model.EpsBG;
+      particles->Vx[np] = -coordinates.x * instance->model.bkg_strain_rate;
     }
     if (setParticles.SetVerticalVelocity) {
       particles->Vz[np] = setParticles.SetVerticalVelocity(instance, coordinates);
     } else {
-      particles->Vz[np] = coordinates.z * instance->model.EpsBG;
+      particles->Vz[np] = coordinates.z * instance->model.bkg_strain_rate;
     }
     if (setParticles.SetGrainSize) {
       particles->d[np] = setParticles.SetGrainSize(instance, coordinates, particles->phase[np]);
@@ -442,11 +442,11 @@ void ValidateSetup(MdoodzSetup *setup, MdoodzInput *instance) {
     errorsCount++;
   } else {
     if (!setup->SetParticles->SetHorizontalVelocity) {
-      warnings[warningsCount] = "SetParticles.SetHorizontalVelocity is not specified. Horizontal velocity will be (-x * EpsBG)";
+      warnings[warningsCount] = "SetParticles.SetHorizontalVelocity is not specified. Horizontal velocity will be (-x * bkg_strain_rate)";
       warningsCount++;
     }
     if (!setup->SetParticles->SetVerticalVelocity) {
-      warnings[warningsCount] = "SetParticles.SetVerticalVelocity is not specified. Horizontal velocity will be (z * EpsBG)";
+      warnings[warningsCount] = "SetParticles.SetVerticalVelocity is not specified. Horizontal velocity will be (z * bkg_strain_rate)";
       warningsCount++;
     }
     if (!setup->SetParticles->SetPhase) {
@@ -545,7 +545,7 @@ SetBC SetPureShearBCVx(MdoodzInput *input, POSITION position, Coordinates coordi
     bc.value = 0;
     bc.type  = 13;
   } else if (position == W || position == E) {
-    bc.value = -coordinates.x * input->model.EpsBG;
+    bc.value = -coordinates.x * input->model.bkg_strain_rate;
     bc.type  = 0;
   } else {
     bc.value = 0.0;
@@ -562,10 +562,10 @@ SetBC SetSimpleShearBCVx(MdoodzInput *input, POSITION position, Coordinates coor
   SetBC        bc;
   const double Lz = (double) (input->model.zmax - input->model.zmin);
   if (position == S || position == SE || position == SW) {
-    bc.value = -input->model.EpsBG * Lz;
+    bc.value = -input->model.bkg_strain_rate * Lz;
     bc.type  = 11;
   } else if (position == N || position == NE || position == NW) {
-    bc.value = input->model.EpsBG * Lz;
+    bc.value = input->model.bkg_strain_rate * Lz;
     bc.type  = 11;
   } else if (position == E) {
     bc.value = 0.0;
@@ -602,7 +602,7 @@ SetBC SetPureShearBCVz(MdoodzInput *input, POSITION position, Coordinates coordi
     bc.value = 0;
     bc.type  = 13;
   } else if (position == S || position == N) {
-    bc.value = coordinates.z * input->model.EpsBG;
+    bc.value = coordinates.z * input->model.bkg_strain_rate;
     bc.type  = 0;
   } else {
     bc.value = 0;

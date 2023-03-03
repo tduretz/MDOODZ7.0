@@ -151,11 +151,11 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         // Create phase percentage arrays
         CountPartCell( &particles, &mesh, input.model, topo, topo_ini, 0, input.scaling  );
 
-        P2Mastah( &input.model, particles, input.materials.eta0, &mesh, mesh.eta_s, mesh.BCg.type,  0, 0, interp, vert, input.model.itp_stencil);
-        P2Mastah( &input.model, particles, input.materials.eta0, &mesh, mesh.eta_n, mesh.BCp.type,  0, 0, interp, cent, input.model.itp_stencil);
+        P2Mastah( &input.model, particles, input.materials.eta0, &mesh, mesh.eta_s, mesh.BCg.type,  0, 0, interp, vert, input.model.interp_stencil);
+        P2Mastah( &input.model, particles, input.materials.eta0, &mesh, mesh.eta_n, mesh.BCp.type,  0, 0, interp, cent, input.model.interp_stencil);
 
-        P2Mastah( &input.model, particles, particles.noise, &mesh, mesh.noise_s, mesh.BCg.type,  1, 0, interp, vert, input.model.itp_stencil);
-        P2Mastah( &input.model, particles, particles.noise, &mesh, mesh.noise_n, mesh.BCp.type,  1, 0, interp, cent, input.model.itp_stencil);
+        P2Mastah( &input.model, particles, particles.noise, &mesh, mesh.noise_s, mesh.BCg.type,  1, 0, interp, vert, input.model.interp_stencil);
+        P2Mastah( &input.model, particles, particles.noise, &mesh, mesh.noise_n, mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil);
 
         P2Mastah( &input.model, particles, particles.T,  &mesh, mesh.T , mesh.BCp.type,  1, 0, interp, cent, 1);
         P2Mastah( &input.model, particles, input.materials.Cv, &mesh, mesh.Cv, mesh.BCp.type,  0, 0, interp, cent, 1);
@@ -197,7 +197,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
         SetBCs(*setup->SetBCs, &input, &mesh);
         if (input.model.initial_cooling == 1 ) ThermalSteps( &mesh, input.model,  mesh.T,  mesh.dT,  mesh.rhs_t, mesh.T, &particles, input.model.cooling_duration, input.scaling );
-        if (input.model.thermal_perturb == 1 ) SetThermalPert( &mesh, input.model, input.scaling );
+        if (input.model.therm_perturb == 1 ) SetThermalPert( &mesh, input.model, input.scaling );
         Interp_Grid2P_centroids2( particles, particles.T,    &mesh, mesh.T, mesh.xvz_coord,  mesh.zvx_coord,  mesh.Nx-1, mesh.Nz-1, mesh.BCt.type, &input.model );
         ArrayEqualArray( mesh.T0_n, mesh.T, (mesh.Nx-1)*(mesh.Nz-1) );
 
@@ -221,7 +221,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             // Compute pressure
             ComputeLithostaticPressure( &mesh, &input.model, input.materials.rho[0], input.scaling, 1 );
             Interp_Grid2P_centroids2( particles, particles.P,    &mesh, mesh.p_lith, mesh.xvz_coord,  mesh.zvx_coord,  mesh.Nx-1, mesh.Nz-1, mesh.BCp.type, &input.model );
-            P2Mastah( &input.model, particles, particles.P,     &mesh, mesh.p_in , mesh.BCp.type,  1, 0, interp, cent, input.model.itp_stencil);
+            P2Mastah( &input.model, particles, particles.P,     &mesh, mesh.p_in , mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil);
             ArrayEqualArray( mesh.p_in, mesh.p_lith,  (mesh.Nx-1)*(mesh.Nz-1) );
             ArrayEqualArray( mesh.p0_n, mesh.p_lith,  (mesh.Nx-1)*(mesh.Nz-1) );
             MinMaxArrayTag( mesh.p_in, input.scaling.S,   (mesh.Nx-1)*(mesh.Nz-1), "P initial ", mesh.BCp.type );
@@ -235,7 +235,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         printf("*************************************\n");
         // Grain size
         InitialiseGrainSizeParticles( &particles, &input.materials );
-        P2Mastah( &input.model, particles, particles.d,     &mesh, mesh.d_n , mesh.BCp.type,  1, 0, interp, cent, input.model.itp_stencil);
+        P2Mastah( &input.model, particles, particles.d,     &mesh, mesh.d_n , mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil);
         ArrayEqualArray( mesh.d0_n, mesh.d_n,  (mesh.Nx-1)*(mesh.Nz-1) );
         MinMaxArrayTag( mesh.d_n, input.scaling.L,   (mesh.Nx-1)*(mesh.Nz-1), "d         ", mesh.BCp.type );
 
@@ -247,17 +247,17 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         printf("*************************************\n");
         printf("****** Initialize composition *******\n");
         printf("*************************************\n");
-        P2Mastah( &input.model, particles, particles.X,     &mesh, mesh.X0_n , mesh.BCp.type,  1, 0, interp, cent, input.model.itp_stencil);
-        P2Mastah( &input.model, particles, particles.X,     &mesh, mesh.X0_s , mesh.BCg.type,  1, 0, interp, vert, input.model.itp_stencil);
+        P2Mastah( &input.model, particles, particles.X,     &mesh, mesh.X0_n , mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil);
+        P2Mastah( &input.model, particles, particles.X,     &mesh, mesh.X0_s , mesh.BCg.type,  1, 0, interp, vert, input.model.interp_stencil);
 
         if (input.model.anisotropy == 1 ) {
             InitialiseDirectorVector ( &mesh, &particles, &input.model, &input.materials, input.scaling.L);
-            P2Mastah( &input.model, particles, NULL, &mesh, mesh.d1_n,    mesh.BCp.type, -1, 0, interp, cent, input.model.itp_stencil);
-            P2Mastah( &input.model, particles, NULL, &mesh, mesh.d2_n,    mesh.BCp.type, -2, 0, interp, cent, input.model.itp_stencil);
-            P2Mastah( &input.model, particles, NULL, &mesh, mesh.angle_n, mesh.BCp.type, -3, 0, interp, cent, input.model.itp_stencil);
-            P2Mastah( &input.model, particles, NULL, &mesh, mesh.d1_s,    mesh.BCg.type, -1, 0, interp, vert, input.model.itp_stencil);
-            P2Mastah( &input.model, particles, NULL, &mesh, mesh.d2_s,    mesh.BCg.type, -2, 0, interp, vert, input.model.itp_stencil);
-            P2Mastah( &input.model, particles, NULL, &mesh, mesh.angle_s, mesh.BCg.type, -3, 0, interp, vert, input.model.itp_stencil);
+            P2Mastah( &input.model, particles, NULL, &mesh, mesh.d1_n,    mesh.BCp.type, -1, 0, interp, cent, input.model.interp_stencil);
+            P2Mastah( &input.model, particles, NULL, &mesh, mesh.d2_n,    mesh.BCp.type, -2, 0, interp, cent, input.model.interp_stencil);
+            P2Mastah( &input.model, particles, NULL, &mesh, mesh.angle_n, mesh.BCp.type, -3, 0, interp, cent, input.model.interp_stencil);
+            P2Mastah( &input.model, particles, NULL, &mesh, mesh.d1_s,    mesh.BCg.type, -1, 0, interp, vert, input.model.interp_stencil);
+            P2Mastah( &input.model, particles, NULL, &mesh, mesh.d2_s,    mesh.BCg.type, -2, 0, interp, vert, input.model.interp_stencil);
+            P2Mastah( &input.model, particles, NULL, &mesh, mesh.angle_s, mesh.BCg.type, -3, 0, interp, vert, input.model.interp_stencil);
             FiniteStrainAspectRatio ( &mesh, input.scaling, input.model, &particles );
         }
 
@@ -415,7 +415,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
         //-----------------------------------------------------------------------------------------------------------
         // Interp P --> p0_n , p0_s
-        P2Mastah( &input.model, particles, particles.P,     &mesh, mesh.p0_n,   mesh.BCp.type,  1, 0, interp, cent, input.model.itp_stencil);
+        P2Mastah( &input.model, particles, particles.P,     &mesh, mesh.p0_n,   mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil);
 
         // UpdateDensity( &mesh, &particles, &input.materials, &input.model, &input.scaling );
 
@@ -433,9 +433,9 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         if  (input.model.elastic == 1 ) {
 
             // Get old stresses from particles
-            P2Mastah( &input.model, particles, particles.sxxd,    &mesh, mesh.sxxd0, mesh.BCp.type,  1, 0, interp, cent, input.model.itp_stencil);
-            P2Mastah( &input.model, particles, particles.szzd,    &mesh, mesh.szzd0, mesh.BCp.type,  1, 0, interp, cent, input.model.itp_stencil);
-            P2Mastah( &input.model, particles, particles.sxz,     &mesh, mesh.sxz0,  mesh.BCg.type,  1, 0, interp, vert, input.model.itp_stencil);
+            P2Mastah( &input.model, particles, particles.sxxd,    &mesh, mesh.sxxd0, mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil);
+            P2Mastah( &input.model, particles, particles.szzd,    &mesh, mesh.szzd0, mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil);
+            P2Mastah( &input.model, particles, particles.sxz,     &mesh, mesh.sxz0,  mesh.BCg.type,  1, 0, interp, vert, input.model.interp_stencil);
 
             InterpCentroidsToVerticesDouble( mesh.sxxd0, mesh.sxxd0_s, &mesh, &input.model );
             InterpCentroidsToVerticesDouble( mesh.szzd0, mesh.szzd0_s, &mesh, &input.model );
@@ -448,20 +448,20 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
         // Director vector
         if (input.model.anisotropy == 1 ) {
-            P2Mastah( &input.model, particles, NULL, &mesh, mesh.d1_n,    mesh.BCp.type, -1, 0, interp, cent, input.model.itp_stencil);
-            P2Mastah( &input.model, particles, NULL, &mesh, mesh.d2_n,    mesh.BCp.type, -2, 0, interp, cent, input.model.itp_stencil);
-            P2Mastah( &input.model, particles, NULL, &mesh, mesh.angle_n, mesh.BCp.type, -3, 0, interp, cent, input.model.itp_stencil);
-            P2Mastah( &input.model, particles, NULL, &mesh, mesh.d1_s,    mesh.BCg.type, -1, 0, interp, vert, input.model.itp_stencil);
-            P2Mastah( &input.model, particles, NULL, &mesh, mesh.d2_s,    mesh.BCg.type, -2, 0, interp, vert, input.model.itp_stencil);
-            P2Mastah( &input.model, particles, NULL, &mesh, mesh.angle_s, mesh.BCg.type, -3, 0, interp, vert, input.model.itp_stencil);
+            P2Mastah( &input.model, particles, NULL, &mesh, mesh.d1_n,    mesh.BCp.type, -1, 0, interp, cent, input.model.interp_stencil);
+            P2Mastah( &input.model, particles, NULL, &mesh, mesh.d2_n,    mesh.BCp.type, -2, 0, interp, cent, input.model.interp_stencil);
+            P2Mastah( &input.model, particles, NULL, &mesh, mesh.angle_n, mesh.BCp.type, -3, 0, interp, cent, input.model.interp_stencil);
+            P2Mastah( &input.model, particles, NULL, &mesh, mesh.d1_s,    mesh.BCg.type, -1, 0, interp, vert, input.model.interp_stencil);
+            P2Mastah( &input.model, particles, NULL, &mesh, mesh.d2_s,    mesh.BCg.type, -2, 0, interp, vert, input.model.interp_stencil);
+            P2Mastah( &input.model, particles, NULL, &mesh, mesh.angle_s, mesh.BCg.type, -3, 0, interp, vert, input.model.interp_stencil);
             FiniteStrainAspectRatio ( &mesh, input.scaling, input.model, &particles );
         }
 
-        P2Mastah( &input.model, particles, particles.X,     &mesh, mesh.X0_n , mesh.BCp.type,  1, 0, interp, cent, input.model.itp_stencil);
-        P2Mastah( &input.model, particles, particles.X,     &mesh, mesh.X0_s , mesh.BCg.type,  1, 0, interp, vert, input.model.itp_stencil);
+        P2Mastah( &input.model, particles, particles.X,     &mesh, mesh.X0_n , mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil);
+        P2Mastah( &input.model, particles, particles.X,     &mesh, mesh.X0_s , mesh.BCg.type,  1, 0, interp, vert, input.model.interp_stencil);
 
-        P2Mastah( &input.model, particles, particles.noise, &mesh, mesh.noise_s, mesh.BCg.type,  1, 0, interp, vert, input.model.itp_stencil);
-        P2Mastah( &input.model, particles, particles.noise, &mesh, mesh.noise_n, mesh.BCp.type,  1, 0, interp, cent, input.model.itp_stencil);
+        P2Mastah( &input.model, particles, particles.noise, &mesh, mesh.noise_s, mesh.BCg.type,  1, 0, interp, vert, input.model.interp_stencil);
+        P2Mastah( &input.model, particles, particles.noise, &mesh, mesh.noise_n, mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil);
 
         // Diffuse rheological contrasts
         //            if (input.model.diffuse_X == 1) {
@@ -473,11 +473,11 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         //            }
 
         // Interpolate Grain size
-        P2Mastah( &input.model, particles, particles.d,     &mesh, mesh.d0_n , mesh.BCp.type,  1, 0, interp, cent, input.model.itp_stencil);
+        P2Mastah( &input.model, particles, particles.d,     &mesh, mesh.d0_n , mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil);
         ArrayEqualArray(  mesh.d_n,  mesh.d0_n, Ncx*Ncz );
 
         // Interpolate Melt fraction
-        P2Mastah( &input.model, particles, particles.phi,   &mesh, mesh.phi0_n , mesh.BCp.type,  1, 0, interp, cent, input.model.itp_stencil);
+        P2Mastah( &input.model, particles, particles.phi,   &mesh, mesh.phi0_n , mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil);
 
         //-------------------------------------------------------------------------------------------------------------
 
@@ -872,8 +872,8 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             printf("********** Chemical solver **********\n");
             printf("*************************************\n");
 
-            P2Mastah ( &input.model, particles, input.materials.k_chem, &mesh, mesh.kc_x, mesh.BCu.type,  0, 0, interp, vxnodes, input.model.itp_stencil);
-            P2Mastah ( &input.model, particles, input.materials.k_chem, &mesh, mesh.kc_z, mesh.BCv.type,  0, 0, interp, vznodes, input.model.itp_stencil);
+            P2Mastah ( &input.model, particles, input.materials.k_chem, &mesh, mesh.kc_x, mesh.BCu.type,  0, 0, interp, vxnodes, input.model.interp_stencil);
+            P2Mastah ( &input.model, particles, input.materials.k_chem, &mesh, mesh.kc_z, mesh.BCv.type,  0, 0, interp, vznodes, input.model.interp_stencil);
             ChemicalDirectSolve( &mesh, input.model, &particles, &input.materials, input.model.dt, input.scaling );
 
         }
@@ -1076,7 +1076,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         //------------------------------------------------------------------------------------------------------------------------------//
 
         // Write output data
-        if ( input.model.writer == 1 && input.model.step % input.model.writerStep == 0 ) {
+        if ( input.model.writer == 1 && input.model.step % input.model.writer_step == 0 ) {
 
             printf("*************************************\n");
             printf("********* Write output files ********\n");
@@ -1084,7 +1084,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
             // Breakpoint file
             t_omp = (double)omp_get_wtime();
-            if (input.model.delete_breakpoints == 1 ) DeletePreviousBreakpoint(input.model.step, input.model.writerStep  );
+            if (input.model.delete_breakpoints == 1 ) DeletePreviousBreakpoint(input.model.step, input.model.writer_step  );
             MakeBreakpointParticles( &particles, &mesh, &topo_chain, &topo_chain_ini, input.model, &topo, &topo_ini, input.scaling );
             UpdateInputFile( inputFileName, input.model.step);
             printf("** Time for Breakpoint file write = %lf sec\n", (double)((double)omp_get_wtime() - t_omp));

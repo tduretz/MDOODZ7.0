@@ -36,7 +36,7 @@ int SetDualPhase(MdoodzInput *input, Coordinates coordinate, int phase) {
 
 double SetDensity(MdoodzInput *input, Coordinates coordinates, int phase) {
   const double T_init = (input->model.user0 + zeroC) / input->scaling.T;
-  const double P_init = (input->model.PrBG         ) / input->scaling.S;
+  const double P_init = (input->model.bkg_pressure         ) / input->scaling.S;
   if (1 == 0) {
     return input->materials.rho[phase] * exp(input->materials.bet[phase]*P_init -  input->materials.alp[phase] * T_init);
   } else {

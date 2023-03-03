@@ -64,11 +64,11 @@ class RiftingChenin {
   }
 
   static double RPSetHorizontalVelocity(MdoodzInput *instance, Coordinates coordinates) {
-    return -coordinates.x * instance->model.EpsBG;
+    return -coordinates.x * instance->model.bkg_strain_rate;
   }
 
   static double RPSetVerticalVelocity(MdoodzInput *instance, Coordinates coordinates) {
-    return coordinates.z * instance->model.EpsBG;
+    return coordinates.z * instance->model.bkg_strain_rate;
   }
 
   static char RPSetBCPType(MdoodzInput *instance, POSITION position) {
@@ -544,7 +544,7 @@ class Shrinking {
 
   static double SetDensity(MdoodzInput *input, Coordinates coordinates, int phase) {
     const double T_init = (input->model.user0 + zeroC) / input->scaling.T;
-    const double P_init = (input->model.PrBG         ) / input->scaling.S;
+    const double P_init = (input->model.bkg_pressure         ) / input->scaling.S;
     if (1 == 0) {
       return input->materials.rho[phase] * exp(input->materials.bet[phase]*P_init -  input->materials.alp[phase] * T_init);
     } else {

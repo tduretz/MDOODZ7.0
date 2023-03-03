@@ -61,11 +61,11 @@ double SetGrainSize(MdoodzInput *instance, Coordinates coordinates, int phase) {
 }
 
 double SetHorizontalVelocity(MdoodzInput *instance, Coordinates coordinates) {
-  return -coordinates.x * instance->model.EpsBG;
+  return -coordinates.x * instance->model.bkg_strain_rate;
 }
 
 double SetVerticalVelocity(MdoodzInput *instance, Coordinates coordinates) {
-  return coordinates.z * instance->model.EpsBG;
+  return coordinates.z * instance->model.bkg_strain_rate;
 }
 
 char SetBCPType(MdoodzInput *instance, POSITION position) {

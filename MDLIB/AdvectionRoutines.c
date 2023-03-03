@@ -89,7 +89,7 @@ firstprivate( model ) // schedule( static )
             c3 = k + l*(model.Nx+1);
             om_n[c1] = -(mesh.v_in[c3+1] - mesh.v_in[c3])/model.dx + (mesh.u_in[c1+model.Nx] - mesh.u_in[c1])/model.dz;
             om_n[c1] = 0.5*om_n[c1];
-            //            om_n[c1] = model.EpsBG/2.0;
+            //            om_n[c1] = model.bkg_strain_rate/2.0;
             //}
         }
         Interp_Grid2P( *particles, OmA, &mesh, om_n, mesh.xg_coord,  mesh.zg_coord,  mesh.Nx,   mesh.Nz, mesh.BCg.type   );
@@ -497,7 +497,7 @@ void PureShearALE( params *model, grid *mesh, markers *topo_chain, scale scaling
     //    else                              model->zmax +=  dzmax;
 
 
-    printf("Adjusting the mesh: Epsilon_xx = %2.2e, Volume = %2.2e\n", model->EpsBG * model->dt, (model->xmax - model->xmin) *(model->zmax - model->zmin) * scaling.L*scaling.L);
+    printf("Adjusting the mesh: Epsilon_xx = %2.2e, Volume = %2.2e\n", model->bkg_strain_rate * model->dt, (model->xmax - model->xmin) *(model->zmax - model->zmin) * scaling.L*scaling.L);
     printf("xmin = %lf, xmax = %lf\n", model->xmin*scaling.L, model->xmax*scaling.L);
     printf("zmin = %lf, zmax = %lf\n", model->zmin*scaling.L, model->zmax*scaling.L);
 
@@ -520,8 +520,8 @@ void DefineInitialTimestep( params *model, grid *mesh, markers particles, mat_pr
 // Define initial timestep is elasticity is turned on
 if ( model->elastic == 1 && model->constant_dt != 1 ) {
 
-    P2Mastah( model, particles, materials.G,     mesh, mesh->mu_n,   mesh->BCp.type,  0, 0, interp, cent, model->itp_stencil );
-    P2Mastah( model, particles, materials.G,     mesh, mesh->mu_s,   mesh->BCg.type,  0, 0, interp, vert, model->itp_stencil );
+    P2Mastah( model, particles, materials.G,     mesh, mesh->mu_n,   mesh->BCp.type,  0, 0, interp, cent, model->interp_stencil );
+    P2Mastah( model, particles, materials.G,     mesh, mesh->mu_s,   mesh->BCg.type,  0, 0, interp, vert, model->interp_stencil );
 
     for ( k=0; k<mesh->Nx*mesh->Nz; k++) {
 
@@ -544,10 +544,10 @@ if ( model->elastic == 1 && model->constant_dt != 1 ) {
 }
 
 //// Initial Courant limit
-//    if ( model->constant_dt != 1 && fabs(model->EpsBG>0.0) && model->dt > 0.1*model->dx/(fabs(model->EpsBG) * (model->xmax - model->xmin)) ) {
+//    if ( model->constant_dt != 1 && fabs(model->bkg_strain_rate>0.0) && model->dt > 0.1*model->dx/(fabs(model->bkg_strain_rate) * (model->xmax - model->xmin)) ) {
 //    printf("Initial Courant check:\n");
-//    printf("Suggested dt = %2.2e s (Vchar= %2.2e m/s)\n", model->dt*scaling.t, model->EpsBG * (model->xmax - model->xmin)*scaling.V);
-//    model->dt  = 0.1*model->dx/(fabs(model->EpsBG) * (model->xmax - model->xmin));
+//    printf("Suggested dt = %2.2e s (Vchar= %2.2e m/s)\n", model->dt*scaling.t, model->bkg_strain_rate * (model->xmax - model->xmin)*scaling.V);
+//    model->dt  = 0.1*model->dx/(fabs(model->bkg_strain_rate) * (model->xmax - model->xmin));
 //    model->dt0 = model->dt;
 //    printf("new dt = %2.2e s\n", model->dt*scaling.t);
 //}
@@ -899,7 +899,7 @@ void PureShearALE_X( params *model,  grid *mesh, markers *topo_chain, scale scal
        model->zmax +=  dzmax;
     }
 
-    printf("Adjusting the mesh: Epsilon_xx = %2.2e, Volume = %2.2e\n", model->EpsBG * model->dt, (model->xmax - model->xmin) *(model->zmax - model->zmin) * scaling.L*scaling.L);
+    printf("Adjusting the mesh: Epsilon_xx = %2.2e, Volume = %2.2e\n", model->bkg_strain_rate * model->dt, (model->xmax - model->xmin) *(model->zmax - model->zmin) * scaling.L*scaling.L);
     printf("xmin = %lf, xmax = %lf\n", model->xmin*scaling.L, model->xmax*scaling.L);
     printf("zmin = %lf, zmax = %lf\n", model->zmin*scaling.L, model->zmax*scaling.L);
 
@@ -990,7 +990,7 @@ void PureShearALE_Z( params *model,  grid *mesh, markers *topo_chain, scale scal
     if (model->pure_shear_ALE == 2)  model->zmax = MaxFreeSurfaceAltitude + 10.0e3/scaling.L;
     else                              model->zmax +=  dzmax;
 
-    printf("Adjusting the mesh: Epsilon_xx = %2.2e, Volume = %2.2e\n", model->EpsBG * model->dt, (model->xmax - model->xmin) *(model->zmax - model->zmin) * scaling.L*scaling.L);
+    printf("Adjusting the mesh: Epsilon_xx = %2.2e, Volume = %2.2e\n", model->bkg_strain_rate * model->dt, (model->xmax - model->xmin) *(model->zmax - model->zmin) * scaling.L*scaling.L);
     printf("xmin = %lf, xmax = %lf\n", model->xmin*scaling.L, model->xmax*scaling.L);
     printf("zmin = %lf, zmax = %lf\n", model->zmin*scaling.L, model->zmax*scaling.L);
 

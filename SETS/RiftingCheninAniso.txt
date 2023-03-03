@@ -27,7 +27,7 @@ dt      = 1.2623e+11
 Courant = 0.45
 penalty = 1e2
 eta_average = 0
-itp_stencil = 1
+interp_stencil = 1
 
 /**** SWITCHES ****/
 mechanical    = 1
@@ -58,7 +58,7 @@ track_T_P_x_z     = 1 / initial P and T field record
 polar           = 0
 
 /**** SETUP DEPENDANT ****/
-EpsBG           = -1.056e-15 /Background strain rate [s-1] => extension rate = 1 cm/yr
+bkg_strain_rate           = -1.056e-15 /Background strain rate [s-1] => extension rate = 1 cm/yr
 user0           = 0.0e3     /Radius of perturbation [m]
 user1           = 125.0e3   /Initial lithosphere thickness [m]
 user2           = 30.0e3    /Initial crust thickness [m]
@@ -259,5 +259,5 @@ Newton  = 0
 nit_max = 1 // for high resolution use from 10 to 20
 tol_u   = 5.0e-8
 tol_p   = 5.0e-8
-mineta  = 5.0e18
-maxeta  = 1.0e25
+min_eta  = 5.0e18
+max_eta  = 1.0e25

@@ -57,7 +57,7 @@ diffuse_X        = 0
 diffusion_length = 1e0
 
 /**** SETUP DEPENDANT ****/
-EpsBG           = 5e-12  / Background strain rate (positive in compression)
+bkg_strain_rate           = 5e-12  / Background strain rate (positive in compression)
 user0           = 0      / Dirichlet (0) or Neumann (1) for normal components 
 user1           = 35.0   / semi major axis of ellipse [m]
 user2           = 4.375  / semi minor axis of ellipse [m]
@@ -147,6 +147,6 @@ nonlin_abs_mom   = 1e-9
 nonlin_abs_div   = 1e-9
 abs_rel_u   = 1e-9
 abs_rel_p   = 1e-9
-mineta  = 1e0
-maxeta  = 1e30
+min_eta  = 1e0
+max_eta  = 1e30
 GNUplot_residuals = 1

@@ -51,7 +51,7 @@ adiab_heating      = 2
 surface_processes  = 0
 shear_style     = 0 /0:pure shear --- 1: simple shear
 num_deriv       = 0
-lsolver         = 0
+lin_solver         = 0
 penalty         = 1e2
 diag_scaling    = 0
 lin_abs_div     = 1e-11
@@ -63,8 +63,8 @@ preconditioner         = 0
 aniso          = 0
  
 /**** SETUP DEPENDANT ****/
-EpsBG           = 6e-15 /Background strain rate
-PrBG            = 0.0
+bkg_strain_rate           = 6e-15 /Background strain rate
+bkg_pressure            = 0.0
 surf_diff       = 0
 user0           = 1.0
 user1           = -1e3
@@ -467,5 +467,5 @@ Newton  = 0
 nit_max = 0
 tol_u   = 5e-10
 tol_p   = 5e-10
-mineta  = 1e-6
-maxeta  = 1e26
+min_eta  = 1e-6
+max_eta  = 1e26

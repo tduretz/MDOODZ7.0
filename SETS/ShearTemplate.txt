@@ -38,7 +38,7 @@ RK          = 4
 /**** LINEAR SOLVER ****/
 noisy        = 1
 penalty      = 1e5
-lsolver      = -1
+lin_solver      = -1
 diag_scaling = 0
 lin_abs_div  = 1e-9
 lin_rel_div  = 1e-9
@@ -57,8 +57,8 @@ nonlin_abs_div   = 1e-9
 nonlin_rel_div   = 1e-9
 
 /**** VISCOSITY CUT-OFF ****/
-mineta      = 1e-3
-maxeta      = 1e6
+min_eta      = 1e-3
+max_eta      = 1e6
 
 /**** SWITCHES ****/
 anisotropy             = 1
@@ -72,7 +72,7 @@ advection         = 0
 shear_style     = 0
 periodic_x    = 0
 pure_shear_ALE = 1
-EpsBG           = 1
+bkg_strain_rate           = 1
 user0           = 1     / temperature [°C]
 user1           = 0.05  / inclusion radius [m]
 user2           = 0

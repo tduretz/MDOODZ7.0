@@ -27,7 +27,7 @@ xmax =  30e3
 zmax =  15e3
 dt   = 1.2623e+11
 Courant      = 0.5
-lsolver      = 0
+lin_solver      = 0
 penalty      = 1e5
 diag_scaling = 0
 
@@ -58,8 +58,8 @@ preconditioner        = 0
 aniso          = 0
  
 /**** SETUP DEPENDANT ****/
-EpsBG           = 2e-14 /Background strain rate
-PrBG            = 0
+bkg_strain_rate           = 2e-14 /Background strain rate
+bkg_pressure            = 0
 surf_diff       = 0
 user0           = 400
 user1           = 2e3 /radius
@@ -199,5 +199,5 @@ Newton  = 1
 nit_max = 10
 tol_u   = 5e-8
 tol_p   = 5e-8
-mineta  = 1e-6
-maxeta  = 1e26
+min_eta  = 1e-6
+max_eta  = 1e26

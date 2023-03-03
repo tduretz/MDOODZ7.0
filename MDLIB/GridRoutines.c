@@ -355,10 +355,10 @@ void InitialiseSolutionFields( grid *mesh, params *model ) {
             else {        
                 if (model->step==0) {
                     // Initial velocity field (zero or pure shear)
-                    if (model->EpsBG == 0) mesh->u_in[c]  = 0.0;
+                    if (model->bkg_strain_rate == 0) mesh->u_in[c]  = 0.0;
                     // Pure shear
-                    else mesh->u_in[c]  = -mesh->xg_coord[k]*(model->EpsBG - model->DivBG/3.0);
-                    if (model->periodic_x == 1) mesh->u_in[c] = 2.0*(mesh->zvx_coord[l])*model->EpsBG + mesh->xg_coord[k]*model->DivBG/3.0; // Simple shear
+                    else mesh->u_in[c]  = -mesh->xg_coord[k]*(model->bkg_strain_rate - model->bkg_div_rate/3.0);
+                    if (model->periodic_x == 1) mesh->u_in[c] = 2.0*(mesh->zvx_coord[l])*model->bkg_strain_rate + mesh->xg_coord[k]*model->bkg_div_rate/3.0; // Simple shear
                 }
                 // Force Dirichlets
                 if (mesh->BCu.type[c] == 0) mesh->u_in[c]  = mesh->BCu.val[c]; 
@@ -377,9 +377,9 @@ void InitialiseSolutionFields( grid *mesh, params *model ) {
             else {
                 if (model->step==0) {
                     // Initial velocity field (zero or pure shear)
-                    if (model->EpsBG == 0) mesh->v_in[c]  = 0.0;
-                    else mesh->v_in[c]  = mesh->zg_coord[l]*(model->EpsBG + model->DivBG/3.0);
-                    if (model->periodic_x == 1) mesh->v_in[c]  = 0.0 + mesh->zg_coord[l]*model->DivBG/3.0;
+                    if (model->bkg_strain_rate == 0) mesh->v_in[c]  = 0.0;
+                    else mesh->v_in[c]  = mesh->zg_coord[l]*(model->bkg_strain_rate + model->bkg_div_rate/3.0);
+                    if (model->periodic_x == 1) mesh->v_in[c]  = 0.0 + mesh->zg_coord[l]*model->bkg_div_rate/3.0;
                 }
                 // Force Dirichlets
                 if (mesh->BCv.type[c] == 0) mesh->v_in[c]  = mesh->BCv.val[c];
@@ -395,7 +395,7 @@ void InitialiseSolutionFields( grid *mesh, params *model ) {
             if ( mesh->BCp.type[c] == 30 ||  mesh->BCp.type[c] == 31 ) mesh->p_in[c]  = 0.0;
             if ( mesh->BCp.type[c] != 30 ||  mesh->BCp.type[c] != 31 ) {
                 if (model->step==0) {
-                    mesh->p_in[c]  = 0.0 + model->PrBG;
+                    mesh->p_in[c]  = 0.0 + model->bkg_pressure;
                 }
             }
         }
@@ -457,7 +457,7 @@ void ComputeLithostaticPressure( grid *mesh, params *model, double RHO_REF, scal
             if ( mode == 1 ) rho_eff = mesh->rho_n[c];
             
             if ( mesh->BCp.type[c] != 30 && mesh->BCp.type[c] != 31 ) {
-                mesh->p_lith[c] += model->PrBG;
+                mesh->p_lith[c] += model->bkg_pressure;
                 mesh->p_lith[c]  += 0.5*model->gz * mesh->dz * rho_eff;
             }
         }

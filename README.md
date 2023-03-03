@@ -69,8 +69,8 @@ Aggregates pointers to functions for setting up particle properties.
 Must have.
 
 
-- `SetHorizontalVelocity` describes a particle Horizontal Velocity (Vx) in relation to coordinates. Default value is `-coordinates.x * input->model.EpsBG`
-- `SetVerticalVelocity` describes a particle Vertical Velocity (Vz) in relation to coordinates. Default value is `coordinates.z * input->model.EpsBG`
+- `SetHorizontalVelocity` describes a particle Horizontal Velocity (Vx) in relation to coordinates. Default value is `-coordinates.x * input->model.bkg_strain_rate`
+- `SetVerticalVelocity` describes a particle Vertical Velocity (Vz) in relation to coordinates. Default value is `coordinates.z * input->model.bkg_strain_rate`
 - `SetPhase` describes a particle phase id in relation to coordinates. Default value is `0`: model will be homogeneous
 - `SetTemperature` describes a particle temperature in relation to coordinates. Default value is `273.15 / input->scaling.T`: model is 0°C
 - `SetGrainSize` describes a particle grain size in relation to coordinates. Default value is `0.0`

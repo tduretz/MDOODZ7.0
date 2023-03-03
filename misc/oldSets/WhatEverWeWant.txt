@@ -33,7 +33,7 @@ dt          = 0.5 // not used if constant_dt == 0
 
 /**** LINEAR SOLVER ****/
 penalty      = 1e5
-lsolver      = 2
+lin_solver      = 2
 lin_abs_div  = 1e-8
 lin_rel_div  = 1e-8
 
@@ -48,8 +48,8 @@ nonlin_rel_div   = 1e-8
 nonlin_rel_div   = 1e-8
 
 /**** VISCOSITY CUT-OFF ****/
-mineta      = 1e17
-maxeta      = 1e25
+min_eta      = 1e17
+max_eta      = 1e25
 
 /**** SWITCHES ****/
 elastic         = 0
@@ -63,7 +63,7 @@ GNUplot_residuals = 0
 shear_style     = 0
 periodic_x    = 0
 pure_shear_ALE = 1
-EpsBG           = 5e-14 // 1/seconds
+bkg_strain_rate           = 5e-14 // 1/seconds
 user0           = 400     // temperature [°C]
 user1           = 3e3  // inclusion radius [m]
 

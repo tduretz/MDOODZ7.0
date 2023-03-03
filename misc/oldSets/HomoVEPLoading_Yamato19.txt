@@ -33,7 +33,7 @@ dt                = 1e6
 constant_dt       = 1
 Courant           = 0.2
 penalty           = 1e2
-lsolver           = 2
+lin_solver           = 2
 diag_scaling      = 0
 lin_abs_div       = 1e-5
 lin_rel_div       = 1e-5
@@ -66,8 +66,8 @@ ProgReac        = 0
 def_maps        = 0
 
 /**** SETUP DEPENDANT ****/
-EpsBG           = -1.0e-8
-PrBG            = 2.0e9
+bkg_strain_rate           = -1.0e-8
+bkg_pressure            = 2.0e9
 user0           = 550.0     / temperature [°C]
 user1           = 0
 user2           = 0
@@ -181,5 +181,5 @@ nit_max = 20
 rel_tol_KSP = 5e-4
 tol_u   = 1e-10
 tol_p   = 1e-10
-mineta  = 1e10
-maxeta  = 1e30
+min_eta  = 1e10
+max_eta  = 1e30

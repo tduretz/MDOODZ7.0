@@ -2751,7 +2751,7 @@ for istep=istart:ijump:iend
                 %         xlabel(xLabel), ylabel(zLabel);
                 %         axis xy image, colorbar;
                 %         if crop == 1 xlim([lim.xmin lim.xmax]); ylim([lim.zmin lim.zmax]); end
-                %         if exist('minEta', 'var') caxis([minEta maxEta]); end
+                %         if exist('min_eta', 'var') caxis([min_eta max_eta]); end
                 
                 % eII
                 subplot(3,1,2),
@@ -3508,7 +3508,7 @@ for istep=istart:ijump:iend
             
             xlabel(xLabel), ylabel(zLabel);
             if crop == 1 xlim([lim.xmin lim.xmax]); ylim([lim.zmin lim.zmax]); end
-            if exist('minEta', 'var') caxis([minEta maxEta]); end
+            if exist('min_eta', 'var') caxis([min_eta max_eta]); end
             drawnow
             
             if printfig == 1

@@ -116,7 +116,7 @@ polar           = 0
 
 /**** SETUP DEPENDANT ****/
 
-EpsBG           = -1.056e-15 /Background strain rate [s-1] => extension rate = 1 cm/yr
+bkg_strain_rate           = -1.056e-15 /Background strain rate [s-1] => extension rate = 1 cm/yr
 
 user0           = 0.0e3     /Radius of perturbation [m]
 
@@ -529,7 +529,7 @@ tol_u   = 5.0e-8
 
 tol_p   = 5.0e-8
 
-mineta  = 5.0e18
+min_eta  = 5.0e18
 
-maxeta  = 1.0e25
+max_eta  = 1.0e25
 

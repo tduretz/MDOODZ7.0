@@ -49,7 +49,7 @@ penalty         = 1e5
 preconditioner         = 0
 
 /**** SETUP DEPENDANT ****/
-EpsBG           =-5e-14
+bkg_strain_rate           =-5e-14
 user0           = 400   / temperature [°C]
 user1           = 3e3   / inclusion radius [m]
 user2           = 0
@@ -131,5 +131,5 @@ Newton  = 1
 nit_max = 10
 tol_u   = 5e-10
 tol_p   = 5e-10
-mineta  = 1e19
-maxeta  = 1e25
+min_eta  = 1e19
+max_eta  = 1e25

@@ -16,10 +16,10 @@ b      = 5.5398e-20
 T_aim  = (P_mean[:]/1e9/b)**(1/a) + 273.15
 
 # Predicted pressure with time
-DivBG  = 1e-14
+bkg_div_rate  = 1e-14
 P_ini  = 3.45e9  
 beta   = 1.4286e-11 
-P_pred = P_ini - DivBG*time[:]/beta
+P_pred = P_ini - bkg_div_rate*time[:]/beta
 
 fig, axs = mpl.subplots(2)
 # fig.suptitle('PressureTemplate model')

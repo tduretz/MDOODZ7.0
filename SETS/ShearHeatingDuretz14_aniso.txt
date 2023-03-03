@@ -47,7 +47,7 @@ surface_processes  = 0
 shear_style     = 0 / 0:pure shear --- 1: simple shear
 
 /**** LINEAR SOLVER ****/
-lsolver      = 0
+lin_solver      = 0
 penalty      = 1e7
 diag_scaling = 0
 
@@ -65,13 +65,13 @@ nonlin_abs_mom       = 1e-9
 nonlin_rel_mom       = 1e-9
 nonlin_abs_div       = 1e-9
 nonlin_rel_div       = 1e-9
-mineta          = 1e16
-maxeta          = 1e26
+min_eta          = 1e16
+max_eta          = 1e26
  
 /**** SETUP DEPENDANT ****/
 anisotropy           = 1
-EpsBG           = 5e-14 /Background strain rate
-PrBG            = 0     
+bkg_strain_rate           = 5e-14 /Background strain rate
+bkg_pressure            = 0     
 user0           = 400 / background T
 user1           = 3e3 / radius of perturbation
 user2           = 0

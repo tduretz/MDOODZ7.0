@@ -709,17 +709,17 @@ double LineSearchDecoupled( SparseMat *Stokes, SparseMat *StokesA, SparseMat *St
 
 void SolveStokesDecoupled( SparseMat *StokesA, SparseMat *StokesB, SparseMat *StokesC, SparseMat *StokesD, SparseMat *Stokes, DirectSolver* PardisoStokes, params model, grid *mesh, scale scaling ) {
 
-    printf("---- Solve Stokes in a decoupled/segregated fashion, lsolver = %d ----\n", model.lsolver);
+    printf("---- Solve Stokes in a decoupled/segregated fashion, lin_solver = %d ----\n", model.lin_solver);
 
     clock_t t_omp;
 
     // Call direct solver
     t_omp = (double)omp_get_wtime();
 
-    if (model.lsolver== 0) DirectStokesDecoupled    ( StokesA, StokesB, StokesC, StokesD, PardisoStokes, StokesA->b, StokesC->b, Stokes->x, model, mesh, scaling, Stokes );
-    if (model.lsolver== 1) KSPStokesDecoupled       ( StokesA, StokesB, StokesC, StokesD, PardisoStokes, StokesA->b, StokesC->b, Stokes->x, model, mesh, scaling, Stokes, Stokes, StokesA, StokesB, StokesC );
-    if (model.lsolver== 2) KillerSolver             ( StokesA, StokesB, StokesC, StokesD, PardisoStokes, StokesA->b, StokesC->b, Stokes->x, model, mesh, scaling, Stokes, Stokes, StokesA, StokesB, StokesC );
-    if (model.lsolver==-1) DirectStokesDecoupledComp( StokesA, StokesB, StokesC, StokesD, PardisoStokes, StokesA->b, StokesC->b, Stokes->x, model, mesh, scaling, Stokes );
+    if (model.lin_solver== 0) DirectStokesDecoupled    ( StokesA, StokesB, StokesC, StokesD, PardisoStokes, StokesA->b, StokesC->b, Stokes->x, model, mesh, scaling, Stokes );
+    if (model.lin_solver== 1) KSPStokesDecoupled       ( StokesA, StokesB, StokesC, StokesD, PardisoStokes, StokesA->b, StokesC->b, Stokes->x, model, mesh, scaling, Stokes, Stokes, StokesA, StokesB, StokesC );
+    if (model.lin_solver== 2) KillerSolver             ( StokesA, StokesB, StokesC, StokesD, PardisoStokes, StokesA->b, StokesC->b, Stokes->x, model, mesh, scaling, Stokes, Stokes, StokesA, StokesB, StokesC );
+    if (model.lin_solver==-1) DirectStokesDecoupledComp( StokesA, StokesB, StokesC, StokesD, PardisoStokes, StokesA->b, StokesC->b, Stokes->x, model, mesh, scaling, Stokes );
 
     ScaleVelocitiesRHSBack(StokesA, StokesD, Stokes->x);
 
@@ -732,17 +732,17 @@ void SolveStokesDecoupled( SparseMat *StokesA, SparseMat *StokesB, SparseMat *St
 
 void SolveStokesDefectDecoupled( SparseMat *StokesA, SparseMat *StokesB, SparseMat *StokesC, SparseMat *StokesD, SparseMat *Stokes, DirectSolver *PardisoStokes, Nparams* Nmodel, grid* mesh, params* model, markers* particles, markers* topo_chain, surface *topo, mat_prop materials, scale scaling, SparseMat *JacobA, SparseMat *JacobB, SparseMat *JacobC ) {
 
-    printf("---- Solve Stokes in a decoupled/segregated fashion and defect correction mode, lsolver = %d ----\n", model->lsolver);
+    printf("---- Solve Stokes in a decoupled/segregated fashion and defect correction mode, lin_solver = %d ----\n", model->lin_solver);
     double alpha = -1.0;
     clock_t t_omp;
     double *dx = DoodzCalloc( Stokes->neq, sizeof(double));
 
     // Call direct solver
     t_omp = (double)omp_get_wtime();
-    if ( model->lsolver == 0 ) DirectStokesDecoupled    ( StokesA, StokesB, StokesC, StokesD, PardisoStokes, StokesA->F, StokesC->F, dx, *model, mesh, scaling, Stokes );
-    if ( model->lsolver == 1 ) KSPStokesDecoupled       ( StokesA, StokesB, StokesC, StokesD, PardisoStokes, StokesA->F, StokesC->F, dx, *model, mesh, scaling, Stokes, Stokes, JacobA, JacobB, JacobC );
-    if ( model->lsolver == 2 ) KillerSolver             ( StokesA, StokesB, StokesC, StokesD, PardisoStokes, StokesA->F, StokesC->F, dx, *model, mesh, scaling, Stokes, Stokes, JacobA, JacobB, JacobC );
-    if ( model->lsolver ==-1 ) DirectStokesDecoupledComp( StokesA, StokesB, StokesC, StokesD, PardisoStokes, StokesA->F, StokesC->F, dx, *model, mesh, scaling, Stokes );
+    if ( model->lin_solver == 0 ) DirectStokesDecoupled    ( StokesA, StokesB, StokesC, StokesD, PardisoStokes, StokesA->F, StokesC->F, dx, *model, mesh, scaling, Stokes );
+    if ( model->lin_solver == 1 ) KSPStokesDecoupled       ( StokesA, StokesB, StokesC, StokesD, PardisoStokes, StokesA->F, StokesC->F, dx, *model, mesh, scaling, Stokes, Stokes, JacobA, JacobB, JacobC );
+    if ( model->lin_solver == 2 ) KillerSolver             ( StokesA, StokesB, StokesC, StokesD, PardisoStokes, StokesA->F, StokesC->F, dx, *model, mesh, scaling, Stokes, Stokes, JacobA, JacobB, JacobC );
+    if ( model->lin_solver ==-1 ) DirectStokesDecoupledComp( StokesA, StokesB, StokesC, StokesD, PardisoStokes, StokesA->F, StokesC->F, dx, *model, mesh, scaling, Stokes );
     printf("** Time for direct Stokes solver = %lf sec\n", (double)((double)omp_get_wtime() - t_omp));
 
     // Scale back veolicities

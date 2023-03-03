@@ -65,7 +65,7 @@ polar           = 1
 StressRotation  = 2
 
 /**** SETUP DEPENDANT ****/
-EpsBG           = 1e-15
+bkg_strain_rate           = 1e-15
 user0           =-35e3   / Moho depth [m]
 user1           =-150e3  / LAB depth [m]
 user2           =-200e3  / depth of compression [m] 
@@ -175,5 +175,5 @@ nit_max = 3
 rel_tol_KSP = 1e-4
 tol_u   = 1e-10
 tol_p   = 1e-10
-mineta  = 1e17
-maxeta  = 1e25
+min_eta  = 1e17
+max_eta  = 1e25

@@ -48,11 +48,11 @@ double SetGrainSize(MdoodzInstance *instance, Coordinates coordinates) {
 }
 
 double SetHorizontalVelocity(MdoodzInstance *instance, Coordinates coordinates) {
-  return -coordinates.x * instance->model.EpsBG;
+  return -coordinates.x * instance->model.bkg_strain_rate;
 }
 
 double SetVerticalVelocity(MdoodzInstance *instance, Coordinates coordinates) {
-  return coordinates.z * instance->model.EpsBG;
+  return coordinates.z * instance->model.bkg_strain_rate;
 }
 
 SetBC SetBCVx(MdoodzInstance *instance, POSITION position, Coordinates coordinates) {
@@ -61,7 +61,7 @@ SetBC SetBCVx(MdoodzInstance *instance, POSITION position, Coordinates coordinat
     bc.value = 0;
     bc.type  = 13;
   } else if (position == W || position == E) {
-    bc.value = -coordinates.x * instance->model.EpsBG;
+    bc.value = -coordinates.x * instance->model.bkg_strain_rate;
     bc.type  = 0;
   } else {
     bc.value = 0;
@@ -77,7 +77,7 @@ SetBC SetBCVz(MdoodzInstance *instance, POSITION position, Coordinates coordinat
     bc.value = 0;
     bc.type  = 13;
   } else if (position == S || position == N) {
-    bc.value = coordinates.z * instance->model.EpsBG;
+    bc.value = coordinates.z * instance->model.bkg_strain_rate;
     bc.type  = 0;
   } else {
     bc.value = 0;

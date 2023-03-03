@@ -27,7 +27,7 @@ dt      = 5e11
 constant_dt = 0
 Courant = 0.3
 penalty = 1e5
-lsolver = 0
+lin_solver = 0
 DefectCorrectionForm = 1
 diag_scaling = 1
 lin_abs_div = 1e-11
@@ -68,7 +68,7 @@ reseed_markers = 1
 IncrementalUpdateGrid = 1
 
 /**** SETUP DEPENDANT ****/
-EpsBG           = -1e-15
+bkg_strain_rate           = -1e-15
 user0           =-60e3   / inclusion depth [m]
 user1           = 2.5e3  / inclusion radius [m]
 user2           = 500    / background T [C]
@@ -160,5 +160,5 @@ nonlin_abs_mom   = 1e-7
 nonlin_abs_div   = 1e-7
 nonlin_rel_mom   = 1e-7
 nonlin_rel_div   = 1e-7
-mineta  = 1e17
-maxeta  = 1e25
+min_eta  = 1e17
+max_eta  = 1e25

@@ -46,8 +46,8 @@ dens_var        = 1  / renamed in MD7.0 (VolChangeReac)
 
 /**** SETUP DEPENDANT ****/
 shear_style     = 0
-EpsBG           = 0.0
-PrBG            = 2.0e9
+bkg_strain_rate           = 0.0
+bkg_pressure            = 2.0e9
 user0           = 680.0
 
 /**** NON-LINEAR ITERATIONS ****/
@@ -60,8 +60,8 @@ nonlin_abs_mom     = 1e-9
 nonlin_abs_div     = 1e-9
 nonlin_rel_mom     = 1e-9
 nonlin_rel_div     = 1e-9
-mineta        = 1e10
-maxeta        = 1e30
+min_eta        = 1e10
+max_eta        = 1e30
 
 /**** MAT PROPERTIES ****/
 Nb_phases = 4

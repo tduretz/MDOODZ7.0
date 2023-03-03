@@ -44,7 +44,7 @@ RK          = 4
 /**** LINEAR SOLVER ****/
 noisy           = 1
 penalty         = 1e6
-lsolver         = -1
+lin_solver         = -1
 lin_abs_div     = 1e-9
 lin_rel_div     = 1e-9
 lin_abs_mom     = 1e-9
@@ -66,9 +66,9 @@ nonlin_abs_div       = 1e-9
 nonlin_rel_div       = 1e-9
 
 /**** VISCOSITY CUT-OFF ****/
-mineta      = 1e-3
-maxeta      = 1e6
-itp_stencil = 9
+min_eta      = 1e-3
+max_eta      = 1e6
+interp_stencil = 9
 eta_average     = 1
 
 /**** SWITCHES ****/
@@ -82,7 +82,7 @@ finite_strain           = 1
 shear_style     = 0
 periodic_x    = 0
 pure_shear_ALE = 1
-EpsBG           = -1.0  / negative for extension
+bkg_strain_rate           = -1.0  / negative for extension
 user0           = 0.5   / layer height
 user1           = 0.2   / spacing
 user2           = 5     / number of layers

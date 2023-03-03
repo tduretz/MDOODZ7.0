@@ -68,11 +68,11 @@ double SetTemperature(MdoodzInput *instance, Coordinates coordinates) {
 // }
 
 // double SetHorizontalVelocity(MdoodzInput *instance, Coordinates coordinates) {
-//   return -coordinates.x * instance->model.EpsBG;
+//   return -coordinates.x * instance->model.bkg_strain_rate;
 // }
 
 // double SetVerticalVelocity(MdoodzInput *instance, Coordinates coordinates) {
-//   return coordinates.z * instance->model.EpsBG;
+//   return coordinates.z * instance->model.bkg_strain_rate;
 // }
 
 char SetBCPType(MdoodzInput *instance, POSITION position) {
@@ -139,7 +139,7 @@ SetBC SetBCVx(MdoodzInput *instance, POSITION position, Coordinates coordinates)
   SetBC bc;
   const double Earth_radius = 6370e3/instance->scaling.L, dz_smooth = 10e3/instance->scaling.L;
   const double Lx = instance->model.xmax - instance->model.xmin;
-  double V_tot    =  Lx * instance->model.EpsBG; // |VxW| + |VxE|
+  double V_tot    =  Lx * instance->model.bkg_strain_rate; // |VxW| + |VxE|
   double maxAngle = asin(Lx/2/Earth_radius);     // Aperture angle
   double tet_W, alp_W, tet_E, alp_E;
   double VxW, VxE;
@@ -196,7 +196,7 @@ SetBC SetBCVz(MdoodzInput *instance, POSITION position, Coordinates coordinates)
   SetBC bc;
   const double Earth_radius = 6370e3/instance->scaling.L, dz_smooth = 10e3/instance->scaling.L;
   const double Lx = instance->model.xmax - instance->model.xmin;
-  double V_tot    =  Lx * instance->model.EpsBG; // |VxW| + |VxE|
+  double V_tot    =  Lx * instance->model.bkg_strain_rate; // |VxW| + |VxE|
   double maxAngle = asin(Lx/2/Earth_radius);     // Aperture angle
   double tet_W, alp_W, tet_E, alp_E;
   double VxW, VxE, VzW, VzE, VzS=0.0;

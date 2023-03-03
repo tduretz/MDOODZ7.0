@@ -80,7 +80,7 @@ double ViscosityConciseAniso( int phase, double lxlz, double lx2, double angle, 
     // ACTUNG FOR GSE:: d is now d0 and d1 is now d
     // !!!!!!!!!!!!!!!!!!!!!!!!
     // General paramaters
-    const double tol    = 1.0e-11, R = materials->R, dt = model->dt, minEta = model->mineta, maxEta = model->maxeta;
+    const double tol    = 1.0e-11, R = materials->R, dt = model->dt, min_eta = model->min_eta, max_eta = model->max_eta;
     const int    nitmax = 20, noisy = 0;
     double eta = 0.0, eta_el, eta_cst;
     int    plastic = 0, constant = 0, dislocation = 0, peierls = 0, diffusion = 0, gbs = 0, elastic = model->elastic, kinetics = 0, is_pl = 0;

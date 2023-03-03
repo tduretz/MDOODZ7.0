@@ -50,7 +50,7 @@ eta_average         = 1
 advection       = 0
 noisy           = 1
 penalty        = 1e4
-lsolver        = 2
+lin_solver        = 2
 diag_scaling   = 0
 lin_abs_div    = 1e-11
 lin_rel_div    = 1e-11
@@ -73,7 +73,7 @@ surf_ised1 = 5
 surf_ised2 = 5
 
 /**** SETUP DEPENDANT ****/
-EpsBG           = 0e-18
+bkg_strain_rate           = 0e-18
 user0           = 1330     /mantle temperature [oC]
 user1           = 150e3    /lithospheric thickness [m]
 user2           = 3.17e-10 /plate velocity [m/s]
@@ -263,5 +263,5 @@ nonlin_abs_mom     = 1e-8
 nonlin_abs_div     = 1e-8
 nonlin_rel_mom     = 1e-9
 nonlin_rel_div     = 1e-9
-mineta  = 1e17
-maxeta  = 1e25
+min_eta  = 1e17
+max_eta  = 1e25

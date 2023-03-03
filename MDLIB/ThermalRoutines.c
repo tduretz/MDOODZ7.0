@@ -590,7 +590,7 @@ void SetThermalPert( grid* mesh, params model, scale scaling ) {
 
     double x, z;
     int    k, l, c2, nx, nz, ncx, ncz;
-    double pert = model.therm_pert_dT, x0 = model.therm_pert_x0, z0 = model.therm_pert_z0, rad = model.therm_pert_rad;
+    double pert = model.therm_perturb_dT, x0 = model.therm_perturb_x0, z0 = model.therm_perturb_z0, rad = model.therm_perturb_rad;
 
     nx   = mesh->Nx;
     nz   = mesh->Nz;

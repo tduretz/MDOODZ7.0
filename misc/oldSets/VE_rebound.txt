@@ -52,7 +52,7 @@ IncrementalUpdateGrid = 0
 reseed_markers = 0
 
 /**** SETUP DEPENDANT ****/
-EpsBG           =-5e-140
+bkg_strain_rate           =-5e-140
 user0           = 400   / temperature [°C]
 user1           = 3e3   / inclusion radius [m]
 user2           = 0
@@ -119,5 +119,5 @@ min_part_cell = 16
 nit_max = 1
 tol_u   = 5e-6
 tol_p   = 5e-6
-mineta  = 1e19
-maxeta  = 1e27
+min_eta  = 1e19
+max_eta  = 1e27

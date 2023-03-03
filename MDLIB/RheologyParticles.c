@@ -71,10 +71,10 @@ void OldDeviatoricStressesPressure( grid* mesh, markers* particles, scale scalin
     szz0 = DoodzCalloc(Ncx*Ncz, sizeof(DoodzFP));
     sxz0 = DoodzCalloc(Ncx*Ncz, sizeof(DoodzFP));
     
-    P2Mastah( model, *particles, particles->sxxd,    mesh, sxx0,   mesh->BCp.type,  1, 0, interp, cent, model->itp_stencil);
-    P2Mastah( model, *particles, particles->szzd,    mesh, szz0,   mesh->BCp.type,  1, 0, interp, cent, model->itp_stencil);
-    P2Mastah( model, *particles, particles->syy,     mesh, syy0,   mesh->BCp.type,  1, 0, interp, cent, model->itp_stencil);
-    P2Mastah( model, *particles, particles->sxz,     mesh, mesh->sxz0,   mesh->BCg.type,  1, 0, interp, vert, model->itp_stencil);
+    P2Mastah( model, *particles, particles->sxxd,    mesh, sxx0,   mesh->BCp.type,  1, 0, interp, cent, model->interp_stencil);
+    P2Mastah( model, *particles, particles->szzd,    mesh, szz0,   mesh->BCp.type,  1, 0, interp, cent, model->interp_stencil);
+    P2Mastah( model, *particles, particles->syy,     mesh, syy0,   mesh->BCp.type,  1, 0, interp, cent, model->interp_stencil);
+    P2Mastah( model, *particles, particles->sxz,     mesh, mesh->sxz0,   mesh->BCg.type,  1, 0, interp, vert, model->interp_stencil);
     
 #pragma omp parallel for shared( mesh, sxx0, syy0, szz0 ) private( k, k1, l, c0, c1, c2 ) firstprivate( Nx, Ncx, Ncz )
     for ( k1=0; k1<Ncx*Ncz; k1++ ) {
@@ -656,8 +656,8 @@ void FiniteStrainAspectRatio ( grid *mesh, scale scaling, params model, markers 
         FS_AR[k] = e1/e2;
     }
     
-    P2Mastah( &model, *particles, FS_AR, mesh, mesh->FS_AR_n,   mesh->BCp.type,  1, 0, interp, cent, model.itp_stencil);
-    P2Mastah( &model, *particles, FS_AR, mesh, mesh->FS_AR_s,   mesh->BCg.type,  1, 0, interp, vert, model.itp_stencil);
+    P2Mastah( &model, *particles, FS_AR, mesh, mesh->FS_AR_n,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil);
+    P2Mastah( &model, *particles, FS_AR, mesh, mesh->FS_AR_s,   mesh->BCg.type,  1, 0, interp, vert, model.interp_stencil);
     
     DoodzFree(FS_AR);
     
@@ -1318,9 +1318,9 @@ firstprivate( model )
             }
             
             // Subgrid stress increments markers --> grid
-            P2Mastah( model, *particles, dtxxms,     mesh, dtxxgs,   mesh->BCp.type,  1, 0, interp, cent, model->itp_stencil);
-            P2Mastah( model, *particles, dtzzms,     mesh, dtzzgs,   mesh->BCp.type,  1, 0, interp, cent, model->itp_stencil);
-            P2Mastah( model, *particles, dtxzms,     mesh, dtxzgs,   mesh->BCg.type,  1, 0, interp, vert, model->itp_stencil);
+            P2Mastah( model, *particles, dtxxms,     mesh, dtxxgs,   mesh->BCp.type,  1, 0, interp, cent, model->interp_stencil);
+            P2Mastah( model, *particles, dtzzms,     mesh, dtzzgs,   mesh->BCp.type,  1, 0, interp, cent, model->interp_stencil);
+            P2Mastah( model, *particles, dtxzms,     mesh, dtxzgs,   mesh->BCg.type,  1, 0, interp, vert, model->interp_stencil);
             
             // Remaining stress increments on the grid
 #pragma omp parallel for shared(mesh,dtxxgs,dtxxgr,dtzzgs,dtzzgr) private(c0) firstprivate(Ncx,Ncz)

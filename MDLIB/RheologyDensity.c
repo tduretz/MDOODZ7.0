@@ -320,7 +320,7 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
 
   // General paramaters
   double eta = 0.0, R = materials->R, dt = model->dt;
-  double minEta = model->mineta, maxEta = model->maxeta;
+  double min_eta = model->min_eta, max_eta = model->max_eta;
   double TmaxPeierls = (1200.0 + zeroC) / scaling->T;// max. T for Peierls
 
   // Parameters for deformation map calculations
@@ -731,12 +731,12 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
   //-------- Post-Processing
 
   // Viscosity limiter
-  if( *etaVE > maxEta ) {
-    *etaVE = maxEta;
+  if( *etaVE > max_eta ) {
+    *etaVE = max_eta;
   }
 
-  if( *etaVE < minEta ) {
-    *etaVE = minEta;
+  if( *etaVE < min_eta ) {
+    *etaVE = min_eta;
   }
 
   //    printf("e --> %2.2e %2.2e %2.2e\n", Exx, Ezz, Eyy); // if (fabs(Eyy)>1e-6)
@@ -1155,7 +1155,7 @@ void CohesionFrictionDilationGrid( grid* mesh, markers* particles, mat_prop mate
 
   // Plastic strain
   strain_pl  = DoodzCalloc((model.Nx-1)*(model.Nz-1), sizeof(double));
-  P2Mastah( &model, *particles,  particles->strain_pl,     mesh, strain_pl,   mesh->BCp.type,  1, 0, interp, cent, model.itp_stencil);
+  P2Mastah( &model, *particles,  particles->strain_pl,     mesh, strain_pl,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil);
 
   // Calculate cell centers cohesion and friction
 #pragma omp parallel for shared( mesh, strain_pl ) private( p, c0 ) firstprivate( model, materials, average, style, Ncx, Ncz )
@@ -1473,7 +1473,7 @@ void UpdateDensity( grid* mesh, markers* particles, mat_prop *materials, params 
 void StrainRateComponents( grid* mesh, scale scaling, params* model ) {
 
   int k, l, c0, c1, c2, Nx, Nz, Ncx, Ncz, k1;
-  double dx, dz;//, Eyyt = 0.0*model->DivBG/3.0;
+  double dx, dz;//, Eyyt = 0.0*model->bkg_div_rate/3.0;
   double dvxdx, dvydy, dvzdz;
   double out_of_plane = 0.0;
   if (model->out_of_plane==1) out_of_plane = 1.0;

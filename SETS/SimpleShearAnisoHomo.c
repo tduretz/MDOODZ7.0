@@ -69,7 +69,7 @@ double SetVerticalVelocity(MdoodzInput *input, Coordinates coordinates) {
 }
 
 double SetHorizontalVelocity(MdoodzInput *input, Coordinates coordinates) {
-  return -0.5 * input->model.EpsBG * (coordinates.z + (input->model.zmax - input->model.zmin) / 2);
+  return -0.5 * input->model.bkg_strain_rate * (coordinates.z + (input->model.zmax - input->model.zmin) / 2);
 }
 
 double SetGrainSize(MdoodzInput *input, Coordinates coordinates, int phase) {

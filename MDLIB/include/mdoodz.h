@@ -31,26 +31,26 @@ typedef struct {
   double  gx, gz;
   int     Nx, Nz, Nt, step, nit, Newton, noisy;
   eta_average eta_average;
-  int     itp_stencil;
+  int     interp_stencil;
   double  nexp_radial_basis;
   int     mechanical, periodic_x, elastic, isnonnewtonian,
           thermal, pure_shear_ALE, free_surface, write_markers, write_debug;
   double free_surface_stab;
   int    constant_dt, RK, line_search, initial_cooling, subgrid_diffusion, adiab_heating,
           shear_heating, advection, finite_strain, conserv_interp;
-  int surface_processes, loc_iter, thermal_perturb, surf_ised1,
+  int surface_processes, loc_iter, therm_perturb, surf_ised1,
           surf_ised2, MantleID, topografix, reseed_markers, smooth_softening;
-  double EpsBG, DivBG, user0, user1, user2, user3, user4, user5, user6, user7,
+  double bkg_strain_rate, bkg_div_rate, user0, user1, user2, user3, user4, user5, user6, user7,
           user8;
   char  *import_file;
   char  *import_files_dir;
   int    Nb_phases;
   int    ncont;
-  double Courant, mineta, maxeta;
+  double Courant, min_eta, max_eta;
   // Particles
   int    initial_noise;
   // Linear solver
-  int    lsolver, diag_scaling, preconditioner;
+  int    lin_solver, diag_scaling, preconditioner;
   double penalty, lin_abs_div, lin_rel_div, lin_abs_mom, lin_rel_mom, auto_penalty, compressible,
           rel_tol_KSP;
   // Non-linear solver
@@ -58,11 +58,11 @@ typedef struct {
   int    safe_mode, max_num_stag;
   // Deformation maps
   int    nT, nE, nd, def_maps;
-  double Pn, Tmin, Tmax, Emin, Emax, dmin, dmax, PrBG, TBG;
+  double Pn, Tmin, Tmax, Emin, Emax, dmin, dmax, bkg_pressure, bkg_temperature;
   // Surface processes
   double surf_diff, surf_sedirate, surf_baselev, surf_Winc, surf_Vinc;
   // Initial thermal perturbation
-  double therm_pert_x0, therm_pert_z0, therm_pert_dT, therm_pert_rad,
+  double therm_perturb_x0, therm_perturb_z0, therm_perturb_dT, therm_perturb_rad,
           cooling_duration;
   // For rheological database...
   int      force_act_vol_ast;
@@ -88,7 +88,7 @@ typedef struct {
   int      anisotropy, out_of_plane, marker_noise; //aniso_fstrain
   int      residual_form;
   int      irestart, istep;
-  int      writer, writerStep;
+  int      writer, writer_step;
   const char     *writer_subfolder;
   int      save_initial_markers, load_initial_markers;
   char    *initial_markers_file;

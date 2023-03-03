@@ -57,7 +57,7 @@ polar           = 1
 
 
 /**** SETUP DEPENDANT ****/
-EpsBG           = 0 /Background strain rate
+bkg_strain_rate           = 0 /Background strain rate
 user0           = 0 /Activate open BC EAST side
 user1           = 1 /Activate upper plate
 user2           = 1 /Activate slab dip 

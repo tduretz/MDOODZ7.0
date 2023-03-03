@@ -61,11 +61,11 @@ out_of_plane             = 1     / non zeros total Eyy
 compressible    = 1
 shear_style     = 0
 elastic       = 1
-EpsBG           = 1e-25
-DivBG           = 1e-14
-PrBG            = 3.45e9  / pressure [Pa]
-TBG             = 873.15  / temperature [K]
-user0           = 0       / 0: fix T=TBG, 1: use T=(P/b)^(1/a)
+bkg_strain_rate           = 1e-25
+bkg_div_rate           = 1e-14
+bkg_pressure            = 3.45e9  / pressure [Pa]
+bkg_temperature             = 873.15  / temperature [K]
+user0           = 0       / 0: fix T=bkg_temperature, 1: use T=(P/b)^(1/a)
 user1           = 2       / 2: fancy set up --- 1: simple inclusion --- 0: homogeneous
 user2           = 0.5e-3  / inclusion radius [m]
 user3           = 6.9462     / fit coefficient a for T=(P/b)^(1/a)
@@ -188,5 +188,5 @@ nonlin_abs_mom   = 1e-11
 nonlin_abs_div   = 1e-11
 lin_abs_div = 1e-9
 lin_rel_div = 1e-9
-mineta  = 1e17
-maxeta  = 1e25
+min_eta  = 1e17
+max_eta  = 1e25

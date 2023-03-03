@@ -143,8 +143,8 @@ maxTxx =  0.642;
 minPdyn = -1e8;
 maxPdyn =  5e8;
 
-% minEta = 19;
-% maxEta = 25;
+% min_eta = 19;
+% max_eta = 25;
 
 mindiv  =-0.25e-14;
 maxdiv  = 0.25e-14;
@@ -656,7 +656,7 @@ for istep=istart:ijump:iend
             %         title(['Viscosity (log10) at' TimeLabel])
             title(['eta s min = ', num2str(min(eta_s(eta_s>0)), '%2.4e'), ' max = ', num2str(max(eta_s(eta_s>0)), '%2.4e')])
             xlabel(xLabel), ylabel(zLabel);
-            if exist('minEta', 'var') caxis([minEta maxEta]); end
+            if exist('min_eta', 'var') caxis([min_eta max_eta]); end
             if crop == 1, xlim([lim.xmin lim.xmax]); ylim([lim.zmin lim.zmax]); end
             
             subplot(224)
@@ -670,7 +670,7 @@ for istep=istart:ijump:iend
             title(['eta n min = ', num2str(min(eta_n(eta_n>0)), '%2.4e'), ' max = ', num2str(max(eta_n(eta_n>0)), '%2.4e')])
             xlabel(xLabel), ylabel(zLabel);
             if crop == 1 xlim([lim.xmin lim.xmax]); ylim([lim.zmin lim.zmax]); end
-            if exist('minEta', 'var') caxis([minEta maxEta]); end
+            if exist('min_eta', 'var') caxis([min_eta max_eta]); end
             drawnow
  
  
@@ -704,7 +704,7 @@ for istep=istart:ijump:iend
             title(['min = ', num2str(min(eta(eta>0)), '%2.4e'), ' max = ', num2str(max(eta(eta>0)), '%2.4e')])
             xlabel(xLabel), ylabel(zLabel);
             if crop == 1, xlim([lim.xmin lim.xmax]); ylim([lim.zmin lim.zmax]); end
-            if exist('minEta', 'var') caxis([minEta maxEta]); end
+            if exist('min_eta', 'var') caxis([min_eta max_eta]); end
             
             subplot(212)
             imagesc(xc_plot, zc_plot, log10(eta_n));
@@ -717,7 +717,7 @@ for istep=istart:ijump:iend
             title(['min = ', num2str(min(eta_n(eta_n>0)), '%2.4e'), ' max = ', num2str(max(eta_n(eta_n>0)), '%2.4e')])
             xlabel(xLabel), ylabel(zLabel);
             if crop == 1 xlim([lim.xmin lim.xmax]); ylim([lim.zmin lim.zmax]); end
-            if exist('minEta', 'var') caxis([minEta maxEta]); end
+            if exist('min_eta', 'var') caxis([min_eta max_eta]); end
             
             drawnow
             
@@ -2590,7 +2590,7 @@ for istep=istart:ijump:iend
                 %         xlabel(xLabel), ylabel(zLabel);
                 %         axis xy image, colorbar;
                 %         if crop == 1 xlim([lim.xmin lim.xmax]); ylim([lim.zmin lim.zmax]); end
-                %         if exist('minEta', 'var') caxis([minEta maxEta]); end
+                %         if exist('min_eta', 'var') caxis([min_eta max_eta]); end
                 
                 % eII
                 subplot(3,1,2),
@@ -3347,7 +3347,7 @@ for istep=istart:ijump:iend
             
             xlabel(xLabel), ylabel(zLabel);
             if crop == 1 xlim([lim.xmin lim.xmax]); ylim([lim.zmin lim.zmax]); end
-            if exist('minEta', 'var') caxis([minEta maxEta]); end
+            if exist('min_eta', 'var') caxis([min_eta max_eta]); end
             drawnow
             
             if printfig == 1
