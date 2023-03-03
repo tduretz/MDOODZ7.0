@@ -57,10 +57,10 @@ stress_rotation = 2
 Newton      = 0 
 nit_max     = 1
 rel_tol_KSP = 1e-4
-abs_tol_u   = 1e-10
-abs_tol_p   = 1e-10
-rel_tol_u   = 1e-10
-rel_tol_p   = 1e-10
+nonlin_abs_mom   = 1e-10
+nonlin_abs_div   = 1e-10
+nonlin_rel_mom   = 1e-10
+nonlin_rel_div   = 1e-10
 mineta      = 1e17
 maxeta      = 1e25
 
@@ -83,7 +83,7 @@ Nb_phases = 3
 /**** PHASE 0 ****/
 ID   = 0
 rho  = 2800.00 / Crust
-mu   = 3e10
+G   = 3e10
 Cv   = 1050
 k    = 2.5
 Qr   = 1e-6
@@ -107,7 +107,7 @@ Qpwl = 0
 /**** PHASE 1 ****/
 ID   = 1
 rho  = 3300.00 / Mantle lithosphere
-mu   = 3e10
+G   = 3e10
 Cv   = 1050
 k    = 2.5
 Qr   = 0
@@ -131,7 +131,7 @@ Qpwl = 0
 /**** PHASE 2 ****/
 ID   = 2
 rho  = 3300.00 / Astehenosphere
-mu   = 3e10
+G   = 3e10
 Cv   = 1050
 k    = 2.5
 Qr   = 0

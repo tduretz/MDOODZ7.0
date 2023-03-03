@@ -610,11 +610,11 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
               IsFirstNewtonStep  = 1;
             }
 
-            while ( Nmodel.nit <= Nmax_picard && nstag< input.model.nstagmax) {
+            while ( Nmodel.nit <= Nmax_picard && nstag< input.model.max_num_stag) {
 
                 if ( Nmodel.nit > 0 && Nmodel.Picard2Newton == 1 ) {
-                    printf("input.model.Newton = %d --- %d\n", input.model.Newton, Nmodel.rp_rel[Nmodel.nit-1] < Nmodel.Pic2NewtCond);
-                    if ( Nmodel.rx_rel[Nmodel.nit-1] < Nmodel.Pic2NewtCond || Nmodel.rz_rel[Nmodel.nit-1] < Nmodel.Pic2NewtCond || Nmodel.rp_rel[Nmodel.nit-1] < Nmodel.Pic2NewtCond || Nmodel.nit>= Nmodel.nit_Pic_max) {
+                    printf("input.model.Newton = %d --- %d\n", input.model.Newton, Nmodel.rp_rel[Nmodel.nit-1] < Nmodel.Picard2Newton_tol);
+                    if ( Nmodel.rx_rel[Nmodel.nit-1] < Nmodel.Picard2Newton_tol || Nmodel.rz_rel[Nmodel.nit-1] < Nmodel.Picard2Newton_tol || Nmodel.rp_rel[Nmodel.nit-1] < Nmodel.Picard2Newton_tol || Nmodel.nit>= Nmodel.max_Pic_its) {
                         if ( IsFirstNewtonStep == 0 ) CholmodSolver.Analyze = 0;
                         if ( IsFirstNewtonStep == 1 ) {
                             cholmod_free_factor ( &CholmodSolver.Lfact, &CholmodSolver.c);
@@ -711,8 +711,8 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                 if (input.model.write_debug == 1 ) WriteResiduals( mesh, input.model, Nmodel, input.scaling );
 
                 // if pass --> clear matrix break
-                if ( (Nmodel.resx < Nmodel.abs_tol_u || Nmodel.resx/Nmodel.resx0 < Nmodel.rel_tol_u) && (Nmodel.resz < Nmodel.abs_tol_u || Nmodel.resz/Nmodel.resz0 < Nmodel.rel_tol_u) && (Nmodel.resp < Nmodel.abs_tol_p || Nmodel.resp/Nmodel.resp0 < Nmodel.rel_tol_p) ) {
-                    printf( "Non-linear solver converged to abs_tol_u = %2.2e abs_tol_p = %2.2e rel_tol_u = %2.2e rel_tol_p = %2.2e\n", Nmodel.abs_tol_u, Nmodel.abs_tol_p, Nmodel.rel_tol_u, Nmodel.rel_tol_p );
+                if ( (Nmodel.resx < Nmodel.nonlin_abs_mom || Nmodel.resx/Nmodel.resx0 < Nmodel.nonlin_rel_mom) && (Nmodel.resz < Nmodel.nonlin_abs_mom || Nmodel.resz/Nmodel.resz0 < Nmodel.nonlin_rel_mom) && (Nmodel.resp < Nmodel.nonlin_abs_div || Nmodel.resp/Nmodel.resp0 < Nmodel.nonlin_rel_div) ) {
+                    printf( "Non-linear solver converged to nonlin_abs_mom = %2.2e nonlin_abs_div = %2.2e nonlin_rel_mom = %2.2e nonlin_rel_div = %2.2e\n", Nmodel.nonlin_abs_mom, Nmodel.nonlin_abs_div, Nmodel.nonlin_rel_mom, Nmodel.nonlin_rel_div );
                     FreeSparseSystems( IsJacobianUsed, 1, &Stokes, &StokesA, &StokesB, &StokesC, &StokesD, &JacobA, &JacobB, &JacobC, &JacobD );
                     break;
                 }
@@ -731,8 +731,8 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                 
                 // Check for stagnation and apply safety restrictions is requested and required
                 if ( Nmodel.stagnated == 1 && input.model.elastic == 1 && input.model.safe_mode == 1 ) {
-                    printf( "\e[1;31mWARNING : Non-linear solver stagnated (abs_tol_u = %2.2e abs_tol_p = %2.2e)\e[m\n", Nmodel.abs_tol_u, Nmodel.abs_tol_p );
-                    printf( "\e[1;31mWARNING : Non-linear solver stagnated (rel_tol_u = %2.2e rel_tol_p = %2.2e)\e[m\n", Nmodel.rel_tol_u, Nmodel.rel_tol_p );
+                    printf( "\e[1;31mWARNING : Non-linear solver stagnated (nonlin_abs_mom = %2.2e nonlin_abs_div = %2.2e)\e[m\n", Nmodel.nonlin_abs_mom, Nmodel.nonlin_abs_div );
+                    printf( "\e[1;31mWARNING : Non-linear solver stagnated (nonlin_rel_mom = %2.2e nonlin_rel_div = %2.2e)\e[m\n", Nmodel.nonlin_rel_mom, Nmodel.nonlin_rel_div );
                     printf( "\e[1;31mReducing the timestep, and restart the iterations cycle...\e[m\n");
                     printf( "Before reduction: input.model.dt =, %2.2e\n", input.model.dt* input.scaling.t);
                     // ----------------------
@@ -747,8 +747,8 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                     ArrayEqualArray( mesh.v_in, mesh.v_start,  (mesh.Nx+1)*(mesh.Nz)   );
                     nstag++;
                     //-----------------------
-                    printf( "nstag value = %02d - nstagmax = %02d\n", nstag, input.model.nstagmax);
-                    if (nstag== input.model.nstagmax) {
+                    printf( "nstag value = %02d - max_num_stag = %02d\n", nstag, input.model.max_num_stag);
+                    if (nstag== input.model.max_num_stag) {
                         printf( "CheckDoudzOut!!\n");
                         exit(0);
                     //-----------------------
@@ -780,13 +780,13 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             int i, nit;
             if (Nmodel.nit>=Nmodel.nit_max)  nit = Nmodel.nit_max;
             if (Nmodel.nit< Nmodel.nit_max)  nit = Nmodel.nit;
-            if (Nmodel.Picard2Newton == 1 )  printf("Picard 2 Newton is activated with condition: %2.2e\n", Nmodel.Pic2NewtCond);
+            if (Nmodel.Picard2Newton == 1 )  printf("Picard 2 Newton is activated with condition: %2.2e\n", Nmodel.Picard2Newton_tol);
             for (i=0; i<=nit; i++) {
                 if (Nmodel.LogIsNewtonStep[i] == 1) printf("New. it. %02d: abs: |Fx| = %2.2e - |Fz| = %2.2e - |Fp| = %2.2e --- rel: |Fx| = %2.2e - |Fz| = %2.2e - |Fp| = %2.2e\n", i, Nmodel.rx_abs[i], Nmodel.rz_abs[i], Nmodel.rp_abs[i], Nmodel.rx_rel[i], Nmodel.rz_rel[i], Nmodel.rp_rel[i]);
                 else                                printf("Pic. it. %02d: abs: |Fx| = %2.2e - |Fz| = %2.2e - |Fp| = %2.2e --- rel: |Fx| = %2.2e - |Fz| = %2.2e - |Fp| = %2.2e\n", i, Nmodel.rx_abs[i], Nmodel.rz_abs[i], Nmodel.rp_abs[i], Nmodel.rx_rel[i], Nmodel.rz_rel[i], Nmodel.rp_rel[i]);
                 if (i == Nmodel.nit_max && input.model.safe_mode == 1) {
                     printf("Exit: Max iteration reached: Nmodel.nit_max = %02d! Check what you wanna do now...\n",Nmodel.nit_max);
-                    if ( (Nmodel.resx < Nmodel.abs_tol_u) && (Nmodel.resz < Nmodel.abs_tol_u) && (Nmodel.resp < Nmodel.abs_tol_p) ) {}
+                    if ( (Nmodel.resx < Nmodel.nonlin_abs_mom) && (Nmodel.resz < Nmodel.nonlin_abs_mom) && (Nmodel.resp < Nmodel.nonlin_abs_div) ) {}
                     else exit(1);
                 }
             }
@@ -1128,7 +1128,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
     // Free char*'s
     free(input.model.import_file);
     free(input.model.import_files_dir);
-    //free(input.model.writerSubfolder);
+    //free(input.model.writer_subfolder);
     free(input.model.initial_markers_file);
     // free(input.model.description);
 

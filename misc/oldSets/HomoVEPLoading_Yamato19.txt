@@ -35,15 +35,15 @@ Courant           = 0.2
 penalty           = 1e2
 lsolver           = 2
 diag_scaling      = 0
-abs_tol_div       = 1e-5
-rel_tol_div       = 1e-5
+lin_abs_div       = 1e-5
+lin_rel_div       = 1e-5
 GNUplot_residuals = 0
-pc_type           = 0
+preconditioner           = 0
 eta_avg           = 1
 num_deriv         = 0
 StressRotation    = 1
 safe_mode         = 1
-nstagmax          = 5
+max_num_stag          = 5
 
 /**** SWITCHES ****/
 mechanical    = 1
@@ -83,7 +83,7 @@ Nb_phases = 3
 /**** PHASE 0 ****/
 ID   = 0
 rho  = 2750.00 / matrix Anorthite wet 
-mu   = 1.0e10
+G   = 1.0e10
 Cv   = 1050.0
 k    = 2.3
 Qr   = 0.0
@@ -109,7 +109,7 @@ gsref = 1e-7
 /**** PHASE 1 ****/
 ID   = 1
 rho  = 2750.00 / matrix Anorthite Wet
-mu   = 1.0e10
+G   = 1.0e10
 Cv   = 1050.0
 k    = 2.3
 Qr   = 0.0
@@ -135,7 +135,7 @@ gsref = 1e-7
 /**** PHASE 2 ****/
 ID   = 2
 rho  = 2750.00 /reaction => Diffusion creep
-mu   = 3.5e10
+G   = 3.5e10
 Cv   = 1050.0
 k    = 2.3
 Qr   = 0.0

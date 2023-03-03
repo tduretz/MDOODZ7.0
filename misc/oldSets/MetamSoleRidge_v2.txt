@@ -28,7 +28,7 @@ zmax    =  10e3
 dt      = 1.2623e+11
 Courant = 0.25
 
-abs_tol_div = 1e-10
+lin_abs_div = 1e-10
 
 /**** SWITCHES ****/
 mechanical    = 1
@@ -54,10 +54,10 @@ num_deriv       = 0
 lsolver         = 0
 penalty         = 1e2
 diag_scaling    = 0
-abs_tol_div     = 1e-11
-rel_tol_div     = 1e-11
+lin_abs_div     = 1e-11
+lin_rel_div     = 1e-11
 noisy           = 1
-pc_type         = 0
+preconditioner         = 0
 
 /**** ANISOTROPY ****/
 aniso          = 0
@@ -84,7 +84,7 @@ Nb_phases = 12
 
 ID   = 0
 rho  = 1000.00 /inclusion
-mu   = 3e10
+G   = 3e10
 Cv   = 1050
 k    = 200.0
 Qr   = 0
@@ -111,7 +111,7 @@ aniso_factor = 1
 
 ID   = 1
 rho  = 2800.00 /inclusion
-mu   = 3e10
+G   = 3e10
 Cv   = 1050
 k    = 2.0
 Qr   = 0
@@ -138,7 +138,7 @@ aniso_factor = 1
 
 ID   = 2
 rho  = 3200.00 /matrix
-mu   = 3e10
+G   = 3e10
 Cv   = 1050
 k    = 2.0
 Qr   = 0
@@ -171,7 +171,7 @@ Ce   = 20.0e6
 
 ID   = 3
 rho  = 3200.00 /matrix
-mu   = 3e10
+G   = 3e10
 Cv   = 1050
 k    = 2.0
 Qr   = 0
@@ -204,7 +204,7 @@ Ce   = 20.0e6
 
 ID   = 4
 rho  = 2800.00 /basalt
-mu   = 3e10
+G   = 3e10
 Cv   = 1050
 k    = 2.0
 Qr   = 0
@@ -237,7 +237,7 @@ Ce   = 20.0e6
 
 ID   = 5
 rho  = 2850.00 /gabbro
-mu   = 3e10
+G   = 3e10
 Cv   = 1050
 k    = 2.0
 Qr   = 0
@@ -270,7 +270,7 @@ Ce   = 20.0e6
 
 ID   = 6
 rho  = 2800.00 /serpentine
-mu   = 3e10
+G   = 3e10
 Cv   = 1050
 k    = 2.0
 Qr   = 0
@@ -298,7 +298,7 @@ aniso_factor = 10
 
 ID   = 7
 rho  = 2800.00 /sediments
-mu   = 3e10
+G   = 3e10
 Cv   = 1050
 k    = 2.0
 Qr   = 0
@@ -325,7 +325,7 @@ aniso_factor = 10
 
 ID   = 8
 rho  = 3200.00 /asthenosphere
-mu   = 3e10
+G   = 3e10
 Cv   = 1050
 k    = 2.0
 Qr   = 0
@@ -353,7 +353,7 @@ aniso_factor = 10
 
 ID   = 9
 rho  = 2800.00 /basalt
-mu   = 3e10
+G   = 3e10
 Cv   = 1050
 k    = 2.0
 Qr   = 0
@@ -386,7 +386,7 @@ Ce   = 20.0e6
 
 ID   = 10
 rho  = 2850.00 /gabbro
-mu   = 3e10
+G   = 3e10
 Cv   = 1050
 k    = 2.0
 Qr   = 0
@@ -419,7 +419,7 @@ Ce   = 20.0e6
 
 ID   = 11
 rho  = 2800.00 /sediments
-mu   = 3e10
+G   = 3e10
 Cv   = 1050
 k    = 2.0
 Qr   = 0

@@ -158,7 +158,7 @@ alp  = 32.0e-6 / thermal expansivity
 
 bet  = 1e-11   / compressibility
 
-mu   = 1e10    / shear modulus
+G   = 1e10    / shear modulus
 
 Cv   = 1050    / heat capacity
 
@@ -188,7 +188,7 @@ ID   = 1
 
 rho  = 2800.00 / Crust - Maryland Diabase
 
-mu   = 1.0e10
+G   = 1.0e10
 
 Cv   = 1050.0
 
@@ -228,7 +228,7 @@ alp  = 32.0e-6
 
 bet  = 1.5e-11
 
-mu   = 1.0e10
+G   = 1.0e10
 
 Cv   = 1050.0
 
@@ -264,7 +264,7 @@ alp  = 32.0e-6
 
 bet  = 1.5e-11
 
-mu   = 1.0e10
+G   = 1.0e10
 
 Cv   = 1050.0
 
@@ -296,7 +296,7 @@ ID   = 4
 
 rho  = 2300.00 / sediments
 
-mu   = 1e10
+G   = 1e10
 
 Cv   = 1050
 
@@ -341,7 +341,7 @@ ID   = 5
 
 rho  = 2300.00 / sediments
 
-mu   = 1e10
+G   = 1e10
 
 Cv   = 1050
 
@@ -391,7 +391,7 @@ alp  = 32.0e-6
 
 bet  = 1.5e-11
 
-mu   = 1.0e10
+G   = 1.0e10
 
 Cv   = 1050.0
 
@@ -421,7 +421,7 @@ ID   = 7
 
 rho  = 2800.00 / Crust - Dry Quartz
 
-mu   = 1.0e10
+G   = 1.0e10
 
 Cv   = 1050.0
 
@@ -455,7 +455,7 @@ ID   = 8
 
 rho  = 2800.00 / Crust - Dry Quartz
 
-mu   = 1.0e10
+G   = 1.0e10
 
 Cv   = 1050.0
 

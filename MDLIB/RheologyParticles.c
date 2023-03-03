@@ -1301,13 +1301,13 @@ firstprivate( model )
             for ( k=0; k<particles->Nb_part; k++ ) {
                 if (particles->phase[k] != -1) {
                     p         = particles->phase[k];
-                    dtaum     = etam[k] / materials->mu[p];
+                    dtaum     = etam[k] / materials->G[p];
                     dtxxms[k] = -( particles->sxxd[k] - txxm0[k]) * (1.0 - exp(-d*dt/dtaum));
                     dtzzms[k] = -( particles->szzd[k] - tzzm0[k]) * (1.0 - exp(-d*dt/dtaum));
                     dtxzms[k] = -( particles->sxz[k]  - txzm0[k]) * (1.0 - exp(-d*dt/dtaum));
                     if (isinf(dtxxms[k])) {
                         printf("Infinite dtxxms[k]: %2.2e %2.2e %2.2e\n", particles->sxxd[k], txxm0[k], exp(-d*dt/dtaum));
-                        printf("%2.2e %2.2e %2.2e %2.2e %2.2e", d, dt, dtaum, etam[k]*scaling->eta, materials->mu[p]*scaling->S );
+                        printf("%2.2e %2.2e %2.2e %2.2e %2.2e", d, dt, dtaum, etam[k]*scaling->eta, materials->G[p]*scaling->S );
                         exit(1);
                     }
                     if (isnan(dtxxms[k])) {

@@ -26,8 +26,8 @@ dt   = 5.0e+9
 Courant = 0.25
 penalty = 1e1
 eta_avg = 0
-rel_tol_div = 1e-10
-abs_tol_div = 1e-10
+lin_rel_div = 1e-10
+lin_abs_div = 1e-10
 
 /**** SWITCHES ****/
 mechanical    = 1
@@ -67,7 +67,7 @@ Nb_phases = 2
 
 ID   = 0
 rho  = 1 / matrix
-mu   = 1e20
+G   = 1e20
 Cv   = 1050
 k    = 2.5
 Qr   = 0
@@ -90,7 +90,7 @@ Qpwl = 0
 
 ID   = 1
 rho  = 4000.00 / matrix
-mu   = 1e10
+G   = 1e10
 Cv   = 1050
 k    = 2.5
 Qr   = 0

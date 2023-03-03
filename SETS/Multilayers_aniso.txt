@@ -45,10 +45,10 @@ RK          = 4
 noisy           = 1
 penalty         = 1e6
 lsolver         = -1
-abs_tol_div     = 1e-9
-rel_tol_div     = 1e-9
-abs_tol_mom     = 1e-9
-rel_tol_mom     = 1e-9
+lin_abs_div     = 1e-9
+lin_rel_div     = 1e-9
+lin_abs_mom     = 1e-9
+lin_rel_mom     = 1e-9
 
 /**** NON-LINEAR SOLVER ****/
 Newton          = 1     / set to 1 only for accurate/production runs
@@ -58,12 +58,12 @@ rel_tol_KSP     = 1e-4
 let_res_grow    = 0
 line_search_min = 0.0 
 Picard2Newton   = 1
-Pic2NewtCond    = 1e-1
+Picard2Newton_tol    = 1e-1
 diag_scaling    = 0
-abs_tol_u       = 1e-9
-rel_tol_u       = 1e-9
-abs_tol_p       = 1e-9
-rel_tol_p       = 1e-9
+nonlin_abs_mom       = 1e-9
+nonlin_rel_mom       = 1e-9
+nonlin_abs_div       = 1e-9
+nonlin_rel_div       = 1e-9
 
 /**** VISCOSITY CUT-OFF ****/
 mineta      = 1e-3
@@ -97,7 +97,7 @@ Nb_phases = 2
 /**** PHASE 0 ****/
 ID   = 0
 rho  = 2700.00 / matrix
-mu   = 1
+G   = 1
 Cv   = 1050
 k    = 2.5
 Qr   = 0
@@ -122,7 +122,7 @@ ani_fac_e = 1.0
 /**** PHASE 1 ****/
 ID   = 1
 rho  = 2700.00 / layer
-mu   = 1
+G   = 1
 Cv   = 1050
 k    = 2.5
 Qr   = 0

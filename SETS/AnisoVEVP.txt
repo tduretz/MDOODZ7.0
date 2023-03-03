@@ -49,12 +49,12 @@ RK          = 4
 noisy        = 1
 penalty      = 1e5
 lsolver      = -1
-pc_type      = 0
+preconditioner      = 0
 diag_scaling = 0
-abs_tol_div  = 1e-9
-rel_tol_div  = 1e-9
-abs_tol_mom  = 1e-11
-rel_tol_mom  = 1e-11
+lin_abs_div  = 1e-9
+lin_rel_div  = 1e-9
+lin_abs_mom  = 1e-11
+lin_rel_mom  = 1e-11
 
 
 /**** NON-LINEAR SOLVER ****/
@@ -62,10 +62,10 @@ Newton      = 1
 line_search = 1
 nit_max     = 10
 rel_tol_KSP = 1e-4
-abs_tol_u   = 1e-9
-rel_tol_u   = 1e-9
-abs_tol_p   = 1e-9
-rel_tol_p   = 1e-9
+nonlin_abs_mom   = 1e-9
+nonlin_rel_mom   = 1e-9
+nonlin_abs_div   = 1e-9
+nonlin_rel_div   = 1e-9
 
 /**** VISCOSITY CUT-OFF ****/
 mineta      = 1e-3
@@ -91,7 +91,7 @@ Nb_phases = 2
 /**** PHASE 1 ****/
 ID          = 0
 rho         = 2700.00 / matrix
-mu          = 3e1
+G          = 3e1
 Cv          = 1050
 k           = 2.5
 Qr          = 0
@@ -123,7 +123,7 @@ ayy         = 1.0
 /**** PHASE 2 ****/
 ID          = 1
 rho         = 2700.00 / inclusion
-mu          = 3e1
+G          = 3e1
 Cv          = 1050
 k           = 2.5
 Qr          = 0

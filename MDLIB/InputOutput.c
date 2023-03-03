@@ -1079,22 +1079,21 @@ Input ReadInputFile( char *fileName ) {
     }
 
     // Output
-    model.writer          = ReadInt2( fin, "writer",          0 );
-    model.writerStep      = ReadInt2( fin, "writer_step",     1 );
-    model.write_markers   = ReadInt2( fin, "writer_markers",  0 );
-    model.write_debug     = ReadInt2( fin, "writer_debug",    0 );
-    model.writerSubfolder = ReadChar( fin, "writerSubfolder", "./");
+    model.writer           = ReadInt2( fin, "writer",             0 );
+    model.writerStep       = ReadInt2( fin, "writer_step",        1 );
+    model.write_markers    = ReadInt2( fin, "writer_markers",     0 );
+    model.write_debug      = ReadInt2( fin, "writer_debug",       0 );
+    model.writer_subfolder = ReadChar( fin, "writer_subfolder", "./");
 
     // Input
-    model.import_files_dir     = ReadChar( fin, "import_files_dir", "../../IMPORT");
-    model.import_file          = ReadChar( fin, "import_file", "blah.bin");
-    model.save_initial_markers = ReadInt2( fin, "save_initial_markers",          0 );
-    model.load_initial_markers = ReadInt2( fin, "load_initial_markers",          0 );
-
+    model.import_files_dir     = ReadChar( fin, "import_files_dir",    "../../IMPORT");
+    model.import_file          = ReadChar( fin, "import_file",             "blah.bin");
+    model.save_initial_markers = ReadInt2( fin, "save_initial_markers",            0 );
+    model.load_initial_markers = ReadInt2( fin, "load_initial_markers",            0 );
     model.initial_markers_file = ReadChar( fin, "initial_markers_file", "markers.bin");
 
     // Read scales for non-dimensionalisation
-    scale scaling             = (scale){
+    scale scaling            = (scale){
                         .eta = ReadDou2(fin, "eta", 1.0),
                         .L   = ReadDou2(fin, "L", 1.0),
                         .V   = ReadDou2(fin, "V", 1.0),
@@ -1103,28 +1102,26 @@ Input ReadInputFile( char *fileName ) {
     ScaleMe( &scaling );
     double Ga = 1e9*365.25*3600*24/scaling.t;
 
-    // Domain size
-    model.Nx              = ReadInt2( fin, "Nx",   10 );
-    model.Nz              = ReadInt2( fin, "Nz",   10 );
-    model.Nt              = ReadInt2( fin, "Nt",    1 );
-    model.xmin            = ReadDou2( fin, "xmin",  1.0  ) / scaling.L; model.xmin0 = model.xmin;
-    model.zmin            = ReadDou2( fin, "zmin",  1.0  ) / scaling.L; model.zmin0 = model.zmin;
-    model.xmax            = ReadDou2( fin, "xmax",  1.0  ) / scaling.L; model.xmax0 = model.xmax;
-    model.zmax            = ReadDou2( fin, "zmax",  1.0  ) / scaling.L; model.zmax0 = model.zmax;
-    model.dt              = ReadDou2( fin, "dt",    0.0  ) / scaling.t;
-    model.Courant         = ReadDou2( fin, "Courant",       0.5 );
-    model.penalty         = ReadDou2( fin, "penalty",      1.0e10 );
-    model.abs_tol_div     = ReadDou2( fin, "abs_tol_div", 1.0e-9 );
-    model.rel_tol_div     = ReadDou2( fin, "rel_tol_div",  1.0e-5 );
-    model.abs_tol_mom     = ReadDou2( fin, "abs_tol_mom", 1.0e-9 );
-    model.rel_tol_mom     = ReadDou2( fin, "rel_tol_mom",  1.0e-5 );
-    model.auto_penalty    = ReadDou2( fin, "auto_penalty",    0.0  );
-    model.diag_scaling    = ReadInt2( fin, "diag_scaling",       1 );
-    model.pc_type         = ReadInt2( fin, "pc_type",       0 );
-    model.safe_mode       = ReadInt2( fin, "safe_mode",     0 );
-    model.safe_dt_div     = ReadDou2( fin, "safe_dt_div",  5.0 );
-    model.nstagmax        = ReadInt2( fin, "nstagmax",      3 );
-    model.noisy           = ReadInt2( fin, "noisy",         1 );  // Prints a lot of info to standard output
+    // Spatial domain
+    model.Nx                 = ReadInt2( fin, "Nx",      10 );            // Number of vertices in x direction
+    model.Nz                 = ReadInt2( fin, "Nz",      10 );            // Number of vertices in y direction
+    model.xmin               = ReadDou2( fin, "xmin",  1.0  )/scaling.L;  // Spatial domain extent
+    model.zmin               = ReadDou2( fin, "zmin",  1.0  )/scaling.L;  // Spatial domain extent 
+    model.xmax               = ReadDou2( fin, "xmax",  1.0  )/scaling.L;  // Spatial domain extent 
+    model.zmax               = ReadDou2( fin, "zmax",  1.0  )/scaling.L;  // Spatial domain extent
+    // Time domain
+    model.Nt                 = ReadInt2( fin, "Nt",       1 );            // Number of time steps    
+    model.dt                 = ReadDou2( fin, "dt",    0.0  )/scaling.t;  // Time step
+    model.Courant            = ReadDou2( fin, "Courant",           0.5 ); // Courant number
+    // Numerics
+    model.penalty            = ReadDou2( fin, "penalty",        1.0e10 ); // Penalty factor
+    model.auto_penalty       = ReadDou2( fin, "auto_penalty",      0.0 ); // Activates automatic penalty factor computation
+    model.diag_scaling       = ReadInt2( fin, "diag_scaling",        1 ); // Activates diagonal scaling
+    model.preconditioner     = ReadInt2( fin, "preconditioner",      0 ); // Preconditoner type for Newton ietrations, 0: Picard preconditionner
+    model.safe_mode          = ReadInt2( fin, "safe_mode",           0 ); // Activates safe mode: reduces time step if convergence fails
+    model.safe_dt_div        = ReadDou2( fin, "safe_dt_div",       5.0 ); // Reduction factor for time step reduction
+    model.max_num_stag       = ReadInt2( fin, "max_num_stag",        3 ); // maximum number of stagnation (safe mode)
+    model.noisy              = ReadInt2( fin, "noisy",               1 ); // Prints a lot of info to standard output
     model.initial_noise      = ReadInt2( fin, "initial_noise",       0 ); // Add noise on initial marker locations
     model.mechanical         = ReadInt2( fin, "mechanical",          1 ); // Activates mechanical solver
     model.advection          = ReadInt2( fin, "advection",           1 ); // Activates advection
@@ -1135,7 +1132,7 @@ Input ReadInputFile( char *fileName ) {
     model.elastic            = ReadInt2( fin, "elastic",             0 ); // Activates elasticity
     model.thermal            = ReadInt2( fin, "thermal",             0 ); // Activates thermal solver
     model.line_search        = ReadInt2( fin, "line_search",         0 ); // Activates line search
-    model.line_search_min    = ReadDou2( fin, "line_search_min",   0.0 ); // Minimim alpha value for line search 
+    model.line_search_min    = ReadDou2( fin, "line_search_min",   0.0 ); // Minimum alpha value for line search 
     model.free_surface       = ReadInt2( fin, "free_surface",        0 ); // Activates free surface
     model.free_surface_stab  = ReadDou2( fin, "free_surface_stab", 0.0 ); // Activate free surface stabilisation: range 0.0-2.0
     model.initial_cooling    = ReadInt2( fin, "initial_cooling",     0 ); // Activates initial cooling
@@ -1166,13 +1163,16 @@ Input ReadInputFile( char *fileName ) {
     model.smooth_softening   = ReadInt2( fin, "smooth_softening",    1 ); // Activates smooth explicit kinematic softening function
     model.oop                = ReadInt2( fin, "oop",                 0 ); // Out-of-plane strain
     model.noise_bg           = ReadInt2( fin, "noise_bg",            0 ); // Background noise generated on the particles --> mesh (used for cohesion)
-    model.residual_form      = ReadInt2( fin, "residual_form",       1 ); // form of residual - TODO: delete if our models work with new default value (1)
-    
+    model.residual_form      = ReadInt2( fin, "residual_form",       1 ); // Form of residual - TODO: delete if our models work with new default value (1)
+    model.dt_max             = ReadDou2( fin, "dt_max", 1e20 )/scaling.t; // maximum allowed time step, the default value is set to ~infinite, it we become effective only if specificaly set in XXX.txt (see e.g. LithoScale.txt)
+    model.dt_min             = ReadDou2( fin, "dt_min",-1e20 )/scaling.t; // minimum allowed time step, defaut is negative such that it will never be activated unless specifically set in XXX.txt file
+    model.eta_avg            = ReadInt2( fin, "eta_avg",             0 ); // 0: arithmetic mean - 1: harmonic mean - 2: geometric mean
+    model.itp_stencil        = ReadInt2( fin, "itp_stencil",         1 ); // 1: 1-Cell          - 9: 9-Cell
     // Consequential behaviour
+    if (model.itp_stencil!=1 && model.itp_stencil!=9) { printf("Wrong value of itp_stencil: shoulbd be 1 or 9.\n"); exit(1); }
     if ( model.shear_style == 1 ) model.periodic_x    = 1; // If simple shear, it must  be periodic in x
     if ( model.shear_style == 0 ) model.periodic_x    = 0; // If simple shear, it can't be periodic in x
     if ( model.anisotropy  == 1 ) model.finite_strain = 1; // If anisotropy, then also track finite strain
-
     // Setup dependant
     model.EpsBG           = ReadDou2( fin, "EpsBG",         1e-30 ) / scaling.E; // Background tectonic rate, defaut is close to zero to avoid any Nans of Infs in rheology
     model.DivBG           = ReadDou2( fin, "DivBG",           0.0 ) / scaling.E; // Background divergence rate
@@ -1206,40 +1206,35 @@ Input ReadInputFile( char *fileName ) {
     model.user7           = ReadDou2( fin, "user7",           0.0 );
     model.user8           = ReadDou2( fin, "user8",           0.0 );
     // Derived quantities
-    model.dx                = (model.xmax - model.xmin) / (model.Nx - 1);
-    model.dz                = (model.zmax - model.zmin) / (model.Nz - 1);
-    model.dt0               = model.dt;
-    model.dt_start          = model.dt;
-    model.dt_max            = ReadDou2( fin, "dt_max",     1e20 ) / scaling.t; // maximum allowed time step, the default value is set to ~infinite, it we become effective only if specificaly set in XXX.txt (see e.g. LithoScale.txt)
-    model.dt_min            = ReadDou2( fin, "dt_min",    -1e20 ) / scaling.t; // minimum allowed time step, defaut is negative such that it will never be activated unless specifically set in XXX.txt file
-    model.eta_avg           = ReadInt2( fin, "eta_avg",       0 );              // 0: arithmetic mean - 1: harmonic mean - 2: geometric mean
-    model.itp_stencil       = ReadInt2( fin, "itp_stencil",       1   );        // 1: 1-Cell          - 9: 9-Cell
-    if (model.itp_stencil!=1 && model.itp_stencil!=9) { printf("Wrong value of itp_stencil: shoulbd be 1 or 9.\n"); exit(1); }
-    model.nexp_radial_basis = ReadDou2( fin, "nexp_radial_basis", 1.0 ); // exponent for radial basis function interp. TODO: remove this unused option
-
-       // For Cindy's setup
+    model.dx              = (model.xmax - model.xmin) / (model.Nx - 1);
+    model.dz              = (model.zmax - model.zmin) / (model.Nz - 1);
+    model.dt0             = model.dt;
+    model.dt_start        = model.dt;
+    model.xmin0           = model.xmin;
+    model.zmin0           = model.zmin;
+    model.xmax0           = model.xmax;
+    model.zmax0           = model.zmax;
+    // For Cindy's setup
     model.diffuse_X       = ReadInt2( fin, "diffuse_X",     0 );              // 0 or 1
     model.diffuse_avg     = ReadInt2( fin, "diffuse_avg",   0 );              // 0: arithmetic mean - 1: harmonic mean - 2: geometric mean
     model.diffusion_length= ReadDou2( fin, "diffusion_length",  0.0 ) / scaling.L;
-
     // Gravity
     model.gx              = ReadDou2( fin, "gx",  0.0 ) / scaling.a;
     model.gz              = ReadDou2( fin, "gz",  0.0 ) / scaling.a;
-
     // Material properties
     model.Nb_phases = materials.Nb_phases =  ReadInt2( fin, "Nb_phases", 0 );
     for ( k=0; k<materials.Nb_phases; k++) {
         // Read general parameters
         materials.rho[k]  = ReadMatProps( fin, "rho", k,   2700.0 )  / scaling.rho;
-        materials.mu[k]   = ReadMatProps( fin, "mu",  k,   1.0e10 )  / scaling.S;
+        materials.G[k]    = ReadMatProps( fin, "G",  k,   1.0e10  )  / scaling.S;
         materials.Cv[k]   = ReadMatProps( fin, "Cv",  k,   1.0e3  )  / scaling.Cv;
         materials.k[k]    = ReadMatProps( fin, "k",   k,   1.0e-6 )  / scaling.k;
-        materials.k_eff[k] = materials.k[k];
+        materials.k_eff[k]= materials.k[k];
         materials.Qr[k]   = ReadMatProps( fin, "Qr",  k,   1.0e-30)  / (scaling.W / pow(scaling.L,3.0));
-        materials.alp[k]  = ReadMatProps( fin, "alp", k,      0.0)  / (1.0/scaling.T);
+        materials.alp[k]  = ReadMatProps( fin, "alp", k,      0.0 )  / (1.0/scaling.T);
         materials.bet[k]  = ReadMatProps( fin, "bet", k,  1.0e-40 )  / (1.0/scaling.S);
         materials.drho[k] = ReadMatProps( fin, "drho",k,      0.0 )  / (scaling.rho);
-        materials.T0[k]   = (zeroC) / (scaling.T); // +20
+        materials.T0[k]   = (zeroC) / (scaling.T); 
         materials.P0[k]   = 1e5 / (scaling.S);
         // Read plasticity parameters
         materials.plast[k]= (int)ReadMatProps( fin, "plast",k,     1.0 );
@@ -1322,7 +1317,7 @@ Input ReadInputFile( char *fileName ) {
         printf("Xmin   = %2.1lf  km         Xmax   = %2.1lf  km     Nx   = %3d    dx   = %.2lf m\n", (model.xmin*scaling.L)/1e3, (model.xmax*scaling.L)/1e3, model.Nx, model.dx*scaling.L);
         printf("Zmin   = %2.1lf  km         Zmax   = %2.1lf  km      Nz   = %3d    dz   = %.2lf m\n", (model.zmin*scaling.L)/1e3, (model.zmax*scaling.L)/1e3, model.Nz, model.dz*scaling.L );
         printf("-------------------------------------------- PHASE: %d -------------------------------------------\n", k);
-        printf("rho    = %2.2e kg/m^3     mu = %2.2e Pa\n", materials.rho[k]*scaling.rho, materials.mu[k]*scaling.S );
+        printf("rho    = %2.2e kg/m^3     G = %2.2e Pa\n", materials.rho[k]*scaling.rho, materials.G[k]*scaling.S );
         printf("Cv     = %2.2e J/kg/K      k = %2.2e W/m/K      Qr = %2.2e W/m3\n", materials.Cv[k]*scaling.Cv, materials.k[k]*scaling.k, materials.Qr[k]*(scaling.W / pow(scaling.L,3)) );
         printf("C      = %2.2e Pa        phi = %2.2e deg      Slim = %2.2e Pa\n",  materials.C[k]*scaling.S, materials.phi[k]*180/M_PI, materials.Slim[k]*scaling.S );
         printf("alp    = %2.2e 1/T        T0 = %2.2e K         bet = %2.2e 1/Pa       P0 = %2.2e Pa       drho = %2.2e kg/m^3 \n", materials.alp[k]*(1/scaling.T), materials.T0[k]*(scaling.T), materials.bet[k]*(1/scaling.S), materials.P0[k]*(scaling.S), materials.drho[k]*scaling.rho );
@@ -1463,8 +1458,8 @@ Input ReadInputFile( char *fileName ) {
             printf ("One should increment 'model.num_PD' to allocate enough memory and store the database\n");
             exit(5);
         }
-        model.PDMnT[pid]         = 1000;                     // Resolution for temperature (MANTLE) []
-        model.PDMnP[pid]         = 1000;                     // Resolution for pressure    (MANTLE) []
+        model.PDMnT[pid]         = 1000;                    // Resolution for temperature (MANTLE) []
+        model.PDMnP[pid]         = 1000;                    // Resolution for pressure    (MANTLE) []
         model.PDMTmin[pid]       = 473.0/scaling.T;         // Minimum temperature        (MANTLE) [K]
         model.PDMTmax[pid]       = 2273.0/scaling.T;        // Maximum temperature        (MANTLE) [K]
         model.PDMPmin[pid]       = 100e6/scaling.S;         // Minimum pressure           (MANTLE) [Pa]
@@ -1477,11 +1472,11 @@ Input ReadInputFile( char *fileName ) {
             printf ("One should increment 'model.num_PD' to allocate enough memory and store the database\n");
             exit(5);
         }
-        model.PDMnT[pid]         = 1500;                     // Resolution for temperature (MANTLE) []
-        model.PDMnP[pid]         = 1500;                     // Resolution for pressure    (MANTLE) []
+        model.PDMnT[pid]         = 1500;                    // Resolution for temperature (MANTLE) []
+        model.PDMnP[pid]         = 1500;                    // Resolution for pressure    (MANTLE) []
         model.PDMTmin[pid]       = 273.0/scaling.T;         // Minimum temperature        (MANTLE) [K]
         model.PDMTmax[pid]       = 2273.0/scaling.T;        // Maximum temperature        (MANTLE) [K]
-        model.PDMPmin[pid]       = 1e5/scaling.S;         // Minimum pressure           (MANTLE) [Pa]
+        model.PDMPmin[pid]       = 1e5/scaling.S;           // Minimum pressure           (MANTLE) [Pa]
         model.PDMPmax[pid]       = 25e9 /scaling.S;         // Maximum pressure           (MANTLE) [Pa]
         model.PDMrho[pid]        = ReadBin( model.import_files_dir, "Hawaiian_Pyrolite_HR_rho_bin.dat", model.PDMnT[pid], model.PDMnP[pid], scaling.rho);
 
@@ -1491,8 +1486,8 @@ Input ReadInputFile( char *fileName ) {
             printf ("One should increment 'model.num_PD' to allocate enough memory and store the database\n");
             exit(5);
         }
-        model.PDMnT[pid]         = 1000;                     // Resolution for temperature (MANTLE) []
-        model.PDMnP[pid]         = 1000;                     // Resolution for pressure    (MANTLE) []
+        model.PDMnT[pid]         = 1000;                    // Resolution for temperature (MANTLE) []
+        model.PDMnP[pid]         = 1000;                    // Resolution for pressure    (MANTLE) []
         model.PDMTmin[pid]       = 573.0/scaling.T;         // Minimum temperature        (MANTLE) [K]
         model.PDMTmax[pid]       = 1273.0/scaling.T;        // Maximum temperature        (MANTLE) [K]
         model.PDMPmin[pid]       = 100e6/scaling.S;         // Minimum pressure           (MANTLE) [Pa]
@@ -1505,12 +1500,12 @@ Input ReadInputFile( char *fileName ) {
             printf ("One should increment 'model.num_PD' to allocate enough memory and store the database\n");
             exit(5);
         }
-        model.PDMnT[pid]         = 1249;                     // Resolution for temperature (MANTLE) []
-        model.PDMnP[pid]         = 1249;                     // Resolution for pressure    (MANTLE) []
+        model.PDMnT[pid]         = 1249;                    // Resolution for temperature (MANTLE) []
+        model.PDMnP[pid]         = 1249;                    // Resolution for pressure    (MANTLE) []
         model.PDMTmin[pid]       = 373.0/scaling.T;         // Minimum temperature        (MANTLE) [K]
         model.PDMTmax[pid]       = 1373.0/scaling.T;        // Maximum temperature        (MANTLE) [K]
-        model.PDMPmin[pid]       = 10.13e6/scaling.S;         // Minimum pressure           (MANTLE) [Pa]
-        model.PDMPmax[pid]       = 5.5816e9 /scaling.S;        // Maximum pressure           (MANTLE) [Pa]
+        model.PDMPmin[pid]       = 10.13e6/scaling.S;       // Minimum pressure           (MANTLE) [Pa]
+        model.PDMPmax[pid]       = 5.5816e9 /scaling.S;     // Maximum pressure           (MANTLE) [Pa]
         model.PDMrho[pid]        = ReadBin(model.import_files_dir, "Andesite.dat", model.PDMnT[pid], model.PDMnP[pid], scaling.rho);
 
         /**** PHASE DIAGRAMS #04 - Hydrated Peridotite (Hydrated_Pdt.dat)  ****/
@@ -1523,8 +1518,8 @@ Input ReadInputFile( char *fileName ) {
         model.PDMnP[pid]         = 793;                     // Resolution for pressure    (MANTLE) []
         model.PDMTmin[pid]       = 373.0/scaling.T;         // Minimum temperature        (MANTLE) [K]
         model.PDMTmax[pid]       = 1373.0/scaling.T;        // Maximum temperature        (MANTLE) [K]
-        model.PDMPmin[pid]       = 10.13e6/scaling.S;         // Minimum pressure           (MANTLE) [Pa]
-        model.PDMPmax[pid]       = 5.5816e9 /scaling.S;        // Maximum pressure           (MANTLE) [Pa]
+        model.PDMPmin[pid]       = 10.13e6/scaling.S;       // Minimum pressure           (MANTLE) [Pa]
+        model.PDMPmax[pid]       = 5.5816e9 /scaling.S;     // Maximum pressure           (MANTLE) [Pa]
         model.PDMrho[pid]        = ReadBin(model.import_files_dir, "Hydrated_Pdt.dat", model.PDMnT[pid], model.PDMnP[pid], scaling.rho);
 
         /**** PHASE DIAGRAMS #05 - MORB (MORB.dat)  ****/
@@ -1533,12 +1528,12 @@ Input ReadInputFile( char *fileName ) {
             printf ("One should increment 'model.num_PD' to allocate enough memory and store the database\n");
             exit(5);
         }
-        model.PDMnT[pid]         = 1249;                     // Resolution for temperature (MANTLE) []
-        model.PDMnP[pid]         = 1249;                     // Resolution for pressure    (MANTLE) []
+        model.PDMnT[pid]         = 1249;                    // Resolution for temperature (MANTLE) []
+        model.PDMnP[pid]         = 1249;                    // Resolution for pressure    (MANTLE) []
         model.PDMTmin[pid]       = 373.0/scaling.T;         // Minimum temperature        (MANTLE) [K]
         model.PDMTmax[pid]       = 1373.0/scaling.T;        // Maximum temperature        (MANTLE) [K]
-        model.PDMPmin[pid]       = 10.13e6/scaling.S;         // Minimum pressure           (MANTLE) [Pa]
-        model.PDMPmax[pid]       = 5.5816e9 /scaling.S;        // Maximum pressure           (MANTLE) [Pa]
+        model.PDMPmin[pid]       = 10.13e6/scaling.S;       // Minimum pressure           (MANTLE) [Pa]
+        model.PDMPmax[pid]       = 5.5816e9 /scaling.S;     // Maximum pressure           (MANTLE) [Pa]
         model.PDMrho[pid]        = ReadBin(model.import_files_dir, "MORB.dat", model.PDMnT[pid], model.PDMnP[pid], scaling.rho);
 
         /**** PHASE DIAGRAMS #06 - Pelite (Pelite.dat)  ****/
@@ -1547,12 +1542,12 @@ Input ReadInputFile( char *fileName ) {
             printf ("One should increment 'model.num_PD' to allocate enough memory and store the database\n");
             exit(5);
         }
-        model.PDMnT[pid]         = 1249;                     // Resolution for temperature (MANTLE) []
-        model.PDMnP[pid]         = 1249;                     // Resolution for pressure    (MANTLE) []
+        model.PDMnT[pid]         = 1249;                    // Resolution for temperature (MANTLE) []
+        model.PDMnP[pid]         = 1249;                    // Resolution for pressure    (MANTLE) []
         model.PDMTmin[pid]       = 373.0/scaling.T;         // Minimum temperature        (MANTLE) [K]
         model.PDMTmax[pid]       = 1373.0/scaling.T;        // Maximum temperature        (MANTLE) [K]
-        model.PDMPmin[pid]       = 10.13e6/scaling.S;         // Minimum pressure           (MANTLE) [Pa]
-        model.PDMPmax[pid]       = 5.5816e9 /scaling.S;        // Maximum pressure           (MANTLE) [Pa]
+        model.PDMPmin[pid]       = 10.13e6/scaling.S;       // Minimum pressure           (MANTLE) [Pa]
+        model.PDMPmax[pid]       = 5.5816e9 /scaling.S;     // Maximum pressure           (MANTLE) [Pa]
         model.PDMrho[pid]        = ReadBin(model.import_files_dir, "Pelite.dat", model.PDMnT[pid], model.PDMnP[pid], scaling.rho);
 
         /**** PHASE DIAGRAMS #07 - Rhyolite (Rhyolite.dat)  ****/
@@ -1561,12 +1556,12 @@ Input ReadInputFile( char *fileName ) {
             printf ("One should increment 'model.num_PD' to allocate enough memory and store the database\n");
             exit(5);
         }
-        model.PDMnT[pid]         = 1249;                     // Resolution for temperature (MANTLE) []
-        model.PDMnP[pid]         = 1249;                     // Resolution for pressure    (MANTLE) []
+        model.PDMnT[pid]         = 1249;                    // Resolution for temperature (MANTLE) []
+        model.PDMnP[pid]         = 1249;                    // Resolution for pressure    (MANTLE) []
         model.PDMTmin[pid]       = 373.0/scaling.T;         // Minimum temperature        (MANTLE) [K]
         model.PDMTmax[pid]       = 1373.0/scaling.T;        // Maximum temperature        (MANTLE) [K]
-        model.PDMPmin[pid]       = 10.13e6/scaling.S;         // Minimum pressure           (MANTLE) [Pa]
-        model.PDMPmax[pid]       = 5.5816e9 /scaling.S;        // Maximum pressure           (MANTLE) [Pa]
+        model.PDMPmin[pid]       = 10.13e6/scaling.S;       // Minimum pressure           (MANTLE) [Pa]
+        model.PDMPmax[pid]       = 5.5816e9 /scaling.S;     // Maximum pressure           (MANTLE) [Pa]
         model.PDMrho[pid]        = ReadBin(model.import_files_dir, "Rhyolite.dat", model.PDMnT[pid], model.PDMnP[pid], scaling.rho);
 
         /**** PHASE DIAGRAMS #08 - Serpentinite (Serpentinite.dat)  ****/
@@ -1579,8 +1574,8 @@ Input ReadInputFile( char *fileName ) {
         model.PDMnP[pid]         = 793;                     // Resolution for pressure    (MANTLE) []
         model.PDMTmin[pid]       = 373.0/scaling.T;         // Minimum temperature        (MANTLE) [K]
         model.PDMTmax[pid]       = 1373.0/scaling.T;        // Maximum temperature        (MANTLE) [K]
-        model.PDMPmin[pid]       = 10.13e6/scaling.S;         // Minimum pressure           (MANTLE) [Pa]
-        model.PDMPmax[pid]       = 5.5816e9 /scaling.S;        // Maximum pressure           (MANTLE) [Pa]
+        model.PDMPmin[pid]       = 10.13e6/scaling.S;       // Minimum pressure           (MANTLE) [Pa]
+        model.PDMPmax[pid]       = 5.5816e9 /scaling.S;     // Maximum pressure           (MANTLE) [Pa]
         model.PDMrho[pid]        = ReadBin(model.import_files_dir, "Serpentinite.dat", model.PDMnT[pid], model.PDMnP[pid], scaling.rho);
 
         /**** PHASE DIAGRAMS #09 - Si02 (Si02.dat)  ****/
@@ -1589,8 +1584,8 @@ Input ReadInputFile( char *fileName ) {
             printf ("One should increment 'model.num_PD' to allocate enough memory and store the database\n");
             exit(5);
         }
-        model.PDMnT[pid]         = 675;                           // Resolution for temperature (MANTLE) []
-        model.PDMnP[pid]         = 2500;                          // Resolution for pressure    (MANTLE) []
+        model.PDMnT[pid]         = 675;                          // Resolution for temperature (MANTLE) []
+        model.PDMnP[pid]         = 2500;                         // Resolution for pressure    (MANTLE) []
         model.PDMTmin[pid]       = (398+1e-3)/scaling.T;         // Minimum temperature        (MANTLE) [K]
         model.PDMTmax[pid]       = (800+273)/scaling.T;          // Maximum temperature        (MANTLE) [K]
         model.PDMPmin[pid]       = (0.0090/10*1e9)/scaling.S;    // Minimum pressure           (MANTLE) [Pa]
@@ -1607,8 +1602,8 @@ Input ReadInputFile( char *fileName ) {
         printf("Loading kinetic data...\n");
 
         /**** Quartz Coesite (dG_QuartzCoesite.dat)  ****/
-        model.kin_nT        = 675;                          // Resolution for temperature (MANTLE) []
-        model.kin_nP        = 2500;                         // Resolution for pressure    (MANTLE) []
+        model.kin_nT        = 675;                         // Resolution for temperature (MANTLE) []
+        model.kin_nP        = 2500;                        // Resolution for pressure    (MANTLE) []
         model.kin_Tmin      = (398+1e-3)/scaling.T;        // Minimum temperature        (MANTLE) [K]
         model.kin_Tmax      = (800+273)/scaling.T;         // Maximum temperature        (MANTLE) [K]
         model.kin_Pmin      = (0.0090/10*1e9)/scaling.S;   // Minimum pressure           (MANTLE) [Pa]
@@ -1631,11 +1626,11 @@ Input ReadInputFile( char *fileName ) {
     // Temperature, strain rate, grain size MIN/MAX & pressure
     model.Tmin            = ReadDou2(fin, "Tmin", 100.0);  model.Tmin += zeroC; model.Tmin /= scaling.T;    // C . K & non-dimensionalization
     model.Tmax            = ReadDou2(fin, "Tmax", 1000.0); model.Tmax += zeroC; model.Tmax /= scaling.T;    // C . K & non-dimensionalization
-    model.Emin            = ReadDou2(fin, "Emin", -30.0);  //model.Emin /= scaling.E;                           // Non-dimensionalization
+    model.Emin            = ReadDou2(fin, "Emin", -30.0);   //model.Emin /= scaling.E;                           // Non-dimensionalization
     model.Emax            = ReadDou2(fin, "Emax", -4.0 );   //model.Emax /= scaling.E;                           // Non-dimensionalization
     model.dmin            = ReadDou2(fin, "dmin", -7.0 );   //model.dmin /= scaling.L;                           // Non-dimensionalization
     model.dmax            = ReadDou2(fin, "dmax", -2.0 );   //model.dmax /= scaling.L;                           // Non-dimensionalization
-    model.Pn              = ReadDou2(fin, "Pn",  5.0e8 );      model.Pn   /= scaling.S;                           // Non-dimensionalization
+    model.Pn              = ReadDou2(fin, "Pn",  5.0e8 );      model.Pn   /= scaling.S;                          // Non-dimensionalization
 
     //------------------------------------------------------------------------------------------------------------------------------//
     // NUMERICAL PARAMETERS
@@ -1649,20 +1644,28 @@ Input ReadInputFile( char *fileName ) {
     particles.Nb_part       = (model.Nx-1)*(model.Nz-1) * particles.Nx_part * particles.Nz_part;
     particles.Nb_part_max   = 4.1*particles.Nb_part;
 
+    // Linear solver tolerances
+    model.lin_abs_div        = ReadDou2( fin, "lin_abs_div",    1.0e-9 ); // Tolerance for linear mechanical solver
+    model.lin_rel_div        = ReadDou2( fin, "lin_rel_div",    1.0e-5 ); // Tolerance for linear mechanical solver
+    model.lin_abs_mom        = ReadDou2( fin, "lin_abs_mom",    1.0e-9 ); // Tolerance for linear mechanical solver
+    model.lin_rel_mom        = ReadDou2( fin, "lin_rel_mom",    1.0e-5 ); // Tolerance for linear mechanical solver
+
     // Nonlinear iteration parameters
-    model.Newton           = ReadInt2( fin, "Newton", 0 );
-    Nmodel.Picard2Newton   = ReadInt2( fin, "Picard2Newton", 0 );
-    Nmodel.let_res_grow    = ReadInt2( fin, "let_res_grow",  0 );
-    Nmodel.Pic2NewtCond    = ReadDou2( fin, "Pic2NewtCond", 1e-1 );
-    Nmodel.nit_Pic_max     = ReadInt2( fin, "nit_Pic_max", 10 );
-    if (model.Newton==0) Nmodel.Picard2Newton = 0;
+    model.Newton             = ReadInt2( fin, "Newton",               0 );
+    Nmodel.Picard2Newton     = ReadInt2( fin, "Picard2Newton",        0 );
+    Nmodel.let_res_grow      = ReadInt2( fin, "let_res_grow",         0 );
+    Nmodel.Picard2Newton_tol = ReadDou2( fin, "Picard2Newton_tol", 1e-1 );
+    Nmodel.max_Pic_its       = ReadInt2( fin, "max_Pic_its",         10 );
+
+    // Consequential behaviour
+    if (model.Newton==0) Nmodel.Picard2Newton = 0; // If Picard is activated, do not switch to Newton
 
     model.rel_tol_KSP      = ReadDou2( fin, "rel_tol_KSP", 1e-4 );
     Nmodel.nit_max         = ReadInt2( fin, "nit_max", 1 );
-    Nmodel.abs_tol_u       = ReadDou2( fin, "abs_tol_u", 1.0e-6 );// / (scaling.S * scaling.L);                  // Fx * cel_vol
-    Nmodel.abs_tol_p       = ReadDou2( fin, "abs_tol_p", 1.0e-6 );// / (scaling.E * scaling.L * scaling.L );    // Fp * cel_vol
-    Nmodel.rel_tol_u       = ReadDou2( fin, "rel_tol_u", 1.0e-6 );
-    Nmodel.rel_tol_p       = ReadDou2( fin, "rel_tol_p", 1.0e-6 );
+    Nmodel.nonlin_abs_mom  = ReadDou2( fin, "nonlin_abs_mom", 1.0e-6 ); // Tolerance for non-linear mechanical solver
+    Nmodel.nonlin_abs_div  = ReadDou2( fin, "nonlin_abs_div", 1.0e-6 ); // Tolerance for non-linear mechanical solver
+    Nmodel.nonlin_rel_mom  = ReadDou2( fin, "nonlin_rel_mom", 1.0e-6 ); // Tolerance for non-linear mechanical solver
+    Nmodel.nonlin_rel_div  = ReadDou2( fin, "nonlin_rel_div", 1.0e-6 ); // Tolerance for non-linear mechanical solver
     model.mineta           = ReadDou2( fin, "mineta", 1.0e18 ) / scaling.eta;
     model.maxeta           = ReadDou2( fin, "maxeta", 1.0e24 ) / scaling.eta;
     Nmodel.stagnated       = 0;
@@ -1677,10 +1680,10 @@ Input ReadInputFile( char *fileName ) {
     // Close input file
     fclose(fin);
     return (Input) {
-      .model = model,
+      .model     = model,
       .particles = particles,
-      .scaling = scaling,
-      .Nmodel = Nmodel,
+      .scaling   = scaling,
+      .Nmodel    = Nmodel,
       .materials = materials,
     };
 }

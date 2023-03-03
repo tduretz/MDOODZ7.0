@@ -33,8 +33,8 @@ dt      = 1e4
 Courant = 0.3
 penalty = 1e2
 lsolver =  2
-rel_tol_div = 1e-10
-abs_tol_div = 1e-13
+lin_rel_div = 1e-10
+lin_abs_div = 1e-13
 diag_scaling = 1
 
 /**** SWITCHES ****/

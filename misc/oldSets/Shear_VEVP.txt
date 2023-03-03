@@ -30,11 +30,11 @@ Courant           = 0.3
 penalty           = 1e5
 lsolver           = 2
 diag_scaling      = 0
-abs_tol_div       = 1e-11
-rel_tol_div       = 1e-11
+lin_abs_div       = 1e-11
+lin_rel_div       = 1e-11
 GNUplot_residuals = 1
 shear_style       = 1
-pc_type           = 0
+preconditioner           = 0
 eta_avg           = 1
 num_deriv         = 0
 
@@ -73,7 +73,7 @@ Nb_phases = 2
 /**** PHASE 1 ****/
 ID   = 0
 rho  = 2700.00 / matrix
-mu   = 1
+G   = 1
 Cv   = 1050
 k    = 2.5
 Qr   = 0
@@ -98,7 +98,7 @@ Qpwl = 0
 /**** PHASE 2 ****/
 ID   = 1
 rho  = 2700.00 / inclusion
-mu   = 1
+G   = 1
 Cv   = 1050
 k    = 2.5
 Qr   = 0

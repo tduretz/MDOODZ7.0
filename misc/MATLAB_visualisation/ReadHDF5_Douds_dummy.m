@@ -4035,7 +4035,7 @@ for istep=istart:ijump:iend
             % %         title('log Diss [MPa/s]', 'FontSize', 12, 'FontName', 'Myriad pro')
             %         title('log Diss [Pa/s]', 'FontSize', 12, 'FontName', 'Myriad pro')
             %
-            % %         ylabel('ln D [\mu m]','FontName', 'Myriad pro')
+            % %         ylabel('ln D [\G m]','FontName', 'Myriad pro')
             %         ylabel(' D [\mum]','FontName', 'Myriad pro')
             %
             % %         xlabel('1/T*10^{3} [K]','FontName', 'Myriad pro')

@@ -76,7 +76,7 @@ Nb_phases = 4
 
 ID   = 0
 rho  = 2800.00 /inclusions omphacite 0
-mu   = 1e10
+G   = 1e10
 Cv   = 1050
 k    = 2.3
 Qr   = 0
@@ -101,7 +101,7 @@ aniso_factor = 10
 
 ID   = 1
 rho  = 2800.00 /inclusions omphacite 1
-mu   = 1e10
+G   = 1e10
 Cv   = 1050
 k    = 2.3
 Qr   = 0
@@ -126,7 +126,7 @@ aniso_factor = 10
 
 ID   = 2
 rho  = 3300.00 /matrix garnet
-mu   = 1e10
+G   = 1e10
 Cv   = 1050
 k    = 3.0
 Qr   = 0
@@ -151,7 +151,7 @@ aniso_factor = 10
 
 ID   = 3
 rho  = 3300.00 /matrix garnet
-mu   = 1e10
+G   = 1e10
 Cv   = 1050
 k    = 3.0
 Qr   = 0

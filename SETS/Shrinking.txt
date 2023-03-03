@@ -31,20 +31,20 @@ penalty           = 1e2
 lsolver           = 2
 diag_scaling      = 0
 gnuplot_log_res = 0
-pc_type           = 1
+preconditioner           = 1
 eta_avg           = 0
 num_deriv         = 0
 stress_rotation    = 1
 safe_mode         = 1
 safe_dt_div       = 2.0
-nstagmax          = 10
+max_num_stag          = 10
 IncrementalUpdateGrid = 1
 
 
-abs_tol_div       = 1e-10
-rel_tol_div       = 1e-10
-abs_tol_mom       = 1e-10  / momentum tolerance (new in MD7.0)
-rel_tol_mom       = 1e-10
+lin_abs_div       = 1e-10
+lin_rel_div       = 1e-10
+lin_abs_mom       = 1e-10  / momentum tolerance (new in MD7.0)
+lin_rel_mom       = 1e-10
 
 /**** SWITCHES ****/
 compressible    = 1
@@ -89,7 +89,7 @@ Nb_phases = 4
 /**** PHASE 0 ****/
 ID   = 0
 rho  = 2850.00 / matrix Granulite
-mu   = 4.0e10
+G   = 4.0e10
 Cv   = 1050.0
 k    = 2.3
 Qr   = 0.0
@@ -121,7 +121,7 @@ density_model = 3
 /**** PHASE 1 ****/
 ID   = 1
 rho  = 2850.00 / Dry CPX inclusion
-mu   = 4.0e10
+G   = 4.0e10
 Cv   = 1050.0
 k    = 2.3
 Qr   = 0.0
@@ -153,7 +153,7 @@ density_model = 3
 /**** PHASE 2 ****/
 ID   = 2
 rho  = 2850.00 / matrix Granulite
-mu   = 4.0e10
+G   = 4.0e10
 Cv   = 1050.0
 k    = 2.3
 Qr   = 0.0
@@ -185,7 +185,7 @@ density_model = 3
 /**** PHASE 3 ****/
 ID   = 3
 rho  = 3250.00 / keep granulite, only change in rho
-mu   = 4.0e10
+G   = 4.0e10
 Cv   = 1050.0
 k    = 2.3
 Qr   = 0.0
@@ -236,12 +236,12 @@ Newton        = 1
 let_res_grow  = 0
 line_search_min = 0.0 
 Picard2Newton = 1
-Pic2NewtCond  = 2e-1
+Picard2Newton_tol  = 2e-1
 nit_max       = 30
 rel_tol_KSP   = 5e-4
-abs_tol_u     = 1e-9
-abs_tol_p     = 1e-9
-rel_tol_u     = 1e-9
-rel_tol_p     = 1e-9
+nonlin_abs_mom     = 1e-9
+nonlin_abs_div     = 1e-9
+nonlin_rel_mom     = 1e-9
+nonlin_rel_div     = 1e-9
 mineta        = 1e10
 maxeta        = 1e30

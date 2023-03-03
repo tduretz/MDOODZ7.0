@@ -1240,7 +1240,7 @@ void ShearModCompExpGrid( grid* mesh, mat_prop *materials, params *model, scale 
 
           // Arithmetic
           if (average == 0) {
-            mesh->mu_n[c0]  += mesh->phase_perc_n[p][c0] * materials->mu[p];
+            mesh->mu_n[c0]  += mesh->phase_perc_n[p][c0] * materials->G[p];
             mesh->bet_n[c0] += mesh->phase_perc_n[p][c0] * materials->bet[p];
             if ( model->anisotropy == 1 ) {
               if (materials->ani_fstrain[p]==0) mesh->aniso_factor_e_n[c0] += mesh->phase_perc_n[p][c0] * materials->ani_fac_e[p];
@@ -1249,7 +1249,7 @@ void ShearModCompExpGrid( grid* mesh, mat_prop *materials, params *model, scale 
           }
           // Harmonic
           if (average == 1) {
-            mesh->mu_n[c0]  += mesh->phase_perc_n[p][c0] *  1.0/materials->mu[p];
+            mesh->mu_n[c0]  += mesh->phase_perc_n[p][c0] *  1.0/materials->G[p];
             mesh->bet_n[c0] += mesh->phase_perc_n[p][c0] *  1.0/materials->bet[p];
             if ( model->anisotropy == 1 ) {
               if (materials->ani_fstrain[p]==0) mesh->aniso_factor_e_n[c0] += mesh->phase_perc_n[p][c0] * 1.0/materials->ani_fac_e[p];
@@ -1258,7 +1258,7 @@ void ShearModCompExpGrid( grid* mesh, mat_prop *materials, params *model, scale 
           }
           // Geometric
           if (average == 2) {
-            mesh->mu_n[c0]  += mesh->phase_perc_n[p][c0] *  log(materials->mu[p]);
+            mesh->mu_n[c0]  += mesh->phase_perc_n[p][c0] *  log(materials->G[p]);
             mesh->bet_n[c0] += mesh->phase_perc_n[p][c0] *  log(materials->bet[p]);
             if ( model->anisotropy == 1 ) {
               if (materials->ani_fstrain[p]==0) mesh->aniso_factor_e_n[c0] += mesh->phase_perc_n[p][c0] * log(materials->ani_fac_e[p]);
@@ -1302,7 +1302,7 @@ void ShearModCompExpGrid( grid* mesh, mat_prop *materials, params *model, scale 
 
           // Arithmetic
           if (average == 0) {
-            mesh->mu_s[c1]  += mesh->phase_perc_s[p][c1] * materials->mu[p];
+            mesh->mu_s[c1]  += mesh->phase_perc_s[p][c1] * materials->G[p];
             mesh->bet_s[c1] += mesh->phase_perc_s[p][c1] * materials->bet[p];
             if ( model->anisotropy == 1 ) {
               if (materials->ani_fstrain[p]==0) mesh->aniso_factor_e_s[c1] += mesh->phase_perc_s[p][c1] * materials->ani_fac_e[p];
@@ -1311,7 +1311,7 @@ void ShearModCompExpGrid( grid* mesh, mat_prop *materials, params *model, scale 
           }
           // Harmonic
           if (average == 1) {
-            mesh->mu_s[c1]  += mesh->phase_perc_s[p][c1] *  1.0/materials->mu[p];
+            mesh->mu_s[c1]  += mesh->phase_perc_s[p][c1] *  1.0/materials->G[p];
             mesh->bet_s[c1] += mesh->phase_perc_s[p][c1] *  1.0/materials->bet[p];
             if ( model->anisotropy == 1 ) {
               if (materials->ani_fstrain[p]==0) mesh->aniso_factor_e_s[c1] += mesh->phase_perc_s[p][c1] *  1.0/materials->ani_fac_e[p];
@@ -1320,7 +1320,7 @@ void ShearModCompExpGrid( grid* mesh, mat_prop *materials, params *model, scale 
           }
           // Geometric
           if (average == 2) {
-            mesh->mu_s[c1]  += mesh->phase_perc_s[p][c1] *  log(materials->mu[p]);
+            mesh->mu_s[c1]  += mesh->phase_perc_s[p][c1] *  log(materials->G[p]);
             mesh->bet_s[c1] += mesh->phase_perc_s[p][c1] *  log(materials->bet[p]);
             if ( model->anisotropy == 1 ) {
               if (materials->ani_fstrain[p]==0) mesh->aniso_factor_e_s[c1] += mesh->phase_perc_s[p][c1] *  log(materials->ani_fac_e[p]);

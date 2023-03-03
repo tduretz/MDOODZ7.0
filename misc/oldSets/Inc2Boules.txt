@@ -75,7 +75,7 @@ Nb_phases = 4
 
 ID   = 0
 rho  = 2800.00 /inclusions 
-mu   = 1e10
+G   = 1e10
 Cv   = 1050
 k    = 2.3
 Qr   = 0
@@ -97,7 +97,7 @@ Qpwl = 0
 
 ID   = 1
 rho  = 2800.00 /inclusions 
-mu   = 1e10
+G   = 1e10
 Cv   = 1050
 k    = 2.3
 Qr   = 0
@@ -119,7 +119,7 @@ Qpwl = 0
 
 ID   = 2
 rho  = 3300.00 /matrix 
-mu   = 1e10
+G   = 1e10
 Cv   = 1050
 k    = 3.0
 Qr   = 0
@@ -141,7 +141,7 @@ Qpwl = 0
 
 ID   = 3
 rho  = 3300.00 /matrix 
-mu   = 1e10
+G   = 1e10
 Cv   = 1050
 k    = 3.0
 Qr   = 0

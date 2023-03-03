@@ -39,18 +39,18 @@ noisy        = 0
 penalty      = 1e5
 lsolver      = -1
 diag_scaling = 0
-abs_tol_div  = 1e-8
-rel_tol_div  = 1e-8
+lin_abs_div  = 1e-8
+lin_rel_div  = 1e-8
 
 /**** NON-LINEAR SOLVER ****/
 Newton      = 0 
 line_search = 0
 nit_max     = 100
 rel_tol_KSP = 1e-4
-abs_tol_u   = 1e-8
-abs_tol_u   = 1e-8
-rel_tol_p   = 1e-8
-rel_tol_p   = 1e-8
+nonlin_abs_mom   = 1e-8
+nonlin_abs_mom   = 1e-8
+nonlin_rel_div   = 1e-8
+nonlin_rel_div   = 1e-8
 
 /**** VISCOSITY CUT-OFF ****/
 mineta      = 1e-3

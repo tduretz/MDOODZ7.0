@@ -35,8 +35,8 @@ penalty = 1e2
 lsolver = -1
 DefectCorrectionForm = 1
 diag_scaling = 0
-abs_tol_div = 1e-8
-rel_tol_div = 1e-8
+lin_abs_div = 1e-8
+lin_rel_div = 1e-8
 
 /**** SWITCHES ****/
 mechanical    = 1
@@ -61,7 +61,7 @@ aniso           = 1
 aniso_fstrain   = 0 // finite strain anisotropy activated
 
 /**** SETUP DEPENDANT ****/
-pc_type = 1
+preconditioner = 1
 EpsBG           = 1
 shear_style     = 1
 user0           = 1     / temperature [°C]
@@ -79,7 +79,7 @@ Nb_phases = 2
 /**** PHASE 1 ****/
 ID   = 0
 rho  = 2700.00 / matrix
-mu   = 1e3
+G   = 1e3
 Cv   = 1050
 k    = 2.5
 Qr   = 0
@@ -104,7 +104,7 @@ aniso_factor = 10.0
 /**** PHASE 2 ****/
 ID   = 1
 rho  = 2700.00 / inclusion
-mu   = 1e3
+G   = 1e3
 Cv   = 1050
 k    = 2.5
 Qr   = 0

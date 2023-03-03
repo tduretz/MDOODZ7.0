@@ -81,7 +81,7 @@ class ShearTemplate : public ::testing::Test {
   }
 
   static void MutateInput(MdoodzInput *input, MutateInputParams *mutateInputParams) {
-    input->model.writerSubfolder = mutateInputParams->str1;
+    input->model.writer_subfolder = mutateInputParams->str1;
   }
 };
 

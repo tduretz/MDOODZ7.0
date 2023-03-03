@@ -30,9 +30,9 @@ penalty = 1e4
 lsolver = 2
 DefectCorrectionForm = 1
 diag_scaling = 1
-abs_tol_div = 1e-11
-rel_tol_div = 1e-11
-pc_type     = 1
+lin_abs_div = 1e-11
+lin_rel_div = 1e-11
+preconditioner     = 1
 num_deriv   = 0
 
 /**** SWITCHES ****/
@@ -76,7 +76,7 @@ Nb_phases = 2
 /**** PHASE 1 ****/
 ID   = 0
 rho  = 2700.00 / matrix
-mu   = 1e10
+G   = 1e10
 Cv   = 1050
 k    = 2.5
 Qr   = 0
@@ -101,7 +101,7 @@ Qpwl = 0
 /**** PHASE 2 ****/
 ID   = 1
 rho  = 2700.00 / inclusion
-mu   = 1e10
+G   = 1e10
 Cv   = 1050
 k    = 2.5
 Qr   = 0

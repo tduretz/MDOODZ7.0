@@ -78,7 +78,7 @@ Nb_phases = 3
 /**** PHASE 0 ****/
 ID   = 0
 rho  = 3295.00 / matrix --- omphacite
-mu   = 6e10
+G   = 6e10
 Cv   = 1050
 k    = 2.5
 Qr   = 0
@@ -105,7 +105,7 @@ density_model = 3
 /**** PHASE 1 ****/
 ID   = 1
 rho  = 3577.00 / inclusion 1 - garnet
-mu   = 9e10
+G   = 9e10
 Cv   = 1050
 k    = 2.5
 Qr   = 0
@@ -132,7 +132,7 @@ density_model = 3
 /**** PHASE 2 ****/
 ID   = 2
 rho  = 2700.00 / inclusion
-mu   = 6e10
+G   = 6e10
 Cv   = 1050
 k    = 2.5
 Qr   = 0
@@ -176,12 +176,12 @@ min_part_cell = 16
 /**** NON-LINEAR ITERATIONS ****/
 Newton        = 1
 Picard2Newton = 1
-Pic2NewtCond  = 1e-1
+Picard2Newton_tol  = 1e-1
 nit_max  = 101
 rel_tol_KSP = 1e-4
-abs_tol_u   = 1e-11
-abs_tol_p   = 1e-11
-abs_tol_div = 1e-9
-rel_tol_div = 1e-9
+nonlin_abs_mom   = 1e-11
+nonlin_abs_div   = 1e-11
+lin_abs_div = 1e-9
+lin_rel_div = 1e-9
 mineta  = 1e17
 maxeta  = 1e25

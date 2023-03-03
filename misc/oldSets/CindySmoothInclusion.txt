@@ -30,8 +30,8 @@ Courant = 0.49
 
 /**** Solver ****/
 penalty     = 1e3
-abs_tol_div = 1e-8
-rel_tol_div = 1e-8
+lin_abs_div = 1e-8
+lin_rel_div = 1e-8
 
 /**** SWITCHES ****/
 mechanical    = 1
@@ -74,7 +74,7 @@ Nb_phases = 2
 ID   = 0             / Matrix
 gsref = 1e-3         / reference grain size 
 rho  = 3300 
-mu   = 1
+G   = 1
 Cv   = 1050
 k    = 2.5
 Qr   = 0
@@ -99,7 +99,7 @@ Reac      = 1
 ID   = 1              / Inclusion
 gsref = 1e-3          / reference grain size
 rho  = 2700.00 
-mu   = 1
+G   = 1
 Cv   = 1050
 k    = 2.5
 Qr   = 0
@@ -139,12 +139,12 @@ min_part_cell = 16
 /**** PICARD ITERATIONS ****/
 Newton  = 1
 nit_max = 10
-pc_type = 1
+preconditioner = 1
 Picard2Newton = 1
-Pic2NewtCond  = 7.5e-1
+Picard2Newton_tol  = 7.5e-1
 rel_tol_KSP = 5e-3
-abs_tol_u   = 1e-9
-abs_tol_p   = 1e-9
+nonlin_abs_mom   = 1e-9
+nonlin_abs_div   = 1e-9
 abs_rel_u   = 1e-9
 abs_rel_p   = 1e-9
 mineta  = 1e0

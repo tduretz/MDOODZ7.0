@@ -30,9 +30,9 @@ penalty = 1e5
 lsolver = 0
 DefectCorrectionForm = 1
 diag_scaling = 1
-abs_tol_div = 1e-11
-rel_tol_div = 1e-11
-pc_type     = 1
+lin_abs_div = 1e-11
+lin_rel_div = 1e-11
+preconditioner     = 1
 
 /**** SWITCHES ****/
 mechanical    = 1
@@ -84,7 +84,7 @@ Nb_phases = 2
 /**** PHASE 1 ****/
 ID   = 0
 rho  = 3000.00 / crust
-mu   = 1e10
+G   = 1e10
 Cv   = 1050
 k    = 2.5
 Qr   = 0
@@ -113,7 +113,7 @@ eta_vp = 2e20
 /**** PHASE 2 ****/
 ID   = 1
 rho  = 3000.00 / Lithosphere
-mu   = 1e10
+G   = 1e10
 Cv   = 1050
 k    = 2.5
 Qr   = 0
@@ -154,11 +154,11 @@ min_part_cell = 16
 Newton  = 1
 nit_max = 50
 Picard2Newton = 1
-Pic2NewtCond  = 1e-1
+Picard2Newton_tol  = 1e-1
 rel_tol_KSP = 1e-4
-abs_tol_u   = 1e-7
-abs_tol_p   = 1e-7
-rel_tol_u   = 1e-7
-rel_tol_p   = 1e-7
+nonlin_abs_mom   = 1e-7
+nonlin_abs_div   = 1e-7
+nonlin_rel_mom   = 1e-7
+nonlin_rel_div   = 1e-7
 mineta  = 1e17
 maxeta  = 1e25

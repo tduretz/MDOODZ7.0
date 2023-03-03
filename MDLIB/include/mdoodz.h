@@ -50,12 +50,12 @@ typedef struct {
   // Particles
   int    initial_noise;
   // Linear solver
-  int    lsolver, diag_scaling, pc_type;
-  double penalty, abs_tol_div, rel_tol_div, abs_tol_mom, rel_tol_mom, auto_penalty, compressible,
+  int    lsolver, diag_scaling, preconditioner;
+  double penalty, lin_abs_div, lin_rel_div, lin_abs_mom, lin_rel_mom, auto_penalty, compressible,
           rel_tol_KSP;
   // Non-linear solver
   double line_search_min, safe_dt_div;
-  int    safe_mode, nstagmax;
+  int    safe_mode, max_num_stag;
   // Deformation maps
   int    nT, nE, nd, def_maps;
   double Pn, Tmin, Tmax, Emin, Emax, dmin, dmax, PrBG, TBG;
@@ -89,7 +89,7 @@ typedef struct {
   int      residual_form;
   int      irestart, istep;
   int      writer, writerStep;
-  const char     *writerSubfolder;
+  const char     *writer_subfolder;
   int      save_initial_markers, load_initial_markers;
   char    *initial_markers_file;
   int     marker_aniso_angle;
@@ -104,7 +104,7 @@ typedef struct {
 typedef struct {
   int    Nb_phases;
   double R;
-  double  eps0[20], tau0[20], eta0[20], rho[20], mu[20], Cv[20], k[20], Qr[20], C[20], phi[20],
+  double  eps0[20], tau0[20], eta0[20], rho[20], G[20], Cv[20], k[20], Qr[20], C[20], phi[20],
           psi[20], Slim[20], n[20], A[20], Ea[20], Va[20], alp[20], bet[20], Qm[20],
           T0[20], P0[20], drho[20], k_eff[20];
   double tpwl[20], Qpwl[20], Vpwl[20], npwl[20], mpwl[20], Apwl[20], apwl[20],
