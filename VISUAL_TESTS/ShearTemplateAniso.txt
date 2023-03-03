@@ -24,7 +24,7 @@ pure_shear_ALE = 1
 bkg_strain_rate           = 1
 
 /**** SWITCHES ****/
-aniso           = 1
+anisotropy      = 1
 advection       = 0
 
 /**** USER-DEFINED ****/
