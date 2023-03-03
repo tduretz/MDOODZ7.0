@@ -1068,22 +1068,21 @@ Input ReadInputFile( char *fileName ) {
         exit(1);
     }
 
-    // snprintf(model.description, sizeof(model.description), "%s", ReadChar( fin, "description", "no description"));
-
     // Simulation start/restart from Breakpoint
     model.istep              = ReadInt2( fin, "istep", 0 );
     model.irestart           = ReadInt2( fin, "irestart", 0 );
-
-    if ( model.istep == 0 ) {
-        model.irestart = 0; // Override the restart step number written in the text file (istep)
-    }
+    if ( model.istep == 0 ) model.irestart = 0; // Override the restart step number written in the text file (istep)
 
     // Output
-    model.writer           = ReadInt2( fin, "writer",             0 );
-    model.writerStep       = ReadInt2( fin, "writer_step",        1 );
-    model.write_markers    = ReadInt2( fin, "writer_markers",     0 );
-    model.write_debug      = ReadInt2( fin, "writer_debug",       0 );
-    model.writer_subfolder = ReadChar( fin, "writer_subfolder", "./");
+    model.writer             = ReadInt2( fin, "writer",              0 ); // Write files
+    model.writerStep         = ReadInt2( fin, "writer_step",         1 ); // Frequency of output
+    model.write_markers      = ReadInt2( fin, "writer_markers",      0 ); // Writes marker files
+    model.write_debug        = ReadInt2( fin, "writer_debug",        0 ); // Write debug files
+    model.writer_subfolder   = ReadChar( fin, "writer_subfolder",  "./"); // Write output in given subfolder
+    model.noisy              = ReadInt2( fin, "noisy",               1 ); // Prints a lot of info to standard output
+    model.track_T_P_x_z      = ReadInt2( fin, "track_T_P_x_z",       0 ); // Tracks initial T, P, x and z on particles 
+    model.delete_breakpoints = ReadInt2( fin, "delete_breakpoints",  1 ); // Progressively deletes breakpoint files
+    model.gnuplot_log_res    = ReadInt2( fin, "gnuplot_log_res",     0 ); // Activates GNU plot residuals visualisation
 
     // Input
     model.import_files_dir     = ReadChar( fin, "import_files_dir",    "../../IMPORT");
@@ -1113,67 +1112,68 @@ Input ReadInputFile( char *fileName ) {
     model.Nt                 = ReadInt2( fin, "Nt",       1 );            // Number of time steps    
     model.dt                 = ReadDou2( fin, "dt",    0.0  )/scaling.t;  // Time step
     model.Courant            = ReadDou2( fin, "Courant",           0.5 ); // Courant number
-    // Numerics
+    model.RK                 = ReadInt2( fin, "RK",                  4 ); // Order of Runge-Kutta advection solver (1, 2 or 4)
+    model.constant_dt        = ReadInt2( fin, "constant_dt",         0 ); // Activates constant time step
+    model.stress_rotation    = ReadInt2( fin, "stress_rotation",     1 ); // 0: no stress rotation, 1: analytic rotation, 2: upper convected rate
+    model.dt_max             = ReadDou2( fin, "dt_max", 1e20 )/scaling.t; // maximum allowed time step, the default value is set to ~infinite, it we become effective only if specificaly set in XXX.txt (see e.g. LithoScale.txt)
+    model.dt_min             = ReadDou2( fin, "dt_min",-1e20 )/scaling.t; // minimum allowed time step, defaut is negative such that it will never be activated unless specifically set in XXX.txt file
+    // Physics
+    model.mechanical         = ReadInt2( fin, "mechanical",          1 ); // Activates mechanical solver
+    model.advection          = ReadInt2( fin, "advection",           1 ); // Activates advection
+    model.elastic            = ReadInt2( fin, "elastic",             0 ); // Activates elasticity
+    model.thermal            = ReadInt2( fin, "thermal",             0 ); // Activates thermal solver
+    model.anisotropy         = ReadInt2( fin, "anisotropy",          0 ); // Turns on anisotropy
+    model.polar              = ReadInt2( fin, "polar",               0 ); // Activate polar-Cartesian coordinates
+    model.finite_strain      = ReadInt2( fin, "finite_strain",       0 ); // Integrates finite stran and save deformation gradient tensor
+    model.compressible       = ReadInt2( fin, "compressible",        0 ); // Turns on compressibility
+    model.density_variations = ReadInt2( fin, "density_variations",  0 ); // Turns on volume change due to reaction if 1
+    model.kinetics           = ReadInt2( fin, "kinetics",            0 ); // Activates reaction kinetics
+    model.out_of_plane       = ReadInt2( fin, "out_of_plane",         0 ); // Out-of-plane strain
+    // Numerics: linear solver
     model.penalty            = ReadDou2( fin, "penalty",        1.0e10 ); // Penalty factor
     model.auto_penalty       = ReadDou2( fin, "auto_penalty",      0.0 ); // Activates automatic penalty factor computation
     model.diag_scaling       = ReadInt2( fin, "diag_scaling",        1 ); // Activates diagonal scaling
     model.preconditioner     = ReadInt2( fin, "preconditioner",      0 ); // Preconditoner type for Newton ietrations, 0: Picard preconditionner
+    // Numerics: non-linear solver
     model.safe_mode          = ReadInt2( fin, "safe_mode",           0 ); // Activates safe mode: reduces time step if convergence fails
     model.safe_dt_div        = ReadDou2( fin, "safe_dt_div",       5.0 ); // Reduction factor for time step reduction
     model.max_num_stag       = ReadInt2( fin, "max_num_stag",        3 ); // maximum number of stagnation (safe mode)
-    model.noisy              = ReadInt2( fin, "noisy",               1 ); // Prints a lot of info to standard output
-    model.initial_noise      = ReadInt2( fin, "initial_noise",       0 ); // Add noise on initial marker locations
-    model.mechanical         = ReadInt2( fin, "mechanical",          1 ); // Activates mechanical solver
-    model.advection          = ReadInt2( fin, "advection",           1 ); // Activates advection
-    model.constant_dt        = ReadInt2( fin, "constant_dt",         0 ); // Activates constant time step
-    model.RK                 = ReadInt2( fin, "RK",                  4 ); // Order of Runge-Kutta advection solver (1, 2 or 4)
-    model.periodic_x         = ReadInt2( fin, "periodic_x",          0 ); // Activates periodicity in x
-    model.pure_shear_ALE     = ReadInt2( fin, "pure_shear_ALE",      0 ); // Activates Arbitrary Lagarangian Eulerian mode (pure shear box deformation)
-    model.elastic            = ReadInt2( fin, "elastic",             0 ); // Activates elasticity
-    model.thermal            = ReadInt2( fin, "thermal",             0 ); // Activates thermal solver
     model.line_search        = ReadInt2( fin, "line_search",         0 ); // Activates line search
     model.line_search_min    = ReadDou2( fin, "line_search_min",   0.0 ); // Minimum alpha value for line search 
+    model.residual_form      = ReadInt2( fin, "residual_form",       1 ); // Form of residual - TODO: delete if our models work with new default value (1)
+
+    // Numerics: marker-in-cell
+    model.eta_average        = ReadInt2( fin, "eta_average",         0 ); // 0: arithmetic mean - 1: harmonic mean - 2: geometric mean
+    model.itp_stencil        = ReadInt2( fin, "itp_stencil",         1 ); // 1: 1-Cell          - 9: 9-Cell
+    model.subgrid_diffusion  = ReadInt2( fin, "subgrid_diffusion",   0 ); // 0: No subgrid diffusion, 1: temperature, 2: temperature + stress
+    model.conserv_interp     = ReadInt2( fin, "conserv_interp",      0 ); // Activates Taras conservative interpolation
+    model.direct_neighbour   = ReadInt2( fin, "direct_neighbour",    0 ); // Direct neighbour interpolation
+    model.initial_noise      = ReadInt2( fin, "initial_noise",       0 ); // Add noise on initial marker locations
+    model.marker_noise       = ReadInt2( fin, "marker_noise",        0 ); // Background noise field generated and tracked on the particles 
+    model.reseed_markers     = ReadInt2( fin, "reseed_markers",      1 ); // Activates reseeding / particle injection
+    // Boundary conditions
+    model.shear_style        = ReadInt2( fin, "shear_style",         0 ); // BC type: 0: pure shear, 2: periodic simple shear
+    model.periodic_x         = ReadInt2( fin, "periodic_x",          0 ); // Activates periodicity in x
+    model.pure_shear_ALE     = ReadInt2( fin, "pure_shear_ALE",      0 ); // Activates Arbitrary Lagarangian Eulerian mode (pure shear box deformation)
     model.free_surface       = ReadInt2( fin, "free_surface",        0 ); // Activates free surface
     model.free_surface_stab  = ReadDou2( fin, "free_surface_stab", 0.0 ); // Activate free surface stabilisation: range 0.0-2.0
+    // Model configurations
     model.initial_cooling    = ReadInt2( fin, "initial_cooling",     0 ); // Activates initial cooling
     model.cooling_duration   = ReadDou2( fin, "cooling_duration",   Ga ); // Initial cooling duration
-    model.subgrid_diffusion  = ReadInt2( fin, "subgrid_diffusion",   0 ); // 0: No subgrid diffusion, 1: temperature, 2: temperature + stress
     model.shear_heating      = ReadInt2( fin, "shear_heating",       1 ); // Activates shear heating
     model.adiab_heating      = ReadInt2( fin, "adiab_heating",       0 ); // 0: zero, 1: lithostatic P assumption, 2: full derivative
     model.surface_processes  = ReadInt2( fin, "surface_processes",   0 ); // 1: diffusion; 2: diffusion + sedimentation
-    model.thermal_perturb    = ReadInt2( fin, "thermal_perturb",     0 ); // Includes user defined initial thermal perbation
-    model.finite_strain      = ReadInt2( fin, "finite_strain",       0 ); // Integrates finite stran and save deformation gradient tensor
-    model.track_T_P_x_z      = ReadInt2( fin, "track_T_P_x_z",       0 ); // Tracks initial T, P, x and z on particles 
-    model.delete_breakpoints = ReadInt2( fin, "delete_breakpoints",  1 ); // Progressively deletes breakpoint files
-    model.anisotropy         = ReadInt2( fin, "anisotropy",          0 ); // Turns on anisotropy
     model.marker_aniso_angle = ReadInt2( fin, "marker_aniso_angle",  0 ); // Enables setting anisotropy angle per particles rather than phases
-    model.compressible       = ReadInt2( fin, "compressible",        0 ); // Turns on compressibility
-    model.gnuplot_log_res    = ReadInt2( fin, "gnuplot_log_res",     0 ); // Activate GNU plot residuals visualisation
-    model.shear_style        = ReadInt2( fin, "shear_style",         0 ); // BC type: 0: pure shear, 2: periodic simple shear
-    model.stress_rotation    = ReadInt2( fin, "stress_rotation",     1 ); // 0: no stress rotation, 1: analytic rotation, 2: upper convected rate
-    model.polar              = ReadInt2( fin, "polar",               0 ); // Activate polar-Cartesian coordinates
+    // Transformations
     model.progress_transform = ReadInt2( fin, "progress_transform",  0 ); // Activate progressive reactions
     model.no_return          = ReadInt2( fin, "no_return",           0 ); // Turns off retrogression if 1.0
     model.unsplit_diff_reac  = ReadInt2( fin, "unsplit_diff_reac",   0 ); // Unsplits diffusion and reaction
-    model.kinetics           = ReadInt2( fin, "kinetics",            0 ); // Activates reaction kinetics
-    model.density_change     = ReadInt2( fin, "density_change",      0 ); // Turns on volume change due to reaction if 1
-    model.direct_neighbour   = ReadInt2( fin, "direct_neighbour",    0 ); // Direct neighbour interpolation
-    model.reseed_markers     = ReadInt2( fin, "reseed_markers",      1 ); // Activates reseeding / particle injection
-    model.conserv_interp     = ReadInt2( fin, "conserv_interp",      0 ); // Activates Taras conservative interpolation
     model.smooth_softening   = ReadInt2( fin, "smooth_softening",    1 ); // Activates smooth explicit kinematic softening function
-    model.oop                = ReadInt2( fin, "oop",                 0 ); // Out-of-plane strain
-    model.noise_bg           = ReadInt2( fin, "noise_bg",            0 ); // Background noise generated on the particles --> mesh (used for cohesion)
-    model.residual_form      = ReadInt2( fin, "residual_form",       1 ); // Form of residual - TODO: delete if our models work with new default value (1)
-    model.dt_max             = ReadDou2( fin, "dt_max", 1e20 )/scaling.t; // maximum allowed time step, the default value is set to ~infinite, it we become effective only if specificaly set in XXX.txt (see e.g. LithoScale.txt)
-    model.dt_min             = ReadDou2( fin, "dt_min",-1e20 )/scaling.t; // minimum allowed time step, defaut is negative such that it will never be activated unless specifically set in XXX.txt file
-    model.eta_avg            = ReadInt2( fin, "eta_avg",             0 ); // 0: arithmetic mean - 1: harmonic mean - 2: geometric mean
-    model.itp_stencil        = ReadInt2( fin, "itp_stencil",         1 ); // 1: 1-Cell          - 9: 9-Cell
     // Consequential behaviour
     if (model.itp_stencil!=1 && model.itp_stencil!=9) { printf("Wrong value of itp_stencil: shoulbd be 1 or 9.\n"); exit(1); }
     if ( model.shear_style == 1 ) model.periodic_x    = 1; // If simple shear, it must  be periodic in x
     if ( model.shear_style == 0 ) model.periodic_x    = 0; // If simple shear, it can't be periodic in x
     if ( model.anisotropy  == 1 ) model.finite_strain = 1; // If anisotropy, then also track finite strain
-    // Setup dependant
     model.EpsBG           = ReadDou2( fin, "EpsBG",         1e-30 ) / scaling.E; // Background tectonic rate, defaut is close to zero to avoid any Nans of Infs in rheology
     model.DivBG           = ReadDou2( fin, "DivBG",           0.0 ) / scaling.E; // Background divergence rate
     model.PrBG            = ReadDou2( fin, "PrBG",            0.0 ) / scaling.S; // Background pressure
@@ -1187,6 +1187,7 @@ Input ReadInputFile( char *fileName ) {
     model.surf_Winc       = ReadDou2( fin, "surf_Winc",       0.0 ) / scaling.L;
     model.surf_Vinc       = ReadDou2( fin, "surf_Vinc",       0.0 ) / scaling.V;
     // Initial thermal perturbation
+    model.thermal_perturb = ReadInt2( fin, "thermal_perturb",   0 ); // Includes user defined initial thermal perbation
     model.therm_pert_x0   = ReadDou2( fin, "therm_pert_x0",   0.0 ) / scaling.L;
     model.therm_pert_z0   = ReadDou2( fin, "therm_pert_z0",   0.0 ) / scaling.L;
     model.therm_pert_rad  = ReadDou2( fin, "therm_pert_rad",  0.0 ) / scaling.L;

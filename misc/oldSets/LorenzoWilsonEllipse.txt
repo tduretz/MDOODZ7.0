@@ -33,7 +33,7 @@ zmax    =   20.0e3
 dt      = 1.2623e+11
 Courant = 0.45
 penalty = 1e2
-eta_avg = 0
+eta_average = 0
 lin_abs_div = 1e-30
 
 /**** SWITCHES ****/

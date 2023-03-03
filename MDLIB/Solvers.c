@@ -1073,7 +1073,7 @@ void KillerSolver( SparseMat *matA,  SparseMat *matB,  SparseMat *matC,  SparseM
     // ************** D ************** //
     SuiteSparse_long rsize;
     double gamma        = model.penalty, penalty;
-    int vol_change = model.density_change;
+    int vol_change = model.density_variations;
 
     rsize               = Stokes->neq_cont;
     Dcm0                = cholmod_speye( rsize, rsize, CHOLMOD_REAL, &c );
@@ -1458,7 +1458,7 @@ void KSPStokesDecoupled( SparseMat *matA,  SparseMat *matB,  SparseMat *matC,  S
     // ************** D ************** //
     SuiteSparse_long rsize;
     double gamma  = model.penalty, penalty;//1e12;//1e10*model.Nx*model.Nz;
-    int vol_change = model.density_change;
+    int vol_change = model.density_variations;
 
     rsize = Stokes->neq_cont;
     Dcm0  = cholmod_speye (rsize, rsize, CHOLMOD_REAL, &c );

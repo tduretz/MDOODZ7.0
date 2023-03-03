@@ -65,7 +65,7 @@ free_surface         = 1
 free_surface_stab    = 0
 finite_strain           = 1
 advection         = 0
-eta_avg           = 1
+eta_average           = 1
 anisotropy             = 1
 
 /**** SETUP-DEPENDANT ****/

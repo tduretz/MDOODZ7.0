@@ -56,7 +56,7 @@ HomoFields      = 0
 delete_breakpoints = 0
 GNUplot_residuals = 1
 no_markers      = 0
-eta_avg         = 1
+eta_average         = 1
 advection       = 1
 
 /**** SETUP DEPENDANT ****/

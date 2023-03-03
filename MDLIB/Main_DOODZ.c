@@ -294,8 +294,8 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             MinMaxArrayTag( mesh.rho_n, input.scaling.rho, (mesh.Nx-1)*(mesh.Nz-1), "rho_n     ", mesh.BCp.type );
             
              MinMaxArray(particles.noise, 1.0, particles.Nb_part, "noise p" );
-            if (input.model.noise_bg == 1) MinMaxArrayTag( mesh.noise_s, 1.0, (mesh.Nx-0)*(mesh.Nz-0), "noise_s     ", mesh.BCg.type );
-            if (input.model.noise_bg == 1) MinMaxArrayTag( mesh.noise_n, 1.0, (mesh.Nx-1)*(mesh.Nz-1), "noise_n     ", mesh.BCp.type );
+            if (input.model.marker_noise == 1) MinMaxArrayTag( mesh.noise_s, 1.0, (mesh.Nx-0)*(mesh.Nz-0), "noise_s     ", mesh.BCg.type );
+            if (input.model.marker_noise == 1) MinMaxArrayTag( mesh.noise_n, 1.0, (mesh.Nx-1)*(mesh.Nz-1), "noise_n     ", mesh.BCp.type );
             for (int p=0; p< input.model.Nb_phases; p++) {
                 printf("Phase number %d:\n", p);
                 MinMaxArrayTag( mesh.phase_perc_n[p],    1.0, (mesh.Nx-1)*(mesh.Nz-1), "ph_n      ", mesh.BCp.type );
@@ -679,7 +679,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                 BuildStokesOperatorDecoupled  ( &mesh, input.model, 0, mesh.p_corr, mesh.p_in, mesh.u_in, mesh.v_in, &Stokes, &StokesA, &StokesB, &StokesC, &StokesD, 1 );
 
                 // Build discrete system of equations - Jacobian (do it also for densification since drhodp is needed)
-                if ( (IsFullNewton   == 1 && Nmodel.nit > 0) || input.model.density_change == 1  ) RheologicalOperators( &mesh, &input.model, &input.materials, &input.scaling, 1 );
+                if ( (IsFullNewton   == 1 && Nmodel.nit > 0) || input.model.density_variations == 1  ) RheologicalOperators( &mesh, &input.model, &input.materials, &input.scaling, 1 );
                 if ( IsJacobianUsed == 1 ) BuildJacobianOperatorDecoupled( &mesh, input.model, 0, mesh.p_corr, mesh.p_in, mesh.u_in, mesh.v_in,  &Jacob,  &JacobA,  &JacobB,  &JacobC,   &JacobD, 1 );
                 
                 // Diagonal input.scaling

@@ -25,7 +25,7 @@ zmax    = 10.000000e3
 dt      = 1.2623e+11
 Courant = 0.45
 penalty = 1e2
-eta_avg = 0
+eta_average = 0
 itp_stencil = 1
 
 /**** SWITCHES ****/
@@ -57,7 +57,7 @@ polar           = 0
 anisotropy           = 0
 
 /**** SETUP DEPENDANT ****/
-noise_bg        = 1
+marker_noise        = 1
 EpsBG           = -1e-15 /Background strain rate [s-1] => extension rate = 1 cm/yr
 user0           = 0.0e3     /Radius of perturbation [m]
 user1           = 125.0e3   /Initial lithosphere thickness [m]

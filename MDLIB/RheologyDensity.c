@@ -755,7 +755,7 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
   int    p, k, l, Nx, Nz, Ncx, Ncz, c0, c1, k1;
   double eta, txx1, tzz1, txz1, etaVE, VEcoeff = 0.0, eII_el, eII_pl, eII_pwl, eII_exp, eII_lin, eII_gbs, eII_cst, dnew, div_el, div_pl, div_r;
   double Wtot, Wel, Wdiss;
-  int    average = model->eta_avg, unsplit_diff_reac = model->unsplit_diff_reac;
+  int    average = model->eta_average, unsplit_diff_reac = model->unsplit_diff_reac;
   double Xreac;
   double OverS;
   double Pcorr, rho;
@@ -811,7 +811,7 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
     if ( unsplit_diff_reac == 0 ) mesh->X_n[c0]        = 0.0;
     mesh->OverS_n[c0]    = 0.0;
 
-    if ( model->density_change == 1 ) {
+    if ( model->density_variations == 1 ) {
       mesh->rho_n[c0]  = 0.0;
       //            mesh->drhodp_n[c0] = 0.0;
     }
@@ -887,7 +887,7 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
           mesh->OverS_n[c0]     += mesh->phase_perc_n[p][c0] * OverS;
 
           // Volume changes
-          if ( model->density_change == 1 ) {
+          if ( model->density_variations == 1 ) {
             mesh->rho_n[c0]       += mesh->phase_perc_n[p][c0] * rho;
           }
         }
@@ -1171,7 +1171,7 @@ void CohesionFrictionDilationGrid( grid* mesh, markers* particles, mat_prop mate
       // Call softening routine
       Softening(c0, mesh->phase_perc_n, mesh->dil_n, mesh->fric_n, mesh->C_n, strain_pl[c0], model, materials, style, average );
       // Include random noise
-      if (model.noise_bg == 1) mesh->C_n[c0] += mesh->noise_n[c0]*mesh->C_n[c0];
+      if (model.marker_noise == 1) mesh->C_n[c0] += mesh->noise_n[c0]*mesh->C_n[c0];
     }
   }
 
@@ -1196,7 +1196,7 @@ void CohesionFrictionDilationGrid( grid* mesh, markers* particles, mat_prop mate
       // Call softening routine
       Softening(c1, mesh->phase_perc_s, mesh->dil_s, mesh->fric_s, mesh->C_s, strain_pl[c1], model, materials, style, average );
       // Include random noise
-      if (model.noise_bg == 1) mesh->C_s[c1] += mesh->noise_s[c1]*mesh->C_s[c1];
+      if (model.marker_noise == 1) mesh->C_s[c1] += mesh->noise_s[c1]*mesh->C_s[c1];
     }
   }
 
@@ -1212,7 +1212,7 @@ void CohesionFrictionDilationGrid( grid* mesh, markers* particles, mat_prop mate
 void ShearModCompExpGrid( grid* mesh, mat_prop *materials, params *model, scale scaling ) {
 
   int p, k, l, Nx, Nz, Ncx, Ncz, c0, c1;
-  int average = 1;//%model.eta_avg; // SHOULD NOT BE ALLOWED TO BE ELSE THAN 1
+  int average = 1;//%model.eta_average; // SHOULD NOT BE ALLOWED TO BE ELSE THAN 1
 
   Nx = mesh->Nx;
   Nz = mesh->Nz;
@@ -1475,8 +1475,8 @@ void StrainRateComponents( grid* mesh, scale scaling, params* model ) {
   int k, l, c0, c1, c2, Nx, Nz, Ncx, Ncz, k1;
   double dx, dz;//, Eyyt = 0.0*model->DivBG/3.0;
   double dvxdx, dvydy, dvzdz;
-  double oop = 0.0;
-  if (model->oop==1) oop = 1.0;
+  double out_of_plane = 0.0;
+  if (model->out_of_plane==1) out_of_plane = 1.0;
 
   Nx = mesh->Nx;
   Nz = mesh->Nz;
@@ -1485,7 +1485,7 @@ void StrainRateComponents( grid* mesh, scale scaling, params* model ) {
   dx = mesh->dx;
   dz = mesh->dz;
 
-#pragma omp parallel for shared( mesh ) private( k, k1, l, c0, c1, c2, dvxdx, dvydy, dvzdz  ) firstprivate( dx, dz, Nx, Ncx, Ncz, oop )
+#pragma omp parallel for shared( mesh ) private( k, k1, l, c0, c1, c2, dvxdx, dvydy, dvzdz  ) firstprivate( dx, dz, Nx, Ncx, Ncz, out_of_plane )
   for ( k1=0; k1<Ncx*Ncz; k1++ ) {
     k  = mesh->kp[k1];
     l  = mesh->lp[k1];
@@ -1502,7 +1502,7 @@ void StrainRateComponents( grid* mesh, scale scaling, params* model ) {
       // Velocity gradients - Total normal strain rates
       dvxdx = (mesh->u_in[c1+1+Nx]   - mesh->u_in[c1+Nx])/dx;
       dvzdz = (mesh->v_in[c2+Nx+1+1] - mesh->v_in[c2+1] )/dz;
-      dvydy = oop*0.5*( dvxdx + dvzdz );
+      dvydy = out_of_plane*0.5*( dvxdx + dvzdz );
 
       // Velocity divergence
       mesh->div_u[c0] = dvxdx + dvzdz + dvydy;

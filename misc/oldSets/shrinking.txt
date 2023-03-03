@@ -34,7 +34,7 @@ lin_abs_div       = 1e-10
 lin_rel_div       = 1e-10
 GNUplot_residuals = 0
 preconditioner           = 1
-eta_avg           = 0
+eta_average           = 0
 num_deriv         = 0
 StressRotation    = 1
 safe_mode         = 1
@@ -44,7 +44,7 @@ IncrementalUpdateGrid = 1
 StressUpdate    = 0
 
 /**** SWITCHES ****/
-oop             = 1
+out_of_plane             = 1
 compressible    = 1
 elastic       = 1
 mechanical    = 1

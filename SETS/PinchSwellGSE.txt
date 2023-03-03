@@ -25,7 +25,7 @@ zmax =  0.55
 dt   = 1e11
 Courant = 0.50
 penalty = 1e5
-eta_avg = 0
+eta_average = 0
 
 gnuplot_log_res = 0
 

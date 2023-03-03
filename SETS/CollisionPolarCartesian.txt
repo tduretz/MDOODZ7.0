@@ -30,7 +30,7 @@ Courant = 0.45
 
 /**** SWITCHES ****/
 penalty         = 1e3
-eta_avg         = 1
+eta_average         = 1
 itp_stencil     = 9
 mechanical    = 1
 constant_dt     = 0

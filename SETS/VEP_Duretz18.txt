@@ -57,7 +57,7 @@ lin_abs_div       = 1e-11
 lin_rel_div       = 1e-11
 shear_style       = 0
 preconditioner           = 1
-eta_avg           = 0
+eta_average           = 0
 num_deriv         = 0
 let_res_grow      = 1
 

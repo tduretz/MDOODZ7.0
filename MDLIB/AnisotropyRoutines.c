@@ -372,7 +372,7 @@ void NonNewtonianViscosityGridAniso( grid *mesh, mat_prop *materials, params *mo
   int    p, k, l, Nx, Nz, Ncx, Ncz, c0, c1, k1;
   double eta, txx1, tzz1, txz1, eta_vep, ani_vep, ani_e, eII_el, eII_pl, eII_pwl, eII_exp, eII_lin, eII_gbs, eII_cst, dnew, div_el, div_pl, div_r;
   double el = 0.0, Wtot, Wel, Wdiss;
-  int    average = model->eta_avg, unsplit_diff_reac = model->unsplit_diff_reac;
+  int    average = model->eta_average, unsplit_diff_reac = model->unsplit_diff_reac;
   double Xreac;
   double OverS;
   double Pcorr, rho;
@@ -432,7 +432,7 @@ void NonNewtonianViscosityGridAniso( grid *mesh, mat_prop *materials, params *mo
     mesh->aniso_factor_n[c0]   = 0.0;
     // mesh->aniso_factor_e_n[c0] = 0.0;
 
-    if ( model->density_change == 1 ) {
+    if ( model->density_variations == 1 ) {
       mesh->rho_n[c0]  = 0.0;
     }
 
@@ -531,7 +531,7 @@ void NonNewtonianViscosityGridAniso( grid *mesh, mat_prop *materials, params *mo
           mesh->OverS_n[c0]     += mesh->phase_perc_n[p][c0] * OverS;
 
           // Volume changes
-          if ( model->density_change == 1 ) {
+          if ( model->density_variations == 1 ) {
             mesh->rho_n[c0]     += mesh->phase_perc_n[p][c0] * (rho);
           }
         }

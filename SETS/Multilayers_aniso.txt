@@ -69,7 +69,7 @@ nonlin_rel_div       = 1e-9
 mineta      = 1e-3
 maxeta      = 1e6
 itp_stencil = 9
-eta_avg     = 1
+eta_average     = 1
 
 /**** SWITCHES ****/
 anisotropy             = 1

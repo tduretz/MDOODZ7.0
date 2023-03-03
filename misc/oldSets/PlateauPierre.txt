@@ -30,7 +30,7 @@ constant_dt = 0
 dt_max  = 3.1558e+12
 Courant = 0.45
 lin_abs_div = 1e-28
-eta_avg = 2
+eta_average = 2
 
 lin_abs_div     = 1e-9
 lin_rel_div     = 1e-9

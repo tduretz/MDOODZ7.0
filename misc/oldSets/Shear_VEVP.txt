@@ -35,7 +35,7 @@ lin_rel_div       = 1e-11
 GNUplot_residuals = 1
 shear_style       = 1
 preconditioner           = 0
-eta_avg           = 1
+eta_average           = 1
 num_deriv         = 0
 
 /**** SWITCHES ****/

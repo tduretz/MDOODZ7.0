@@ -36,7 +36,7 @@ num_deriv         = 0
 GNUplot_residuals = 1
 shear_style       = 1
 preconditioner           = 1
-eta_avg           = 0
+eta_average           = 0
 
 /**** SWITCHES ****/
 mechanical    = 1

@@ -26,7 +26,7 @@ zmax    = 10.000000e3
 dt      = 1.2623e+11
 Courant = 0.5
 penalty = 1e2
-eta_avg = 0
+eta_average = 0
 itp_stencil = 1
 
 /**** SWITCHES ****/

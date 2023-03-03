@@ -25,7 +25,7 @@ zmax =  1000.0000000e3
 dt   = 5.0e+9
 Courant = 0.25
 penalty = 1e1
-eta_avg = 0
+eta_average = 0
 lin_rel_div = 1e-10
 lin_abs_div = 1e-10
 

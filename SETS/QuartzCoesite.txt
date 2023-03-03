@@ -54,10 +54,10 @@ gnuplot_log_res = 0
 kinetics          = 1
 
 /**** SETUP DEPENDANT ****/
-eta_avg         = 0
+eta_average         = 0
 VolChangeReac   = 1
-noise_bg        = 1     / noise beau-gosse
-oop             = 1     / non zeros total Eyy
+marker_noise        = 1     / noise beau-gosse
+out_of_plane             = 1     / non zeros total Eyy
 compressible    = 1
 shear_style     = 0
 elastic       = 1

@@ -10,7 +10,7 @@
 // address Williams comments
 typedef enum { ARITHMETIC = 0,
                HARMONIC   = 1,
-               GEOMETRIC  = 2 } ETA_AVG;
+               GEOMETRIC  = 2 } eta_average;
 
 // Tensor 2D
 typedef struct {
@@ -30,7 +30,7 @@ typedef struct {
   double  xmin0, zmin0, xmax0, zmax0;
   double  gx, gz;
   int     Nx, Nz, Nt, step, nit, Newton, noisy;
-  ETA_AVG eta_avg;
+  eta_average eta_average;
   int     itp_stencil;
   double  nexp_radial_basis;
   int     mechanical, periodic_x, elastic, isnonnewtonian,
@@ -83,9 +83,9 @@ typedef struct {
   int      diffuse_X, diffuse_avg;
   double   diffusion_length;
   // For Pips
-  int      progress_transform, no_return, density_change, unsplit_diff_reac, kinetics;
+  int      progress_transform, no_return, density_variations, unsplit_diff_reac, kinetics;
   // Anisotropy
-  int      anisotropy, oop, noise_bg; //aniso_fstrain
+  int      anisotropy, out_of_plane, marker_noise; //aniso_fstrain
   int      residual_form;
   int      irestart, istep;
   int      writer, writerStep;

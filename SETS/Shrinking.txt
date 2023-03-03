@@ -32,7 +32,7 @@ lsolver           = 2
 diag_scaling      = 0
 gnuplot_log_res = 0
 preconditioner           = 1
-eta_avg           = 0
+eta_average           = 0
 num_deriv         = 0
 stress_rotation    = 1
 safe_mode         = 1
@@ -67,7 +67,7 @@ finite_strain         = 0
 /*** CHEMICAL ***/
 progress_transform        = 1  / !!!!
 no_return        = 0 
-density_change        = 1  / renamed in MD7.0 (VolChangeReac)    
+density_variations        = 1  / renamed in MD7.0 (VolChangeReac)    
 unsplit_diff_reac = 0
 
 /**** SETUP DEPENDANT ****/
