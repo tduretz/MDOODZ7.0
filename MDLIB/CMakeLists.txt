@@ -16,10 +16,8 @@ add_library(mdoodz SHARED
         ParticleRoutines.c
         RheologyDensity.c
         RheologyParticles.c
-        Routines_BEN.c
         Solvers.c
         SparseTools.c
-        StokesAssemblyCoupled.c
         StokesAssemblyDecoupled.c
         StokesRoutines.c
         ThermalRoutines.c
