@@ -34,6 +34,7 @@ typedef struct {
   double *T0, *P0, *x0, *z0, *Tmax, *Pmax, *divth;
   double *dsxxd, *dszzd, *dsxz;
   double *noise, *rho;
+  double *aniso_angle;
 } markers;
 
 
@@ -518,7 +519,7 @@ void            RogerGuntherII(markers *, params, grid, int, scale);
 void            AccumulatedStrainII(grid *, scale, params, markers *, double *, double *, int, int, char *);
 void            AdvectFreeSurf(markers *, params, scale);
 
-void            InitialiseDirectorVector(grid *, markers *, params *, mat_prop *);
+void            InitialiseDirectorVector(grid *, markers *, params *, mat_prop *, double);
 void            NormalizeDirector(grid *, DoodzFP *, DoodzFP *, DoodzFP *, DoodzFP *, params *);
 void            RotateDirectorVector(grid, markers *, params, scale *);
 void            UpdateParticlePressure(grid *, scale, params, markers *, mat_prop *);

@@ -1156,6 +1156,7 @@ Input ReadInputFile( char *fileName ) {
     model.track_T_P_x_z      = ReadInt2( fin, "track_T_P_x_z",      0 ); // Tracks initial T, P, x and z on particles 
     model.delete_breakpoints = ReadInt2( fin, "delete_breakpoints", 1 ); // Progressively deletes breakpoint files
     model.anisotropy         = ReadInt2( fin, "anisotropy",         0 ); // Turns on anisotropy
+    model.particle_aniso_angle = ReadInt2( fin, "particle_aniso_angle", 0 ); // Enables setting anisotropy angle per particles rather than phases
     model.compressible       = ReadInt2( fin, "compressible",       0 ); // Turns on compressibility
     model.gnuplot_log_res    = ReadInt2( fin, "gnuplot_log_res",    0 ); // Activate GNU plot residuals visualisation
     model.shear_style        = ReadInt2( fin, "shear_style",        0 ); // BC type: 0: pure shear, 2: periodic simple shear
@@ -1173,6 +1174,7 @@ Input ReadInputFile( char *fileName ) {
     model.oop                = ReadInt2( fin, "oop",                0 ); // Out-of-plane strain
     model.noise_bg           = ReadInt2( fin, "noise_bg",           0 ); // Background noise generated on the particles --> mesh (used for cohesion)
     model.residual_form      = ReadInt2( fin, "residual_form",      1 ); // form of residual - TODO: delete if our models work with new default value (1)
+    
     if ( model.shear_style == 1 ) model.isperiodic_x  = 1;
         if ( model.shear_style == 0 ) model.isperiodic_x  = 0;
     if ( model.anisotropy       == 1 ) model.finite_strain       = 1;

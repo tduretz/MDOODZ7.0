@@ -2,16 +2,16 @@ run-tests:
 	cd cmake-build && ctest --extra-verbose --output-on-failure
 
 run:
-	cd cmake-exec/$(SET) && ./$(SET)
+	cd cmake-exec/$(SET) && ./$(SET) $(TXT)
 
 run-vis:
 	cd visualtests-out && ./visualtests
 
 build-dev:
-	cmake -B ./cmake-build -DOPT=$(OPT) -DOMP=$(OMP) -DVIS=$(VIS) -DSET=$(SET) -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ && cmake --build ./cmake-build
+	cmake -B ./cmake-build -DOPT=$(OPT) -DOMP=$(OMP) -DVIS=$(VIS) -DSET=$(SET) -DTXT=$(TXT) -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ && cmake --build ./cmake-build
 
 build:
-	cmake -DOPT=ON -DOMP=ON -B ./cmake-build -DSET=$(SET) && cmake --build ./cmake-build
+	cmake -DOPT=ON -DOMP=ON -B ./cmake-build -DSET=$(SET) -DTXT=$(TXT) && cmake --build ./cmake-build
 
 clean:
 	rm -rf *build*/ && rm -rf *exec*/

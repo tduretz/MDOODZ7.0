@@ -105,13 +105,16 @@ void SetParticles(SetParticles_ff setParticles, MdoodzInput *instance, markers *
     Tensor2D F;
     F.xx=1.; F.xz=0.; F.zx=0.; F.zz=1.; 
     if (setParticles.SetDefGrad) {
-      setParticles.SetDefGrad(instance, coordinates, particles->phase[np], &F);
+      F = setParticles.SetDefGrad(instance, coordinates, particles->phase[np]);
     }
     if (instance->model.finite_strain==1) {
       particles->Fxx[np] = F.xx;
       particles->Fxz[np] = F.xz;
       particles->Fzx[np] = F.zx;
       particles->Fzz[np] = F.zz;
+    }
+    if (instance->model.particle_aniso_angle && setParticles.SetAnisoAngle) {
+      particles->aniso_angle[np] = setParticles.SetAnisoAngle(instance, coordinates, particles->phase[np]) *M_PI / 180;
     }
     ValidatePhase(particles->phase[np], instance->model.Nb_phases);
   }
