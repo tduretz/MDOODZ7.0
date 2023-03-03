@@ -24,25 +24,25 @@ zmin    = -3.000000e4
 xmax    =  5.000000e4
 zmax    =  1.000000e3
 dt      = 4e11
-dt_constant = 1
+constant_dt = 1
 Courant = 0.3
 
 /**** SWITCHES ****/
-ismechanical    = 1
+mechanical    = 1
 RK              = 4
-isperiodic_x    = 0
-ispureshear_ALE = 0
-isinertial      = 0
-iselastic       = 1
-isthermal       = 0
+periodic_x    = 0
+pure_shear_ALE = 0
+
+elastic       = 1
+thermal       = 0
 line_search     = 1
-free_surf       = 1
-free_surf_stab  = 1
-eqn_state       = 0
-thermal_eq      = 0
-subgrid_diff    = 2
-shear_heat      = 0
-adiab_heat      = 0
+free_surface       = 1
+free_surface_stab  = 1
+
+initial_cooling      = 0
+subgrid_diffusion    = 2
+shear_heating      = 0
+adiab_heating      = 0
 fstrain         = 0
 HomoFields      = 0
 delete_breakpoints = 0

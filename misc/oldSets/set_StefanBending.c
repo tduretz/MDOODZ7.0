@@ -137,7 +137,7 @@ void SetParticles( markers *particles, scale scaling, params model, mat_prop *ma
 
         //--------------------------//
         // DENSITY
-        if ( model.eqn_state > 0 ) {
+        if ( 1 == 0 ) {
             particles->rho[np] = materials->rho[particles->phase[np]] * (1 -  materials->alp[particles->phase[np]] * (T_init - materials->T0[particles->phase[np]]) );
         }
         else {
@@ -436,7 +436,7 @@ void SetBCs( grid *mesh, params *model, scale scaling, markers* particles, mat_p
                 x  = mesh->xg_coord[k];
                 z  = mesh->zvx_coord[l];
 
-                if ( model->ismechanical ==0 && model->polar==1 ) {
+                if ( model->mechanical ==0 && model->polar==1 ) {
                     r           = sqrt(x*x + z*z);
                     tet         = atan(z/x);
                     Vt          = 2.0*model->EpsBG*r*sin(tet);
@@ -518,7 +518,7 @@ void SetBCs( grid *mesh, params *model, scale scaling, markers* particles, mat_p
                 x  = mesh->xvz_coord[k];
                 z  = mesh->zg_coord[l];
                 
-                 if ( model->ismechanical ==0 && model->polar==1 ) {
+                 if ( model->mechanical ==0 && model->polar==1 ) {
                      r           = sqrt(x*x + z*z);
                      tet         = atan(z/x);
                      Vt          = 2.0*model->EpsBG*r*sin(tet);

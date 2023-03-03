@@ -83,7 +83,7 @@ double ViscosityConciseAniso( int phase, double lxlz, double lx2, double angle, 
     const double tol    = 1.0e-11, R = materials->R, dt = model->dt, minEta = model->mineta, maxEta = model->maxeta;
     const int    nitmax = 20, noisy = 0;
     double eta = 0.0, eta_el, eta_cst;
-    int    plastic = 0, constant = 0, dislocation = 0, peierls = 0, diffusion = 0, gbs = 0, elastic = model->iselastic, kinetics = 0, is_pl = 0;
+    int    plastic = 0, constant = 0, dislocation = 0, peierls = 0, diffusion = 0, gbs = 0, elastic = model->elastic, kinetics = 0, is_pl = 0;
     double eta_pwl = 0.0, B_pwl = 0.0, C_pwl = 0.0, Q_pwl = materials->Qpwl[phase], V_pwl = materials->Vpwl[phase], n_pwl = materials->npwl[phase], m_pwl = materials->mpwl[phase], r_pwl = materials->rpwl[phase], A_pwl = materials->Apwl[phase], f_pwl = materials->fpwl[phase], a_pwl = materials->apwl[phase], F_pwl = materials->Fpwl[phase], pre_factor = materials->pref_pwl[phase], t_pwl = materials->tpwl[phase];
     const double E_lin = materials->Qlin[phase], V_lin = materials->Vlin[phase], n_lin = materials->nlin[phase], m_lin = materials->mlin[phase], r_lin = materials->rlin[phase], A_lin = materials->Alin[phase], f_lin = materials->flin[phase], a_lin = materials->alin[phase], F_lin = materials->Flin[phase];
     double eta_ve_n, eta_ve_s, ani_fac_v, ani_fac_p, a_e, a_v, a_p, Tii;
@@ -378,7 +378,7 @@ void NonNewtonianViscosityGridAniso( grid *mesh, mat_prop *materials, params *mo
   double Pcorr, rho;
   double Exx, Ezz, Exz, eta_e, ani, d1, d2, angle, lxlz, lx2, lay_ang;
   double Da11, Da12, Da13, Da22, Da23, Da33, iDa11, iDa12, iDa13, iDa22, iDa23, iDa33, a11, a12, a13, a22, a23, a33, det;
-  if (model->iselastic == 1) el = 1.0;
+  if (model->elastic == 1) el = 1.0;
 
   double etaVE, VEcoeff, d0; // to delete
 
@@ -440,7 +440,7 @@ void NonNewtonianViscosityGridAniso( grid *mesh, mat_prop *materials, params *mo
     if ( mesh->BCp.type[c0] != 30 && mesh->BCp.type[c0] != 31 ) {
 
       //----------------------------------------------------------//
-      if ( model->iselastic==1 ) eta_e      = model->dt*mesh->mu_n[c0];
+      if ( model->elastic==1 ) eta_e      = model->dt*mesh->mu_n[c0];
       else                       eta_e      = 1.0; // set to arbitrary value to avoid division by 0.0
       //----------------------------------------------------------//
         // Anisotropy
@@ -455,7 +455,7 @@ void NonNewtonianViscosityGridAniso( grid *mesh, mat_prop *materials, params *mo
         // lxlz    = 0.5*d1;
         // lx2     = pow( cos(angle), 2);
       //----------------------------------------------------------//
-      // if ( model->iselastic==1 ) {
+      // if ( model->elastic==1 ) {
       //   Exx = mesh->exxd[c0]  + mesh->sxxd0[c0] /eta_e/2.0;
       //   Ezz = mesh->ezzd[c0]  + mesh->szzd0[c0] /eta_e/2.0;
       //   Exz = mesh->exz_n[c0] + mesh->sxz0_n[c0]/eta_e/2.0;
@@ -468,7 +468,7 @@ void NonNewtonianViscosityGridAniso( grid *mesh, mat_prop *materials, params *mo
 
       double aniS_e, aniS_vep;
       aniS_e = 1.0 - 1.0 / mesh->aniso_factor_e_n[c0];
-      EffectiveStrainRate( &Exx, &Ezz, &Exz, mesh->exxd[c0], mesh->ezzd[c0], mesh->exz_n[c0], mesh->sxxd0[c0], mesh->szzd0[c0], mesh->sxz0_n[c0], d1, d2, aniS_e, eta_e, model->iselastic ); 
+      EffectiveStrainRate( &Exx, &Ezz, &Exz, mesh->exxd[c0], mesh->ezzd[c0], mesh->exz_n[c0], mesh->sxxd0[c0], mesh->szzd0[c0], mesh->sxz0_n[c0], d1, d2, aniS_e, eta_e, model->elastic ); 
       
       // Loop on phases
       for ( p=0; p<model->Nb_phases; p++) {
@@ -576,7 +576,7 @@ void NonNewtonianViscosityGridAniso( grid *mesh, mat_prop *materials, params *mo
       // double aniS_e, aniS_vep;
       // if ( model->aniso_fstrain  == 0 ) aniS_e = 1.0 - 1.0 / mesh->aniso_factor_e_n[c0];
       // if ( model->aniso_fstrain  == 1 ) aniS_e = 1.0 - 1.0 / mesh->FS_AR_n[c0];
-      // EffectiveStrainRate( &Exx, &Ezz, &Exz, mesh->exxd[c0], mesh->ezzd[c0], mesh->exz_n[c0], mesh->sxxd0[c0], mesh->szzd0[c0], mesh->sxz0_n[c0], d1, d2, aniS_e, eta_e, model->iselastic ); 
+      // EffectiveStrainRate( &Exx, &Ezz, &Exz, mesh->exxd[c0], mesh->ezzd[c0], mesh->exz_n[c0], mesh->sxxd0[c0], mesh->szzd0[c0], mesh->sxz0_n[c0], d1, d2, aniS_e, eta_e, model->elastic ); 
       // Final stress update
       aniS_vep = 1.0 - 1.0 / mesh->aniso_factor_n[c0];
       // if ( model->aniso_fstrain  == 0 ) aniS_vep = 1.0 - 1.0 / mesh->aniso_factor_n[c0];
@@ -613,7 +613,7 @@ void NonNewtonianViscosityGridAniso( grid *mesh, mat_prop *materials, params *mo
 
     if ( mesh->BCg.type[c1] != 30 ) {
 
-      if ( model->iselastic==1   ) eta_e      = model->dt*mesh->mu_s[c1];
+      if ( model->elastic==1   ) eta_e      = model->dt*mesh->mu_s[c1];
       else           eta_e      = 1.0; // set to arbitrary value to avoid division by 0.0
       //----------------------------------------------------------//
         // // Anisotropy
@@ -633,9 +633,9 @@ void NonNewtonianViscosityGridAniso( grid *mesh, mat_prop *materials, params *mo
       aniS_e = 1.0 - 1.0 / mesh->aniso_factor_e_s[c1];
       // if ( model->aniso_fstrain  == 0 ) aniS_e = 1.0 - 1.0 / mesh->aniso_factor_e_s[c1];
       // if ( model->aniso_fstrain  == 1 ) aniS_e = 1.0 - 1.0 / mesh->FS_AR_s[c1];
-      EffectiveStrainRate( &Exx, &Ezz, &Exz, mesh->exxd_s[c1], mesh->ezzd_s[c1], mesh->exz[c1], mesh->sxxd0_s[c1], mesh->szzd0_s[c1], mesh->sxz0[c1], d1, d2, aniS_e, eta_e, model->iselastic ); 
+      EffectiveStrainRate( &Exx, &Ezz, &Exz, mesh->exxd_s[c1], mesh->ezzd_s[c1], mesh->exz[c1], mesh->sxxd0_s[c1], mesh->szzd0_s[c1], mesh->sxz0[c1], d1, d2, aniS_e, eta_e, model->elastic ); 
 
-      // if ( model->iselastic==1   ) {
+      // if ( model->elastic==1   ) {
       //   Exx = mesh->exxd_s[c1] + mesh->sxxd0_s[c1]/eta_e/2.0;
       //   Ezz = mesh->ezzd_s[c1] + mesh->szzd0_s[c1]/eta_e/2.0;
       //   Exz = mesh->exz[c1]    + mesh->sxz0[c1]   /eta_e/2.0;
@@ -715,7 +715,7 @@ void NonNewtonianViscosityGridAniso( grid *mesh, mat_prop *materials, params *mo
       // double aniS_e, aniS_vep;
       // if ( model->aniso_fstrain  == 0 ) aniS_e = 1.0 - 1.0 / mesh->aniso_factor_e_s[c1];
       // if ( model->aniso_fstrain  == 1 ) aniS_e = 1.0 - 1.0 / mesh->FS_AR_s[c1];
-      // EffectiveStrainRate( &Exx, &Ezz, &Exz, mesh->exxd_s[c1], mesh->ezzd_s[c1], mesh->exz[c1], mesh->sxxd0_s[c1], mesh->szzd0_s[c1], mesh->sxz0[c1], d1, d2, aniS_e, eta_e, model->iselastic ); 
+      // EffectiveStrainRate( &Exx, &Ezz, &Exz, mesh->exxd_s[c1], mesh->ezzd_s[c1], mesh->exz[c1], mesh->sxxd0_s[c1], mesh->szzd0_s[c1], mesh->sxz0[c1], d1, d2, aniS_e, eta_e, model->elastic ); 
 
       // Final stress update
       aniS_vep = 1.0 - 1.0 / mesh->aniso_factor_s[c1];

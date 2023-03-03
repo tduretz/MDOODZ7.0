@@ -63,39 +63,39 @@ eta_avg = 0
 
 /**** SWITCHES ****/
 
-ismechanical    = 1
+mechanical    = 1
 
-dt_constant     = 0
+constant_dt     = 0
 
 RK              = 4
 
-isperiodic_x    = 0
+periodic_x    = 0
 
-ispureshear_ALE = 1  /1: box stretched at constant strain rate; -1 box of constant size
+pure_shear_ALE = 1  /1: box stretched at constant strain rate; -1 box of constant size
 
-isinertial      = 0
 
-iselastic       = 1
 
-isthermal       = 1
+elastic       = 1
+
+thermal       = 1
 
 isPl_soft       = 0
 
 line_search     = 1
 
-free_surf       = 1
+free_surface       = 1
 
-free_surf_stab  = 1
+free_surface_stab  = 1
 
-eqn_state       = 1
 
-thermal_eq      = 1
 
-subgrid_diff    = 2
+initial_cooling      = 1
 
-shear_heat      = 1
+subgrid_diffusion    = 2
 
-adiab_heat      = 0
+shear_heating      = 1
+
+adiab_heating      = 0
 
 surface_processes  = 1 /0 = none; 1 = diffusion only; 2 = fills instantaneously the basin up to the base level;  3 = diffusion + source term
 

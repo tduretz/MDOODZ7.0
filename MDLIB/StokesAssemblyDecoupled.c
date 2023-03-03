@@ -467,7 +467,7 @@ void Zjacobian_InnerNodesDecoupled3( SparseMat *Stokes, SparseMat *StokesA, Spar
     int Newton = 1;
     double oop = 1.0;
     if (model.oop==1) oop = 3.0/2.0;
-    int periodix = model.isperiodic_x;
+    int periodix = model.periodic_x;
     double vC_corr = 0.0;
     
     int iVzC   = c3;
@@ -2243,9 +2243,9 @@ void BuildStokesOperatorDecoupled( grid *mesh, params model, int lev, double *p_
     
     // Switches
     int eqn,  sign = 1, comp = 0, stab = 0;
-    if (model.free_surf_stab>0) stab = 1;
+    if (model.free_surface_stab>0) stab = 1;
     if (model.compressible==1  ) comp = 1;
-    double theta = model.free_surf_stab;
+    double theta = model.free_surface_stab;
     
     //    if ( stab==1 ) printf("It tastes like Bo'\n");
     
@@ -2824,9 +2824,9 @@ void BuildJacobianOperatorDecoupled( grid *mesh, params model, int lev, double *
     
     // Switches
     int eqn,  sign = 1, comp = 1, stab = 0;
-    if (model.free_surf_stab>0) stab = 1;
+    if (model.free_surface_stab>0) stab = 1;
     if (model.compressible==1  ) comp = 1;
-    double theta = model.free_surf_stab;
+    double theta = model.free_surface_stab;
     
     // Decompose domain
     int n_th, N, ith;

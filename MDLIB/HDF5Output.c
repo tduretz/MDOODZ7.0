@@ -640,7 +640,7 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
     //---------------------------------------------------
 
     // Topography
-    if ( model.free_surf == 1 ) {
+    if ( model.free_surface == 1 ) {
 
         Cxtopo = DoodzMalloc( sizeof(float)*topo_chain->Nb_part);
         DoubleToFloat( topo_chain->x, Cxtopo, topo_chain->Nb_part );
@@ -775,7 +775,7 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
     AddFieldToGroup( FileName, "Centers" , "X" , 'f', (model.Nx-1)*(model.Nz-1), CX, 1 );
     AddFieldToGroup( FileName, "Centers" , "OverS",'f', (model.Nx-1)*(model.Nz-1), COverS, 1 );
 
-    if ( model.free_surf == 1 ) {
+    if ( model.free_surface == 1 ) {
         AddFieldToGroup( FileName, "Topo", "z_grid" , 'f', (model.Nx), Cheight, 1 );
         AddFieldToGroup( FileName, "Topo", "Vx_grid" , 'f', (model.Nx), Ctopovx, 1 );
         AddFieldToGroup( FileName, "Topo", "Vz_grid" , 'f', (model.Nx+1), Ctopovz, 1 );
@@ -883,7 +883,7 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
     DoodzFree( Cdivu_th );
     DoodzFree( Cdivu_r );
 
-    if ( model.free_surf == 1 ) {
+    if ( model.free_surface == 1 ) {
         DoodzFree( Cxtopo );
         DoodzFree( Cztopo );
         DoodzFree( Cheight );
@@ -1023,7 +1023,7 @@ void WriteOutputHDF5Particles( grid *mesh, markers *particles, surface *topo, ma
     ScaleBack( part_sxz,   scaling.S, Nb_part_viz );
 
     // Topography
-    if ( model.free_surf == 1 ) {
+    if ( model.free_surface == 1 ) {
 
         // Real topo
         Cxtopo = DoodzMalloc( sizeof(float)*topo_chain->Nb_part);
@@ -1134,7 +1134,7 @@ void WriteOutputHDF5Particles( grid *mesh, markers *particles, surface *topo, ma
     AddFieldToGroup( FileName, "Particles", "sxxd", 'f', Nb_part_viz, part_sxxd,    1 );
     AddFieldToGroup( FileName, "Particles", "sxz",  'f', Nb_part_viz, part_sxz,    1 );
 
-    if ( model.free_surf == 1 ) {
+    if ( model.free_surface == 1 ) {
         AddFieldToGroup( FileName, "Topo", "height" , 'f', (model.Nx), Cheight, 1 );
         AddFieldToGroup( FileName, "Topo", "vxsurf" , 'f', (model.Nx), Cvxsurf, 1 );
         AddFieldToGroup( FileName, "Topo", "vzsurf" , 'f', (model.Nx+1), Cvzsurf, 1 );
@@ -1169,7 +1169,7 @@ void WriteOutputHDF5Particles( grid *mesh, markers *particles, surface *topo, ma
     DoodzFree( part_index  ); // Tracer: clean
     //------------//
 
-    if ( model.free_surf == 1 ) {
+    if ( model.free_surface == 1 ) {
         DoodzFree( Cxtopo );
         DoodzFree( Cztopo );
         DoodzFree( Cvxtopo );

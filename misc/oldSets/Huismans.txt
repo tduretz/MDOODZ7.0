@@ -24,7 +24,7 @@ zmin    = -120.000000e3
 xmax    =  300.000000e3
 zmax    =  10.000000e3
 dt      = 5e11
-dt_constant = 0
+constant_dt = 0
 Courant = 0.3
 penalty = 1e5
 lsolver = 0
@@ -35,23 +35,23 @@ rel_tol_div = 1e-11
 pc_type     = 1
 
 /**** SWITCHES ****/
-ismechanical    = 1
-dt_constant     = 0
+mechanical    = 1
+constant_dt     = 0
 RK              = 4
-isperiodic_x    = 0
-ispureshear_ALE = 0
-isinertial      = 0
-iselastic       = 1
-isthermal       = 0
+periodic_x    = 0
+pure_shear_ALE = 0
+
+elastic       = 1
+thermal       = 0
 line_search     = 1
 line_search_min = 0.1
-free_surf       = 1
-free_surf_stab  = 0
-eqn_state       = 0
-thermal_eq      = 0
-subgrid_diff    = 2
-shear_heat      = 0
-adiab_heat      = 0
+free_surface       = 1
+free_surface_stab  = 0
+
+initial_cooling      = 0
+subgrid_diffusion    = 2
+shear_heating      = 0
+adiab_heating      = 0
 fstrain         = 0
 HomoFields      = 0
 delete_breakpoints = 0

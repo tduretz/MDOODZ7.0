@@ -27,9 +27,9 @@ Nx_part = 4
 Nz_part = 4
 
 /**** TIME ****/
-dt_constant = 0
+constant_dt = 0
 Courant     = 0.3 
-dt          = 0.5 // not used if dt_constant == 0
+dt          = 0.5 // not used if constant_dt == 0
 
 /**** LINEAR SOLVER ****/
 penalty      = 1e5
@@ -52,17 +52,17 @@ mineta      = 1e17
 maxeta      = 1e25
 
 /**** SWITCHES ****/
-iselastic         = 0
-free_surf         = 0
-free_surf_stab    = 0
+elastic         = 0
+free_surface         = 0
+free_surface_stab    = 0
 fstrain           = 1
 advection         = 1
 GNUplot_residuals = 0
 
 /**** SETUP-DEPENDANT ****/
 shear_style     = 0
-isperiodic_x    = 0
-ispureshear_ALE = 1
+periodic_x    = 0
+pure_shear_ALE = 1
 EpsBG           = 5e-14 // 1/seconds
 user0           = 400     // temperature [°C]
 user1           = 3e3  // inclusion radius [m]

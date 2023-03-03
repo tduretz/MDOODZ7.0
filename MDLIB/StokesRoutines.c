@@ -158,7 +158,7 @@ void RheologicalOperators( grid* mesh, params* model, mat_prop* materials, scale
         double ani_vep  = 1., ani_e  = 1., ani_fstrain = 1.;
         double aniS_vep = 0., aniS_e = 0.;
         //----------------------------------------------------------//
-        if ( model->iselastic==1 ) eta_e = model->dt*mesh->mu_n[k];
+        if ( model->elastic==1 ) eta_e = model->dt*mesh->mu_n[k];
         else                       eta_e = 1.; // set to arbitrary value to avoid division by 0.0
         if ( comp==1 )             K     = 1./mesh->bet_n[k];
         else                       K     = 0.;
@@ -188,7 +188,7 @@ void RheologicalOperators( grid* mesh, params* model, mat_prop* materials, scale
         }
         //----------------------------------------------------------//
         // Exx = mesh->exxd[k]; Ezz = mesh->ezzd[k]; Exz = mesh->exz_n[k];
-        EffectiveStrainRate( &Exx, &Ezz, &Exz, mesh->exxd[k], mesh->ezzd[k], mesh->exz_n[k], mesh->sxxd0[k], mesh->szzd0[k], mesh->sxz0_n[k], d1, d2, aniS_e, eta_e, model->iselastic ); 
+        EffectiveStrainRate( &Exx, &Ezz, &Exz, mesh->exxd[k], mesh->ezzd[k], mesh->exz_n[k], mesh->sxxd0[k], mesh->szzd0[k], mesh->sxz0_n[k], d1, d2, aniS_e, eta_e, model->elastic ); 
         const double e_a2 = eta_vep/(ani_vep*ani_vep);      
         const double Gxz = 2.0*Exz;
         const double Dxx = Exx*(1.0 - aniS_vep*d1) + Ezz*aniS_vep*d1 - Gxz*aniS_vep*d2;
@@ -233,7 +233,7 @@ void RheologicalOperators( grid* mesh, params* model, mat_prop* materials, scale
         double ani_vep  = 1., ani_e  = 1., ani_fstrain = 1.;
         double aniS_vep = 0., aniS_e = 0.;
         //----------------------------------------------------------//
-        if ( model->iselastic==1 ) eta_e = model->dt*mesh->mu_s[k];
+        if ( model->elastic==1 ) eta_e = model->dt*mesh->mu_s[k];
         else                       eta_e = 1.; // set to arbitrary value to avoid division by 0.0
         //----------------------------------------------------------//
         if ( model->anisotropy == 0 ) {
@@ -260,7 +260,7 @@ void RheologicalOperators( grid* mesh, params* model, mat_prop* materials, scale
         // lx2     = pow( cos(angle), 2);
         }
         //----------------------------------------------------------//
-        EffectiveStrainRate( &Exx, &Ezz, &Exz, mesh->exxd_s[k], mesh->ezzd_s[k], mesh->exz[k], mesh->sxxd0_s[k], mesh->szzd0_s[k], mesh->sxz0[k], d1, d2, aniS_e, eta_e, model->iselastic );
+        EffectiveStrainRate( &Exx, &Ezz, &Exz, mesh->exxd_s[k], mesh->ezzd_s[k], mesh->exz[k], mesh->sxxd0_s[k], mesh->szzd0_s[k], mesh->sxz0[k], d1, d2, aniS_e, eta_e, model->elastic );
         // Exx = mesh->exxd_s[k]; Ezz = mesh->ezzd_s[k]; Exz = mesh->exz[k];
         const double e_a2 = eta_vep/(ani_vep*ani_vep);
         const double Gxz  = 2.*Exz;
@@ -931,7 +931,7 @@ void EvaluateRHS( grid* mesh, params model, scale scaling, double RHO_REF ) {
                     mesh->roger_x[c]  = - gx * rhoVx;
 
                     // // Elastic force
-                    // if ( model.iselastic == 1 && model.residual_form==0 ) {
+                    // if ( model.elastic == 1 && model.residual_form==0 ) {
                         // Inner nodes
                         // if (k>0 && k<Nx-1) {
                         //     if ( inE ) mesh->roger_x[c]  -= 1.0/dx * ( mesh->eta_n[iPrE] / (mesh->mu_n[iPrE]*model.dt)  * mesh->sxxd0[iPrE] );
@@ -951,7 +951,7 @@ void EvaluateRHS( grid* mesh, params model, scale scaling, double RHO_REF ) {
     /* Here we calculate the forcing term -rho*gz on the finest grid level */
     /* --------------------------------------------------------------------*/
     
-    double drhodz, om = model.free_surf_stab;
+    double drhodz, om = model.free_surface_stab;
     double Wvalley = model.surf_Winc;
     double Vinc    = -model.surf_Vinc;
 
@@ -1010,7 +1010,7 @@ void EvaluateRHS( grid* mesh, params model, scale scaling, double RHO_REF ) {
 //                    }
                     
                     // // Elastic force
-                    // if  (model.iselastic == 1 && model.residual_form==0 ) {
+                    // if  (model.elastic == 1 && model.residual_form==0 ) {
                         // if ( l>0 && l<Nz-1 ) {
                         //     if ( inN ) mesh->roger_z[c]  -= 1.0/dz * (  mesh->eta_n[iPrN] / (mesh->mu_n[iPrN] *model.dt ) * (mesh->szzd0[iPrN]) );
                         //     if ( inS ) mesh->roger_z[c]  -= 1.0/dz * ( -mesh->eta_n[iPrS] / (mesh->mu_n[iPrS] *model.dt ) * (mesh->szzd0[iPrS]) );
@@ -1049,7 +1049,7 @@ void EvaluateRHS( grid* mesh, params model, scale scaling, double RHO_REF ) {
                     if (mesh->comp_cells[c] == 1) {
                         if ( model.density_change == 0 ) mesh->rhs_p[c] += mesh->p0_n[c]*mesh->bet_n[c]/model.dt;
                         if ( model.density_change == 1 ) mesh->rhs_p[c] += log(mesh->rho0_n[c])/model.dt;
-                        if (model.adiab_heat > 0 ) {
+                        if (model.adiab_heating > 0 ) {
                             mesh->rhs_p[c] += mesh->divth0_n[c];
                         }
                     }

@@ -93,8 +93,8 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
     // Allocate marker chain
     markers       topo_chain, topo_chain_ini;
     surface      topo, topo_ini;
-    if (input.model.free_surf == 1 ) AllocateMarkerChain( &topo,     &topo_chain, input.model );
-    if (input.model.free_surf == 1 ) AllocateMarkerChain( &topo_ini, &topo_chain_ini, input.model );
+    if (input.model.free_surface == 1 ) AllocateMarkerChain( &topo,     &topo_chain, input.model );
+    if (input.model.free_surface == 1 ) AllocateMarkerChain( &topo_ini, &topo_chain_ini, input.model );
 
     // Set new particle distribution
     int cent=1, vert=0, prop=1, interp=0, vxnodes=-1, vznodes=-2;
@@ -117,7 +117,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
         // Initial grid tags
         SetBCs(*setup->SetBCs, &input, &mesh);
-        if (input.model.free_surf == 1 ) {
+        if (input.model.free_surface == 1 ) {
 
             // Define the horizontal position of the surface marker chain
             SetTopoChainHorizontalCoords( &topo,     &topo_chain, input.model, mesh, input.scaling );
@@ -146,7 +146,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         MinMaxArray(particles.Vz, input.scaling.V, particles.Nb_part, "Vzp init" );
         MinMaxArray(particles.T, input.scaling.T, particles.Nb_part,  "Tp init" );
 
-        if (input.model.free_surf == 1 ) CleanUpSurfaceParticles( &particles, &mesh, topo, input.scaling );
+        if (input.model.free_surface == 1 ) CleanUpSurfaceParticles( &particles, &mesh, topo, input.scaling );
 
         // Create phase percentage arrays
         CountPartCell( &particles, &mesh, input.model, topo, topo_ini, 0, input.scaling  );
@@ -163,20 +163,6 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         P2Mastah( &input.model, particles, input.materials.k_eff, &mesh, mesh.kx, mesh.BCu.type,  0, 0, interp, vxnodes, 1);
         P2Mastah( &input.model, particles, input.materials.k_eff, &mesh, mesh.kz, mesh.BCv.type,  0, 0, interp, vznodes, 1);
 
-        // UpdateDensity( &mesh, &particles, &input.materials, &input.model, &input.scaling );
-
-        // if ( input.model.eqn_state > 0) {
-        //     P2Mastah( &input.model, particles, particles.rho, &mesh, mesh.rho_s, mesh.BCg.type,  1, 0, interp, vert, input.model.itp_stencil);
-        //     P2Mastah( &input.model, particles, particles.rho, &mesh, mesh.rho_n, mesh.BCp.type,  1, 0, interp, cent, input.model.itp_stencil);
-        // }
-        // else {
-        //     P2Mastah( &input.model, particles, input.materials.rho, &mesh, mesh.rho_s, mesh.BCg.type,  0, 0, interp, vert, input.model.itp_stencil);
-        //     P2Mastah( &input.model, particles, input.materials.rho, &mesh, mesh.rho_n, mesh.BCp.type,  0, 0, interp, cent, input.model.itp_stencil);
-        // }
-
-        // MinMaxArrayTag( mesh.rho_s,      input.scaling.rho, (mesh.Nx-0)*(mesh.Nz-0), "rho_s     ", mesh.BCg.type );
-        // MinMaxArrayTag( mesh.rho_n,      input.scaling.rho, (mesh.Nx-1)*(mesh.Nz-1), "rho_n     ", mesh.BCp.type );
-        // exit(1);
         if (input.model.noisy == 1 ) {
             MinMaxArray( mesh.u_in, input.scaling.V, (mesh.Nx)*(mesh.Nz+1),   "Vx. grid" );
             MinMaxArray( mesh.v_in, input.scaling.V, (mesh.Nx+1)*(mesh.Nz),   "Vz. grid" );
@@ -210,7 +196,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         P2Mastah( &input.model, particles, input.materials.Qr,    &mesh, mesh.Qr, mesh.BCp.type,  0, 0, interp, cent, 1);
 
         SetBCs(*setup->SetBCs, &input, &mesh);
-        if (input.model.thermal_eq == 1 ) ThermalSteps( &mesh, input.model,  mesh.T,  mesh.dT,  mesh.rhs_t, mesh.T, &particles, input.model.cooling_time, input.scaling );
+        if (input.model.initial_cooling == 1 ) ThermalSteps( &mesh, input.model,  mesh.T,  mesh.dT,  mesh.rhs_t, mesh.T, &particles, input.model.cooling_duration, input.scaling );
         if (input.model.thermal_perturb == 1 ) SetThermalPert( &mesh, input.model, input.scaling );
         Interp_Grid2P_centroids2( particles, particles.T,    &mesh, mesh.T, mesh.xvz_coord,  mesh.zvx_coord,  mesh.Nx-1, mesh.Nz-1, mesh.BCt.type, &input.model );
         ArrayEqualArray( mesh.T0_n, mesh.T, (mesh.Nx-1)*(mesh.Nz-1) );
@@ -221,43 +207,32 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         printf("******** Initialize pressure ********\n");
         printf("*************************************\n");
 
-        // Compute dev. strain rate tensor components
+        // Compute deviatoric strain rate tensor components
         ApplyBC( &mesh, &input.model );
         StrainRateComponents( &mesh, input.scaling, &input.model );
 
+        // Iterate on pressure and density
         for (int iter=0; iter<10; iter++) {
 
-            // if ( input.model.eqn_state > 0 ) {
-                UpdateDensity( &mesh, &particles, &input.materials, &input.model, &input.scaling );
-            // }
-            // Interp_Grid2P_centroids( particles, particles.rho, &mesh, mesh.rho_n, mesh.xc_coord,  mesh.zc_coord,  mesh.Nx-1, mesh.Nz-1, mesh.BCp.type, &input.model );
-            // ArrayEqualArray( mesh.rho0_n, mesh.rho_n, (mesh.Nx-1)*(mesh.Nz-1) );
+            // Compute density
+            UpdateDensity( &mesh, &particles, &input.materials, &input.model, &input.scaling );
+            if (input.model.free_surface == 1 ) SurfaceDensityCorrection( &mesh, input.model, topo, input.scaling  );
 
-            // Free surface - subgrid density correction
-            if (input.model.free_surf == 1 ) {
-                SurfaceDensityCorrection( &mesh, input.model, topo, input.scaling  );
-            }
-            // ArrayEqualArray( mesh.rho0_n, mesh.rho_n, (mesh.Nx-1)*(mesh.Nz-1) );
-
-            // Lithostatic pressure for initial visco-plastic viscosity field
+            // Compute pressure
             ComputeLithostaticPressure( &mesh, &input.model, input.materials.rho[0], input.scaling, 1 );
             Interp_Grid2P_centroids2( particles, particles.P,    &mesh, mesh.p_lith, mesh.xvz_coord,  mesh.zvx_coord,  mesh.Nx-1, mesh.Nz-1, mesh.BCp.type, &input.model );
             P2Mastah( &input.model, particles, particles.P,     &mesh, mesh.p_in , mesh.BCp.type,  1, 0, interp, cent, input.model.itp_stencil);
             ArrayEqualArray( mesh.p_in, mesh.p_lith,  (mesh.Nx-1)*(mesh.Nz-1) );
             ArrayEqualArray( mesh.p0_n, mesh.p_lith,  (mesh.Nx-1)*(mesh.Nz-1) );
-
             MinMaxArrayTag( mesh.p_in, input.scaling.S,   (mesh.Nx-1)*(mesh.Nz-1), "P initial ", mesh.BCp.type );
         }
 
+        // Interpolate pressure from centroids to vertices
         InterpCentroidsToVerticesDouble( mesh.p0_n, mesh.p0_s, &mesh, &input.model );
-        //            InterpCentroidsToVerticesDouble( mesh.szzd0, mesh.szzd0_s, &mesh, &input.model );
-        //            InterpVerticesToCentroidsDouble( mesh.sxz0_n,  mesh.sxz0,  &mesh, &input.model );
-
-
+  
         printf("*************************************\n");
         printf("******* Initialize grain size *******\n");
         printf("*************************************\n");
-
         // Grain size
         InitialiseGrainSizeParticles( &particles, &input.materials );
         P2Mastah( &input.model, particles, particles.d,     &mesh, mesh.d_n , mesh.BCp.type,  1, 0, interp, cent, input.model.itp_stencil);
@@ -267,25 +242,11 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         printf("*************************************\n");
         printf("******** Initialize density *********\n");
         printf("*************************************\n");
-
-        // if ( input.model.eqn_state > 0 ) {
         UpdateDensity( &mesh, &particles, &input.materials, &input.model, &input.scaling );
-        // }
-        // Interp_Grid2P_centroids( particles, particles.rho, &mesh, mesh.rho_n, mesh.xc_coord,  mesh.zc_coord,  mesh.Nx-1, mesh.Nz-1, mesh.BCp.type, &input.model );
-        // ArrayEqualArray( mesh.rho0_n, mesh.rho_n, (mesh.Nx-1)*(mesh.Nz-1) );
 
         printf("*************************************\n");
         printf("****** Initialize composition *******\n");
         printf("*************************************\n");
-
-        //            if ( input.model.diffuse_X == 1 ) {
-        //                Interp_P2C ( particles, particles.X, &mesh, mesh.Xreac_n, mesh.xg_coord, mesh.zg_coord, 1, 0 );
-        //                Diffuse_X(&mesh, &input.model, &input.scaling);
-        //                Interp_Grid2P( particles, particles.X, &mesh, mesh.Xreac_n, mesh.xc_coord,  mesh.zc_coord,  mesh.Nx-1, mesh.Nz-1, mesh.BCp.type );
-        //                Interp_P2C ( particles, particles.X, &mesh, mesh.Xreac_n, mesh.xg_coord, mesh.zg_coord, 1, 0 );
-        //                Interp_P2N ( particles, particles.X, &mesh, mesh.Xreac_s, mesh.xg_coord, mesh.zg_coord, 1, 0, &input.model );
-        //            }
-
         P2Mastah( &input.model, particles, particles.X,     &mesh, mesh.X0_n , mesh.BCp.type,  1, 0, interp, cent, input.model.itp_stencil);
         P2Mastah( &input.model, particles, particles.X,     &mesh, mesh.X0_s , mesh.BCg.type,  1, 0, interp, vert, input.model.itp_stencil);
 
@@ -305,7 +266,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         printf("*************************************\n");
 
         // Compute shear modulus, expansivity, compressibility, cohesion and friction angle on the grid
-        if (input.model.iselastic == 1 ) ShearModCompExpGrid( &mesh, &input.materials, &input.model, input.scaling );
+        if (input.model.elastic == 1 ) ShearModCompExpGrid( &mesh, &input.materials, &input.model, input.scaling );
         CohesionFrictionDilationGrid( &mesh, &particles, input.materials, input.model, input.scaling );
         ShearModCompExpGrid( &mesh, &input.materials, &input.model, input.scaling );
         Interp_Grid2P_centroids2( particles, particles.P,    &mesh, mesh.p_in, mesh.xvz_coord,  mesh.zvx_coord,  mesh.Nx-1, mesh.Nz-1, mesh.BCp.type, &input.model );
@@ -426,7 +387,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         //------------------------------------------------------------------------------------------------------------------------------//
 
         // Remove particles that would be above the surface
-        if (input.model.free_surf == 1 ) {
+        if (input.model.free_surface == 1 ) {
             CleanUpSurfaceParticles( &particles, &mesh, topo, input.scaling );
             CellFlagging( &mesh, input.model, topo, input.scaling );
             ArrayEqualArray(     topo.height0,     topo.height, mesh.Nx );
@@ -459,7 +420,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         // UpdateDensity( &mesh, &particles, &input.materials, &input.model, &input.scaling );
 
         // // Free surface - subgrid density correction
-        // if (input.model.free_surf == 1 ) { // TODO: include into UpdateDensity
+        // if (input.model.free_surface == 1 ) { // TODO: include into UpdateDensity
         //     SurfaceDensityCorrection( &mesh, input.model, topo, input.scaling  );
         // }
 
@@ -469,7 +430,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         ComputeLithostaticPressure( &mesh, &input.model, input.materials.rho[0], input.scaling, 1 );
 
         // Elasticity - interpolate advected/rotated stresses
-        if  (input.model.iselastic == 1 ) {
+        if  (input.model.elastic == 1 ) {
 
             // Get old stresses from particles
             P2Mastah( &input.model, particles, particles.sxxd,    &mesh, mesh.sxxd0, mesh.BCp.type,  1, 0, interp, cent, input.model.itp_stencil);
@@ -536,7 +497,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         UpdateDensity( &mesh, &particles, &input.materials, &input.model, &input.scaling );
 
         // Free surface - subgrid density correction
-        if (input.model.free_surf == 1 ) {
+        if (input.model.free_surface == 1 ) {
             SurfaceDensityCorrection( &mesh, input.model, topo, input.scaling  );
         }
 
@@ -587,7 +548,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
         printf("** Time for particles interpolations I = %lf sec\n",  (double)((double)omp_get_wtime() - t_omp) );
 
-        if (input.model.ismechanical == 1 ) {
+        if (input.model.mechanical == 1 ) {
 
           if (input.crazyConductivity) {
             for (int n = 0; n < input.crazyConductivity->nPhases; n++) {
@@ -601,7 +562,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             SetBCs(*setup->SetBCs, &input, &mesh);
 
             // Reset fields and BC values if needed
-            //        if ( input.model.ispureshear_ale == 1 ) InitialiseSolutionFields( &mesh, &input.model );
+            //        if ( input.model.pure_shear_ALE == 1 ) InitialiseSolutionFields( &mesh, &input.model );
             InitialiseSolutionFields( &mesh, &input.model );
             EvalNumberOfEquations( &mesh, &Stokes );
             if ( IsNewtonStep == 1 ) EvalNumberOfEquations( &mesh, &Jacob  );
@@ -769,7 +730,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                 }
                 
                 // Check for stagnation and apply safety restrictions is requested and required
-                if ( Nmodel.stagnated == 1 && input.model.iselastic == 1 && input.model.safe_mode == 1 ) {
+                if ( Nmodel.stagnated == 1 && input.model.elastic == 1 && input.model.safe_mode == 1 ) {
                     printf( "\e[1;31mWARNING : Non-linear solver stagnated (abs_tol_u = %2.2e abs_tol_p = %2.2e)\e[m\n", Nmodel.abs_tol_u, Nmodel.abs_tol_p );
                     printf( "\e[1;31mWARNING : Non-linear solver stagnated (rel_tol_u = %2.2e rel_tol_p = %2.2e)\e[m\n", Nmodel.rel_tol_u, Nmodel.rel_tol_p );
                     printf( "\e[1;31mReducing the timestep, and restart the iterations cycle...\e[m\n");
@@ -853,7 +814,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         //------------------------------------------------------------------------------------------------------------------------------//
 
         // THIS IS ACTIVATED JUST FOR TOPO.VX IN OUTPUT FILE --- Free surface - interpolate velocity components on the free surface
-        if (input.model.free_surf == 1 ) {
+        if (input.model.free_surface == 1 ) {
             SurfaceVelocity( &mesh, input.model, &topo, &topo_chain, input.scaling );
             MinMaxArray( topo_chain.Vx, input.scaling.V, topo_chain.Nb_part,       "Vx surf." );
             MinMaxArray( topo_chain.Vz, input.scaling.V, topo_chain.Nb_part,       "Vz surf." );
@@ -884,7 +845,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
         //------------------------------------------------------------------------------------------------------------------------------//
 
-        if (input.model.isthermal == 1 ) {
+        if (input.model.thermal == 1 ) {
 
             printf("*************************************\n");
             printf("*********** Thermal solver **********\n");
@@ -893,7 +854,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             t_omp = (double)omp_get_wtime();
 
             // Matrix assembly and direct solve
-            EnergyDirectSolve( &mesh, input.model,  mesh.T,  mesh.dT,  mesh.rhs_t, mesh.T, &particles, input.model.dt, input.model.shear_heat, input.model.adiab_heat, input.scaling, 1 );
+            EnergyDirectSolve( &mesh, input.model,  mesh.T,  mesh.dT,  mesh.rhs_t, mesh.T, &particles, input.model.dt, input.model.shear_heating, input.model.adiab_heating, input.scaling, 1 );
             MinMaxArray(particles.T, input.scaling.T, particles.Nb_part, "T part. before UpdateParticleEnergy");
 
             // Update energy on particles
@@ -958,11 +919,11 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                 printf("************** Advection step %03d of %03d: dtsub = %2.2e **************\n", isub, nsub, input.model.dt* input.scaling.t );
 
                 // Advect domain boundaries
-                if (input.model.ispureshear_ale > 0 ) {
+                if (input.model.pure_shear_ALE > 0 ) {
                     PureShearALE( &input.model, &mesh, &topo_chain, input.scaling );
                 }
 
-                if (input.model.free_surf == 1 ) {
+                if (input.model.free_surface == 1 ) {
                     // Save old topo
                     ArrayEqualArray( topo_chain.z0, topo_chain.z, topo_chain.Nb_part ); // save old z
                     ArrayEqualArray( topo_chain_ini.z0, topo_chain_ini.z, topo_chain.Nb_part ); // save old z
@@ -974,7 +935,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                 }
 
                 //                // Advect free surface
-                //                if ( input.model.free_surf == 1 ) {
+                //                if ( input.model.free_surface == 1 ) {
                 //                    AdvectFreeSurf( &topo_chain,     input.model, input.scaling );
                 //                    AdvectFreeSurf( &topo_chain_ini, input.model, input.scaling );
                 //                    MinMaxArray( topo_chain.z,      input.scaling.L, topo_chain.Nb_part,       "z surf.     " );
@@ -982,13 +943,13 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                 //                }
 
                 // Correction for particle inflow 0
-                if (input.model.ispureshear_ale == -1 && input.model.isperiodic_x == 0) ParticleInflowCheck( &particles, &mesh, input.model, topo, 0 );
+                if (input.model.pure_shear_ALE == -1 && input.model.periodic_x == 0) ParticleInflowCheck( &particles, &mesh, input.model, topo, 0 );
 
                 // Advect fluid particles
                 RogerGuntherII( &particles, input.model, mesh, 1, input.scaling );
 
                 // Correction for particle inflow 1
-                if (input.model.ispureshear_ale == -1 && input.model.isperiodic_x == 0) ParticleInflowCheck( &particles, &mesh, input.model, topo, 1 );
+                if (input.model.pure_shear_ALE == -1 && input.model.periodic_x == 0) ParticleInflowCheck( &particles, &mesh, input.model, topo, 1 );
 
                 // Update accumulated strain
                 AccumulatedStrainII( &mesh, input.scaling, input.model, &particles,  mesh.xc_coord,  mesh.zc_coord, mesh.Nx-1, mesh.Nz-1, mesh.BCp.type );
@@ -1001,7 +962,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                     WriteOutputHDF5Particles( &mesh, &particles, &topo, &topo_chain, &topo_ini, &topo_chain_ini, input.model, "Particles_BeforeSurfRemesh", input.materials, input.scaling );
                 }
 
-                if (input.model.free_surf == 1 ) {
+                if (input.model.free_surface == 1 ) {
 
                     // Get current topography
                     ProjectTopography( &topo,     &topo_chain, input.model, mesh, input.scaling, mesh.xg_coord, 0 );
@@ -1079,7 +1040,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                 printf("** Time for CountPartCell = %lf sec\n", (double)((double)omp_get_wtime() - t_omp) );
 
                 // Remove particles that would be above the surface
-                if (input.model.free_surf == 1 ) {
+                if (input.model.free_surface == 1 ) {
                     CleanUpSurfaceParticles( &particles, &mesh, topo, input.scaling );
                     CellFlagging( &mesh, input.model, topo, input.scaling );
                 }
@@ -1152,8 +1113,8 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
     if (input.model.gnuplot_log_res == 1) pclose(GNUplotPipe);
 
     //    // Free markers chains
-    if (input.model.free_surf == 1 )    FreeMarkerChain( &topo,     &topo_chain     );
-    if (input.model.free_surf == 1 )    FreeMarkerChain( &topo_ini, &topo_chain_ini );
+    if (input.model.free_surface == 1 )    FreeMarkerChain( &topo,     &topo_chain     );
+    if (input.model.free_surface == 1 )    FreeMarkerChain( &topo_ini, &topo_chain_ini );
 
     // Free Phase diagrams if activated
     if (input.model.isPD == 1 ) FreePhaseDiagrams( &input.model );

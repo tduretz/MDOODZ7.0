@@ -29,23 +29,23 @@ dt      = 1.2623e+11
 Courant = 0.5
 
 /**** SWITCHES ****/
-ismechanical    = 1
-dt_constant     = 0
+mechanical    = 1
+constant_dt     = 0
 RK              = 4
-isperiodic_x    = 0
-ispureshear_ALE =-1
-isinertial      = 0
-iselastic       = 1
-isthermal       = 1
+periodic_x    = 0
+pure_shear_ALE =-1
+
+elastic       = 1
+thermal       = 1
 line_search     = 0
-free_surf       = 1
-free_surf_stab  = 1
-eqn_state       = 1
-thermal_eq      = 1
-subgrid_diff    = 2
-shear_heat      = 1
+free_surface       = 1
+free_surface_stab  = 1
+
+initial_cooling      = 1
+subgrid_diffusion    = 2
+shear_heating      = 1
 compressible    = 1
-adiab_heat      = 2
+adiab_heating      = 2
 surface_processes  = 0
 shear_style     = 0 /0:pure shear --- 1: simple shear
 num_deriv       = 0

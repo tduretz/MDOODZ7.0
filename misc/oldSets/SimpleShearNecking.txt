@@ -34,22 +34,22 @@ diag_scaling = 1
 itp_stencil  = 9
 
 /**** SWITCHES ****/
-ismechanical    = 1
-dt_constant     = 0
+mechanical    = 1
+constant_dt     = 0
 RK              = 4
-isperiodic_x    = 1
-ispureshear_ALE = 0
-isinertial      = 0
-iselastic       = 1
-isthermal       = 1
+periodic_x    = 1
+pure_shear_ALE = 0
+
+elastic       = 1
+thermal       = 1
 line_search     = 0
-free_surf       = 0
-free_surf_stab  = 0
-eqn_state       = 0
-thermal_eq      = 0
-subgrid_diff    = 0
-shear_heat      = 1
-adiab_heat      = 1
+free_surface       = 0
+free_surface_stab  = 0
+
+initial_cooling      = 0
+subgrid_diffusion    = 0
+shear_heating      = 1
+adiab_heating      = 1
 isPl_soft       = 0
 surface_processes  = 0
 initial_noise   = 0

@@ -113,7 +113,7 @@ void LoadIniParticles( char* name, markers* particles, grid* mesh, markers *topo
     fread( &s3, 1, 1, file);
     fread( &s4, 1, 1, file);
 
-    if (model->free_surf == 1) {
+    if (model->free_surface == 1) {
         fread(&topo_chain->Nb_part,   s1,                   1, file );
         fread( topo_chain->x,         s3, topo_chain->Nb_part, file );
         fread( topo_chain->z,         s3, topo_chain->Nb_part, file );
@@ -138,7 +138,7 @@ void LoadIniParticles( char* name, markers* particles, grid* mesh, markers *topo
     free(name);
     //---------------------------------------------------------------------------------------------------------//
 
-    if (model->free_surf == 1) {
+    if (model->free_surface == 1) {
         topo_chain_ini->Nb_part = topo_chain->Nb_part;
         // note: the topo_chain should be scaled as well
 #pragma omp parallel for shared( topo_chain, model, scaling )
@@ -234,7 +234,7 @@ void LoadBreakpointParticles( markers *particles, grid* mesh, markers *topo_chai
     fread( &model->zmax, s2, 1, file);
 
 
-    if (model->free_surf == 1) {
+    if (model->free_surface == 1) {
         fread(&topo_chain->Nb_part,   s1,                   1, file );
         fread( topo_chain->x,         s3, topo_chain->Nb_part, file );
         fread( topo_chain->z,         s3, topo_chain->Nb_part, file );
@@ -260,7 +260,7 @@ void LoadBreakpointParticles( markers *particles, grid* mesh, markers *topo_chai
     fread( particles->phase, s1, particles->Nb_part, file);
     fread( particles->dual, s1, particles->Nb_part, file);
 
-    if (model->iselastic == 1) {
+    if (model->elastic == 1) {
         fread( particles->sxxd,   s3, particles->Nb_part, file );
         fread( particles->szzd,   s3, particles->Nb_part, file );
         fread( particles->sxz,    s3, particles->Nb_part, file );
@@ -336,7 +336,7 @@ void LoadBreakpointParticles( markers *particles, grid* mesh, markers *topo_chai
     // This is to avoid any problem with restarting - more data needs to be stored
 
         // Topo related
-        if (model->free_surf == 1) {
+        if (model->free_surface == 1) {
             fread( topo->height,  s3,  Nx, file );
             fread( topo->height0, s3,  Nx, file );
             fread( topo->a,       s3, Ncx, file );
@@ -423,7 +423,7 @@ void LoadBreakpointParticles( markers *particles, grid* mesh, markers *topo_chai
         particles->Vz[k]    /=scaling.V;
         particles->phi[k]   /=1.0;
         particles->X[k]     /=1.0;
-        if ( model->iselastic == 1 ) {
+        if ( model->elastic == 1 ) {
             particles->sxxd[k]    /= scaling.S;
             particles->szzd[k]    /= scaling.S;
             particles->sxz[k]     /= scaling.S;
@@ -497,7 +497,7 @@ void LoadBreakpointParticles( markers *particles, grid* mesh, markers *topo_chai
         }
     }
 
-    if (model->free_surf == 1) {
+    if (model->free_surface == 1) {
         for (k=0; k<topo_chain->Nb_part; k++) {
             topo_chain->x[k]  /= scaling.L;
             topo_chain->z[k]  /= scaling.L;
@@ -585,7 +585,7 @@ void MakeBreakpointParticles( markers *particles,  grid* mesh, markers *topo_cha
         particles->Vz[k]     *= scaling.V;
         particles->phi[k]    *= 1.0;
         particles->X[k]      *= 1.0;
-        if (model.iselastic == 1) {
+        if (model.elastic == 1) {
             particles->sxxd[k] *= scaling.S;
             particles->szzd[k] *= scaling.S;
             particles->sxz[k]  *= scaling.S;
@@ -663,7 +663,7 @@ void MakeBreakpointParticles( markers *particles,  grid* mesh, markers *topo_cha
         }
     }
 
-    if (model.free_surf == 1) {
+    if (model.free_surface == 1) {
         for (k=0; k<topo_chain->Nb_part; k++) {
             topo_chain->x[k] *= scaling.L;
             topo_chain->z[k] *= scaling.L;
@@ -733,7 +733,7 @@ void MakeBreakpointParticles( markers *particles,  grid* mesh, markers *topo_cha
     fwrite( &model.zmin, s2, 1, file);
     fwrite( &model.zmax, s2, 1, file);
 
-    if (model.free_surf == 1) {
+    if (model.free_surface == 1) {
         fwrite( &topo_chain->Nb_part,  s1,                   1, file );
         fwrite( topo_chain->x,         s3, topo_chain->Nb_part, file );
         fwrite( topo_chain->z,         s3, topo_chain->Nb_part, file );
@@ -759,7 +759,7 @@ void MakeBreakpointParticles( markers *particles,  grid* mesh, markers *topo_cha
     fwrite( particles->phase, s1, particles->Nb_part, file);
     fwrite( particles->dual,  s1, particles->Nb_part, file);
 
-    if (model.iselastic == 1) {
+    if (model.elastic == 1) {
         fwrite( particles->sxxd,   s3, particles->Nb_part, file );
         fwrite( particles->szzd,   s3, particles->Nb_part, file );
         fwrite( particles->sxz,    s3, particles->Nb_part, file );
@@ -841,7 +841,7 @@ void MakeBreakpointParticles( markers *particles,  grid* mesh, markers *topo_cha
     fwrite( &model.L0, s3, 1, file );
 
     // This is to avoid any problem with restarting - more data needs to be stored
-    if (model.free_surf == 1) {
+    if (model.free_surface == 1) {
         // Topo related
         fwrite( topo->height,  s3,  Nx, file );
         fwrite( topo->height0, s3,  Nx, file );
@@ -928,7 +928,7 @@ void MakeBreakpointParticles( markers *particles,  grid* mesh, markers *topo_cha
         particles->phi[k]   /= 1.0;
         particles->X[k]     /= 1.0;
 
-        if (model.iselastic == 1) {
+        if (model.elastic == 1) {
             particles->sxxd[k]   /= scaling.S;
             particles->szzd[k]   /= scaling.S;
             particles->sxz[k]    /= scaling.S;
@@ -1000,7 +1000,7 @@ void MakeBreakpointParticles( markers *particles,  grid* mesh, markers *topo_cha
         }
     }
 
-    if (model.free_surf == 1) {
+    if (model.free_surface == 1) {
         for (k=0; k<topo_chain->Nb_part; k++) {
             topo_chain->x[k]  /= scaling.L;
             topo_chain->z[k]  /= scaling.L;
@@ -1101,6 +1101,7 @@ Input ReadInputFile( char *fileName ) {
                         .T   = ReadDou2(fin, "T", 1.0),
     };
     ScaleMe( &scaling );
+    double Ga = 1e9*365.25*3600*24/scaling.t;
 
     // Domain size
     model.Nx              = ReadInt2( fin, "Nx",   10 );
@@ -1118,70 +1119,65 @@ Input ReadInputFile( char *fileName ) {
     model.abs_tol_mom     = ReadDou2( fin, "abs_tol_mom", 1.0e-9 );
     model.rel_tol_mom     = ReadDou2( fin, "rel_tol_mom",  1.0e-5 );
     model.auto_penalty    = ReadDou2( fin, "auto_penalty",    0.0  );
-    model.decoupled_solve = ReadInt2( fin, "decoupled_solve",    1 );
     model.diag_scaling    = ReadInt2( fin, "diag_scaling",       1 );
     model.pc_type         = ReadInt2( fin, "pc_type",       0 );
     model.safe_mode       = ReadInt2( fin, "safe_mode",     0 );
     model.safe_dt_div     = ReadDou2( fin, "safe_dt_div",  5.0 );
     model.nstagmax        = ReadInt2( fin, "nstagmax",      3 );
     model.noisy           = ReadInt2( fin, "noisy",         1 );  // Prints a lot of info to standard output
-    model.eqn_state       = ReadInt2( fin, "eqn_state",       0 );
-
-    // Switches // remove is ? from ParaMeter --> para_meter
-    model.initial_part    = ReadInt2( fin, "initial_part",    1 ); // Initial particule distribution, 0: MD4.5 style, 1: MD6.0 style
-    model.initial_noise   = ReadInt2( fin, "initial_noise",   0 ); // Add noise on initial marker locations
-    model.ismechanical    = ReadInt2( fin, "ismechanical",    1 ); // Activates mechanical solver
-    model.advection       = ReadInt2( fin, "advection",       1 ); // Activates advection
-    model.dt_constant     = ReadInt2( fin, "dt_constant",     0 ); // Fixed time step
-    model.RK              = ReadInt2( fin, "RK",              4 ); // Order of Runge-Kutta advection solver
-    model.isperiodic_x    = ReadInt2( fin, "isperiodic_x",    0 ); // Activates periodicity in x
-    model.ispureshear_ale = ReadInt2( fin, "ispureshear_ALE", 0 );
-    model.isinertial      = ReadInt2( fin, "isinertial",      0 );
-    model.iselastic       = ReadInt2( fin, "iselastic",       0 );
-    model.isthermal       = ReadInt2( fin, "isthermal",       0 );
-    model.line_search     = ReadInt2( fin, "line_search",     0 );
-    model.line_search_min = ReadDou2( fin, "line_search_min", 0.0 );
-    model.free_surf       = ReadInt2( fin, "free_surf",       0 );
-    model.free_surf_stab  = ReadDou2( fin, "free_surf_stab",  0 );
-    model.thermal_eq      = ReadInt2( fin, "thermal_eq",      0 );
-    model.cooling_time    = ReadDou2( fin, "cooling_time", 1000e6*365.25*3600*24/scaling.t);
-    model.subgrid_diff    = ReadInt2( fin, "subgrid_diff",    0 );
-    model.shear_heat      = ReadInt2( fin, "shear_heat",      1 );
-    model.adiab_heat      = ReadInt2( fin, "adiab_heat",      0 ); // 0: zero, 1: lithostatic P assumption, 2: full derivative
-    model.surface_processes  = ReadInt2( fin, "surface_processes",  0 ); // 1: diffusion; 2: diffusion + sedimentation
-    model.count_markers      = ReadInt2( fin, "count_markers",      1 );
-    model.thermal_perturb    = ReadInt2( fin, "thermal_perturb",    0 ); // Includes user defined initial thermal perbation
-    model.finite_strain      = ReadInt2( fin, "finite_strain",      0 ); // Integrates finite stran and save deformation gradient tensor
-    model.track_T_P_x_z      = ReadInt2( fin, "track_T_P_x_z",      0 ); // Tracks initial T, P, x and z on particles 
-    model.delete_breakpoints = ReadInt2( fin, "delete_breakpoints", 1 ); // Progressively deletes breakpoint files
-    model.anisotropy         = ReadInt2( fin, "anisotropy",         0 ); // Turns on anisotropy
-    model.marker_aniso_angle = ReadInt2( fin, "marker_aniso_angle", 0 ); // Enables setting anisotropy angle per particles rather than phases
-    model.compressible       = ReadInt2( fin, "compressible",       0 ); // Turns on compressibility
-    model.gnuplot_log_res    = ReadInt2( fin, "gnuplot_log_res",    0 ); // Activate GNU plot residuals visualisation
-    model.shear_style        = ReadInt2( fin, "shear_style",        0 ); // BC type: 0: pure shear, 2: periodic simple shear
-    model.stress_rotation    = ReadInt2( fin, "stress_rotation",    1 ); // 0: no stress rotation, 1: analytic rotation, 2: upper convected rate
-    model.polar              = ReadInt2( fin, "polar",              0 ); // Activate polar-Cartesian coordinates
-    model.progress_transform = ReadInt2( fin, "progress_transform", 0 ); // Activate progressive reactions
-    model.no_return          = ReadInt2( fin, "no_return",          0 ); // Turns off retrogression if 1.0
-    model.unsplit_diff_reac  = ReadInt2( fin, "unsplit_diff_reac",  0 ); // Unsplits diffusion and reaction
-    model.kinetics           = ReadInt2( fin, "kinetics",           0 ); // Activates reaction kinetics
-    model.density_change     = ReadInt2( fin, "density_change",     0 ); // Turns on volume change due to reaction if 1
-    model.direct_neighbour   = ReadInt2( fin, "direct_neighbour",   0 ); // Direct neighbour interpolation
-    model.reseed_markers     = ReadInt2( fin, "reseed_markers",     1 ); // Activates reseeding / particle injection
-    model.conserv_interp     = ReadInt2( fin, "conserv_interp",     0 ); // Activates Taras conservative interpolation
-    model.smooth_softening   = ReadInt2( fin, "smooth_softening",   1 ); // Activates smooth explicit kinematic softening function
-    model.oop                = ReadInt2( fin, "oop",                0 ); // Out-of-plane strain
-    model.noise_bg           = ReadInt2( fin, "noise_bg",           0 ); // Background noise generated on the particles --> mesh (used for cohesion)
-    model.residual_form      = ReadInt2( fin, "residual_form",      1 ); // form of residual - TODO: delete if our models work with new default value (1)
+    model.initial_noise      = ReadInt2( fin, "initial_noise",       0 ); // Add noise on initial marker locations
+    model.mechanical         = ReadInt2( fin, "mechanical",          1 ); // Activates mechanical solver
+    model.advection          = ReadInt2( fin, "advection",           1 ); // Activates advection
+    model.constant_dt        = ReadInt2( fin, "constant_dt",         0 ); // Activates constant time step
+    model.RK                 = ReadInt2( fin, "RK",                  4 ); // Order of Runge-Kutta advection solver (1, 2 or 4)
+    model.periodic_x         = ReadInt2( fin, "periodic_x",          0 ); // Activates periodicity in x
+    model.pure_shear_ALE     = ReadInt2( fin, "pure_shear_ALE",      0 ); // Activates Arbitrary Lagarangian Eulerian mode (pure shear box deformation)
+    model.elastic            = ReadInt2( fin, "elastic",             0 ); // Activates elasticity
+    model.thermal            = ReadInt2( fin, "thermal",             0 ); // Activates thermal solver
+    model.line_search        = ReadInt2( fin, "line_search",         0 ); // Activates line search
+    model.line_search_min    = ReadDou2( fin, "line_search_min",   0.0 ); // Minimim alpha value for line search 
+    model.free_surface       = ReadInt2( fin, "free_surface",        0 ); // Activates free surface
+    model.free_surface_stab  = ReadDou2( fin, "free_surface_stab", 0.0 ); // Activate free surface stabilisation: range 0.0-2.0
+    model.initial_cooling    = ReadInt2( fin, "initial_cooling",     0 ); // Activates initial cooling
+    model.cooling_duration   = ReadDou2( fin, "cooling_duration",   Ga ); // Initial cooling duration
+    model.subgrid_diffusion  = ReadInt2( fin, "subgrid_diffusion",   0 ); // 0: No subgrid diffusion, 1: temperature, 2: temperature + stress
+    model.shear_heating      = ReadInt2( fin, "shear_heating",       1 ); // Activates shear heating
+    model.adiab_heating      = ReadInt2( fin, "adiab_heating",       0 ); // 0: zero, 1: lithostatic P assumption, 2: full derivative
+    model.surface_processes  = ReadInt2( fin, "surface_processes",   0 ); // 1: diffusion; 2: diffusion + sedimentation
+    model.thermal_perturb    = ReadInt2( fin, "thermal_perturb",     0 ); // Includes user defined initial thermal perbation
+    model.finite_strain      = ReadInt2( fin, "finite_strain",       0 ); // Integrates finite stran and save deformation gradient tensor
+    model.track_T_P_x_z      = ReadInt2( fin, "track_T_P_x_z",       0 ); // Tracks initial T, P, x and z on particles 
+    model.delete_breakpoints = ReadInt2( fin, "delete_breakpoints",  1 ); // Progressively deletes breakpoint files
+    model.anisotropy         = ReadInt2( fin, "anisotropy",          0 ); // Turns on anisotropy
+    model.marker_aniso_angle = ReadInt2( fin, "marker_aniso_angle",  0 ); // Enables setting anisotropy angle per particles rather than phases
+    model.compressible       = ReadInt2( fin, "compressible",        0 ); // Turns on compressibility
+    model.gnuplot_log_res    = ReadInt2( fin, "gnuplot_log_res",     0 ); // Activate GNU plot residuals visualisation
+    model.shear_style        = ReadInt2( fin, "shear_style",         0 ); // BC type: 0: pure shear, 2: periodic simple shear
+    model.stress_rotation    = ReadInt2( fin, "stress_rotation",     1 ); // 0: no stress rotation, 1: analytic rotation, 2: upper convected rate
+    model.polar              = ReadInt2( fin, "polar",               0 ); // Activate polar-Cartesian coordinates
+    model.progress_transform = ReadInt2( fin, "progress_transform",  0 ); // Activate progressive reactions
+    model.no_return          = ReadInt2( fin, "no_return",           0 ); // Turns off retrogression if 1.0
+    model.unsplit_diff_reac  = ReadInt2( fin, "unsplit_diff_reac",   0 ); // Unsplits diffusion and reaction
+    model.kinetics           = ReadInt2( fin, "kinetics",            0 ); // Activates reaction kinetics
+    model.density_change     = ReadInt2( fin, "density_change",      0 ); // Turns on volume change due to reaction if 1
+    model.direct_neighbour   = ReadInt2( fin, "direct_neighbour",    0 ); // Direct neighbour interpolation
+    model.reseed_markers     = ReadInt2( fin, "reseed_markers",      1 ); // Activates reseeding / particle injection
+    model.conserv_interp     = ReadInt2( fin, "conserv_interp",      0 ); // Activates Taras conservative interpolation
+    model.smooth_softening   = ReadInt2( fin, "smooth_softening",    1 ); // Activates smooth explicit kinematic softening function
+    model.oop                = ReadInt2( fin, "oop",                 0 ); // Out-of-plane strain
+    model.noise_bg           = ReadInt2( fin, "noise_bg",            0 ); // Background noise generated on the particles --> mesh (used for cohesion)
+    model.residual_form      = ReadInt2( fin, "residual_form",       1 ); // form of residual - TODO: delete if our models work with new default value (1)
     
-    if ( model.shear_style == 1 ) model.isperiodic_x  = 1;
-        if ( model.shear_style == 0 ) model.isperiodic_x  = 0;
-    if ( model.anisotropy       == 1 ) model.finite_strain       = 1;
+    // Consequential behaviour
+    if ( model.shear_style == 1 ) model.periodic_x    = 1; // If simple shear, it must  be periodic in x
+    if ( model.shear_style == 0 ) model.periodic_x    = 0; // If simple shear, it can't be periodic in x
+    if ( model.anisotropy  == 1 ) model.finite_strain = 1; // If anisotropy, then also track finite strain
+
     // Setup dependant
     model.EpsBG           = ReadDou2( fin, "EpsBG",         1e-30 ) / scaling.E; // Background tectonic rate, defaut is close to zero to avoid any Nans of Infs in rheology
-    model.DivBG           = ReadDou2( fin, "DivBG",           0.0 ) / scaling.E;
-    model.PrBG            = ReadDou2( fin, "PrBG",            0.0 ) / scaling.S;
-    model.TBG             = ReadDou2( fin, "TBG",             0.0 ) / scaling.T;
+    model.DivBG           = ReadDou2( fin, "DivBG",           0.0 ) / scaling.E; // Background divergence rate
+    model.PrBG            = ReadDou2( fin, "PrBG",            0.0 ) / scaling.S; // Background pressure
+    model.TBG             = ReadDou2( fin, "TBG",             0.0 ) / scaling.T; // Background temperature
     // Surface processes
     model.surf_diff       = ReadDou2( fin, "surf_diff",       0.0 ) / (pow(scaling.L,2.0)/scaling.t);
     model.surf_ised1      = ReadInt2( fin, "surf_ised1",      0.0 );

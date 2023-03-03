@@ -33,14 +33,14 @@ eta_avg = 0
 itp_stencil = 1
 
 /**** SWITCHES ****/
-ismechanical    = 1
-dt_constant     = 0
+mechanical    = 1
+constant_dt     = 0
 RK              = 4
-isperiodic_x    = 0
-ispureshear_ALE = 1  /1: box stretched at constant strain rate; -1 box of constant size
-isinertial      = 0
-iselastic       = 1
-isthermal       = 0
+periodic_x    = 0
+pure_shear_ALE = 1  /1: box stretched at constant strain rate; -1 box of constant size
+
+elastic       = 1
+thermal       = 0
 isPl_soft       = 0
 line_search     = 1
 anisotropy           = 1

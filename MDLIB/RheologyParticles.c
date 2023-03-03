@@ -943,7 +943,7 @@ void UpdateParticleEnergy( grid* mesh, scale scaling, params model, markers* par
     Interp_Grid2P_centroids2( *particles, Tm0, mesh, Tg0, mesh->xvz_coord,  mesh->zvx_coord, Nx-1, Nz-1, mesh->BCt.type, &model  );
     
     // SUBGRID
-    if ( model.subgrid_diff >= 1 ) { /* CASE WITH SUBGRID DIFFUSION */
+    if ( model.subgrid_diffusion >= 1 ) { /* CASE WITH SUBGRID DIFFUSION */
         
         printf("Subgrid diffusion for temperature update\n");
         dTgs = DoodzCalloc(Ncx*Ncz, sizeof(DoodzFP));
@@ -1026,7 +1026,7 @@ void UpdateParticlePressure( grid* mesh, scale scaling, params model, markers* p
         }
     }
     
-    if ( model.subgrid_diff >= 2 ) {
+    if ( model.subgrid_diffusion >= 2 ) {
         
         printf("Subgrid diffusion for pressure update\n");
         double *Pg0  = DoodzCalloc(Ncx*Ncz, sizeof(DoodzFP));
@@ -1184,7 +1184,7 @@ firstprivate( model )
     InterpVerticesToCentroidsDouble( om_n, om_s, mesh, model );
 
     // // Rotate stress only if elasticity is activated 
-    if ( model->iselastic==1 ) {
+    if ( model->elastic==1 ) {
     
 #pragma omp parallel for shared ( mesh, dudz_n, dvdx_n, dudx_n, dvdz_n, om_n ) \
     private ( k1, txx, tzz, txz, angle)                     \
@@ -1231,9 +1231,9 @@ firstprivate( model )
             if (particles->phase[k] != -1) {
                 double nx = particles->nx[k];
                 double nz = particles->nz[k];
-                double mdudx =  Centers2Particle( particles, dudx_n,     mesh->xvz_coord, mesh->zvx_coord, mesh->Nx-1, mesh->Nz-1, mesh->BCp.type, mesh->dx, mesh->dz, k, model->isperiodic_x );
+                double mdudx =  Centers2Particle( particles, dudx_n,     mesh->xvz_coord, mesh->zvx_coord, mesh->Nx-1, mesh->Nz-1, mesh->BCp.type, mesh->dx, mesh->dz, k, model->periodic_x );
                 double mdudz = Vertices2Particle( particles, dudz_s,     mesh->xg_coord,  mesh->zg_coord,  mesh->Nx-0, mesh->Nz-0, mesh->BCg.type, mesh->dx, mesh->dz, k );
-                double mdvdz =  Centers2Particle( particles, dvdz_n,     mesh->xvz_coord, mesh->zvx_coord, mesh->Nx-1, mesh->Nz-1, mesh->BCp.type, mesh->dx, mesh->dz, k, model->isperiodic_x );
+                double mdvdz =  Centers2Particle( particles, dvdz_n,     mesh->xvz_coord, mesh->zvx_coord, mesh->Nx-1, mesh->Nz-1, mesh->BCp.type, mesh->dx, mesh->dz, k, model->periodic_x );
                 double mdvdx = Vertices2Particle( particles, dvdx_s,     mesh->xg_coord,  mesh->zg_coord,  mesh->Nx-0, mesh->Nz-0, mesh->BCg.type, mesh->dx, mesh->dz, k );
                 particles->nx[k] += dt*(-(mdudx - mdvdz)*nx*nz - mdvdx*nz*nz + mdudz*nx*nx)*nz;
                 particles->nz[k] += dt*( (mdudx - mdvdz)*nx*nz + mdvdx*nz*nz - mdudz*nx*nx)*nx;
@@ -1261,7 +1261,7 @@ firstprivate( model )
     Nx = mesh->Nx; Ncx = Nx-1;
     Nz = mesh->Nz; Ncz = Nz-1;
     
-    if ( model->subgrid_diff > -1 ) {
+    if ( model->subgrid_diffusion > -1 ) {
         
         // Alloc
         dtxxgs = DoodzCalloc(Ncx*Ncz, sizeof(DoodzFP));
@@ -1292,7 +1292,7 @@ firstprivate( model )
         MinMaxArray(etam, scaling->eta, particles->Nb_part, "eta phys part  ");
         
         
-        if ( model->subgrid_diff == 2 ) {
+        if ( model->subgrid_diffusion == 2 ) {
             
             printf("Subgrid diffusion for stress tensor component update\n");
             
@@ -1366,7 +1366,7 @@ firstprivate( model )
         DoodzFree( etam   );
         
     }
-    if (model->subgrid_diff==0 || model->subgrid_diff==1 || model->subgrid_diff==4){
+    if (model->subgrid_diffusion==0 || model->subgrid_diffusion==1 || model->subgrid_diffusion==4){
         
         printf("No subgrid diffusion for stress tensor component update\n");
         

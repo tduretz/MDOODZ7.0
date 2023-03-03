@@ -60,7 +60,7 @@ PTmax           = 0;
 TminusT0        = 0;
 emergency_benoit = 0;
 fstrain          = 0;
-shear_heating    = 0;
+shear_heatinging    = 0;
 princi_stress    = 0;
 director_vector  = 1;
 Pl_soft          = 0;
@@ -4698,7 +4698,7 @@ for istep=istart:ijump:iend
             %         save('Yoann_VP_initial', 'zc_plot', 'P', 'T', 'eta', 'sII')
         end
         
-        if shear_heating==1
+        if shear_heatinging==1
             
             sxxd  = hdf5read(filename,'/Centers/sxxd'); sxxd = cast(sxxd, 'double');
             sxz   = hdf5read(filename,'/Vertices/sxz'); sxz  = cast(sxz, 'double');

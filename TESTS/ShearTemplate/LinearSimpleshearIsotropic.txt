@@ -31,7 +31,7 @@ Nz_part = 4
 
 /**** TIME ****/
 Nt          = 1
-dt_constant = 1
+constant_dt = 1
 Courant     = 0.3
 dt          = 0.5
 RK          = 4
@@ -62,16 +62,16 @@ maxeta      = 1e6
 
 /**** SWITCHES ****/
 anisotropy             = 0
-iselastic         = 0
-free_surf         = 0
-free_surf_stab    = 0
+elastic         = 0
+free_surface         = 0
+free_surface_stab    = 0
 finite_strain           = 1
 advection         = 0
 
 /**** SETUP-DEPENDANT ****/
 shear_style     = 1
-isperiodic_x    = 0
-ispureshear_ALE = 1
+periodic_x    = 0
+pure_shear_ALE = 1
 EpsBG           = 1
 user0           = 1     / temperature [°C]
 user1           = 0.05  / inclusion radius [m]

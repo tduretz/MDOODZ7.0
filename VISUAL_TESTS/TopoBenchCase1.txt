@@ -22,7 +22,7 @@ zmin    =  -700.000000e3
 zmax    =    50.000000e3
 
 /**** TIME ****/
-dt_constant = 1
+constant_dt = 1
 dt          = 5e9
 
 /**** LINEAR SOLVER ****/
@@ -32,8 +32,8 @@ penalty         = 1e3
 residual_form   = 0
 
 /**** SWITCHES ****/
-free_surf       = 1
-free_surf_stab  = 1
+free_surface       = 1
+free_surface_stab  = 1
 
 /**** GRAVITY ****/
 gz = -10.00

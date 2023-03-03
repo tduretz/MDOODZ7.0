@@ -162,7 +162,7 @@ void BuildInitialTopography( surface *topo, markers *topo_chain, params model, g
 //        
 //        //        //--------------------------//
 //        //        // DENSITY
-//        //        if ( model.eqn_state > 0 ) {
+//        //        if ( 1 == 0 ) {
 //        //            particles->rho[np] = materials->rho[particles->phase[np]] * (1 -  materials->alp[particles->phase[np]] * (Tpart - materials->T0[particles->phase[np]]) );
 //        //        }
 //        //        else {
@@ -255,7 +255,7 @@ void SetParticles( markers *particles, scale scaling, params model, mat_prop *ma
         
         //        //--------------------------//
         //        // DENSITY
-        //        if ( model.eqn_state > 0 ) {
+        //        if ( 1 == 0 ) {
         //            particles->rho[np] = materials->rho[particles->phase[np]] * (1 -  materials->alp[particles->phase[np]] * (Tpart - materials->T0[particles->phase[np]]) );
         //        }
         //        else {

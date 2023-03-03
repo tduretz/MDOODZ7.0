@@ -26,7 +26,7 @@ zmin    = -1000.000000e3
 xmax    =  750.000000e3
 zmax    = 10.000000e3 
 dt      = 1.2623e+10
-dt_constant = 0
+constant_dt = 0
 dt_max  = 3.1558e+12
 Courant = 0.45
 abs_tol_div = 1e-28
@@ -36,26 +36,25 @@ abs_tol_div     = 1e-9
 rel_tol_div     = 1e-9
 penalty         = 4e4
 
-initial_part          = 0
 IncrementalUpdateGrid = 0
 
 /**** SWITCHES ****/
-ismechanical    = 1
-dt_constant     = 0
+mechanical    = 1
+constant_dt     = 0
 RK              = 4
-isperiodic_x    = 0
-ispureshear_ALE = 1
-isinertial      = 0
-iselastic       = 1
-isthermal       = 1
+periodic_x    = 0
+pure_shear_ALE = 1
+
+elastic       = 1
+thermal       = 1
 line_search     = 0
-free_surf       = 1
-free_surf_stab  = 1
-eqn_state       = 1
-thermal_eq      = 1
-subgrid_diff    = 1
-shear_heat      = 0
-adiab_heat      = 0
+free_surface       = 1
+free_surface_stab  = 1
+
+initial_cooling      = 1
+subgrid_diffusion    = 1
+shear_heating      = 0
+adiab_heating      = 0
 compressible    = 0
 cpc             = 1
 

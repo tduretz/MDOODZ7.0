@@ -38,7 +38,7 @@
 void ExpandCentroidArray( double* CentroidArray, double* temp, grid* mesh, params *model ) {
     
     int k, l, Nx, Nz, Ncx, Ncz, c0, c1;
-    int per = model->isperiodic_x;
+    int per = model->periodic_x;
     
     Nx = mesh->Nx;
     Nz = mesh->Nz;
@@ -106,7 +106,7 @@ void ExpandCentroidArray( double* CentroidArray, double* temp, grid* mesh, param
 void InterpCentroidsToVerticesDouble( double* CentroidArray, double* VertexArray, grid* mesh, params *model ) {
     
     int k, l, Nx, Nz, Ncx, Ncz, c0, c1;    
-    int per = model->isperiodic_x;
+    int per = model->periodic_x;
     
     Nx  = mesh->Nx;
     Nz  = mesh->Nz;
@@ -358,7 +358,7 @@ void InitialiseSolutionFields( grid *mesh, params *model ) {
                     if (model->EpsBG == 0) mesh->u_in[c]  = 0.0;
                     // Pure shear
                     else mesh->u_in[c]  = -mesh->xg_coord[k]*(model->EpsBG - model->DivBG/3.0);
-                    if (model->isperiodic_x == 1) mesh->u_in[c] = 2.0*(mesh->zvx_coord[l])*model->EpsBG + mesh->xg_coord[k]*model->DivBG/3.0; // Simple shear
+                    if (model->periodic_x == 1) mesh->u_in[c] = 2.0*(mesh->zvx_coord[l])*model->EpsBG + mesh->xg_coord[k]*model->DivBG/3.0; // Simple shear
                 }
                 // Force Dirichlets
                 if (mesh->BCu.type[c] == 0) mesh->u_in[c]  = mesh->BCu.val[c]; 
@@ -379,7 +379,7 @@ void InitialiseSolutionFields( grid *mesh, params *model ) {
                     // Initial velocity field (zero or pure shear)
                     if (model->EpsBG == 0) mesh->v_in[c]  = 0.0;
                     else mesh->v_in[c]  = mesh->zg_coord[l]*(model->EpsBG + model->DivBG/3.0);
-                    if (model->isperiodic_x == 1) mesh->v_in[c]  = 0.0 + mesh->zg_coord[l]*model->DivBG/3.0;
+                    if (model->periodic_x == 1) mesh->v_in[c]  = 0.0 + mesh->zg_coord[l]*model->DivBG/3.0;
                 }
                 // Force Dirichlets
                 if (mesh->BCv.type[c] == 0) mesh->v_in[c]  = mesh->BCv.val[c];

@@ -22,7 +22,7 @@ xmax    = 1.0
 zmax    = 1.0
 advection         = 1
 dt                = 1e7
-dt_constant       = 0
+constant_dt       = 0
 Courant           = 0.2
 penalty           = 1e2
 diag_scaling      = 0
@@ -33,12 +33,12 @@ nstagmax          = 10
 
 /**** SWITCHES ****/
 compressible    = 1
-iselastic       = 1
+elastic       = 1
 line_search     = 1
-eqn_state       = 3
-subgrid_diff    = 2
-shear_heat      = 0
-adiab_heat      = 0
+
+subgrid_diffusion    = 2
+shear_heating      = 0
+adiab_heating      = 0
 
 /*** CHEMICAL ***/
 ProgReac        = 1  / !!!!

@@ -325,7 +325,7 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
 
   // Parameters for deformation map calculations
   int    it, nitmax = 20, noisy = 0;
-  int    plastic = 0, constant = 0, dislocation = 0, peierls = 0, diffusion = 0, gbs = 0, elastic = model->iselastic, kinetics = 0;
+  int    plastic = 0, constant = 0, dislocation = 0, peierls = 0, diffusion = 0, gbs = 0, elastic = model->elastic, kinetics = 0;
   double tol = 1.0e-11, res_pl = 0.0, Tii = 0.0, Tii0 = sqrt(Txx0 * Txx0 + Txz0 * Txz0);
   double eta_lo = 0.0, eta_up = 0.0, eta_ve = 0.0;
   double eta_pwl = 0.0, eta_exp = 0.0, eta_vep = 0.0, eta_lin = 0.0, eta_el = 0.0, eta_gbs = 0.0, eta_cst = 0.0, eta_pl = 0.0;
@@ -762,7 +762,7 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
   double Exx, Ezz, Exz, eta_e;
   double Da11, Da12, Da13, Da22, Da23, Da33, iDa11, iDa12, iDa13, iDa22, iDa23, iDa33, a11, a12, a13, a22, a23, a33, det;
   double el = 0.0;
-  if (model->iselastic == 1) el = 1.0;
+  if (model->elastic == 1) el = 1.0;
 
   Nx  = mesh->Nx;
   Ncx = Nx - 1;
@@ -820,7 +820,7 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
     if ( mesh->BCp.type[c0] != 30 && mesh->BCp.type[c0] != 31 ) {
 
       //----------------------------------------------------------//
-      if ( model->iselastic==1 ) eta_e      = model->dt*mesh->mu_n[c0];
+      if ( model->elastic==1 ) eta_e      = model->dt*mesh->mu_n[c0];
       else                       eta_e      = 1.0; // set to arbitrary value to avoid division by 0.0
       //----------------------------------------------------------//
       Exx = mesh->exxd[c0]  + el*mesh->sxxd0[c0] /eta_e/2.0;
@@ -947,7 +947,7 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
 
     if ( mesh->BCg.type[c1] != 30 ) {
 
-      if ( model->iselastic==1   ) eta_e      = model->dt*mesh->mu_s[c1];
+      if ( model->elastic==1   ) eta_e      = model->dt*mesh->mu_s[c1];
       else           eta_e      = 1.0; // set to arbitrary value to avoid division by 0.0
       //----------------------------------------------------------//
       Exx = mesh->exxd_s[c1] + el*mesh->sxxd0_s[c1]/eta_e/2.0;
@@ -1347,7 +1347,7 @@ void ShearModCompExpGrid( grid* mesh, mat_prop *materials, params *model, scale 
 
   // Periodic
   double av;
-  if (model->isperiodic_x==1) {
+  if (model->periodic_x==1) {
     for( l=0; l<Nz; l++) {
       c1 = l*Nx + Nx-1;
       av = 0.5*(mesh->mu_s[c1] + mesh->mu_s[l*Nx]);

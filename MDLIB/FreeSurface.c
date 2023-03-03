@@ -345,8 +345,8 @@ void ProjectTopography( surface *topo, markers *topo_chain, params model, grid m
 
     // Correct for sides is the box in case of inflow conditions
     for (k=0;k<Nx;k++) {
-        if ( model.polar==0 && model.ispureshear_ale <= 0 && k==Nx-1 ) topo->height[k]=topo->height[k-1];
-        if ( model.polar==0 && model.ispureshear_ale <= 0 && k==0    ) topo->height[k]=topo->height[k+1];
+        if ( model.polar==0 && model.pure_shear_ALE <= 0 && k==Nx-1 ) topo->height[k]=topo->height[k-1];
+        if ( model.polar==0 && model.pure_shear_ALE <= 0 && k==0    ) topo->height[k]=topo->height[k+1];
     }
 
     // Correct for sides when working in polar mode

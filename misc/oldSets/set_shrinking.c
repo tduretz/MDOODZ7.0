@@ -539,7 +539,7 @@ void SetBCs( grid *mesh, params *model, scale scaling, markers* particles, mat_p
             
             if ( mesh->BCt.type[c] != 30 ) {
                 
-                if( model->isperiodic_x == 1 ){
+                if( model->periodic_x == 1 ){
                     
                     // WEST
                     
@@ -610,7 +610,7 @@ void SetBCs( grid *mesh, params *model, scale scaling, markers* particles, mat_p
             
             if ( mesh->BCc.type[c] != 30 ) {
                 
-                if( model->isperiodic_x == 1 ){
+                if( model->periodic_x == 1 ){
                     
                     // WEST
                     

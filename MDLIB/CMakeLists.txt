@@ -5,7 +5,7 @@ add_library(mdoodz SHARED
         ChemicalRoutines.c
         FD_Jacobian.c
         FlowLaws.c
-        free_surf.c
+        FreeSurface.c
         GridRoutines.c
         HDF5Output.c
         InputOutput.c

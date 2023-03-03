@@ -325,7 +325,7 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
       } else if (l == NCZ - 1) {
         position = N;
       } else if ((mesh->BCp.type[c] == -1 || mesh->BCp.type[c] == 1 || mesh->BCp.type[c] == 0) && mesh->BCp.type[c + NCX] == 30) {
-        position = FREE_SURFACE;
+        position = free_surfaceACE;
       } else {
         position = INTERNAL;
       }
@@ -376,7 +376,7 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
       } else if (l == NCZ - 1) {
         position = N;
       } else if ((mesh->BCt.type[c] == -1 || mesh->BCt.type[c] == 1 || mesh->BCt.type[c] == 0) && mesh->BCt.type[c + NCX] == 30) {
-        position = FREE_SURFACE;
+        position = free_surfaceACE;
       } else {
         position = INTERNAL;
       }
@@ -421,9 +421,9 @@ void ValidateSetup(MdoodzSetup *setup, MdoodzInput *instance) {
   char *errors[20]    = {};
   int   warningsCount = 0;
   char *warnings[20]  = {};
-  if (instance->model.free_surf) {
+  if (instance->model.free_surface) {
     if (!setup->BuildInitialTopography) {
-      errors[errorsCount] = "If Free Surface mode is ON and BuildInitialTopography MUST be specified. Please set free_surf = 0 or set BuildInitialTopography";
+      errors[errorsCount] = "If Free Surface mode is ON and BuildInitialTopography MUST be specified. Please set free_surface = 0 or set BuildInitialTopography";
       errorsCount++;
     } else {
       if (!setup->BuildInitialTopography->SetSurfaceZCoord) {
@@ -503,13 +503,13 @@ void ValidateSetup(MdoodzSetup *setup, MdoodzInput *instance) {
       warnings[warningsCount] = "SetBCs.SetBCPType is not specified. BCP type will be set to -1";
       warningsCount++;
     }
-    if (instance->model.isthermal) {
+    if (instance->model.thermal) {
       if (!setup->SetBCs->SetBCTNew) {
-        errors[errorsCount] = "SetBCs.SetBCTNew MUST be specified for Thermal model. Please set isthermal = 0 or specify SetBCTTypeNew";
+        errors[errorsCount] = "SetBCs.SetBCTNew MUST be specified for Thermal model. Please set thermal = 0 or specify SetBCTTypeNew";
         errorsCount++;
       }
       if (!setup->SetBCs->SetBCT) {
-        errors[errorsCount] = "SetBCs.SetBCT MUST be specified for Thermal model. Please set isthermal = 0 or specify SetBCTType (will be deprecated)";
+        errors[errorsCount] = "SetBCs.SetBCT MUST be specified for Thermal model. Please set thermal = 0 or specify SetBCTType (will be deprecated)";
         errorsCount++;
       }
     }

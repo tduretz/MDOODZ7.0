@@ -30,7 +30,7 @@ Nx_part = 4
 Nz_part = 4
 
 /**** TIME ****/
-dt_constant = 0
+constant_dt = 0
 advection   = 1
 Courant     = 0.3
 dt          = 0.5
@@ -65,15 +65,15 @@ eta_avg     = 1
 
 /**** SWITCHES ****/
 anisotropy             = 0
-iselastic         = 0
-free_surf         = 0
-free_surf_stab    = 0
+elastic         = 0
+free_surface         = 0
+free_surface_stab    = 0
 finite_strain           = 1
 
 /**** SETUP-DEPENDANT ****/
 shear_style     = 0
-isperiodic_x    = 0
-ispureshear_ALE = 1
+periodic_x    = 0
+pure_shear_ALE = 1
 EpsBG           = -1.0  / negative for extension
 user0           = 0.5   / layer height
 user1           = 0.2   / spacing

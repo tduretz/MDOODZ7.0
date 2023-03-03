@@ -423,7 +423,7 @@ void ViscosityDerivatives0( grid *mesh, mat_prop *materials, params *model, scal
         if ( mesh->BCp.type[c0] != 30 && mesh->BCp.type[c0] != 31 ) {
             
             //----------------------------------------------------------//
-            if ( model->iselastic==1 ) etae      = model->dt*mesh->mu_n[c0];
+            if ( model->elastic==1 ) etae      = model->dt*mesh->mu_n[c0];
             else                       etae      = 1.0; // set to arbitrary value to avoid division by 0.0
             //----------------------------------------------------------//
             if ( model->anisotropy == 0 ) {
@@ -599,7 +599,7 @@ void ViscosityDerivatives0( grid *mesh, mat_prop *materials, params *model, scal
         if ( mesh->BCg.type[c1] != 30 ) {
 
             //----------------------------------------------------------//
-            if ( model->iselastic==1   ) etae      = model->dt*mesh->mu_s[c1];
+            if ( model->elastic==1   ) etae      = model->dt*mesh->mu_s[c1];
             else           etae      = 1.0; // set to arbitrary value to avoid division by 0.0
             //----------------------------------------------------------//
             if ( model->anisotropy == 0 ) {
@@ -806,7 +806,7 @@ void ViscosityDerivatives( grid *mesh, mat_prop *materials, params *model, scale
         if ( mesh->BCp.type[c0] != 30 && mesh->BCp.type[c0] != 31 ) {
             
             //----------------------------------------------------------//
-            if ( model->iselastic==1 ) etae      = model->dt*mesh->mu_n[c0];
+            if ( model->elastic==1 ) etae      = model->dt*mesh->mu_n[c0];
             else                       etae      = 1.0; // set to arbitrary value to avoid division by 0.0
             //----------------------------------------------------------//
             if ( model->anisotropy == 0 ) {
@@ -884,7 +884,7 @@ void ViscosityDerivatives( grid *mesh, mat_prop *materials, params *model, scale
         if ( mesh->BCg.type[c1] != 30 ) {
 
             //----------------------------------------------------------//
-            if ( model->iselastic==1   ) etae      = model->dt*mesh->mu_s[c1];
+            if ( model->elastic==1   ) etae      = model->dt*mesh->mu_s[c1];
             else           etae      = 1.0; // set to arbitrary value to avoid division by 0.0
             //----------------------------------------------------------//
             if ( model->anisotropy == 0 ) {

@@ -33,11 +33,11 @@ typedef struct {
   ETA_AVG eta_avg;
   int     itp_stencil;
   double  nexp_radial_basis;
-  int     ismechanical, isperiodic_x, isinertial, iselastic, isnonnewtonian,
-          isthermal, ispureshear_ale, free_surf, write_markers, write_debug;
-  double free_surf_stab;
-  int    dt_constant, RK, line_search, thermal_eq, subgrid_diff, adiab_heat,
-          shear_heat, advection, finite_strain, conserv_interp;
+  int     mechanical, periodic_x, elastic, isnonnewtonian,
+          thermal, pure_shear_ALE, free_surface, write_markers, write_debug;
+  double free_surface_stab;
+  int    constant_dt, RK, line_search, initial_cooling, subgrid_diffusion, adiab_heating,
+          shear_heating, advection, finite_strain, conserv_interp;
   int surface_processes, loc_iter, thermal_perturb, surf_ised1,
           surf_ised2, MantleID, topografix, reseed_markers, smooth_softening;
   double EpsBG, DivBG, user0, user1, user2, user3, user4, user5, user6, user7,
@@ -48,7 +48,7 @@ typedef struct {
   int    ncont;
   double Courant, mineta, maxeta;
   // Particles
-  int    initial_noise, initial_part;
+  int    initial_noise;
   // Linear solver
   int    lsolver, diag_scaling, pc_type;
   double penalty, abs_tol_div, rel_tol_div, abs_tol_mom, rel_tol_mom, auto_penalty, compressible,
@@ -63,7 +63,7 @@ typedef struct {
   double surf_diff, surf_sedirate, surf_baselev, surf_Winc, surf_Vinc;
   // Initial thermal perturbation
   double therm_pert_x0, therm_pert_z0, therm_pert_dT, therm_pert_rad,
-          cooling_time;
+          cooling_duration;
   // For rheological database...
   int      force_act_vol_ast;
   double   act_vol_dis_ast, act_vol_dif_ast;
@@ -86,7 +86,6 @@ typedef struct {
   int      progress_transform, no_return, density_change, unsplit_diff_reac, kinetics;
   // Anisotropy
   int      anisotropy, oop, noise_bg; //aniso_fstrain
-  int      eqn_state;
   int      residual_form;
   int      irestart, istep;
   int      writer, writerStep;
@@ -190,7 +189,7 @@ typedef enum {
   S,
   W,
   E,
-  FREE_SURFACE
+  free_surfaceACE
 } POSITION;
 
 typedef struct {

@@ -671,12 +671,12 @@ void AssignMarkerProperties (markers* particles, int new_ind, int min_index, par
         particles->noise[new_ind]         = particles->noise[min_index];   // to be changed
     }
     else {
-        particles->d[new_ind]             = Centers2Particle( particles, mesh->d_n,     mesh->xvz_coord, mesh->zvx_coord, mesh->Nx-1, mesh->Nz-1, mesh->BCp.type, mesh->dx, mesh->dz, new_ind, model->isperiodic_x );
-        particles->T[new_ind]             = Centers2Particle( particles, mesh->T,     mesh->xvz_coord, mesh->zvx_coord, mesh->Nx-1, mesh->Nz-1, mesh->BCp.type, mesh->dx, mesh->dz, new_ind, model->isperiodic_x );
-        particles->P[new_ind]             = Centers2Particle( particles, mesh->p_in,  mesh->xvz_coord, mesh->zvx_coord, mesh->Nx-1, mesh->Nz-1, mesh->BCp.type, mesh->dx, mesh->dz, new_ind, model->isperiodic_x );
-        particles->phi[new_ind]           = Centers2Particle( particles, mesh->phi_n,     mesh->xvz_coord, mesh->zvx_coord, mesh->Nx-1, mesh->Nz-1, mesh->BCp.type, mesh->dx, mesh->dz, new_ind, model->isperiodic_x );
-        particles->X[new_ind]             = Centers2Particle( particles, mesh->X_n,  mesh->xvz_coord, mesh->zvx_coord, mesh->Nx-1, mesh->Nz-1, mesh->BCp.type, mesh->dx, mesh->dz, new_ind, model->isperiodic_x );
-        particles->noise[new_ind]             = Centers2Particle( particles, mesh->noise_n,  mesh->xvz_coord, mesh->zvx_coord, mesh->Nx-1, mesh->Nz-1, mesh->BCp.type, mesh->dx, mesh->dz, new_ind, model->isperiodic_x );
+        particles->d[new_ind]             = Centers2Particle( particles, mesh->d_n,     mesh->xvz_coord, mesh->zvx_coord, mesh->Nx-1, mesh->Nz-1, mesh->BCp.type, mesh->dx, mesh->dz, new_ind, model->periodic_x );
+        particles->T[new_ind]             = Centers2Particle( particles, mesh->T,     mesh->xvz_coord, mesh->zvx_coord, mesh->Nx-1, mesh->Nz-1, mesh->BCp.type, mesh->dx, mesh->dz, new_ind, model->periodic_x );
+        particles->P[new_ind]             = Centers2Particle( particles, mesh->p_in,  mesh->xvz_coord, mesh->zvx_coord, mesh->Nx-1, mesh->Nz-1, mesh->BCp.type, mesh->dx, mesh->dz, new_ind, model->periodic_x );
+        particles->phi[new_ind]           = Centers2Particle( particles, mesh->phi_n,     mesh->xvz_coord, mesh->zvx_coord, mesh->Nx-1, mesh->Nz-1, mesh->BCp.type, mesh->dx, mesh->dz, new_ind, model->periodic_x );
+        particles->X[new_ind]             = Centers2Particle( particles, mesh->X_n,  mesh->xvz_coord, mesh->zvx_coord, mesh->Nx-1, mesh->Nz-1, mesh->BCp.type, mesh->dx, mesh->dz, new_ind, model->periodic_x );
+        particles->noise[new_ind]             = Centers2Particle( particles, mesh->noise_n,  mesh->xvz_coord, mesh->zvx_coord, mesh->Nx-1, mesh->Nz-1, mesh->BCp.type, mesh->dx, mesh->dz, new_ind, model->periodic_x );
 
     }
 
@@ -688,10 +688,10 @@ void AssignMarkerProperties (markers* particles, int new_ind, int min_index, par
         particles->sxz[new_ind]           = particles->sxz[min_index];
     }
     else {
-        particles->sxxd[new_ind]          = Centers2Particle( particles, mesh->sxxd,     mesh->xvz_coord, mesh->zvx_coord, mesh->Nx-1, mesh->Nz-1, mesh->BCp.type, mesh->dx, mesh->dz, new_ind, model->isperiodic_x );
-        particles->szzd[new_ind]          = Centers2Particle( particles, mesh->szzd,     mesh->xvz_coord, mesh->zvx_coord, mesh->Nx-1, mesh->Nz-1, mesh->BCp.type, mesh->dx, mesh->dz, new_ind, model->isperiodic_x );
+        particles->sxxd[new_ind]          = Centers2Particle( particles, mesh->sxxd,     mesh->xvz_coord, mesh->zvx_coord, mesh->Nx-1, mesh->Nz-1, mesh->BCp.type, mesh->dx, mesh->dz, new_ind, model->periodic_x );
+        particles->szzd[new_ind]          = Centers2Particle( particles, mesh->szzd,     mesh->xvz_coord, mesh->zvx_coord, mesh->Nx-1, mesh->Nz-1, mesh->BCp.type, mesh->dx, mesh->dz, new_ind, model->periodic_x );
         particles->sxz[new_ind]           = Vertices2Particle( particles, mesh->sxz,     mesh->xg_coord,  mesh->zg_coord,  mesh->Nx-0, mesh->Nz-0, mesh->BCg.type, mesh->dx, mesh->dz, new_ind );
-//        particles->sxz[new_ind]          = Centers2Particle( particles, mesh->sxz_n,     mesh->xvz_coord, mesh->zvx_coord, mesh->Nx-1, mesh->Nz-1, mesh->BCp.type, mesh->dx, mesh->dz, new_ind, model->isperiodic_x );
+//        particles->sxz[new_ind]          = Centers2Particle( particles, mesh->sxz_n,     mesh->xvz_coord, mesh->zvx_coord, mesh->Nx-1, mesh->Nz-1, mesh->BCp.type, mesh->dx, mesh->dz, new_ind, model->periodic_x );
     }
     particles->dsxxd[new_ind]         = particles->dsxxd[min_index];
     particles->dszzd[new_ind]         = particles->dszzd[min_index];
@@ -1001,7 +1001,7 @@ void AddPartCell2( int *pidx, int *Nb_part_thread, markers *particles, grid mesh
             new_x = xg[0] + ic*mesh.dx/2.0 + mesh.dx/4.0;
             new_z = zg[0] + jc*mesh.dz/2.0 + mesh.dz/4.0;
 
-            if ( model.free_surf==1 ) {
+            if ( model.free_surface==1 ) {
 //                h0    =  topo.a0[cell]*new_x      + topo.b0[cell];
                 h     =  topo.a[cell]*new_x      +  topo.b[cell];
                 h_ini =  topo_ini.a[cell]*new_x  +  topo_ini.b[cell];
@@ -1060,7 +1060,7 @@ void AddPartVert( markers *particles, grid mesh, int ic, int jc, int* ind_list, 
         //        cell = ceil((distance/model.dx)+0.5) - 1;
         //        if (cell<0) cell = 0;
         //        if (cell>mesh.Nx[0]-2) cell = mesh.Nx[0]-2;
-        if ( model.free_surf==1 ) h  = topo.a[cell]*new_x  + topo.b[cell];
+        if ( model.free_surface==1 ) h  = topo.a[cell]*new_x  + topo.b[cell];
 
 
         if ( new_x > model.xmin && new_z > model.zmin && new_z<h   ) {
@@ -1084,7 +1084,7 @@ void AddPartVert( markers *particles, grid mesh, int ic, int jc, int* ind_list, 
         // Get the particle index
         new_x = mesh.xg_coord[ic] + mesh.dx/3.0;
         new_z = mesh.zg_coord[jc] - mesh.dz/3.0;
-        if ( model.free_surf==1 ) h  = topo.a[cell]*new_x  + topo.b[cell];
+        if ( model.free_surface==1 ) h  = topo.a[cell]*new_x  + topo.b[cell];
 
         if ( new_x < model.xmax && new_z > model.zmin && new_z<h   ) {
 
@@ -1106,7 +1106,7 @@ void AddPartVert( markers *particles, grid mesh, int ic, int jc, int* ind_list, 
         // Get the particle index
         new_x = mesh.xg_coord[ic] - mesh.dx/3.0;
         new_z = mesh.zg_coord[jc] + mesh.dz/3.0;
-        if ( model.free_surf==1 ) h  = topo.a[cell]*new_x  + topo.b[cell];
+        if ( model.free_surface==1 ) h  = topo.a[cell]*new_x  + topo.b[cell];
 
         if ( new_z < model.zmax && new_x > model.xmin && new_z<h  ) {
 
@@ -1128,7 +1128,7 @@ void AddPartVert( markers *particles, grid mesh, int ic, int jc, int* ind_list, 
         // Get the particle index
         new_x = mesh.xg_coord[ic] + mesh.dx/3.0;
         new_z = mesh.zg_coord[jc] + mesh.dz/3.0;
-        if ( model.free_surf==1 ) h  = topo.a[cell]*new_x  + topo.b[cell];
+        if ( model.free_surface==1 ) h  = topo.a[cell]*new_x  + topo.b[cell];
 
 
         if ( new_z < model.zmax && new_x < model.xmax && new_z<h ) {
@@ -1174,14 +1174,14 @@ void PutPartInBox( markers *particles, grid *mesh, params model, surface topo, s
     for (j=0; j<mesh->Nx-1; j++) {
         for (i=0; i<mesh->Nz-1; i++) {
             
-            if (model.free_surf == 1) {
+            if (model.free_surface == 1) {
                 a = topo.a[j];
                 b = topo.b[j];
             }
             for (kj=0; kj<particles->Nx_part; kj++) {
                 for (ki=0; ki<particles->Nz_part; ki++) {
                     
-                    if (model.free_surf == 1) {
+                    if (model.free_surface == 1) {
                         
 //                        coord_x = mesh->xg_coord[j] + dx_particles*kj + dx_particles;
 //                        coord_z = mesh->zg_coord[i] + dz_particles*ki + dz_particles;
@@ -1212,7 +1212,7 @@ void PutPartInBox( markers *particles, grid *mesh, params model, surface topo, s
                         }
                     }
                     
-                    if (model.free_surf == 0) {
+                    if (model.free_surface == 0) {
 //                        coord_x = mesh->xg_coord[j] + dx_particles*kj + dx_particles;
 //                        coord_z = mesh->zg_coord[i] + dz_particles*ki + dz_particles;
                         
@@ -1302,7 +1302,7 @@ void Interp_G2P ( markers *particles, DoodzFP* mat_prop, grid *mesh, double* Mar
     double **Wm, **BmWm;
     double nexp = model->nexp_radial_basis, w;
     double sig  = sqrt( dx*dx + dz*dz )*2.0;
-    int    periodix = model->isperiodic_x;
+    int    periodix = model->periodic_x;
     
     int vertx = 0, vertz = 0;
     if (Nz==mesh->Nx) vertx = 1;
@@ -1542,7 +1542,7 @@ void Interp_P2G ( markers *particles, DoodzFP* mat_prop, grid *mesh, double* Nod
     double **Wm, **BmWm;
     double nexp = model->nexp_radial_basis, w;
     double sig  = sqrt( dx*dx + dz*dz )*2.0;
-    int    periodix = model->isperiodic_x;
+    int    periodix = model->periodic_x;
     
     int vertx = 0, vertz = 0;
     if (Nz==mesh->Nx) vertx = 1;
@@ -1920,7 +1920,7 @@ firstprivate ( dx, dz, Nb_part, Nx, Nz, X_vect, Z_vect  ) //schedule( static )
 
     // Periodic
     double av;
-    if (model->isperiodic_x==1) {
+    if (model->periodic_x==1) {
         for( l=0; l<Nz; l++) {
             c1 = l*Nx + Nx-1;
             av = 0.5*(NodeField[c1] + NodeField[l*Nx]);
@@ -2224,7 +2224,7 @@ firstprivate ( mat_prop, dx, dz, Nb_part, Nx, Nz, mesh, flag, itp_type )  //sche
 //    // Periodic - only for grid values
 //    double av;
 //    int l, c1;
-//    if (model->isperiodic_x==1 && (model->Nx-Nx==0) ) {
+//    if (model->periodic_x==1 && (model->Nx-Nx==0) ) {
 //        for( l=0; l<Nz; l++) {
 //            c1 = l*Nx + Nx-1;
 //            av = 0.5*(NodeField[c1] + NodeField[l*Nx]);
@@ -2378,7 +2378,7 @@ firstprivate ( dx, dz, Nb_part, Nx, Nz ) //schedule( dynamic )
     // Periodic - only for grid values
     double av;
     int l, c1;
-    if (model->isperiodic_x==1 ) {
+    if (model->periodic_x==1 ) {
         for( l=0; l<Nz; l++) {
             c1 = l*Nx + Nx-1;
             av = 0.5*(NodeField[c1] + NodeField[l*Nx]);
@@ -2445,7 +2445,7 @@ void Interp_Grid2P ( markers particles, DoodzFP* PartField, grid *mesh, double* 
     int  Nb_part;
     double distance, sumW;
     int periodix = 1;
-//    int periodix = model->isperiodic_x;
+//    int periodix = model->periodic_x;
 
     Nb_part=particles.Nb_part;
     double Xp, Lx = mesh->xg_coord[mesh->Nx-1] - mesh->xg_coord[0];
@@ -2617,7 +2617,7 @@ void Interp_Grid2P_centroids2 ( markers particles, DoodzFP* PartField, grid *mes
     double dx,dz,dxm,dzm;
     int  Nb_part;
     double distance, sumW;
-    int periodix = model->isperiodic_x;
+    int periodix = model->periodic_x;
 
     Nb_part=particles.Nb_part;
     double Xp, Lx = mesh->xg_coord[mesh->Nx-1] - mesh->xg_coord[0];
@@ -3034,7 +3034,7 @@ void Interp_Phase2VizGrid ( markers particles, int* PartField, grid *mesh, char*
     if (ic>ncx-1) ic = ncx-1;
 
     // Compute topography
-//    if ( model.free_surf == 1 ) h = topo.b[ic] + topo.a[ic]*particles.x[k];
+//    if ( model.free_surface == 1 ) h = topo.b[ic] + topo.a[ic]*particles.x[k];
 
     for (k=0;k<Nb_part;k++) {
 
@@ -3414,7 +3414,7 @@ void P2Mastah ( params *model, markers particles, DoodzFP* mat_prop, grid *mesh,
 
                     // E
                     peri = 0;
-                    if (ip==Nx-1 && model->isperiodic_x==1) peri = 1;
+                    if (ip==Nx-1 && model->periodic_x==1) peri = 1;
 
                     if ( ip<Nx-1 || peri==1 ){
                         kp  = ip + jp*Nx + (1.0-peri)*1 - peri*(Nx-1);
@@ -3427,7 +3427,7 @@ void P2Mastah ( params *model, markers particles, DoodzFP* mat_prop, grid *mesh,
 
                     // W
                     peri = 0;
-                    if (ip==0 && model->isperiodic_x==1) peri = 1;
+                    if (ip==0 && model->periodic_x==1) peri = 1;
 
                     if ( ip>0 || peri==1 ){
                         kp  = ip + jp*Nx - (1.0-peri)*1 + peri*(Nx-1);
@@ -3442,7 +3442,7 @@ void P2Mastah ( params *model, markers particles, DoodzFP* mat_prop, grid *mesh,
                     
                     // SW
                     peri = 0;
-                    if (ip==0 && model->isperiodic_x==1) peri = 1;
+                    if (ip==0 && model->periodic_x==1) peri = 1;
 
                     if ( jp>0 && (ip>0 || peri==1) ){
                         kp = ip + (jp-1)*Nx - (1.0-peri)*1 + peri*(Nx-1);
@@ -3455,7 +3455,7 @@ void P2Mastah ( params *model, markers particles, DoodzFP* mat_prop, grid *mesh,
 
                     // NW
                     peri = 0;
-                    if (ip==0 && model->isperiodic_x==1) peri = 1;
+                    if (ip==0 && model->periodic_x==1) peri = 1;
 
                     if ( jp<Nz-1 && (ip>0 || peri==1) ){
                         kp = ip + (jp+1)*Nx - (1.0-peri)*1 + peri*(Nx-1);
@@ -3468,7 +3468,7 @@ void P2Mastah ( params *model, markers particles, DoodzFP* mat_prop, grid *mesh,
 
                     // NE
                     peri = 0;
-                    if (ip==Nx-1 && model->isperiodic_x==1) peri = 1;
+                    if (ip==Nx-1 && model->periodic_x==1) peri = 1;
 
                     if ( jp<Nz-1 && (ip<Nx-1 || peri==1) ){
                         kp = ip + (jp+1)*Nx + (1.0-peri)*1 - peri*(Nx-1);
@@ -3481,7 +3481,7 @@ void P2Mastah ( params *model, markers particles, DoodzFP* mat_prop, grid *mesh,
 
                     // SE
                     peri = 0;
-                    if (ip==Nx-1 && model->isperiodic_x==1) peri = 1;
+                    if (ip==Nx-1 && model->periodic_x==1) peri = 1;
 
                     if ( jp>0 && (ip<Nx-1 || peri==1) ){
                         kp = ip + (jp-1)*Nx + (1.0-peri)*1 - peri*(Nx-1);
@@ -3985,7 +3985,7 @@ void CountPartCell ( markers* particles, grid *mesh, params model, surface topo,
                         mpc[ith][kc]++;
 
                         // Periodic
-                        if (model.isperiodic_x == 1 ) {
+                        if (model.periodic_x == 1 ) {
 
                             // Count particles from East side to West side of first thread
                             if (ic==2*(ncx_e[ith]+0)-1 && ith==0) {
@@ -4052,7 +4052,7 @@ void CountPartCell ( markers* particles, grid *mesh, params model, surface topo,
 
 
                     // Periodic
-                    if (model.isperiodic_x == 1 ) {
+                    if (model.periodic_x == 1 ) {
 
                         // Count particles from East side to West side of first thread
                         if (ic==2*(ncx_e[ith]+0)-1 && ith==0) {
@@ -4396,7 +4396,7 @@ void CountPartCell ( markers* particles, grid *mesh, params model, surface topo,
     // Periodic - only for grid values
     double av;
     int c1;
-    if (model.isperiodic_x==1 && (model.Nx-Nx==0) ) {
+    if (model.periodic_x==1 && (model.Nx-Nx==0) ) {
         for (ip=0;ip<model.Nb_phases;ip++) {
             for( l=0; l<Nz; l++) {
                 c1 = l*Nx + Nx-1;
