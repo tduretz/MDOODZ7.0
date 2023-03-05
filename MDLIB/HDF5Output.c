@@ -709,15 +709,21 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
     AddFieldToGroup( FileName, "Model", "Params"   , 'd', 8,  A, 1 );
 
     // Add time series
-    AddFieldToGroup(  FileName, "TimeSeries", "Time_time" ,     'd', model.Nt+1,  mesh->Time_time,      1 );
-    AddFieldToGroup(  FileName, "TimeSeries", "Short_time" ,    'd', model.Nt+1,  mesh->Short_time,     1 );
-    AddFieldToGroup(  FileName, "TimeSeries", "Work_time" ,     'd', model.Nt+1,  mesh->Work_time,      1 );
-    AddFieldToGroup(  FileName, "TimeSeries", "Uthermal_time" , 'd', model.Nt+1,  mesh->Uthermal_time,  1 );
-    AddFieldToGroup(  FileName, "TimeSeries", "Uelastic_time" , 'd', model.Nt+1,  mesh->Uelastic_time,  1 );
-    AddFieldToGroup(  FileName, "TimeSeries", "T_mean_time" ,   'd', model.Nt+1,  mesh->T_mean_time,    1 );
-    AddFieldToGroup(  FileName, "TimeSeries", "P_mean_time" ,   'd', model.Nt+1,  mesh->P_mean_time,    1 );
-    AddFieldToGroup(  FileName, "TimeSeries", "Tii_mean_time" , 'd', model.Nt+1,  mesh->Tii_mean_time,  1 );
-    AddFieldToGroup(  FileName, "TimeSeries", "Eii_mean_time" , 'd', model.Nt+1,  mesh->Eii_mean_time,  1 );
+    AddFieldToGroup(  FileName, "TimeSeries", "Time_time"      , 'd', model.Nt+1,  mesh->Time_time      , 1 );
+    AddFieldToGroup(  FileName, "TimeSeries", "Short_time"     , 'd', model.Nt+1,  mesh->Short_time     , 1 );
+    AddFieldToGroup(  FileName, "TimeSeries", "Work_time"      , 'd', model.Nt+1,  mesh->Work_time      , 1 );
+    AddFieldToGroup(  FileName, "TimeSeries", "Uthermal_time"  , 'd', model.Nt+1,  mesh->Uthermal_time  , 1 );
+    AddFieldToGroup(  FileName, "TimeSeries", "Uelastic_time"  , 'd', model.Nt+1,  mesh->Uelastic_time  , 1 );
+    AddFieldToGroup(  FileName, "TimeSeries", "T_mean_time"    , 'd', model.Nt+1,  mesh->T_mean_time    , 1 );
+    AddFieldToGroup(  FileName, "TimeSeries", "P_mean_time"    , 'd', model.Nt+1,  mesh->P_mean_time    , 1 );
+    AddFieldToGroup(  FileName, "TimeSeries", "sxxd_mean_time" , 'd', model.Nt+1,  mesh->sxxd_mean_time , 1 );
+    AddFieldToGroup(  FileName, "TimeSeries", "szzd_mean_time" , 'd', model.Nt+1,  mesh->szzd_mean_time , 1 );
+    AddFieldToGroup(  FileName, "TimeSeries", "sxz_mean_time"  , 'd', model.Nt+1,  mesh->sxz_mean_time  , 1 );
+    AddFieldToGroup(  FileName, "TimeSeries", "Tii_mean_time"  , 'd', model.Nt+1,  mesh->Tii_mean_time  , 1 );
+    AddFieldToGroup(  FileName, "TimeSeries", "exxd_mean_time" , 'd', model.Nt+1,  mesh->exxd_mean_time , 1 );
+    AddFieldToGroup(  FileName, "TimeSeries", "ezzd_mean_time" , 'd', model.Nt+1,  mesh->ezzd_mean_time , 1 );
+    AddFieldToGroup(  FileName, "TimeSeries", "exz_mean_time"  , 'd', model.Nt+1,  mesh->exz_mean_time  , 1 );
+    AddFieldToGroup(  FileName, "TimeSeries", "Eii_mean_time"  , 'd', model.Nt+1,  mesh->Eii_mean_time  , 1 );
 
 
     // Grid coordinate arrays
