@@ -110,6 +110,7 @@ npwl = 0.0
 Qpwl = 0
 ani_fstrain  = 1     / activates finite strain anisotropy
 ani_fac_v    = 1.0
+ani_fac_max  = 1.5
 
 /**** PHASE 2 ****/
 ID   = 1
