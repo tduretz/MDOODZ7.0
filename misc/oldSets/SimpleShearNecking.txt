@@ -28,37 +28,37 @@ zmax =  0.5000000e3
 dt   = 1.2623e11
 dt_min  = 1e-6  
 Courant = 0.3
-lsolver      = 0
+lin_solver      = 0
 penalty      = 1e3
 diag_scaling = 1
-itp_stencil  = 9
+interp_stencil  = 9
 
 /**** SWITCHES ****/
-ismechanical    = 1
-dt_constant     = 0
+mechanical    = 1
+constant_dt     = 0
 RK              = 4
-isperiodic_x    = 1
-ispureshear_ALE = 0
-isinertial      = 0
-iselastic       = 1
-isthermal       = 1
+periodic_x    = 1
+pure_shear_ALE = 0
+
+elastic       = 1
+thermal       = 1
 line_search     = 0
-free_surf       = 0
-free_surf_stab  = 0
-eqn_state       = 0
-thermal_eq      = 0
-subgrid_diff    = 0
-shear_heat      = 1
-adiab_heat      = 1
+free_surface       = 0
+free_surface_stab  = 0
+
+initial_cooling      = 0
+subgrid_diffusion    = 0
+shear_heating      = 1
+adiab_heating      = 1
 isPl_soft       = 0
-surf_processes  = 0
+surface_processes  = 0
 initial_noise   = 0
 IncrementalUpdateGrid = 0
  
 /**** SETUP DEPENDANT ****/
 shear_style     = 1
-EpsBG           = 1e-15 /Background strain rate
-PrBG            = 1.4e9 /Background P
+bkg_strain_rate           = 1e-15 /Background strain rate
+bkg_pressure            = 1.4e9 /Background P
 surf_diff       = 0
 user0           = 0
 user1           = 2e2   /Inclusion radius
@@ -77,7 +77,7 @@ Nb_phases = 4
 
 ID   = 0
 rho  = 2800.00 /inclusions
-mu   = 1e10
+G   = 1e10
 Cv   = 1050
 k    = 2.3
 Qr   = 0
@@ -99,7 +99,7 @@ Qpwl = 0
 
 ID   = 1
 rho  = 2800.00 /inclusions 
-mu   = 1e10
+G   = 1e10
 Cv   = 1050
 k    = 2.3
 Qr   = 0
@@ -121,7 +121,7 @@ Qpwl = 0
 
 ID   = 2
 rho  = 3300.00 /matrix 
-mu   = 1e10
+G   = 1e10
 Cv   = 1050
 k    = 3.0
 Qr   = 0
@@ -143,7 +143,7 @@ Qpwl = 0
 
 ID   = 3
 rho  = 3300.00 /matrix 
-mu   = 1e10
+G   = 1e10
 Cv   = 1050
 k    = 3.0
 Qr   = 0
@@ -186,5 +186,5 @@ Newton  = 0
 nit_max = 1
 tol_u   = 5e-8
 tol_p   = 5e-8
-mineta  = 1e17
-maxeta  = 1e25
+min_eta  = 1e17
+max_eta  = 1e25

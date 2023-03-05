@@ -1,4 +1,4 @@
-
+% ffmpeg -r 12 -f image2 -i %*.png -c:v libx264 -r 30 -pix_fmt yuv420p NR0-f image2 -i %*.png -c:v libx264 -r 30 -pix_fmt yuv420p NR02.mp42.mp4
 function Main
 
 clear
@@ -7,6 +7,7 @@ clc
 path = '~/REPO_GIT/MDOODZ7.0/MDLIB/MLPS_run_ani/';
 path = '~/REPO_GIT/MDOODZ7.0/MDLIB//';
 path = '~/REPO_GIT/MDOODZ7.0/RUNS/NR02_Newt/';
+path = '/Volumes/Blackie/NeckingReview/NR08_650/';
 
 cd(path)
 DEBUG       = 0;
@@ -16,9 +17,9 @@ Hc_ini = 35;
 Hl_ini = 125;
 
 % Files
-istart = 1750;
+istart = 750;
 ijump  = 10;
-iend   = 1750;
+iend   = 750;
 
 %--------------------------------------------------
 % what do you want to plot:
@@ -32,7 +33,7 @@ vel_vectors     = 0;
 vel_divergence  = 0;
 pre_plot        = 0;
 dyna_pre        = 0;
-stress_inv      = 1;
+stress_inv      = 0;
 stress_evol     = 0;
 stress_plot     = 0;
 srate_plot      = 0;
@@ -62,8 +63,8 @@ X_plot          = 0;
 srate_ratio     = 0;
 TminusT0        = 0;
 emergency_benoit = 0;
-fstrain          = 0;
-shear_heating    = 0;
+finite_strain          = 0;
+shear_heatinging    = 0;
 princi_stress    = 0;
 director_vector  = 0;
 Pl_soft          = 0;
@@ -150,10 +151,10 @@ maxSii = 250e6;
 % Size of the window
 crop       = 0;
 
-lim.xmin   = -4;
-lim.xmax   =  4;
-lim.zmin   = -4;
-lim.zmax   =  1;
+lim.xmin   = -100;
+lim.xmax   =  150;
+lim.zmin   = -100;
+lim.zmax   =  10;
 
 % In order to calculate lithostatic pressure
 gz = -9.81;
@@ -253,14 +254,22 @@ elseif strcmp(color_map, 'geoffroy_ast3') == 1
         200 143 124]./255;
 elseif strcmp(color_map, 'geoffroy_ast4') == 1
     map = [        255           255           255
-        200 143 124; % 0
-         75,158,237; % 1
+        247 207 190; % 0
+        135,192,218; % 1
         165 227 173; % 2
         213 228 209; % 3
-        247 207 190; % 0 4
+        200 143 124; % 0 4
          90,105,243; % 1 5
-        29,190, 33;  % 2 6
-        200 143 124]./255;
+        29,190, 33; % 2 6
+
+        221, 150, 112; % 7
+                229, 46, 50; % 8
+        213, 228, 209; % 9
+        65, 144, 120; % 10
+        220, 222, 184; % 11
+         241, 204, 97; % 12
+    ]
+    map = map./255;  
 elseif strcmp(color_map, 'JPB') == 1
     map = [        255           255           255
         105 194 239;
@@ -657,19 +666,22 @@ for istep=istart:ijump:iend
                 itop    = find(VizGrid.ph(:,ix)==2 | VizGrid.ph(:,ix)==(2+4), 1, 'last'  );
                 dH      = (zc_plot(itop)-zc_plot(ibot))*1000;
                 PSm(ix) = (z0(itop,ix)-z0(ibot,ix))/dH; 
-                SSm(ix) = (x0(itop,ix)-x0(ibot,ix))/dH; 
+%                 SSm(ix) = (x0(itop,ix)-x0(ibot,ix))/dH; 
+                SSm(ix) = dH/(x0(itop,ix)-x0(ibot,ix)); 
                 
                 ibot    = find(VizGrid.ph(:,ix)==0 | VizGrid.ph(:,ix)==(0+4), 1, 'first'  );
                 itop    = find(VizGrid.ph(:,ix)==0 | VizGrid.ph(:,ix)==(0+4), 1, 'last'  );
                 dH      = (zc_plot(itop)-zc_plot(ibot))*1000;
                 PSuc(ix) = (z0(itop,ix)-z0(ibot,ix))/dH; 
-                SSuc(ix) = (x0(itop,ix)-x0(ibot,ix))/dH; 
+%                 SSuc(ix) = (x0(itop,ix)-x0(ibot,ix))/dH;
+                SSuc(ix) = dH/(x0(itop,ix)-x0(ibot,ix));
                 
                 ibot    = find(VizGrid.ph(:,ix)==1 | VizGrid.ph(:,ix)==(1+4), 1, 'first'  );
                 itop    = find(VizGrid.ph(:,ix)==1 | VizGrid.ph(:,ix)==(1+4), 1, 'last'  );
                 dH      = (zc_plot(itop)-zc_plot(ibot))*1000;
                 PSlc(ix) = (z0(itop,ix)-z0(ibot,ix))/dH; 
-                SSlc(ix) = (x0(itop,ix)-x0(ibot,ix))/dH;
+%                 SSlc(ix) = (x0(itop,ix)-x0(ibot,ix))/dH;
+                SSlc(ix) = dH/(x0(itop,ix)-x0(ibot,ix));
                
                 
             end
@@ -682,9 +694,9 @@ for istep=istart:ijump:iend
 
             
             subplot(212), hold on
-            plot(VizGrid.x_plot, atand(SSuc))
-            plot(VizGrid.x_plot, atand(SSlc))
-            plot(VizGrid.x_plot, atand(SSm))
+            plot(VizGrid.x_plot, 90 - atand(abs(SSuc)))
+            plot(VizGrid.x_plot, 90 - atand(abs(SSlc)))
+            plot(VizGrid.x_plot, 90 - atand(abs(SSm)))
             legend('Upper crust', 'Lower crust', 'Mantle' )
             title('Simple shear')
 
@@ -736,9 +748,12 @@ for istep=istart:ijump:iend
             eII_el = reshape(eII_el,params(4)-1,params(5)-1)';
             
             eII_pwl = hdf5read(filename,'/Centers/eII_pwl');
-%             eII_pwl = hdf5read(filename,'/Centers/strain_pwl');
             eII_pwl = cast(eII_pwl , 'double');
             eII_pwl = reshape(eII_pwl,params(4)-1,params(5)-1)';
+            
+            eII_exp = hdf5read(filename,'/Centers/eII_exp');
+            eII_exp = cast(eII_exp , 'double');
+            eII_exp = reshape(eII_exp,params(4)-1,params(5)-1)';
             
             BDc     = zeros(size(eII_pl,2),1);
             BDuc    = zeros(size(eII_pl,2),1);
@@ -749,9 +764,48 @@ for istep=istart:ijump:iend
             
             % Elasto-plastic VS viscous
             BD = (eII_pl > eII_pwl) | (eII_el > eII_pwl);
+%             BD(T>1373) = 0;
+
+            Ela =  (eII_el > eII_pwl) & (eII_el > eII_pl);
+            Pla =  (eII_pl > eII_pwl) & (eII_pl > eII_el);
+            Vis =  (eII_pwl > eII_pl) & (eII_pwl > eII_el);
 %             % Plastic VS visco-elastic
 %             BD = (eII_pl > eII_pwl) | (eII_pl > eII_el);
             VizGrid = PhaseMap( filename, VizGrid );
+            
+            % Elasto-plastic behaviour on the fine mesh
+            BD_hr = zeros(size(VizGrid.ph_hr));
+            Ela_hr = zeros(size(VizGrid.ph_hr));
+            Pla_hr = zeros(size(VizGrid.ph_hr));
+            Vis_hr = zeros(size(VizGrid.ph_hr));
+            
+            ix_LR = 0;
+            
+            for ix= 1:2:size(BD_hr,2)-1
+                ix_LR = ix_LR+1;
+                iy_LR = 0;
+
+                for iy= 1:2:size(BD_hr,1)-2
+                    iy_LR = iy_LR+1;
+                    BD_hr(iy,ix)     = BD(iy_LR,ix_LR);
+                    BD_hr(iy,ix+1)   = BD(iy_LR,ix_LR);
+                    BD_hr(iy+1,ix)   = BD(iy_LR,ix_LR);
+                    BD_hr(iy+1,ix+1) = BD(iy_LR,ix_LR);
+                    
+                    Ela_hr(iy,ix)     = Ela(iy_LR,ix_LR);
+                    Ela_hr(iy,ix+1)   = Ela(iy_LR,ix_LR);
+                    Ela_hr(iy+1,ix)   = Ela(iy_LR,ix_LR);
+                    Ela_hr(iy+1,ix+1) = Ela(iy_LR,ix_LR);
+                    Pla_hr(iy,ix)     = Pla(iy_LR,ix_LR);
+                    Pla_hr(iy,ix+1)   = Pla(iy_LR,ix_LR);
+                    Pla_hr(iy+1,ix)   = Pla(iy_LR,ix_LR);
+                    Pla_hr(iy+1,ix+1) = Pla(iy_LR,ix_LR);
+                    Vis_hr(iy,ix)     = Vis(iy_LR,ix_LR);
+                    Vis_hr(iy,ix+1)   = Vis(iy_LR,ix_LR);
+                    Vis_hr(iy+1,ix)   = Vis(iy_LR,ix_LR);
+                    Vis_hr(iy+1,ix+1) = Vis(iy_LR,ix_LR);
+                end
+            end
             
             
             for ix = 1:size(VizGrid.ph,2)
@@ -759,8 +813,7 @@ for istep=istart:ijump:iend
                 all  = sum( VizGrid.ph(:,ix)==2 | VizGrid.ph(:,ix)==(2+4) );
                 brit = sum( VizGrid.ph(:,ix)==2 | VizGrid.ph(:,ix)==(2+4) & BD(:,ix)==1 );
                 BDm(ix) = brit/all; 
-                
-                
+
                 all_lc  = sum( VizGrid.ph(:,ix)==1 | VizGrid.ph(:,ix)==(1+4) );
                 brit_lc = sum( VizGrid.ph(:,ix)==1 | VizGrid.ph(:,ix)==(1+4) & BD(:,ix)==1 );
                 
@@ -777,9 +830,28 @@ for istep=istart:ijump:iend
             %%%%%%%%%%%%%
             hold on
             
+            % Delete passive UC/LC boundary
+            VizGrid.ph_hr(VizGrid.ph_hr==1) = 0;
+            VizGrid.ph_hr(VizGrid.ph_hr==5) = 4;
+            VizGrid.ph_hr(VizGrid.ph_hr==3) = 2;
+            
+            % Draw boundary based on E-P
+            VizGrid.ph_hr(VizGrid.ph_hr==0 & Ela_hr==1) = 1;
+            VizGrid.ph_hr(VizGrid.ph_hr==4 & Ela_hr==1) = 5;
+            VizGrid.ph_hr(VizGrid.ph_hr==0 & Pla_hr==1) = 7;
+            VizGrid.ph_hr(VizGrid.ph_hr==4 & Pla_hr==1) = 8;
+            
+            VizGrid.ph_hr(VizGrid.ph_hr==2 & Vis_hr==1) = 9;
+            VizGrid.ph_hr(VizGrid.ph_hr==6 & Vis_hr==1) = 10;
+            VizGrid.ph_hr(VizGrid.ph_hr==2 & Pla_hr==1) = 11;
+            VizGrid.ph_hr(VizGrid.ph_hr==6 & Pla_hr==1) = 12;
+            
             clf
             colormap(map);
-            imagesc(VizGrid.x_plot_hr, VizGrid.z_plot_hr, VizGrid.ph_hr);
+            imagesc(VizGrid.x_plot_hr, VizGrid.z_plot_hr, VizGrid.ph_hr, 'AlphaData', .8);
+%              imagesc(VizGrid.x_plot_hr, VizGrid.z_plot_hr, BD_hr);
+%              imagesc(VizGrid.x_plot, VizGrid.z_plot, BD);
+
             set(gca,'Ydir','Normal')
             shading interp, caxis ([-1 size(map,1)-2])%, axis ij
             axis image
@@ -788,10 +860,13 @@ for istep=istart:ijump:iend
             
             % Isotherms
             hold on
-            v = 200:200:2000;
-            [c, h] = contour(VizGrid.x_plot, VizGrid.z_plot, T-273, v);
-            set(h, 'Color', 'w', 'LineWidth', 1.0);
+            v = 200:300:2000;
+            [c, h] = contour(VizGrid.x_plot, VizGrid.z_plot, T-273, v, 'w');
+            set(h, 'LineWidth', 0.5);
             hold off
+            
+                        if Ccontours == 1; AddCompoContours( filename, VizGrid, crop, lim  ); end
+
             
             colorbar('Location', 'SouthOutside')
             xlabel(xLabel, 'FontSize', Ftsz), ylabel(zLabel, 'FontSize', Ftsz)
@@ -808,9 +883,9 @@ for istep=istart:ijump:iend
             
             if printfig == 1
                 if crop == 1
-                    print([path, './Fig_Phases/Crop_PhasesGrid', num2str(istep,'%05d'),file_suffix], format, res)
+                    print([path, './Fig_Phases/Crop_PhasesGrid_EP', num2str(istep,'%05d'),file_suffix], format, res)
                 else
-                    print([path, './Fig_Phases/Fig_PhasesGrid', num2str(istep,'%05d'),file_suffix], format, res)
+                    print([path, './Fig_Phases/Fig_PhasesGrid_EP', num2str(istep,'%05d'),file_suffix], format, res)
                 end
                 close all
             end
@@ -2676,7 +2751,7 @@ for istep=istart:ijump:iend
                 %         xlabel(xLabel), ylabel(zLabel);
                 %         axis xy image, colorbar;
                 %         if crop == 1 xlim([lim.xmin lim.xmax]); ylim([lim.zmin lim.zmax]); end
-                %         if exist('minEta', 'var') caxis([minEta maxEta]); end
+                %         if exist('min_eta', 'var') caxis([min_eta max_eta]); end
                 
                 % eII
                 subplot(3,1,2),
@@ -3433,7 +3508,7 @@ for istep=istart:ijump:iend
             
             xlabel(xLabel), ylabel(zLabel);
             if crop == 1 xlim([lim.xmin lim.xmax]); ylim([lim.zmin lim.zmax]); end
-            if exist('minEta', 'var') caxis([minEta maxEta]); end
+            if exist('min_eta', 'var') caxis([min_eta max_eta]); end
             drawnow
             
             if printfig == 1
@@ -4103,7 +4178,7 @@ for istep=istart:ijump:iend
             % %         title('log Diss [MPa/s]', 'FontSize', 12, 'FontName', 'Myriad pro')
             %         title('log Diss [Pa/s]', 'FontSize', 12, 'FontName', 'Myriad pro')
             %
-            % %         ylabel('ln D [\mu m]','FontName', 'Myriad pro')
+            % %         ylabel('ln D [\G m]','FontName', 'Myriad pro')
             %         ylabel(' D [\mum]','FontName', 'Myriad pro')
             %
             % %         xlabel('1/T*10^{3} [K]','FontName', 'Myriad pro')
@@ -4599,7 +4674,7 @@ for istep=istart:ijump:iend
             %         save('Yoann_VP_initial', 'zc_plot', 'P', 'T', 'eta', 'sII')
         end
         
-        if shear_heating==1
+        if shear_heatinging==1
             
             sxxd  = hdf5read(filename,'/Centers/sxxd'); sxxd = cast(sxxd, 'double');
             sxz   = hdf5read(filename,'/Vertices/sxz'); sxz  = cast(sxz, 'double');
@@ -4857,7 +4932,7 @@ for istep=istart:ijump:iend
         %--------------------------------------------------
         % plot finite strain
         %--------------------------------------------------
-        if ( fstrain == 1 )
+        if ( finite_strain == 1 )
             
             Fxx  = hdf5read(filename,'/Centers/Fxx'); Fxx = cast(Fxx, 'double');
             Fxx = (reshape(Fxx,params(4)-1,params(5)-1)');

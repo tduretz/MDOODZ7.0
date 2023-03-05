@@ -34,7 +34,13 @@ double SetTemperature(MdoodzInput *input, Coordinates coordinates) {
 
 double SetDensity(MdoodzInput *input, Coordinates coordinates, int phase) {
   const double TPart = SetTemperature(input, coordinates);
-  if (input->model.eqn_state == 1) {
+  /* Hi Roman, there is an awkward 1==0 below. In fact the global switch `eqn_state` was never used.
+  Density is computed interally and the type of equation of state depends on the phase.
+  To update density on particles one may use the function:
+  EvaluateDensity( phase_ID, T, P, X,  model, materials );  where X is likely 0.0 in most cases (it's a depletion amount)
+  --> Consequence: SetDensity() should be aware `of materials`
+  */
+  if ( 1==0 ) {
     return input->materials.rho[phase] * (1 - input->materials.alp[phase] * (TPart - input->materials.T0[phase]));
   } else {
     return input->materials.rho[phase];
@@ -44,7 +50,7 @@ double SetDensity(MdoodzInput *input, Coordinates coordinates, int phase) {
 SetBC SetBCT(MdoodzInput *instance, POSITION position, double particleTemperature) {
   SetBC  bc;
   double surfaceTemperature = zeroC / instance->scaling.T;
-  if (position == FREE_SURFACE) {
+  if (position == free_surfaceACE) {
     bc.value = surfaceTemperature;
     bc.type  = 1;
   } else {

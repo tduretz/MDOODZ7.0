@@ -107,7 +107,7 @@ void SetBCs_freeSlipBox( grid *mesh, params *model, scale scaling, markers* part
                     }
                     else {
                         mesh->BCu.type[c] = 0;
-                        mesh->BCu.val[c]  = -X[k]*model->EpsBG;//0.0;
+                        mesh->BCu.val[c]  = -X[k]*model->bkg_strain_rate;//0.0;
                     }
                 }
                 
@@ -120,7 +120,7 @@ void SetBCs_freeSlipBox( grid *mesh, params *model, scale scaling, markers* part
                     }
                     else {
                         mesh->BCu.type[c] = 0;
-                        mesh->BCu.val[c]  = -X[k]*model->EpsBG;//0.0;
+                        mesh->BCu.val[c]  = -X[k]*model->bkg_strain_rate;//0.0;
                     }
                 }
                 
@@ -167,13 +167,13 @@ void SetBCs_freeSlipBox( grid *mesh, params *model, scale scaling, markers* part
                 // Matching BC nodes SOUTH
                 if (l==0  && k>0 && k<mesh->Nx) {
                     mesh->BCv.type[c] = 0;
-                    mesh->BCv.val[c]  = Z[l]*model->EpsBG;//0.0;
+                    mesh->BCv.val[c]  = Z[l]*model->bkg_strain_rate;//0.0;
                 }
                 
                 // Matching BC nodes NORTH
                 if (l==mesh->Nz-1  && k>0 && k<mesh->Nx) {
                     mesh->BCv.type[c] = 0;
-                    mesh->BCv.val[c]  = Z[l]*model->EpsBG;//0.0;
+                    mesh->BCv.val[c]  = Z[l]*model->bkg_strain_rate;//0.0;
                 }
                 
                 // Non-matching boundary points

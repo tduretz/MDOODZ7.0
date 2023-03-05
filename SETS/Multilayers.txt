@@ -8,7 +8,7 @@ writer_step     = 10
 writer_markers  = 0
 writer_debug    = 0
 writer_energies = 0
-GNUplot_residuals = 0
+gnuplot_log_res = 0
 
 /**** SCALES ****/
 eta = 1
@@ -30,7 +30,7 @@ Nx_part = 4
 Nz_part = 4
 
 /**** TIME ****/
-dt_constant = 0
+constant_dt = 0
 advection   = 1
 Courant     = 0.3
 dt          = 0.5
@@ -39,12 +39,12 @@ RK          = 4
 /**** LINEAR SOLVER ****/
 noisy        = 1
 penalty      = 1e5
-lsolver      = -1
+lin_solver      = -1
 diag_scaling = 0
-abs_tol_div  = 1e-9
-rel_tol_div  = 1e-9
-abs_tol_mom  = 1e-11
-rel_tol_mom  = 1e-11
+lin_abs_div  = 1e-9
+lin_rel_div  = 1e-9
+lin_abs_mom  = 1e-11
+lin_rel_mom  = 1e-11
 
 
 /**** NON-LINEAR SOLVER ****/
@@ -52,29 +52,29 @@ Newton      = 0    / set to 1 only for accurate/production runs
 line_search = 0    / same
 nit_max     = 1    / more than 1 for accurate/production runs
 rel_tol_KSP = 1e-4
-abs_tol_u   = 1e-9
-rel_tol_u   = 1e-9
-abs_tol_p   = 1e-9
-rel_tol_p   = 1e-9
+nonlin_abs_mom   = 1e-9
+nonlin_rel_mom   = 1e-9
+nonlin_abs_div   = 1e-9
+nonlin_rel_div   = 1e-9
 
 /**** VISCOSITY CUT-OFF ****/
-mineta      = 1e-3
-maxeta      = 1e6
-itp_stencil = 9
-eta_avg     = 1
+min_eta      = 1e-3
+max_eta      = 1e6
+interp_stencil = 9
+eta_average     = 1
 
 /**** SWITCHES ****/
-aniso             = 0
-iselastic         = 0
-free_surf         = 0
-free_surf_stab    = 0
-fstrain           = 1
+anisotropy             = 0
+elastic         = 0
+free_surface         = 0
+free_surface_stab    = 0
+finite_strain           = 1
 
 /**** SETUP-DEPENDANT ****/
 shear_style     = 0
-isperiodic_x    = 0
-ispureshear_ALE = 1
-EpsBG           = -1.0  / negative for extension
+periodic_x    = 0
+pure_shear_ALE = 1
+bkg_strain_rate           = -1.0  / negative for extension
 user0           = 0.5   / layer height
 user1           = 0.2   / spacing
 user2           = 5     / number of layers
@@ -89,7 +89,7 @@ Nb_phases = 2
 /**** PHASE 1 ****/
 ID   = 0
 rho  = 2700.00 / matrix
-mu   = 1
+G   = 1
 Cv   = 1050
 k    = 2.5
 Qr   = 0
@@ -114,7 +114,7 @@ ani_fac_e = 1.0
 /**** PHASE 2 ****/
 ID   = 1
 rho  = 2700.00 / inclusion
-mu   = 1
+G   = 1
 Cv   = 1050
 k    = 2.5
 Qr   = 0

@@ -1,0 +1,171 @@
+\documentclass{article}
+\usepackage{graphicx} % Required for inserting images
+\usepackage{amsmath}
+
+\begin{document}
+
+
+    \section{Kinematic flow}
+
+    \subsection{Kinematic flow description}
+    \subsubsection{Pure Shear}
+
+    \begin{equation}
+    {\epsilon_{xx} = \frac{\partial V_x}{\partial x} = \frac{\Delta V_x}{\Delta x}
+        = \frac{-V_{x}^{BC} - V_{x}^{BC}}{\Delta x} =\frac{ -2V_{x}^{BC}}{\Delta x}}
+    \end{equation}
+    \begin{equation}
+        \epsilon_{yy} = \frac{\partial V_y}{\partial y} = \frac{\Delta V_y}{\Delta y}
+        = \frac{V_{y}^{BC} + V_{y}^{BC}}{\Delta y} =\frac{ 2V_{y}^{BC}}{\Delta y}
+    \end{equation}
+    \begin{minipage}{0.4\textwidth}
+        \begin{equation}
+            \epsilon_{xy} = \frac{0 - 0}{\partial y} = 0
+        \end{equation}
+    \end{minipage}
+    \begin{minipage}{0.4\textwidth}
+        \begin{equation}
+            \epsilon_{xy} = \frac{V_{y} - V_{y}}{\partial x} = 0
+        \end{equation}
+    \end{minipage}
+
+    \begin{minipage}{0.4\textwidth}
+        \begin{equation}
+            V_{x} = -\epsilon \partial yx
+        \end{equation}
+    \end{minipage}
+    \begin{minipage}{0.4\textwidth}
+        \begin{equation}
+            V_{y} = -\epsilon \partial yy
+        \end{equation}
+    \end{minipage}
+
+    \begin{minipage}{0.4\textwidth}
+        \begin{equation}
+            \frac{\partial V_x}{\partial x} = -\epsilon \partial y
+        \end{equation}
+    \end{minipage}
+
+    \begin{minipage}{0.4\textwidth}
+        \begin{equation}
+            \frac{\partial V_y}{\partial y} = -\epsilon \partial x
+        \end{equation}
+    \end{minipage}
+
+
+    \subsubsection{Simple Shear}
+
+    If Simple Shear is horizontal, then $V_y=0$ and $\partial V_x = -\epsilon \partial y$
+
+    \begin{equation}
+    {\epsilon_{xx} = \frac{\partial V_x}{\partial x} = \frac{\Delta V_x}{\Delta x}
+        = \frac{V_{x}^{E} - V_{x}^{W}}{\Delta x} =0}
+    \end{equation}
+
+    \begin{equation}
+    {\epsilon_{yy} = \frac{\Delta V_y}{\Delta y} = 0 }
+    \end{equation}
+
+    \begin{equation}
+    {\epsilon_{xy} = \frac{\Delta V_x}{\Delta y} = \frac{V_{x}^{W} + V_{x}^{S}}{\Delta y} = \frac{2V_{x}^{W}}{\Delta y}}
+    \end{equation}
+
+    \subsubsection{Horisontal Tension}
+
+    $V_y=0$ and $\partial V_x = -\epsilon \partial x$
+
+    \begin{equation}
+    {\epsilon_{xx} = \frac{V_{x}^{E} - V_{x}^{W}}{\Delta x} =\frac{2V_{x}}{\Delta x}}
+    \end{equation}
+
+    \begin{equation}
+    {\epsilon_{yy} = \frac{\Delta V_y}{\Delta y} = 0 }
+    \end{equation}
+
+    \begin{equation}
+    {\epsilon_{xy} = \frac{V_{x}^{E} + V_{x}^{W}}{\Delta y} = 0 }
+    \end{equation}
+
+    \subsection{Divergence}
+
+    For 2D kinematic flow Divergence is defined by:
+
+    \begin{equation}
+        \nabla \cdot \vec{V} = \begin{bmatrix} \frac{\partial}{\partial x} && \frac{\partial}{\partial y} \end{bmatrix} \cdot \begin{bmatrix} Vx \\ Vy \end{bmatrix} = \frac{\partial V_x}{\partial x} + \frac{\partial V_y}{\partial y}
+    \end{equation}
+
+    Velocity gradient tensor is defined by:
+
+    \begin{equation}
+        Vx \cdot \vec{V} = \begin{bmatrix}\frac{\partial}{\partial x} \\ \frac{\partial}{\partial y} \end{bmatrix} \cdot \begin{bmatrix} Vx && Vy \end{bmatrix} =
+        \begin{bmatrix} \frac{\partial Vx}{\partial x} && \frac{\partial Vy}{\partial x}
+        \\ \frac{\partial Vx}{\partial y} && \frac{\partial Vy}{\partial y} \end{bmatrix}
+    \end{equation}
+
+    and it is not symmetrical, to make it symmetrical we use linear algebra law to get a total strain rate:
+
+    $$
+    A \rightarrow  A_{sym} \frac{1}{2}(A + A')
+    $$
+
+    \begin{equation}
+        \frac{1}{2} \begin{bmatrix} \frac{\partial Vx}{\partial x} + \frac{\partial Vx}{\partial x} && \frac{\partial Vy}{\partial x} + \frac{\partial Vy}{\partial y}
+        \\ \frac{\partial Vy}{\partial y} + \frac{\partial Vy}{\partial x} && \frac{\partial Vy}{\partial x} + \frac{\partial Vy}{\partial y} \end{bmatrix} = \dot{\epsilon}_{ij} = \begin{bmatrix} \epsilon_{xx} && \epsilon_{xy} \\ \epsilon_{yx} && \epsilon_{xy} \end{bmatrix}
+    \end{equation}
+
+    Strain rate is deviatoric  if $\nabla_{v} = 0$ and volumetric when $\nabla_{v} \neq 0$:
+
+    \\ \\
+
+    Deviatoric strain rate:
+
+    \begin{equation}
+        \epsilon_{xx} + \epsilon_{yy} = 0
+    \end{equation}
+
+    \begin{equation}
+        \epsilon ' _{ij} = \epsilon_{ij} - \frac{1}{2} \nabla ' V \partial_{ij}
+    \end{equation}
+
+    \begin{equation}
+        \partial_{ij} = \begin{bmatrix}
+                            1 && 0 \\ 0 && 1
+        \end{bmatrix}
+    \end{equation}
+
+    Volumetric stain rate:
+
+    $ \nabla ' V$ - is divergence
+    \begin{equation}
+        \frac{\partial Vx}{\partial x} + \frac{\partial Vy}{\partial y} = \nabla ' V
+    \end{equation}
+
+    \begin{equation}
+        \epsilon_{xx} + \epsilon_{yy} = \nabla  V
+    \end{equation}
+
+    \subsection{Strain rate}
+
+    To calculate total strain rate we calculate deviatoric strain rate:
+
+    \begin{equation}
+        \epsilon_{ij} =
+        \begin{bmatrix}
+            \frac{\partial Vx}{\partial x} && \frac{1}{2}(\frac{\partial Vx}{\partial y} + \frac{\partial Vy}{\partial x}) \\
+            \frac{1}{2}(\frac{\partial Vx}{\partial x} + \frac{\partial Vy}{\partial y}) && \frac{\partial Vy}{\partial y}
+        \end{bmatrix}
+    \end{equation}
+
+    then we calculate the divergence:
+
+    \begin{equation}
+        \frac{1}{2}(\frac{2V}{2}) \nabla ' v = \frac{\partial Vx}{Vx} + \frac{2Vy}{\partial y}
+    \end{equation}
+
+    and afterwards using total strain rate definition in equation 19:
+
+    \begin{equation}
+        \epsilon ' _{ij} = \frac{1}{2}(\frac{\partial Vx}{\partial y} + \frac{\partial Vy}{\partial x})\frac{\partial Vy}{\partial y} - \frac{1}{2}(\frac{\partial Vx}{\partial x} - \frac{2Vy}{\partial y})
+    \end{equation}
+
+\end{document}

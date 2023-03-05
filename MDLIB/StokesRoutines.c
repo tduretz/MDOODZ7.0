@@ -75,7 +75,7 @@ void RheologicalOperators( grid* mesh, params* model, mat_prop* materials, scale
         double ani_vep  = 1.;
         double aniS_vep = 0.;
         //----------------------------------------------------------//
-        if ( model->aniso == 0 ) {
+        if ( model->anisotropy == 0 ) {
           aniS_vep = 0.0; d1   = 0.0; d2   = 0.0;
         }
         else {
@@ -114,7 +114,7 @@ void RheologicalOperators( grid* mesh, params* model, mat_prop* materials, scale
         double ani_vep  = 1.;
         double aniS_vep = 0.;
         //----------------------------------------------------------//
-        if ( model->aniso == 0 ) {
+        if ( model->anisotropy == 0 ) {
          aniS_vep = 0.0; d1   = 0.; d2   = 0.;
         }
         else {
@@ -153,12 +153,12 @@ void RheologicalOperators( grid* mesh, params* model, mat_prop* materials, scale
         double ani_vep  = 1., ani_e  = 1., ani_fstrain = 1.;
         double aniS_vep = 0., aniS_e = 0.;
         //----------------------------------------------------------//
-        if ( model->iselastic==1 ) eta_e = model->dt*mesh->mu_n[k];
+        if ( model->elastic==1 ) eta_e = model->dt*mesh->mu_n[k];
         else                       eta_e = 1.; // set to arbitrary value to avoid division by 0.0
         if ( comp==1 )             K     = 1./mesh->bet_n[k];
         else                       K     = 0.;
         //----------------------------------------------------------//
-        if ( model->aniso == 0 ) {
+        if ( model->anisotropy == 0 ) {
           aniS_e = 0.; aniS_vep = 0.0; d1   = 0.0; d2   = 0.0; angle = 0.; lxlz = 0.; lx2 = 0.;
         }
         else {
@@ -176,7 +176,8 @@ void RheologicalOperators( grid* mesh, params* model, mat_prop* materials, scale
           lx2     = cos(lay_ang)*cos(lay_ang);
         }
         //----------------------------------------------------------//
-        EffectiveStrainRate( &Exx, &Ezz, &Exz, mesh->exxd[k], mesh->ezzd[k], mesh->exz_n[k], mesh->sxxd0[k], mesh->szzd0[k], mesh->sxz0_n[k], d1, d2, aniS_e, eta_e, model->iselastic ); 
+        // Exx = mesh->exxd[k]; Ezz = mesh->ezzd[k]; Exz = mesh->exz_n[k];
+        EffectiveStrainRate( &Exx, &Ezz, &Exz, mesh->exxd[k], mesh->ezzd[k], mesh->exz_n[k], mesh->sxxd0[k], mesh->szzd0[k], mesh->sxz0_n[k], d1, d2, aniS_e, eta_e, model->elastic ); 
         const double e_a2 = eta_vep/(ani_vep*ani_vep);      
         const double Gxz = 2.0*Exz;
         const double Dxx = Exx*(1.0 - aniS_vep*d1) + Ezz*aniS_vep*d1 - Gxz*aniS_vep*d2;
@@ -221,10 +222,10 @@ void RheologicalOperators( grid* mesh, params* model, mat_prop* materials, scale
         double ani_vep  = 1., ani_e  = 1., ani_fstrain = 1.;
         double aniS_vep = 0., aniS_e = 0.;
         //----------------------------------------------------------//
-        if ( model->iselastic==1 ) eta_e = model->dt*mesh->mu_s[k];
+        if ( model->elastic==1 ) eta_e = model->dt*mesh->mu_s[k];
         else                       eta_e = 1.; // set to arbitrary value to avoid division by 0.0
         //----------------------------------------------------------//
-        if ( model->aniso == 0 ) {
+        if ( model->anisotropy == 0 ) {
           aniS_e = 0.; aniS_vep = 0.0; d1   = 0.; d2   = 0.;
         }
         else {
@@ -242,7 +243,7 @@ void RheologicalOperators( grid* mesh, params* model, mat_prop* materials, scale
           lx2     = cos(lay_ang)*cos(lay_ang);
         }
         //----------------------------------------------------------//
-        EffectiveStrainRate( &Exx, &Ezz, &Exz, mesh->exxd_s[k], mesh->ezzd_s[k], mesh->exz[k], mesh->sxxd0_s[k], mesh->szzd0_s[k], mesh->sxz0[k], d1, d2, aniS_e, eta_e, model->iselastic );
+        EffectiveStrainRate( &Exx, &Ezz, &Exz, mesh->exxd_s[k], mesh->ezzd_s[k], mesh->exz[k], mesh->sxxd0_s[k], mesh->szzd0_s[k], mesh->sxz0[k], d1, d2, aniS_e, eta_e, model->elastic );
         // Exx = mesh->exxd_s[k]; Ezz = mesh->ezzd_s[k]; Exz = mesh->exz[k];
         const double e_a2 = eta_vep/(ani_vep*ani_vep);
         const double Gxz  = 2.*Exz;
@@ -401,8 +402,8 @@ void UpdateNonLinearity( grid* mesh, markers* particles, markers* topo_chain, su
     StrainRateComponents( mesh, scaling, model );
 
     // Stress update
-    if (model->aniso==0) NonNewtonianViscosityGrid(      mesh, &materials, model, *Nmodel, &scaling );
-    if (model->aniso==1) NonNewtonianViscosityGridAniso( mesh, &materials, model, *Nmodel, &scaling );
+    if (model->anisotropy==0) NonNewtonianViscosityGrid(      mesh, &materials, model, *Nmodel, &scaling );
+    if (model->anisotropy==1) NonNewtonianViscosityGridAniso( mesh, &materials, model, *Nmodel, &scaling );
 
 
     // MinMaxArrayTag( mesh->T,    scaling.T, (mesh->Nx-1)*(mesh->Nz-1), "T         ", mesh->BCt.type );
@@ -423,10 +424,10 @@ void UpdateNonLinearity( grid* mesh, markers* particles, markers* topo_chain, su
     // MinMaxArrayTag( mesh->rho_n,      scaling.rho, (mesh->Nx-1)*(mesh->Nz-1), "rho_n     ", mesh->BCp.type );
     // MinMaxArrayTag( mesh->rho0_n,     scaling.rho, (mesh->Nx-1)*(mesh->Nz-1), "rho0_n    ", mesh->BCp.type );
     // MinMaxArrayTag( mesh->d_n,        scaling.L,   (mesh->Nx-1)*(mesh->Nz-1), "d         ", mesh->BCp.type );
-    // if (model->aniso==1) MinMaxArrayTag( mesh->aniso_factor_n,  1.0,   (mesh->Nx-1)*(mesh->Nz-1), "ani_fac_n ",   mesh->BCp.type );
-    // if (model->aniso==1) MinMaxArrayTag( mesh->aniso_factor_s,  1.0,   (mesh->Nx-0)*(mesh->Nz-0), "ani_fac_s ",   mesh->BCg.type );
-    // if (model->aniso==1) MinMaxArrayTag( mesh->aniso_factor_e_n,  1.0, (mesh->Nx-1)*(mesh->Nz-1), "ani_fac_e_n ", mesh->BCp.type );
-    // if (model->aniso==1) MinMaxArrayTag( mesh->aniso_factor_e_s,  1.0, (mesh->Nx-0)*(mesh->Nz-0), "ani_fac_e_s ", mesh->BCg.type );
+    // if (model->anisotropy==1) MinMaxArrayTag( mesh->aniso_factor_n,  1.0,   (mesh->Nx-1)*(mesh->Nz-1), "ani_fac_n ",   mesh->BCp.type );
+    // if (model->anisotropy==1) MinMaxArrayTag( mesh->aniso_factor_s,  1.0,   (mesh->Nx-0)*(mesh->Nz-0), "ani_fac_s ",   mesh->BCg.type );
+    // if (model->anisotropy==1) MinMaxArrayTag( mesh->aniso_factor_e_n,  1.0, (mesh->Nx-1)*(mesh->Nz-1), "ani_fac_e_n ", mesh->BCp.type );
+    // if (model->anisotropy==1) MinMaxArrayTag( mesh->aniso_factor_e_s,  1.0, (mesh->Nx-0)*(mesh->Nz-0), "ani_fac_e_s ", mesh->BCg.type );
 
     // Evaluate right hand side
     EvaluateRHS( mesh, *model, scaling, materials.rho[0] );
@@ -503,166 +504,6 @@ void ExtractSolutions2( SparseMat *Stokes, grid* mesh, params* model, double* dx
 
     // Apply Bc to Vx and Vz
     ApplyBC( mesh, model );
-}
-
-/*--------------------------------------------------------------------------------------------------------------------*/
-/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
-/*--------------------------------------------------------------------------------------------------------------------*/
-
-double LineSearch( SparseMat *Stokes, double *dx, grid* mesh, params *model, Nparams* Nmodel, markers* particles, markers *topo_chain, surface *topo, mat_prop materials, scale scaling ) {
-
-    printf("---- Line search for Stokes equations ----\n");
-
-    int ix, kk, k, cc;
-    int nx= model->Nx, nz=model->Nz, ncx=nx-1, ncz=nz-1, nzvx=nz+1, nxvz=nx+1;
-    double *rx, *rz, *rp, alpha, *alphav, dalpha, minx;
-    double *u, *v, *p;
-    Nparams residuals;
-    clock_t  t_omp;
-    int success = 0, niter=0, nitermax=1;
-    double minalpha[nitermax], maxalpha[nitermax], frac = 1.0;
-    int ntry[nitermax];
-
-    Nmodel->stagnated = 0;
-
-    ntry[0]     = 6;
-    minalpha[0] = -2.5;
-    maxalpha[0] = -0.0;
-
-    //    ntry[0]     = 11;
-    //    minalpha[0] = -2.25;
-    //    maxalpha[0] = -0.25;
-
-    //    ntry[0]     = 1;
-    //    minalpha[0] = -1.0;
-    //    maxalpha[0] = -1.0;
-
-    t_omp = (double)omp_get_wtime();
-
-    // Allocate
-    u          = DoodzMalloc( nx*nzvx*sizeof(double) );
-    v          = DoodzMalloc( nxvz*nz*sizeof(double) );
-    p          = DoodzMalloc( ncx*ncz*sizeof(double) );
-
-    // Save initial fields (before updates)
-    ArrayEqualArray( u, mesh->u_in, nx*nzvx );
-    ArrayEqualArray( v, mesh->v_in, nxvz*nz );
-    ArrayEqualArray( p, mesh->p_in, ncx*ncz );
-
-    // Do line search iterations
-    while ( success == 0 && niter < nitermax ) {
-
-        // allocate array
-        alphav = DoodzMalloc( ntry[niter]*sizeof(double) );
-        rx     = DoodzMalloc( ntry[niter]*sizeof(double) );
-        rz     = DoodzMalloc( ntry[niter]*sizeof(double) );
-        rp     = DoodzMalloc( ntry[niter]*sizeof(double) );
-
-        alpha    = maxalpha[niter];
-        dalpha   = fabs(maxalpha[niter]-minalpha[niter])/(ntry[niter]-1);
-
-        // Search for optimal relaxation parameters
-        for( kk=0; kk<ntry[niter]; kk++ ) {
-
-            // Update alpha
-            if (kk>0) alpha -= dalpha;
-            alphav[kk] = alpha;
-
-            // Start from initial solutions
-            ArrayEqualArray( mesh->u_in, u, nx*nzvx );
-            ArrayEqualArray( mesh->v_in, v, nxvz*nz );
-            ArrayEqualArray( mesh->p_in, p, ncx*ncz );
-
-            // Test relaxed u-v-p solutions
-#pragma omp parallel for shared( mesh, dx, Stokes ) private( cc ) firstprivate( alpha, nzvx, nx )
-            for( cc=0; cc<nzvx*nx; cc++) {
-                if ( mesh->BCu.type[cc] != 30 && mesh->BCu.type[cc] != 0 && mesh->BCu.type[cc] != 11 && mesh->BCu.type[cc] != 13 && mesh->BCu.type[cc] != -12  ) {
-                    mesh->u_in[cc] += alpha*dx[Stokes->eqn_u[cc]];
-                }
-            }
-
-#pragma omp parallel for shared( mesh, dx, Stokes ) private( cc ) firstprivate( alpha, nz, nxvz )
-            for( cc=0; cc<nz*nxvz; cc++) {
-                if ( mesh->BCv.type[cc] != 30 && mesh->BCv.type[cc] != 0 && mesh->BCv.type[cc] != 11 && mesh->BCv.type[cc] != 13 && mesh->BCv.type[cc] != -12 ) {
-                    mesh->v_in[cc] += alpha*dx[Stokes->eqn_v[cc]];
-                }
-            }
-
-#pragma omp parallel for shared( mesh, dx, Stokes ) private( cc ) firstprivate( alpha, ncx, ncz )
-            for( cc=0; cc<ncz*ncx; cc++) {
-
-                if ( mesh->BCp.type[cc] != 30 && mesh->BCp.type[cc] != 0  && mesh->BCp.type[cc] != 31 ) {
-                    mesh->p_in[cc] += alpha*dx[Stokes->eqn_p[cc]];
-                }
-            }
-
-            // Apply Bc to Vx and Vz
-            ApplyBC( mesh, model );
-
-            //            Print2DArrayDouble( u,  nx, nzvx, scaling.V );
-            //            Print2DArrayDouble( v,  nxvz, nz, scaling.V );
-            //            Print2DArrayDouble( p,  ncx, ncz, scaling.S );
-
-            //------------------------------------------------------------------------------------------------------
-            // Update non-linearity
-            UpdateNonLinearity( mesh, particles, topo_chain, topo, materials, model, Nmodel, scaling, 0, 1.0 );
-
-            //------------------------------------------------------------------------------------------------------
-
-            // Calculate residual
-//            model->free_surf_stab = 0;
-            EvaluateStokesResidual( Stokes, &residuals, mesh, *model, scaling, 1 );
-//            model->free_surf_stab = dummy;
-
-            rx[kk] = residuals.resx;
-            rz[kk] = residuals.resz;
-            rp[kk] = residuals.resp;
-            printf("\e[1;34mAlpha\e[m = %lf --> rx = %2.4e rz = %2.4e rp = %2.2e\n", alpha, rx[kk]* (scaling.F/pow(scaling.L,3)), rz[kk]* (scaling.F/pow(scaling.L,3)), rp[kk]*scaling.E );
-
-        }
-
-        // Look for the minimum predicted residuals
-        minx  = rz[0];
-        ix = 0;
-        for( k=1; k<ntry[niter]; k++ ) {
-            if(rz[k]<minx) {
-                minx = rz[k];
-                ix = k;
-            }
-        }
-        alpha = alphav[ix];
-
-        // if the minmimun residuals are lower than starting ones, then success
-        if ( rx[ix] < frac*Nmodel->resx_f || rz[ix]<frac*Nmodel->resz_f  ) { //|| rp[ix]<frac*Nmodel->resp
-            success = 1;
-            printf("\e[1;34mPredicted Residuals\e[m : alpha  = %lf --> rx = %2.4e rz = %2.4e rp = %2.4e\n", alphav[ix], rx[ix]* (scaling.F/pow(scaling.L,3)), rz[ix]* (scaling.F/pow(scaling.L,3)), rp[ix]*scaling.E);
-        }
-
-        DoodzFree(rx);
-        DoodzFree(rz);
-        DoodzFree(rp);
-        DoodzFree(alphav);
-        niter++;
-    }
-
-    if ( fabs(alpha)<1e-13 || success == 0 ) {
-        printf( "Found minimum of the function -- iteration cycle stagnates\n...\n" );
-        Nmodel->stagnated = 1;
-        alpha = 1.0;
-    }
-
-    // Reset solutions
-    ArrayEqualArray( mesh->u_in, u, nx*nzvx );
-    ArrayEqualArray( mesh->v_in, v, nxvz*nz );
-    ArrayEqualArray( mesh->p_in, p, ncx*ncz );
-
-    // Free
-    DoodzFree( u );
-    DoodzFree( v );
-    DoodzFree( p );
-    printf("** Line search took = %f sec\n", (double)((double)omp_get_wtime() - t_omp) );
-
-    return alpha;
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
@@ -849,67 +690,19 @@ double LineSearchDecoupled( SparseMat *Stokes, SparseMat *StokesA, SparseMat *St
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-void SolveStokes( SparseMat *Stokes, DirectSolver* PardisoStokes ) {
-
-    printf("---- Solve Stokes ----\n");
-
-    clock_t t_omp;
-
-    // Call direct solver
-    t_omp = (double)omp_get_wtime();
-    DirectStokes( Stokes, PardisoStokes, Stokes->b, Stokes->x );
-    printf("** Time for direct Stokes solver = %lf sec\n", (double)((double)omp_get_wtime() - t_omp));
-}
-
-/*--------------------------------------------------------------------------------------------------------------------*/
-/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
-/*--------------------------------------------------------------------------------------------------------------------*/
-
-void SolveStokesDefect( SparseMat *Stokes, DirectSolver *PardisoStokes, Nparams* Nmodel, grid* mesh, params* model, markers* particles, markers* topo_chain, surface *topo, mat_prop materials, scale scaling ) {
-
-    printf("---- Solve Stokes in defect correction mode ----\n");
-
-    double alpha = -1.0;
-    double *dx;
-    clock_t t_omp;
-
-    dx = DoodzCalloc( Stokes->neq, sizeof(double));
-
-    // Call direct solver
-    t_omp = (double)omp_get_wtime();
-    DirectStokes( Stokes, PardisoStokes, Stokes->F, dx );
-    printf("** Time for direct Stokes solver = %lf sec\n", (double)((double)omp_get_wtime() - t_omp));
-
-    // Line search
-    if ( model->line_search == 1 ) {
-        alpha = LineSearch( Stokes, dx, mesh, model, Nmodel, particles, topo_chain, topo, materials, scaling  );
-    }
-
-    // Return updated solution vector
-    if ( Nmodel->stagnated == 0) {
-        ArrayPlusScalarArray( Stokes->x, alpha, dx, Stokes->neq );
-    }
-
-    DoodzFree(dx);
-}
-
-/*--------------------------------------------------------------------------------------------------------------------*/
-/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
-/*--------------------------------------------------------------------------------------------------------------------*/
-
 void SolveStokesDecoupled( SparseMat *StokesA, SparseMat *StokesB, SparseMat *StokesC, SparseMat *StokesD, SparseMat *Stokes, DirectSolver* PardisoStokes, params model, grid *mesh, scale scaling ) {
 
-    printf("---- Solve Stokes in a decoupled/segregated fashion, lsolver = %d ----\n", model.lsolver);
+    printf("---- Solve Stokes in a decoupled/segregated fashion, lin_solver = %d ----\n", model.lin_solver);
 
     clock_t t_omp;
 
     // Call direct solver
     t_omp = (double)omp_get_wtime();
 
-    if (model.lsolver== 0) DirectStokesDecoupled    ( StokesA, StokesB, StokesC, StokesD, PardisoStokes, StokesA->b, StokesC->b, Stokes->x, model, mesh, scaling, Stokes );
-    if (model.lsolver== 1) KSPStokesDecoupled       ( StokesA, StokesB, StokesC, StokesD, PardisoStokes, StokesA->b, StokesC->b, Stokes->x, model, mesh, scaling, Stokes, Stokes, StokesA, StokesB, StokesC );
-    if (model.lsolver== 2) KillerSolver             ( StokesA, StokesB, StokesC, StokesD, PardisoStokes, StokesA->b, StokesC->b, Stokes->x, model, mesh, scaling, Stokes, Stokes, StokesA, StokesB, StokesC );
-    if (model.lsolver==-1) DirectStokesDecoupledComp( StokesA, StokesB, StokesC, StokesD, PardisoStokes, StokesA->b, StokesC->b, Stokes->x, model, mesh, scaling, Stokes );
+    if (model.lin_solver== 0) DirectStokesDecoupled    ( StokesA, StokesB, StokesC, StokesD, PardisoStokes, StokesA->b, StokesC->b, Stokes->x, model, mesh, scaling, Stokes );
+    if (model.lin_solver== 1) KSPStokesDecoupled       ( StokesA, StokesB, StokesC, StokesD, PardisoStokes, StokesA->b, StokesC->b, Stokes->x, model, mesh, scaling, Stokes, Stokes, StokesA, StokesB, StokesC );
+    if (model.lin_solver== 2) KillerSolver             ( StokesA, StokesB, StokesC, StokesD, PardisoStokes, StokesA->b, StokesC->b, Stokes->x, model, mesh, scaling, Stokes, Stokes, StokesA, StokesB, StokesC );
+    if (model.lin_solver==-1) DirectStokesDecoupledComp( StokesA, StokesB, StokesC, StokesD, PardisoStokes, StokesA->b, StokesC->b, Stokes->x, model, mesh, scaling, Stokes );
 
     ScaleVelocitiesRHSBack(StokesA, StokesD, Stokes->x);
 
@@ -922,17 +715,17 @@ void SolveStokesDecoupled( SparseMat *StokesA, SparseMat *StokesB, SparseMat *St
 
 void SolveStokesDefectDecoupled( SparseMat *StokesA, SparseMat *StokesB, SparseMat *StokesC, SparseMat *StokesD, SparseMat *Stokes, DirectSolver *PardisoStokes, Nparams* Nmodel, grid* mesh, params* model, markers* particles, markers* topo_chain, surface *topo, mat_prop materials, scale scaling, SparseMat *JacobA, SparseMat *JacobB, SparseMat *JacobC ) {
 
-    printf("---- Solve Stokes in a decoupled/segregated fashion and defect correction mode, lsolver = %d ----\n", model->lsolver);
+    printf("---- Solve Stokes in a decoupled/segregated fashion and defect correction mode, lin_solver = %d ----\n", model->lin_solver);
     double alpha = -1.0;
     clock_t t_omp;
     double *dx = DoodzCalloc( Stokes->neq, sizeof(double));
 
     // Call direct solver
     t_omp = (double)omp_get_wtime();
-    if ( model->lsolver == 0 ) DirectStokesDecoupled    ( StokesA, StokesB, StokesC, StokesD, PardisoStokes, StokesA->F, StokesC->F, dx, *model, mesh, scaling, Stokes );
-    if ( model->lsolver == 1 ) KSPStokesDecoupled       ( StokesA, StokesB, StokesC, StokesD, PardisoStokes, StokesA->F, StokesC->F, dx, *model, mesh, scaling, Stokes, Stokes, JacobA, JacobB, JacobC );
-    if ( model->lsolver == 2 ) KillerSolver             ( StokesA, StokesB, StokesC, StokesD, PardisoStokes, StokesA->F, StokesC->F, dx, *model, mesh, scaling, Stokes, Stokes, JacobA, JacobB, JacobC );
-    if ( model->lsolver ==-1 ) DirectStokesDecoupledComp( StokesA, StokesB, StokesC, StokesD, PardisoStokes, StokesA->F, StokesC->F, dx, *model, mesh, scaling, Stokes );
+    if ( model->lin_solver == 0 ) DirectStokesDecoupled    ( StokesA, StokesB, StokesC, StokesD, PardisoStokes, StokesA->F, StokesC->F, dx, *model, mesh, scaling, Stokes );
+    if ( model->lin_solver == 1 ) KSPStokesDecoupled       ( StokesA, StokesB, StokesC, StokesD, PardisoStokes, StokesA->F, StokesC->F, dx, *model, mesh, scaling, Stokes, Stokes, JacobA, JacobB, JacobC );
+    if ( model->lin_solver == 2 ) KillerSolver             ( StokesA, StokesB, StokesC, StokesD, PardisoStokes, StokesA->F, StokesC->F, dx, *model, mesh, scaling, Stokes, Stokes, JacobA, JacobB, JacobC );
+    if ( model->lin_solver ==-1 ) DirectStokesDecoupledComp( StokesA, StokesB, StokesC, StokesD, PardisoStokes, StokesA->F, StokesC->F, dx, *model, mesh, scaling, Stokes );
     printf("** Time for direct Stokes solver = %lf sec\n", (double)((double)omp_get_wtime() - t_omp));
 
     // Scale back veolicities
@@ -951,79 +744,6 @@ void SolveStokesDefectDecoupled( SparseMat *StokesA, SparseMat *StokesB, SparseM
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-void EvaluateStokesResidual( SparseMat *Stokes, Nparams *Nmodel, grid *mesh, params model, scale scaling, int quiet ) {
-
-    int cc, nx=model.Nx, nz=model.Nz, nzvx=nz+1, nxvz=nx+1, ncx=nx-1, ncz=nz-1;
-    double celvol, Area=0.0;
-    int ndofx=0, ndofz=0, ndofp=0;
-
-    celvol = model.dx*model.dz;
-
-    // Residuals
-    double resx = 0.0;
-    double resz = 0.0;
-    double resp = 0.0;
-
-    // Function evaluation
-    BuildStokesOperator( mesh, model, 0, mesh->p_in,  mesh->u_in,  mesh->v_in, Stokes, 0 );
-
-    // Integrate residuals
-#pragma omp parallel for shared( mesh, Stokes ) private( cc ) firstprivate(nx, nzvx ) reduction(+:resx,ndofx)
-    for( cc=0; cc<nzvx*nx; cc++) {
-        if ( mesh->BCu.type[cc] != 0 && mesh->BCu.type[cc] != 30 && mesh->BCu.type[cc] != 11 && mesh->BCu.type[cc] != 13 && mesh->BCu.type[cc] != -12) {
-            ndofx++;
-            resx        += Stokes->F[Stokes->eqn_u[cc]]*Stokes->F[Stokes->eqn_u[cc]];
-            mesh->ru[cc] = Stokes->F[Stokes->eqn_u[cc]];
-        }
-    }
-    Nmodel->resx = resx;
-
-#pragma omp parallel for shared( mesh, Stokes ) private( cc ) firstprivate( nz, nxvz ) reduction(+:resz,ndofz)
-    for( cc=0; cc<nz*nxvz; cc++) {
-        if ( mesh->BCv.type[cc] != 0 && mesh->BCv.type[cc] != 30 && mesh->BCv.type[cc] != 11 && mesh->BCv.type[cc] != 13 && mesh->BCv.type[cc] != -12) {
-            ndofz++;
-            resz        += Stokes->F[Stokes->eqn_v[cc]]*Stokes->F[Stokes->eqn_v[cc]];
-            mesh->rv[cc] = Stokes->F[Stokes->eqn_v[cc]];
-        }
-    }
-    Nmodel->resz = resz;
-
-#pragma omp parallel for shared( mesh, Stokes ) private( cc ) firstprivate( celvol, ncz, ncx ) reduction(+:resp,ndofp,Area)
-    for( cc=0; cc<ncz*ncx; cc++) {
-        if ( mesh->BCp.type[cc] != 0 && mesh->BCp.type[cc] != 30  && mesh->BCp.type[cc] != 31) {
-            ndofp++;
-            Area        += celvol;
-            resp        += Stokes->F[Stokes->eqn_p[cc]]*Stokes->F[Stokes->eqn_p[cc]];
-            mesh->rp[cc] = Stokes->F[Stokes->eqn_p[cc]];
-        }
-    }
-    Nmodel->resp = resp;
-
-    // Sqrt
-    Nmodel->resx =  sqrt(Nmodel->resx/ndofx);
-    Nmodel->resz =  sqrt(Nmodel->resz/ndofz);
-    Nmodel->resp =  sqrt(Nmodel->resp/ndofp);
-
-
-    if ( quiet == 0 ) {
-        printf("Fu = %2.6e\n", Nmodel->resx ); // Units of momentum
-        printf("Fv = %2.6e\n", Nmodel->resz ); // Units of momentum
-        printf("Fp = %2.6e\n", Nmodel->resp ); // Units of velocity gradient
-    }
-
-    if ( isnan(Nmodel->resx) || isnan(Nmodel->resz) || isnan(Nmodel->resp) ) {
-        printf("Fu = %2.6e\n", Nmodel->resx ); // Units of momentum
-        printf("Fv = %2.6e\n", Nmodel->resz ); // Units of momentum
-        printf("Fp = %2.6e\n", Nmodel->resp );// Units of velocity gradient
-        printf("Solve went wrong - Nan residuals...\nExiting...\n");
-        exit(122);
-    }
-}
-
-/*--------------------------------------------------------------------------------------------------------------------*/
-/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
-/*--------------------------------------------------------------------------------------------------------------------*/
-
 void EvaluateStokesResidualDecoupled( SparseMat *Stokes, SparseMat *StokesA, SparseMat *StokesB, SparseMat *StokesC, SparseMat *StokesD, Nparams *Nmodel, grid *mesh, params model, scale scaling, int quiet ) {
 
     int cc, nx=model.Nx, nz=model.Nz, nzvx=nz+1, nxvz=nx+1, ncx=nx-1, ncz=nz-1;
@@ -1036,8 +756,8 @@ void EvaluateStokesResidualDecoupled( SparseMat *Stokes, SparseMat *StokesA, Spa
 
     // Function evaluation
     BuildStokesOperatorDecoupled(   mesh, model, 0, mesh->p_corr, mesh->p_in,  mesh->u_in,  mesh->v_in, Stokes, StokesA, StokesB, StokesC, StokesD, 0 );
-    // if ( model.aniso == 0 ) BuildStokesOperatorDecoupled(   mesh, model, 0, mesh->p_corr, mesh->p_in,  mesh->u_in,  mesh->v_in, Stokes, StokesA, StokesB, StokesC, StokesD, 0 );
-    // if ( model.aniso == 1 ) BuildJacobianOperatorDecoupled( mesh, model, 0, mesh->p_corr, mesh->p_in,  mesh->u_in,  mesh->v_in, Stokes, StokesA, StokesB, StokesC, StokesD, 0 );
+    // if ( model.anisotropy == 0 ) BuildStokesOperatorDecoupled(   mesh, model, 0, mesh->p_corr, mesh->p_in,  mesh->u_in,  mesh->v_in, Stokes, StokesA, StokesB, StokesC, StokesD, 0 );
+    // if ( model.anisotropy == 1 ) BuildJacobianOperatorDecoupled( mesh, model, 0, mesh->p_corr, mesh->p_in,  mesh->u_in,  mesh->v_in, Stokes, StokesA, StokesB, StokesC, StokesD, 0 );
 
     // Integrate residuals
 #pragma omp parallel for shared( mesh, Stokes, StokesA ) private( cc ) firstprivate( nx, nzvx ) reduction(+:resx,ndofx)
@@ -1194,7 +914,7 @@ void EvaluateRHS( grid* mesh, params model, scale scaling, double RHO_REF ) {
                     mesh->roger_x[c]  = - gx * rhoVx;
 
                     // // Elastic force
-                    // if ( model.iselastic == 1 && model.residual_form==0 ) {
+                    // if ( model.elastic == 1 && model.residual_form==0 ) {
                         // Inner nodes
                         // if (k>0 && k<Nx-1) {
                         //     if ( inE ) mesh->roger_x[c]  -= 1.0/dx * ( mesh->eta_n[iPrE] / (mesh->mu_n[iPrE]*model.dt)  * mesh->sxxd0[iPrE] );
@@ -1214,7 +934,7 @@ void EvaluateRHS( grid* mesh, params model, scale scaling, double RHO_REF ) {
     /* Here we calculate the forcing term -rho*gz on the finest grid level */
     /* --------------------------------------------------------------------*/
     
-    double drhodz, om = model.free_surf_stab;
+    double drhodz, om = model.free_surface_stab;
     double Wvalley = model.surf_Winc;
     double Vinc    = -model.surf_Vinc;
 
@@ -1265,7 +985,7 @@ void EvaluateRHS( grid* mesh, params model, scale scaling, double RHO_REF ) {
                     mesh->roger_z[c]  = - gz * rhoVz;
 
 //                    // Additional stabilisation term from surface processes
-//                    if (model.surf_processes >= 1 && ( mesh->BCp.type[iPrS] == 30 || mesh->BCp.type[iPrS] == 31 || mesh->BCp.type[iPrN] == 30 || mesh->BCp.type[iPrN] == 31 ) ) {
+//                    if (model.surface_processes >= 1 && ( mesh->BCp.type[iPrS] == 30 || mesh->BCp.type[iPrS] == 31 || mesh->BCp.type[iPrN] == 30 || mesh->BCp.type[iPrN] == 31 ) ) {
 //                        drhodz = ( mesh->rho_n[iPrN] - mesh->rho_n[iPrS] ) / dz;
 //                        if ( fabs(mesh->xvz_coord[k]) <= 0.5*Wvalley ) {
 //                            mesh->roger_z[c]  += -1.0*om*Vinc*model.dt*gz*drhodz;
@@ -1273,7 +993,7 @@ void EvaluateRHS( grid* mesh, params model, scale scaling, double RHO_REF ) {
 //                    }
                     
                     // // Elastic force
-                    // if  (model.iselastic == 1 && model.residual_form==0 ) {
+                    // if  (model.elastic == 1 && model.residual_form==0 ) {
                         // if ( l>0 && l<Nz-1 ) {
                         //     if ( inN ) mesh->roger_z[c]  -= 1.0/dz * (  mesh->eta_n[iPrN] / (mesh->mu_n[iPrN] *model.dt ) * (mesh->szzd0[iPrN]) );
                         //     if ( inS ) mesh->roger_z[c]  -= 1.0/dz * ( -mesh->eta_n[iPrS] / (mesh->mu_n[iPrS] *model.dt ) * (mesh->szzd0[iPrS]) );
@@ -1310,9 +1030,9 @@ void EvaluateRHS( grid* mesh, params model, scale scaling, double RHO_REF ) {
 
                 if (model.compressible == 1 ) {
                     if (mesh->comp_cells[c] == 1) {
-                        if ( model.dens_var == 0 ) mesh->rhs_p[c] += mesh->p0_n[c]*mesh->bet_n[c]/model.dt;
-                        if ( model.dens_var == 1 ) mesh->rhs_p[c] += log(mesh->rho0_n[c])/model.dt;
-                        if (model.adiab_heat > 0 ) {
+                        if ( model.density_variations == 0 ) mesh->rhs_p[c] += mesh->p0_n[c]*mesh->bet_n[c]/model.dt;
+                        if ( model.density_variations == 1 ) mesh->rhs_p[c] += log(mesh->rho0_n[c])/model.dt;
+                        if (model.adiab_heating > 0 ) {
                             mesh->rhs_p[c] += mesh->divth0_n[c];
                         }
                     }

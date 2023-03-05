@@ -10,7 +10,7 @@
 // address Williams comments
 typedef enum { ARITHMETIC = 0,
                HARMONIC   = 1,
-               GEOMETRIC  = 2 } ETA_AVG;
+               GEOMETRIC  = 2 } eta_average;
 
 // Tensor 2D
 typedef struct {
@@ -30,40 +30,40 @@ typedef struct {
   double  xmin0, zmin0, xmax0, zmax0;
   double  gx, gz;
   int     Nx, Nz, Nt, step, nit, Newton, noisy;
-  ETA_AVG eta_avg;
-  int     itp_stencil;
+  eta_average eta_average;
+  int     interp_stencil;
   double  nexp_radial_basis;
-  int     ismechanical, isperiodic_x, isinertial, iselastic, isnonnewtonian,
-          isthermal, ispureshear_ale, free_surf, write_markers, write_debug;
-  double free_surf_stab;
-  int    dt_constant, RK, line_search, thermal_eq, subgrid_diff, adiab_heat,
-          shear_heat, advection, fstrain, ConservInterp;
-  int surf_processes, cpc, surf_remesh, loc_iter, therm_pert, surf_ised1,
-          surf_ised2, MantleID, topografix, Reseed, SmoothSoftening;
-  double EpsBG, DivBG, user0, user1, user2, user3, user4, user5, user6, user7,
+  int     mechanical, periodic_x, elastic, isnonnewtonian,
+          thermal, pure_shear_ALE, free_surface, write_markers, write_debug;
+  double free_surface_stab;
+  int    constant_dt, RK, line_search, initial_cooling, subgrid_diffusion, adiab_heating,
+          shear_heating, advection, finite_strain, conserv_interp;
+  int surface_processes, loc_iter, therm_perturb, surf_ised1,
+          surf_ised2, MantleID, topografix, reseed_markers, smooth_softening;
+  double bkg_strain_rate, bkg_div_rate, user0, user1, user2, user3, user4, user5, user6, user7,
           user8;
   char  *import_file;
   char  *import_files_dir;
   int    Nb_phases;
   int    ncont;
-  double Courant, mineta, maxeta;
+  double Courant, min_eta, max_eta;
   // Particles
-  int    initial_noise, initial_part;
+  int    initial_noise;
   // Linear solver
-  int    decoupled_solve, lsolver, diag_scaling, pc_type;
-  double penalty, abs_tol_div, rel_tol_div, abs_tol_mom, rel_tol_mom, auto_penalty, compressible,
+  int    lin_solver, diag_scaling, preconditioner;
+  double penalty, lin_abs_div, lin_rel_div, lin_abs_mom, lin_rel_mom, auto_penalty, compressible,
           rel_tol_KSP;
   // Non-linear solver
   double line_search_min, safe_dt_div;
-  int    safe_mode, nstagmax;
+  int    safe_mode, max_num_stag;
   // Deformation maps
   int    nT, nE, nd, def_maps;
-  double Pn, Tmin, Tmax, Emin, Emax, dmin, dmax, PrBG, TBG;
+  double Pn, Tmin, Tmax, Emin, Emax, dmin, dmax, bkg_pressure, bkg_temperature;
   // Surface processes
   double surf_diff, surf_sedirate, surf_baselev, surf_Winc, surf_Vinc;
   // Initial thermal perturbation
-  double therm_pert_x0, therm_pert_z0, therm_pert_dT, therm_pert_rad,
-          cooling_time;
+  double therm_perturb_x0, therm_perturb_z0, therm_perturb_dT, therm_perturb_rad,
+          cooling_duration;
   // For rheological database...
   int      force_act_vol_ast;
   double   act_vol_dis_ast, act_vol_dif_ast;
@@ -75,24 +75,24 @@ typedef struct {
   int      kin_nP, kin_nT;
   double  *kin_dG, kin_Tmin, kin_Tmax, kin_Pmin, kin_Pmax;
   // Visualisation
-  int      rec_T_P_x_z, delete_breakpoints, GNUplot_residuals;
+  int      track_T_P_x_z, delete_breakpoints, gnuplot_log_res;
   // Boundary conditions type
   int      BC_setup_type, shear_style, polar;
-  int      StressRotation, StressUpdate, DirectNeighbour;
+  int      stress_rotation, direct_neighbour;
   // For diffused rheological constrasts
   int      diffuse_X, diffuse_avg;
   double   diffusion_length;
   // For Pips
-  int      ProgReac, NoReturn, dens_var, Plith_trick, UnsplitDiffReac, kinetics;
+  int      progress_transform, no_return, density_variations, unsplit_diff_reac, kinetics;
   // Anisotropy
-  int      aniso, oop, noise_bg; //aniso_fstrain
-  int      eqn_state;
+  int      anisotropy, out_of_plane, marker_noise; //aniso_fstrain
   int      residual_form;
   int      irestart, istep;
-  int      writer, writerStep;
-  const char     *writerSubfolder;
+  int      writer, writer_step;
+  const char     *writer_subfolder;
   int      save_initial_markers, load_initial_markers;
   char    *initial_markers_file;
+  int     marker_aniso_angle;
 } params;
 
 // Stucture scale contains scaling parameters
@@ -104,7 +104,7 @@ typedef struct {
 typedef struct {
   int    Nb_phases;
   double R;
-  double  eps0[20], tau0[20], eta0[20], rho[20], mu[20], Cv[20], k[20], Qr[20], C[20], phi[20],
+  double  eps0[20], tau0[20], eta0[20], rho[20], G[20], Cv[20], k[20], Qr[20], C[20], phi[20],
           psi[20], Slim[20], n[20], A[20], Ea[20], Va[20], alp[20], bet[20], Qm[20],
           T0[20], P0[20], drho[20], k_eff[20];
   double tpwl[20], Qpwl[20], Vpwl[20], npwl[20], mpwl[20], Apwl[20], apwl[20],
@@ -160,7 +160,8 @@ typedef double (*SetDensity_f)(MdoodzInput *input, Coordinates coordinates, int 
 typedef double (*SetXComponent_f)(MdoodzInput *input, Coordinates coordinates, int phase);
 typedef double (*SetPressure_f)(MdoodzInput *input, Coordinates coordinates, int phase);
 typedef double (*SetNoise_f)(MdoodzInput *input, Coordinates coordinates, int phase);
-typedef void   (*SetDefGrad_f)(MdoodzInput *input, Coordinates coordinates, int phase, Tensor2D*);
+typedef double (*SetAnisoAngle_f)(MdoodzInput *input, Coordinates coordinates, int phase);
+typedef Tensor2D (*SetDefGrad_f)(MdoodzInput *input, Coordinates coordinates, int phase);
 
 typedef struct {
   SetHorizontalVelocity_f SetHorizontalVelocity;
@@ -175,6 +176,7 @@ typedef struct {
   SetDensity_f            SetDensity;
   SetXComponent_f         SetXComponent;
   SetDefGrad_f            SetDefGrad;
+  SetAnisoAngle_f         SetAnisoAngle;
 } SetParticles_ff;
 
 typedef enum {
@@ -187,7 +189,7 @@ typedef enum {
   S,
   W,
   E,
-  FREE_SURFACE
+  free_surfaceACE
 } POSITION;
 
 typedef struct {

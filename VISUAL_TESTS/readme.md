@@ -1,6 +1,6 @@
 # Visual Tests
 
-Last run date: 2023-02-03.16:09:22
+Last run date: 2023-03-03.18:11:46
 
 ## Usage 
 
@@ -70,6 +70,13 @@ the model domain, and used these values as Dirichlet boundary conditions.
 | Result  | Reference                   |
 | ------------- |-----------------------------|
 | ![](img/ShearTemplate1.png)  | ![](img/ShearTemplate1Reference.png) |
+
+### ShearTemplate (Simple Shear) with anisotropy
+
+| Result                          | Reference                   |
+|---------------------------------|-----------------------------|
+| ![](img/ShearTemplateAniso.png) | ![](img/ShearTemplateAnisoReference.png) |
+
 
 ### ShearHeatingDuretz14
 

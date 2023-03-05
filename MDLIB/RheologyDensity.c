@@ -320,12 +320,12 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
 
   // General paramaters
   double eta = 0.0, R = materials->R, dt = model->dt;
-  double minEta = model->mineta, maxEta = model->maxeta;
+  double min_eta = model->min_eta, max_eta = model->max_eta;
   double TmaxPeierls = (1200.0 + zeroC) / scaling->T;// max. T for Peierls
 
   // Parameters for deformation map calculations
   int    it, nitmax = 20, noisy = 0;
-  int    plastic = 0, constant = 0, dislocation = 0, peierls = 0, diffusion = 0, gbs = 0, elastic = model->iselastic, kinetics = 0;
+  int    plastic = 0, constant = 0, dislocation = 0, peierls = 0, diffusion = 0, gbs = 0, elastic = model->elastic, kinetics = 0;
   double tol = 1.0e-11, res_pl = 0.0, Tii = 0.0, Tii0 = sqrt(Txx0 * Txx0 + Txz0 * Txz0);
   double eta_lo = 0.0, eta_up = 0.0, eta_ve = 0.0;
   double eta_pwl = 0.0, eta_exp = 0.0, eta_vep = 0.0, eta_lin = 0.0, eta_el = 0.0, eta_gbs = 0.0, eta_cst = 0.0, eta_pl = 0.0;
@@ -359,7 +359,7 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
   int    mix_avg             = model->diffuse_avg;
   double rho1                = materials->rho[phase];
   double rho2                = materials->rho[phase];
-  int    ProgressiveReaction = materials->reac_soft[phase], NoReturn = model->NoReturn;
+  int    ProgressiveReaction = materials->reac_soft[phase], no_return = model->no_return;
   double tau_kin = materials->tau_kin[phase], Pr = materials->Pr[phase], dPr = materials->dPr[phase];
   double divr = 0.0;
   if (model->diffuse_X == 0) constant_mix = 0;
@@ -478,11 +478,11 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
   // Reaction stuff: 2. Mixture rheology (Huet et al., 2014)
   if (  ProgressiveReaction == 1 ) {
 
-    if ( model->UnsplitDiffReac == 0 ) {
+    if ( model->unsplit_diff_reac == 0 ) {
 
       X     = (X0*tau_kin - 0.5*dt*erfc((P - Pr)/dPr) + dt)/(dt + tau_kin);
 
-      if ( X<X0 && NoReturn == 1 ) {
+      if ( X<X0 && no_return == 1 ) {
         X      = X0;
       }
     }
@@ -731,12 +731,12 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
   //-------- Post-Processing
 
   // Viscosity limiter
-  if( *etaVE > maxEta ) {
-    *etaVE = maxEta;
+  if( *etaVE > max_eta ) {
+    *etaVE = max_eta;
   }
 
-  if( *etaVE < minEta ) {
-    *etaVE = minEta;
+  if( *etaVE < min_eta ) {
+    *etaVE = min_eta;
   }
 
   //    printf("e --> %2.2e %2.2e %2.2e\n", Exx, Ezz, Eyy); // if (fabs(Eyy)>1e-6)
@@ -755,14 +755,14 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
   int    p, k, l, Nx, Nz, Ncx, Ncz, c0, c1, k1;
   double eta, txx1, tzz1, txz1, etaVE, VEcoeff = 0.0, eII_el, eII_pl, eII_pwl, eII_exp, eII_lin, eII_gbs, eII_cst, dnew, div_el, div_pl, div_r;
   double Wtot, Wel, Wdiss;
-  int    average = model->eta_avg, UnsplitDiffReac = model->UnsplitDiffReac;
+  int    average = model->eta_average, unsplit_diff_reac = model->unsplit_diff_reac;
   double Xreac;
   double OverS;
   double Pcorr, rho;
   double Exx, Ezz, Exz, eta_e;
   double Da11, Da12, Da13, Da22, Da23, Da33, iDa11, iDa12, iDa13, iDa22, iDa23, iDa33, a11, a12, a13, a22, a23, a33, det;
   double el = 0.0;
-  if (model->iselastic == 1) el = 1.0;
+  if (model->elastic == 1) el = 1.0;
 
   Nx  = mesh->Nx;
   Ncx = Nx - 1;
@@ -775,7 +775,7 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
   InterpCentroidsToVerticesDouble( mesh->phi0_n,  mesh->phi0_s,  mesh, model ); // ACHTUNG NOT FRICTION ANGLE
 
   // Evaluate cell center viscosities
-#pragma omp parallel for shared( mesh ) private( k, l, k1, p, eta, c1, c0, txx1, tzz1, txz1, etaVE, VEcoeff, eII_el, eII_pl, eII_pwl, eII_exp, eII_lin, eII_gbs, eII_cst, dnew, Xreac,OverS, Pcorr, rho, div_el, div_pl, div_r, Exx, Ezz, Exz, eta_e, Wtot, Wel, Wdiss ) firstprivate( el, UnsplitDiffReac, materials, scaling, average, model, Ncx, Ncz )
+#pragma omp parallel for shared( mesh ) private( k, l, k1, p, eta, c1, c0, txx1, tzz1, txz1, etaVE, VEcoeff, eII_el, eII_pl, eII_pwl, eII_exp, eII_lin, eII_gbs, eII_cst, dnew, Xreac,OverS, Pcorr, rho, div_el, div_pl, div_r, Exx, Ezz, Exz, eta_e, Wtot, Wel, Wdiss ) firstprivate( el, unsplit_diff_reac, materials, scaling, average, model, Ncx, Ncz )
   for ( k1=0; k1<Ncx*Ncz; k1++ ) {
 
     //    for ( l=0; l<Ncz; l++ ) {
@@ -807,11 +807,11 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
     mesh->Wel[c0]         = 0.0;
     mesh->Wdiss[c0]       = 0.0;
     //        X                     =  mesh->Xreac_n[c0]; // Save X first
-    //        if (model->ProgReac==1) mesh->Xreac_n[c0]    = 0.0;
-    if ( UnsplitDiffReac == 0 ) mesh->X_n[c0]        = 0.0;
+    //        if (model->progress_transform==1) mesh->Xreac_n[c0]    = 0.0;
+    if ( unsplit_diff_reac == 0 ) mesh->X_n[c0]        = 0.0;
     mesh->OverS_n[c0]    = 0.0;
 
-    if ( model->dens_var == 1 ) {
+    if ( model->density_variations == 1 ) {
       mesh->rho_n[c0]  = 0.0;
       //            mesh->drhodp_n[c0] = 0.0;
     }
@@ -820,7 +820,7 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
     if ( mesh->BCp.type[c0] != 30 && mesh->BCp.type[c0] != 31 ) {
 
       //----------------------------------------------------------//
-      if ( model->iselastic==1 ) eta_e      = model->dt*mesh->mu_n[c0];
+      if ( model->elastic==1 ) eta_e      = model->dt*mesh->mu_n[c0];
       else                       eta_e      = 1.0; // set to arbitrary value to avoid division by 0.0
       //----------------------------------------------------------//
       Exx = mesh->exxd[c0]  + el*mesh->sxxd0[c0] /eta_e/2.0;
@@ -883,11 +883,11 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
           mesh->div_u_pl[c0]    += mesh->phase_perc_n[p][c0] * div_pl;
           mesh->div_u_r[c0]     += mesh->phase_perc_n[p][c0] * div_r;
 
-          if ( UnsplitDiffReac == 0 ) mesh->X_n[c0]         += mesh->phase_perc_n[p][c0] * Xreac;
+          if ( unsplit_diff_reac == 0 ) mesh->X_n[c0]         += mesh->phase_perc_n[p][c0] * Xreac;
           mesh->OverS_n[c0]     += mesh->phase_perc_n[p][c0] * OverS;
 
           // Volume changes
-          if ( model->dens_var == 1 ) {
+          if ( model->density_variations == 1 ) {
             mesh->rho_n[c0]       += mesh->phase_perc_n[p][c0] * rho;
           }
         }
@@ -910,7 +910,7 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
         }
         if (isnan (mesh->eta_phys_n[c0]) ) {
           printf("NaN: Problem on cell centers:\n");
-          printf("ProgReac %d\n", model->ProgReac);
+          printf("progress_transform %d\n", model->progress_transform);
           for ( p=0; p<model->Nb_phases; p++) printf("phase %d vol=%2.2e\n", p, mesh->phase_perc_n[p][c0]);
           printf("eta=%2.2e G=%2.2e T=%2.2e P=%2.2e d=%2.2e phi=%2.2e %2.2e %2.2e %2.2e %2.2e\n", eta*scaling->eta, mesh->mu_n[c0]*scaling->S, mesh->T[c0]*scaling->T, mesh->p_in[c0]*scaling->S, mesh->d0_n[c0]*scaling->L, mesh->phi_n[c0], mesh->exxd[c0], mesh->exz_n[c0], mesh->sxxd0[c0], mesh->sxz0_n[c0]);
           printf("flag %d nb part cell = %d cell index = %d\n", mesh->BCp.type[c0],mesh->nb_part_cell[c0], c0);
@@ -932,7 +932,7 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
   }
 
 // Calculate vertices viscosity
-#pragma omp parallel for shared( mesh ) private( k, l, k1, p, eta, c1, c0, txx1, tzz1, txz1, etaVE, VEcoeff, eII_el, eII_pl, eII_pwl, eII_exp, eII_lin, eII_gbs, eII_cst, dnew, Wtot, Wel, Wdiss, Xreac, OverS, Pcorr, rho, div_el, div_pl, div_r, Exx, Ezz, Exz, eta_e ) firstprivate( el, UnsplitDiffReac, materials, scaling, average, model, Nx, Nz )
+#pragma omp parallel for shared( mesh ) private( k, l, k1, p, eta, c1, c0, txx1, tzz1, txz1, etaVE, VEcoeff, eII_el, eII_pl, eII_pwl, eII_exp, eII_lin, eII_gbs, eII_cst, dnew, Wtot, Wel, Wdiss, Xreac, OverS, Pcorr, rho, div_el, div_pl, div_r, Exx, Ezz, Exz, eta_e ) firstprivate( el, unsplit_diff_reac, materials, scaling, average, model, Nx, Nz )
   for ( k1=0; k1<Nx*Nz; k1++ ) {
 
     k  = mesh->kn[k1];
@@ -943,11 +943,11 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
     mesh->eta_phys_s[c1] = 0.0;
     mesh->eta_s[c1]      = 0.0;
 
-    if (UnsplitDiffReac == 0) mesh->X_s[c1]        = 0.0;
+    if (unsplit_diff_reac == 0) mesh->X_s[c1]        = 0.0;
 
     if ( mesh->BCg.type[c1] != 30 ) {
 
-      if ( model->iselastic==1   ) eta_e      = model->dt*mesh->mu_s[c1];
+      if ( model->elastic==1   ) eta_e      = model->dt*mesh->mu_s[c1];
       else           eta_e      = 1.0; // set to arbitrary value to avoid division by 0.0
       //----------------------------------------------------------//
       Exx = mesh->exxd_s[c1] + el*mesh->sxxd0_s[c1]/eta_e/2.0;
@@ -984,7 +984,7 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
               mesh->eta_phys_s[c1] += mesh->phase_perc_s[p][c1] * log(eta);
               break;
           }
-          if (UnsplitDiffReac == 0) mesh->X_s[c1]        += mesh->phase_perc_s[p][c1] * Xreac;
+          if (unsplit_diff_reac == 0) mesh->X_s[c1]        += mesh->phase_perc_s[p][c1] * Xreac;
         }
       }
       // HARMONIC AVERAGE
@@ -1143,8 +1143,10 @@ void CohesionFrictionDilationGrid( grid* mesh, markers* particles, mat_prop mate
   int p, k, l, Nx, Nz, Ncx, Ncz, c0, c1;
   int average = 0;
   double *strain_pl;
-  int style = 1;
-  int    cent=1, vert=0, prop=1, interp=0;
+  int style = 0;
+  int cent = 1, vert = 0, prop = 1, interp = 0;
+
+  if (model.smooth_softening==1) style = 1;
 
   Nx = mesh->Nx;
   Nz = mesh->Nz;
@@ -1153,7 +1155,7 @@ void CohesionFrictionDilationGrid( grid* mesh, markers* particles, mat_prop mate
 
   // Plastic strain
   strain_pl  = DoodzCalloc((model.Nx-1)*(model.Nz-1), sizeof(double));
-  P2Mastah( &model, *particles,  particles->strain_pl,     mesh, strain_pl,   mesh->BCp.type,  1, 0, interp, cent, model.itp_stencil);
+  P2Mastah( &model, *particles,  particles->strain_pl,     mesh, strain_pl,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil);
 
   // Calculate cell centers cohesion and friction
 #pragma omp parallel for shared( mesh, strain_pl ) private( p, c0 ) firstprivate( model, materials, average, style, Ncx, Ncz )
@@ -1169,7 +1171,7 @@ void CohesionFrictionDilationGrid( grid* mesh, markers* particles, mat_prop mate
       // Call softening routine
       Softening(c0, mesh->phase_perc_n, mesh->dil_n, mesh->fric_n, mesh->C_n, strain_pl[c0], model, materials, style, average );
       // Include random noise
-      if (model.noise_bg == 1) mesh->C_n[c0] += mesh->noise_n[c0]*mesh->C_n[c0];
+      if (model.marker_noise == 1) mesh->C_n[c0] += mesh->noise_n[c0]*mesh->C_n[c0];
     }
   }
 
@@ -1194,7 +1196,7 @@ void CohesionFrictionDilationGrid( grid* mesh, markers* particles, mat_prop mate
       // Call softening routine
       Softening(c1, mesh->phase_perc_s, mesh->dil_s, mesh->fric_s, mesh->C_s, strain_pl[c1], model, materials, style, average );
       // Include random noise
-      if (model.noise_bg == 1) mesh->C_s[c1] += mesh->noise_s[c1]*mesh->C_s[c1];
+      if (model.marker_noise == 1) mesh->C_s[c1] += mesh->noise_s[c1]*mesh->C_s[c1];
     }
   }
 
@@ -1210,7 +1212,7 @@ void CohesionFrictionDilationGrid( grid* mesh, markers* particles, mat_prop mate
 void ShearModCompExpGrid( grid* mesh, mat_prop *materials, params *model, scale scaling ) {
 
   int p, k, l, Nx, Nz, Ncx, Ncz, c0, c1;
-  int average = 1;//%model.eta_avg; // SHOULD NOT BE ALLOWED TO BE ELSE THAN 1
+  int average = 1;//%model.eta_average; // SHOULD NOT BE ALLOWED TO BE ELSE THAN 1
 
   Nx = mesh->Nx;
   Nz = mesh->Nz;
@@ -1228,7 +1230,7 @@ void ShearModCompExpGrid( grid* mesh, mat_prop *materials, params *model, scale 
       mesh->mu_n[c0]  = 0.0;
       mesh->bet_n[c0] = 0.0;
       mesh->alp[c0]   = 0.0;
-      if ( model->aniso == 1 ) mesh->aniso_factor_e_n[c0] = 0.0;
+      if ( model->anisotropy == 1 ) mesh->aniso_factor_e_n[c0] = 0.0;
 
       // Compute only if below free surface
       if ( mesh->BCp.type[c0] != 30 && mesh->BCp.type[c0] != 31) {
@@ -1238,27 +1240,27 @@ void ShearModCompExpGrid( grid* mesh, mat_prop *materials, params *model, scale 
 
           // Arithmetic
           if (average == 0) {
-            mesh->mu_n[c0]  += mesh->phase_perc_n[p][c0] * materials->mu[p];
+            mesh->mu_n[c0]  += mesh->phase_perc_n[p][c0] * materials->G[p];
             mesh->bet_n[c0] += mesh->phase_perc_n[p][c0] * materials->bet[p];
-            if ( model->aniso == 1 ) {
+            if ( model->anisotropy == 1 ) {
               if (materials->ani_fstrain[p]==0) mesh->aniso_factor_e_n[c0] += mesh->phase_perc_n[p][c0] * materials->ani_fac_e[p];
               if (materials->ani_fstrain[p]==1) mesh->aniso_factor_e_n[c0] += mesh->phase_perc_n[p][c0] * AnisoFactorEvolv( mesh->FS_AR_n[c0], materials->ani_fac_max[p] );
             }
           }
           // Harmonic
           if (average == 1) {
-            mesh->mu_n[c0]  += mesh->phase_perc_n[p][c0] *  1.0/materials->mu[p];
+            mesh->mu_n[c0]  += mesh->phase_perc_n[p][c0] *  1.0/materials->G[p];
             mesh->bet_n[c0] += mesh->phase_perc_n[p][c0] *  1.0/materials->bet[p];
-            if ( model->aniso == 1 ) {
+            if ( model->anisotropy == 1 ) {
               if (materials->ani_fstrain[p]==0) mesh->aniso_factor_e_n[c0] += mesh->phase_perc_n[p][c0] * 1.0/materials->ani_fac_e[p];
               if (materials->ani_fstrain[p]==1) mesh->aniso_factor_e_n[c0] += mesh->phase_perc_n[p][c0] * 1.0/AnisoFactorEvolv( mesh->FS_AR_n[c0], materials->ani_fac_max[p] );
             }
           }
           // Geometric
           if (average == 2) {
-            mesh->mu_n[c0]  += mesh->phase_perc_n[p][c0] *  log(materials->mu[p]);
+            mesh->mu_n[c0]  += mesh->phase_perc_n[p][c0] *  log(materials->G[p]);
             mesh->bet_n[c0] += mesh->phase_perc_n[p][c0] *  log(materials->bet[p]);
-            if ( model->aniso == 1 ) {
+            if ( model->anisotropy == 1 ) {
               if (materials->ani_fstrain[p]==0) mesh->aniso_factor_e_n[c0] += mesh->phase_perc_n[p][c0] * log(materials->ani_fac_e[p]);
               if (materials->ani_fstrain[p]==1) mesh->aniso_factor_e_n[c0] += mesh->phase_perc_n[p][c0] * log(AnisoFactorEvolv( mesh->FS_AR_n[c0], materials->ani_fac_max[p] ));
             }
@@ -1273,8 +1275,8 @@ void ShearModCompExpGrid( grid* mesh, mat_prop *materials, params *model, scale 
         if ( average==2 ) mesh->mu_n[c0] = exp(mesh->mu_n[c0]);
         if ( average==1 ) mesh->bet_n[c0] = 1.0/mesh->bet_n[c0];
         if ( average==2 ) mesh->bet_n[c0] = exp(mesh->bet_n[c0]);
-        if ( average==1 && model->aniso == 1 ) mesh->aniso_factor_e_n[c0] = 1.0/mesh->aniso_factor_e_n[c0];
-        if ( average==2 && model->aniso == 1 ) mesh->aniso_factor_e_n[c0] = exp(mesh->aniso_factor_e_n[c0]);
+        if ( average==1 && model->anisotropy == 1 ) mesh->aniso_factor_e_n[c0] = 1.0/mesh->aniso_factor_e_n[c0];
+        if ( average==2 && model->anisotropy == 1 ) mesh->aniso_factor_e_n[c0] = exp(mesh->aniso_factor_e_n[c0]);
       }
     }
   }
@@ -1290,7 +1292,7 @@ void ShearModCompExpGrid( grid* mesh, mat_prop *materials, params *model, scale 
       // First - initialize to 0
       mesh->mu_s[c1]  = 0.0;
       mesh->bet_s[c1] = 0.0;
-      if ( model->aniso == 1 ) mesh->aniso_factor_e_s[c1] = 0.0;
+      if ( model->anisotropy == 1 ) mesh->aniso_factor_e_s[c1] = 0.0;
 
       // Compute only if below free surface
       if ( mesh->BCg.type[c1] != 30 ) {
@@ -1300,27 +1302,27 @@ void ShearModCompExpGrid( grid* mesh, mat_prop *materials, params *model, scale 
 
           // Arithmetic
           if (average == 0) {
-            mesh->mu_s[c1]  += mesh->phase_perc_s[p][c1] * materials->mu[p];
+            mesh->mu_s[c1]  += mesh->phase_perc_s[p][c1] * materials->G[p];
             mesh->bet_s[c1] += mesh->phase_perc_s[p][c1] * materials->bet[p];
-            if ( model->aniso == 1 ) {
+            if ( model->anisotropy == 1 ) {
               if (materials->ani_fstrain[p]==0) mesh->aniso_factor_e_s[c1] += mesh->phase_perc_s[p][c1] * materials->ani_fac_e[p];
               if (materials->ani_fstrain[p]==1) mesh->aniso_factor_e_s[c1] += mesh->phase_perc_s[p][c1] * AnisoFactorEvolv( mesh->FS_AR_s[c1], materials->ani_fac_max[p] );
             }
           }
           // Harmonic
           if (average == 1) {
-            mesh->mu_s[c1]  += mesh->phase_perc_s[p][c1] *  1.0/materials->mu[p];
+            mesh->mu_s[c1]  += mesh->phase_perc_s[p][c1] *  1.0/materials->G[p];
             mesh->bet_s[c1] += mesh->phase_perc_s[p][c1] *  1.0/materials->bet[p];
-            if ( model->aniso == 1 ) {
+            if ( model->anisotropy == 1 ) {
               if (materials->ani_fstrain[p]==0) mesh->aniso_factor_e_s[c1] += mesh->phase_perc_s[p][c1] *  1.0/materials->ani_fac_e[p];
               if (materials->ani_fstrain[p]==1) mesh->aniso_factor_e_s[c1] += mesh->phase_perc_s[p][c1] *  1.0/AnisoFactorEvolv( mesh->FS_AR_s[c1], materials->ani_fac_max[p] );
             }
           }
           // Geometric
           if (average == 2) {
-            mesh->mu_s[c1]  += mesh->phase_perc_s[p][c1] *  log(materials->mu[p]);
+            mesh->mu_s[c1]  += mesh->phase_perc_s[p][c1] *  log(materials->G[p]);
             mesh->bet_s[c1] += mesh->phase_perc_s[p][c1] *  log(materials->bet[p]);
-            if ( model->aniso == 1 ) {
+            if ( model->anisotropy == 1 ) {
               if (materials->ani_fstrain[p]==0) mesh->aniso_factor_e_s[c1] += mesh->phase_perc_s[p][c1] *  log(materials->ani_fac_e[p]);
               if (materials->ani_fstrain[p]==1) mesh->aniso_factor_e_s[c1] += mesh->phase_perc_s[p][c1] *  log(AnisoFactorEvolv( mesh->FS_AR_s[c1], materials->ani_fac_max[p] ));
             }
@@ -1337,22 +1339,22 @@ void ShearModCompExpGrid( grid* mesh, mat_prop *materials, params *model, scale 
         if ( average==2 ) mesh->mu_s[c1]  = exp(mesh->mu_s[c1]);
         if ( average==1 ) mesh->bet_s[c1] = 1.0/mesh->bet_s[c1];
         if ( average==2 ) mesh->bet_s[c1] = exp(mesh->bet_s[c1]);
-        if ( average==1 && model->aniso == 1 )  mesh->aniso_factor_e_s[c1] = 1.0/mesh->aniso_factor_e_s[c1];
-        if ( average==2 && model->aniso == 1 )  mesh->aniso_factor_e_s[c1] = exp(mesh->aniso_factor_e_s[c1]);
+        if ( average==1 && model->anisotropy == 1 )  mesh->aniso_factor_e_s[c1] = 1.0/mesh->aniso_factor_e_s[c1];
+        if ( average==2 && model->anisotropy == 1 )  mesh->aniso_factor_e_s[c1] = exp(mesh->aniso_factor_e_s[c1]);
       }
     }
   }
 
   // Periodic
   double av;
-  if (model->isperiodic_x==1) {
+  if (model->periodic_x==1) {
     for( l=0; l<Nz; l++) {
       c1 = l*Nx + Nx-1;
       av = 0.5*(mesh->mu_s[c1] + mesh->mu_s[l*Nx]);
       mesh->mu_s[c1] = av; mesh->mu_s[l*Nx] = av;
       av = 0.5*(mesh->bet_s[c1] + mesh->bet_s[l*Nx]);
       mesh->bet_s[c1] = av; mesh->bet_s[l*Nx] = av;
-      if ( model->aniso == 1 ) {
+      if ( model->anisotropy == 1 ) {
         av = 0.5*(mesh->aniso_factor_e_s[c1] + mesh->aniso_factor_e_s[l*Nx]);
         mesh->aniso_factor_e_s[c1] = av; mesh->aniso_factor_e_s[l*Nx] = av;
       }
@@ -1370,7 +1372,7 @@ void ShearModCompExpGrid( grid* mesh, mat_prop *materials, params *model, scale 
 double EvaluateDensity( int p, double T, double P, double X, params *model, mat_prop *materials ) {
 
   double rho, rho_ref, rho1, rho2, drho, T0, alpha, P0, beta;
-  int    ProgressiveReaction = materials->reac_soft[p], NoReturn = model->NoReturn;
+  int    ProgressiveReaction = materials->reac_soft[p], no_return = model->no_return;
   
   // Constant density
   if ( materials->density_model[p] == 0 ) {
@@ -1471,10 +1473,10 @@ void UpdateDensity( grid* mesh, markers* particles, mat_prop *materials, params 
 void StrainRateComponents( grid* mesh, scale scaling, params* model ) {
 
   int k, l, c0, c1, c2, Nx, Nz, Ncx, Ncz, k1;
-  double dx, dz;//, Eyyt = 0.0*model->DivBG/3.0;
+  double dx, dz;//, Eyyt = 0.0*model->bkg_div_rate/3.0;
   double dvxdx, dvydy, dvzdz;
-  double oop = 0.0;
-  if (model->oop==1) oop = 1.0;
+  double out_of_plane = 0.0;
+  if (model->out_of_plane==1) out_of_plane = 1.0;
 
   Nx = mesh->Nx;
   Nz = mesh->Nz;
@@ -1483,7 +1485,7 @@ void StrainRateComponents( grid* mesh, scale scaling, params* model ) {
   dx = mesh->dx;
   dz = mesh->dz;
 
-#pragma omp parallel for shared( mesh ) private( k, k1, l, c0, c1, c2, dvxdx, dvydy, dvzdz  ) firstprivate( dx, dz, Nx, Ncx, Ncz, oop )
+#pragma omp parallel for shared( mesh ) private( k, k1, l, c0, c1, c2, dvxdx, dvydy, dvzdz  ) firstprivate( dx, dz, Nx, Ncx, Ncz, out_of_plane )
   for ( k1=0; k1<Ncx*Ncz; k1++ ) {
     k  = mesh->kp[k1];
     l  = mesh->lp[k1];
@@ -1500,7 +1502,7 @@ void StrainRateComponents( grid* mesh, scale scaling, params* model ) {
       // Velocity gradients - Total normal strain rates
       dvxdx = (mesh->u_in[c1+1+Nx]   - mesh->u_in[c1+Nx])/dx;
       dvzdz = (mesh->v_in[c2+Nx+1+1] - mesh->v_in[c2+1] )/dz;
-      dvydy = oop*0.5*( dvxdx + dvzdz );
+      dvydy = out_of_plane*0.5*( dvxdx + dvzdz );
 
       // Velocity divergence
       mesh->div_u[c0] = dvxdx + dvzdz + dvydy;
