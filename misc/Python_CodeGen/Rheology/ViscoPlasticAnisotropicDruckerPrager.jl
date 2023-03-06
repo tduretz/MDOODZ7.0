@@ -27,13 +27,21 @@ function AnisotropicDruckerPrager( γ̇, p )
     am        = p.am
     Ji        = p.Ji
     a_p       = p.a_p
-    τii       = sqrt( 1/2*(Tn2 + Ts2))
-    J2_corr   = 0.
+    Txx       = p.Txx
+    Txy       = p.Txy
+    a_ve      = p.a_ve
+    τii       = sqrt( 1/2*(Tn2 + a_p^2*Ts2))
     J1_corr   = 0.
     ap_n      = 1.0 - eta_ve.*γ̇./τii;
-    ap_s      = 1.0 - eta_ve.*γ̇./τii * ani_rat;
-    ap_n = ap_s
+    # ap_s      = 1.0 - eta_ve.*γ̇./τii * ani_rat;
+    ap_s      = 1.0 - eta_ve.*γ̇./τii /a_ve^2;
+
+    # ap_s      = 1.0 - eta_ve.*γ̇./τii;
     J2_corr   = 1/2*( Tn2*ap_n^2 + a_p^2*Ts2*ap_s^2)
+
+    # eta_ve_s  = eta_ve/a_ve^2
+    # J2_corr   = Txx^2*(1 - 2*γ̇*eta_ve/τii)^2 + a_p^2*Txy^2*(1 - 2*γ̇*eta_ve_s*a_p^2/τii)^2
+
     F         = sqrt(J2_corr) - C*cos(fric) - P.*am.*sin(fric) + J1_corr - eta_vp.*γ̇;
     # F    =  τii  - γ̇*eta_ve  - C*cos(fric) - P.*am.*sin(fric) + J1_corr - eta_vp.*γ̇;
     return F
@@ -43,7 +51,7 @@ function main()
 
     # Return mapping will fail if a_p != a_v (no root, F always larger than 0) 
 
-    solve              = false
+    solve              = true
     isotropic_DP_ckeck = false
 
     eta = 1e23
@@ -53,11 +61,10 @@ function main()
     t   = L/V
     E   = 1/t
     S   = eta*E
-
     K = 0.00e+00; fric=0.523599; dil = 0.000000
     Ft = 6.6592e+00; Y2_v = 6.2088e+02; Y2_p = 1.5258e+02; eta_vp = 1.00e-02
     a_ve = 2.236068e+00; eta_ve = 2.721397e+01; G = 1.000000e+01;  dt = 1.262300e-04
-    a_e = 2.236068; a_v = 2.236068; a_p = 1.000000
+    a_e = 2.236068; a_v = 2.236068; a_p = 6.000000
     Txx = -5.958186e+00; Tyy = 5.958186e+00; Tzz = -6.190604e-13; Txy = -1.082017e+01; P = 1.052000e+01
     gdot = 0.000000e+00
     C = 5.000000e-01; fric = 5.235988e-01
@@ -102,35 +109,43 @@ function main()
     # ckecks J2
     am      = (a1 + a2 + a3)/3
     Tn2     = Txx^2+Tyy^2+Tzz^2
-    Ts2     = Txy^2+Tyx^2
+    Ts2     = (Txy^2+Tyx^2)
     Tii     = sqrt(Jii)
     τii     = sqrt(Jii)
-    ani_rat = a_p^2/a_ve^2
-    gdot    = γ̇
+    # if (a_p^2/a_ve^2)<0.8 
+    #     a_p = sqrt(0.8*a_ve^2) 
+    # end
+    ani_rat = a_p^2/a_ve^2 
+    @show ani_rat
+
+    gdot    = γ̇ 
     Jii     = Y2_p
     J2_corr = Y2_p
-    J2_corr = Txx .^ 2 .* (-eta_ve .* gdot ./ sqrt(Txx .^ 2 / 2 + Txy .^ 2 .* a_p .^ 2 / 2 + Tyx .^ 2 .* a_p .^ 2 / 2 + Tyy .^ 2 / 2 + Tzz .^ 2 / 2) + 1) .^ 2 / 2 + Txy .^ 2 .* a_p .^ 2 .* (-a_p .^ 2 .* eta_ve .* gdot ./ (a_ve .^ 2 .* sqrt(Txx .^ 2 / 2 + Txy .^ 2 .* a_p .^ 2 / 2 + Tyx .^ 2 .* a_p .^ 2 / 2 + Tyy .^ 2 / 2 + Tzz .^ 2 / 2)) + 1) .^ 2 / 2 + Tyx .^ 2 .* a_p .^ 2 .* (-a_p .^ 2 .* eta_ve .* gdot ./ (a_ve .^ 2 .* sqrt(Txx .^ 2 / 2 + Txy .^ 2 .* a_p .^ 2 / 2 + Tyx .^ 2 .* a_p .^ 2 / 2 + Tyy .^ 2 / 2 + Tzz .^ 2 / 2)) + 1) .^ 2 / 2 + Tyy .^ 2 .* (-eta_ve .* gdot ./ sqrt(Txx .^ 2 / 2 + Txy .^ 2 .* a_p .^ 2 / 2 + Tyx .^ 2 .* a_p .^ 2 / 2 + Tyy .^ 2 / 2 + Tzz .^ 2 / 2) + 1) .^ 2 / 2 + Tzz .^ 2 .* (-eta_ve .* gdot ./ sqrt(Txx .^ 2 / 2 + Txy .^ 2 .* a_p .^ 2 / 2 + Tyx .^ 2 .* a_p .^ 2 / 2 + Tyy .^ 2 / 2 + Tzz .^ 2 / 2) + 1) .^ 2 / 2
-    @show (1, sqrt(J2_corr))
     J2_corr = Y2_p*(1.0 - eta_ve * gdot/sqrt(Y2_p))^2
-    @show (2, sqrt(J2_corr))
-    @show (3, sqrt(Y2_p)*(1-eta_ve * gdot/sqrt(Y2_p)) )
-    @show (4, sqrt(Y2_p) - eta_ve * gdot )
-    @show (5, sqrt(Y2_p) - γ̇*eta_ve )
+    (2, sqrt(J2_corr))
+    (3, sqrt(Y2_p)*(1-eta_ve * gdot/sqrt(Y2_p)) )
+    (4, sqrt(Y2_p) - eta_ve * gdot )
+    (5, sqrt(Y2_p) - γ̇*eta_ve )
     ap_n      = 1.0 - eta_ve .*  γ̇./τii;
     ap_s      = 1.0 - eta_ve .*  γ̇./τii * ani_rat;
     J2_corr   = 1/2*( Tn2*ap_n^2 + a_p^2*Ts2*ap_s^2)
     @show (6, sqrt(J2_corr))
-    @show ("J2", sqrt(Y2_p))
-    @show F = sqrt(J2_corr) - C*cos(fric) - P*sin(fric) - eta_vp .* gdot
+
+    eta_ve_s = eta_ve/a_ve^2
+    J2_corr   = Txx^2*(1 - 2*γ̇*eta_ve/τii)^2 + a_p^2*Txy^2*(1 - 2*γ̇*eta_ve_s*a_p^2/τii)^2
+    @show (7, sqrt(J2_corr))
+    @show (γ̇)
+    F = sqrt(J2_corr) - C*cos(fric) - P*sin(fric) - eta_vp .* gdot
    
+    
     # ckecks J1
     a1  = 1.0
     J1c = (Txx .* a1 .* (-eta_ve .* gdot ./ sqrt(Txx .^ 2 / 2 + Txy .^ 2 .* a_p .^ 2 / 2 + Tyx .^ 2 .* a_p .^ 2 / 2 + Tyy .^ 2 / 2 + Tzz .^ 2 / 2) + 1) + Tyy .* a2 .* (-eta_ve .* gdot ./ sqrt(Txx .^ 2 / 2 + Txy .^ 2 .* a_p .^ 2 / 2 + Tyx .^ 2 .* a_p .^ 2 / 2 + Tyy .^ 2 / 2 + Tzz .^ 2 / 2) + 1) + Tzz .* a3 .* (-eta_ve .* gdot ./ sqrt(Txx .^ 2 / 2 + Txy .^ 2 .* a_p .^ 2 / 2 + Tyx .^ 2 .* a_p .^ 2 / 2 + Tyy .^ 2 / 2 + Tzz .^ 2 / 2) + 1)) .* sin(fric) / 3
-    @show ( 1, J1c*S )
+    ( 1, J1c*S )
     Ji   = sin(fric)/3*( a1*Txx + a2*Tyy + a3*Tzz)
     ap_n = 1. - eta_ve .* gdot ./ sqrt(Jii)
     J1c  = ap_n*Ji
-    @show ( 2, J1c*S )
+    ( 2, J1c*S )
 
     if isotropic_DP_ckeck
         a1, a2, a3 = 1.0, 1.0, 1.0
@@ -142,15 +157,14 @@ function main()
     # Pre compute
     am      = (a1 + a2 + a3)/3
     Tn2     = Txx^2+Tyy^2+Tzz^2
-    Ts2     = Txy^2+Tyx^2
+    Ts2     = (Txy^2+Tyx^2)
     Tii     = sqrt(Jii)
-    ani_rat = a_p^2/a_ve^2
 
     # Make 2D maps of yield function
-    γ̇v    = LinRange(0.0, 20, 500)
+    γ̇v    = LinRange(0.0, 2, 500)
     Fiso  = zero(γ̇v)
     Fani  = zero(γ̇v)
-    p     = (τii = sqrt(Y2_p), eta_ve = eta_ve, P = P, fric = fric, C = C, eta_vp = eta_vp, Tn2 = Tn2, Ts2 = Ts2, ani_rat = ani_rat, Ji = Ji, am = am, a_p=a_p)
+    p     = (τii = sqrt(Y2_p), eta_ve = eta_ve, P = P, fric = fric, C = C, eta_vp = eta_vp, Tn2 = Tn2, Ts2 = Ts2, ani_rat = ani_rat, Ji = Ji, am = am, a_p=a_p, Txx=Txx, Txy=Txy, a_ve=a_ve)
     for i in eachindex(γ̇v)
         Fiso[i] =   IsotropicDruckerPrager( γ̇v[i], p )
         Fani[i] = AnisotropicDruckerPrager( γ̇v[i], p )
@@ -218,7 +232,7 @@ function main()
             Pc        = P + am*K*Δt*γ̇*sin(dil)
 
             ap_n      = 1.0 - eta_ve .* gdot./Tii;
-            ap_s      = 1.0 - eta_ve .* gdot./Tii * ani_rat;
+            ap_s      = 1.0 - eta_ve .* gdot./Tii #* ani_rat;
             
             J1_corr   = ap_n*Ji
             J2_corr   = 1/2*( Tn2*ap_n^2 + a_p^2*Ts2*ap_s^2)
@@ -226,7 +240,7 @@ function main()
             @show  (sqrt(J2_corr),  C*cos(fric), Pc.*am.*sin(fric), J1_corr, eta_vp.*gdot)
     
             dapndgdot = -eta_ve/Tii
-            dapsdgdot = dapndgdot*ani_rat
+            dapsdgdot = dapndgdot#*ani_rat
             dFdgdot   = -eta_vp + 1/2/sqrt(J2_corr) * ( a_p^2*Ts2*ap_s*dapsdgdot + Tn2*ap_n*dapndgdot ) - am^2*K*dt*sin(dil)*sin(fric) + dapndgdot*Ji
         
             dFdγ̇      = dFdgdot

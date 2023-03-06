@@ -81,7 +81,7 @@ double ViscosityConciseAniso( int phase, double lxlz, double lx2, double angle, 
     // !!!!!!!!!!!!!!!!!!!!!!!!
     // General paramaters
     const double tol    = 1.0e-11, R = materials->R, dt = model->dt, minEta = model->mineta, maxEta = model->maxeta;
-    const int    nitmax = 10, noisy = 1;
+    const int    nitmax = 10, noisy = 0;
     double eta = 0.0, eta_el, eta_cst;
     int    plastic = 0, constant = 0, dislocation = 0, peierls = 0, diffusion = 0, gbs = 0, elastic = model->iselastic, kinetics = 0, is_pl = 0;
     double eta_pwl = 0.0, B_pwl = 0.0, C_pwl = 0.0, Q_pwl = materials->Qpwl[phase], V_pwl = materials->Vpwl[phase], n_pwl = materials->npwl[phase], m_pwl = materials->mpwl[phase], r_pwl = materials->rpwl[phase], A_pwl = materials->Apwl[phase], f_pwl = materials->fpwl[phase], a_pwl = materials->apwl[phase], F_pwl = materials->Fpwl[phase], pre_factor = materials->pref_pwl[phase], t_pwl = materials->tpwl[phase];
@@ -238,16 +238,18 @@ double ViscosityConciseAniso( int phase, double lxlz, double lx2, double angle, 
     *ani_vep = eta_ve_n/eta_ve_s;
 
     // Iterations for visco-elasto-viscoplastic correction
-    const double txx = T_rot.xx, tzz=T_rot.zz, tyy=T_rot.yy, txz=T_rot.xz;
+
     const double eta_vp0 = materials->eta_vp[phase], n_vp = materials->n_vp[phase], eta_vp = materials->eta_vp[phase];
     const double a1 = materials->axx[phase], a2 = materials->azz[phase], a3 = materials->ayy[phase];
     const double am = (a1+a2+a3)/3.0, a_ve = sqrt(eta_ve_n/eta_ve_s);
+    const double txx = T_rot.xx, tzz=T_rot.zz, tyy=T_rot.yy, txz=T_rot.xz;
+    // if (a_p*a_p/(a_ve*a_ve) < 0.5 ) a_p = sqrt(0.5*a_ve*a_ve);
 
     const double Y2_p    = Y2( &T_rot, ani_fac_p);
     const double Tn2     = txx*txx + tyy*tyy + tzz*tzz;
     const double Ts2     = 2*txz*txz;
     const double Y1      = sin(fric)/3.0*( a1*txx + a2*tzz + a3*tyy);
-    const double ani_rat = a_p*a_p/(a_ve*a_ve);
+    const double ani_rat = 1.0;//a_p*a_p/(a_ve*a_ve);
     const double Ft      = sqrt(Y2_p) - C*cos(fric) - am*P*sin(fric) +  Y1;
     
     double Fc = Ft, Pc = P;
@@ -258,8 +260,9 @@ double ViscosityConciseAniso( int phase, double lxlz, double lx2, double angle, 
    
 
     if (Ft>1e-17) {
-      is_pl = 1;
-      Tii   = sqrt(Y2_p);
+      is_pl   = 1;
+      plastic = 1;
+      Tii     = sqrt(Y2_p);
       if (noisy) {
       printf("Start local VP iterations (cst: %d --- el: %d --- pwl: %d --- comp = %02f\n", constant, elastic, dislocation, model->compressible);
       printf("K = %2.2e; fric=%02f; dil = %02f\n", K*scaling->S, fric, dil);
