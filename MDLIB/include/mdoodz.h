@@ -34,7 +34,7 @@ typedef struct {
   int     interp_stencil;
   double  nexp_radial_basis;
   int     mechanical, periodic_x, elastic, isnonnewtonian,
-          thermal, pure_shear_ALE, free_surface, write_markers, write_debug;
+          thermal, pure_shear_ALE, free_surface, writer_markers, writer_debug;
   double free_surface_stab;
   int    constant_dt, RK, line_search, initial_cooling, subgrid_diffusion, adiab_heating,
           shear_heating, advection, finite_strain, conserv_interp;
@@ -189,7 +189,7 @@ typedef enum {
   S,
   W,
   E,
-  free_surfaceACE
+  free_surface
 } POSITION;
 
 typedef struct {
