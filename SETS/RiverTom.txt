@@ -40,7 +40,7 @@ subgrid_diffusion = 2
 shear_heating     = 1
 adiab_heating     = 2
 track_T_P_x_z     = 1 / initial P and T field record
-conserv_interp    = 
+conserv_interp    = 0
 
 /**** SURFACE PROCESSES ****/
 surface_processes  = 0 /0 = none; 1 = diffusion only; 2 = fills instantaneously the basin up to the base level;  3 = diffusion + source term
