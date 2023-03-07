@@ -1028,9 +1028,10 @@ Input ReadInputFile( char *fileName ) {
     // Output
     model.writer             = ReadInt2( fin, "writer",              0 ); // Write files
     model.writer_step        = ReadInt2( fin, "writer_step",         1 ); // Frequency of output
-    model.write_markers      = ReadInt2( fin, "writer_markers",      0 ); // Writes marker files
-    model.write_debug        = ReadInt2( fin, "writer_debug",        0 ); // Writes debug files
+    model.writer_markers     = ReadInt2( fin, "writer_markers",      0 ); // Writes marker files
+    model.writer_debug       = ReadInt2( fin, "writer_debug",        0 ); // Writes debug files
     model.writer_subfolder   = ReadChar( fin, "writer_subfolder",  "./"); // Writes output in given subfolder
+    // printf("%s\n", model.writer_subfolder); exit(1);
     model.noisy              = ReadInt2( fin, "noisy",               1 ); // Prints a lot of info to standard output
     model.track_T_P_x_z      = ReadInt2( fin, "track_T_P_x_z",       0 ); // Tracks initial T, P, x and z on particles 
     model.delete_breakpoints = ReadInt2( fin, "delete_breakpoints",  1 ); // Progressively deletes breakpoint files
@@ -1697,16 +1698,21 @@ char* ReadChar( FILE *fin, char FieldName[], char Default[] ) {
 
         if (feof(fin)) {
             printf("Warning : Parameter '%s' not found in the setup file, running with default value %s\n", FieldName, Default);
-            rewind (fin);
-            int str_size = strlen(Default);
-            int h1;
-            string2 = malloc((str_size+1)*sizeof(char));
-            for (h1=0; h1<str_size; h1++) {
-                string2[h1] = Default[h1];
-            }
+            rewind(fin);
             free(string1);
             free(param1);
             free(param2);
+            // return Default;
+            asprintf(&string2, "%s", Default);
+            // int str_size = strlen(Default);
+            // int h1;
+            // string2 = malloc((str_size+1)*sizeof(char));
+            // for (h1=0; h1<str_size; h1++) {
+            //     string2[h1] = Default[h1];
+            // }
+            // free(string1);
+            // free(param1);
+            // free(param2);
             return string2;
         }
 

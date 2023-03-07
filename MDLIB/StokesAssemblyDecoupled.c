@@ -2700,7 +2700,7 @@ void BuildStokesOperatorDecoupled( grid *mesh, params model, int lev, double *p_
         //--------------------------------------//
         
 #ifndef _VG_
-        if ( model.write_debug == 1 ) {
+        if ( model.writer_debug == 1 ) {
             
             char *filename;
             asprintf( &filename, "Stokes_%02dcpu_step%02d_iter%02d.gzip.h5", n_th, model.step, model.nit );
@@ -3234,7 +3234,7 @@ void BuildJacobianOperatorDecoupled( grid *mesh, params model, int lev, double *
         
         //--------------------------------------//
 #ifndef _VG_
-        if ( model.write_debug == 1 ) {
+        if ( model.writer_debug == 1 ) {
             
             char *filename;
             asprintf( &filename, "Jacobian_%02dcpu_step%02d_iter%02d.gzip.h5", n_th, model.step, model.nit );

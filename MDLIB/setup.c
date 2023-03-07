@@ -325,7 +325,7 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
       } else if (l == NCZ - 1) {
         position = N;
       } else if ((mesh->BCp.type[c] == -1 || mesh->BCp.type[c] == 1 || mesh->BCp.type[c] == 0) && mesh->BCp.type[c + NCX] == 30) {
-        position = free_surfaceACE;
+        position = free_surface;
       } else {
         position = INTERNAL;
       }
@@ -376,7 +376,7 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
       } else if (l == NCZ - 1) {
         position = N;
       } else if ((mesh->BCt.type[c] == -1 || mesh->BCt.type[c] == 1 || mesh->BCt.type[c] == 0) && mesh->BCt.type[c + NCX] == 30) {
-        position = free_surfaceACE;
+        position = free_surface;
       } else {
         position = INTERNAL;
       }

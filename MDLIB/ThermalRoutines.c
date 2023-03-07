@@ -448,7 +448,7 @@ void EnergyDirectSolve( grid *mesh, params model, double *rhoE, double *drhoE, d
         MinMaxArrayTag( mesh->T, scaling.T, (mesh->Nx-1)*(mesh->Nz-1), "T", mesh->BCt.type );
 #ifndef _VG_
         // Write matrix in a HDF5 file for debugging purposes
-        if ( model.write_debug == 1 ) {
+        if ( model.writer_debug == 1 ) {
 
             char *filename;
             asprintf( &filename, "EnergyMatrix.gzip.h5" );

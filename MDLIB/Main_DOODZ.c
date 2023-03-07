@@ -327,7 +327,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         // Write initial output
         if ( input.model.writer == 1 ) {
             WriteOutputHDF5( &mesh, &particles, &topo, &topo_chain, input.model, Nmodel, "Output", input.materials, input.scaling );
-            if (input.model.write_markers == 1 ) WriteOutputHDF5Particles( &mesh, &particles, &topo, &topo_chain, &topo_ini, &topo_chain_ini, input.model, "Particles", input.materials, input.scaling );
+            if (input.model.writer_markers == 1 ) WriteOutputHDF5Particles( &mesh, &particles, &topo, &topo_chain, &topo_ini, &topo_chain_ini, input.model, "Particles", input.materials, input.scaling );
         }
 
         // Set initial stresses and pressure to zero
@@ -670,7 +670,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                     if (input.model.anisotropy==1) MinMaxArrayTag( mesh.aniso_factor_e_s,  1.0, (mesh.Nx)*(mesh.Nz),     "ani_fac_e_s ", mesh.BCg.type );
                 }
 
-                if (input.model.write_debug == 1 ) {
+                if (input.model.writer_debug == 1 ) {
                     WriteOutputHDF5( &mesh, &particles, &topo, &topo_chain, input.model, Nmodel, "Output_BeforeSolve", input.materials, input.scaling );
                     WriteOutputHDF5Particles( &mesh, &particles, &topo, &topo_chain, &topo_ini, &topo_chain_ini, input.model, "Particles_BeforeSolve", input.materials, input.scaling );
                 }
@@ -708,7 +708,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                 Nmodel.resz_f = Nmodel.resz; Nmodel.rz_abs[Nmodel.nit] = Nmodel.resz; Nmodel.rz_rel[Nmodel.nit] = Nmodel.resz/Nmodel.resz0;
                 Nmodel.resp_f = Nmodel.resp; Nmodel.rp_abs[Nmodel.nit] = Nmodel.resp; Nmodel.rp_rel[Nmodel.nit] = Nmodel.resp/Nmodel.resp0;
 
-                if (input.model.write_debug == 1 ) WriteResiduals( mesh, input.model, Nmodel, input.scaling );
+                if (input.model.writer_debug == 1 ) WriteResiduals( mesh, input.model, Nmodel, input.scaling );
 
                 // if pass --> clear matrix break
                 if ( (Nmodel.resx < Nmodel.nonlin_abs_mom || Nmodel.resx/Nmodel.resx0 < Nmodel.nonlin_rel_mom) && (Nmodel.resz < Nmodel.nonlin_abs_mom || Nmodel.resz/Nmodel.resz0 < Nmodel.nonlin_rel_mom) && (Nmodel.resp < Nmodel.nonlin_abs_div || Nmodel.resp/Nmodel.resp0 < Nmodel.nonlin_rel_div) ) {
@@ -957,7 +957,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                 // Update deformation gradient tensor components
                 if (input.model.finite_strain == 1 ) DeformationGradient( mesh, input.scaling, input.model, &particles );
 
-                if (input.model.write_debug == 1 ) {
+                if (input.model.writer_debug == 1 ) {
                     WriteOutputHDF5( &mesh, &particles, &topo, &topo_chain, input.model, Nmodel, "Output_BeforeSurfRemesh", input.materials, input.scaling );
                     WriteOutputHDF5Particles( &mesh, &particles, &topo, &topo_chain, &topo_ini, &topo_chain_ini, input.model, "Particles_BeforeSurfRemesh", input.materials, input.scaling );
                 }
@@ -978,7 +978,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                     ProjectTopography( &topo,     &topo_chain, input.model, mesh, input.scaling, mesh.xg_coord, 0 );
                     ProjectTopography( &topo_ini, &topo_chain_ini, input.model, mesh, input.scaling, mesh.xg_coord, 0 );
 
-                    if (input.model.write_debug == 1 ) {
+                    if (input.model.writer_debug == 1 ) {
                         WriteOutputHDF5( &mesh, &particles, &topo, &topo_chain, input.model, Nmodel, "Output_AfterSurfRemesh", input.materials, input.scaling );
                         WriteOutputHDF5Particles( &mesh, &particles, &topo, &topo_chain, &topo_ini, &topo_chain_ini, input.model, "Particles_AfterSurfRemesh", input.materials, input.scaling );
                     }
@@ -997,7 +997,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                         CountPartCell( &particles, &mesh, input.model, topo, topo_ini, 0, input.scaling );
                     }
 
-                    if (input.model.write_debug == 1 ) {
+                    if (input.model.writer_debug == 1 ) {
                         WriteOutputHDF5( &mesh, &particles, &topo, &topo_chain, input.model, Nmodel, "Outputx", input.materials, input.scaling );
                         WriteOutputHDF5Particles( &mesh, &particles, &topo, &topo_chain, &topo_ini, &topo_chain_ini, input.model, "Particlesx", input.materials, input.scaling );
                     }
@@ -1018,7 +1018,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                 printf("** Time for advection solver = %lf sec\n", (double)((double)omp_get_wtime() - t_omp) );
 
 #ifdef _HDF5_
-                if ( input.model.write_debug == 1 ) {
+                if ( input.model.writer_debug == 1 ) {
                     WriteOutputHDF5( &mesh, &particles, &topo, &topo_chain, input.model, Nmodel, "Outputxx", input.materials, input.scaling );
                     WriteOutputHDF5Particles( &mesh, &particles, &topo, &topo_chain, &topo_ini, &topo_chain_ini, input.model, "Particlesxx", input.materials, input.scaling );
                 }
@@ -1093,7 +1093,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 #ifndef _VG_
             t_omp = (double)omp_get_wtime();
             WriteOutputHDF5( &mesh, &particles, &topo, &topo_chain, input.model, Nmodel, "Output", input.materials, input.scaling );
-            if (input.model.write_markers == 1 ) WriteOutputHDF5Particles( &mesh, &particles, &topo, &topo_chain, &topo_ini, &topo_chain_ini, input.model, "Particles", input.materials, input.scaling );
+            if (input.model.writer_markers == 1 ) WriteOutputHDF5Particles( &mesh, &particles, &topo, &topo_chain, &topo_ini, &topo_chain_ini, input.model, "Particles", input.materials, input.scaling );
             printf("** Time for Output file write = %lf sec\n", (double)((double)omp_get_wtime() - t_omp));
 #endif
         }
@@ -1128,7 +1128,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
     // Free char*'s
     free(input.model.import_file);
     free(input.model.import_files_dir);
-    //free(input.model.writer_subfolder);
+    // free(input.model.writer_subfolder);
     free(input.model.initial_markers_file);
     // free(input.model.description);
 
