@@ -14,15 +14,15 @@ V   = 1.0e-9      /velocity
 T   = 1.e+02      /temperature
  
 /**** SPACE****/
-Nx      = 151 
-Nz      = 81
+Nx      = 21 /151 
+Nz      = 11 /81
 xmin    = -250.000000e3
 xmax    =  250.000000e3
 zmin    = -150.000000e3
 zmax    =   10.000000e3 
 
 /**** TIME ****/
-Nt          = 10
+Nt          = 0
 dt          = 2.63e10
 constant_dt = 1
 Courant     = 0.25

@@ -188,11 +188,16 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         printf("****** Initialize temperature *******\n");
         printf("*************************************\n");
 
-        Print2DArrayChar( mesh.BCt.type, mesh.Nx-1, mesh.Nz-1, 1.0 );
-        Print2DArrayChar( mesh.BCt.typW, mesh.Nz-1, 1, 1.0 );
-        Print2DArrayChar( mesh.BCt.typN, mesh.Nx-1, 1, 1.0 );
+        // Print2DArrayChar( mesh.BCt.type, mesh.Nx-1, mesh.Nz-1, 1.0 );
+        printf("West");
         Print2DArrayChar( mesh.BCt.typE, mesh.Nz-1, 1, 1.0 );
+        printf("East");
+        Print2DArrayChar( mesh.BCt.typW, mesh.Nz-1, 1, 1.0 );
+        printf("South");
         Print2DArrayChar( mesh.BCt.typS, mesh.Nx-1, 1, 1.0 );
+        printf("North");
+        Print2DArrayChar( mesh.BCt.typN, mesh.Nx-1, 1, 1.0 );
+        exit(33);
 
         // Get energy and related material parameters from particles
         P2Mastah( &input.model, particles, input.materials.k_eff, &mesh, mesh.kx, mesh.BCu.type,  0, 0, interp, vxnodes, 1);

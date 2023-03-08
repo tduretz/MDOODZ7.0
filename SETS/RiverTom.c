@@ -78,17 +78,18 @@ SetBC SetBCTNew(MdoodzInput *instance, POSITION position, double particleTempera
   SetBC     bc;
   double surfaceTemperature = zeroC / instance->scaling.T;
   double mantleTemperature  = (1330. + zeroC) / instance->scaling.T;
+  bc.value = 0.;
+  bc.type  = 0;
   if (position == S || position == SE || position == SW) {
     bc.value = particleTemperature;
     bc.type  = 1;
-  } else if (position == N || position == NE || position == NW) {
-    bc.value = surfaceTemperature;
+  } 
+  if (position == N || position == NE || position == NW) {
+    bc.value = particleTemperature;
     bc.type  = 1;
-  } else if (position == W || position == E) {
+  } 
+  if (position == W || position == E ) {
     bc.value = mantleTemperature;
-    bc.type  = 0;
-  } else {
-    bc.value = 0;
     bc.type  = 0;
   }
   return bc;
