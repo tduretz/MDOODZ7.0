@@ -327,6 +327,7 @@ void SetGridCoordinates( grid *mesh, params *model, int nx, int nz ) {
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
+#if 0 //MD7
 void InitialiseSolutionFields( grid *mesh, params *model ) {
     
     // Set initial velocity and pressure fields
@@ -405,6 +406,97 @@ void InitialiseSolutionFields( grid *mesh, params *model ) {
     ApplyBC( mesh, model ); 
     printf("Velocity field was set to background pure shear\n");
 }
+#endif
+
+void InitialiseSolutionFields( grid *mesh, params *model ) {
+    
+    // Set initial velocity and pressure fields
+	
+    int nx, nz, nxvz, nzvx, ncx, ncz;
+    int k, l, c;
+    double eps = 1e-13; // perturbation to avoid zero pressure that results in Nan d(eta)dP in numerical differentiation
+	
+    nx  = mesh->Nx;
+    nz  = mesh->Nz;
+    nxvz = nx+1;
+    nzvx = nz+1;
+    ncx  = nx-1;
+    ncz  = nz-1;
+
+    for( l=0; l<nzvx; l++) {
+        for( k=0; k<nx; k++) {
+            
+            c = k + l*nx;
+            
+//            // This works with cylindrical
+//            mesh->u_in[c]  = 0.0;
+//            if (mesh->BCu.type[c] == 0) mesh->u_in[c]  = mesh->BCu.val[c];
+            
+            if ( mesh->BCu.type[c] == 30 )  mesh->u_in[c]  = 0.0;
+            
+            
+            if ( mesh->BCu.type[c] != 30 ) {
+                
+                if (model->step==0) {
+                    
+                    // Initial velocity field (zero or pure shear)
+                    if (model->bkg_strain_rate == 0) mesh->u_in[c]  = 0.0;
+                    // Pure shear
+                    else mesh->u_in[c]  = -mesh->xg_coord[k]*model->bkg_strain_rate;
+//                    if (model->isperiodic_x == 1) mesh->u_in[c] = 2.0*mesh->zvx_coord[l]*model->EpsBG; // Simple shear
+//                    if (model->isperiodic_x == 1) mesh->u_in[c] = 2.0*(mesh->zvx_coord[l]-model->zmin)*model->EpsBG; // Simple shear
+                    if (model->periodic_x == 1) mesh->u_in[c] = 2.0*(mesh->zvx_coord[l])*model->bkg_strain_rate; // Simple shear
+//                    printf("%2.2e\n", mesh->u_in[c] );
+                }
+                // Force Dirichlets
+                if (mesh->BCu.type[c] == 0) mesh->u_in[c]  = mesh->BCu.val[c];
+            }
+    
+        }
+    }
+	
+    for( l=0; l<nz; l++) {
+        for( k=0; k<nxvz; k++) {
+            
+            c = k + l*nxvz;
+            
+            if ( mesh->BCv.type[c] == 30 )  mesh->v_in[c]  = 0.0;
+            
+            if ( mesh->BCv.type[c] != 30 ) {
+                if (model->step==0) {
+                    // Initial velocity field (zero or pure shear)
+                    if (model->bkg_strain_rate == 0) mesh->v_in[c]  = 0.0;
+                    else mesh->v_in[c]  = mesh->zg_coord[l]*model->bkg_strain_rate;
+                    if (model->periodic_x == 1) mesh->v_in[c]  = 0.0;
+                }
+                // Force Dirichlets
+                if (mesh->BCv.type[c] == 0) mesh->v_in[c]  = mesh->BCv.val[c];
+            }
+            
+        }
+    }
+    
+    for( l=0; l<ncz; l++) {
+        for( k=0; k<ncx; k++) {
+            
+            c = k + l*ncx;
+            
+//            mesh->p_in[c]  = 0.0;
+            
+            if ( mesh->BCp.type[c] == 30 ||  mesh->BCp.type[c] == 31 ) mesh->p_in[c]  = 0.0;
+            
+            if ( mesh->BCp.type[c] != 30 ||  mesh->BCp.type[c] != 31) {
+                if (model->step==0) {
+                    // Initial pressure field
+                    mesh->p_in[c]  = 0.0 + model->bkg_pressure;
+                }
+            }
+            
+        }
+    }
+    
+    printf("Velocity field was set to background pure shear\n");
+}
 
 /*--------------------------------------------------------------------------------------------------------------------*/
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
@@ -476,6 +568,8 @@ void ComputeLithostaticPressure( grid *mesh, params *model, double RHO_REF, scal
     
 
 }
+
+
 
 /*--------------------------------------------------------------------------------------------------------------------*/
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/

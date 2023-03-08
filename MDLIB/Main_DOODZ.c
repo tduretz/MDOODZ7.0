@@ -188,6 +188,12 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         printf("****** Initialize temperature *******\n");
         printf("*************************************\n");
 
+        Print2DArrayChar( mesh.BCt.type, mesh.Nx-1, mesh.Nz-1, 1.0 );
+        Print2DArrayChar( mesh.BCt.typW, mesh.Nz-1, 1, 1.0 );
+        Print2DArrayChar( mesh.BCt.typN, mesh.Nx-1, 1, 1.0 );
+        Print2DArrayChar( mesh.BCt.typE, mesh.Nz-1, 1, 1.0 );
+        Print2DArrayChar( mesh.BCt.typS, mesh.Nx-1, 1, 1.0 );
+
         // Get energy and related material parameters from particles
         P2Mastah( &input.model, particles, input.materials.k_eff, &mesh, mesh.kx, mesh.BCu.type,  0, 0, interp, vxnodes, 1);
         P2Mastah( &input.model, particles, input.materials.k_eff, &mesh, mesh.kz, mesh.BCv.type,  0, 0, interp, vznodes, 1);
@@ -243,6 +249,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         printf("******** Initialize density *********\n");
         printf("*************************************\n");
         UpdateDensity( &mesh, &particles, &input.materials, &input.model, &input.scaling );
+        if (input.model.free_surface == 1 ) SurfaceDensityCorrection( &mesh, input.model, topo, input.scaling  );
 
         printf("*************************************\n");
         printf("****** Initialize composition *******\n");

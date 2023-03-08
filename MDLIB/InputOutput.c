@@ -1067,9 +1067,9 @@ Input ReadInputFile( char *fileName ) {
     model.Courant            = ReadDou2( fin, "Courant",             0.5 ); // Courant number
     model.RK                 = ReadInt2( fin, "RK",                    4 ); // Order of Runge-Kutta advection solver (1, 2 or 4)
     model.constant_dt        = ReadInt2( fin, "constant_dt",           0 ); // Activates constant time step
-    model .stress_rotation    = ReadInt2( fin, "stress_rotation",      1 ); // 0: no stress rotation, 1: analytic rotation, 2: upper convected rate
-    model .dt_max             = ReadDou2( fin, "dt_max", 1e20 ) /scaling.t; // maximum allowed time step, the default value is set to ~infinite, it we become effective only if specificaly set in XXX.txt (see e.g. LithoScale.txt)
-    model .dt_min             = ReadDou2( fin, "dt_min",-1e20 ) /scaling.t; // minimum allowed time step, defaut is negative such that it will never be activated unless specifically set in XXX.txt file
+    model.stress_rotation    = ReadInt2( fin, "stress_rotation",       1 ); // 0: no stress rotation, 1: analytic rotation, 2: upper convected rate
+    model.dt_max             = ReadDou2( fin, "dt_max", 1e20 ) /scaling.t;  // maximum allowed time step, the default value is set to ~infinite, it we become effective only if specificaly set in XXX.txt (see e.g. LithoScale.txt)
+    model.dt_min             = ReadDou2( fin, "dt_min",-1e20 ) /scaling.t;  // minimum allowed time step, defaut is negative such that it will never be activated unless specifically set in XXX.txt file
     // Physics 
     model.mechanical         = ReadInt2( fin, "mechanical",            1 ); // Activates mechanical solver
     model.advection          = ReadInt2( fin, "advection",             1 ); // Activates advection
