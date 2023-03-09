@@ -401,23 +401,49 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
           mesh->BCt.type[c] = bc.type;
           mesh->BCt.val[c]  = bc.value;
         }
+        
+        //----------------------------------------------------------------------
+        //----------------------------------------------------------------------
+
+        POSITION  position = INTERNAL;
+        if (k == 0) {
+            position = W;
+        } 
+        if (k == NCX - 1) {
+            position = E;
+        } 
+
         // TODO change size of BCt array and phase out SetBCTNew
         if (setBCs.SetBCTNew) {
           SetBC bc = setBCs.SetBCTNew(instance, position, mesh->T[c]);
           if (k == 0) {
-            mesh->BCt.typW[l] = 0;//bc.type;
+            // printf("pos = %d --- BC = %d\n", position, bc.type);
+            mesh->BCt.typW[l] = bc.type;
             mesh->BCt.valW[l] = bc.value;
           } 
           if (k == NCX - 1) {
-            mesh->BCt.typE[l] = 0;//bc.type;
+            mesh->BCt.typE[l] = bc.type;
             mesh->BCt.valE[l] = bc.value;
           } 
-          if (l == 0) {
-            mesh->BCt.typS[k] = 1;//bc.type;
+        }
+
+        if (l == 0) {
+          position = S;
+        } 
+        if (l == NCZ - 1) {
+          position = N;
+        } 
+
+        // TODO change size of BCt array and phase out SetBCTNew
+        if (setBCs.SetBCTNew) {
+          SetBC bc = setBCs.SetBCTNew(instance, position, mesh->T[c]);
+          
+          if (l == 0  ) {
+            mesh->BCt.typS[k] = bc.type;
             mesh->BCt.valS[k] = bc.value;
           } 
-          if (l == NCZ - 1) {
-            mesh->BCt.typN[k] = 1;//bc.type;
+          if (l == NCZ - 1 ) {
+            mesh->BCt.typN[k] = bc.type;
             mesh->BCt.valN[k] = bc.value;
           }
         }

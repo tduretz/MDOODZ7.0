@@ -199,8 +199,8 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         // Print2DArrayChar( mesh.BCt.typS, mesh.Nx-1, 1, 1.0 );
         // printf("North");
         // Print2DArrayChar( mesh.BCt.typN, mesh.Nx-1, 1, 1.0 );
-        //printf("BCT_exp");
-        //Print2DArrayChar( mesh.BCT_exp.type, mesh.Nx+1, mesh.Nz+1, 1.0 );
+        // printf("BCT_exp");
+        // Print2DArrayChar( mesh.BCT_exp.type, mesh.Nx+1, mesh.Nz+1, 1.0 );
         // exit(33);
 
         // Get energy and related material parameters from particles
@@ -950,14 +950,6 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                     RogerGuntherII( &topo_chain, input.model, mesh, 1, input.scaling );
                     RogerGuntherII( &topo_chain_ini, input.model, mesh, 1, input.scaling );
                 }
-
-                //                // Advect free surface
-                //                if ( input.model.free_surface == 1 ) {
-                //                    AdvectFreeSurf( &topo_chain,     input.model, input.scaling );
-                //                    AdvectFreeSurf( &topo_chain_ini, input.model, input.scaling );
-                //                    MinMaxArray( topo_chain.z,      input.scaling.L, topo_chain.Nb_part,       "z surf.     " );
-                //                    MinMaxArray( topo_chain_ini.z,  input.scaling.L, topo_chain_ini.Nb_part,   "z surf. ini." );
-                //                }
 
                 // Correction for particle inflow 0
                 if (input.model.pure_shear_ALE == -1 && input.model.periodic_x == 0) ParticleInflowCheck( &particles, &mesh, input.model, topo, 0 );
