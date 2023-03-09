@@ -484,6 +484,8 @@ grid GridAlloc(params *model) {
   mesh.kc_z           = DoodzCalloc(NxVz * Nz, sizeof(double));
   mesh.Qr             = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
   mesh.rhs_t          = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  mesh.BCT_exp.type   = DoodzCalloc((Nx + 1) * (Nz + 1), sizeof(char));
+  mesh.BCT_exp.val    = DoodzCalloc((Nx + 1) * (Nz + 1), sizeof(double));
   mesh.BCt.type       = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(char));
   mesh.BCt.typW       = DoodzCalloc((Nz - 1), sizeof(char));
   mesh.BCt.typE       = DoodzCalloc((Nz - 1), sizeof(char));
@@ -801,6 +803,8 @@ void GridFree(grid *mesh, params *model) {
     DoodzFree(mesh->kc_z);
     DoodzFree(mesh->Qr);
     DoodzFree(mesh->rhs_t);
+    DoodzFree(mesh->BCT_exp.type);
+    DoodzFree(mesh->BCT_exp.val);
     DoodzFree(mesh->BCt.val);
     DoodzFree(mesh->BCt.valW);
     DoodzFree(mesh->BCt.valE);

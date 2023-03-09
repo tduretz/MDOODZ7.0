@@ -201,6 +201,7 @@ typedef SetBC (*SetBCVx_f)(MdoodzInput *input, POSITION position, Coordinates co
 typedef SetBC (*SetBCVz_f)(MdoodzInput *input, POSITION position, Coordinates coordinates);
 typedef SetBC (*SetBCT_f)(MdoodzInput *input, POSITION position, double gridTemperature);
 typedef SetBC (*SetBCTNew_f)(MdoodzInput *input, POSITION position, double gridTemperature);
+typedef SetBC (*SetBCT1_f)(MdoodzInput *input, POSITION position, Coordinates coordinates, double gridTemperature);
 typedef char (*SetBCPType_f)(MdoodzInput *input, POSITION position);
 
 typedef struct {

@@ -197,6 +197,8 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         Print2DArrayChar( mesh.BCt.typS, mesh.Nx-1, 1, 1.0 );
         printf("North");
         Print2DArrayChar( mesh.BCt.typN, mesh.Nx-1, 1, 1.0 );
+        printf("BCT_exp");
+        Print2DArrayChar( mesh.BCT_exp.type, mesh.Nx+1, mesh.Nz+1, 1.0 );
         exit(33);
 
         // Get energy and related material parameters from particles

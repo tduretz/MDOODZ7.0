@@ -407,6 +407,34 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
     }
   }
 
+  //--------------- NEW
+  for (int l = 0; l < NCZ+2; l++) {
+    for (int k = 0; k < NCX+2; k++) {
+
+      const int c = k + l * (NCX+2);
+      POSITION  position = INTERNAL;
+
+      if (k == 0)       position = W;
+      if (k == NCX + 1) position = E;
+      if (l == 0)       position = S;
+      if (l == NCZ + 1) position = N;  
+      if ((mesh->BCt.type[c] == -1 || mesh->BCt.type[c] == 1 || mesh->BCt.type[c] == 0) && mesh->BCt.type[c + NCX] == 30) {
+        position = free_surface;
+      } 
+      if (mesh->BCt.type[c] != 30) {
+        if (setBCs.SetBCT) {
+          Coordinates coordinates = {
+              .x = mesh->xvz_coord[k],
+              .z = mesh->zvx_coord[l]};
+          SetBC bc          = setBCs.SetBCT1(instance, position, coordinates, mesh->T[c]);
+          mesh->BCt.type[c] = bc.type;
+          mesh->BCt.val[c]  = bc.value;
+        }
+      }
+    }
+  }
+  //--------------- NEW
+
   printf("Velocity and pressure were initialised\n");
   printf("Boundary conditions were set up\n");
   // Print2DArrayChar( mesh->BCu.type, mesh->Nx, (mesh->Nz+1), 1.0 );
