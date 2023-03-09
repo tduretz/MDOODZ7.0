@@ -1,5 +1,5 @@
 /**** RESTART ****/
-istep = 00010
+istep = 00005
 irestart = 0
 
 /**** OUTPUT FILES ****/
@@ -14,15 +14,15 @@ V   = 1.0e-9      /velocity
 T   = 1.e+02      /temperature
  
 /**** SPACE****/
-Nx      = 21 /151 
-Nz      = 11 /81
+Nx      = 251 
+Nz      = 181
 xmin    = -250.000000e3
 xmax    =  250.000000e3
 zmin    = -150.000000e3
 zmax    =   10.000000e3 
 
 /**** TIME ****/
-Nt          = 0
+Nt          = 500
 dt          = 2.63e10
 constant_dt = 1
 Courant     = 0.25
@@ -43,13 +43,13 @@ track_T_P_x_z     = 1 / initial P and T field record
 conserv_interp    = 0
 
 /**** SURFACE PROCESSES ****/
-surface_processes  = 0 /0 = none; 1 = diffusion only; 2 = fills instantaneously the basin up to the base level;  3 = diffusion + source term
+surface_processes  = 5 /0 = none; 1 = diffusion only; 2 = fills instantaneously the basin up to the base level;  3 = diffusion + source term
 surf_diff          = 8.0e-6 /topography diffusion coefficient
 surf_Winc          = 10e3
 surf_Vinc          = 7e-9
 
 /**** SETUP DEPENDANT ****/
-bkg_strain_rate = 1e-25 / Background strain rate [s-1] 
+bkg_strain_rate = 1e-18 / Background strain rate [s-1] 
 user0           = 1330.0    / Mantle temperature    
 user1           = 60.0e3    / Crust thickness    
 
