@@ -291,10 +291,10 @@ void RemeshMarkerChain( markers *topo_chain, surface *topo, params model, scale 
             if (in<0)    in = 0;
             if (in>Ncx-1)in = Ncx-1;
             grid_topo       = (topo->b[in] + topo->a[in] * ( topo_chain->x[k] ));
-            if ( fabs((grid_topo-topo_chain->z[k]) / grid_topo) > mismax) {
+            //if ( fabs((grid_topo-topo_chain->z[k]) / grid_topo) > mismax) {
                 topo_chain->z[k]   = grid_topo;
                 inc++;
-            }
+            //}
         }
         printf("Had to correct %d marker topographies for a mismax of %lf\n", inc, mismax);
     }
@@ -317,7 +317,7 @@ void ProjectTopography( surface *topo, markers *topo_chain, params model, grid m
    Wm              = DoodzCalloc ( Nx-1, sizeof(double));
    BmWm            = DoodzCalloc ( Nx-1, sizeof(double));
    double *heightc = DoodzCalloc ( Nx-1, sizeof(double));
-
+    double *Delta_heightc = DoodzCalloc ( Nx-1, sizeof(double));
    for (k=0;k<topo_chain->Nb_part;k++) {
 
         if ( topo_chain->phase[k] != -1 ) {
@@ -325,7 +325,7 @@ void ProjectTopography( surface *topo, markers *topo_chain, params model, grid m
             distance = ( topo_chain->x[k] - mesh.xc_coord[0] );
             in   = ceil( (distance/dx) + 0.5) - 1;
             dxm = 2.0*fabs( mesh.xc_coord[in] - topo_chain->x[k]);
-            mark_val = topo_chain->z[k];
+            mark_val = topo_chain->z[k]-topo_chain->z0[k];
 
             Wm[in]   += (1.0-(dxm/dx));
             BmWm[in] += mark_val*(1.0-(dxm/dx));
@@ -334,11 +334,16 @@ void ProjectTopography( surface *topo, markers *topo_chain, params model, grid m
    }
 
    for (k=0;k<Nx-1;k++) {
-       heightc[k] += BmWm[k]/Wm[k];
+       if (Wm[k]==0.0){
+                  Delta_heightc[k]+= 0.0;
+        }
+       else {
+                  Delta_heightc[k]+= BmWm[k]/Wm[k];
+        }
    }
 
    for (k=1;k<Nx-1;k++) {
-        topo->height[k] = 0.5*(heightc[k]+heightc[k-1]);
+       topo->height[k] = topo->height0[k] + 0.5*(Delta_heightc[k]+Delta_heightc[k-1]);
     }
    topo->height[0]=topo->height[1];
    topo->height[Nx-1]=topo->height[Nx-2];
@@ -362,6 +367,7 @@ void ProjectTopography( surface *topo, markers *topo_chain, params model, grid m
     DoodzFree(Wm);
     DoodzFree(BmWm);
     DoodzFree(heightc);
+    DoodzFree(Delta_heightc);
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
@@ -836,9 +842,11 @@ void SurfaceDensityCorrection( grid *mesh, params model, surface topo, scale sca
             if (mesh->BCp.type[c1] == -1 && mesh->BCp.type[c1+ncx] == 31 ) {
                 h  = topo.b[i] + topo.a[i]*mesh->xc_coord[i];
                 h0               = fabs(h - mesh->zc_coord[j]);
+                // double rho_ini = mesh->rho_n[c1];
                 mesh->rho_n[c1]  *= h0/dz;
                 mesh->rho0_n[c1] *= h0/dz;
                 mesh->FreeSurfW_n[c1] = h0/dz;
+                // printf("rho_ini = %3.3lf --- rho = %3.3lf -- h = %3.3lf --- h0/dz = %3.3lf \n", rho_ini*scaling.rho, mesh->rho_n[c1]*scaling.rho, h*scaling.L, h0/dz);
             }
             if ( mesh->BCp.type[c1] == 30 || mesh->BCp.type[c1] == 31 ) {
                 mesh->rho_n[c1]       = 1.0/scaling.rho;
@@ -899,7 +907,7 @@ void DiffuseAlongTopography( grid *mesh, params model, scale scaling, double *ar
     printf("Kero       = %2.2e m2.s-1\n", diff*(pow(scaling.L,2.0)/scaling.t));
     printf("Sed. rate  = %2.2e m/y with base level: %2.2e m\n", model.surf_sedirate*scaling.V*3600.0*365.0*24.0, base_level*scaling.L);
 
-    if ( model.surface_processes == 1 || model.surface_processes == 3 || model.surface_processes == 5 ) {
+    if ( model.surface_processes == 1 || model.surface_processes == 5 ) {
 
         if ( model.surface_processes == 5 ) {
         

@@ -3,61 +3,45 @@
 #include "stdbool.h"
 #include "stdlib.h"
 
-
 double SetSurfaceZCoord(MdoodzInput *instance, double x_coord) {
-  const double TopoLevel = -0.0e3 / instance->scaling.L;
-  const double h_pert    = 0.0;//instance->model.user3 / instance->scaling.L;
-  return TopoLevel + h_pert * (3330.0 - 2800.0) / 2800.0 * cos(2 * M_PI * x_coord / (instance->model.xmax - instance->model.xmin));
+  double TopoLevel = 0.0;
+  if (fabs(x_coord) < instance->model.surf_Winc/2.0) TopoLevel = -500.0/instance->scaling.L;
+  return TopoLevel;
 }
 
 int SetPhase(MdoodzInput *instance, Coordinates coordinates) {
-  const double lithosphereThickness  = instance->model.user1 / instance->scaling.L;
-  const double crustThickness        = instance->model.user2 / instance->scaling.L;
-  const double perturbationAmplitude = instance->model.user3 / instance->scaling.L;
-  const double mohoLevel             = -crustThickness;// - perturbationAmplitude * cos(2 * M_PI * coordinates.x / (instance->model.xmax - instance->model.xmin));
-  const bool   isBelowLithosphere    = coordinates.z < -lithosphereThickness;
-  const bool   isAboveMoho           = coordinates.z > mohoLevel;
-  const bool   isSeed                = ( pow(coordinates.x, 2) + pow(coordinates.z-0.6666*mohoLevel, 2) ) < pow(perturbationAmplitude, 2);
+  const double H_crust  = instance->model.user1 / instance->scaling.L;
+  if (coordinates.z> -H_crust) return 0;
+  else return 1;
+}
 
-  if (isSeed) return 0;
+int SetDualPhase(MdoodzInput *input, Coordinates coordinate, int phase) {
+    
+    int    dual_phase = phase;
+    double Lx = input->model.xmax - input->model.xmin;
+    double Lz = input->model.zmax - input->model.zmin;
+    double Ax, Az;
 
-  if (instance->model.user4 && isAboveMoho) {
-    const bool is2500MAboveMoho = coordinates.z > mohoLevel + 2500 / instance->scaling.L;
-    const bool is4500MAboveMoho = coordinates.z > mohoLevel + 4500 / instance->scaling.L;
-    const bool is7000MAboveMoho = coordinates.z > mohoLevel + 7000 / instance->scaling.L;
-    const bool is9000MAboveMoho = coordinates.z > mohoLevel + 9000 / instance->scaling.L;
-    return 1;
-    // if (is2500MAboveMoho && !is4500MAboveMoho) {
-    //   return 7;
-    // } else if (is7000MAboveMoho && !is9000MAboveMoho) {
-    //   return 8;
-    // } else {
-    //   return 1;
-    // }
-  } else if (isAboveMoho) {
-    return 1;
-  } else if (isBelowLithosphere) {
-    return 3;
-  } else {
-    return 2;
-  }
+    // Set checkerboard for phase 0
+    Ax = cos( 6.0*2.0*M_PI*coordinate.x / Lx  );
+    Az = sin( 6.0*2.0*M_PI*coordinate.z / Lz  );
+    if ( ( (Az<0.0 && Ax<0.0) || (Az>0.0 && Ax>0.0) ) && dual_phase==0 ) {
+        dual_phase += input->model.Nb_phases;
+    }
+
+  return dual_phase;
 }
 
 double SetTemperature(MdoodzInput *instance, Coordinates coordinates) {
   const double lithosphereThickness = instance->model.user1 / instance->scaling.L;
   const double surfaceTemperature   = 273.15 / instance->scaling.T;
-  const double mantleTemperature    = (1330.0 + 273.15) / instance->scaling.T;
+  const double mantleTemperature    = (instance->model.user0 + 273.15) / instance->scaling.T;
   const double particleTemperature  = ((mantleTemperature - surfaceTemperature) / lithosphereThickness) * (-coordinates.z) + surfaceTemperature;
   if (particleTemperature > mantleTemperature) {
     return mantleTemperature;
   } else {
     return particleTemperature;
   }
-}
-
-double SetGrainSize(MdoodzInput *instance, Coordinates coordinates, int phase) {
-  const int asthenospherePhase = 3;
-  return instance->materials.gs_ref[asthenospherePhase];
 }
 
 double SetHorizontalVelocity(MdoodzInput *instance, Coordinates coordinates) {
@@ -94,17 +78,18 @@ SetBC SetBCTNew(MdoodzInput *instance, POSITION position, double particleTempera
   SetBC     bc;
   double surfaceTemperature = zeroC / instance->scaling.T;
   double mantleTemperature  = (1330. + zeroC) / instance->scaling.T;
+  bc.value = 0.;
+  bc.type  = 0;
   if (position == S || position == SE || position == SW) {
     bc.value = particleTemperature;
     bc.type  = 1;
-  } else if (position == N || position == NE || position == NW) {
-    bc.value = surfaceTemperature;
+  } 
+  if (position == N || position == NE || position == NW) {
+    bc.value = particleTemperature;
     bc.type  = 1;
-  } else if (position == W || position == E) {
+  } 
+  if (position == W || position == E ) {
     bc.value = mantleTemperature;
-    bc.type  = 0;
-  } else {
-    bc.value = 0;
     bc.type  = 0;
   }
   return bc;
@@ -120,6 +105,61 @@ void AddCrazyConductivity(MdoodzInput *input) {
   input->crazyConductivity               = crazyConductivity;
 }
 
+SetBC SetBCVx(MdoodzInput *instance, POSITION position, Coordinates coordinates) {
+  SetBC bc;
+  const double Lx    = instance->model.xmax - instance->model.xmin;
+  const double V_tot =  Lx * instance->model.bkg_strain_rate; 
+  const double x = coordinates.x, z = coordinates.z;
+
+  // Evaluate velocity of W and E boundaries
+  const double VxW =  0.5*V_tot;
+  const double VxE = -0.5*V_tot;
+  
+  // Assign BC values
+  if (position == N || position == S || position == NW || position == SW || position == NE || position == SE) {
+    bc.value = 0;
+    bc.type  = 13;
+  } else if (position == W) {
+    bc.value = VxW;
+    bc.type  = 0;
+  } else if (position == E) {
+    bc.value = VxE;
+    bc.type  = 0;
+  } else {
+    bc.value = 0.0;
+    bc.type  = -1;
+  }
+  return bc;
+}
+
+SetBC SetBCVz(MdoodzInput *instance, POSITION position, Coordinates coordinates) {
+  SetBC bc;
+  const double Lx = instance->model.xmax - instance->model.xmin;
+  double V_tot    =  Lx * instance->model.bkg_strain_rate; // |VxW| + |VxE|
+ 
+  // Compute bottom boundary velocity and account for erosion
+  const double surf_Winc = instance->model.surf_Winc;
+  const double surf_Vinc = instance->model.surf_Vinc;
+  const double Vz_corr   = surf_Winc*surf_Vinc / Lx;
+  const double VzS = -V_tot * (0.0 - instance->model.zmin) / Lx + Vz_corr;
+
+  // Set boundary nodes types and values
+  if (position == W || position == SW || position == NW ) {
+    bc.value = 0.0;
+    bc.type  = 13;
+  } else if ( position == E || position == SE || position == NE) {
+    bc.value = 0.0;
+    bc.type  = 13;
+  } else if (position == S || position == N) {
+    bc.value = VzS;
+    bc.type  = 0;
+  } else {
+    bc.value = 0;
+    bc.type  = -1;
+  }
+  return bc;
+}
+
 int main() {
   MdoodzSetup setup = {
           .BuildInitialTopography = &(BuildInitialTopography_ff){
@@ -128,13 +168,15 @@ int main() {
           .SetParticles = &(SetParticles_ff){
                   .SetPhase              = SetPhase,
                   .SetTemperature        = SetTemperature,
-                  .SetGrainSize          = SetGrainSize,
                   .SetHorizontalVelocity = SetHorizontalVelocity,
                   .SetVerticalVelocity   = SetVerticalVelocity,
+                  .SetDualPhase          = SetDualPhase,
           },
           .SetBCs = &(SetBCs_ff){
-                  .SetBCVx    = SetPureShearBCVx,
-                  .SetBCVz    = SetPureShearBCVz,
+                  .SetBCVx    = SetBCVx, // manuel
+                  .SetBCVz    = SetBCVz,
+                  // .SetBCVx    = SetPureShearBCVx, // automatic
+                  // .SetBCVz    = SetPureShearBCVz,
                   .SetBCPType = SetBCPType,
                   .SetBCT     = SetBCT,
                   .SetBCTNew  = SetBCTNew,
@@ -142,5 +184,5 @@ int main() {
           .MutateInput = AddCrazyConductivity,
 
   };
-  RunMDOODZ("RiftingBasic.txt", &setup);
+  RunMDOODZ("RiverTom.txt", &setup);
 }

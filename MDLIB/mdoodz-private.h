@@ -71,7 +71,7 @@ typedef struct {
           *p_start, *divth0_n, *T0_n;
   int    *iter_smooth;
   int    *nb_part_cell, *nb_part_vert;
-  BC      BCu, BCv, BCp, BCp_exp;
+  BC      BCu, BCv, BCp, BCp_exp, BCT_exp;
   // TODO rename BCu and rename BCv to BCVx and BCVz
   // TODO rename BCp to BCP (P as pressure is always capital P)
   // TODO find and and do the same for (T as temperature)

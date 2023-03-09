@@ -1450,14 +1450,13 @@ void UpdateDensity( grid* mesh, markers* particles, mat_prop *materials, params 
         rho  = EvaluateDensity( p, mesh->T[c0],    mesh->p_in[c0], mesh->X_n[c0],  model, materials );
         rho0 = EvaluateDensity( p, mesh->T0_n[c0], mesh->p0_n[c0], mesh->X0_n[c0], model, materials );
 
-        // if (mesh->X0_n[c0]>0.002) {
-        //   printf("%2.6e\n", rho0*scaling->rho);
-        //             // printf("%2.6e\n", mesh->X0_n[c0]);
-        // }
-
         // Average density base on phase density and phase volume fraction
         if ( mesh->BCp.type[c0] != 30 ) mesh->rho_n[c0]  += mesh->phase_perc_n[p][c0] * rho;
         if ( mesh->BCp.type[c0] != 30 ) mesh->rho0_n[c0] += mesh->phase_perc_n[p][c0] * rho0;
+
+        // if (mesh->BCp.type[c0] == -1 && mesh->BCp.type[c0+Ncx] == 31 ) {
+        //   printf("At the surface: rho = %2.2lf, phase = %d rho = %2.2lf X = %2.2lf density_model = %d\n", mesh->rho_n[c0]*scaling->rho, p, rho, mesh->phase_perc_n[p][c0], materials->density_model[p]);
+        // }
       }
     }
   }

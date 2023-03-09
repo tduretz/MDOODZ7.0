@@ -7,6 +7,24 @@
 #define Rad_Earth 6370000
 #include "stdbool.h"
 
+#define RESET   "\033[0m"
+#define BLACK   "\033[30m"      /* Black */
+#define RED     "\033[31m"      /* Red */
+#define GREEN   "\033[32m"      /* Green */
+#define YELLOW  "\033[33m"      /* Yellow */
+#define BLUE    "\033[34m"      /* Blue */
+#define MAGENTA "\033[35m"      /* Magenta */
+#define CYAN    "\033[36m"      /* Cyan */
+#define WHITE   "\033[37m"      /* White */
+#define BOLDBLACK   "\033[1m\033[30m"      /* Bold Black */
+#define BOLDRED     "\033[1m\033[31m"      /* Bold Red */
+#define BOLDGREEN   "\033[1m\033[32m"      /* Bold Green */
+#define BOLDYELLOW  "\033[1m\033[33m"      /* Bold Yellow */
+#define BOLDBLUE    "\033[1m\033[34m"      /* Bold Blue */
+#define BOLDMAGENTA "\033[1m\033[35m"      /* Bold Magenta */
+#define BOLDCYAN    "\033[1m\033[36m"      /* Bold Cyan */
+#define BOLDWHITE   "\033[1m\033[37m"      /* Bold White */
+
 // address Williams comments
 typedef enum { ARITHMETIC = 0,
                HARMONIC   = 1,
@@ -34,7 +52,7 @@ typedef struct {
   int     interp_stencil;
   double  nexp_radial_basis;
   int     mechanical, periodic_x, elastic, isnonnewtonian,
-          thermal, pure_shear_ALE, free_surface, write_markers, write_debug;
+          thermal, pure_shear_ALE, free_surface, writer_markers, writer_debug;
   double free_surface_stab;
   int    constant_dt, RK, line_search, initial_cooling, subgrid_diffusion, adiab_heating,
           shear_heating, advection, finite_strain, conserv_interp;
@@ -189,7 +207,7 @@ typedef enum {
   S,
   W,
   E,
-  free_surfaceACE
+  free_surface
 } POSITION;
 
 typedef struct {
@@ -201,6 +219,7 @@ typedef SetBC (*SetBCVx_f)(MdoodzInput *input, POSITION position, Coordinates co
 typedef SetBC (*SetBCVz_f)(MdoodzInput *input, POSITION position, Coordinates coordinates);
 typedef SetBC (*SetBCT_f)(MdoodzInput *input, POSITION position, double gridTemperature);
 typedef SetBC (*SetBCTNew_f)(MdoodzInput *input, POSITION position, double gridTemperature);
+typedef SetBC (*SetBCT1_f)(MdoodzInput *input, POSITION position, Coordinates coordinates, double gridTemperature);
 typedef char (*SetBCPType_f)(MdoodzInput *input, POSITION position);
 
 typedef struct {
