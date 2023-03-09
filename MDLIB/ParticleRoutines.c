@@ -553,6 +553,23 @@ void ParticleInflowCheck ( markers* particles, grid *mesh, params model, surface
     int finite_strain = model.finite_strain;
     
     clock_t t_omp = (double)omp_get_wtime();
+
+    // Count particles ready for recycling
+    int np_reuse = 0;
+    for (k=0; k<Nb_part; k++) {
+        if ( particles->phase[k] == -1 ) np_reuse++;
+    }
+    printf( GREEN "Particles available for recycling: %04d\n" RESET, np_reuse);
+
+    // Stores indices of particles to recycle
+    int *ip_reuse = DoodzCalloc( np_reuse, sizeof(int));
+    np_reuse = 0;
+    for (k=0; k<Nb_part; k++) {
+        if ( particles->phase[k] == -1 ) {
+            ip_reuse[np_reuse] = k; 
+            np_reuse++;
+        }
+    }
     
     // Check if particles are in the first west/east half-cell column
     if (flag == 0) {
@@ -590,6 +607,8 @@ reduction(+:npW,npE )
         
         xW=mesh->xg_coord[0]          + dx2;
         xE=mesh->xg_coord[model.Nx-1] - dx2;
+
+        int NewIndex;
         
         for (k=0; k<Nb_part; k++) {
             
@@ -601,36 +620,52 @@ reduction(+:npW,npE )
                     npW += 1;
                     
                     // Add particles
-                    if (Nb_part < particles->Nb_part_max) {
-                        particles->x[Nb_part] = particles->x[k]-dx2;
-                        particles->z[Nb_part] = particles->z[k];
-                        // Assign new marker point properties
-                        AssignMarkerProperties ( particles, Nb_part, k, &model, mesh, 1 );
-//                        AssignMarkerProperties ( particles, Nb_part, k, &model, mesh, model.direct_neighbour );
+                    if (np_reuse>0) {
+                        // Recycle
+                        NewIndex = ip_reuse[np_reuse-1];
+                        np_reuse -= 1;
+                    }
+                    else if (Nb_part < particles->Nb_part_max) {
+                        // Increase number of particles
+                        NewIndex = Nb_part;
                         Nb_part++;
                     }
                     else {
                         printf("Too many particles in my mind %d, maximum %d\n", Nb_part, particles->Nb_part_max);
                     }
+
+                    // Add particles
+                    particles->x[NewIndex] = particles->x[k]-dx2;
+                    particles->z[NewIndex] = particles->z[k];
+                    // Assign new marker point properties
+                    AssignMarkerProperties ( particles, NewIndex, k, &model, mesh, 1 );
                 }
                 
                 // EAST COAST
                 if (particles->x[k]>=xE-dx2 && particles->x[k]<=xE) {
                     particles->intag[k] = 2;
                     npE += 1;
-                    
+
                     // Add particles
-                    if (Nb_part < particles->Nb_part_max) {
-                        particles->x[Nb_part] = particles->x[k]+dx2;
-                        particles->z[Nb_part] = particles->z[k];
-                        // Assign new marker point properties
-                        AssignMarkerProperties ( particles, Nb_part, k, &model, mesh, 1 );
-//                        AssignMarkerProperties ( particles, Nb_part, k, &model, mesh, model.direct_neighbour );
+                    if (np_reuse>0) {
+                        // Recycle
+                        NewIndex = ip_reuse[np_reuse-1];
+                        np_reuse -= 1;
+                    }
+                    else if (Nb_part < particles->Nb_part_max) {
+                        // Increase number of particles
+                        NewIndex = Nb_part;
                         Nb_part++;
                     }
                     else {
                         printf("Too many particles in my mind %d, maximum %d\n", Nb_part, particles->Nb_part_max);
                     }
+                    
+                    // Add particles
+                    particles->x[NewIndex] = particles->x[k]+dx2;
+                    particles->z[NewIndex] = particles->z[k];
+                    // Assign new marker point properties
+                    AssignMarkerProperties ( particles, NewIndex, k, &model, mesh, 1 );
                 }
             }
         }
@@ -3648,8 +3683,6 @@ void CountPartCell ( markers* particles, grid *mesh, params model, surface topo,
                     }
                 }
             }
-
-//                        printf("%d re-used particles, %d particles left out\n", inc_reuse, npreuse[ith]-inc_reuse);
         }
     }
 
@@ -3696,13 +3729,13 @@ void CountPartCell ( markers* particles, grid *mesh, params model, surface topo,
                 
                 if ( ip<npreuse[ith]) {
                     // Reuse indices
+                    // printf("Recycle marker %d\n", ipreuse[ith][ip]);
                     k = ipreuse[ith][ip];
                 }
                 else {
                     // New indices
                     k = id_new[ith] + nb_new[ith];
                     nb_new[ith]++;
-                    
                 }
                 // Security check
                 if (k>particles->Nb_part_max) {
@@ -3860,649 +3893,3 @@ void CountPartCell ( markers* particles, grid *mesh, params model, surface topo,
 /*--------------------------------------------------------------------------------------------------------------------*/
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
-
-void CountPartCell_Old( markers* particles, grid *mesh, params model, surface topo, int reseed_markers, scale scaling  ) {
-
-    // This function counts the number of particle that are currently in each cell of the domain.
-    // The function detects cells that are lacking of particle and call the particle re-seeding routine.
-
-    int k, l, ic, jc, kc, nthreads, thread_num, **NPPC, **NPPV;
-    int ncx=mesh->Nx-1, ncz=mesh->Nz-1, Nx=mesh->Nx, Nz=mesh->Nz, Nb_part=particles->Nb_part;
-    double distance;
-    int nb_part_reuse=0, *ind_part_reuse, inc_reuse=0;
-    double dx=mesh->dx, dz=mesh->dz;
-    int **ind_per_cell, *ind_part;
-    int kk = 0;
-    int jj, n_neigh=0, n_neigh0, ic2, *neigh_part, ii, p;
-
-    printf("USING OLD PART IN CELL\n");
-
-    // Initialise
-    Initialise2DArrayInt( mesh->nb_part_cell, ncx, ncz, 0 );
-    Initialise2DArrayInt( mesh->nb_part_vert, Nx, Nz, 0 );
-
-    //------------------------- NODES -----------------------//
-
-
-#pragma omp parallel
-    {
-        nthreads = omp_get_num_threads();
-    }
-
-    // Allocate
-    NPPV = DoodzCalloc( nthreads, sizeof(int*));
-    for (k=0; k<nthreads; k++) {
-        NPPV[k] = DoodzCalloc( Nx*Nz, sizeof(int));
-    }
-
-    double ***PHASE_s;
-
-    // Allocate
-    PHASE_s = DoodzCalloc( nthreads, sizeof(double**));
-    for (k=0; k<nthreads; k++) {
-        PHASE_s[k] = DoodzCalloc( model.Nb_phases, sizeof(double*));
-        for (l=0; l<model.Nb_phases; l++) {
-            PHASE_s[k][l] = DoodzCalloc( (Nx)*(Nz), sizeof(double));
-        }
-    }
-
-    // Count number of particles per nodes
-#pragma omp parallel for shared ( particles, model, NPPV, Nb_part, PHASE_s  )    reduction(+:nb_part_reuse)        \
-private ( k, distance, ic, jc, thread_num )                    \
-firstprivate( ncx, mesh ) schedule( static )
-    for (k=0; k<Nb_part; k++) {
-
-        thread_num = omp_get_thread_num();
-
-        if ( particles->phase[k] != -1 ) {
-
-            // -------- Check NODES ----------
-
-            // Get column/line indices
-            distance = (particles->x[k]-mesh->xg_coord[0]);
-            ic       = ceil((distance/dx)+0.5) -1;
-            distance = (particles->z[k]-mesh->zg_coord[0]);
-            jc       = ceil((distance/dz)+0.5) -1;
-
-            // If particles are around the nodes: count them
-            if ( particles -> phase[k]>=0 ) {
-                NPPV[thread_num][ic + jc * Nx]++;
-                PHASE_s[thread_num][particles->phase[k]][ic + jc * Nx] ++;
-            }
-        }
-        else {
-            // -------- Check What's OUT  ----------
-            // If particles are taged as 'out' (-1): count them for re-use
-            (nb_part_reuse)++;
-        }
-    }
-
-    printf ("Before NODE re-seeding, nb_part_reuse: %d\n ", nb_part_reuse);
-
-    // Initialise Phase arrays
-#pragma omp parallel for shared ( mesh, Nx, Nz, model ) private( p, l ) schedule( static )
-    for ( l=0; l<Nx*Nz; l++ ) {
-        for ( p=0; p<model.Nb_phases; p++ ) {
-            mesh->phase_perc_s[p][l] = 0;
-        }
-    }
-
-
-    // Final reduction for NODES
-    for ( l=0; l<Nx*Nz; l++ ) {
-        //        if ( mesh->BCg.type[l] != 30 ) {
-        for ( k=0; k<nthreads; k++ ) {
-            for ( p=0; p<model.Nb_phases; p++ ) {
-                mesh->phase_perc_s[p][l] += PHASE_s[k][p][l];
-            }
-            mesh->nb_part_vert[l]   += NPPV[k][l];
-        }
-        //        }
-    }
-
-
-    // Normalise to phase percentages
-#pragma omp parallel for shared ( mesh, Nx, Nz, model ) private( p, l ) schedule( static )
-    for ( l=0; l<Nx*Nz; l++ ) {
-        //        if ( mesh->BCg.type[l] != 30 ) {
-        for ( p=0; p<model.Nb_phases; p++ ) {
-            if (mesh->nb_part_vert[l]>0) mesh->phase_perc_s[p][l] /= mesh->nb_part_vert[l];
-        }
-        //        }
-    }
-
-    //-------------------------------------------------------------------------------------------------------------------------//
-
-    // NODES CYCLES
-    // Loop over cells and check for the minimum amount of particles
-
-    ind_per_cell = DoodzMalloc(sizeof(int*)*(mesh->Nx) * (mesh->Nz));
-    ind_part     = DoodzCalloc((mesh->Nx) * (mesh->Nz), sizeof(int));
-
-    // Loop on cells and allocate the required number of particles
-    for (k=0; k<(mesh->Nx) * (mesh->Nz); k++) {
-        ind_per_cell[k] = DoodzMalloc(sizeof(int)*(mesh->nb_part_vert[k]));
-    }
-
-    // Initialise the array containing particles indices to reuse
-    ind_part_reuse = DoodzMalloc(sizeof(int)*(nb_part_reuse));
-
-    //-------------------------------------------------------------------------------------------------------------------------//
-
-
-    // Build list of particles to reuse
-    for (k=0; k<Nb_part; k++) {
-        if ( particles->phase[k] == -1 ) {
-            ind_part_reuse[kk] = k;
-            kk++;
-        }
-    }
-
-    //-------------------------------------------------------------------------------------------------------------------------//
-
-    // LOOP ON PARTICLES, GIVE THEIR ID'S TO THE CELL THAT OWNS THEM
-    for (k=0; k<Nb_part; k++) {
-
-        if ( particles->phase[k] !=-1 ) {
-
-            // Get the column:
-            distance=(particles->x[k]-mesh->xg_coord[0]);
-            ic=ceil((distance/dx)+0.5) -1;
-
-            // Get the line:
-            distance=(particles->z[k]-mesh->zg_coord[0]);
-            jc=ceil((distance/dz)+0.5) -1;
-
-            // Global index
-            kc = ic + jc * (mesh->Nx);
-            ind_per_cell[kc][ind_part[kc]] = k;
-
-            //#pragma omp atomic
-            (ind_part[kc])++;
-        }
-    }
-
-    //    if (reseed_markers==0) {
-    //        mesh->P2N = DoodzMalloc(sizeof(int*)*(mesh->Nx[0]) * (mesh->Nz[0]));
-    //        // Loop on cells and allocate the required number of particles
-    //        for (k=0; k<(mesh->Nx[0]) * (mesh->Nz[0]); k++) {
-    //            mesh->P2N[k] = DoodzMalloc(sizeof(int)*(mesh->nb_part_vert[k]));
-    //        }
-    //
-    //        for (k=0; k<(mesh->Nx[0]) * (mesh->Nz[0]); k++) {
-    //            for (l=0; l<mesh->nb_part_vert[k]; l++) {
-    //                mesh->P2N[k][l] = ind_per_cell[k][l];
-    //            }
-    //        }
-    //    }
-
-    //-------------------------------------------------------------------------------------------------------------------------//
-
-    if (reseed_markers == 1) {
-
-        // LOOP ON NODES - reseed_markers PARTICLES IF NEEDED
-        for (k=0; k<mesh->Nx; k++) {
-            for (l=0; l<mesh->Nz; l++) {
-                ic = k + l * (mesh->Nx);
-
-                // Detect unsufficient number of points
-                if (mesh->nb_part_vert[ic] < particles -> min_part_cell && mesh->BCg.type[ic] != 30 ) {
-
-                    // IF there are no particles in the current cell, look in neighbouring cells
-                    if ( mesh->nb_part_vert[ic] < 1 ) {
-
-                        n_neigh = 0;
-
-                        // Determine number of particles in neighbouring cells, take care of the boundaries
-                        if (k>0) {
-                            ic2 = k + l * (mesh->Nx) - 1;
-                            n_neigh += mesh->nb_part_vert[ic2];
-                            if ( k == 149 && l == 99) printf("%d parts for W\n", mesh->nb_part_vert[ic2]);
-                        }
-                        if (k<mesh->Nx-1) {
-                            ic2 = k + l * (mesh->Nx) + 1;
-                            if ( mesh->BCg.type[ic2] != 30 ) n_neigh += mesh->nb_part_vert[ic2];
-                            if ( k == 149 && l == 99) printf("%d parts for E\n", mesh->nb_part_vert[ic2]);
-                        }
-                        if (l>0) {
-                            ic2 = k + l * (mesh->Nx) - mesh->Nx;
-                            if ( mesh->BCg.type[ic2] != 30 ) n_neigh += mesh->nb_part_vert[ic2];
-                            if ( k == 149 && l == 99) printf("%d parts for S\n", mesh->nb_part_vert[ic2]);
-                        }
-                        if (l<mesh->Nz-1) {
-                            ic2 = k + l * (mesh->Nx) + mesh->Nx;
-                            if ( mesh->BCg.type[ic2] != 30 ) n_neigh += mesh->nb_part_vert[ic2];
-                            if ( k == 149 && l == 99) printf("%d parts for N\n", mesh->nb_part_vert[ic2]);
-                        }
-
-                        // Diagonal neighbours
-                        if ( k>0 && l<mesh->Nz-1 ) { // NW
-                            ic2 = k + l * (mesh->Nx) - 1 + mesh->Nx;
-                            if ( mesh->BCg.type[ic2] != 30 ) n_neigh += mesh->nb_part_vert[ic2];
-                        }
-                        if ( k>0 && l>0 ) {  // SW
-                            ic2 = k + l * (mesh->Nx) - 1 - mesh->Nx;
-                            if ( mesh->BCg.type[ic2] != 30 ) n_neigh += mesh->nb_part_vert[ic2];
-                        }
-                        if ( k<mesh->Nx-1 && l<mesh->Nz-1 ) { // NE
-                            ic2 = k + l * (mesh->Nx) + 1 + mesh->Nx;
-                            if ( mesh->BCg.type[ic2] != 30 ) n_neigh += mesh->nb_part_vert[ic2];
-                        }
-                        if ( k<mesh->Nx-1 && l>0 ) { // SE
-                            ic2 = k + l * (mesh->Nx) - mesh->Nx + 1;
-                            if ( mesh->BCg.type[ic2] != 30 ) n_neigh += mesh->nb_part_vert[ic2];
-                        }
-
-                        // Allocate array of neighbouring cell particles
-                        neigh_part = DoodzMalloc( sizeof(int)*n_neigh);
-
-                        // Reset n-neigh, re-evaluate number of neighbourgs and save their indices
-                        n_neigh = 0;
-
-                        // Determine the list of particle indices that are lying in the neighbouring cells, take care of the boundaries
-                        if ( k>0 ) {
-                            ic2 = k + l * (mesh->Nx) - 1;
-                            if ( mesh->BCg.type[ic2] != 30 ) {
-                                n_neigh0 = n_neigh;
-                                n_neigh += mesh->nb_part_vert[ic2];
-                                ii = 0;
-                                for (jj=n_neigh0; jj<n_neigh; jj++) {
-                                    neigh_part[jj] = ind_per_cell[ic2][ii];
-                                    ii++;
-                                }
-                            }
-                        }
-                        if (k<mesh->Nx-1) {
-                            ic2 = k + l * (mesh->Nx) + 1;
-                            if ( mesh->BCg.type[ic2] != 30 ) {
-
-                                n_neigh0 = n_neigh;
-                                n_neigh += mesh->nb_part_vert[ic2];
-                                ii = 0;
-                                for (jj=n_neigh0; jj<n_neigh; jj++) {
-                                    neigh_part[jj] = ind_per_cell[ic2][ii];
-                                    ii++;
-                                }
-                            }
-                        }
-                        if (l>0) {
-                            ic2 = k + l * (mesh->Nx) - mesh->Nx;
-                            if ( mesh->BCg.type[ic2] != 30 ) {
-
-                                n_neigh0 = n_neigh;
-                                n_neigh += mesh->nb_part_vert[ic2];
-                                ii = 0;
-                                for (jj=n_neigh0; jj<n_neigh; jj++) {
-                                    neigh_part[jj] = ind_per_cell[ic2][ii];
-                                    ii++;
-                                }
-                            }
-                        }
-                        if (l<mesh->Nz-1) {
-                            ic2 = k + l * (mesh->Nx) + mesh->Nx;
-                            if ( mesh->BCg.type[ic2] != 30 ) {
-
-                                n_neigh0 = n_neigh;
-                                n_neigh += mesh->nb_part_vert[ic2];
-                                ii = 0;
-                                for (jj=n_neigh0; jj<n_neigh; jj++) {
-                                    neigh_part[jj] = ind_per_cell[ic2][ii];
-                                    ii++;
-                                }
-                            }
-                        }
-
-                        // Diagonal neighbours
-                        if ( k>0 && l<mesh->Nz-1 ) { // NW
-                            ic2 = k + l * (mesh->Nx) - 1 + mesh->Nx;
-                            if ( mesh->BCg.type[ic2] != 30 ) {
-
-                                n_neigh0 = n_neigh;
-                                n_neigh += mesh->nb_part_vert[ic2];
-                                ii = 0;
-                                for (jj=n_neigh0; jj<n_neigh; jj++) {
-                                    neigh_part[jj] = ind_per_cell[ic2][ii];
-                                    ii++;
-                                }
-                            }
-                        }
-
-                        if ( k>0 && l>0 ) {  // SW
-                            ic2 = k + l * (mesh->Nx) - 1 - mesh->Nx;
-                            if ( mesh->BCg.type[ic2] != 30 ) {
-
-                                n_neigh0 = n_neigh;
-                                n_neigh += mesh->nb_part_vert[ic2];
-                                ii = 0;
-                                for (jj=n_neigh0; jj<n_neigh; jj++) {
-                                    neigh_part[jj] = ind_per_cell[ic2][ii];
-                                    ii++;
-                                }
-                            }
-                        }
-
-                        if ( k<mesh->Nx-1 && l<mesh->Nz-1 ) { // NE
-                            ic2 = k + l * (mesh->Nx) + 1 + mesh->Nx;
-                            if ( mesh->BCg.type[ic2] != 30 ) {
-
-                                n_neigh0 = n_neigh;
-                                n_neigh += mesh->nb_part_vert[ic2];
-                                ii = 0;
-                                for (jj=n_neigh0; jj<n_neigh; jj++) {
-                                    neigh_part[jj] = ind_per_cell[ic2][ii];
-                                    ii++;
-                                }
-                            }
-                        }
-
-                        if ( k<mesh->Nx-1 && l>0 ) { // SE
-                            ic2 = k + l * (mesh->Nx) - mesh->Nx + 1;
-                            if ( mesh->BCg.type[ic2] != 30 ) {
-
-                                n_neigh0 = n_neigh;
-                                n_neigh += mesh->nb_part_vert[ic2];
-                                ii = 0;
-                                for (jj=n_neigh0; jj<n_neigh; jj++) {
-                                    neigh_part[jj] = ind_per_cell[ic2][ii];
-                                    ii++;
-                                }
-                            }
-                        }
-
-                        if (n_neigh==0) {
-                            printf("no neighbouring particles for node k = %d l = %d tag=%d x=%lf z=%lf... The code is gonna breakdown...\n", k,l, mesh->BCg.type[ic], mesh->xg_coord[k]*5, mesh->zg_coord[l]*5);
-                            exit(1);
-                        }
-                        else {
-                            AddPartVert( particles, *mesh, k, l, neigh_part, model, n_neigh, ind_part_reuse, &inc_reuse, nb_part_reuse, topo );
-                        }
-                        DoodzFree(neigh_part);
-                    }
-                }
-            }
-        }
-    }
-
-    printf("%d re-used particles, %d particles left out\n", inc_reuse, nb_part_reuse-inc_reuse);
-
-    //-------------------------------------------------------------------------------------------------------------------------//
-
-    /* free table-table */
-    for (k=0; k<(mesh->Nx) * (mesh->Nz); k++) {
-        DoodzFree(ind_per_cell[k]);
-    }
-    DoodzFree(ind_per_cell);
-    DoodzFree(ind_part);
-    DoodzFree(ind_part_reuse);
-
-    // Free PHASE
-    for (k=0; k<nthreads; k++) {
-        for (l=0; l<model.Nb_phases; l++) {
-            DoodzFree( PHASE_s[k][l] );
-        }
-        DoodzFree( PHASE_s[k] );
-    }
-    DoodzFree( PHASE_s );
-
-
-    //-------------------------------------------------------------------------------------------------------------------------//
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //-------------------------------------------------------------------------------------------------------------------------//
-
-
-    // CELL CYCLES
-
-    nb_part_reuse = 0;
-    int *ind_part_reuse2;
-    double ***PHASE_n;
-
-    // Allocate
-    NPPC = DoodzCalloc( nthreads, sizeof(int*));
-    for (k=0; k<nthreads; k++) {
-        NPPC[k] = DoodzCalloc( Nx*Nz, sizeof(int));
-    }
-
-    // Allocate
-    PHASE_n = DoodzCalloc( nthreads, sizeof(double**));
-    for (k=0; k<nthreads; k++) {
-        PHASE_n[k] = DoodzCalloc( model.Nb_phases, sizeof(double*));
-        for (l=0; l<model.Nb_phases; l++) {
-            PHASE_n[k][l] = DoodzCalloc( (Nx)*(Nz), sizeof(double));
-        }
-    }
-
-
-    // Count number of particles per cell
-#pragma omp parallel for shared ( particles, model, NPPC, Nb_part, PHASE_n )    reduction(+:nb_part_reuse )        \
-private ( k, distance, ic, jc, thread_num )                    \
-firstprivate( ncx, mesh ) schedule( static )
-
-    for (k=0; k<Nb_part; k++) {
-
-        thread_num = omp_get_thread_num();
-
-        if ( particles->phase[k] != -1 ) {
-
-            // -------- Check CELLS ----------
-
-            // Get column/line indices
-            distance = (particles->x[k] - mesh->xc_coord[0]);
-            ic       = ceil((distance/mesh->dx)+0.5) - 1;
-            distance = (particles->z[k] - mesh->zc_coord[0]);
-            jc       = ceil((distance/mesh->dz)+0.5) - 1;
-
-            // If particles within cells then count them
-            if ( particles -> phase[k]>=0 ) {
-                NPPC[thread_num][ic + jc * ncx] ++;
-                PHASE_n[thread_num][particles->phase[k]][ic + jc * ncx] ++;
-            }
-        }
-        else {
-            // -------- Check What's OUT  ----------
-            // If particles are taged as 'out' (-1): count them for re-use
-            (nb_part_reuse)++;
-        }
-    }
-
-    printf ("Before CELL re-seeding, nb_part_reuse: %d\n", nb_part_reuse);
-
-    // Initialise Phase arrays
-#pragma omp parallel for shared ( mesh, ncx, ncz, model ) private( p, l ) schedule( static )
-    for ( l=0; l<ncx*ncz; l++ ) {
-        for ( p=0; p<model.Nb_phases; p++ ) {
-            mesh->phase_perc_n[p][l] = 0;
-        }
-    }
-
-    // Final reduction for CELLS
-#pragma omp parallel for shared ( mesh, NPPC, ncx, ncz, nthreads, PHASE_n, model ) private( p, l, k ) schedule( static )
-    for ( l=0; l<ncx*ncz; l++ ) {
-
-        //        if ( mesh->BCp.type[0][l] != 30 && mesh->BCp.type[0][l] != 31) {
-
-        for ( k=0; k<nthreads; k++ ) {
-            for ( p=0; p<model.Nb_phases; p++ ) {
-                mesh->phase_perc_n[p][l] += PHASE_n[k][p][l];
-            }
-            mesh->nb_part_cell[l]   += NPPC[k][l];
-        }
-        //        }
-    }
-
-    // Normalise to phase percentages
-#pragma omp parallel for shared ( mesh, ncx, ncz, model ) private( p, l ) schedule( static )
-    for ( l=0; l<ncx*ncz; l++ ) {
-        //        if ( mesh->BCp.type[0][l] != 30 && mesh->BCp.type[0][l] != 31) {
-        for ( p=0; p<model.Nb_phases; p++ ) {
-            if (mesh->nb_part_cell[l]>0) mesh->phase_perc_n[p][l] /= mesh->nb_part_cell[l];
-        }
-        //        }
-    }
-
-    //-------------------------------------------------------------------------------------------//
-
-    // Initialise the array containing particles indices to reuse
-    ind_part_reuse2 = DoodzMalloc(sizeof(int)*(nb_part_reuse));
-
-    // Loop over cells and check for the minimum amount of particles
-    ind_per_cell =  DoodzMalloc(sizeof(int*)*ncx*ncz);
-    ind_part     =  DoodzCalloc(sizeof(int), ncx*ncz);
-
-    // Loop on cells and allocate the required number of particles
-    for (k=0; k<ncx*ncz; k++) {
-        ind_per_cell[k] =  DoodzMalloc(sizeof(int)*(mesh->nb_part_cell[k]));
-    }
-
-    // Build list of particles to reuse
-    kk = 0;
-    //#pragma omp parallel for shared ( particles, ind_part_reuse ) reduction ( +:kk )
-    for (k=0; k<Nb_part; k++) {
-        if ( particles->phase[k] == -1 ) {
-            ind_part_reuse2[kk] = k;
-            kk++;
-        }
-    }
-
-    //-------------------------------------------------------------------------------------------------------------------------//
-
-    // Loop on particles, give their ID's to the cell that owns them
-    for (k=0; k<Nb_part; k++) {
-
-        if ( particles->phase[k] != -1 ) {
-            distance=(particles->x[k] - mesh->xc_coord[0]);
-            ic = ceil((distance/mesh->dx)+0.5) - 1;
-            distance=(particles->z[k] - mesh->zc_coord[0]);
-            jc = ceil((distance/mesh->dz)+0.5) - 1;
-
-            kc = ic + jc * (mesh->Nx-1);
-
-            ind_per_cell[kc][ind_part[kc]] = k;
-            ind_part[kc] ++;
-        }
-    }
-
-    //    if (reseed_markers==0) {
-    //
-    //        mesh->P2C = DoodzMalloc(sizeof(int*)*(mesh->Nx[0]-1) * (mesh->Nz[0]-1));
-    //        // Loop on cells and allocate the required number of particles
-    //        for (k=0; k<(mesh->Nx[0]-1) * (mesh->Nz[0]-1); k++) {
-    //            mesh->P2C[k] = DoodzMalloc(sizeof(int)*(mesh->nb_part_cell[k]));
-    //        }
-    //
-    //        for (k=0; k<(mesh->Nx[0]-1) * (mesh->Nz[0]-1); k++) {
-    //            for (l=0; l<mesh->nb_part_cell[k]; l++) {
-    //                mesh->P2C[k][l] = ind_per_cell[k][l];
-    //            }
-    //        }
-    //    }
-
-    //-------------------------------------------------------------------------------------------------------------------------//
-
-    int *ind_list, neighs, oo, nb;
-
-    if (reseed_markers == 1) {
-
-        // Loop on cells and add particles
-        for (k=0; k<ncx; k++) {
-            for (l=0; l<ncz; l++) {
-                ic = k + l * ncx;
-
-                if (mesh->BCt.type[ic] != 30) {
-
-                    if ( mesh->nb_part_cell[ic] < particles -> min_part_cell ) {
-
-                        neighs = 0;
-                        oo     = 0;
-
-                        // list the number of particles in the neighbouring cells
-                        neighs+= mesh->nb_part_cell[ic];
-                        if (k>0)     neighs+= mesh->nb_part_cell[ic-1];
-                        if (k<ncx-1) neighs+= mesh->nb_part_cell[ic+1];
-                        if (l>0)     neighs+= mesh->nb_part_cell[ic-ncx];
-                        if (l<ncz-1) neighs+= mesh->nb_part_cell[ic+ncx];
-
-                        if (neighs == 0) {
-                            printf("All the neighbouring CELLS of ix = %d iz = %d are empty, simulation will stop\n", k, l);
-                        }
-
-                        ind_list = DoodzMalloc( neighs * sizeof(int));
-
-
-                        for ( nb=0; nb<mesh->nb_part_cell[ic]; nb++ ) {
-                            ind_list[oo] = ind_per_cell[ic][nb];
-                            oo++;
-                        }
-
-                        if (k>0) {
-                            for ( nb=0; nb<mesh->nb_part_cell[ic-1]; nb++ ) {
-                                ind_list[oo] = ind_per_cell[ic-1][nb];
-                                oo++;
-                            }
-                        }
-                        if (k<ncx-1) {
-                            for ( nb=0; nb<mesh->nb_part_cell[ic+1]; nb++ ) {
-                                ind_list[oo] = ind_per_cell[ic+1][nb];
-                                oo++;
-                            }
-                        }
-                        if (l>0) {
-                            for ( nb=0; nb<mesh->nb_part_cell[ic-ncx]; nb++ ) {
-                                ind_list[oo] = ind_per_cell[ic-ncx][nb];
-                                oo++;
-                            }
-                        }
-                        if (l<ncz-1) {
-                            for ( nb=0; nb<mesh->nb_part_cell[ic+ncx]; nb++ ) {
-                                ind_list[oo] = ind_per_cell[ic+ncx][nb];
-                                oo++;
-                            }
-                        }
-                        AddPartCell( particles, *mesh, k, l, ind_list, model, neighs, ind_part_reuse2, &inc_reuse, nb_part_reuse, topo );
-                        DoodzFree(ind_list);
-                    }
-                }
-            }
-        }
-    }
-
-    printf("%d re-used particles, %d particles left out\n", inc_reuse, nb_part_reuse-inc_reuse);
-
-
-
-    //-------------------------------------------------------------------------------------------------------------------------//
-
-    /* free table-table */
-    for (k=0; k<ncx*ncz; k++) {
-        DoodzFree(ind_per_cell[k]);
-    }
-    DoodzFree(ind_per_cell);
-    DoodzFree(ind_part);
-    DoodzFree(ind_part_reuse2);
-
-    for (l=0; l<nthreads; l++) {
-        DoodzFree(NPPC[l]);
-    }
-    DoodzFree(NPPC);
-
-    for ( k=0; k<nthreads; k++ ) {
-        DoodzFree(NPPV[k]);
-    }
-    DoodzFree(NPPV);
-
-
-    // Free PHASE
-    for (k=0; k<nthreads; k++) {
-        for (l=0; l<model.Nb_phases; l++) {
-            DoodzFree( PHASE_n[k][l] );
-        }
-        DoodzFree( PHASE_n[k] );
-    }
-    DoodzFree( PHASE_n );
-
-}
-/*--------------------------------------------------------------------------------------------------------------------*/
-/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
-/*--------------------------------------------------------------------------------------------------------------------*/
-

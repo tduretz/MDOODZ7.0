@@ -1,7 +1,6 @@
 add_library(mdoodz SHARED
         AdvectionRoutines.c
         AnisotropyRoutines.c
-	BC.c
         ChemicalRoutines.c
         FD_Jacobian.c
         FlowLaws.c
@@ -22,7 +21,7 @@ add_library(mdoodz SHARED
         StokesRoutines.c
         ThermalRoutines.c
         ThermalSolver.c
-        setup.c
+        Setup.c
         RheologyDensity.h)
 target_link_libraries(mdoodz ${DEPENDENCIES})
 target_include_directories(mdoodz PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
