@@ -1,5 +1,7 @@
+# Parameters that can be read from input text file:
+
 ```C
-// Simulation start/restart from Breakpoint
+    // Simulation start/restart from Breakpoint
     model.istep              = ReadInt2( fin, "istep", 0 );
     model.irestart           = ReadInt2( fin, "irestart", 0 );
     if ( model.istep == 0 ) model.irestart = 0; // Override the restart step number written in the text file (istep)
