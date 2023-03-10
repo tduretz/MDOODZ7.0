@@ -353,108 +353,6 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
 
   for (int l = 0; l < NCZ; l++) {
     for (int k = 0; k < NCX; k++) {
-      const int c = k + l * (NCX);
-      POSITION  position = INTERNAL;
-      if (k == 0) {
-        if (l == NCZ - 1) {
-          position = NW;
-        } else if (l == 0) {
-          position = SW;
-        } 
-        else {
-          position = W;
-        }
-        // Tag free surface
-        if (l < NCZ-1) {
-          if (mesh->BCt.type[c + NCX] == 30) {
-            position = free_surface;
-          }
-        }
-
-      } 
-      if (k == NCX - 1) {
-        if (l == NCZ - 1) {
-          position = NE;
-        } else if (l == 0) {
-          position = SE;
-        } else {
-          position = E;
-        }
-        // Tag free surface
-        if (l < NCZ-1) {
-          if (mesh->BCt.type[c + NCX] == 30) {
-            position = free_surface;
-          }
-        }
-      } 
-      if (l == 0) {
-        position = S;
-      } 
-      if (l == NCZ - 1) {
-        position = N;
-      } else if ((mesh->BCt.type[c] == -1 || mesh->BCt.type[c] == 1 || mesh->BCt.type[c] == 0) && mesh->BCt.type[c + NCX] == 30) {
-        position = free_surface;
-      } 
-      if (mesh->BCt.type[c] != 30) {
-        // if (setBCs.SetBCT) {
-        //   SetBC bc          = setBCs.SetBCT(instance, position, mesh->T[c]);
-        //   mesh->BCt.type[c] = bc.type;
-        //   mesh->BCt.val[c]  = bc.value;
-        // }
-        
-        //----------------------------------------------------------------------
-        //----------------------------------------------------------------------
-
-        POSITION  position = INTERNAL;
-        if (k == 0) {
-            position = W;
-        } 
-        if (k == NCX - 1) {
-            position = E;
-        } 
-
-        // TODO change size of BCt array and phase out SetBCTNew
-        if (setBCs.SetBCTNew) {
-          SetBC bc = setBCs.SetBCTNew(instance, position, mesh->T[c]);
-          if (k == 0) {
-            // printf("pos = %d --- BC = %d\n", position, bc.type);
-            mesh->BCt.typW[l] = bc.type;
-            mesh->BCt.valW[l] = bc.value;
-          } 
-          if (k == NCX - 1) {
-            mesh->BCt.typE[l] = bc.type;
-            mesh->BCt.valE[l] = bc.value;
-          } 
-        }
-
-        if (l == 0) {
-          position = S;
-        } 
-        if (l == NCZ - 1) {
-          position = N;
-        } 
-
-        // TODO change size of BCt array and phase out SetBCTNew
-        if (setBCs.SetBCTNew) {
-          SetBC bc = setBCs.SetBCTNew(instance, position, mesh->T[c]);
-          
-          if (l == 0  ) {
-            mesh->BCt.typS[k] = bc.type;
-            mesh->BCt.valS[k] = bc.value;
-          } 
-          if (l == NCZ - 1 ) {
-            mesh->BCt.typN[k] = bc.type;
-            mesh->BCt.valN[k] = bc.value;
-          }
-        }
-      }
-
-    }
-  }
-
-  //--------------- NEW
-  for (int l = 0; l < NCZ; l++) {
-    for (int k = 0; k < NCX; k++) {
 
       const int c  = k + l * (NCX);
       const int c1 = (k+1) + (l+1) * (NCX+2);
@@ -512,24 +410,7 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
             mesh->BCT_exp.type[c1] = bc.type;
             mesh->BCT_exp.val[c1]  = bc.value;
           }
-        }
-
-      // }
-      // if (k == NCX + 1) position = E;
-      // if (l == 0)       position = S;
-      // if (l == NCZ + 1) position = N;  
-      // if ((mesh->BCt.type[c] == -1 || mesh->BCt.type[c] == 1 || mesh->BCt.type[c] == 0) && mesh->BCt.type[c + NCX] == 30) {
-      //   position = free_surface;
-      // } 
-      // if (mesh->BCt.type[c] != 30) {
-        // if (setBCs.SetBCT) {
-        //   Coordinates coordinates = {
-        //       .x = mesh->xvz_coord[k],
-        //       .z = mesh->zvx_coord[l]};
-        //   SetBC bc          = setBCs.SetBCT(instance, position, mesh->T[c]);
-        //   mesh->BCT_exp.type[c] = bc.type;
-        //   mesh->BCT_exp.val[c]  = bc.value;
-         
+        }      
        }
     }
   }
@@ -631,10 +512,10 @@ void ValidateSetup(MdoodzSetup *setup, MdoodzInput *instance) {
       warningsCount++;
     }
     if (instance->model.thermal) {
-      if (!setup->SetBCs->SetBCTNew) {
-        errors[errorsCount] = "SetBCs.SetBCTNew MUST be specified for Thermal model. Please set thermal = 0 or specify SetBCTTypeNew";
-        errorsCount++;
-      }
+      // if (!setup->SetBCs->SetBCTNew) {
+      //   errors[errorsCount] = "SetBCs.SetBCTNew MUST be specified for Thermal model. Please set thermal = 0 or specify SetBCTTypeNew";
+      //   errorsCount++;
+      // }
       if (!setup->SetBCs->SetBCT) {
         errors[errorsCount] = "SetBCs.SetBCT MUST be specified for Thermal model. Please set thermal = 0 or specify SetBCTType (will be deprecated)";
         errorsCount++;

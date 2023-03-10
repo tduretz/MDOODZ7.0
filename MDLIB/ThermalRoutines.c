@@ -190,6 +190,8 @@ void EnergyDirectSolve( grid *mesh, params model, double *rhoE, double *drhoE, d
                     c2  = k   + l*ncx;
                     c3  = k   + l*nxvz+1;
 
+                    // printf("HOH\n");
+
                     if (mesh->BCT_exp.type[c0] != 30 ) {
 
                         // Central coefficient
@@ -298,7 +300,8 @@ void EnergyDirectSolve( grid *mesh, params model, double *rhoE, double *drhoE, d
                             bbc[eqn] += 2.0*AS*one_dz_dz * mesh->BCT_exp.val[c0-(ncx+2)];
                         }
 
-                        if (l==0 && mesh->BCT_exp.type[c0-(ncx+2)]==2) { // SOUTH
+                        // Bottom flux
+                        if (l==0 && mesh->BCT_exp.type[c0-(ncx+2)]==0) { // SOUTH
                             bbc[eqn] += -1.0/mesh->dx * mesh->BCT_exp.val[c0-(ncx+2)];
                         }
 
@@ -409,21 +412,26 @@ void EnergyDirectSolve( grid *mesh, params model, double *rhoE, double *drhoE, d
         dUt          = 0.0;
         zero_celsius = zeroC;
 #pragma omp parallel for shared( mesh, scaling, x ) private( c2, eqn ) firstprivate( ncx, ncz, zero_celsius, model ) reduction (+:dUt)
-        for( c2=0; c2<ncx*ncz; c2++) {
-            eqn = eqn_t[c2];
-            if ( mesh->BCT_exp.type[c0] != 30 ) {
-                mesh->dT[c2] = 1.0*(x[eqn] -  mesh->T[c2]);
-                mesh->T[c2]  = mesh->T[c2] + mesh->dT[c2];
-                dUt         += mesh->rho_n[c2]*mesh->Cv[c2]*mesh->dT[c2];
-                if (mesh->T[c2] < 0.0) {
-                    printf("Negative temperature --- Are you crazy! (EnergyDirectSolve)\n");
-                    exit(1);
+        // LOOP ON THE GRID TO CALCULATE FD COEFFICIENTS
+        for( l=0; l<ncz; l++) {
+            for( k=0; k<ncx; k++) {
+                c0  = (k+1) + (l+1)*(ncx+2);
+                c2  = k   + l*ncx;
+                eqn = eqn_t[c2];
+                if ( mesh->BCT_exp.type[c0] != 30 ) {
+                    mesh->dT[c2] = 1.0*(x[eqn] -  mesh->T[c2]);
+                    mesh->T[c2]  = mesh->T[c2] + mesh->dT[c2];
+                    dUt         += mesh->rho_n[c2]*mesh->Cv[c2]*mesh->dT[c2];
+                    if (mesh->T[c2] < 0.0) {
+                        printf("Negative temperature --- Are you crazy! (EnergyDirectSolve)\n");
+                        exit(1);
+                    }
                 }
-            }
-            else {
-                // Outside the free surface
-                mesh->dT[c2] = 0.0;
-                mesh->T[c2]  = zero_celsius/scaling.T;
+                else {
+                    // Outside the free surface
+                    mesh->dT[c2] = 0.0;
+                    mesh->T[c2]  = zero_celsius/scaling.T;
+                }
             }
         }
         mesh->Uthermal += dUt*model.dx*model.dz;
@@ -469,7 +477,6 @@ void EnergyDirectSolve( grid *mesh, params model, double *rhoE, double *drhoE, d
             AddFieldToGroup( filename, "matrix", "J" , 'i', nnzc,  OutputDD.J,  1 );
             AddFieldToGroup( filename, "matrix", "V" , 'd', nnzc,  OutputDD.V,  1 );
             AddFieldToGroup( filename, "matrix", "rhs" , 'd', neq, OutputDD.b,  1 );
-
             DoodzFree( OutputDD.eqn_p );
             free(filename);
         }
@@ -492,7 +499,6 @@ void EnergyDirectSolve( grid *mesh, params model, double *rhoE, double *drhoE, d
     DoodzFree(eqn_t);
 }
 
-
 /*--------------------------------------------------------------------------------------------------------------------*/
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
@@ -509,60 +515,6 @@ void ThermalSteps( grid *mesh, params model, double *rhoE, double *drhoE, double
     EnergyDirectSolve( mesh, model, mesh->T, mesh->dT, rhs_t, mesh->T, particles, dt, 0, 0, scaling, nit );
 
 }
-
-/*--------------------------------------------------------------------------------------------------------------------*/
-/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
-/*--------------------------------------------------------------------------------------------------------------------*/
-
-//void AdvectHeat ( grid* mesh, params *model, scale scaling ) {
-//
-//    DoodzFP *VxC, *VzC;
-//    VxC = DoodzCalloc( (mesh->Nx-1)*(mesh->Nz-1), sizeof(DoodzFP) );
-//    VzC = DoodzCalloc( (mesh->Nx-1)*(mesh->Nz-1), sizeof(DoodzFP) );
-//
-//    VelocitiesOnCenters(  mesh->u_in, mesh->v_in, VxC, VzC, mesh->Nx, mesh->Nz, scaling );
-//    FirstOrderUpwindAdvection( VxC, VzC, mesh->T, mesh->T, mesh, mesh->Nx-1, mesh->Nz-1, *model, scaling, 1 );
-//
-//    DoodzFree( VxC );
-//    DoodzFree( VzC );
-//}
-
-/*--------------------------------------------------------------------------------------------------------------------*/
-/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
-/*--------------------------------------------------------------------------------------------------------------------*/
-
-// void Energies( grid* mesh, params model, scale scaling ) {
-
-//     int noisy=1;
-
-//     if ( noisy==1 ) {
-//         printf("Thermal energy = %2.8e\n",  mesh->Uthermal*scaling.S*scaling.L*scaling.L );
-//         printf("Mechnical work = %2.8e\n",  mesh->Work *scaling.S*scaling.L*scaling.L );
-//         if (model.elastic == 1) printf("Elastic energy = %2.8e\n", mesh->Uelastic*scaling.S*scaling.L*scaling.L );
-//         if (model.elastic == 1) printf("Remainder      = %2.8e\n", (mesh->Work - mesh->Uthermal - mesh->Uelastic)/mesh->Work );
-//         else {
-//             if (noisy==1) printf("Difference     = %2.8e\n", (mesh->Work - mesh->Uthermal)/mesh->Work );
-//         }
-//     }
-
-//     mesh->Uthermal[model.step-1] = mesh->Uthermal*scaling.S*scaling.L*scaling.L;
-//     mesh->Uelastic[model.step-1] = mesh->Uelastic*scaling.S*scaling.L*scaling.L;
-//     mesh->Work[model.step-1]     = mesh->Work*scaling.S*scaling.L*scaling.L;
-//     mesh->Time[model.step-1]     = model.time*scaling.t;
-//     mesh->Short[model.step-1]    = (model.L0-(model.xmax - model.xmin))/model.L0 * 100.0;
-
-//     if ( model.step == model.Nt ) {
-
-//         CreateOutputHDF5( "Energies.gzip.h5" );
-//         AddGroupToHDF5( "Energies.gzip.h5", "Fields" );
-//         AddFieldToGroup(  "Energies.gzip.h5", "Fields", "Time" ,     'd', model.Nt,  mesh->Time,      1 );
-//         AddFieldToGroup(  "Energies.gzip.h5", "Fields", "Short" ,    'd', model.Nt,  mesh->Short,     1 );
-//         AddFieldToGroup(  "Energies.gzip.h5", "Fields", "Work" ,     'd', model.Nt,  mesh->Work,      1 );
-//         AddFieldToGroup(  "Energies.gzip.h5", "Fields", "Uthermal" , 'd', model.Nt,  mesh->Uthermal,  1 );
-//         AddFieldToGroup(  "Energies.gzip.h5", "Fields", "Uelastic" , 'd', model.Nt,  mesh->Uelastic,  1 );
-
-//     }
-// }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
@@ -593,7 +545,6 @@ void SetThermalPert( grid* mesh, params model, scale scaling ) {
         }
     }
 }
-
 
 /*--------------------------------------------------------------------------------------------------------------------*/
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/

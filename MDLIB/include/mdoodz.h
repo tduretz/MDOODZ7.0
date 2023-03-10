@@ -210,6 +210,25 @@ typedef enum {
   free_surface
 } POSITION;
 
+// Thermal boundary condition types
+typedef enum {
+    constant_flux        = 0,
+    constant_temperature = 1,
+    periodic_x           =-2,
+} Thermal_BC;
+
+// Mechanical boundary condition types
+typedef enum {
+    inside                =  -1,
+    constant_velocity     =   0,
+    constant_shear_stress =  13,
+    constant_velocity_NC  =  11,
+    periodic_x_VxW        =  -2,
+    periodic_x_VxE        = -12,
+    periodic_x_VzS        = -12,
+    periodic_x_VzN        = -12,
+} Mechanical_BC;
+
 typedef struct {
   double value;
   char   type;
@@ -227,7 +246,6 @@ typedef struct {
   SetBCVz_f    SetBCVz;
   SetBCT_f     SetBCT;
   SetBCPType_f SetBCPType;
-  SetBCTNew_f  SetBCTNew;
 } SetBCs_ff;
 
 typedef struct {
@@ -235,7 +253,6 @@ typedef struct {
   int   *phases;
   int    nPhases;
 } CrazyConductivity;
-
 
 typedef struct {
   int   nx;
