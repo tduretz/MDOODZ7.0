@@ -188,7 +188,8 @@ SetBC SetBCVz(MdoodzInput *instance, POSITION position, Coordinates coordinates)
   const double surf_Winc = instance->model.surf_Winc;
   const double surf_Vinc = instance->model.surf_Vinc;
   const double Vz_corr   = surf_Winc*surf_Vinc / Lx;
-  const double VzS = -V_tot * (0.0 - instance->model.zmin) / Lx + 0.0*Vz_corr;
+  const double VzS = -V_tot * (0.0 - instance->model.zmin) / Lx + Vz_corr;
+
 
   // Set boundary nodes types and values
   if (position == W || position == SW || position == NW ) {

@@ -1,6 +1,6 @@
 # Visual Tests
 
-Last run date: 2023-03-03.18:11:46
+Last run date: 2023-03-09.16:40:30
 
 ## Usage 
 
@@ -98,7 +98,7 @@ Figure show the evolution of shear stress for an inclusion submitted to positive
 
 | Result                 | Reference                 |
 |------------------------|---------------------------|
-| ![](img/Shrinking.gif) | ![](img/ShrinkingRef.gif) |
+| ![](img/shrinking.gif) | ![](img/shrinkingRef.gif) |
 
 
 ### TopoBenchCase1 Result with Analytical solution
