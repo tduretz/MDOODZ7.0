@@ -63,12 +63,13 @@ char SetBCPType(MdoodzInput *instance, POSITION position) {
 SetBC SetBCT(MdoodzInput *instance, POSITION position, double particleTemperature) {
   SetBC     bc;
   double surfaceTemperature = zeroC / instance->scaling.T;
-  if (position == free_surface) {
-    bc.value = surfaceTemperature;
+  if (position == free_surface || position == S || position == N) {
     bc.type  = 1;
-  } else {
-    bc.value = 0.0;
+    bc.value = surfaceTemperature;
+  } 
+  if (position == W || position == E) {
     bc.type  = 0;
+    bc.value = 0.;
   }
   return bc;
 }

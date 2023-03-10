@@ -537,7 +537,7 @@ void Print2DArrayChar( char* arr, int nx, int nz, double scale ) {
             
             k = cx + cz*nx;
             //        printf("%.2lf ", arr[k]*scale);
-            printf("%d ", arr[k]);
+            printf("%02d ", arr[k]);
         }
         printf("\n");
     }
