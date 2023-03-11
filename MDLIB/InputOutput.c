@@ -1057,9 +1057,9 @@ Input ReadInputFile( char *fileName ) {
     // Spatial domain
     model.Nx                 = ReadInt2( fin, "Nx",        10 );            // Number of vertices in x direction
     model.Nz                 = ReadInt2( fin, "Nz",        10 );            // Number of vertices in y direction
-    model.xmin               = ReadDou2( fin, "xmin",     1.0 )/scaling.L;  // Spatial domain extent
-    model.zmin               = ReadDou2( fin, "zmin",     1.0 )/scaling.L;  // Spatial domain extent 
-    model.xmax               = ReadDou2( fin, "xmax",     1.0 )/scaling.L;  // Spatial domain extent 
+    model.xmin               = ReadDou2( fin, "xmin",    -1.0 )/scaling.L;  // Spatial domain extent
+    model.xmax               = ReadDou2( fin, "xmax",     1.0 )/scaling.L;  // Spatial domain extent
+    model.zmin               = ReadDou2( fin, "zmin",    -1.0 )/scaling.L;  // Spatial domain extent  
     model.zmax               = ReadDou2( fin, "zmax",     1.0 )/scaling.L;  // Spatial domain extent
     // Time domain
     model.Nt                 = ReadInt2( fin, "Nt",         1 );            // Number of time steps    
@@ -1083,10 +1083,10 @@ Input ReadInputFile( char *fileName ) {
     model.kinetics           = ReadInt2( fin, "kinetics",              0 ); // Activates reaction kinetics
     model.out_of_plane       = ReadInt2( fin, "out_of_plane",          0 ); // Out-of-plane strain
     // Numerics: linear solver
-    model.penalty            = ReadDou2( fin, "penalty",          1.0e10 ); // Penalty factor
+    model.penalty            = ReadDou2( fin, "penalty",           1.0e3 ); // Penalty factor
     model.auto_penalty       = ReadDou2( fin, "auto_penalty",        0.0 ); // Activates automatic penalty factor computation
     model.diag_scaling       = ReadInt2( fin, "diag_scaling",          1 ); // Activates diagonal scaling
-    model.preconditioner     = ReadInt2( fin, "preconditioner",        0 ); // Preconditoner type for Newton ietrations, 0: Picard preconditionner
+    model.preconditioner     = ReadInt2( fin, "preconditioner",        0 ); // Preconditoner type for Newton iterations, 0: Picard preconditionner
     model.lin_abs_div        = ReadDou2( fin, "lin_abs_div",      1.0e-9 ); // Tolerance for linear mechanical solver
     model.lin_rel_div        = ReadDou2( fin, "lin_rel_div",      1.0e-5 ); // Tolerance for linear mechanical solver
     model.lin_abs_mom        = ReadDou2( fin, "lin_abs_mom",      1.0e-9 ); // Tolerance for linear mechanical solver

@@ -1,99 +1,95 @@
-# Parameters that can be read from input text file:
+# Parameters and parameter values read from input text file:
 
-```C
-    // Simulation start/restart from Breakpoint
-    model.istep              = ReadInt2( fin, "istep", 0 );
-    model.irestart           = ReadInt2( fin, "irestart", 0 );
-    if ( model.istep == 0 ) model.irestart = 0; // Override the restart step number written in the text file (istep)
+##  Simulation start/restart from breakpoint files
+- `irestart`: 0 if simulation starts from beginning, 1 if simulation restarst from a step. Default: 00000
+- `istep`: last step written, indicates step to restart from if irestart is 1. Defaut: 0
 
-    // Output
-    model.writer             = ReadInt2( fin, "writer",              0 ); // Write files
-    model.writer_step        = ReadInt2( fin, "writer_step",         1 ); // Frequency of output
-    model.writer_markers     = ReadInt2( fin, "writer_markers",      0 ); // Writes marker files
-    model.writer_debug       = ReadInt2( fin, "writer_debug",        0 ); // Writes debug files
-    model.writer_subfolder   = ReadChar( fin, "writer_subfolder",  "./"); // Writes output in given subfolder
-    // printf("%s\n", model.writer_subfolder); exit(1);
-    model.noisy              = ReadInt2( fin, "noisy",               1 ); // Prints a lot of info to standard output
-    model.track_T_P_x_z      = ReadInt2( fin, "track_T_P_x_z",       0 ); // Tracks initial T, P, x and z on particles 
-    model.delete_breakpoints = ReadInt2( fin, "delete_breakpoints",  1 ); // Progressively deletes breakpoint files
-    model.gnuplot_log_res    = ReadInt2( fin, "gnuplot_log_res",     0 ); // Activates GNU plot residuals visualisation
+## Simulation start/restart 
+- `writer`: Writes .hdf5 files for visualisation and .dat breakpoint files for restart. Default: 0
+- `writer_step`: Frequency of output. Default 1.
+- `writer_markers`: Writes hdf5 marker files (large files!). Default: 0
+- `writer_debug`: Writes debug files. Default: 0
+- `writer_subfolder`: Writes output in given subfolder. Default: ./
+- `noisy`: Prints a lot of info to standard output. Default: 1
+- `track_T_P_x_z`: Tracks initial T, P, x and z on particles 
+- `delete_breakpoints`: Progressively deletes breakpoint files. Default: 0
+- `gnuplot_log_res`: Activates GNU plot residuals visualisation (requires gnuplot). Default: 0
 
-    // Input
-    model.import_files_dir     = ReadChar( fin, "import_files_dir",    "../../IMPORT");
-    model.import_file          = ReadChar( fin, "import_file",             "blah.bin");
-    model.save_initial_markers = ReadInt2( fin, "save_initial_markers",            0 );
-    model.load_initial_markers = ReadInt2( fin, "load_initial_markers",            0 );
-    model.initial_markers_file = ReadChar( fin, "initial_markers_file", "markers.bin");
+## External files
+- `import_files_dir`: Default: `../../IMPORT`
+- `import_file`: Default: `blah.bin`       
+- `save_initial_markers`: saves initial marker configuration in a .bin file. Default: 0
+- `load_initial_markers`: load the marker configurations if the .bin containing ,arker positions. Default: 0
+- `initial_markers_file`: name of the file to be written/loaded. Default: `markers.bin`
 
-    // Read scales for non-dimensionalisation
-    scale scaling            = (scale){
-                        .eta = ReadDou2(fin, "eta", 1.0),
-                        .L   = ReadDou2(fin, "L", 1.0),
-                        .V   = ReadDou2(fin, "V", 1.0),
-                        .T   = ReadDou2(fin, "T", 1.0),
-    };
-    ScaleMe( &scaling );
-    double Ga = 1e9*365.25*3600*24/scaling.t;
+## Physical scales
+- `eta`: Viscosity [Pa.s]. Default: 1.0
+- `L`: Length [m]. Default: 1.0
+- `V`: Velocity [m/s]. Default: 1.0
+- `T`: Temperature [K]. Default: 1.0
+## Spatial domain
+- `Nx`: Number of vertices in x direction. Default: 10
+- `Nz`: Number of vertices in y direction. Default: 10
+- `xmin`: Spatial domain extent. Default: -1.0
+- `xmax`: Spatial domain extent
+- `zmin`: Spatial domain extent. Default: -1.0 
+- `zmax`: Spatial domain extent
 
-    // Spatial domain
-    model.Nx                 = ReadInt2( fin, "Nx",        10 );            // Number of vertices in x direction
-    model.Nz                 = ReadInt2( fin, "Nz",        10 );            // Number of vertices in y direction
-    model.xmin               = ReadDou2( fin, "xmin",     1.0 )/scaling.L;  // Spatial domain extent
-    model.zmin               = ReadDou2( fin, "zmin",     1.0 )/scaling.L;  // Spatial domain extent 
-    model.xmax               = ReadDou2( fin, "xmax",     1.0 )/scaling.L;  // Spatial domain extent 
-    model.zmax               = ReadDou2( fin, "zmax",     1.0 )/scaling.L;  // Spatial domain extent
-    // Time domain
-    model.Nt                 = ReadInt2( fin, "Nt",         1 );            // Number of time steps    
-    model.dt                 = ReadDou2( fin, "dt",       0.0 ) /scaling.t; // Time step
-    model.Courant            = ReadDou2( fin, "Courant",             0.5 ); // Courant number
-    model.RK                 = ReadInt2( fin, "RK",                    4 ); // Order of Runge-Kutta advection solver (1, 2 or 4)
-    model.constant_dt        = ReadInt2( fin, "constant_dt",           0 ); // Activates constant time step
-    model.stress_rotation    = ReadInt2( fin, "stress_rotation",       1 ); // 0: no stress rotation, 1: analytic rotation, 2: upper convected rate
-    model.dt_max             = ReadDou2( fin, "dt_max", 1e20 ) /scaling.t;  // maximum allowed time step, the default value is set to ~infinite, it we become effective only if specificaly set in XXX.txt (see e.g. LithoScale.txt)
-    model.dt_min             = ReadDou2( fin, "dt_min",-1e20 ) /scaling.t;  // minimum allowed time step, defaut is negative such that it will never be activated unless specifically set in XXX.txt file
-    // Physics 
-    model.mechanical         = ReadInt2( fin, "mechanical",            1 ); // Activates mechanical solver
-    model.advection          = ReadInt2( fin, "advection",             1 ); // Activates advection
-    model.elastic            = ReadInt2( fin, "elastic",               0 ); // Activates elasticity
-    model.thermal            = ReadInt2( fin, "thermal",               0 ); // Activates thermal solver
-    model.anisotropy         = ReadInt2( fin, "anisotropy",            0 ); // Turns on anisotropy
-    model.polar              = ReadInt2( fin, "polar",                 0 ); // Activate polar-Cartesian coordinates
-    model.finite_strain      = ReadInt2( fin, "finite_strain",         0 ); // Integrates finite stran and save deformation gradient tensor
-    model.compressible       = ReadInt2( fin, "compressible",          0 ); // Turns on compressibility
-    model.density_variations = ReadInt2( fin, "density_variations",    0 ); // Turns on volume change due to reaction if 1
-    model.kinetics           = ReadInt2( fin, "kinetics",              0 ); // Activates reaction kinetics
-    model.out_of_plane       = ReadInt2( fin, "out_of_plane",          0 ); // Out-of-plane strain
-    // Numerics: linear solver
-    model.penalty            = ReadDou2( fin, "penalty",          1.0e10 ); // Penalty factor
-    model.auto_penalty       = ReadDou2( fin, "auto_penalty",        0.0 ); // Activates automatic penalty factor computation
-    model.diag_scaling       = ReadInt2( fin, "diag_scaling",          1 ); // Activates diagonal scaling
-    model.preconditioner     = ReadInt2( fin, "preconditioner",        0 ); // Preconditoner type for Newton ietrations, 0: Picard preconditionner
-    model.lin_abs_div        = ReadDou2( fin, "lin_abs_div",      1.0e-9 ); // Tolerance for linear mechanical solver
-    model.lin_rel_div        = ReadDou2( fin, "lin_rel_div",      1.0e-5 ); // Tolerance for linear mechanical solver
-    model.lin_abs_mom        = ReadDou2( fin, "lin_abs_mom",      1.0e-9 ); // Tolerance for linear mechanical solver
-    model.lin_rel_mom        = ReadDou2( fin, "lin_rel_mom",      1.0e-5 ); // Tolerance for linear mechanical solver
-    model.lin_solver         = ReadInt2( fin, "lin_solver",            2 ); // 1: Powell-Hestenes, 2: Powell-Hestenes augmented (killer solver) 
-    // Numerics: non-linear solver
-    Nmodel.nit_max           = ReadInt2( fin, "nit_max",               1 ); // Maximum number of iterations
-    model.Newton             = ReadInt2( fin, "Newton",                0 ); // Activates Newton iterations
-    Nmodel.Picard2Newton     = ReadInt2( fin, "Picard2Newton",         0 ); // Switch from Picard to Newton iterations
-    Nmodel.Picard2Newton_tol = ReadDou2( fin, "Picard2Newton_tol",  1e-1 ); // Condition for switching based on residual magnitude
-    Nmodel.max_Pic_its       = ReadInt2( fin, "max_Pic_its",          10 ); // Condition for switching based on number of Picard iterations
-    Nmodel.let_res_grow      = ReadInt2( fin, "let_res_grow",          0 ); // Allows residual to grow 
-    model.rel_tol_KSP        = ReadDou2( fin, "rel_tol_KSP",        1e-4 ); // Relative tolerance for inner Krylov solver
-    Nmodel.nonlin_abs_mom    = ReadDou2( fin, "nonlin_abs_mom",   1.0e-6 ); // Tolerance for non-linear mechanical solver
-    Nmodel.nonlin_abs_div    = ReadDou2( fin, "nonlin_abs_div",   1.0e-6 ); // Tolerance for non-linear mechanical solver
-    Nmodel.nonlin_rel_mom    = ReadDou2( fin, "nonlin_rel_mom",   1.0e-6 ); // Tolerance for non-linear mechanical solver
-    Nmodel.nonlin_rel_div    = ReadDou2( fin, "nonlin_rel_div",   1.0e-6 ); // Tolerance for non-linear mechanical solver
-    model.min_eta            = ReadDou2( fin, "min_eta", 1e18)/scaling.eta; // Minimum viscosity
-    model.max_eta            = ReadDou2( fin, "max_eta", 1e24)/scaling.eta; // Maximum viscosity
-    model.safe_mode          = ReadInt2( fin, "safe_mode",             0 ); // Activates safe mode: reduces time step if convergence fails
-    model.safe_dt_div        = ReadDou2( fin, "safe_dt_div",         5.0 ); // Reduction factor for time step reduction
-    model.max_num_stag       = ReadInt2( fin, "max_num_stag",          3 ); // maximum number of stagnation (safe mode)
-    model.line_search        = ReadInt2( fin, "line_search",           0 ); // Activates line search
-    model.line_search_min    = ReadDou2( fin, "line_search_min",     0.0 ); // Minimum alpha value for line search 
-    model.residual_form      = ReadInt2( fin, "residual_form",         1 ); // Form of residual - TODO: delete if our models work with new default value (1)
-    Nmodel.stagnated         = 0;
+## Time domain
+- `Nt`:` Number of time steps. Default: 1  
+- `dt`:` Time step [s]. Default: 0.0
+- `Courant`: Courant number. Default: 0.5
+- `RK`:` Order of Runge-Kutta advection solver (1, 2 or 4). Default 4.
+- `constant_dt`:` Activates constant time step. Default: 0
+- `stress_rotation`: 0: no stress rotation, 1: analytic rotation, 2: upper convected rate. Default: 1
+- `dt_min`:` minimum allowed time step [s], defaut is negative such that it will never be activated unless specifically set in XXX.txt file. Default: -1e20
+- `dt_max`:` maximum allowed time step [s], the default value is set to ~infinite, it we become effective only if specificaly set in XXX.txt (see e.g. LithoScale.txt). Default: 1e20
+
+## Physics 
+- `mechanical`: Activates mechanical solver. Default 1
+- `advection`: Activates advection. Default 1
+- `elastic`: Activates elasticity. Default 0
+- `thermal`: Activates thermal solver. Default 0
+- `anisotropy`: Turns on anisotropy. Default 0
+- `polar`: Activate polar-Cartesian coordinates. Default 0
+- `finite_strain`: Integrates finite stran and save deformation gradient tensor. Default 0
+- `compressible`: Turns on compressible formulation. Default 0
+- `density_variations`: Turns on volume change due to reaction if 1. Default 0
+- `kinetics`: Activates reaction kinetics. Only for coesite --> quartz transformation so far. Default 0
+- `out_of_plane: Out-of-plane strain. Default 0
+
+## Numerics: linear solver
+- `lin_solver`: 1: Powell-Hestenes, 2: Powell-Hestenes augmented (killer solver). Default: 2 
+- `model.penalty`: Penalty factor. Default 1.0e3
+- `auto_penalty`: Activates automatic penalty factor computation. Default: 0.0
+- `diag_scaling`: Activates diagonal scaling. Default 1
+- `preconditioner`: Preconditoner type for Newton.iterations, 0: Picard preconditionner. Default 0
+- `lin_abs_div`: Tolerance for linear mechanical solver. Default 1e-9
+- `lin_rel_div`: Tolerance for linear mechanical solver. Default 1e-5
+- `lin_abs_mom`: Tolerance for linear mechanical solver. Default: 1e-9
+- `lin_rel_mom`: Tolerance for linear mechanical solver. Default: 1e-5
+
+## Numerics: non-linear solver
+- `Newton`: Activates Newton iterations. 0: Picard, 1: Newton. Default: 0
+- `nit_max`: Maximum number of iterations. Default 1
+- `Picard2Newton`: Switch from Picard to Newton. iterations. Default: 0
+- `Picard2Newton_tol`: Condition for switching based on residual magnitude. Default: 1e-1
+- `max_Pic_its`: Condition for switching based on number of Picard iterations. Default: 10
+- `line_search`: Activates line search. Default 0
+- `line_search_min`: Minimum alpha value for line search. Default: 0.0
+- `let_res_grow`: Allows residual to grow. Default 0
+- `rel_tol_KSP`: Relative tolerance for inner Krylov solver. Default: 1e-4
+- `nonlin_abs_mom`: Tolerance for non-linear mechanical solver. Default: 1e-6
+- `nonlin_abs_div`: Tolerance for non-linear mechanical solver. Default: 1e-6
+- `nonlin_rel_mom`: Tolerance for non-linear mechanical solver. Default: 1e-6
+- `nonlin_rel_div`: Tolerance for non-linear mechanical solver. Default: 1e-6
+- `min_eta`: Minimum viscosity. 1e18
+- `max_eta`: Maximum viscosity. 1e24
+- `safe_mode`: Activates safe mode: reduces time step if convergence fails. Default: 0
+- `safe_dt_div`: Reduction factor for time step reduction. Default: 5.0
+- `max_num_stag`: Maximum number of stagnation (safe mode). Default 3
+- `residual_form`: Form of residual - TODO: delete if our models work with new default value (1). Default 1
+```C    
     // Numerics: marker-in-cell
     ParticlesInput particles;
     model.eta_average        = ReadInt2( fin, "eta_average",           0 ); // 0: arithmetic mean - 1: harmonic mean - 2: geometric mean
