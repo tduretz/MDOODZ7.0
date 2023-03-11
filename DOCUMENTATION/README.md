@@ -54,9 +54,7 @@
 - `polar`: Activate polar-Cartesian coordinates. Default 0
 - `finite_strain`: Integrates finite stran and save deformation gradient tensor. Default 0
 - `compressible`: Turns on compressible formulation. Default 0
-- `density_variations`: Turns on volume change due to reaction if 1. Default 0
-- `kinetics`: Activates reaction kinetics. Only for coesite --> quartz transformation so far. Default 0
-- `out_of_plane: Out-of-plane strain. Default 0
+- `out_of_plane`: Out-of-plane strain. Default 0
 
 ## Numerics: linear solver
 - `lin_solver`: 1: Powell-Hestenes, 2: Powell-Hestenes augmented (killer solver). Default: 2 
@@ -89,40 +87,43 @@
 - `safe_dt_div`: Reduction factor for time step reduction. Default: 5.0
 - `max_num_stag`: Maximum number of stagnation (safe mode). Default 3
 - `residual_form`: Form of residual - TODO: delete if our models work with new default value (1). Default 1
-```C    
-    // Numerics: marker-in-cell
-    ParticlesInput particles;
-    model.eta_average        = ReadInt2( fin, "eta_average",           0 ); // 0: arithmetic mean - 1: harmonic mean - 2: geometric mean
-    model.interp_stencil     = ReadInt2( fin, "interp_stencil",        1 ); // 1: 1-Cell          - 9: 9-Cell
-    model.subgrid_diffusion  = ReadInt2( fin, "subgrid_diffusion",     0 ); // 0: No subgrid diffusion, 1: temperature, 2: temperature + stress
-    model.conserv_interp     = ReadInt2( fin, "conserv_interp",        0 ); // Activates Taras conservative interpolation
-    model.direct_neighbour   = ReadInt2( fin, "direct_neighbour",      0 ); // Direct neighbour interpolation
-    model.initial_noise      = ReadInt2( fin, "initial_noise",         0 ); // Add noise on initial marker locations
-    model.marker_noise       = ReadInt2( fin, "marker_noise",          0 ); // Background noise field generated and tracked on the particles 
-    model.reseed_markers     = ReadInt2( fin, "reseed_markers",        1 ); // Activates reseeding / particle injection
-    particles.Nx_part        = ReadInt2( fin, "Nx_part",               4 ); // number of particle per cell in x
-    particles.Nz_part        = ReadInt2( fin, "Nz_part",               4 ); // number of particle per cell in y
-    particles.min_part_cell  = ReadInt2( fin, "min_part_cell",        16 ); // minimum number of particle per cell (if below: will trigger reseeding)
-    particles.Nb_part        = (model.Nx-1)*(model.Nz-1) * particles.Nx_part * particles.Nz_part;
-    particles.Nb_part_max    = 4.1*particles.Nb_part;
-    // Boundary conditions
-    model.shear_style        = ReadInt2( fin, "shear_style",           0 ); // BC type: 0: pure shear, 2: periodic simple shear
-    model.periodic_x         = ReadInt2( fin, "periodic_x",            0 ); // Activates periodicity in x
-    model.pure_shear_ALE     = ReadInt2( fin, "pure_shear_ALE",        0 ); // Activates Arbitrary Lagarangian Eulerian mode (pure shear box deformation)
-    model.free_surface       = ReadInt2( fin, "free_surface",          0 ); // Activates free surface
-    model.free_surface_stab  = ReadDou2( fin, "free_surface_stab",   0.0 ); // Activate free surface stabilisation: range 0.0-2.0
-    // Model configurations
-    model.initial_cooling    = ReadInt2( fin, "initial_cooling",       0 ); // Activates initial cooling
-    model.cooling_duration   = ReadDou2( fin, "cooling_duration",     Ga ); // Initial cooling duration
-    model.shear_heating      = ReadInt2( fin, "shear_heating",         1 ); // Activates shear heating
-    model.adiab_heating      = ReadInt2( fin, "adiab_heating",         0 ); // 0: zero, 1: lithostatic P assumption, 2: full derivative
-    model.surface_processes  = ReadInt2( fin, "surface_processes",     0 ); // 1: diffusion; 2: diffusion + sedimentation
-    model.marker_aniso_angle = ReadInt2( fin, "marker_aniso_angle",    0 ); // Enables setting anisotropy angle per particles rather than phases
-    // Transformations
-    model.progress_transform = ReadInt2( fin, "progress_transform",    0 ); // Activate progressive reactions
-    model.no_return          = ReadInt2( fin, "no_return",             0 ); // Turns off retrogression if 1.0
-    model.unsplit_diff_reac  = ReadInt2( fin, "unsplit_diff_reac",     0 ); // Unsplits diffusion and reaction
-    model.smooth_softening   = ReadInt2( fin, "smooth_softening",      1 ); // Activates smooth explicit kinematic softening function
+   
+## Numerics: marker-in-cell
+- `eta_average`: 0: arithmetic mean - 1: harmonic mean - 2: geometric mean. Default: 0
+- `interp_stencil`: 1: 1-Cell          - 9: 9-Cell. Default: 1
+- `subgrid_diffusion`: 0: No subgrid diffusion, 1: temperature, 2: temperature + stress. Default: 0
+- `conserv_interp`: Activates Taras. Default: 0 conservative interpolation
+- `direct_neighbour`: Direct neighbour. Default: 0 interpolation
+- `initial_noise`: Add noise on initial. Default: 0 marker locations
+- `marker_noise`: Background noise. Default: 0field generated and tracked on the particles. Default: 0
+- `reseed_markers`: Activates reseeding / particle injection. Default: 1
+- `Nx_part"`: Number of particle per cell in x. Default: 4
+- `Nz_part"`: Number of particle per cell in y. Default: 4
+- `min_part_cell`: Minimum number of particle per cell (if below: will trigger reseeding). Default: 16
+
+## Boundary conditions
+- `shear_style`: BC type: 0: pure shear, 2: periodic simple shear. Default: 0
+- `periodic_x`: Activates periodicity in x. Default: 0
+- `pure_shear_ALE`: Activates Arbitrary Lagarangian Eulerian mode (pure shear box deformation). Default: 0
+- `free_surface`: Activates free surface. Default: 0
+- `free_surface_stab`: Activate free surface stabilisation: range 0.0-2.0. Default: 0.0 
+
+## Model configurations
+- `initial_cooling`:  Activates initial cooling. Default 0
+- `cooling_duration`:  Initial cooling duration. Default 1 Ga
+- `shear_heating`:  Activates shear heating. Default 1
+- `adiab_heating`:  0: zero, 1: lithostatic P assumption, 2: full derivative. Default 0
+- `surface_processes`:  1: diffusion; 2: diffusion + sedimentation; 5: diffusion + localised incision. Default 0
+- `marker_aniso_angle`:  Enables setting anisotropy angle per particles rather than phases. Default 0
+
+## Transformations
+- `density_variations`: Turns on volume change due to reaction if 1. Default 0
+- `kinetics`: Activates reaction kinetics. Only for coesite --> quartz transformation so far. Default 0
+- `progress_transform`: Activate progressive reactions. Default 0
+- `no_return`: Turns off retrogression if 1 Default 0
+- `unsplit_diff_reac`: Unsplits diffusion and reaction Default. 0
+- `smooth_softening`: Activates smooth explicit kinematic softening function. Default 1
+```C 
     // Background ambient conditions
     model.bkg_strain_rate    = ReadDou2( fin, "bkg_strain_rate", 1e-30)/scaling.E; // Background tectonic rate, defaut is close to zero to avoid any Nans of Infs in rheology
     model.bkg_div_rate       = ReadDou2( fin, "bkg_div_rate",      0.0)/scaling.E; // Background divergence rate
