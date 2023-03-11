@@ -123,39 +123,33 @@
 - `no_return`: Turns off retrogression if 1 Default 0
 - `unsplit_diff_reac`: Unsplits diffusion and reaction Default. 0
 - `smooth_softening`: Activates smooth explicit kinematic softening function. Default 1
-```C 
-    // Background ambient conditions
-    model.bkg_strain_rate    = ReadDou2( fin, "bkg_strain_rate", 1e-30)/scaling.E; // Background tectonic rate, defaut is close to zero to avoid any Nans of Infs in rheology
-    model.bkg_div_rate       = ReadDou2( fin, "bkg_div_rate",      0.0)/scaling.E; // Background divergence rate
-    model.bkg_pressure       = ReadDou2( fin, "bkg_pressure",      0.0)/scaling.S; // Background pressure
-    model.bkg_temperature    = ReadDou2( fin, "bkg_temperature",   0.0)/scaling.T; // Background temperature
-    // Surface processes
-    model.surf_diff          = ReadDou2( fin, "surf_diff",       0.0 ) / (pow(scaling.L,2.0)/scaling.t);
-    model.surf_ised1         = ReadInt2( fin, "surf_ised1",      0.0 );
-    model.surf_ised2         = ReadInt2( fin, "surf_ised2",      0.0 );
-    model.surf_sedirate      = ReadDou2( fin, "surf_sedirate",   0.0 ) / scaling.V;
-    model.surf_baselev       = ReadDou2( fin, "surf_baselev",    0.0 ) / scaling.L;
-    model.surf_Winc          = ReadDou2( fin, "surf_Winc",       0.0 ) / scaling.L;
-    model.surf_Vinc          = ReadDou2( fin, "surf_Vinc",       0.0 ) / scaling.V;
-    // Initial thermal perturbation
-    model.therm_perturb      = ReadInt2( fin, "therm_perturb",                 0 ); // Includes initial thermal perbation
-    model.therm_perturb_x0   = ReadDou2( fin, "therm_perturb_x0",  0.0 )/scaling.L; // x position
-    model.therm_perturb_z0   = ReadDou2( fin, "therm_perturb_z0",  0.0 )/scaling.L; // y position
-    model.therm_perturb_rad  = ReadDou2( fin, "therm_perturb_rad", 0.0 )/scaling.L; // Radius
-    model.therm_perturb_dT   = ReadDou2( fin, "therm_perturb_dT" , 0.0 )/scaling.T; // Temperature anomaly
-    // For rheological database reasons...
-    model.force_act_vol_ast  = ReadInt2( fin, "force_act_vol_ast",   0 ); // if 1 then:
-    model.act_vol_dis_ast    = ReadDou2( fin, "act_vol_dis_ast" ,  0.0 ); // ... set dislocation creep to value
-    model.act_vol_dif_ast    = ReadDou2( fin, "act_vol_dif_ast" ,  0.0 ); // ... set diffusion creep to value
-    // Model user's delights
-    model.user0              = ReadDou2( fin, "user0",           0.0 );
-    model.user1              = ReadDou2( fin, "user1",           0.0 );
-    model.user2              = ReadDou2( fin, "user2",           0.0 );
-    model.user3              = ReadDou2( fin, "user3",           0.0 );
-    model.user4              = ReadDou2( fin, "user4",           0.0 );
-    model.user5              = ReadDou2( fin, "user5",           0.0 );
-    model.user6              = ReadDou2( fin, "user6",           0.0 );
-    model.user7              = ReadDou2( fin, "user7",           0.0 );
-    model.user8              = ReadDou2( fin, "user8",           0.0 );
 
-```
+## Background ambient conditions
+- `bkg_strain_rate`: Background tectonic rate, default is close to zero to avoid any Nans of Infs in rheology. Default 1e-30 [1/s]
+- `bkg_div_rate`:   Background divergence rate. Default 0
+- `bkg_pressure`:   Background pressure. Default 0
+- `bkg_temperature`: Background temperature. Default 0
+
+## Surface processes
+- `surf_diff`: Surface diffusivity [m^2/s]. Default: 0
+- `surf_ised1`: Marker sediment index 1. Default: 0
+- `surf_ised2`: Marker sediment index 2. Default: 0
+- `surf_sedirate`: Sedimentation rate [m/s]. Default: 0.0
+- `surf_baselev: Sedimentation base level [m]. Default: 0.0
+- `surf_Winc`: Incision width [m] for `surface processes = 5`. Default: 0.0
+- `surf_Vinc`: Incision rate [m] for `surface processes = 5`. Default: 0.0
+
+## Initial thermal perturbation
+- `therm_perturb`: Includes an initial circular thermal perturbation. Default: 0
+- `therm_perturb_x0`: x center position [m]. Default: 0.0
+- `therm_perturb_z0`: z center position [m]. Default: 0.0
+- `therm_perturb_rad`: Radius [m]. Default: 0.0
+- `therm_perturb_dT`: Temperature anomaly [K]. Default: 0.0
+## For rheological database purposes...
+- `force_act_vol_ast`: Default is 0. If 1 then:
+- `act_vol_dis_ast`:  ... set dislocation creep to value [J/bar]
+- `act_vol_dif_ast`:  ... set diffusion creep to value [J/bar]
+## Model user's delights
+- `user0`: Can be used to parse anything. Needs to be scaled internally 
+- ...
+- `user8`: Can be used to parse anything. Needs to be scaled internally 
