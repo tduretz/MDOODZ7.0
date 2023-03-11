@@ -1,8 +1,8 @@
 # Parameters and parameter values read from input text file:
 
 ##  Simulation start/restart from breakpoint files
-- `irestart`: 0 if simulation starts from beginning, 1 if simulation restarst from a step. Default: 00000
-- `istep`: last step written, indicates step to restart from if irestart is 1. Defaut: 0
+- `irestart`: 0 if simulation starts from beginning, 1 if simulation restarts from a step. Default: 00000
+- `istep`: last step written, indicates step to restart from if irestart is 1. Default: 0
 
 ## Simulation start/restart 
 - `writer`: Writes .hdf5 files for visualisation and .dat breakpoint files for restart. Default: 0
