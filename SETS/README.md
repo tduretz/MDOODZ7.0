@@ -135,9 +135,9 @@
 - `surf_ised1`: Marker sediment index 1. Default: 0
 - `surf_ised2`: Marker sediment index 2. Default: 0
 - `surf_sedirate`: Sedimentation rate [m/s]. Default: 0.0
-- `surf_baselev: Sedimentation base level [m]. Default: 0.0
-- `surf_Winc`: Incision width [m] for `surface processes = 5`. Default: 0.0
-- `surf_Vinc`: Incision rate [m] for `surface processes = 5`. Default: 0.0
+- `surf_baselev`: Sedimentation base level [m]. Default: 0.0
+- `surf_Winc`: Incision width [m] for `surface processes == 5`. Default: 0.0
+- `surf_Vinc`: Incision rate [m] for `surface processes == 5`. Default: 0.0
 
 ## Initial thermal perturbation
 - `therm_perturb`: Includes an initial circular thermal perturbation. Default: 0
