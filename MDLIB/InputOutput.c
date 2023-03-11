@@ -1147,7 +1147,7 @@ Input ReadInputFile( char *fileName ) {
     model.unsplit_diff_reac  = ReadInt2( fin, "unsplit_diff_reac",     0 ); // Unsplits diffusion and reaction
     model.smooth_softening   = ReadInt2( fin, "smooth_softening",      1 ); // Activates smooth explicit kinematic softening function
     // Background ambient conditions
-    model.bkg_strain_rate    = ReadDou2( fin, "bkg_strain_rate", 1e-30)/scaling.E; // Background tectonic rate, defaut is close to zero to avoid any Nans of Infs in rheology
+    model.bkg_strain_rate    = ReadDou2( fin, "bkg_strain_rate", 1e-30)/scaling.E; // Background tectonic rate, default is close to zero to avoid any Nans of Infs in rheology
     model.bkg_div_rate       = ReadDou2( fin, "bkg_div_rate",      0.0)/scaling.E; // Background divergence rate
     model.bkg_pressure       = ReadDou2( fin, "bkg_pressure",      0.0)/scaling.S; // Background pressure
     model.bkg_temperature    = ReadDou2( fin, "bkg_temperature",   0.0)/scaling.T; // Background temperature
