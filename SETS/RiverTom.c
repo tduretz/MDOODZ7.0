@@ -156,7 +156,7 @@ SetBC SetBCT(MdoodzInput *instance, POSITION position, double particleTemperatur
     bc.value = surface_temperature;
   } 
   if (position == W || position == E) {
-    bc.type  = constant_flux;
+    bc.type  = constant_heatflux;
     bc.value = 0.;
   }
   return bc;
