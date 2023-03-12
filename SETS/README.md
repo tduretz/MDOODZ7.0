@@ -1,8 +1,8 @@
 # Parameters and parameter values read from input text file:
 
 ##  Simulation start/restart from breakpoint files
-- `irestart`: 0 if simulation starts from beginning, 1 if simulation restarst from a step. Default: 00000
-- `istep`: last step written, indicates step to restart from if irestart is 1. Defaut: 0
+- `irestart`: 0 if simulation starts from beginning, 1 if simulation restarts from a step. Default: 00000
+- `istep`: last step written, indicates step to restart from if irestart is 1. Default: 0
 
 ## Simulation start/restart 
 - `writer`: Writes .hdf5 files for visualisation and .dat breakpoint files for restart. Default: 0
@@ -139,9 +139,9 @@
 - `surf_ised1`: Marker sediment index 1. Default: 0
 - `surf_ised2`: Marker sediment index 2. Default: 0
 - `surf_sedirate`: Sedimentation rate [m/s]. Default: 0.0
-- `surf_baselev: Sedimentation base level [m]. Default: 0.0
-- `surf_Winc`: Incision width [m] for `surface processes = 5`. Default: 0.0
-- `surf_Vinc`: Incision rate [m] for `surface processes = 5`. Default: 0.0
+- `surf_baselev`: Sedimentation base level [m]. Default: 0.0
+- `surf_Winc`: Incision width [m] for `surface processes == 5`. Default: 0.0
+- `surf_Vinc`: Incision rate [m] for `surface processes == 5`. Default: 0.0
 
 ## Initial thermal perturbation
 - `therm_perturb`: Includes an initial circular thermal perturbation. Default: 0
