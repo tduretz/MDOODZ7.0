@@ -101,7 +101,7 @@ typedef struct {
   int      diffuse_X, diffuse_avg;
   double   diffusion_length;
   // For Pips
-  int      progress_transform, no_return, density_variations, unsplit_diff_reac, kinetics;
+  int      chemical_diffusion, no_return, density_variations, unsplit_diff_reac, kinetics;
   // Anisotropy
   int      anisotropy, out_of_plane, marker_noise; //aniso_fstrain
   int      residual_form;
@@ -212,10 +212,17 @@ typedef enum {
 
 // Thermal boundary condition types
 typedef enum {
-    constant_heatflux    = 0,
-    constant_temperature = 1,
-    periodic_x           =-2,
+    constant_heatflux      = 0,
+    constant_temperature   = 1,
+    periodic_temeprature_x =-2,
 } Thermal_BC;
+
+// Chemical boundary condition types
+typedef enum {
+    constant_Xflux    = 0,
+    constant_X        = 1,
+    periodic_X_x      =-2,
+} Chemical_BC;
 
 // Mechanical boundary condition types
 typedef enum {
@@ -237,14 +244,14 @@ typedef struct {
 typedef SetBC (*SetBCVx_f)(MdoodzInput *input, POSITION position, Coordinates coordinates);
 typedef SetBC (*SetBCVz_f)(MdoodzInput *input, POSITION position, Coordinates coordinates);
 typedef SetBC (*SetBCT_f)(MdoodzInput *input, POSITION position, double gridTemperature);
-typedef SetBC (*SetBCTNew_f)(MdoodzInput *input, POSITION position, double gridTemperature);
-typedef SetBC (*SetBCT1_f)(MdoodzInput *input, POSITION position, Coordinates coordinates, double gridTemperature);
+typedef SetBC (*SetBCC_f)(MdoodzInput *input, POSITION position, double gridXvalue);
 typedef char (*SetBCPType_f)(MdoodzInput *input, POSITION position);
 
 typedef struct {
   SetBCVx_f    SetBCVx;
   SetBCVz_f    SetBCVz;
   SetBCT_f     SetBCT;
+  SetBCC_f     SetBCC;
   SetBCPType_f SetBCPType;
 } SetBCs_ff;
 

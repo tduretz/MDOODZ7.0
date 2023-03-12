@@ -180,7 +180,14 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         // Initial solution fields (Fine mesh)
         SetBCs(*setup->SetBCs, &input, &mesh);
 
-        InitialiseSolutionFields( &mesh, &input.model );
+        if (input.model.mechanical == 1) {
+            InitialiseSolutionFields( &mesh, &input.model );
+        }
+        else {
+            P2Mastah( &input.model, particles, particles.Vx, &mesh, mesh.u_in, mesh.BCu.type,  1, 0, interp, vxnodes, 1);
+            P2Mastah( &input.model, particles, particles.Vz, &mesh, mesh.v_in, mesh.BCv.type,  1, 0, interp, vznodes, 1);
+            ApplyBC( &mesh, &input.model );
+        }
 
         MinMaxArray( mesh.u_in, input.scaling.V, (mesh.Nx)*(mesh.Nz+1),   "Vx. grid" );
         MinMaxArray( mesh.v_in, input.scaling.V, (mesh.Nx+1)*(mesh.Nz),   "Vz. grid" );
@@ -200,7 +207,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         // printf("North");
         // Print2DArrayChar( mesh.BCt.typN, mesh.Nx-1, 1, 1.0 );
         // printf("BCT_exp");
-        // Print2DArrayChar( mesh.BCT_exp.type, mesh.Nx+1, mesh.Nz+1, 1.0 );
+        // Print2DArrayChar( mesh.BCC_exp.type, mesh.Nx+1, mesh.Nz+1, 1.0 );
         // Print2DArrayDouble( mesh.BCT_exp.val, mesh.Nx+1, mesh.Nz+1, input.scaling.T );
 
         // exit(33);
@@ -250,11 +257,9 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         printf("*************************************\n");
         printf("******* Initialize grain size *******\n");
         printf("*************************************\n");
-        // Grain size
         InitialiseGrainSizeParticles( &particles, &input.materials );
         P2Mastah( &input.model, particles, particles.d,     &mesh, mesh.d_n , mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil);
         ArrayEqualArray( mesh.d0_n, mesh.d_n,  (mesh.Nx-1)*(mesh.Nz-1) );
-        MinMaxArrayTag( mesh.d_n, input.scaling.L,   (mesh.Nx-1)*(mesh.Nz-1), "d         ", mesh.BCp.type );
 
         printf("*************************************\n");
         printf("******** Initialize density *********\n");
@@ -291,7 +296,6 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         Interp_Grid2P_centroids2( particles, particles.T,    &mesh, mesh.T,    mesh.xvz_coord,  mesh.zvx_coord,  mesh.Nx-1, mesh.Nz-1, mesh.BCt.type, &input.model );
         if (input.model.anisotropy==0) NonNewtonianViscosityGrid(      &mesh, &input.materials, &input.model, Nmodel, &input.scaling );
         if (input.model.anisotropy==1) NonNewtonianViscosityGridAniso( &mesh, &input.materials, &input.model, Nmodel, &input.scaling );
-        printf("input.model.anisotropy %d\n", input.model.anisotropy);
 
         // Print informations!
         printf("Number of phases : %d\n", input.model.Nb_phases);
@@ -310,8 +314,10 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             MinMaxArrayTag( mesh.eta_phys_n, input.scaling.eta, (mesh.Nx-1)*(mesh.Nz-1), "eta_phys_n", mesh.BCp.type );
             MinMaxArrayTag( mesh.rho_s, input.scaling.rho, (mesh.Nx-0)*(mesh.Nz-0), "rho_s     ", mesh.BCg.type );
             MinMaxArrayTag( mesh.rho_n, input.scaling.rho, (mesh.Nx-1)*(mesh.Nz-1), "rho_n     ", mesh.BCp.type );
-            
-             MinMaxArray(particles.noise, 1.0, particles.Nb_part, "noise p" );
+            MinMaxArrayTag( mesh.X_n,  1.0,   (mesh.Nx-1)*(mesh.Nz-1), "X_n         ", mesh.BCp.type );
+            MinMaxArrayTag( mesh.X0_n, 1.0,   (mesh.Nx-1)*(mesh.Nz-1), "X0_n         ", mesh.BCp.type );
+            MinMaxArrayTag( mesh.X0_s, 1.0,   (mesh.Nx-0)*(mesh.Nz-0), "X0_s         ", mesh.BCg.type );
+            MinMaxArray(particles.X, 1.0, particles.Nb_part, "X part" );
             if (input.model.marker_noise == 1) MinMaxArrayTag( mesh.noise_s, 1.0, (mesh.Nx-0)*(mesh.Nz-0), "noise_s     ", mesh.BCg.type );
             if (input.model.marker_noise == 1) MinMaxArrayTag( mesh.noise_n, 1.0, (mesh.Nx-1)*(mesh.Nz-1), "noise_n     ", mesh.BCp.type );
             for (int p=0; p< input.model.Nb_phases; p++) {
@@ -464,7 +470,6 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             // Interpolate shear modulus
             ShearModCompExpGrid( &mesh, &input.materials, &input.model, input.scaling );
         }
-
 
         // Director vector
         if (input.model.anisotropy == 1 ) {
@@ -885,21 +890,18 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
         //--------------------------------------------------------------------------------------------------------------------------------//
 
-        if (input.model.progress_transform == 1 ) {
-
+        if (input.model.chemical_diffusion == 1 ) {
             printf("*************************************\n");
             printf("********** Chemical solver **********\n");
             printf("*************************************\n");
-
             P2Mastah ( &input.model, particles, input.materials.k_chem, &mesh, mesh.kc_x, mesh.BCu.type,  0, 0, interp, vxnodes, input.model.interp_stencil);
             P2Mastah ( &input.model, particles, input.materials.k_chem, &mesh, mesh.kc_z, mesh.BCv.type,  0, 0, interp, vznodes, input.model.interp_stencil);
             ChemicalDirectSolve( &mesh, input.model, &particles, &input.materials, input.model.dt, input.scaling );
-
         }
         //--------------------------------------------------------------------------------------------------------------------------------//
 
         // Update maximum pressure and temperature on markers
-        if (input.model.track_T_P_x_z == 1 )  UpdateMaxPT(input.scaling, input.model, &particles );
+        if (input.model.track_T_P_x_z == 1) UpdateMaxPT(input.scaling, input.model, &particles );
 
         ComputeMeanQuantitesForTimeSeries( &mesh );
         LogTimeSeries( &mesh, input.model, input.scaling );
@@ -946,7 +948,6 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                     // Save old topo
                     ArrayEqualArray( topo_chain.z0, topo_chain.z, topo_chain.Nb_part ); // save old z
                     ArrayEqualArray( topo_chain_ini.z0, topo_chain_ini.z, topo_chain.Nb_part ); // save old z
-
 
                     // Advect free surface with RK4
                     RogerGuntherII( &topo_chain, input.model, mesh, 1, input.scaling );

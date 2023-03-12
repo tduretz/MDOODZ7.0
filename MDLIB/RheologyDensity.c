@@ -807,7 +807,7 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
     mesh->Wel[c0]         = 0.0;
     mesh->Wdiss[c0]       = 0.0;
     //        X                     =  mesh->Xreac_n[c0]; // Save X first
-    //        if (model->progress_transform==1) mesh->Xreac_n[c0]    = 0.0;
+    //        if (model->chemical_diffusion==1) mesh->Xreac_n[c0]    = 0.0;
     if ( unsplit_diff_reac == 0 ) mesh->X_n[c0]        = 0.0;
     mesh->OverS_n[c0]    = 0.0;
 
@@ -910,7 +910,7 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
         }
         if (isnan (mesh->eta_phys_n[c0]) ) {
           printf("NaN: Problem on cell centers:\n");
-          printf("progress_transform %d\n", model->progress_transform);
+          printf("chemical_diffusion %d\n", model->chemical_diffusion);
           for ( p=0; p<model->Nb_phases; p++) printf("phase %d vol=%2.2e\n", p, mesh->phase_perc_n[p][c0]);
           printf("eta=%2.2e G=%2.2e T=%2.2e P=%2.2e d=%2.2e phi=%2.2e %2.2e %2.2e %2.2e %2.2e\n", eta*scaling->eta, mesh->mu_n[c0]*scaling->S, mesh->T[c0]*scaling->T, mesh->p_in[c0]*scaling->S, mesh->d0_n[c0]*scaling->L, mesh->phi_n[c0], mesh->exxd[c0], mesh->exz_n[c0], mesh->sxxd0[c0], mesh->sxz0_n[c0]);
           printf("flag %d nb part cell = %d cell index = %d\n", mesh->BCp.type[c0],mesh->nb_part_cell[c0], c0);

@@ -633,7 +633,7 @@ void EvaluateCourantCriterion( double* Vx, double* Vz, params *model, scale scal
         }
         
         // If timestep is adaptive: Chemical limitation
-        if ( model->constant_dt != 1 && model->progress_transform == 1 && dt_reac<model->dt ) {
+        if ( model->constant_dt != 1 && model->chemical_diffusion == 1 && dt_reac<model->dt ) {
                 printf("EvaluateCourantCriterion: --> min_tau_kin = %2.2e s \n", min_tau_kin*scaling.t);
                 printf("Timestep limited by Chemical Reaction\n");
                 model->dt = dt_reac;

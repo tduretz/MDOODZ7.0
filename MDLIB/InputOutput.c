@@ -1142,7 +1142,7 @@ Input ReadInputFile( char *fileName ) {
     model.surface_processes  = ReadInt2( fin, "surface_processes",     0 ); // 1: diffusion; 2: diffusion + sedimentation
     model.marker_aniso_angle = ReadInt2( fin, "marker_aniso_angle",    0 ); // Enables setting anisotropy angle per particles rather than phases
     // Transformations
-    model.progress_transform = ReadInt2( fin, "progress_transform",    0 ); // Activate progressive reactions
+    model.chemical_diffusion = ReadInt2( fin, "chemical_diffusion",    0 ); // Activate progressive reactions
     model.no_return          = ReadInt2( fin, "no_return",             0 ); // Turns off retrogression if 1.0
     model.unsplit_diff_reac  = ReadInt2( fin, "unsplit_diff_reac",     0 ); // Unsplits diffusion and reaction
     model.smooth_softening   = ReadInt2( fin, "smooth_softening",      1 ); // Activates smooth explicit kinematic softening function

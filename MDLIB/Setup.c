@@ -414,10 +414,76 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
        }
     }
   }
+
+  // CHEMICAL DIFFUSION
+
+  for (int l = 0; l < NCZ; l++) {
+    for (int k = 0; k < NCX; k++) {
+
+      const int c  = k + l * (NCX);
+      const int c1 = (k+1) + (l+1) * (NCX+2);
+      POSITION  position = INTERNAL;
+
+      mesh->BCC_exp.type[c1] = mesh->BCc.type[c];
+
+      if (mesh->BCc.type[c] != 30) {
+
+        // WEST
+        if (k == 0) {      
+          position = W;
+          if (setBCs.SetBCC) {
+            SetBC bc          = setBCs.SetBCC(instance, position, mesh->T[c]);
+            mesh->BCC_exp.type[c1-1] = bc.type;
+            mesh->BCC_exp.val[c1-1]  = bc.value;
+          }
+        }
+
+        // EAST
+        if (k == NCX-1) {      
+          position = E;
+          if (setBCs.SetBCC) {
+            SetBC bc          = setBCs.SetBCC(instance, position, mesh->T[c]);
+            mesh->BCC_exp.type[c1+1] = bc.type;
+            mesh->BCC_exp.val[c1+1]  = bc.value;
+          }
+        }
+
+        // SOUTH
+        if (l == 0) {      
+          position = S;
+          if (setBCs.SetBCC) {
+            SetBC bc          = setBCs.SetBCC(instance, position, mesh->T[c]);
+            mesh->BCC_exp.type[c1-(NCX+2)] = bc.type;
+            mesh->BCC_exp.val[c1-(NCX+2)]  = bc.value;
+          }
+        }
+
+        // NORTH
+        if (l == NCZ-1) {      
+          position = N;
+          if (setBCs.SetBCC) {
+            SetBC bc          = setBCs.SetBCC(instance, position, mesh->T[c]);
+            mesh->BCC_exp.type[c1+(NCX+2)] = bc.type;
+            mesh->BCC_exp.val[c1+(NCX+2)]  = bc.value;
+          }
+        }
+
+        // FREE SURFACE
+        if ((mesh->BCc.type[c] == -1 || mesh->BCc.type[c] == 1 || mesh->BCt.type[c] == 0) && mesh->BCt.type[c + NCX] == 30) {
+          position = free_surface;
+          if (setBCs.SetBCC) {
+            SetBC bc          = setBCs.SetBCC(instance, position, mesh->T[c]);
+            mesh->BCC_exp.type[c1] = bc.type;
+            mesh->BCC_exp.val[c1]  = bc.value;
+          }
+        }      
+       }
+    }
+  }
+
   //--------------- NEW
 
   printf("SetBCs: Boundary conditions were set up\n");
-  // Print2DArrayChar( mesh->BCu.type, mesh->Nx, (mesh->Nz+1), 1.0 );
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
