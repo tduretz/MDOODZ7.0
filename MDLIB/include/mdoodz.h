@@ -212,7 +212,7 @@ typedef enum {
 
 // Thermal boundary condition types
 typedef enum {
-    constant_flux        = 0,
+    constant_heatflux    = 0,
     constant_temperature = 1,
     periodic_x           =-2,
 } Thermal_BC;
