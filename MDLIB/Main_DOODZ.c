@@ -353,7 +353,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         Initialise1DArrayDouble( mesh.szzd,  (mesh.Nx-1)*(mesh.Nz-1), 0.0 );
         Initialise1DArrayDouble( mesh.sxz,   (mesh.Nx)  *(mesh.Nz)  , 0.0 );
         // Generate deformation maps
-        if (input.model.def_maps == 1 ) GenerateDeformationMaps( &mesh, &input.materials, &input.model, Nmodel, &input.scaling );
+        if (input.model.deformation_maps == 1 ) GenerateDeformationMaps( &mesh, &input.materials, &input.model, Nmodel, &input.scaling );
         particles.Nb_part_ini = particles.Nb_part;
     }
     else {

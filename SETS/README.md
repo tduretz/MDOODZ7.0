@@ -108,6 +108,10 @@
 - `free_surface`: Activates free surface. Default: 0
 - `free_surface_stab`: Activate free surface stabilisation: range 0.0-2.0. Default: 0.0 
 
+## Gravity
+- `gx`: Gravitational acceleration along x. Default: 0.0
+- `gz`: Gravitational acceleration along z. Default: 0.0
+
 ## Model configurations
 - `initial_cooling`:  Activates initial cooling. Default 0
 - `cooling_duration`:  Initial cooling duration. Default 1 Ga
@@ -116,7 +120,7 @@
 - `surface_processes`:  1: diffusion; 2: diffusion + sedimentation; 5: diffusion + localised incision. Default 0
 - `marker_aniso_angle`:  Enables setting anisotropy angle per particles rather than phases. Default 0
 
-## Transformations
+## Material transformations
 - `density_variations`: Turns on volume change due to reaction if 1. Default 0
 - `kinetics`: Activates reaction kinetics. Only for coesite --> quartz transformation so far. Default 0
 - `progress_transform`: Activate progressive reactions. Default 0
@@ -145,10 +149,12 @@
 - `therm_perturb_z0`: z center position [m]. Default: 0.0
 - `therm_perturb_rad`: Radius [m]. Default: 0.0
 - `therm_perturb_dT`: Temperature anomaly [K]. Default: 0.0
+
 ## For rheological database purposes...
 - `force_act_vol_ast`: Default is 0. If 1 then:
 - `act_vol_dis_ast`:  ... set dislocation creep to value [J/bar]
 - `act_vol_dif_ast`:  ... set diffusion creep to value [J/bar]
+
 ## Model user's delights
 - `user0`: Can be used to parse anything. Needs to be scaled internally 
 - ...

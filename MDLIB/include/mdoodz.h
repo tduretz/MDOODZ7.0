@@ -75,7 +75,7 @@ typedef struct {
   double line_search_min, safe_dt_div;
   int    safe_mode, max_num_stag;
   // Deformation maps
-  int    nT, nE, nd, def_maps;
+  int    nT, nE, nd, deformation_maps;
   double Pn, Tmin, Tmax, Emin, Emax, dmin, dmax, bkg_pressure, bkg_temperature;
   // Surface processes
   double surf_diff, surf_sedirate, surf_baselev, surf_Winc, surf_Vinc;

@@ -130,8 +130,8 @@ void SetParticles(SetParticles_ff setParticles, MdoodzInput *instance, markers *
             printf("Cannot open file %s, check if the file exists in the current location !\n Exiting", instance->model.initial_markers_file);
             exit(1);
         }
-        fwrite( particles->x, sizeof(double), particles->Nb_part, file);
-        fwrite( particles->z, sizeof(double), particles->Nb_part, file);
+        fwrite( particles->x,  sizeof(double), particles->Nb_part, file);
+        fwrite( particles->z,  sizeof(double), particles->Nb_part, file);
         fwrite( particles->phase, sizeof(int), particles->Nb_part, file);
         fclose(file);
     }

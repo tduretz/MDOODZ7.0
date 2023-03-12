@@ -1205,7 +1205,26 @@ Input ReadInputFile( char *fileName ) {
         printf("WARNING!! Changing from solver type 0 to solver type 2!!! That's the new standard in MDOODZ 6.0.\n");
         model.lin_solver = 2;
     }
-    // Material properties
+    //------------------------------------------------------------------------------------------------------------------------------//
+    // DEFORMATION MAP PARAMETERS
+    //------------------------------------------------------------------------------------------------------------------------------//
+    // Create deformation maps or not (default no)
+    model.deformation_maps = ReadInt2(fin, "deformation_maps", 0);
+    // Resolution
+    model.nT               = ReadInt2(fin, "nT", 11);
+    model.nE               = ReadInt2(fin, "nE", 11);
+    model.nd               = ReadInt2(fin, "nd", 11);
+    // Temperature, strain rate, grain size MIN/MAX & pressure
+    model.Tmin             = ReadDou2(fin, "Tmin", 100.0);  model.Tmin += zeroC; model.Tmin /= scaling.T;    // C . K & non-dimensionalization
+    model.Tmax             = ReadDou2(fin, "Tmax", 1000.0); model.Tmax += zeroC; model.Tmax /= scaling.T;    // C . K & non-dimensionalization
+    model.Emin             = ReadDou2(fin, "Emin", -30.0);   //model.Emin /= scaling.E;                           // Non-dimensionalization
+    model.Emax             = ReadDou2(fin, "Emax", -4.0 );   //model.Emax /= scaling.E;                           // Non-dimensionalization
+    model.dmin             = ReadDou2(fin, "dmin", -7.0 );   //model.dmin /= scaling.L;                           // Non-dimensionalization
+    model.dmax             = ReadDou2(fin, "dmax", -2.0 );   //model.dmax /= scaling.L;                           // Non-dimensionalization
+    model.Pn               = ReadDou2(fin, "Pn",  5.0e8 );      model.Pn   /= scaling.S;                          // Non-dimensionalization
+    //------------------------------------------------------------------------------------------------------------------------------//
+    // MATERIAL PROPERTIES
+    //------------------------------------------------------------------------------------------------------------------------------//
     model.Nb_phases = materials.Nb_phases =  ReadInt2( fin, "Nb_phases", 0 );
     for ( k=0; k<materials.Nb_phases; k++) {
         // Read general parameters
@@ -1594,27 +1613,6 @@ Input ReadInputFile( char *fileName ) {
         model.kin_Pmax      = (49.9890/10*1e9)/scaling.S;  // Maximum pressure           (MANTLE) [Pa]
         model.kin_dG        = ReadBin(model.import_files_dir, "dG_QuartzCoesite.dat", model.kin_nT, model.kin_nP, scaling.J);
     }
-
-    //------------------------------------------------------------------------------------------------------------------------------//
-    // DEFORMATION MAP PARAMETERS
-    //------------------------------------------------------------------------------------------------------------------------------//
-
-    // Create deformation maps or not (default no)
-    model.def_maps        = ReadInt2(fin, "def_maps", 0);
-
-    // Resolution
-    model.nT              = ReadInt2(fin, "nT", 11);
-    model.nE              = ReadInt2(fin, "nE", 11);
-    model.nd              = ReadInt2(fin, "nd", 11);
-
-    // Temperature, strain rate, grain size MIN/MAX & pressure
-    model.Tmin            = ReadDou2(fin, "Tmin", 100.0);  model.Tmin += zeroC; model.Tmin /= scaling.T;    // C . K & non-dimensionalization
-    model.Tmax            = ReadDou2(fin, "Tmax", 1000.0); model.Tmax += zeroC; model.Tmax /= scaling.T;    // C . K & non-dimensionalization
-    model.Emin            = ReadDou2(fin, "Emin", -30.0);   //model.Emin /= scaling.E;                           // Non-dimensionalization
-    model.Emax            = ReadDou2(fin, "Emax", -4.0 );   //model.Emax /= scaling.E;                           // Non-dimensionalization
-    model.dmin            = ReadDou2(fin, "dmin", -7.0 );   //model.dmin /= scaling.L;                           // Non-dimensionalization
-    model.dmax            = ReadDou2(fin, "dmax", -2.0 );   //model.dmax /= scaling.L;                           // Non-dimensionalization
-    model.Pn              = ReadDou2(fin, "Pn",  5.0e8 );      model.Pn   /= scaling.S;                          // Non-dimensionalization
 
     // Close input file
     fclose(fin);
