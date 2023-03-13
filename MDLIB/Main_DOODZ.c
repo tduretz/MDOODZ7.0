@@ -98,6 +98,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
     // Set new particle distribution
     int cent=1, vert=0, prop=1, interp=0, vxnodes=-1, vznodes=-2;
+    SetupModule Setup = InitSetupModule();
     if ( input.model.irestart == 0 ) {
 
       input.model.step = 0;
@@ -116,7 +117,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         }
 
         // Initial grid tags
-        SetBCs(*setup->SetBCs, &input, &mesh);
+        Setup.SetBCs(*setup->SetBCs, &input, &mesh);
         if (input.model.free_surface == 1 ) {
 
             // Define the horizontal position of the surface marker chain
@@ -124,8 +125,8 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             SetTopoChainHorizontalCoords( &topo_ini, &topo_chain_ini, input.model, mesh, input.scaling );
 
             // Define the vertical position of the surface marker chain
-            BuildInitialTopography(*setup->BuildInitialTopography, &input, &topo_chain );
-            BuildInitialTopography(*setup->BuildInitialTopography, &input, &topo_chain_ini );
+            Setup.BuildInitialTopography(*setup->BuildInitialTopography, &input, &topo_chain );
+            Setup.BuildInitialTopography(*setup->BuildInitialTopography, &input, &topo_chain_ini );
 
             // Project topography on vertices
             ProjectTopography( &topo, &topo_chain, input.model, mesh, input.scaling, mesh.xg_coord, 0 );
@@ -141,7 +142,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         PutPartInBox( &particles, &mesh, input.model, topo, input.scaling );
 
         // Set phases on particles
-        SetParticles(*setup->SetParticles, &input, &particles);
+        Setup.SetParticles(*setup->SetParticles, &input, &particles);
 
         MinMaxArray(particles.Vx, input.scaling.V, particles.Nb_part, "Vxp init" );
         MinMaxArray(particles.Vz, input.scaling.V, particles.Nb_part, "Vzp init" );
@@ -178,7 +179,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
           printf("Running with crazy conductivity for the asthenosphere!!\n");
         }
         // Initial solution fields (Fine mesh)
-        SetBCs(*setup->SetBCs, &input, &mesh);
+        Setup.SetBCs(*setup->SetBCs, &input, &mesh);
 
         InitialiseSolutionFields( &mesh, &input.model );
 
@@ -210,7 +211,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         P2Mastah( &input.model, particles, input.materials.Cv,    &mesh, mesh.Cv, mesh.BCp.type,  0, 0, interp, cent, 1);
         P2Mastah( &input.model, particles, input.materials.Qr,    &mesh, mesh.Qr, mesh.BCp.type,  0, 0, interp, cent, 1);
 
-        SetBCs(*setup->SetBCs, &input, &mesh);
+        Setup.SetBCs(*setup->SetBCs, &input, &mesh);
         if (input.model.initial_cooling == 1 ) ThermalSteps( &mesh, input.model,  mesh.T,  mesh.dT,  mesh.rhs_t, mesh.T, &particles, input.model.cooling_duration, input.scaling );
         if (input.model.therm_perturb == 1 ) SetThermalPert( &mesh, input.model, input.scaling );
         Interp_Grid2P_centroids2( particles, particles.T,    &mesh, mesh.T, mesh.xvz_coord,  mesh.zvx_coord,  mesh.Nx-1, mesh.Nz-1, mesh.BCt.type, &input.model );
@@ -577,7 +578,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
           }
 
             // Allocate and initialise solution and RHS vectors
-            SetBCs(*setup->SetBCs, &input, &mesh);
+            Setup.SetBCs(*setup->SetBCs, &input, &mesh);
 
             // Reset fields and BC values if needed
             //        if ( input.model.pure_shear_ALE == 1 ) InitialiseSolutionFields( &mesh, &input.model );

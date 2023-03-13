@@ -567,9 +567,20 @@ void            LogTimeSeries(grid *, params, scale);
 void            MinMaxArray(double *array, double scale, int size, char *text);
 
 
-void            BuildInitialTopography(BuildInitialTopography_ff buildInitialTopography, MdoodzInput *instance, markers *topo_chain);
-void            SetParticles(SetParticles_ff setParticles, MdoodzInput *instance, markers *particles);
-void            SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh);
+typedef void            (*BuildInitialTopography_f)(BuildInitialTopography_ff buildInitialTopography, MdoodzInput *instance, markers *topo_chain);
+typedef void            (*SetParticles_f)(SetParticles_ff setParticles, MdoodzInput *instance, markers *particles);
+typedef void            (*SetBCs_f)(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh);
+
+typedef double (*SetSurfaceZCoord_f)(MdoodzInput *input, double x_coord);
+typedef int (*SetSurfacePhase_f)(MdoodzInput *input, double x_coord);
+
+typedef struct {
+  BuildInitialTopography_f BuildInitialTopography;
+  SetParticles_f  SetParticles;
+  SetBCs_f  SetBCs;
+} SetupModule;
+
+SetupModule InitSetupModule();
 
 void            ValidateSetup(MdoodzSetup *setup, MdoodzInput *instance);
 
