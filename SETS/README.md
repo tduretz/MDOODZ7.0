@@ -1,49 +1,61 @@
 # Parameters and parameter values read from input text file:
 
 ##  Simulation start/restart from breakpoint files
-- `irestart`: 0 if simulation starts from beginning, 1 if simulation restarts from a step. Default: 00000
-- `istep`: last step written, indicates step to restart from if irestart is 1. Default: 0
+| Parameter  | Description                                                                 | Default value | Allowed values |
+|------------|-----------------------------------------------------------------------------|---------------|----------------|
+| `irestart` | 0 if simulation starts from beginning, 1 if simulation restarts from a step | 0             | Switch: [0,1]  |
+| `istep`    | last step written, indicates step to restart from if irestart is 1          | 00000         | Integer >= 0   |
 
 ## Simulation start/restart 
-- `writer`: Writes .hdf5 files for visualisation and .dat breakpoint files for restart. Default: 0
-- `writer_step`: Frequency of output. Default: 1
-- `writer_markers`: Writes hdf5 marker files (large files!). Default: 0
-- `writer_debug`: Writes debug files. Default: 0
-- `writer_subfolder`: Writes output in given subfolder. Default: ./
-- `noisy`: Prints a lot of info to standard output. Default: 1
-- `track_T_P_x_z`: Tracks initial T, P, x and z on particles. Default: 0
-- `delete_breakpoints`: Progressively deletes breakpoint files. Default: 0
-- `gnuplot_log_res`: Activates GNU plot residuals visualisation (requires gnuplot). Default: 0
+| Parameter            | Description                                                                 | Default value | Allowed values |
+|----------------------|-----------------------------------------------------------------------------|---------------|----------------|
+| `writer`             | Writes .hdf5 files for visualisation and .dat breakpoint files for restart  | 0             | Switch: [0,1]  |
+| `writer_step`        | Frequency of output                                                         | 1             | Switch: [0,1]  |
+| `writer_markers`     | Writes hdf5 marker files (large files!)                                     | 0             | Switch: [0,1]  |
+| `writer_debug`       | Writes debug files                                                          | 0             | Switch: [0,1]  |
+| `writer_subfolder`   | Writes output in given subfolder                                            | ./            | Path to folder |
+| `noisy`              | Prints a lot of info to standard output                                     | 1             | Switch: [0,1]  |
+| `track_T_P_x_z`      | Tracks initial T, P, x and z on particles                                   | 0             | Switch: [0,1]  |
+| `delete_breakpoints` | Progressively deletes breakpoint files                                      | 0             | Switch: [0,1]  |
+| `gnuplot_log_res`    | Activates GNU plot residuals visualisation (requires gnuplot)               | 0             | Switch: [0,1]  |
 
 ## External files
-- `import_files_dir`: Default: `../../IMPORT`
-- `import_file`: Default: `blah.bin`       
-- `save_initial_markers`: saves initial marker configuration in a .bin file. Default: 0
-- `load_initial_markers`: load the marker configurations if the .bin containing marker positions. Default: 0
-- `initial_markers_file`: name of the file to be written/loaded. Default: `markers.bin`
+| Parameter              | Description                                                            | Default value  | Allowed values |
+|------------------------|------------------------------------------------------------------------|----------------|----------------|
+| `import_files_dir`     | import files directory                                                 | `../../IMPORT` | Path to folder |
+| `import_file`          | import file name                                                       | `blah.bin`     | File name      |
+| `save_initial_markers` | saves initial marker configuration in a .bin file                      | 0              | Switch: [0,1]  |
+| `load_initial_markers` | load the marker configurations if the .bin containing marker positions | 0              | Switch: [0,1]  |
+| `initial_markers_file` | name of the file to be written/loaded                                  | `markers.bin`  | File name      |
 
 ## Physical scales
-- `eta`: Viscosity [Pa.s]. Default: 1.0
-- `L`: Length [m]. Default: 1.0
-- `V`: Velocity [m/s]. Default: 1.0
-- `T`: Temperature [K]. Default: 1.0
+| Parameter | Description      | Default value  | Allowed values   |
+|-----------|------------------|----------------|------------------|
+| `eta`     | Viscosity [Pa.s] | 1.0            | Positive decimal |
+| `L`       | Length [m]       | 1.0            | Positive decimal |
+| `V`       | Velocity [m/s]   | 1.0            | Positive decimal |
+| `T`       | Temperature [K]  | 1.0            | Positive decimal |
 ## Spatial domain
-- `Nx`: Number of vertices in x direction. Default: 10
-- `Nz`: Number of vertices in y direction. Default: 10
-- `xmin`: Spatial domain extent. Default: -1.0
-- `xmax`: Spatial domain extent. Default:  1.0
-- `zmin`: Spatial domain extent. Default: -1.0 
-- `zmax`: Spatial domain extent. Default:  1.0
+| Parameter | Description                       | Default value  | Allowed values   |
+|-----------|-----------------------------------|----------------|------------------|
+| `Nx`      | Number of vertices in x direction | 10             | Positive integer |
+| `Nz`      | Number of vertices in y direction | 10             | Positive integer |
+| `xmin`    | Spatial domain extent             | -1.0           | Decimal          |
+| `xmax`    | Spatial domain extent             |  1.0           | Decimal          |
+| `zmin`    | Spatial domain extent             | -1.0           | Decimal          |
+| `zmax`    | Spatial domain extent             |  1.0           | Decimal          |
 
 ## Time domain
-- `Nt`: Number of time steps. Default: 1  
-- `dt`: Time step [s]. Default: 0.0
-- `Courant`: Courant number. Default: 0.5
-- `RK`: Order of Runge-Kutta advection solver (1, 2 or 4). Default: 4
-- `constant_dt`: Activates constant time step. Default: 0
-- `stress_rotation`: 0: no stress rotation, 1: analytic rotation, 2: upper convected rate. Default: 1
-- `dt_min`: minimum allowed time step [s], defaut is negative such that it will never be activated unless specifically set in XXX.txt file. Default: -1e20
-- `dt_max`: maximum allowed time step [s], the default value is set to ~infinite, it we become effective only if specificaly set in XXX.txt (see e.g. LithoScale.txt). Default: 1e20
+| Parameter         | Description                                                          | Default value  | Allowed values   |
+|-------------------|----------------------------------------------------------------------|----------------|------------------|
+| `Nt`              | Number of time steps                                                 | 1              | Positive Integer |
+| `dt`              | Time step [s]                                                        | 0.0            | Decimal          |
+| `Courant`         | Courant number                                                       | 0.5            | Decimal: 0.0-0.5 |
+| `RK`              | Order of Runge-Kutta advection solver (1, 2 or 4)                    | 4              | Switch: [1,2,4]  |
+| `constant_dt`     | Activates constant time step                                         | 0              | Switch: [0,1]    |
+| `stress_rotation` | 0: no stress rotation, 1: analytic rotation, 2: upper convected rate | 1              | Switch: [0,1,2]  |
+| `dt_min`          | minimum allowed time step [s], defaut is negative such that it will <br />never be activated unless specifically set in XXX.txt file | -1e20 | Decimal |
+| `dt_max`          | maximum allowed time step [s], the default value is set to ~infinite, <br />it we become effective only if specificaly set in XXX.txt (see e.g. LithoScale.txt) | 1e20 | Decimal |
 
 ## Physics 
 - `mechanical`: Activates mechanical solver. Default: 1
