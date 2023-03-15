@@ -20,9 +20,9 @@ function main()
     PS        = 1
     
     npwl      = 3.0             # POWER LAW EXPONENT
-    anifac_v       = 1.4             # VISCOUS anisotropy strength in Ray's formulation anifac_v = η_n/η_s
-    anifac_e       = 1.6             # ELASTIC anisotropy strength -------------------- anifac_e = G_n/G_s
-    anifac_p       = 3.0             # PLASTIC anisotropy strength                      anifac_p = τxx_ve/τxy_ve
+    anifac_v  = 1.4             # VISCOUS anisotropy factor anifac_v = η_n/η_s
+    anifac_e  = 1.6             # ELASTIC ----------------- anifac_e = G_n/G_s
+    anifac_p  = 3.0             # PLASTIC ----------------- anifac_p = τxx_ve/τxy_ve
     a1 = 1.0; a2 = 1.0; a3 = 1.0 # friction angle anisotropy
     aniso_ang = LinRange( 0.0, π/2, 21 ) # Director angle (w.r. to horizontal), see Mühlhaus et al. 2002
     # aniso_ang = 0.0
@@ -64,16 +64,16 @@ function main()
     ηvp    = 0*1e18
     
     # Storage/visualisation
-    τii_Ray = zeros(nt, length(aniso_ang))
+    τii_Ray    = zeros(nt, length(aniso_ang))
     τxx_ve_Ray = zeros(nt, length(aniso_ang))
     τyy_ve_Ray = zeros(nt, length(aniso_ang))
     τxy_ve_Ray = zeros(nt, length(aniso_ang))
-    p_Ray   = zeros(nt, length(aniso_ang))
-    τii_MD7 = zeros(nt, length(aniso_ang))
+    p_Ray      = zeros(nt, length(aniso_ang))
+    τii_MD7    = zeros(nt, length(aniso_ang))
     τxx_ve_MD7 = zeros(nt, length(aniso_ang))
     τyy_ve_MD7 = zeros(nt, length(aniso_ang))
     τxy_ve_MD7 = zeros(nt, length(aniso_ang))
-    p_MD7   = zeros(nt, length(aniso_ang))
+    p_MD7      = zeros(nt, length(aniso_ang))
     
     # Loop over all orientations
     for i in eachindex(aniso_ang)
@@ -93,14 +93,14 @@ function main()
             ###############
     
             # Transformation matrix: towards principal plane
-            Q       = [cos(layer_ang[i]) sin(layer_ang[i]); -sin(layer_ang[i]) cos(layer_ang[i])]
-            @show ε_tens  = [εxxd εxy; εxy εyyd]
-            τ0_tens = [τxx_ve0 τxy_ve0; τxy_ve0 τyy_ve0]
-            @show ε_rot   = Q*ε_tens*Q'
-            τ0_rot  = Q*τ0_tens*Q'
+            Q            = [cos(layer_ang[i]) sin(layer_ang[i]); -sin(layer_ang[i]) cos(layer_ang[i])]
+            @show ε_tens = [εxxd εxy; εxy εyyd]
+            τ0_tens      = [τxx_ve0 τxy_ve0; τxy_ve0 τyy_ve0]
+            @show ε_rot  = Q*ε_tens*Q'
+            τ0_rot       = Q*τ0_tens*Q'
             @show cos(layer_ang[i])*sin(layer_ang[i])
-            @show nx = cos(aniso_ang[i])
-            @show ny = sin(aniso_ang[i])
+            @show nx     = cos(aniso_ang[i])
+            @show ny     = sin(aniso_ang[i])
 
             # ε        = [εxx; εyy; εxy]
             # τ0       = [τxx_ve0; τyy_ve0; τxy_ve0]
@@ -109,22 +109,22 @@ function main()
             ############### VISCO-ELASTIC TRIAL
             # Let's suppose all deformation is only visco-elastic (i.e no plastic deformation)
             τ_ve, ηve, sqrt_a_ve, ηpwl = LocalViscoElasticTrialStress_Newton_ηve( ε_rot, τ0_rot, ηe, sqrt(anifac_e), sqrt(anifac_v), Bpwl, Cpwl, npwl, tol, nitmax, noisy )
-            a_ve = sqrt_a_ve^2
-            τxx_ve     = τ_ve[1,1]; τxy_ve   = τ_ve[1,2]; τyy_ve   =  τ_ve[2,2]; τzz_ve   = -τxx_ve-τyy_ve
-            J2 = 0.5*(τxx_ve^2 + τyy_ve^2 + τzz_ve^2) + τxy_ve^2*a_ve
+            anifac_ve = sqrt_a_ve^2
+            τxx_ve    = τ_ve[1,1]; τxy_ve   = τ_ve[1,2]; τyy_ve   =  τ_ve[2,2]; τzz_ve   = -τxx_ve-τyy_ve
+            J2 = 0.5*(τxx_ve^2 + τyy_ve^2 + τzz_ve^2) + τxy_ve^2*anifac_ve
             εxx_ve    = ε_rot[1,1]   + τ0_rot[1,1]/(2*ηe)
             εyy_ve    = ε_rot[2,2]   + τ0_rot[2,2]/(2*ηe)
             εxy_ve    = ε_rot[1,2]   + τ0_rot[1,2]/(2*ηe)*anifac_e
 
-            εii_ve = sqrt( 1/2*(εxx_ve^2+εyy_ve^2) + εxy_ve^2/a_ve )
+            εii_ve = sqrt( 1/2*(εxx_ve^2+εyy_ve^2) + εxy_ve^2/anifac_ve )
             @printf("VE:  Check J2 definition: %2.2e\n", (J2 - (2*ηve)^2 * ( εii_ve^2 ))/J2*100 )
             @printf("VE:  Check T2 definition: %2.2e\n", (sqrt(J2) - 2*ηve * εii_ve  ) / sqrt(J2)*100 )
             @printf("VE:  sqrt(J2) = %2.2e\n", sqrt(J2))
-            @printf("VE:  ani_ve   = %2.2e\n", a_ve)
+            @printf("VE:  ani_ve   = %2.2e\n", anifac_ve)
             # initialize vep variables (also if non-plastic case)
-            ηvep    = ηve
-            a_vep   = a_ve
-            Pc      = P
+            ηvep        = ηve
+            anifac_vep  = anifac_ve
+            Pc          = P
             ############### PLASTIC CORRECTION
             if plasticity == true
                 # Check yield condition
@@ -148,13 +148,13 @@ function main()
                     Tii    = sqrt( 1/2*(Tn2 + anifac_p^2*Ts2)) # WH: compare with fcts_VE_trial.jl line 79 (Eii) -> not consistent?
                     for iter=1:nitmax
                         # It would be nice to have this section derived with Symbolics.jl
-                        gdot   = γ̇
-                        ap_n   = 1 -             eta_ve .* gdot ./  sqrt(J2)
-                        ap_s_old = 1 - anifac_p .^ 2 .* eta_ve .* gdot ./ (sqrt(J2) .* a_ve ) # WH: not used, just for comparison
-                        ap_s   = ap_n#1 - anifac_p .^ 2 .* eta_ve .* gdot ./ (sqrt(J2) .* a_ve )
-                        Jii    = J2
-                        dt     = Δt
-                        eta_vp = ηvp
+                        gdot     = γ̇
+                        ap_n     = 1 -             eta_ve .* gdot ./  sqrt(J2)
+                        ap_s_old = 1 - anifac_p .^ 2 .* eta_ve .* gdot ./ (sqrt(J2) .* anifac_ve ) # WH: not used, just for comparison
+                        ap_s     = ap_n#1 - anifac_p .^ 2 .* eta_ve .* gdot ./ (sqrt(J2) .* anifac_ve )
+                        Jii      = J2
+                        dt       = Δt
+                        eta_vp   = ηvp
                         
                         # With out of plane
                         Pc   = P + K*Δt*γ̇*sin(dil)*am
@@ -184,27 +184,27 @@ function main()
                     εyy_p      = γ̇*( (a2/3-a3/3)*sin(fric) + τyy_ve/sqrt(J2)/2)
                     εxy_p      = γ̇*τxy_ve/sqrt(J2)/2*anifac_p^2
                     εyx_p      = γ̇*τxy_ve/sqrt(J2)/2*anifac_p^2
-                    D          = 2*ηve * [1 0 0 0; 0 1 0 0; 0 0 1/a_ve 0; 0 0 0 1/a_ve]
+                    D          = 2*ηve * [1 0 0 0; 0 1 0 0; 0 0 1/anifac_ve 0; 0 0 0 1/anifac_ve]
                     τ_vec      = D*([εxx_ve; εyy_ve; εxy_ve; εxy_ve] .- [εxx_p; εyy_p; εxy_p; εyx_p])
-                    τ_ve      = [τ_vec[1] τ_vec[3]; τ_vec[4] τ_vec[2]]
+                    τ_ve       = [τ_vec[1] τ_vec[3]; τ_vec[4] τ_vec[2]]
                     J2_corr_p  = 0.5*(τ_ve[1,1]^2 + τ_ve[2,2]^2) + τ_ve[1,2]^2*anifac_p^2
                     @printf("VEP: sqrt(J2_corr_p ) = %2.2e\n", sqrt(J2_corr_p) )
                     @printf("VEP: sqrt(J2_corr   ) = %2.2e\n", sqrt(J2_corr)   )
-                    # Compute a_vep 
+                    # Compute anifac_vep 
                     axx       = (sqrt(J2t)        -       ηve*γ̇)/(sqrt(J2t))
-                    # axy       = (sqrt(J2t)*a_ve - anifac_p^2*ηve*γ̇)/(sqrt(J2t)*a_ve)
+                    # axy       = (sqrt(J2t)*anifac_ve - anifac_p^2*ηve*γ̇)/(sqrt(J2t)*anifac_ve)
                     axy       = axx
                     η_mat     = ηve * [axx 0 0 0; 0 axx 0 0; 0 0 axy 0; 0 0 0 axy]
                     D         = 2*η_mat 
                     τ_vec     = D*([εxx_ve; εyy_ve; εxy_ve; εxy_ve]) 
                     # --- 
-                    a_vep     = a_ve*axx/axy
+                    anifac_vep = anifac_ve*axx/axy
                     ηvep      = ηve*axx
-                    η_mat     = ηvep * [1 0 0 0; 0 1 0 0; 0 0 1/a_vep 0; 0 0 0 1/a_vep] 
+                    η_mat     = ηvep * [1 0 0 0; 0 1 0 0; 0 0 1/anifac_vep 0; 0 0 0 1/anifac_vep] 
                     D         = 2*η_mat
                     τ_vec     = D*([εxx_ve; εyy_ve; εxy_ve; εxy_ve])
                     # ---
-                    τ_ve     = [τ_vec[1] τ_vec[3]; τ_vec[4] τ_vec[2]]
+                    τ_ve      = [τ_vec[1] τ_vec[3]; τ_vec[4] τ_vec[2]]
                     τxx_vec      = τ_ve[1,1]; τyy_vec = τ_ve[2,2]; τzz_vec = -τxx_vec-τyy_vec
                     J2_corr_p = 0.5*(τ_ve[1,1]^2 + τ_ve[2,2]^2) + τ_ve[1,2]^2*anifac_p^2
                     J1_corr_p = a1*τxx_vec + a2*τyy_vec + a3*τzz_vec
@@ -223,11 +223,11 @@ function main()
     
             ###############
             # Store
-            τii_Ray[it,i] = τii
+            τii_Ray[it,i]    = τii
             τxx_ve_Ray[it,i] = τxx_ve
             τyy_ve_Ray[it,i] = τyy_ve
             τxy_ve_Ray[it,i] = τxy_ve
-            p_Ray[it,i]   = Pc
+            p_Ray[it,i]      = Pc
     
             # ###################################################################
             # THIS IS WHAT WILL HAPPEN IN MDOODZ: It still uses the C_ANI business we derived earlier...
@@ -238,7 +238,7 @@ function main()
             d1       = N[1]*N[2] * (-N[1]^2 + N[2]^2)
             C_ANI    = [-d0 d0 -two*d1; d0 -d0 two*d1; -d1 d1 -two*(1/2-d0)]      ###### !!! - sign in D33 -a0
             C_ISO    = [1 0 0; 0 1 0; 0 0 two*1//2]
-            ani      = 1. - 1.  ./ a_vep
+            ani      = 1. - 1.  ./ anifac_vep
             Dani_vep = C_ISO .+ ani*C_ANI # Achtung: factor 2 removed from Dani
             ani      = 1. - 1.  ./ anifac_e
             Dani_e   = C_ISO .+ ani*C_ANI # Achtung: factor 2 removed from Dani
@@ -253,17 +253,17 @@ function main()
          
             # 3 ---------------------------------------------------------------
             # same as 2) but without mistake. Doesn't look very sexy... Can maybe be simplified...
-            E     = ηe*[1 0 0; 0 1 0; 0 0 1] .+ ηpwl*Dani_v*inv(Dani_e)
+            E        = ηe*[1 0 0; 0 1 0; 0 0 1] .+ ηpwl*Dani_v*inv(Dani_e)
             τ_MD7_v2 = 2*ηvep*(ηpwl+ηe)*inv(E)*(Dani_v*ε + Dani_v*inv(Dani_e) * (τ0 ./(2*ηe)))
             
             # @printf("max. rel. VE tangent : %2.2e\n ", maximum( (τ_MD7_v1.-τ_MD7_v2)./τ_MD7_v1)*100 ) 
                 
-            τii_MD7[it,i] = sqrt(0.5*(τ_MD7_v1[1]^2 + τ_MD7_v1[2]^2) + τ_MD7_v1[3]^2)
+            τii_MD7[it,i]    = sqrt(0.5*(τ_MD7_v1[1]^2 + τ_MD7_v1[2]^2) + τ_MD7_v1[3]^2)
             @printf("VEP: τii      = %2.6e\n", τii_MD7[it,i])
             τxx_ve_MD7[it,i] = τ_MD7_v1[1]
             τyy_ve_MD7[it,i] = τ_MD7_v1[2]
             τxy_ve_MD7[it,i] = τ_MD7_v1[3]
-            p_MD7[it,i]   = Pc
+            p_MD7[it,i]      = Pc
     
         end
     end
