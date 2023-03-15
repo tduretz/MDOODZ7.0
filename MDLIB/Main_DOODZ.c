@@ -272,6 +272,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         printf("*************************************\n");
         P2Mastah( &input.model, particles, particles.X,     &mesh, mesh.X0_n , mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil);
         P2Mastah( &input.model, particles, particles.X,     &mesh, mesh.X0_s , mesh.BCg.type,  1, 0, interp, vert, input.model.interp_stencil);
+        ArrayEqualArray( mesh.X_n, mesh.X0_n,  (mesh.Nx-1)*(mesh.Nz-1) );
 
         if (input.model.anisotropy == 1 ) {
             InitialiseDirectorVector ( &mesh, &particles, &input.model, &input.materials, input.scaling.L);
@@ -331,7 +332,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         printf("******** Initialize timestep ********\n");
         printf("*************************************\n");
 
-        DefineInitialTimestep( &input.model, &mesh, particles, input.materials, input.scaling );
+        // DefineInitialTimestep( &input.model, &mesh, particles, input.materials, input.scaling );
 
         if (input.model.track_T_P_x_z == 1 ) {
             ArrayEqualArray( particles.T0,   particles.T, particles.Nb_part );
@@ -575,14 +576,13 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
         if (input.model.mechanical == 1 ) {
 
-          if (input.crazyConductivity) {
-            for (int n = 0; n < input.crazyConductivity->nPhases; n++) {
-              const int    phase           = input.crazyConductivity->phases[n];
-              input.materials.k_eff[phase] = input.materials.k[phase];
+            if (input.crazyConductivity) {
+                for (int n = 0; n < input.crazyConductivity->nPhases; n++) {
+                const int    phase           = input.crazyConductivity->phases[n];
+                input.materials.k_eff[phase] = input.materials.k[phase];
+                }
+                printf("Running with normal conductivity for the asthenosphere...\n");
             }
-            printf("Running with normal conductivity for the asthenosphere...\n");
-          }
-
             // Allocate and initialise solution and RHS vectors
             SetBCs(*setup->SetBCs, &input, &mesh);
 
@@ -853,7 +853,6 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
         // Update pressure on markers
         UpdateParticlePressure( &mesh, input.scaling, input.model, &particles, &input.materials );
-        UpdateParticleX( &mesh, input.scaling, input.model, &particles, &input.materials );
 
         // Grain size evolution
         UpdateParticleGrainSize( &mesh, input.scaling, input.model, &particles, &input.materials );
@@ -890,7 +889,8 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
         //--------------------------------------------------------------------------------------------------------------------------------//
 
-        if (input.model.chemical_diffusion == 1 ) {
+        if (input.model.chemical_diffusion == 1)  {
+            if (input.model.unsplit_diff_reac == 0 ) ArrayEqualArray( mesh.X_n, mesh.X0_n,  (mesh.Nx-1)*(mesh.Nz-1) );
             printf("*************************************\n");
             printf("********** Chemical solver **********\n");
             printf("*************************************\n");
@@ -898,6 +898,15 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             P2Mastah ( &input.model, particles, input.materials.k_chem, &mesh, mesh.kc_z, mesh.BCv.type,  0, 0, interp, vznodes, input.model.interp_stencil);
             ChemicalDirectSolve( &mesh, input.model, &particles, &input.materials, input.model.dt, input.scaling );
         }
+        else {
+            ArrayEqualArray( mesh.X_n, mesh.X0_n,  (mesh.Nx-1)*(mesh.Nz-1) );
+        }
+        UpdateParticleX( &mesh, input.scaling, input.model, &particles, &input.materials );
+
+        // ArrayEqualArray( mesh.X_n, mesh.X0_n,  (mesh.Nx-1)*(mesh.Nz-1) );
+        // UpdateParticleXpips( &mesh, input.scaling, input.model, &particles, &input.materials );
+
+
         //--------------------------------------------------------------------------------------------------------------------------------//
 
         // Update maximum pressure and temperature on markers
@@ -907,7 +916,6 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         LogTimeSeries( &mesh, input.model, input.scaling );
 
         //------------------------------------------------------------------------------------------------------------------------------//
-
 
         if (input.model.advection == 1 ) {
 
@@ -935,7 +943,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             }
 
             // Loop on substeps
-            for (isub=0;isub<nsub;isub++) {
+            for (isub=0; isub<nsub; isub++) {
 
                 printf("************** Advection step %03d of %03d: dtsub = %2.2e **************\n", isub, nsub, input.model.dt* input.scaling.t );
 
@@ -977,9 +985,9 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                 if (input.model.free_surface == 1 ) {
 
                     // Get current topography
-                    ProjectTopography( &topo,     &topo_chain, input.model, mesh, input.scaling, mesh.xg_coord, 0 );
-                    ProjectTopography( &topo_ini, &topo_chain_ini, input.model, mesh, input.scaling, mesh.xg_coord, 0 );
-                    MarkerChainPolyFit( &topo,     &topo_chain, input.model, mesh );
+                    ProjectTopography(  &topo,     &topo_chain,     input.model, mesh, input.scaling, mesh.xg_coord, 0 );
+                    ProjectTopography(  &topo_ini, &topo_chain_ini, input.model, mesh, input.scaling, mesh.xg_coord, 0 );
+                    MarkerChainPolyFit( &topo,     &topo_chain,     input.model, mesh );
                     MarkerChainPolyFit( &topo_ini, &topo_chain_ini, input.model, mesh );
 
                     // Remesh free surface I

@@ -154,7 +154,6 @@ void ChemicalDirectSolve( grid *mesh, params model, markers *particles, mat_prop
 
                 for ( p=0; p<model.Nb_phases; p++ ) {
                     cond =  fabs(mesh->phase_perc_n[p][c2])>1.0e-13;
-
                     if ( cond == 1 ) Pr          += mesh->phase_perc_n[p][c2] * materials->Pr[p];
                     if ( cond == 1 ) dPr         += mesh->phase_perc_n[p][c2] * materials->dPr[p];
                     if ( cond == 1 ) tau_kin[c2] += mesh->phase_perc_n[p][c2] * materials->tau_kin[p];
@@ -202,8 +201,8 @@ void ChemicalDirectSolve( grid *mesh, params model, markers *particles, mat_prop
                     }
                 }
                 
-                // Periodic on the right side
-                if (mesh->BCC_exp.type[c0]==-2 && k==ncx-1 ) {
+                // Periodic on the E side
+                if (mesh->BCC_exp.type[c0+1]==-2 && k==ncx-1 ) {
                     val = -theta*AE*one_dx_dx;
                     AddCoeffChem( J, A, eqn, eqn_t[c2-(ncx-1)],   &nnzc,  val );
                 }
@@ -237,27 +236,27 @@ void ChemicalDirectSolve( grid *mesh, params model, markers *particles, mat_prop
                     else {
                         if (mesh->BCC_exp.type[c0] == 1 ) {
                             val      += 2.0*ks*one_dz_dz;
-                            bbc[eqn] += 2.0*ks*one_dz_dz * mesh->BCc.val[c2];
+                            bbc[eqn] += 2.0*ks*one_dz_dz * mesh->BCC_exp.val[c0];
                         }
                     }
                 }
                 
                 // Flux from sides: WEST
-                if ( (k>0) || (k==0 && mesh->BCC_exp.type[c0]==-2) ) {
-                    if (mesh->BCc.type[c2-1] != 30 ) {
+                if ( (k>0) || (k==0 && mesh->BCC_exp.type[c0-1]==-2) ) {
+                    if (mesh->BCC_exp.type[c0-1] != 30 ) {
                         val +=  AW*one_dx_dx;
                     }
                     // Dirichlet contribution (free surface)
                     else {
                         if (mesh->BCC_exp.type[c0] == 1 ) {
                             val      += 2.0*ks*one_dx_dx;
-                            bbc[eqn] += 2.0*ks*one_dx_dx * mesh->BCc.val[c2];
+                            bbc[eqn] += 2.0*ks*one_dx_dx * mesh->BCC_exp.val[c0];
                         }
                     }
                 }
                 
                 // Flux from sides: EAST
-                if ( (k<ncx-1) || (k==ncx-1 && mesh->BCC_exp.type[c0]==-2) ) {
+                if ( (k<ncx-1) || (k==ncx-1 && mesh->BCC_exp.type[c0+1]==-2) ) {
                     if (mesh->BCC_exp.type[c0+1] != 30 ) {
                         val +=  AE*one_dx_dx;
                     }
@@ -265,7 +264,7 @@ void ChemicalDirectSolve( grid *mesh, params model, markers *particles, mat_prop
                     else {
                         if (mesh->BCC_exp.type[c0] == 1 ) {
                             val      += 2.0*ks*one_dx_dx;
-                            bbc[eqn] += 2.0*ks*one_dx_dx * mesh->BCc.val[c2];
+                            bbc[eqn] += 2.0*ks*one_dx_dx * mesh->BCC_exp.val[c0];
                         }
                     }
                 }
@@ -279,7 +278,7 @@ void ChemicalDirectSolve( grid *mesh, params model, markers *particles, mat_prop
                     else {
                         if (mesh->BCC_exp.type[c0] == 1 ) {
                             val      += 2.0*ks*one_dz_dz;
-                            bbc[eqn] += 2.0*ks*one_dz_dz * mesh->BCc.val[c2];
+                            bbc[eqn] += 2.0*ks*one_dz_dz * mesh->BCC_exp.val[c0];
                         }
                     }
                 }
@@ -335,7 +334,7 @@ void ChemicalDirectSolve( grid *mesh, params model, markers *particles, mat_prop
                 
                 AddCoeffChem( J, A, eqn, eqn_t[c2],   &nnzc, val );
                 
-                // -------------- Dirichlet contibutions -------------- //
+                // // -------------- Dirichlet contibutions -------------- //
                 
                 // Contribution to E dof
                 if (k<ncx-1) {
@@ -345,8 +344,8 @@ void ChemicalDirectSolve( grid *mesh, params model, markers *particles, mat_prop
                     }
                 }
                 
-                // Periodic on the left side
-                if (mesh->BCC_exp.type[c0]==-2 && k==0 ) {
+                // Periodic on the W side
+                if (mesh->BCC_exp.type[c0-1]==-2 && k==0 ) {
                     val = -theta*AW*one_dx_dx;
                     AddCoeffChem( J, A, eqn, eqn_t[c2+(ncx-1)],   &nnzc,  val );
                 }
@@ -400,6 +399,7 @@ void ChemicalDirectSolve( grid *mesh, params model, markers *particles, mat_prop
     
     // Extract temperature T from solution vector x, compute temperature increments dT and integrate heat increments dUt
     //#pragma omp parallel for shared( mesh, scaling, x ) private( c2, eqn ) firstprivate( ncx, ncz, zero_celsius, model ) reduction (+:dUt)
+    MinMaxArrayTag( mesh->X_n, 1.0, (mesh->Nx-1)*(mesh->Nz-1), "X", mesh->BCc.type );
     for( l=0; l<ncz; l++) {
         for( k=0; k<ncx; k++) {
             c0  = (k+1) + (l+1)*(ncx+2);

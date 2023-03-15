@@ -190,8 +190,6 @@ void EnergyDirectSolve( grid *mesh, params model, double *rhoE, double *drhoE, d
                     c2  = k   + l*ncx;
                     c3  = k   + l*nxvz+1;
 
-                    // printf("HOH\n");
-
                     if (mesh->BCT_exp.type[c0] != 30 ) {
 
                         // Central coefficient
@@ -212,8 +210,8 @@ void EnergyDirectSolve( grid *mesh, params model, double *rhoE, double *drhoE, d
                             }
                         }
 
-                        // Periodic on the right side
-                        if (mesh->BCT_exp.type[c0]==-2 && k==ncx-1 ) {
+                        // Periodic on the E side
+                        if (mesh->BCT_exp.type[c0+1]==-2 && k==ncx-1 ) {
                             val = -theta*AE*one_dx_dx;
                             AddCoeffThermal( J, A, eqn, eqn_t[c2-(ncx-1)],   &nnzc,  val );
                         }
@@ -252,7 +250,7 @@ void EnergyDirectSolve( grid *mesh, params model, double *rhoE, double *drhoE, d
                         }
 
                         // Flux from sides: WEST
-                        if ( (k>0) || (k==0 && mesh->BCT_exp.type[c0]==-2) ) {
+                        if ( (k>0) || (k==0 && mesh->BCT_exp.type[c0-1]==-2) ) {
                             if (mesh->BCT_exp.type[c0-1] != 30 ) {
                                 val +=  AW*one_dx_dx;
                             }
@@ -266,7 +264,7 @@ void EnergyDirectSolve( grid *mesh, params model, double *rhoE, double *drhoE, d
                         }
 
                         // Flux from sides: EAST
-                        if ( (k<ncx-1) || (k==ncx-1 && mesh->BCT_exp.type[c0]==-2) ) {
+                        if ( (k<ncx-1) || (k==ncx-1 && mesh->BCT_exp.type[c0+1]==-2) ) {
                             if (mesh->BCT_exp.type[c0+1] != 30 ) {
                                 val +=  AE*one_dx_dx;
                             }
@@ -353,8 +351,8 @@ void EnergyDirectSolve( grid *mesh, params model, double *rhoE, double *drhoE, d
                             }
                         }
 
-                        // Periodic on the left side
-                        if (mesh->BCT_exp.type[c0]==-2 && k==0 ) {
+                        // Periodic on W side
+                        if (mesh->BCT_exp.type[c0-1]==-2 && k==0 ) {
                             val = -theta*AW*one_dx_dx;
                             AddCoeffThermal( J, A, eqn, eqn_t[c2+(ncx-1)],   &nnzc,  val );
                         }
@@ -419,7 +417,7 @@ void EnergyDirectSolve( grid *mesh, params model, double *rhoE, double *drhoE, d
                 c2  = k   + l*ncx;
                 eqn = eqn_t[c2];
                 if ( mesh->BCT_exp.type[c0] != 30 ) {
-                    mesh->dT[c2] = 1.0*(x[eqn] -  mesh->T[c2]);
+                    mesh->dT[c2] = x[eqn] -  mesh->T[c2];
                     mesh->T[c2]  = mesh->T[c2] + mesh->dT[c2];
                     dUt         += mesh->rho_n[c2]*mesh->Cv[c2]*mesh->dT[c2];
                     if (mesh->T[c2] < 0.0) {

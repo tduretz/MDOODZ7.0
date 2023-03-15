@@ -12,16 +12,14 @@ int SetPhase(MdoodzInput *input, Coordinates coordinates) {
   }
 }
 
-double SetXComponent(MdoodzInput *input, Coordinates coordinates, int phase) {
-  double X = 0.0;
-  const double radius = 0.25 / input->scaling.L;
+double SetTemperature(MdoodzInput *instance, Coordinates coordinates) {
+  const double radius = 0.25 / instance->scaling.L;
   const double x = coordinates.x + 0.25;
   const double z = coordinates.z;
   if ( x*x + z*z < radius * radius) {
-    return 1.0;
-  }
-  else {
-    return X;
+    return 1.0/700.0;
+  } else {
+    return 0.0;
   }
 }
 
@@ -57,18 +55,18 @@ double SetDensity(MdoodzInput *input, Coordinates coordinates, int phase) {
   }
 }
 
-SetBC SetBCC(MdoodzInput *instance, POSITION position, double particleTemperature) {
+SetBC SetBCT(MdoodzInput *instance, POSITION position, double particleTemperature) {
   SetBC     bc;
   // if (position == W  || position == N || position == E || position == S) {
   //   bc.type  = constant_X;
   //   bc.value = 0.1;
   // }
   if (position == S || position == N) {
-    bc.type  = constant_Xflux;
+    bc.type  = 0;
     bc.value = 0.0;
   }
   if (position == E || position == W) {
-    bc.type  = periodic_X_x;
+    bc.type  = -2;
     bc.value = 0.0;
   }
   return bc;
@@ -82,16 +80,16 @@ int main() {
   MdoodzSetup setup = {
           .SetParticles  = &(SetParticles_ff){
                    .SetHorizontalVelocity = SetHorizontalVelocity,
+                   .SetTemperature        = SetTemperature,
                    .SetPhase              = SetPhase,
                    .SetDualPhase          = SetDualPhase,
                    .SetDensity            = SetDensity,
-                   .SetXComponent         = SetXComponent,
           },
           .SetBCs = &(SetBCs_ff){
                   .SetBCVx = SetPureOrSimpleShearBCVx,
                   .SetBCVz = SetPureOrSimpleShearBCVz,
-                  .SetBCC  = SetBCC,
+                  .SetBCT  = SetBCT,
           },
   };
-  RunMDOODZ("ChemicalDiffusion.txt", &setup);
+  RunMDOODZ("ThermalDiffusion.txt", &setup);
 }

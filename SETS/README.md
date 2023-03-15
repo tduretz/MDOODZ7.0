@@ -123,7 +123,7 @@
 ## Material transformations
 - `density_variations`: Turns on volume change due to reaction if 1. Default 0
 - `kinetics`: Activates reaction kinetics. Only for coesite --> quartz transformation so far. Default 0
-- `progress_transform`: Activate progressive reactions. Default 0
+- `chemical_diffusion`: Activate progressive reactions. Default 0
 - `no_return`: Turns off retrogression if 1 Default 0
 - `unsplit_diff_reac`: Unsplits diffusion and reaction Default. 0
 - `smooth_softening`: Activates smooth explicit kinematic softening function. Default 1

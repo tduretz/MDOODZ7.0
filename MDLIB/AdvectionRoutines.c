@@ -317,24 +317,24 @@ firstprivate ( model ) reduction (+:count) //schedule( static )
 
 void isoutPart( markers *particles, params *model, int k ) {
 
-     if ( model->periodic_x == 1 ) {
-         if ( particles->x[k] < model->xmin ) {
-             // Correct position in x
-             particles->x[k] = model->xmax - ABSV(model->xmin - particles->x[k]);
-         }
-         if ( particles->x[k] > model->xmax ) {
-             // Correct position in x
-             particles->x[k] = model->xmin + ABSV(model->xmax - particles->x[k]);
-         }
-         if ( particles->z[k] < model->zmin || particles->z[k] > model->zmax ) {
-             particles->phase[k] = -1;
-         }
-     }
-     else {
-         if (particles->x[k] < model->xmin || particles->x[k] > model->xmax || particles->z[k] < model->zmin || particles->z[k] > model->zmax) {
-             particles->phase[k] = -1;
-         }
-     }
+    if ( model->periodic_x == 1 ) {
+        if ( particles->x[k] < model->xmin ) {
+            // Correct position in x
+            particles->x[k] = model->xmax - ABSV(model->xmin - particles->x[k]);
+        }
+        if ( particles->x[k] > model->xmax ) {
+            // Correct position in x
+            particles->x[k] = model->xmin + ABSV(model->xmax - particles->x[k]);
+        }
+        if ( particles->z[k] < model->zmin || particles->z[k] > model->zmax ) {
+            particles->phase[k] = -1;
+        }
+    }
+    else {
+        if (particles->x[k] < model->xmin || particles->x[k] > model->xmax || particles->z[k] < model->zmin || particles->z[k] > model->zmax) {
+            particles->phase[k] = -1;
+        }
+    }
 
 }
 
@@ -344,63 +344,61 @@ void isoutPart( markers *particles, params *model, int k ) {
 
 void RogerGuntherII( markers *particles, params model, grid mesh, int precise, scale scaling ) {
 
-    DoodzFP VxA, VxB, VxC, VxD;
-    DoodzFP VzA, VzB, VzC, VzD;
-    DoodzFP OmA, OmB, OmC, OmD, *om_s;
-    DoodzFP xA, zA;
-    int k, k1, l, c0, c1, c2, c3, Nb_part = particles->Nb_part;
-    clock_t t_omp = (double)omp_get_wtime();
-    double dx, dz;
-    double txx, tzz, txz, angle;
-    double *dudx_n, *dvdz_n, *dudz_s, *dvdx_s;
-    double dudxA, dvdzA, dudzA, dvdxA, dudxB, dvdzB, dudzB, dvdxB, dudxC, dvdzC, dudzC, dvdxC, dudxD, dvdzD, dudzD, dvdxD, VEA,VEB,VEC,VED;
-    double nx, nz, ndotx, ndotz, w12, norm;
+DoodzFP VxA, VxB, VxC, VxD;
+DoodzFP VzA, VzB, VzC, VzD;
+DoodzFP OmA, OmB, OmC, OmD, *om_s;
+DoodzFP xA, zA;
+int k, k1, l, c0, c1, c2, c3, Nb_part = particles->Nb_part;
+clock_t t_omp = (double)omp_get_wtime();
+double dx, dz;
+double txx, tzz, txz, angle;
+double *dudx_n, *dvdz_n, *dudz_s, *dvdx_s;
+double dudxA, dvdzA, dudzA, dvdxA, dudxB, dvdzB, dudzB, dvdxB, dudxC, dvdzC, dudzC, dvdxC, dudxD, dvdzD, dudzD, dvdxD, VEA,VEB,VEC,VED;
+double nx, nz, ndotx, ndotz, w12, norm;
 
-    int new = model.conserv_interp; // DO NOT activate Taras trick: so far it is a source of asymmetry (conservative interpolation)
-    dx = mesh.dx;
-    dz = mesh.dz;
+int new = model.conserv_interp; // DO NOT activate Taras trick: so far it is a source of asymmetry (conservative interpolation)
+dx = mesh.dx;
+dz = mesh.dz;
 
 #pragma omp parallel for shared ( particles, mesh, om_s ) \
 private ( k, xA, zA, VxA, VzA, VxB, VzB, VxC, VzC, VxD, VzD, OmA, OmB, OmC, OmD, txx, tzz, txz, angle, dudxA, dvdzA, dudzA, dvdxA, dudxB, dvdzB, dudzB, dvdxB, dudxC, dvdzC, dudzC, dvdxC, dudxD, dvdzD, dudzD, dvdxD, VEA,VEB,VEC,VED, nx, nz, ndotx, ndotz, w12, norm ) \
 firstprivate( model, dx, dz, new )
-    for (k=0;k<Nb_part;k++) {
+for (k=0;k<Nb_part;k++) {
 
 
-        xA           = particles->x[k];
-        zA           = particles->z[k];
-        V2P( &VxA, &VzA, particles, mesh.u_in,  mesh.v_in, mesh.xg_coord, mesh.zg_coord, mesh.zvx_coord, mesh.xvz_coord, mesh.Nx, mesh.Nz, mesh.Nz+1, mesh.Nx+1, mesh.BCu.type, mesh.BCv.type, dx, dz, k, new );
-        if (particles->phase[k] != -1) {
-            particles->x[k] = xA + 0.5 * model.dt * VxA;
-            particles->z[k] = zA + 0.5 * model.dt * VzA;
-        }
-       isoutPart( particles, &model, k );
-        V2P( &VxB, &VzB, particles, mesh.u_in,  mesh.v_in, mesh.xg_coord, mesh.zg_coord, mesh.zvx_coord, mesh.xvz_coord, mesh.Nx, mesh.Nz, mesh.Nz+1, mesh.Nx+1, mesh.BCu.type, mesh.BCv.type, dx, dz, k, new );
-        if (particles->phase[k] != -1) {
-            particles->x[k] = xA + 0.5 * model.dt * VxB;
-            particles->z[k] = zA + 0.5 * model.dt * VzB;
-        }
-       isoutPart( particles, &model, k );
-        V2P( &VxC, &VzC, particles, mesh.u_in,  mesh.v_in, mesh.xg_coord, mesh.zg_coord, mesh.zvx_coord, mesh.xvz_coord, mesh.Nx, mesh.Nz, mesh.Nz+1, mesh.Nx+1, mesh.BCu.type, mesh.BCv.type, dx, dz, k, new );
-        if (particles->phase[k] != -1) {
-            particles->x[k] = xA + 1.0 * model.dt * VxC;
-            particles->z[k] = zA + 1.0 * model.dt * VzC;
-        }
-       isoutPart( particles, &model, k );
-        V2P( &VxD, &VzD, particles, mesh.u_in,  mesh.v_in, mesh.xg_coord, mesh.zg_coord, mesh.zvx_coord, mesh.xvz_coord, mesh.Nx, mesh.Nz, mesh.Nz+1, mesh.Nx+1, mesh.BCu.type, mesh.BCv.type, dx, dz, k, new );
-        VxA = (1.0/6.0) * ( VxA + 2.0 * VxB + 2.0 * VxC + VxD);
-        VzA = (1.0/6.0) * ( VzA + 2.0 * VzB + 2.0 * VzC + VzD);
-
-        if (particles->phase[k] != -1) {
-            particles->x[k]    = xA + model.dt * VxA;
-            particles->z[k]    = zA + model.dt * VzA;
-            particles->Vx[k]   = VxA;
-            particles->Vz[k]   = VzA;
-        }
-        isoutPart( particles, &model, k );
+    xA           = particles->x[k];
+    zA           = particles->z[k];
+    V2P( &VxA, &VzA, particles, mesh.u_in,  mesh.v_in, mesh.xg_coord, mesh.zg_coord, mesh.zvx_coord, mesh.xvz_coord, mesh.Nx, mesh.Nz, mesh.Nz+1, mesh.Nx+1, mesh.BCu.type, mesh.BCv.type, dx, dz, k, new );
+    if (particles->phase[k] != -1) {
+        particles->x[k] = xA + 0.5 * model.dt * VxA;
+        particles->z[k] = zA + 0.5 * model.dt * VzA;
     }
+    isoutPart( particles, &model, k );
+    V2P( &VxB, &VzB, particles, mesh.u_in,  mesh.v_in, mesh.xg_coord, mesh.zg_coord, mesh.zvx_coord, mesh.xvz_coord, mesh.Nx, mesh.Nz, mesh.Nz+1, mesh.Nx+1, mesh.BCu.type, mesh.BCv.type, dx, dz, k, new );
+    if (particles->phase[k] != -1) {
+        particles->x[k] = xA + 0.5 * model.dt * VxB;
+        particles->z[k] = zA + 0.5 * model.dt * VzB;
+    }
+    isoutPart( particles, &model, k );
+    V2P( &VxC, &VzC, particles, mesh.u_in,  mesh.v_in, mesh.xg_coord, mesh.zg_coord, mesh.zvx_coord, mesh.xvz_coord, mesh.Nx, mesh.Nz, mesh.Nz+1, mesh.Nx+1, mesh.BCu.type, mesh.BCv.type, dx, dz, k, new );
+    if (particles->phase[k] != -1) {
+        particles->x[k] = xA + 1.0 * model.dt * VxC;
+        particles->z[k] = zA + 1.0 * model.dt * VzC;
+    }
+    isoutPart( particles, &model, k );
+    V2P( &VxD, &VzD, particles, mesh.u_in,  mesh.v_in, mesh.xg_coord, mesh.zg_coord, mesh.zvx_coord, mesh.xvz_coord, mesh.Nx, mesh.Nz, mesh.Nz+1, mesh.Nx+1, mesh.BCu.type, mesh.BCv.type, dx, dz, k, new );
+    VxA = (1.0/6.0) * ( VxA + 2.0 * VxB + 2.0 * VxC + VxD);
+    VzA = (1.0/6.0) * ( VzA + 2.0 * VzB + 2.0 * VzC + VzD);
 
+    if (particles->phase[k] != -1) {
+        particles->x[k]    = xA + model.dt * VxA;
+        particles->z[k]    = zA + model.dt * VzA;
+        particles->Vx[k]   = VxA;
+        particles->Vz[k]   = VzA;
+    }
+    isoutPart( particles, &model, k );
+}
     printf("** Time for Roger Gunther = %lf sec --- using conservative interpolation: %0d\n",  (double)((double)omp_get_wtime() - t_omp), model.conserv_interp );
-
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/

@@ -40,10 +40,9 @@ max_num_stag          = 10
 
 shear_style = 1
 mechanical = 0
-thermal    = 0
+thermal    = 1
 advection  = 1
 noisy      = 0
-reseed_markers = 0
 
 
 lin_abs_div       = 1e-10
@@ -54,24 +53,24 @@ lin_rel_mom       = 1e-10
 /**** SWITCHES ****/
 compressible    = 1
 elastic       = 1
-mechanical    = 1
+mechanical    = 0
 RK              = 4
 
 pure_shear_ALE = 0
-thermal       = 0
+
 line_search     = 1
 free_surface       = 0
 free_surface_stab  = 0
 
-interp_stencil       = 9
+thermal       = 1
 initial_cooling      = 0
-subgrid_diffusion    = 2
+subgrid_diffusion    = 0
 shear_heating      = 0
 adiab_heating      = 0
 finite_strain         = 0
 
 /*** CHEMICAL ***/
-chemical_diffusion        = 1  / !!!!
+chemical_diffusion        = 0  / !!!!
 no_return        = 0 
 density_variations        = 1  / renamed in MD7.0 (VolChangeReac)    
 unsplit_diff_reac = 0
@@ -96,7 +95,7 @@ ID   = 0
 rho  = 2850.00 / matrix Granulite
 G   = 4.0e10
 Cv   = 1050.0
-k    = 2.3
+k    = 2.3e-3
 Qr   = 0.0
 C    = 1.0e70
 phi  = 10.0
@@ -128,7 +127,7 @@ ID   = 1
 rho  = 2850.00 / Dry CPX inclusion
 G   = 4.0e10
 Cv   = 1050.0
-k    = 2.3
+k    = 2.3e-3
 Qr   = 0.0
 C    = 1.0e70
 phi  = 10.0
@@ -160,7 +159,7 @@ ID   = 2
 rho  = 2850.00 / matrix Granulite
 G   = 4.0e10
 Cv   = 1050.0
-k    = 2.3
+k    = 2.3e-3
 Qr   = 0.0
 C    = 1.0e70
 phi  = 10.0
@@ -192,7 +191,7 @@ ID   = 3
 rho  = 3250.00 / keep granulite, only change in rho
 G   = 4.0e10
 Cv   = 1050.0
-k    = 2.3
+k    = 2.3e-3
 Qr   = 0.0
 C    = 1.0e70
 phi  = 10.0
