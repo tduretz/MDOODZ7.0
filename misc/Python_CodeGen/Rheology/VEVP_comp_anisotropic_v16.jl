@@ -20,9 +20,9 @@ function main()
     PS        = 1
     
     npwl      = 3.0             # POWER LAW EXPONENT
-    a_v       = sqrt(1.4)       # VISCOUS anisotropy strength in Ray's formulation a_v = η_n/η_s
-    a_e       = sqrt(1.6)       # ELASTIC anisotropy strength -------------------- a_e = G_n/G_s
-    a_p       = 3.0             # PLASTIC anisotropy strength                      a_p = τxx_ve/τxy_ve
+    anifac_v       = 1.4             # VISCOUS anisotropy strength in Ray's formulation anifac_v = η_n/η_s
+    anifac_e       = 1.6             # ELASTIC anisotropy strength -------------------- anifac_e = G_n/G_s
+    anifac_p       = 3.0             # PLASTIC anisotropy strength                      anifac_p = τxx_ve/τxy_ve
     a1 = 1.0; a2 = 1.0; a3 = 1.0 # friction angle anisotropy
     aniso_ang = LinRange( 0.0, π/2, 21 ) # Director angle (w.r. to horizontal), see Mühlhaus et al. 2002
     # aniso_ang = 0.0
@@ -108,13 +108,13 @@ function main()
 
             ############### VISCO-ELASTIC TRIAL
             # Let's suppose all deformation is only visco-elastic (i.e no plastic deformation)
-            τ_ve, ηve, sqrt_a_ve, ηpwl = LocalViscoElasticTrialStress_Newton_ηve( ε_rot, τ0_rot, ηe, sqrt(a_e), sqrt(a_v), Bpwl, Cpwl, npwl, tol, nitmax, noisy )
+            τ_ve, ηve, sqrt_a_ve, ηpwl = LocalViscoElasticTrialStress_Newton_ηve( ε_rot, τ0_rot, ηe, sqrt(anifac_e), sqrt(anifac_v), Bpwl, Cpwl, npwl, tol, nitmax, noisy )
             a_ve = sqrt_a_ve^2
             τxx_ve     = τ_ve[1,1]; τxy_ve   = τ_ve[1,2]; τyy_ve   =  τ_ve[2,2]; τzz_ve   = -τxx_ve-τyy_ve
             J2 = 0.5*(τxx_ve^2 + τyy_ve^2 + τzz_ve^2) + τxy_ve^2*a_ve
             εxx_ve    = ε_rot[1,1]   + τ0_rot[1,1]/(2*ηe)
             εyy_ve    = ε_rot[2,2]   + τ0_rot[2,2]/(2*ηe)
-            εxy_ve    = ε_rot[1,2]   + τ0_rot[1,2]/(2*ηe)*a_e
+            εxy_ve    = ε_rot[1,2]   + τ0_rot[1,2]/(2*ηe)*anifac_e
 
             εii_ve = sqrt( 1/2*(εxx_ve^2+εyy_ve^2) + εxy_ve^2/a_ve )
             @printf("VE:  Check J2 definition: %2.2e\n", (J2 - (2*ηve)^2 * ( εii_ve^2 ))/J2*100 )
@@ -128,7 +128,7 @@ function main()
             ############### PLASTIC CORRECTION
             if plasticity == true
                 # Check yield condition
-                J2      = 0.5*(τ_ve[1,1]^2 + τ_ve[2,2]^2) + τ_ve[1,2]^2*a_p^2
+                J2      = 0.5*(τ_ve[1,1]^2 + τ_ve[2,2]^2) + τ_ve[1,2]^2*anifac_p^2
                 J2t     = J2
                 J2_corr = J2
                 am      = (a1 + a2 + a3)/3
@@ -145,13 +145,13 @@ function main()
                     Ji     = sin(fric)/3*( a1*τxx_ve + a2*τyy_ve + a3*τzz_ve) # WH: why devide by 3?
                     Tn2    = τxx_ve^2+τyy_ve^2+τzz_ve^2
                     Ts2    = (τxy_ve^2+τyx_ve^2)
-                    Tii    = sqrt( 1/2*(Tn2 + a_p^2*Ts2)) # WH: compare with fcts_VE_trial.jl line 79 (Eii) -> not consistent?
+                    Tii    = sqrt( 1/2*(Tn2 + anifac_p^2*Ts2)) # WH: compare with fcts_VE_trial.jl line 79 (Eii) -> not consistent?
                     for iter=1:nitmax
                         # It would be nice to have this section derived with Symbolics.jl
                         gdot   = γ̇
                         ap_n   = 1 -             eta_ve .* gdot ./  sqrt(J2)
-                        ap_s_old = 1 - a_p .^ 2 .* eta_ve .* gdot ./ (sqrt(J2) .* a_ve ) # WH: not used, just for comparison
-                        ap_s   = ap_n#1 - a_p .^ 2 .* eta_ve .* gdot ./ (sqrt(J2) .* a_ve )
+                        ap_s_old = 1 - anifac_p .^ 2 .* eta_ve .* gdot ./ (sqrt(J2) .* a_ve ) # WH: not used, just for comparison
+                        ap_s   = ap_n#1 - anifac_p .^ 2 .* eta_ve .* gdot ./ (sqrt(J2) .* a_ve )
                         Jii    = J2
                         dt     = Δt
                         eta_vp = ηvp
@@ -160,12 +160,12 @@ function main()
                         Pc   = P + K*Δt*γ̇*sin(dil)*am
 
                         J1_corr   = ap_n*Ji
-                        J2_corr   = 1/2*( Tn2*ap_n^2 + a_p^2*Ts2*ap_s^2)
+                        J2_corr   = 1/2*( Tn2*ap_n^2 + anifac_p^2*Ts2*ap_s^2)
                         Fc        =  sqrt(J2_corr) - C*cos(fric) - Pc.*am.*sin(fric) - eta_vp.*gdot;
                 
                         dapndgdot = -eta_ve/Tii
                         dapsdgdot = dapndgdot#*ani_rat
-                        dFdgdot   = -eta_vp + 1/2/sqrt(J2_corr) * ( a_p^2*Ts2*ap_s*dapsdgdot + Tn2*ap_n*dapndgdot ) - am^2*K*dt*sin(dil)*sin(fric) + dapndgdot*Ji
+                        dFdgdot   = -eta_vp + 1/2/sqrt(J2_corr) * ( anifac_p^2*Ts2*ap_s*dapsdgdot + Tn2*ap_n*dapndgdot ) - am^2*K*dt*sin(dil)*sin(fric) + dapndgdot*Ji
         
                         
                         dFdγ̇ = dFdgdot
@@ -182,17 +182,17 @@ function main()
                     if abs(Fc)/F>1e-6 Fc, error("Yield failed 3")  end
                     εxx_p      = γ̇*( (a1/3-a3/3)*sin(fric) + τxx_ve/sqrt(J2)/2)
                     εyy_p      = γ̇*( (a2/3-a3/3)*sin(fric) + τyy_ve/sqrt(J2)/2)
-                    εxy_p      = γ̇*τxy_ve/sqrt(J2)/2*a_p^2
-                    εyx_p      = γ̇*τxy_ve/sqrt(J2)/2*a_p^2
+                    εxy_p      = γ̇*τxy_ve/sqrt(J2)/2*anifac_p^2
+                    εyx_p      = γ̇*τxy_ve/sqrt(J2)/2*anifac_p^2
                     D          = 2*ηve * [1 0 0 0; 0 1 0 0; 0 0 1/a_ve 0; 0 0 0 1/a_ve]
                     τ_vec      = D*([εxx_ve; εyy_ve; εxy_ve; εxy_ve] .- [εxx_p; εyy_p; εxy_p; εyx_p])
                     τ_ve      = [τ_vec[1] τ_vec[3]; τ_vec[4] τ_vec[2]]
-                    J2_corr_p  = 0.5*(τ_ve[1,1]^2 + τ_ve[2,2]^2) + τ_ve[1,2]^2*a_p^2
+                    J2_corr_p  = 0.5*(τ_ve[1,1]^2 + τ_ve[2,2]^2) + τ_ve[1,2]^2*anifac_p^2
                     @printf("VEP: sqrt(J2_corr_p ) = %2.2e\n", sqrt(J2_corr_p) )
                     @printf("VEP: sqrt(J2_corr   ) = %2.2e\n", sqrt(J2_corr)   )
                     # Compute a_vep 
                     axx       = (sqrt(J2t)        -       ηve*γ̇)/(sqrt(J2t))
-                    # axy       = (sqrt(J2t)*a_ve - a_p^2*ηve*γ̇)/(sqrt(J2t)*a_ve)
+                    # axy       = (sqrt(J2t)*a_ve - anifac_p^2*ηve*γ̇)/(sqrt(J2t)*a_ve)
                     axy       = axx
                     η_mat     = ηve * [axx 0 0 0; 0 axx 0 0; 0 0 axy 0; 0 0 0 axy]
                     D         = 2*η_mat 
@@ -206,7 +206,7 @@ function main()
                     # ---
                     τ_ve     = [τ_vec[1] τ_vec[3]; τ_vec[4] τ_vec[2]]
                     τxx_vec      = τ_ve[1,1]; τyy_vec = τ_ve[2,2]; τzz_vec = -τxx_vec-τyy_vec
-                    J2_corr_p = 0.5*(τ_ve[1,1]^2 + τ_ve[2,2]^2) + τ_ve[1,2]^2*a_p^2
+                    J2_corr_p = 0.5*(τ_ve[1,1]^2 + τ_ve[2,2]^2) + τ_ve[1,2]^2*anifac_p^2
                     J1_corr_p = a1*τxx_vec + a2*τyy_vec + a3*τzz_vec
                     Pc        = P + K*Δt*γ̇*sin(dil)/3*(a1+a2+a3)
                     Fchk      = sqrt(J2_corr_p) - C*cos(fric) - Pc*sin(fric)*am +  sin(fric)/3*J1_corr_p - ηvp*γ̇
@@ -240,9 +240,9 @@ function main()
             C_ISO    = [1 0 0; 0 1 0; 0 0 two*1//2]
             ani      = 1. - 1.  ./ a_vep
             Dani_vep = C_ISO .+ ani*C_ANI # Achtung: factor 2 removed from Dani
-            ani      = 1. - 1.  ./ a_e
+            ani      = 1. - 1.  ./ anifac_e
             Dani_e   = C_ISO .+ ani*C_ANI # Achtung: factor 2 removed from Dani
-            ani      = 1. - 1.  ./ a_v
+            ani      = 1. - 1.  ./ anifac_v
             Dani_v   = C_ISO .+ ani*C_ANI # Achtung: factor 2 removed from Dani
   
             # 1 ---------------------------------------------------------------
