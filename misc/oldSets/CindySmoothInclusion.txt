@@ -119,7 +119,7 @@ npwl  = 1.0
 Qpwl  = 0
 
 /**** DEFMAPS ****/
-def_maps = 0
+deformation_maps = 0
 nT    =    400      / Temperature resolutin []
 nE    =    400      / Strain rate resolution []
 nd    =    1        / Grain size resolution []

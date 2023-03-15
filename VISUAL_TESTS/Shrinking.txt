@@ -66,7 +66,7 @@ adiab_heating      = 0
 finite_strain         = 0
 
 /*** CHEMICAL ***/
-progress_transform        = 1  / !!!!
+chemical_diffusion        = 1  / !!!!
 no_return        = 0
 density_variations        = 1  / renamed in MD7.0 (VolChangeReac)
 unsplit_diff_reac = 0
