@@ -1,6 +1,74 @@
 ####################################################################
 
 # This function only computes eta_pwl, it would require modification more mechanisms are added (Peierls)
+function LocalViscoElasticTrialStress_Newton_ηve_ani_fac( ε_rot, τ0_rot, ηe, ani_fac_e, ani_fac_v, B, C, npwl, tol, nitmax, noisy )
+
+    εxx_eff    = ε_rot[1,1]   + τ0_rot[1,1]/(2*ηe)
+    εyy_eff    = ε_rot[2,2]   + τ0_rot[2,2]/(2*ηe)
+    εxy_eff    = ε_rot[1,2]   + τ0_rot[1,2]/(2*ηe)*ani_fac_e 
+    εzz_eff    = -εxx_eff -εyy_eff
+    # Construct initial guess for viscosity
+    ε2         = 0.5*(ε_rot[1,1]^2 + ε_rot[2,2]^2) + ε_rot[1,2]^2/ani_fac_v 
+    ηpwl       = B^(-1/npwl) * ε2^(0.5*(1-npwl)/npwl)
+    ηve_n      = 1/(1/ηpwl + 1/ηe) 
+    ηve_s      = 1/(ani_fac_v/ηpwl + ani_fac_e/ηe) 
+    fxx0       = 0.
+    fxy0       = 0.
+    for iter=1:nitmax
+        
+        τxx       = 2*ηve_n * εxx_eff
+        τyy       = 2*ηve_n * εyy_eff
+        τxy       = 2*ηve_s * εxy_eff
+        τzz       = -τxx - τyy 
+
+        Y2_v      = 0.5*(τxx^2 + τyy^2 + τzz^2) + τxy^2*ani_fac_v 
+        εii_pwl   = C * sqrt(Y2_v) ^(npwl)
+        ηpwl      = B^(-1/npwl) * εii_pwl^((1-npwl)/npwl)
+
+        # Residuals
+        fxx       = 1 - ηve_n/ηe         - ηve_n/ηpwl               
+        fxy       = 1 - ηve_s/(ηe/ani_fac_e) - ηve_s/(ηpwl/ani_fac_v) 
+        Wxx       = 2*(εxx_eff*τxx + εyy_eff*τyy + εzz_eff*τzz)
+        Wxy       = 2*εxy_eff*τxy
+        ieta_pwl  = 1 ./ ηpwl
+
+        if iter==1 fxx0 = fxx  end
+        if iter==1 fxy0 = fxy  end
+        @printf("Newton ani VE It. %02d: fxx = %2.2e --- fxy = %2.2e\n", iter,  fxx, fxy)
+        if (abs(fxx/fxx0)<tol || abs(fxx)<tol) && (abs(fxy/fxy0)<tol || abs(fxy)<tol)
+            break
+        end
+
+        # Jacobian, check: AnisotropicVE_William_v2.ipynb
+        eta_ve_n  = ηve_n
+        eta_ve_s  = ηve_s
+        eta_e     = ηe
+        dfxxde_n = Wxx .* eta_ve_n       .* ieta_pwl .* (1 - npwl) ./ (2 * Y2_v) - ieta_pwl - 1 ./ eta_e;
+        dfxxde_s = Wxy .* ani_fac_v      .* eta_ve_n .* ieta_pwl .* (1 - npwl) ./ Y2_v;
+        dfxyde_n = Wxx .* ani_fac_v      .* eta_ve_s .* ieta_pwl .* (1 - npwl) ./ (2 * Y2_v);
+        dfxyde_s = Wxy .* ani_fac_v .^ 2 .* eta_ve_s .* ieta_pwl .* (1 - npwl) ./ Y2_v - ani_fac_e ./ eta_e - ani_fac_v .* ieta_pwl;
+
+        f      = [fxx; fxy]
+        J      = [dfxxde_n dfxxde_s; dfxyde_n dfxyde_s]
+        dx     = -J\f
+        ηve_n += dx[1]
+        ηve_s += dx[2]
+    end
+
+    ηve  = ηve_n
+    ani_fac_ve = ηve_n/ηve_s
+
+    # A posteriori stress evaluation
+    D       = 2*ηve * [1 0 0; 0 1 0; 0 0 1.0/ani_fac_ve]
+    τ_vec   = D*[εxx_eff; εyy_eff; εxy_eff]
+    τ_rot   = [τ_vec[1] τ_vec[3]; τ_vec[3] τ_vec[2]]
+
+    return τ_rot, ηve, ani_fac_ve, ηpwl
+
+end
+
+
+# This function only computes eta_pwl, it would require modification more mechanisms are added (Peierls)
 function LocalViscoElasticTrialStress_Newton_ηve( ε_rot, τ0_rot, ηe, a_e, a_v, B, C, npwl, tol, nitmax, noisy )
 
     εxx_eff    = ε_rot[1,1]   + τ0_rot[1,1]/(2*ηe)

@@ -6,7 +6,7 @@ include("./fcts_VE_trial.jl")
 # Adding creep mechanisms would result in adding new isolated viscosities (ηcst, ηlin...)
 # To avoid this, I try to formulate the local iteration in terms of ηve_normal and ηve_shear
 visu       = true
-plasticity = true
+plasticity = :older
 showMD7    = true
 
 function main() 
@@ -14,8 +14,8 @@ function main()
     # Parameters
     R         = 0*8.314
     εbg       = 1.0
-    Δt        = 0.001
-    nt        = 30
+    Δt        = .1
+    nt        = 10
     My        = 1e6*365.25*24*3600
     PS        = 1
     
@@ -27,7 +27,7 @@ function main()
     a_v       = sqrt(ani_fac_v)  # VISCOUS anisotropy strength in Ray's formulation a_v = sqrt(η_n/η_s)
     a_e       = sqrt(ani_fac_e)  # ELASTIC anisotropy strength -------------------- a_e = sqrt(G_n/G_s)
     a_p       =     (ani_fac_p)  # PLASTIC anisotropy strength                      a_p = τxx/τxy
-    aniso_ang = LinRange( 0.0, π/2, 31 )
+    aniso_ang = LinRange( 0.0, π, 31 )
     # aniso_ang = 0.0
     layer_ang = aniso_ang .- π/2 # in 2D the layers are orthogonal to the director
     
@@ -51,17 +51,17 @@ function main()
     T     = 1.
     
     # Power law flow params
-    τbg    = 2.0
-    B      = 2^npwl*εbg/τbg^(npwl)
-    τ_chk  = 2*B^(-1.0/npwl)*εbg^(1.0/npwl)
-    ηpwl   = B^(-1.0/npwl)*εbg^(1.0/npwl-1)
+    τbg    = 100.0
+    Bpwl   = 2^npwl*εbg/τbg^(npwl)
+    τ_chk  = 2*Bpwl^(-1.0/npwl)*εbg^(1.0/npwl)
+    ηpwl   = Bpwl^(-1.0/npwl)*εbg^(1.0/npwl-1)
     τ_chk  = 2*ηpwl*εbg
     if abs(τbg - τ_chk)/τbg > 1e-6 error("Power-law breaks down") end
-    C      = (2*B^(-1/npwl))^(-npwl)
+    Cpwl   = (2*Bpwl^(-1/npwl))^(-npwl)
     G      = 1e1
     K      = 2.0e1
     ηe     = G*Δt
-    Coh    = 0.5
+    C      = 0.5 
     fric   = 0*30*π/180.0
     dil    = 0*10*π/180.0
     ηvp    = 0*1e18
@@ -77,9 +77,11 @@ function main()
     τyy_MD7 = zeros(nt, length(aniso_ang))
     τxy_MD7 = zeros(nt, length(aniso_ang))
     p_MD7   = zeros(nt, length(aniso_ang))
+    τxx_rot = zeros(nt, length(aniso_ang))
+    τxy_rot = zeros(nt, length(aniso_ang))
     
     # Loop over all orientations
-    for i=1:length(aniso_ang)
+    for i in eachindex(aniso_ang)
     
         # Loop over time and model V-E-VP stress build-up 
         τxx = 0.; τyy = 0.; τxy = 0.; P = P_ini;
@@ -110,7 +112,7 @@ function main()
             # ε_eff    = ε .+ inv(Dani_e) * τ0 ./(2*ηe)
 
             ############### VISCO-ELASTIC TRIAL
-            τ_rot, ηve, a_ve, ηpwl = LocalViscoElasticTrialStress_Newton_ηve( ε_rot, τ0_rot, ηe, a_e, a_v, B, C, npwl, tol, nitmax, noisy )
+            τ_rot, ηve, a_ve, ηpwl = LocalViscoElasticTrialStress_Newton_ηve( ε_rot, τ0_rot, ηe, a_e, a_v, Bpwl, Cpwl, npwl, tol, nitmax, noisy )
             τxx     = τ_rot[1,1]; τxy   = τ_rot[1,2]; τyy   =  τ_rot[2,2]; τzz   = -τxx-τyy
             J2 = 0.5*(τxx^2 + τyy^2 + τzz^2) + τxy^2*a_ve^2
             εxx_eff    = ε_rot[1,1]   + τ0_rot[1,1]/(2*ηe)
@@ -127,7 +129,98 @@ function main()
             a_vep   = a_ve
             Pc      = P
             ############### PLASTIC CORRECTION
-            if plasticity == true
+            if plasticity == :newer
+                # Check yield condition
+                J2      = 0.5*(τ_rot[1,1]^2 + τ_rot[2,2]^2) + τ_rot[1,2]^2*a_p^2
+                J2t     = J2
+                J2_corr = J2
+                am      = (a1 + a2 + a3)/3
+                F       = sqrt(J2) - C*cos(fric) - P*sin(fric)/3*(a1+a2+a3) +  sin(fric)*am
+                @printf("Plasticity:  F   = %2.2e\n", F)
+                # Initial guess 
+                γ̇  = 0.
+                Fc    = 0.
+                if F>0 
+                    eta_ve = ηve
+                    Txx    = τxx
+                    Tyy    = τyy
+                    Tzz    = -τyy-τxx
+                    Txy    = τxy
+                    Tyx    = τxy
+                    am      = (a1 + a2 + a3)/3
+                    Ji     = sin(fric)/3*( a1*Txx + a2*Tyy + a3*Tzz) # WH: why devide by 3?
+                    Tn2    = Txx^2+Tyy^2+Tzz^2
+                    Ts2    = (Txy^2+Tyx^2)
+                    Tii    = sqrt( 1/2*(Tn2 + a_p^2*Ts2)) # WH: compare with fcts_VE_trial.jl line 79 (Eii) -> not consistent?
+                    for iter=1:nitmax
+                        # It would be nice to have this section derived with Symbolics.jl
+                        gdot   = γ̇
+                        ap_n   = 1 -             eta_ve .* gdot ./  sqrt(J2)
+                        ap_s_old = 1 - a_p .^ 2 .* eta_ve .* gdot ./ (sqrt(J2) .* a_ve .^ 2) # WH: not used, just for comparison
+                        ap_s   = ap_n#1 - a_p .^ 2 .* eta_ve .* gdot ./ (sqrt(J2) .* a_ve .^ 2)
+                        Jii    = J2
+                        dt     = Δt
+                        eta_vp = ηvp
+                        
+                        # With out of plane
+                        Pc   = P + K*Δt*γ̇*sin(dil)*am
+
+                        J1_corr   = ap_n*Ji
+                        J2_corr   = 1/2*( Tn2*ap_n^2 + a_p^2*Ts2*ap_s^2)
+                        Fc        =  sqrt(J2_corr) - C*cos(fric) - Pc.*am.*sin(fric) - eta_vp.*gdot;
+                
+                        dapndgdot = -eta_ve/Tii
+                        dapsdgdot = dapndgdot#*ani_rat
+                        dFdgdot   = -eta_vp + 1/2/sqrt(J2_corr) * ( a_p^2*Ts2*ap_s*dapsdgdot + Tn2*ap_n*dapndgdot ) - am^2*K*dt*sin(dil)*sin(fric) + dapndgdot*Ji
+        
+                        
+                        dFdγ̇ = dFdgdot
+                        # It would be nice to have this section derived with Symbolics.jl
+                        if noisy>2 @printf("Newton VP It. %02d, r abs. = %2.2e r rel. = %2.2e\n", iter, Fc, Fc/F) end
+                        if abs(Fc)/F < tol || abs(Fc)<tol
+                            # error("sto")
+                            @printf("Plasticity:  ap_n   = %2.2e\nPlasticity:  ap_s   = %2.2e\nPlasticity:  ap_s_old   = %2.2e\n", ap_n,ap_s,ap_s_old)
+                            break
+                        end
+                        γ̇    -= Fc/dFdγ̇
+                    end
+                    # Post-process plasticity
+                    if abs(Fc)/F>1e-6 Fc, error("Yield failed 3")  end
+                    εxx_p      = γ̇*( (a1/3-a3/3)*sin(fric) + τxx/sqrt(J2)/2)
+                    εyy_p      = γ̇*( (a2/3-a3/3)*sin(fric) + τyy/sqrt(J2)/2)
+                    εxy_p      = γ̇*τxy/sqrt(J2)/2*a_p^2
+                    εyx_p      = γ̇*τxy/sqrt(J2)/2*a_p^2
+                    D          = 2*ηve * [1 0 0 0; 0 1 0 0; 0 0 a_ve^-2 0; 0 0 0 a_ve^-2]
+                    τ_vec      = D*([εxx_eff; εyy_eff; εxy_eff; εxy_eff] .- [εxx_p; εyy_p; εxy_p; εyx_p])
+                    τ_rot      = [τ_vec[1] τ_vec[3]; τ_vec[4] τ_vec[2]]
+                    J2_corr_p  = 0.5*(τ_rot[1,1]^2 + τ_rot[2,2]^2) + τ_rot[1,2]^2*a_p^2
+                    @printf("VEP: sqrt(J2_corr_p ) = %2.2e\n", sqrt(J2_corr_p) )
+                    @printf("VEP: sqrt(J2_corr   ) = %2.2e\n", sqrt(J2_corr)   )
+                    # Compute a_vep 
+                    axx       = (sqrt(J2t)        -       ηve*γ̇)/(sqrt(J2t))
+                    # axy       = (sqrt(J2t)*a_ve^2 - a_p^2*ηve*γ̇)/(sqrt(J2t)*a_ve^2)
+                    axy       = axx
+                    η_mat     = ηve * [axx 0 0 0; 0 axx 0 0; 0 0 axy 0; 0 0 0 axy]
+                    D         = 2*η_mat 
+                    τ_vec     = D*([εxx_eff; εyy_eff; εxy_eff; εxy_eff]) 
+                    # --- 
+                    a_vep     = a_ve*sqrt(axx/axy)
+                    ηvep      = ηve*axx
+                    η_mat     = ηvep * [1 0 0 0; 0 1 0 0; 0 0 a_vep^-2 0; 0 0 0 a_vep^-2] 
+                    D         = 2*η_mat
+                    τ_vec     = D*([εxx_eff; εyy_eff; εxy_eff; εxy_eff])
+                    # ---
+                    τ_rot     = [τ_vec[1] τ_vec[3]; τ_vec[4] τ_vec[2]]
+                    τxxc      = τ_rot[1,1]; τyyc = τ_rot[2,2]; τzzc = -τxxc-τyyc
+                    J2_corr_p = 0.5*(τ_rot[1,1]^2 + τ_rot[2,2]^2) + τ_rot[1,2]^2*a_p^2
+                    J1_corr_p = a1*τxxc + a2*τyyc + a3*τzzc
+                    Pc        = P + K*Δt*γ̇*sin(dil)/3*(a1+a2+a3)
+                    Fchk      = sqrt(J2_corr_p) - C*cos(fric) - Pc*sin(fric)*am +  sin(fric)/3*J1_corr_p - ηvp*γ̇
+                end
+            end
+
+            Coh = C
+            if plasticity == :older
                 # Check yield condition
                 J2      = 0.5*(τ_rot[1,1]^2 + τ_rot[2,2]^2) + τ_rot[1,2]^2*a_p^2
                 J2t     = J2
@@ -258,6 +351,10 @@ function main()
                     Fchk      = sqrt(J2_corr_p) - Coh - Pc*sin(fric)/3*(a1+a2+a3) +  sin(fric)/3*J1_corr_p - ηvp*γ̇
                 end
             end
+
+            τxx_rot[i] = τ_rot[1,1] 
+            τxy_rot[i] = τ_rot[1,2]  
+            
     
             ##############################
             # Rotate back
@@ -334,7 +431,7 @@ function main()
         
         i1 = 1  # angle 1
         i2 = Int64(floor(  length(aniso_ang)*1/2))  # angle 2
-        i3 = Int64(floor(  length(aniso_ang)*2/3))  # angle 2
+        i3 = Int64(floor(  length(aniso_ang)*1/5))  # angle 2
         p2=plot( [1:nt].*(Δt/My), τii_Ray[:,i1], color=:red,   label=@sprintf("n angle %2.2f°", aniso_ang[i1]*180/π) )
         p2=plot!([1:nt].*(Δt/My), τii_Ray[:,i2], color=:blue,  label=@sprintf("n angle %2.2f°", aniso_ang[i2]*180/π) )
         p2=plot!([1:nt].*(Δt/My), τii_Ray[:,i3], color=:green, label=@sprintf("n angle %2.2f°", aniso_ang[i3]*180/π) )
@@ -344,19 +441,22 @@ function main()
         p2=plot!([1:nt].*(Δt/My), τii_MD7[:,i3], linewidth=0, marker =:circle, color=:green,  label=:none)
         end
         p2=plot!(xlabel="t [My]", ylabel="τII [MPa]")
-
-        i1 = 1  # angle 1
-        i2 = Int64(floor(  length(aniso_ang)*1/2))  # angle 2
-        i3 = Int64(floor(  length(aniso_ang)*2/3))  # angle 2
-        p3=plot( [1:nt].*(Δt/My), p_Ray[:,i1], color=:red,   label=@sprintf("n angle %2.2f°", aniso_ang[i1]*180/π) )
-        p3=plot!([1:nt].*(Δt/My), p_Ray[:,i2], color=:blue,  label=@sprintf("n angle %2.2f°", aniso_ang[i2]*180/π) )
-        p3=plot!([1:nt].*(Δt/My), p_Ray[:,i3], color=:green, label=@sprintf("n angle %2.2f°", aniso_ang[i3]*180/π) )
-        if showMD7
-        p3=plot!([1:nt].*(Δt/My), p_MD7[:,i1], linewidth=0, marker =:circle, color=:red,    label=:none)
-        p3=plot!([1:nt].*(Δt/My), p_MD7[:,i2], linewidth=0, marker =:circle, color=:blue,   label=:none)
-        p3=plot!([1:nt].*(Δt/My), p_MD7[:,i3], linewidth=0, marker =:circle, color=:green,  label=:none)
-        end
-        p3=plot!(xlabel="t [My]", ylabel="p [MPa]")
+        
+        θ    = LinRange( 0.0, 2π, 30 ) 
+        τxx1 = C*cos.(θ)
+        τxy1 = C*sin.(θ)/ani_fac_p
+        p3=plot(τxx1, τxy1, c=:red)
+        p3=scatter!(τxx_rot, τxy_rot, c=:blue)
+        p3=plot!(xlabel="τxx", ylabel="τxy", aspect_ratio=1)
+        # p3=plot( [1:nt].*(Δt/My), p_Ray[:,i1], color=:red,   label=@sprintf("n angle %2.2f°", aniso_ang[i1]*180/π) )
+        # p3=plot!([1:nt].*(Δt/My), p_Ray[:,i2], color=:blue,  label=@sprintf("n angle %2.2f°", aniso_ang[i2]*180/π) )
+        # p3=plot!([1:nt].*(Δt/My), p_Ray[:,i3], color=:green, label=@sprintf("n angle %2.2f°", aniso_ang[i3]*180/π) )
+        # if showMD7
+        # p3=plot!([1:nt].*(Δt/My), p_MD7[:,i1], linewidth=0, marker =:circle, color=:red,    label=:none)
+        # p3=plot!([1:nt].*(Δt/My), p_MD7[:,i2], linewidth=0, marker =:circle, color=:blue,   label=:none)
+        # p3=plot!([1:nt].*(Δt/My), p_MD7[:,i3], linewidth=0, marker =:circle, color=:green,  label=:none)
+        # end
+        # p3=plot!(xlabel="t [My]", ylabel="p [MPa]")
 
         p4=plot(  aniso_ang.*(180/π), τxx_Ray[st3,:], color=:blue,  label="τxx Ray")
         p4=plot!( aniso_ang.*(180/π), τyy_Ray[st3,:], color=:green, label="τyy Ray")
