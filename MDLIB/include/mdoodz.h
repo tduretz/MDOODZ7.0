@@ -214,14 +214,14 @@ typedef enum {
 typedef enum {
     constant_heatflux      = 0,
     constant_temperature   = 1,
-    periodic_temeprature_x =-2,
+    periodic_temperature   =-2,
 } Thermal_BC;
 
 // Chemical boundary condition types
 typedef enum {
-    constant_Xflux    = 0,
-    constant_X        = 1,
-    periodic_X_x      =-2,
+    constant_Xflux = 0,
+    constant_X     = 1,
+    periodic_X     =-2,
 } Chemical_BC;
 
 // Mechanical boundary condition types
@@ -230,10 +230,10 @@ typedef enum {
     constant_velocity     =   0,
     constant_shear_stress =  13,
     constant_velocity_NC  =  11,
-    periodic_x_VxW        =  -2,
-    periodic_x_VxE        = -12,
-    periodic_x_VzS        = -12,
-    periodic_x_VzN        = -12,
+    periodic_VxW          =  -2,
+    periodic_VxE          = -12,
+    periodic_VzW          = -12,
+    periodic_VzE          = -12,
 } Mechanical_BC;
 
 typedef struct {
