@@ -6,7 +6,7 @@ include("./fcts_VE_trial.jl")
 # Adding creep mechanisms would result in adding new isolated viscosities (ηcst, ηlin...)
 # To avoid this, I try to formulate the local iteration in terms of ηve_normal and ηve_shear
 visu       = true
-plasticity = :older
+plasticity = :newer
 showMD7    = true
 
 function main() 
