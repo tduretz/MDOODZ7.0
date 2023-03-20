@@ -1247,7 +1247,7 @@ Input ReadInputFile( char *fileName ) {
         if (materials.psi[k]>0.0 && model.compressible==0) { printf("Set compressible=1 to activate dilation\n"); exit(1); }
         materials.Slim[k] = ReadMatProps( fin, "Slim" ,k,  1.0e90 )  / scaling.S;
         // Read flow law parameters
-        materials.cstv[k]     = ReadMatProps( fin,     "cstv", k,    1.0  );
+        materials.cstv[k]     = ReadMatProps( fin,     "cstv", k,    0.0  );
         materials.pwlv[k]     = ReadMatProps( fin,     "pwlv", k,    0.0  );
         materials.linv[k]     = ReadMatProps( fin,     "linv", k,    0.0  );
         materials.gbsv[k]     = ReadMatProps( fin,     "gbsv", k,    0.0  );

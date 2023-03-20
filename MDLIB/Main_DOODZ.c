@@ -890,6 +890,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         //--------------------------------------------------------------------------------------------------------------------------------//
 
         if (input.model.chemical_diffusion == 1)  {
+            printf("HALO 1\n");
             if (input.model.unsplit_diff_reac == 0 ) ArrayEqualArray( mesh.X_n, mesh.X0_n,  (mesh.Nx-1)*(mesh.Nz-1) );
             printf("*************************************\n");
             printf("********** Chemical solver **********\n");
@@ -899,7 +900,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             ChemicalDirectSolve( &mesh, input.model, &particles, &input.materials, input.model.dt, input.scaling );
         }
         else {
-            ArrayEqualArray( mesh.X_n, mesh.X0_n,  (mesh.Nx-1)*(mesh.Nz-1) );
+            if (input.model.density_variations==0) ArrayEqualArray( mesh.X_n, mesh.X0_n,  (mesh.Nx-1)*(mesh.Nz-1) );
         }
         UpdateParticleX( &mesh, input.scaling, input.model, &particles, &input.materials );
 

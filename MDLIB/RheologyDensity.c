@@ -392,6 +392,7 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
 
   // Activate deformation mechanisms
   if ( materials->cstv[phase] !=0                  ) constant    = 1;
+  // printf("%d\n", materials->cstv[phase]);
   if ( materials->pwlv[phase] !=0                  ) dislocation = 1;
   if ( materials->expv[phase] !=0 && T<TmaxPeierls ) peierls     = 1;
   if ( materials->linv[phase] !=0                  ) diffusion   = 1;
@@ -712,7 +713,10 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
     if (diffusion  == 1)  inv_eta_diss += (1.0/eta_lin);
     if (constant   == 1)  inv_eta_diss += (1.0/eta_cst);
     if (is_pl      == 1)  inv_eta_diss += (1.0/eta_pl ); 
-    eta        = 1.0/(inv_eta_diss);
+    eta  = 1.0/(inv_eta_diss);
+    // if (T*scaling->T<673.0) {
+    //   printf("constant = %d %2.2e %2.2e %2.2e %2.2e\n", constant, eta*scaling->eta, eta_pwl*scaling->eta, eta_pl*scaling->eta, eta_cst*scaling->eta);
+    // }
 
     // Viscoplastic overstress
     *OverS = eta_vp*gdot;

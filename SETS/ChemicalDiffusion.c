@@ -68,7 +68,7 @@ SetBC SetBCC(MdoodzInput *instance, POSITION position, double particleTemperatur
     bc.value = 0.0;
   }
   if (position == E || position == W) {
-    bc.type  = periodic_X_x;
+    bc.type  = periodic_X;
     bc.value = 0.0;
   }
   return bc;
