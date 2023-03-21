@@ -1,14 +1,13 @@
 /**** RESTART ****/
-istep = 00001
+istep = 00100
 irestart = 0
 
 /**** OUTPUT FILES ****/
 writer          = 1
-writer_step     = 1
+writer_step     = 10
 writer_markers  = 0
 writer_debug    = 0
 writer_energies = 0
-writer_subfolder = Shrinking
 
 /**** SCALES ****/
 eta = 1e15
@@ -19,12 +18,11 @@ T   = 700
 /**** SPACE-TIME ****/
 Nx      = 51
 Nz      = 51
-Nt      = 10
+Nt      = 100
 xmin    =-1.0
 zmin    =-1.0
 xmax    = 1.0
 zmax    = 1.0
-advection         = 1
 dt                = 1e7
 constant_dt       = 0
 Courant           = 0.2
@@ -39,7 +37,12 @@ stress_rotation    = 1
 safe_mode         = 1
 safe_dt_div       = 2.0
 max_num_stag          = 10
-IncrementalUpdateGrid = 1
+
+shear_style = 1
+mechanical = 0
+thermal    = 1
+advection  = 1
+noisy      = 0
 
 
 lin_abs_div       = 1e-10
@@ -50,29 +53,29 @@ lin_rel_mom       = 1e-10
 /**** SWITCHES ****/
 compressible    = 1
 elastic       = 1
-mechanical    = 1
+mechanical    = 0
 RK              = 4
-periodic_x    = 0
+
 pure_shear_ALE = 0
-thermal       = 0
+
 line_search     = 1
 free_surface       = 0
 free_surface_stab  = 0
 
+thermal       = 1
 initial_cooling      = 0
-subgrid_diffusion    = 2
+subgrid_diffusion    = 0
 shear_heating      = 0
 adiab_heating      = 0
 finite_strain         = 0
 
 /*** CHEMICAL ***/
-chemical_diffusion        = 1  / !!!!
-no_return        = 0
-density_variations        = 1  / renamed in MD7.0 (VolChangeReac)
+chemical_diffusion        = 0  / !!!!
+no_return        = 0 
+density_variations        = 1  / renamed in MD7.0 (VolChangeReac)    
 unsplit_diff_reac = 0
 
 /**** SETUP DEPENDANT ****/
-shear_style     = 0
 bkg_strain_rate           = 0.0
 bkg_pressure            = 2.0e9
 user0           = 680.0     / temperature [°C]
@@ -92,7 +95,7 @@ ID   = 0
 rho  = 2850.00 / matrix Granulite
 G   = 4.0e10
 Cv   = 1050.0
-k    = 2.3
+k    = 2.3e-3
 Qr   = 0.0
 C    = 1.0e70
 phi  = 10.0
@@ -116,7 +119,7 @@ reac_phase = 0
 Pr   = 1.0e80
 dPr  = 700.0e6
 tau_kin = 3.1558e9
-k_chem  = 5.0e-26
+k_chem  = 5.0e-10
 density_model = 3
 
 /**** PHASE 1 ****/
@@ -124,7 +127,7 @@ ID   = 1
 rho  = 2850.00 / Dry CPX inclusion
 G   = 4.0e10
 Cv   = 1050.0
-k    = 2.3
+k    = 2.3e-3
 Qr   = 0.0
 C    = 1.0e70
 phi  = 10.0
@@ -148,7 +151,7 @@ reac_phase = 3
 Pr         = 1.5e9
 dPr        = 700.0e6
 tau_kin    = 3.1558e9
-k_chem     = 5.0e-26
+k_chem     = 5.0e-10
 density_model = 3
 
 /**** PHASE 2 ****/
@@ -156,7 +159,7 @@ ID   = 2
 rho  = 2850.00 / matrix Granulite
 G   = 4.0e10
 Cv   = 1050.0
-k    = 2.3
+k    = 2.3e-3
 Qr   = 0.0
 C    = 1.0e70
 phi  = 10.0
@@ -180,7 +183,7 @@ reac_phase = 2
 Pr   = 1.0e80
 dPr  = 700.0e6
 tau_kin = 3.1558e9
-k_chem  = 5.0e-26
+k_chem  = 5.0e-10
 density_model = 3
 
 /**** PHASE 3 ****/
@@ -188,7 +191,7 @@ ID   = 3
 rho  = 3250.00 / keep granulite, only change in rho
 G   = 4.0e10
 Cv   = 1050.0
-k    = 2.3
+k    = 2.3e-3
 Qr   = 0.0
 C    = 1.0e70
 phi  = 10.0
@@ -212,7 +215,7 @@ reac_phase = 3
 Pr   = 1.0e80
 dPr  = 700.0e6
 tau_kin = 3.1558e9
-k_chem  = 5.0e-26
+k_chem  = 5.0e-10
 density_model = 3
 
 /**** DEFMAPS ****/
@@ -235,7 +238,7 @@ min_part_cell = 16
 /**** NON-LINEAR ITERATIONS ****/
 Newton        = 1
 let_res_grow  = 0
-line_search_min = 0.0
+line_search_min = 0.0 
 Picard2Newton = 1
 Picard2Newton_tol  = 2e-1
 nit_max       = 30

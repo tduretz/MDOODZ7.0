@@ -22,28 +22,12 @@ double SetDensity(MdoodzInput *input, Coordinates coordinates, int phase) {
   }
 }
 
-SetBC SetBCT(MdoodzInput *input, POSITION position, double particleTemperature) {
+SetBC SetBCT(MdoodzInput *instance, POSITION position, double particleTemperature) {
   SetBC     bc;
-  if (position == W || position == E || position == S || position == N || position == SE || position == SW || position == NE || position == NW) {
-    bc.type  = 0;
-    bc.value = 0.0;
-  } else {
-    bc.type  = -1;
-    bc.value = 0.0;
-  } 
-  return bc;
-}
-
-
-SetBC SetBCTNew(MdoodzInput *input, POSITION position, double particleTemperature) {
-  SetBC     bc;
-  if (position == W || position == E || position == S || position == N || position == SE || position == SW || position == NE || position == NW) {
-    bc.type  = 0;
-    bc.value = 0.0;
-  } else {
-    bc.type  = -1;
-    bc.value = 0.0;
-  } 
+  if (position == W || position == E || position == S || position == N) {
+    bc.type  = constant_heatflux;
+    bc.value = 0.;
+  }
   return bc;
 }
 
@@ -58,7 +42,6 @@ int main() {
                   .SetBCVx   = SetPureOrSimpleShearBCVx,
                   .SetBCVz   = SetPureOrSimpleShearBCVz,
                   .SetBCT    = SetBCT,
-                  .SetBCTNew = SetBCTNew,
           },
   };
   RunMDOODZ("StrainLocalization_SH_GSE.txt", &input);

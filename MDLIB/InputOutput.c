@@ -1057,9 +1057,9 @@ Input ReadInputFile( char *fileName ) {
     // Spatial domain
     model.Nx                 = ReadInt2( fin, "Nx",        10 );            // Number of vertices in x direction
     model.Nz                 = ReadInt2( fin, "Nz",        10 );            // Number of vertices in y direction
-    model.xmin               = ReadDou2( fin, "xmin",     1.0 )/scaling.L;  // Spatial domain extent
-    model.zmin               = ReadDou2( fin, "zmin",     1.0 )/scaling.L;  // Spatial domain extent 
-    model.xmax               = ReadDou2( fin, "xmax",     1.0 )/scaling.L;  // Spatial domain extent 
+    model.xmin               = ReadDou2( fin, "xmin",    -1.0 )/scaling.L;  // Spatial domain extent
+    model.xmax               = ReadDou2( fin, "xmax",     1.0 )/scaling.L;  // Spatial domain extent
+    model.zmin               = ReadDou2( fin, "zmin",    -1.0 )/scaling.L;  // Spatial domain extent  
     model.zmax               = ReadDou2( fin, "zmax",     1.0 )/scaling.L;  // Spatial domain extent
     // Time domain
     model.Nt                 = ReadInt2( fin, "Nt",         1 );            // Number of time steps    
@@ -1083,10 +1083,10 @@ Input ReadInputFile( char *fileName ) {
     model.kinetics           = ReadInt2( fin, "kinetics",              0 ); // Activates reaction kinetics
     model.out_of_plane       = ReadInt2( fin, "out_of_plane",          0 ); // Out-of-plane strain
     // Numerics: linear solver
-    model.penalty            = ReadDou2( fin, "penalty",          1.0e10 ); // Penalty factor
+    model.penalty            = ReadDou2( fin, "penalty",           1.0e3 ); // Penalty factor
     model.auto_penalty       = ReadDou2( fin, "auto_penalty",        0.0 ); // Activates automatic penalty factor computation
     model.diag_scaling       = ReadInt2( fin, "diag_scaling",          1 ); // Activates diagonal scaling
-    model.preconditioner     = ReadInt2( fin, "preconditioner",        0 ); // Preconditoner type for Newton ietrations, 0: Picard preconditionner
+    model.preconditioner     = ReadInt2( fin, "preconditioner",        0 ); // Preconditoner type for Newton iterations, 0: Picard preconditionner
     model.lin_abs_div        = ReadDou2( fin, "lin_abs_div",      1.0e-9 ); // Tolerance for linear mechanical solver
     model.lin_rel_div        = ReadDou2( fin, "lin_rel_div",      1.0e-5 ); // Tolerance for linear mechanical solver
     model.lin_abs_mom        = ReadDou2( fin, "lin_abs_mom",      1.0e-9 ); // Tolerance for linear mechanical solver
@@ -1142,12 +1142,12 @@ Input ReadInputFile( char *fileName ) {
     model.surface_processes  = ReadInt2( fin, "surface_processes",     0 ); // 1: diffusion; 2: diffusion + sedimentation
     model.marker_aniso_angle = ReadInt2( fin, "marker_aniso_angle",    0 ); // Enables setting anisotropy angle per particles rather than phases
     // Transformations
-    model.progress_transform = ReadInt2( fin, "progress_transform",    0 ); // Activate progressive reactions
+    model.chemical_diffusion = ReadInt2( fin, "chemical_diffusion",    0 ); // Activate progressive reactions
     model.no_return          = ReadInt2( fin, "no_return",             0 ); // Turns off retrogression if 1.0
     model.unsplit_diff_reac  = ReadInt2( fin, "unsplit_diff_reac",     0 ); // Unsplits diffusion and reaction
     model.smooth_softening   = ReadInt2( fin, "smooth_softening",      1 ); // Activates smooth explicit kinematic softening function
     // Background ambient conditions
-    model.bkg_strain_rate    = ReadDou2( fin, "bkg_strain_rate", 1e-30)/scaling.E; // Background tectonic rate, defaut is close to zero to avoid any Nans of Infs in rheology
+    model.bkg_strain_rate    = ReadDou2( fin, "bkg_strain_rate", 1e-30)/scaling.E; // Background tectonic rate, default is close to zero to avoid any Nans of Infs in rheology
     model.bkg_div_rate       = ReadDou2( fin, "bkg_div_rate",      0.0)/scaling.E; // Background divergence rate
     model.bkg_pressure       = ReadDou2( fin, "bkg_pressure",      0.0)/scaling.S; // Background pressure
     model.bkg_temperature    = ReadDou2( fin, "bkg_temperature",   0.0)/scaling.T; // Background temperature
@@ -1205,7 +1205,26 @@ Input ReadInputFile( char *fileName ) {
         printf("WARNING!! Changing from solver type 0 to solver type 2!!! That's the new standard in MDOODZ 6.0.\n");
         model.lin_solver = 2;
     }
-    // Material properties
+    //------------------------------------------------------------------------------------------------------------------------------//
+    // DEFORMATION MAP PARAMETERS
+    //------------------------------------------------------------------------------------------------------------------------------//
+    // Create deformation maps or not (default no)
+    model.deformation_maps = ReadInt2(fin, "deformation_maps", 0);
+    // Resolution
+    model.nT               = ReadInt2(fin, "nT", 11);
+    model.nE               = ReadInt2(fin, "nE", 11);
+    model.nd               = ReadInt2(fin, "nd", 11);
+    // Temperature, strain rate, grain size MIN/MAX & pressure
+    model.Tmin             = ReadDou2(fin, "Tmin", 100.0);  model.Tmin += zeroC; model.Tmin /= scaling.T;    // C . K & non-dimensionalization
+    model.Tmax             = ReadDou2(fin, "Tmax", 1000.0); model.Tmax += zeroC; model.Tmax /= scaling.T;    // C . K & non-dimensionalization
+    model.Emin             = ReadDou2(fin, "Emin", -30.0);   //model.Emin /= scaling.E;                           // Non-dimensionalization
+    model.Emax             = ReadDou2(fin, "Emax", -4.0 );   //model.Emax /= scaling.E;                           // Non-dimensionalization
+    model.dmin             = ReadDou2(fin, "dmin", -7.0 );   //model.dmin /= scaling.L;                           // Non-dimensionalization
+    model.dmax             = ReadDou2(fin, "dmax", -2.0 );   //model.dmax /= scaling.L;                           // Non-dimensionalization
+    model.Pn               = ReadDou2(fin, "Pn",  5.0e8 );      model.Pn   /= scaling.S;                          // Non-dimensionalization
+    //------------------------------------------------------------------------------------------------------------------------------//
+    // MATERIAL PROPERTIES
+    //------------------------------------------------------------------------------------------------------------------------------//
     model.Nb_phases = materials.Nb_phases =  ReadInt2( fin, "Nb_phases", 0 );
     for ( k=0; k<materials.Nb_phases; k++) {
         // Read general parameters
@@ -1228,7 +1247,7 @@ Input ReadInputFile( char *fileName ) {
         if (materials.psi[k]>0.0 && model.compressible==0) { printf("Set compressible=1 to activate dilation\n"); exit(1); }
         materials.Slim[k] = ReadMatProps( fin, "Slim" ,k,  1.0e90 )  / scaling.S;
         // Read flow law parameters
-        materials.cstv[k]     = ReadMatProps( fin,     "cstv", k,    1.0  );
+        materials.cstv[k]     = ReadMatProps( fin,     "cstv", k,    0.0  );
         materials.pwlv[k]     = ReadMatProps( fin,     "pwlv", k,    0.0  );
         materials.linv[k]     = ReadMatProps( fin,     "linv", k,    0.0  );
         materials.gbsv[k]     = ReadMatProps( fin,     "gbsv", k,    0.0  );
@@ -1594,27 +1613,6 @@ Input ReadInputFile( char *fileName ) {
         model.kin_Pmax      = (49.9890/10*1e9)/scaling.S;  // Maximum pressure           (MANTLE) [Pa]
         model.kin_dG        = ReadBin(model.import_files_dir, "dG_QuartzCoesite.dat", model.kin_nT, model.kin_nP, scaling.J);
     }
-
-    //------------------------------------------------------------------------------------------------------------------------------//
-    // DEFORMATION MAP PARAMETERS
-    //------------------------------------------------------------------------------------------------------------------------------//
-
-    // Create deformation maps or not (default no)
-    model.def_maps        = ReadInt2(fin, "def_maps", 0);
-
-    // Resolution
-    model.nT              = ReadInt2(fin, "nT", 11);
-    model.nE              = ReadInt2(fin, "nE", 11);
-    model.nd              = ReadInt2(fin, "nd", 11);
-
-    // Temperature, strain rate, grain size MIN/MAX & pressure
-    model.Tmin            = ReadDou2(fin, "Tmin", 100.0);  model.Tmin += zeroC; model.Tmin /= scaling.T;    // C . K & non-dimensionalization
-    model.Tmax            = ReadDou2(fin, "Tmax", 1000.0); model.Tmax += zeroC; model.Tmax /= scaling.T;    // C . K & non-dimensionalization
-    model.Emin            = ReadDou2(fin, "Emin", -30.0);   //model.Emin /= scaling.E;                           // Non-dimensionalization
-    model.Emax            = ReadDou2(fin, "Emax", -4.0 );   //model.Emax /= scaling.E;                           // Non-dimensionalization
-    model.dmin            = ReadDou2(fin, "dmin", -7.0 );   //model.dmin /= scaling.L;                           // Non-dimensionalization
-    model.dmax            = ReadDou2(fin, "dmax", -2.0 );   //model.dmax /= scaling.L;                           // Non-dimensionalization
-    model.Pn              = ReadDou2(fin, "Pn",  5.0e8 );      model.Pn   /= scaling.S;                          // Non-dimensionalization
 
     // Close input file
     fclose(fin);

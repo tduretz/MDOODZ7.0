@@ -75,7 +75,7 @@ typedef struct {
   double line_search_min, safe_dt_div;
   int    safe_mode, max_num_stag;
   // Deformation maps
-  int    nT, nE, nd, def_maps;
+  int    nT, nE, nd, deformation_maps;
   double Pn, Tmin, Tmax, Emin, Emax, dmin, dmax, bkg_pressure, bkg_temperature;
   // Surface processes
   double surf_diff, surf_sedirate, surf_baselev, surf_Winc, surf_Vinc;
@@ -101,7 +101,7 @@ typedef struct {
   int      diffuse_X, diffuse_avg;
   double   diffusion_length;
   // For Pips
-  int      progress_transform, no_return, density_variations, unsplit_diff_reac, kinetics;
+  int      chemical_diffusion, no_return, density_variations, unsplit_diff_reac, kinetics;
   // Anisotropy
   int      anisotropy, out_of_plane, marker_noise; //aniso_fstrain
   int      residual_form;
@@ -210,6 +210,32 @@ typedef enum {
   free_surface
 } POSITION;
 
+// Thermal boundary condition types
+typedef enum {
+    constant_heatflux      = 0,
+    constant_temperature   = 1,
+    periodic_temperature   =-2,
+} Thermal_BC;
+
+// Chemical boundary condition types
+typedef enum {
+    constant_Xflux = 0,
+    constant_X     = 1,
+    periodic_X     =-2,
+} Chemical_BC;
+
+// Mechanical boundary condition types
+typedef enum {
+    inside                =  -1,
+    constant_velocity     =   0,
+    constant_shear_stress =  13,
+    constant_velocity_NC  =  11,
+    periodic_VxW          =  -2,
+    periodic_VxE          = -12,
+    periodic_VzW          = -12,
+    periodic_VzE          = -12,
+} Mechanical_BC;
+
 typedef struct {
   double value;
   char   type;
@@ -218,16 +244,15 @@ typedef struct {
 typedef SetBC (*SetBCVx_f)(MdoodzInput *input, POSITION position, Coordinates coordinates);
 typedef SetBC (*SetBCVz_f)(MdoodzInput *input, POSITION position, Coordinates coordinates);
 typedef SetBC (*SetBCT_f)(MdoodzInput *input, POSITION position, double gridTemperature);
-typedef SetBC (*SetBCTNew_f)(MdoodzInput *input, POSITION position, double gridTemperature);
-typedef SetBC (*SetBCT1_f)(MdoodzInput *input, POSITION position, Coordinates coordinates, double gridTemperature);
+typedef SetBC (*SetBCC_f)(MdoodzInput *input, POSITION position, double gridXvalue);
 typedef char (*SetBCPType_f)(MdoodzInput *input, POSITION position);
 
 typedef struct {
   SetBCVx_f    SetBCVx;
   SetBCVz_f    SetBCVz;
   SetBCT_f     SetBCT;
+  SetBCC_f     SetBCC;
   SetBCPType_f SetBCPType;
-  SetBCTNew_f  SetBCTNew;
 } SetBCs_ff;
 
 typedef struct {
@@ -235,7 +260,6 @@ typedef struct {
   int   *phases;
   int    nPhases;
 } CrazyConductivity;
-
 
 typedef struct {
   int   nx;

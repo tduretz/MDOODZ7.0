@@ -139,7 +139,6 @@ class RiftingChenin {
                     .SetBCVz    = SetPureShearBCVz,
                     .SetBCT     = RPSetBCT,
                     .SetBCPType = RPSetBCPType,
-                    .SetBCTNew  = RPSetBCTNew,
             },
             .MutateInput = RPMutateInput};
     RunMDOODZ("RiftingChenin.txt", &riftingCheninModel);
@@ -387,7 +386,6 @@ class ShearHeatingDuretz14 {
                     .SetBCVx   = SetPureOrSimpleShearBCVx,
                     .SetBCVz   = SetPureOrSimpleShearBCVz,
                     .SetBCT    = SHD14SetBCT,
-                    .SetBCTNew = SHD14SetBCTNew,
             },
     };
     RunMDOODZ("ShearHeatingDuretz14.txt", &shearHeatingDuretzModel);
@@ -451,7 +449,6 @@ class GSE {
                     .SetBCVx   = SetPureShearBCVx,
                     .SetBCVz   = SetPureShearBCVz,
                     .SetBCT    = GSESetBCT,
-                    .SetBCTNew = GSESetBCTNew,
             },
     };
     RunMDOODZ("PinchSwellGSE.txt", &gseModel);
@@ -501,7 +498,6 @@ class VEP_Duretz18 {
                     .SetBCVx   = SetPureShearBCVx,
                     .SetBCVz   = SetPureShearBCVz,
                     .SetBCT    = GSESetBCT,
-                    .SetBCTNew = GSESetBCTNew,
             },
     };
     RunMDOODZ("VEP_Duretz18.txt", &vepDuretzModel);

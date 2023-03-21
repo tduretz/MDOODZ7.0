@@ -2,7 +2,7 @@
 SHELL := /bin/bash
 
 # Compiler
-CC = /usr/local/Cellar/gcc/11.2.0_3/bin/gcc-11
+CC = gcc-12
 
 # Path to setup file folder
 SET_PATH = ../SETS
