@@ -22,7 +22,7 @@ zmin    = -150.000000e3
 zmax    =   10.000000e3 
 
 /**** TIME ****/
-Nt          = 500
+Nt          = 100
 dt          = 2.63e10
 constant_dt = 1
 Courant     = 0.25

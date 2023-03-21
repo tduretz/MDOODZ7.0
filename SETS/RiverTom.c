@@ -80,27 +80,29 @@ double SetVerticalVelocity(MdoodzInput *instance, Coordinates coordinates) {
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-char SetBCPType(MdoodzInput *instance, POSITION position) {
-  if (position == NE || position == NW) {
-    return 0;
-  } else {
-    return -1;
-  }
-}
+SetBC SetBCVx(MdoodzInput *instance, POSITION position, Coordinates coordinates) {
+  SetBC bc;
+  const double Lx    = instance->model.xmax - instance->model.xmin;
+  const double V_tot =  Lx * instance->model.bkg_strain_rate; 
+  const double x = coordinates.x, z = coordinates.z;
 
-/*--------------------------------------------------------------------------------------------------------------------*/
-/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
-/*--------------------------------------------------------------------------------------------------------------------*/
-
-SetBC SetBCT(MdoodzInput *instance, POSITION position, double particleTemperature) {
-  SetBC     bc;
-  double surfaceTemperature = zeroC / instance->scaling.T;
-  if (position == free_surface) {
-    bc.value = surfaceTemperature;
-    bc.type  = 1;
+  // Evaluate velocity of W and E boundaries
+  const double VxW =  0.5*V_tot;
+  const double VxE = -0.5*V_tot;
+  
+  // Assign BC values
+  if (position == N || position == S || position == NW || position == SW || position == NE || position == SE) {
+    bc.type  = constant_shear_stress;
+    bc.value = 0;
+  } else if (position == W) {
+    bc.type  = constant_velocity;
+    bc.value = VxW;
+  } else if (position == E) {
+    bc.type  = constant_velocity;
+    bc.value = VxE;    
   } else {
-    bc.value = 0.0;
-    bc.type  = 0;
+    bc.type  = inside;
+    bc.value = 0.0;  
   }
   return bc;
 }
@@ -109,23 +111,53 @@ SetBC SetBCT(MdoodzInput *instance, POSITION position, double particleTemperatur
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-SetBC SetBCTNew(MdoodzInput *instance, POSITION position, double particleTemperature) {
+SetBC SetBCVz(MdoodzInput *instance, POSITION position, Coordinates coordinates) {
+  SetBC bc;
+  const double Lx = instance->model.xmax - instance->model.xmin;
+  double V_tot    =  Lx * instance->model.bkg_strain_rate; // |VxW| + |VxE|
+ 
+  // Compute bottom boundary velocity and account for erosion
+  const double surf_Winc = instance->model.surf_Winc;
+  const double surf_Vinc = instance->model.surf_Vinc;
+  const double Vz_corr   = surf_Winc*surf_Vinc / Lx;
+  const double VzS = -V_tot * (0.0 - instance->model.zmin) / Lx + Vz_corr;
+
+  // Set boundary nodes types and values
+  if (position == W || position == SW || position == NW ) {
+    bc.type  = constant_shear_stress;
+    bc.value = 0.0;
+  } else if ( position == E || position == SE || position == NE) {
+    bc.type  = constant_shear_stress;
+    bc.value = 0.0;
+  } else if (position == S || position == N) {
+    bc.type  = constant_velocity;
+    bc.value = VzS;
+  } else {
+    bc.type  = inside;
+    bc.value = 0.0;  
+  }
+  return bc;
+}
+
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
+
+SetBC SetBCT(MdoodzInput *instance, POSITION position, double particleTemperature) {
   SetBC     bc;
-  double surfaceTemperature = zeroC / instance->scaling.T;
-  double mantleTemperature  = (1330. + zeroC) / instance->scaling.T;
-  bc.value = 0.;
-  bc.type  = 0;
-  if (position == S || position == SE || position == SW) {
-    bc.type  = 1;
-    bc.value = particleTemperature;
+  double surface_temperature =          zeroC  / instance->scaling.T;
+  double mantle_temperature  = (1330. + zeroC) / instance->scaling.T;
+  if (position == S) {
+    bc.type  = constant_temperature;
+    bc.value = mantle_temperature;
+  }
+  if (position == free_surface || position == N) {
+    bc.type  = constant_temperature;
+    bc.value = surface_temperature;
   } 
-  if (position == N || position == NE || position == NW) {
-    bc.type  = 1;
-    bc.value = particleTemperature;
-  } 
-  if (position == W || position == E ) {
-    bc.value = mantleTemperature;
-    bc.type  = 0;
+  if (position == W || position == E) {
+    bc.type  = constant_heatflux;
+    bc.value = 0.;
   }
   return bc;
 }
@@ -148,70 +180,6 @@ void AddCrazyConductivity(MdoodzInput *input) {
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-SetBC SetBCVx(MdoodzInput *instance, POSITION position, Coordinates coordinates) {
-  SetBC bc;
-  const double Lx    = instance->model.xmax - instance->model.xmin;
-  const double V_tot =  Lx * instance->model.bkg_strain_rate; 
-  const double x = coordinates.x, z = coordinates.z;
-
-  // Evaluate velocity of W and E boundaries
-  const double VxW =  0.5*V_tot;
-  const double VxE = -0.5*V_tot;
-  
-  // Assign BC values
-  if (position == N || position == S || position == NW || position == SW || position == NE || position == SE) {
-    bc.value = 0;
-    bc.type  = 13;
-  } else if (position == W) {
-    bc.value = VxW;
-    bc.type  = 0;
-  } else if (position == E) {
-    bc.value = VxE;
-    bc.type  = 0;
-  } else {
-    bc.value = 0.0;
-    bc.type  = -1;
-  }
-  return bc;
-}
-
-/*--------------------------------------------------------------------------------------------------------------------*/
-/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
-/*--------------------------------------------------------------------------------------------------------------------*/
-
-SetBC SetBCVz(MdoodzInput *instance, POSITION position, Coordinates coordinates) {
-  SetBC bc;
-  const double Lx = instance->model.xmax - instance->model.xmin;
-  double V_tot    =  Lx * instance->model.bkg_strain_rate; // |VxW| + |VxE|
- 
-  // Compute bottom boundary velocity and account for erosion
-  const double surf_Winc = instance->model.surf_Winc;
-  const double surf_Vinc = instance->model.surf_Vinc;
-  const double Vz_corr   = surf_Winc*surf_Vinc / Lx;
-  const double VzS = -V_tot * (0.0 - instance->model.zmin) / Lx + Vz_corr;
-
-
-  // Set boundary nodes types and values
-  if (position == W || position == SW || position == NW ) {
-    bc.value = 0.0;
-    bc.type  = 13;
-  } else if ( position == E || position == SE || position == NE) {
-    bc.value = 0.0;
-    bc.type  = 13;
-  } else if (position == S || position == N) {
-    bc.value = VzS;
-    bc.type  = 0;
-  } else {
-    bc.value = 0;
-    bc.type  = -1;
-  }
-  return bc;
-}
-
-/*--------------------------------------------------------------------------------------------------------------------*/
-/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
-/*--------------------------------------------------------------------------------------------------------------------*/
-
 int main() {
   MdoodzSetup setup = {
           .BuildInitialTopography = &(BuildInitialTopography_ff){
@@ -227,12 +195,14 @@ int main() {
           .SetBCs = &(SetBCs_ff){
                   .SetBCVx    = SetBCVx, // manuel
                   .SetBCVz    = SetBCVz,
-                  .SetBCPType = SetBCPType,
                   .SetBCT     = SetBCT,
-                  .SetBCTNew  = SetBCTNew,
           },
           .MutateInput = AddCrazyConductivity,
 
   };
   RunMDOODZ("RiverTom.txt", &setup);
 }
+
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/

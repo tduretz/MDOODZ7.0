@@ -1,10 +1,10 @@
 /**** RESTART ****/
-istep = 00001
+istep = 00010
 irestart = 0
 
 /**** OUTPUT FILES ****/
 writer          = 1
-writer_step     = 10
+writer_step     = 1
 writer_markers  = 0
 writer_debug    = 0
 writer_energies = 0
@@ -65,7 +65,7 @@ adiab_heating      = 0
 finite_strain         = 0
 
 /*** CHEMICAL ***/
-progress_transform        = 1  / !!!!
+chemical_diffusion        = 0  / 
 no_return        = 0 
 density_variations        = 1  / renamed in MD7.0 (VolChangeReac)    
 unsplit_diff_reac = 0
