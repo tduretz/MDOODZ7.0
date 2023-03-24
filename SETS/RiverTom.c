@@ -3,17 +3,29 @@
 #include "stdbool.h"
 #include "stdlib.h"
 
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
+
 double SetSurfaceZCoord(MdoodzInput *instance, double x_coord) {
   double TopoLevel = 0.0;
-  if (fabs(x_coord) < instance->model.surf_Winc/2.0) TopoLevel = -500.0/instance->scaling.L;
+  // if (fabs(x_coord) < instance->model.surf_Winc/2.0) TopoLevel = -500.0/instance->scaling.L;
   return TopoLevel;
 }
+
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
 
 int SetPhase(MdoodzInput *instance, Coordinates coordinates) {
   const double H_crust  = instance->model.user1 / instance->scaling.L;
   if (coordinates.z> -H_crust) return 0;
   else return 1;
 }
+
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
 
 int SetDualPhase(MdoodzInput *input, Coordinates coordinate, int phase) {
     
@@ -32,6 +44,10 @@ int SetDualPhase(MdoodzInput *input, Coordinates coordinate, int phase) {
   return dual_phase;
 }
 
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
+
 double SetTemperature(MdoodzInput *instance, Coordinates coordinates) {
   const double lithosphereThickness = instance->model.user1 / instance->scaling.L;
   const double surfaceTemperature   = 273.15 / instance->scaling.T;
@@ -44,66 +60,25 @@ double SetTemperature(MdoodzInput *instance, Coordinates coordinates) {
   }
 }
 
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
+
 double SetHorizontalVelocity(MdoodzInput *instance, Coordinates coordinates) {
   return -coordinates.x * instance->model.bkg_strain_rate;
 }
+
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
 
 double SetVerticalVelocity(MdoodzInput *instance, Coordinates coordinates) {
   return coordinates.z * instance->model.bkg_strain_rate;
 }
 
-char SetBCPType(MdoodzInput *instance, POSITION position) {
-  if (position == NE || position == NW) {
-    return 0;
-  } else {
-    return -1;
-  }
-}
-
-SetBC SetBCT(MdoodzInput *instance, POSITION position, double particleTemperature) {
-  SetBC     bc;
-  double surfaceTemperature = zeroC / instance->scaling.T;
-  if (position == free_surface) {
-    bc.value = surfaceTemperature;
-    bc.type  = 1;
-  } else {
-    bc.value = 0.0;
-    bc.type  = 0;
-  }
-  return bc;
-}
-
-
-SetBC SetBCTNew(MdoodzInput *instance, POSITION position, double particleTemperature) {
-  SetBC     bc;
-  double surfaceTemperature = zeroC / instance->scaling.T;
-  double mantleTemperature  = (1330. + zeroC) / instance->scaling.T;
-  bc.value = 0.;
-  bc.type  = 0;
-  if (position == S || position == SE || position == SW) {
-    bc.value = particleTemperature;
-    bc.type  = 1;
-  } 
-  if (position == N || position == NE || position == NW) {
-    bc.value = particleTemperature;
-    bc.type  = 1;
-  } 
-  if (position == W || position == E ) {
-    bc.value = mantleTemperature;
-    bc.type  = 0;
-  }
-  return bc;
-}
-
-void AddCrazyConductivity(MdoodzInput *input) {
-  int               *asthenospherePhases = (int *) malloc(sizeof(int));
-  CrazyConductivity *crazyConductivity   = (CrazyConductivity *) malloc(sizeof(CrazyConductivity));
-  asthenospherePhases[0]                 = 3;
-  crazyConductivity->phases              = asthenospherePhases;
-  crazyConductivity->nPhases             = 1;
-  crazyConductivity->multiplier          = 1000;
-  input->crazyConductivity               = crazyConductivity;
-}
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
 
 SetBC SetBCVx(MdoodzInput *instance, POSITION position, Coordinates coordinates) {
   SetBC bc;
@@ -117,20 +92,24 @@ SetBC SetBCVx(MdoodzInput *instance, POSITION position, Coordinates coordinates)
   
   // Assign BC values
   if (position == N || position == S || position == NW || position == SW || position == NE || position == SE) {
+    bc.type  = constant_shear_stress;
     bc.value = 0;
-    bc.type  = 13;
   } else if (position == W) {
+    bc.type  = constant_velocity;
     bc.value = VxW;
-    bc.type  = 0;
   } else if (position == E) {
-    bc.value = VxE;
-    bc.type  = 0;
+    bc.type  = constant_velocity;
+    bc.value = VxE;    
   } else {
-    bc.value = 0.0;
-    bc.type  = -1;
+    bc.type  = inside;
+    bc.value = 0.0;  
   }
   return bc;
 }
+
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
 
 SetBC SetBCVz(MdoodzInput *instance, POSITION position, Coordinates coordinates) {
   SetBC bc;
@@ -145,20 +124,61 @@ SetBC SetBCVz(MdoodzInput *instance, POSITION position, Coordinates coordinates)
 
   // Set boundary nodes types and values
   if (position == W || position == SW || position == NW ) {
+    bc.type  = constant_shear_stress;
     bc.value = 0.0;
-    bc.type  = 13;
   } else if ( position == E || position == SE || position == NE) {
+    bc.type  = constant_shear_stress;
     bc.value = 0.0;
-    bc.type  = 13;
   } else if (position == S || position == N) {
+    bc.type  = constant_velocity;
     bc.value = VzS;
-    bc.type  = 0;
   } else {
-    bc.value = 0;
-    bc.type  = -1;
+    bc.type  = inside;
+    bc.value = 0.0;  
   }
   return bc;
 }
+
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
+
+SetBC SetBCT(MdoodzInput *instance, POSITION position, double particleTemperature) {
+  SetBC     bc;
+  double surface_temperature =          zeroC  / instance->scaling.T;
+  double mantle_temperature  = (1330. + zeroC) / instance->scaling.T;
+  if (position == S) {
+    bc.type  = constant_temperature;
+    bc.value = mantle_temperature;
+  }
+  if (position == free_surface || position == N) {
+    bc.type  = constant_temperature;
+    bc.value = surface_temperature;
+  } 
+  if (position == W || position == E) {
+    bc.type  = constant_heatflux;
+    bc.value = 0.;
+  }
+  return bc;
+}
+
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
+
+void AddCrazyConductivity(MdoodzInput *input) {
+  int               *asthenospherePhases = (int *) malloc(sizeof(int));
+  CrazyConductivity *crazyConductivity   = (CrazyConductivity *) malloc(sizeof(CrazyConductivity));
+  asthenospherePhases[0]                 = 3;
+  crazyConductivity->phases              = asthenospherePhases;
+  crazyConductivity->nPhases             = 1;
+  crazyConductivity->multiplier          = 1000;
+  input->crazyConductivity               = crazyConductivity;
+}
+
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
 
 int main() {
   MdoodzSetup setup = {
@@ -175,14 +195,14 @@ int main() {
           .SetBCs = &(SetBCs_ff){
                   .SetBCVx    = SetBCVx, // manuel
                   .SetBCVz    = SetBCVz,
-                  // .SetBCVx    = SetPureShearBCVx, // automatic
-                  // .SetBCVz    = SetPureShearBCVz,
-                  .SetBCPType = SetBCPType,
                   .SetBCT     = SetBCT,
-                  .SetBCTNew  = SetBCTNew,
           },
           .MutateInput = AddCrazyConductivity,
 
   };
   RunMDOODZ("RiverTom.txt", &setup);
 }
+
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/

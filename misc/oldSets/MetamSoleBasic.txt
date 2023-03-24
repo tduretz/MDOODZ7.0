@@ -189,7 +189,7 @@ aniso_angle  = 65
 aniso_factor = 10
 
 /**** DEFMAPS ****/
-def_maps = 0
+deformation_maps = 0
 nT    =    200      / Temperature resolutin []
 nE    =    200      / Strain rate resolution []
 nd    =    6        / Grain size resolution []
