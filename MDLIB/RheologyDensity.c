@@ -392,6 +392,7 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
 
   // Activate deformation mechanisms
   if ( materials->cstv[phase] !=0                  ) constant    = 1;
+  // printf("%d\n", materials->cstv[phase]);
   if ( materials->pwlv[phase] !=0                  ) dislocation = 1;
   if ( materials->expv[phase] !=0 && T<TmaxPeierls ) peierls     = 1;
   if ( materials->linv[phase] !=0                  ) diffusion   = 1;
@@ -712,7 +713,10 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
     if (diffusion  == 1)  inv_eta_diss += (1.0/eta_lin);
     if (constant   == 1)  inv_eta_diss += (1.0/eta_cst);
     if (is_pl      == 1)  inv_eta_diss += (1.0/eta_pl ); 
-    eta        = 1.0/(inv_eta_diss);
+    eta  = 1.0/(inv_eta_diss);
+    // if (T*scaling->T<673.0) {
+    //   printf("constant = %d %2.2e %2.2e %2.2e %2.2e\n", constant, eta*scaling->eta, eta_pwl*scaling->eta, eta_pl*scaling->eta, eta_cst*scaling->eta);
+    // }
 
     // Viscoplastic overstress
     *OverS = eta_vp*gdot;
@@ -807,7 +811,7 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
     mesh->Wel[c0]         = 0.0;
     mesh->Wdiss[c0]       = 0.0;
     //        X                     =  mesh->Xreac_n[c0]; // Save X first
-    //        if (model->progress_transform==1) mesh->Xreac_n[c0]    = 0.0;
+    //        if (model->chemical_diffusion==1) mesh->Xreac_n[c0]    = 0.0;
     if ( unsplit_diff_reac == 0 ) mesh->X_n[c0]        = 0.0;
     mesh->OverS_n[c0]    = 0.0;
 
@@ -910,7 +914,7 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
         }
         if (isnan (mesh->eta_phys_n[c0]) ) {
           printf("NaN: Problem on cell centers:\n");
-          printf("progress_transform %d\n", model->progress_transform);
+          printf("chemical_diffusion %d\n", model->chemical_diffusion);
           for ( p=0; p<model->Nb_phases; p++) printf("phase %d vol=%2.2e\n", p, mesh->phase_perc_n[p][c0]);
           printf("eta=%2.2e G=%2.2e T=%2.2e P=%2.2e d=%2.2e phi=%2.2e %2.2e %2.2e %2.2e %2.2e\n", eta*scaling->eta, mesh->mu_n[c0]*scaling->S, mesh->T[c0]*scaling->T, mesh->p_in[c0]*scaling->S, mesh->d0_n[c0]*scaling->L, mesh->phi_n[c0], mesh->exxd[c0], mesh->exz_n[c0], mesh->sxxd0[c0], mesh->sxz0_n[c0]);
           printf("flag %d nb part cell = %d cell index = %d\n", mesh->BCp.type[c0],mesh->nb_part_cell[c0], c0);

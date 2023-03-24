@@ -71,11 +71,10 @@ typedef struct {
           *p_start, *divth0_n, *T0_n;
   int    *iter_smooth;
   int    *nb_part_cell, *nb_part_vert;
-  BC      BCu, BCv, BCp, BCp_exp, BCT_exp;
+  BC      BCu, BCv, BCp, BCp_exp, BCT_exp, BCt, BCg, BCC_exp, BCc;
   // TODO rename BCu and rename BCv to BCVx and BCVz
   // TODO rename BCp to BCP (P as pressure is always capital P)
   // TODO find and and do the same for (T as temperature)
-  BCT     BCt, BCg, BCc;
   // TODO rename BCg to BCv (v is not capital and stands for vertex)
   double *xg_coord, *zg_coord, *xc_coord, *zc_coord, *xvz_coord, *zvx_coord,
           *xg_coord0, *zg_coord0, *xg_coord_ext, *zg_coord_ext;

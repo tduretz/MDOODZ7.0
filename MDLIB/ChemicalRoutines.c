@@ -75,7 +75,7 @@ void ChemicalDirectSolve( grid *mesh, params model, markers *particles, mat_prop
     double  *A;
     double  *b, *bbc, *x;      // Coefs, rhs, sol
     int *Ic, *J;      // lines, colums
-    int k, l, c1, c2, c3, nx, nz, nxvz, nzvx, ncx, ncz;
+    int k, l, c0, c1, c2, c3, nx, nz, nxvz, nzvx, ncx, ncz;
     double AW, AE, AS, AN;
     int *eqn_t, nnzc, eqn = 0;
     double val, theta=1.0;
@@ -88,11 +88,6 @@ void ChemicalDirectSolve( grid *mesh, params model, markers *particles, mat_prop
     double *tau_kin, *prod, tau_kin_phase;
     double Pr,  Pr_phase;
     double dPr, dPr_phase;
-//    double tau_kin = model.tau_kin;
-//    double k_chem  = model.k_chem;
-//    double dPr     = model.dPr;
-//    double Pr      = model.Pr;
-    
     double ks;//   = k_chem;
     double mink;// = k_chem;
     
@@ -159,7 +154,6 @@ void ChemicalDirectSolve( grid *mesh, params model, markers *particles, mat_prop
 
                 for ( p=0; p<model.Nb_phases; p++ ) {
                     cond =  fabs(mesh->phase_perc_n[p][c2])>1.0e-13;
-
                     if ( cond == 1 ) Pr          += mesh->phase_perc_n[p][c2] * materials->Pr[p];
                     if ( cond == 1 ) dPr         += mesh->phase_perc_n[p][c2] * materials->dPr[p];
                     if ( cond == 1 ) tau_kin[c2] += mesh->phase_perc_n[p][c2] * materials->tau_kin[p];
@@ -167,19 +161,12 @@ void ChemicalDirectSolve( grid *mesh, params model, markers *particles, mat_prop
 
                 // Contribution for source
                 Xeq     = 0.5*erfc((-mesh->p_in[c2] + Pr)/dPr) ;
-                
-                if (Xeq >= mesh->X0_n[c2]                      ) prod[c2] = 1.0;
+                if (Xeq >= mesh->X0_n[c2]                       ) prod[c2] = 1.0;
                 if (Xeq <  mesh->X0_n[c2] && model.no_return==1 ) prod[c2] = 0.0;
-
-    //           printf("Xeq = %2.2e p_in = %2.2e Pr = %2.2e dPr = %2.2e\n", Xeq, mesh->p_in[c2]*scaling.S, Pr*scaling.S, dPr*scaling.S);
-
                 b[eqn] += prod[c2] * Xeq / tau_kin[c2];
             }
-
         }
-        
     }
-    
     MinMaxArray(b, scaling.E, ncz*ncx, "b chemical");
     
     //----------------------------------------------------//
@@ -190,6 +177,7 @@ void ChemicalDirectSolve( grid *mesh, params model, markers *particles, mat_prop
     for( l=0; l<ncz; l++) {
         for( k=0; k<ncx; k++) {
             
+            c0  = (k+1) + (l+1)*(ncx+2);
             c1  = k   + (l+1)*nx;
             c2  = k   + l*ncx;
             c3  = k   + l*nxvz+1;
@@ -207,21 +195,21 @@ void ChemicalDirectSolve( grid *mesh, params model, markers *particles, mat_prop
                 
                 // Contribution to S dof
                 if ( l>0 ) {
-                    if (mesh->BCc.type[c2-ncx] != 30 ) {
+                    if (mesh->BCC_exp.type[c0-(ncx+2)] != 30 ) {
                         val   = -theta*AS*one_dz_dz;
                         AddCoeffChem( J, A, eqn, eqn_t[c2-ncx],   &nnzc,  val );
                     }
                 }
                 
-                // Periodic on the right side
-                if (mesh->BCc.type[c2]==-2 && k==ncx-1 ) {
+                // Periodic on the E side
+                if (mesh->BCC_exp.type[c0+1]==-2 && k==ncx-1 ) {
                     val = -theta*AE*one_dx_dx;
                     AddCoeffChem( J, A, eqn, eqn_t[c2-(ncx-1)],   &nnzc,  val );
                 }
                 
                 // Contribution to W dof
                 if (k>0) {
-                    if (mesh->BCc.type[c2-1] != 30 ) {
+                    if (mesh->BCC_exp.type[c0-1] != 30 ) {
                         val   = -theta*AW*one_dx_dx;
                         AddCoeffChem( J, A, eqn, eqn_t[c2-1],   &nnzc,  val );
                     }
@@ -241,88 +229,88 @@ void ChemicalDirectSolve( grid *mesh, params model, markers *particles, mat_prop
                 // Flux from sides: SOUTH
                 if ( l>0 ) {
                     
-                    if (mesh->BCc.type[c2-ncx] != 30 ) {
+                    if (mesh->BCC_exp.type[c0-(ncx+2)] != 30 ) {
                         val +=  AS*one_dz_dz;
                     }
                     // Dirichlet contribution (free surface)
                     else {
-                        if (mesh->BCc.type[c2] == 1 ) {
+                        if (mesh->BCC_exp.type[c0] == 1 ) {
                             val      += 2.0*ks*one_dz_dz;
-                            bbc[eqn] += 2.0*ks*one_dz_dz * mesh->BCc.val[c2];
+                            bbc[eqn] += 2.0*ks*one_dz_dz * mesh->BCC_exp.val[c0];
                         }
                     }
                 }
                 
                 // Flux from sides: WEST
-                if ( (k>0) || (k==0 && mesh->BCc.type[c2]==-2) ) {
-                    if (mesh->BCc.type[c2-1] != 30 ) {
+                if ( (k>0) || (k==0 && mesh->BCC_exp.type[c0-1]==-2) ) {
+                    if (mesh->BCC_exp.type[c0-1] != 30 ) {
                         val +=  AW*one_dx_dx;
                     }
                     // Dirichlet contribution (free surface)
                     else {
-                        if (mesh->BCc.type[c2] == 1 ) {
+                        if (mesh->BCC_exp.type[c0] == 1 ) {
                             val      += 2.0*ks*one_dx_dx;
-                            bbc[eqn] += 2.0*ks*one_dx_dx * mesh->BCc.val[c2];
+                            bbc[eqn] += 2.0*ks*one_dx_dx * mesh->BCC_exp.val[c0];
                         }
                     }
                 }
                 
                 // Flux from sides: EAST
-                if ( (k<ncx-1) || (k==ncx-1 && mesh->BCc.type[c2]==-2) ) {
-                    if (mesh->BCc.type[c2+1] != 30 ) {
+                if ( (k<ncx-1) || (k==ncx-1 && mesh->BCC_exp.type[c0+1]==-2) ) {
+                    if (mesh->BCC_exp.type[c0+1] != 30 ) {
                         val +=  AE*one_dx_dx;
                     }
                     // Dirichlet contribution (free surface)
                     else {
-                        if (mesh->BCc.type[c2] == 1 ) {
+                        if (mesh->BCC_exp.type[c0] == 1 ) {
                             val      += 2.0*ks*one_dx_dx;
-                            bbc[eqn] += 2.0*ks*one_dx_dx * mesh->BCc.val[c2];
+                            bbc[eqn] += 2.0*ks*one_dx_dx * mesh->BCC_exp.val[c0];
                         }
                     }
                 }
                 
                 // Flux from sides: NORTH
                 if (l<ncz-1)  {
-                    if ( mesh->BCc.type[c2+ncx] != 30 ) {
+                    if ( mesh->BCC_exp.type[c0+(ncx+2)] != 30 ) {
                         val +=  AN*one_dz_dz;
                     }
                     // Dirichlet contribution (free surface)
                     else {
-                        if (mesh->BCc.type[c2] == 1 ) {
+                        if (mesh->BCC_exp.type[c0] == 1 ) {
                             val      += 2.0*ks*one_dz_dz;
-                            bbc[eqn] += 2.0*ks*one_dz_dz * mesh->BCc.val[c2];
+                            bbc[eqn] += 2.0*ks*one_dz_dz * mesh->BCC_exp.val[c0];
                         }
                     }
                 }
                 
                 // -------------- Dirichlet contibutions -------------- //
                 
-                if (l==0 && mesh->BCc.typS[k]==1) {
+                if (l==0 && mesh->BCC_exp.type[c0-(ncx+2)]==1) { // SOUTH
                     val      += 2.0*AS*one_dz_dz;
-                    bbc[eqn] += 2.0*AS*one_dz_dz * mesh->BCc.valS[k];
+                    bbc[eqn] += 2.0*AS*one_dz_dz * mesh->BCC_exp.val[c0-(ncx+2)];
                 }
                 
-                if (l==0 && mesh->BCc.typS[k]==2) {
-                    bbc[eqn] += -1.0/mesh->dx * mesh->BCc.valS[k];
+                if (l==0 && mesh->BCC_exp.type[c0-(ncx+2)]==0) { // SOUTH
+                    bbc[eqn] += -1.0/mesh->dx * mesh->BCC_exp.val[c0-(ncx+2)];
                 }
                 
-                if (k==0 && mesh->BCc.typW[l]==1) {
+                if (k==0 && mesh->BCC_exp.type[c0-1]==1) {  // WEST
                     val      += 2.0*AW*one_dx_dx;
-                    bbc[eqn] += 2.0*AW*one_dx_dx * mesh->BCc.valW[l];
+                    bbc[eqn] += 2.0*AW*one_dx_dx * mesh->BCC_exp.val[c0-1];
                 }
                 
-                if (k==ncx-1 && mesh->BCc.typE[l]==1) {
+                if (k==ncx-1 && mesh->BCC_exp.type[c0+1]==1) { // EAST
                     val      += 2.0*AE*one_dx_dx;
-                    bbc[eqn] += 2.0*AE*one_dx_dx * mesh->BCc.valE[l];
+                    bbc[eqn] += 2.0*AE*one_dx_dx * mesh->BCC_exp.val[c0+1];
                 }
                 
-                if (l==ncz-1 && mesh->BCc.typN[k]==1)  {
+                if (l==ncz-1 && mesh->BCC_exp.type[c0+(ncx+2)]==1)  { // NORTH
                     val      += 2.0*AN*one_dz_dz;
-                    bbc[eqn] += 2.0*AN*one_dz_dz * mesh->BCc.valN[k];
+                    bbc[eqn] += 2.0*AN*one_dz_dz * mesh->BCC_exp.val[c0+(ncx+2)];
                 }
                 
                 // Zero flux in radial coordinates
-                if (k==0 && model.polar==1 && mesh->BCc.type[c2+ncx] != 30 ) {
+                if (k==0 && model.polar==1 && mesh->BCC_exp.type[c0+(ncx+2)]!=30 ) {
                     
                     xn   = mesh->xg_coord[k]-model.dx/2.0;
                     zn   = mesh->zc_coord[l];
@@ -346,25 +334,25 @@ void ChemicalDirectSolve( grid *mesh, params model, markers *particles, mat_prop
                 
                 AddCoeffChem( J, A, eqn, eqn_t[c2],   &nnzc, val );
                 
-                // -------------- Dirichlet contibutions -------------- //
+                // // -------------- Dirichlet contibutions -------------- //
                 
                 // Contribution to E dof
                 if (k<ncx-1) {
-                    if (mesh->BCc.type[c2+1] != 30 ) {
+                    if (mesh->BCC_exp.type[c0+1] != 30 ) {
                         val   = -theta*AE*one_dx_dx;
                         AddCoeffChem( J, A, eqn, eqn_t[c2+1],   &nnzc,  val );
                     }
                 }
                 
-                // Periodic on the left side
-                if (mesh->BCc.type[c2]==-2 && k==0 ) {
+                // Periodic on the W side
+                if (mesh->BCC_exp.type[c0-1]==-2 && k==0 ) {
                     val = -theta*AW*one_dx_dx;
                     AddCoeffChem( J, A, eqn, eqn_t[c2+(ncx-1)],   &nnzc,  val );
                 }
                 
                 // Contribution to N dof
                 if (l<ncz-1)  {
-                    if (mesh->BCc.type[c2+ncx] != 30 ) {
+                    if (mesh->BCC_exp.type[c0+(ncx+2)] != 30 ) {
                         val   = -theta*AN*one_dz_dz;
                         
                         // Zero flux in radial coordinates
@@ -411,19 +399,24 @@ void ChemicalDirectSolve( grid *mesh, params model, markers *particles, mat_prop
     
     // Extract temperature T from solution vector x, compute temperature increments dT and integrate heat increments dUt
     //#pragma omp parallel for shared( mesh, scaling, x ) private( c2, eqn ) firstprivate( ncx, ncz, zero_celsius, model ) reduction (+:dUt)
-    for( c2=0; c2<ncx*ncz; c2++) {
-        eqn = eqn_t[c2];
-        if ( mesh->BCc.type[c2] != 30 ) {
-            //                mesh->dT[c2] = 1.0*(x[eqn] -  mesh->T[c2]);
-            mesh->X_n[c2]  = x[eqn];
-            if (mesh->X_n[c2] < 0.0) {
-                printf("Negative X --- Are you crazy! (ChemicalDirectSolve)\n");
-                exit(1);
+    MinMaxArrayTag( mesh->X_n, 1.0, (mesh->Nx-1)*(mesh->Nz-1), "X", mesh->BCc.type );
+    for( l=0; l<ncz; l++) {
+        for( k=0; k<ncx; k++) {
+            c0  = (k+1) + (l+1)*(ncx+2);
+            c2  = k   + l*ncx;
+            eqn = eqn_t[c2];
+            if ( mesh->BCC_exp.type[c0] != 30 ) {
+                //                mesh->dT[c2] = 1.0*(x[eqn] -  mesh->T[c2]);
+                mesh->X_n[c2]  = x[eqn];
+                if (mesh->X_n[c2] < 0.0) {
+                    printf("Negative X --- Are you crazy! (ChemicalDirectSolve)\n");
+                    exit(1);
+                }
             }
-        }
-        else {
-            // Outside the free surface
-            mesh->X_n[c2]  = 0.0;
+            else {
+                // Outside the free surface
+                mesh->X_n[c2]  = 0.0;
+            }
         }
     }
     MinMaxArrayTag( mesh->X_n, 1.0, (mesh->Nx-1)*(mesh->Nz-1), "X_n", mesh->BCc.type );
@@ -444,3 +437,7 @@ void ChemicalDirectSolve( grid *mesh, params model, markers *particles, mat_prop
     DoodzFree(bbc);
     DoodzFree(eqn_t);
 }
+
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/

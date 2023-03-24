@@ -130,8 +130,8 @@ void SetParticles(SetParticles_ff setParticles, MdoodzInput *instance, markers *
             printf("Cannot open file %s, check if the file exists in the current location !\n Exiting", instance->model.initial_markers_file);
             exit(1);
         }
-        fwrite( particles->x, sizeof(double), particles->Nb_part, file);
-        fwrite( particles->z, sizeof(double), particles->Nb_part, file);
+        fwrite( particles->x,  sizeof(double), particles->Nb_part, file);
+        fwrite( particles->z,  sizeof(double), particles->Nb_part, file);
         fwrite( particles->phase, sizeof(int), particles->Nb_part, file);
         fclose(file);
     }
@@ -353,146 +353,137 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
 
   for (int l = 0; l < NCZ; l++) {
     for (int k = 0; k < NCX; k++) {
-      const int c = k + l * (NCX);
+
+      const int c  = k + l * (NCX);
+      const int c1 = (k+1) + (l+1) * (NCX+2);
       POSITION  position = INTERNAL;
-      if (k == 0) {
-        if (l == NCZ - 1) {
-          position = NW;
-        } else if (l == 0) {
-          position = SW;
-        } 
-        else {
-          position = W;
-        }
-        // Tag free surface
-        if (l < NCZ-1) {
-          if (mesh->BCt.type[c + NCX] == 30) {
-            position = free_surface;
-          }
-        }
 
-      } 
-      if (k == NCX - 1) {
-        if (l == NCZ - 1) {
-          position = NE;
-        } else if (l == 0) {
-          position = SE;
-        } else {
-          position = E;
-        }
-        // Tag free surface
-        if (l < NCZ-1) {
-          if (mesh->BCt.type[c + NCX] == 30) {
-            position = free_surface;
-          }
-        }
-      } 
-      if (l == 0) {
-        position = S;
-      } 
-      if (l == NCZ - 1) {
-        position = N;
-      } else if ((mesh->BCt.type[c] == -1 || mesh->BCt.type[c] == 1 || mesh->BCt.type[c] == 0) && mesh->BCt.type[c + NCX] == 30) {
-        position = free_surface;
-      } 
+      mesh->BCT_exp.type[c1] = mesh->BCt.type[c];
+
       if (mesh->BCt.type[c] != 30) {
-        if (setBCs.SetBCT) {
-          SetBC bc          = setBCs.SetBCT(instance, position, mesh->T[c]);
-          mesh->BCt.type[c] = bc.type;
-          mesh->BCt.val[c]  = bc.value;
-        }
-        
-        //----------------------------------------------------------------------
-        //----------------------------------------------------------------------
 
-        POSITION  position = INTERNAL;
-        if (k == 0) {
-            position = W;
-        } 
-        if (k == NCX - 1) {
-            position = E;
-        } 
-
-        // TODO change size of BCt array and phase out SetBCTNew
-        if (setBCs.SetBCTNew) {
-          SetBC bc = setBCs.SetBCTNew(instance, position, mesh->T[c]);
-          if (k == 0) {
-            // printf("pos = %d --- BC = %d\n", position, bc.type);
-            mesh->BCt.typW[l] = bc.type;
-            mesh->BCt.valW[l] = bc.value;
-          } 
-          if (k == NCX - 1) {
-            mesh->BCt.typE[l] = bc.type;
-            mesh->BCt.valE[l] = bc.value;
-          } 
-        }
-
-        if (l == 0) {
-          position = S;
-        } 
-        if (l == NCZ - 1) {
-          position = N;
-        } 
-
-        // TODO change size of BCt array and phase out SetBCTNew
-        if (setBCs.SetBCTNew) {
-          SetBC bc = setBCs.SetBCTNew(instance, position, mesh->T[c]);
-          
-          if (l == 0  ) {
-            mesh->BCt.typS[k] = bc.type;
-            mesh->BCt.valS[k] = bc.value;
-          } 
-          if (l == NCZ - 1 ) {
-            mesh->BCt.typN[k] = bc.type;
-            mesh->BCt.valN[k] = bc.value;
+        // WEST
+        if (k == 0) {      
+          position = W;
+          if (setBCs.SetBCT) {
+            SetBC bc          = setBCs.SetBCT(instance, position, mesh->T[c]);
+            mesh->BCT_exp.type[c1-1] = bc.type;
+            mesh->BCT_exp.val[c1-1]  = bc.value;
           }
         }
-      }
 
-      // if (l < NCZ-1) {
-      //   if (mesh->BCt.type[c + NCX] == 30) {
-      //     mesh->BCt.type[c] = 1; 
-      //     mesh->BCt.val[c]   = zeroC / instance->scaling.T;
-      //   }
-      // }
+        // EAST
+        if (k == NCX-1) {      
+          position = E;
+          if (setBCs.SetBCT) {
+            SetBC bc          = setBCs.SetBCT(instance, position, mesh->T[c]);
+            mesh->BCT_exp.type[c1+1] = bc.type;
+            mesh->BCT_exp.val[c1+1]  = bc.value;
+          }
+        }
 
-      // mesh->BCt.typS[k] = 1;//bc.type;
-      // mesh->BCt.valS[k] = (1330. + zeroC) / instance->scaling.T;//bc.type;
-      // mesh->BCt.typN[k] = 1;//bc.type;
-      // mesh->BCt.valN[k] = zeroC / instance->scaling.T;//bc.type;
+        // SOUTH
+        if (l == 0) {      
+          position = S;
+          if (setBCs.SetBCT) {
+            SetBC bc          = setBCs.SetBCT(instance, position, mesh->T[c]);
+            mesh->BCT_exp.type[c1-(NCX+2)] = bc.type;
+            mesh->BCT_exp.val[c1-(NCX+2)]  = bc.value;
+          }
+        }
+
+        // NORTH
+        if (l == NCZ-1) {      
+          position = N;
+          if (setBCs.SetBCT) {
+            SetBC bc          = setBCs.SetBCT(instance, position, mesh->T[c]);
+            mesh->BCT_exp.type[c1+(NCX+2)] = bc.type;
+            mesh->BCT_exp.val[c1+(NCX+2)]  = bc.value;
+          }
+        }
+
+        // FREE SURFACE
+        if ((mesh->BCt.type[c] == -1 || mesh->BCt.type[c] == 1 || mesh->BCt.type[c] == 0) && mesh->BCt.type[c + NCX] == 30) {
+          position = free_surface;
+          if (setBCs.SetBCT) {
+            SetBC bc          = setBCs.SetBCT(instance, position, mesh->T[c]);
+            mesh->BCT_exp.type[c1] = bc.type;
+            mesh->BCT_exp.val[c1]  = bc.value;
+          }
+        }      
+       }
+    }
+  }
+
+  // CHEMICAL DIFFUSION
+
+  for (int l = 0; l < NCZ; l++) {
+    for (int k = 0; k < NCX; k++) {
+
+      const int c  = k + l * (NCX);
+      const int c1 = (k+1) + (l+1) * (NCX+2);
+      POSITION  position = INTERNAL;
+
+      mesh->BCC_exp.type[c1] = mesh->BCc.type[c];
+
+      if (mesh->BCc.type[c] != 30) {
+
+        // WEST
+        if (k == 0) {      
+          position = W;
+          if (setBCs.SetBCC) {
+            SetBC bc          = setBCs.SetBCC(instance, position, mesh->T[c]);
+            mesh->BCC_exp.type[c1-1] = bc.type;
+            mesh->BCC_exp.val[c1-1]  = bc.value;
+          }
+        }
+
+        // EAST
+        if (k == NCX-1) {      
+          position = E;
+          if (setBCs.SetBCC) {
+            SetBC bc          = setBCs.SetBCC(instance, position, mesh->T[c]);
+            mesh->BCC_exp.type[c1+1] = bc.type;
+            mesh->BCC_exp.val[c1+1]  = bc.value;
+          }
+        }
+
+        // SOUTH
+        if (l == 0) {      
+          position = S;
+          if (setBCs.SetBCC) {
+            SetBC bc          = setBCs.SetBCC(instance, position, mesh->T[c]);
+            mesh->BCC_exp.type[c1-(NCX+2)] = bc.type;
+            mesh->BCC_exp.val[c1-(NCX+2)]  = bc.value;
+          }
+        }
+
+        // NORTH
+        if (l == NCZ-1) {      
+          position = N;
+          if (setBCs.SetBCC) {
+            SetBC bc          = setBCs.SetBCC(instance, position, mesh->T[c]);
+            mesh->BCC_exp.type[c1+(NCX+2)] = bc.type;
+            mesh->BCC_exp.val[c1+(NCX+2)]  = bc.value;
+          }
+        }
+
+        // FREE SURFACE
+        if ((mesh->BCc.type[c] == -1 || mesh->BCc.type[c] == 1 || mesh->BCt.type[c] == 0) && mesh->BCt.type[c + NCX] == 30) {
+          position = free_surface;
+          if (setBCs.SetBCC) {
+            SetBC bc          = setBCs.SetBCC(instance, position, mesh->T[c]);
+            mesh->BCC_exp.type[c1] = bc.type;
+            mesh->BCC_exp.val[c1]  = bc.value;
+          }
+        }      
+       }
     }
   }
 
   //--------------- NEW
-  // for (int l = 0; l < NCZ+2; l++) {
-  //   for (int k = 0; k < NCX+2; k++) {
-
-  //     const int c = k + l * (NCX+2);
-  //     POSITION  position = INTERNAL;
-
-  //     if (k == 0)       position = W;
-  //     if (k == NCX + 1) position = E;
-  //     if (l == 0)       position = S;
-  //     if (l == NCZ + 1) position = N;  
-  //     if ((mesh->BCt.type[c] == -1 || mesh->BCt.type[c] == 1 || mesh->BCt.type[c] == 0) && mesh->BCt.type[c + NCX] == 30) {
-  //       position = free_surface;
-  //     } 
-  //     if (mesh->BCt.type[c] != 30) {
-  //       if (setBCs.SetBCT) {
-  //         Coordinates coordinates = {
-  //             .x = mesh->xvz_coord[k],
-  //             .z = mesh->zvx_coord[l]};
-  //         SetBC bc          = setBCs.SetBCT1(instance, position, coordinates, mesh->T[c]);
-  //         mesh->BCt.type[c] = bc.type;
-  //         mesh->BCt.val[c]  = bc.value;
-  //       }
-  //     }
-  //   }
-  // }
-  //--------------- NEW
 
   printf("SetBCs: Boundary conditions were set up\n");
-  // Print2DArrayChar( mesh->BCu.type, mesh->Nx, (mesh->Nz+1), 1.0 );
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
@@ -587,10 +578,10 @@ void ValidateSetup(MdoodzSetup *setup, MdoodzInput *instance) {
       warningsCount++;
     }
     if (instance->model.thermal) {
-      if (!setup->SetBCs->SetBCTNew) {
-        errors[errorsCount] = "SetBCs.SetBCTNew MUST be specified for Thermal model. Please set thermal = 0 or specify SetBCTTypeNew";
-        errorsCount++;
-      }
+      // if (!setup->SetBCs->SetBCTNew) {
+      //   errors[errorsCount] = "SetBCs.SetBCTNew MUST be specified for Thermal model. Please set thermal = 0 or specify SetBCTTypeNew";
+      //   errorsCount++;
+      // }
       if (!setup->SetBCs->SetBCT) {
         errors[errorsCount] = "SetBCs.SetBCT MUST be specified for Thermal model. Please set thermal = 0 or specify SetBCTType (will be deprecated)";
         errorsCount++;
