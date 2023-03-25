@@ -6,11 +6,11 @@ function main_simple_ani_vis()
     ani_fac_v  = 3.0 
     ηv         = 1.0 # normal viscoisty
     # Kinematics
-    εbg        = 1.0
     pure_shear = 1
-    εxxd       = pure_shear*εbg
-    εyyd       = -εxx
-    εxy        = (1.0-pure_shear)*εbg
+    ε̇xxd       = pure_shear*5.0
+    ε̇yyd       = -ε̇xxd
+    ε̇xyd       = (1.0-pure_shear)*5.0 + 5.0/3
+    ε̇bg        = sqrt(ε̇xxd^2+ε̇xyd^2)
     # Arrays
     θ          = LinRange( 0.0, π, 51 ) .- π/2
     τii_cart   = zero(θ)
@@ -21,14 +21,22 @@ function main_simple_ani_vis()
     for i in eachindex(θ)
         # Transformation matrix: towards principal plane
         Q           = [cos(θ[i]) sin(θ[i]); -sin(θ[i]) cos(θ[i])]
-        ε_tens      = [εxxd εxy; εxy εyyd]
-        ε_rot       = Q*ε_tens*Q'  
+        ε̇_tens      = [ε̇xxd ε̇xyd; ε̇xyd ε̇yyd]
+        ε̇_rot       = Q*ε̇_tens*Q'  
         # Viscous 
-        ε           = [ε_rot[1,1]; ε_rot[2,2]; ε_rot[1,2]]
+        ε           = [ε̇_rot[1,1]; ε̇_rot[2,2]; ε̇_rot[1,2]]
         D           = 2*ηv*[1 0 0; 0 1 0; 0 0 1.0/ani_fac_v;]
         τ           = D*ε
-        J2          = 0.5*(τ[1]^2 + τ[2]^2) + τ[3]^2*ani_fac_v^2
-        τii_rot1[i] = sqrt(J2)
+        Y2          = 0.5*(τ[1]^2 + τ[2]^2) + τ[3]^2*ani_fac_v^2
+        τii_rot1[i] = sqrt(Y2)
+        # Check strain rate components
+        τxx         = τ[1]
+        τxy         = τ[3]
+        ε̇xxd_chk    = τxx/2/ηv
+        ε̇xyd_chk    = τxy/2/ηv*ani_fac_v
+        @show(ε̇_rot[1,1])
+        @show (ε̇_rot[1,1], ε̇xxd_chk)
+        @show (ε̇_rot[1,2], ε̇xyd_chk)
         # Effective viscosity: compute stress invariant from strain rate invariant
         I2          = 0.5*(ε[1]^2 + ε[2]^2) + ε[3]^2
         τii_rot2[i] = 2*ηv*sqrt(I2)
