@@ -1,10 +1,10 @@
 /**** RESTART ****/
-istep = 00005
+istep = 01000
 irestart = 0
 
 /**** OUTPUT FILES ****/
 writer         = 1
-writer_step    = 10
+writer_step    = 20
 writer_markers = 0
 
 /**** SCALES ****/ Scaling parameters for
@@ -22,10 +22,10 @@ zmin    = -150.000000e3
 zmax    =   10.000000e3 
 
 /**** TIME ****/
-Nt          = 100
+Nt          = 1000
 dt          = 2.63e10
 constant_dt = 1
-Courant     = 0.25
+Courant     = 0.75
 RK          = 4
 
 /**** SWITCHES ****/
@@ -49,7 +49,7 @@ surf_Winc          = 10e3
 surf_Vinc          = 7e-9
 
 /**** SETUP DEPENDANT ****/
-bkg_strain_rate = 1e-18 / Background strain rate [s-1] 
+bkg_strain_rate = 1e-18     / Background strain rate [s-1] 
 user0           = 1330.0    / Mantle temperature    
 user1           = 60.0e3    / Crust thickness    
 
@@ -104,7 +104,7 @@ penalty     = 1e3
 
 /**** NON-LINEAR ITERATIONS ****/
 Newton         = 0
-nit_max        = 1 // for high resolution use from 10 to 20
+nit_max        = 0 // for high resolution use from 10 to 20
 line_search    = 0
 nonlin_abs_mom = 5.0e-8
 nonlin_abs_div = 5.0e-8
