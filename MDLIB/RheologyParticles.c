@@ -951,7 +951,11 @@ void UpdateParticleXpips( grid* mesh, scale scaling, params model, markers* part
     newkx   = DoodzCalloc(Nx*(Nz+1), sizeof(DoodzFP));
     newkz   = DoodzCalloc((Nx+1)*Nz, sizeof(DoodzFP));
     
-    Interp_P2N ( *particles, materials->k_chem,  mesh, knodes, mesh->xg_coord,  mesh->zg_coord, 0, 0, &model );
+    int interp=0, vert=0;
+
+    P2Mastah( &model, *particles, materials->k_chem, mesh, knodes, mesh->BCg.type,  0, 0, interp, vert, (&model)->interp_stencil);
+
+    // Interp_P2N ( *particles, materials->k_chem,  mesh, knodes, mesh->xg_coord,  mesh->zg_coord, 0, 0, &model );
     MinMaxArray(knodes, scaling.L*scaling.L/scaling.t, Nx*Nz, "knodes" );
     
     // fill newkx

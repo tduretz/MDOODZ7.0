@@ -1309,520 +1309,6 @@ double MarkerValue( DoodzFP* mat_prop, markers *particles, int k, int itp_type, 
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-// Particles to reference nodes
-void Interp_P2N ( markers particles, DoodzFP* mat_prop, grid *mesh, double* NodeField, double* X_vect, double* Z_vect, int flag, int itp_type, params* model ) {
-
-    // flag     == 0 --> interpolate from material properties structure
-    // flag     == 1 --> interpolate straight from the particle arrays
-    // itp_type == 0 --> arithmetic distance-weighted average
-    // itp_type == 1 --> harmonic distance-weighted average
-    // itp_type == 2 --> geometric distance-weighted average
-
-    int i, j, k, i_part,j_part, Nx, Nz, Nb_part, nthreads, thread_num, l, c1;
-    double dx, dz, dxm, dzm,  distance, mark_val;
-    double *Xc_virtual, *Zc_virtual, *WM, *BMWM;
-    double **Wm, **BmWm;
-
-    Nx=mesh->Nx;
-    Nz=mesh->Nz;
-    Nb_part=particles.Nb_part;
-    dx=mesh->dx;
-    dz=mesh->dz;
-
-    //    printf("THIS ROUTINE (P2N) IS DEPRECATED!\n");
-
-#pragma omp parallel
-    {
-        nthreads = omp_get_num_threads();
-    }
-
-    //    printf("running on %d threads dx = %2.2e dz = %2.2e\n", nthreads, dx, dz );
-
-    //--------------------------------------------------------------
-    // On fait une grille plus grande...
-    //--------------------------------------------------------------
-
-    Xc_virtual = DoodzMalloc ((Nx+1)*sizeof(double));    // allocate storage for the array
-    Zc_virtual = DoodzMalloc ((Nz+1)*sizeof(double));    // allocate storage for the array
-
-    //--------------------------------------------------------------
-    // compute Xc_virtual
-    //--------------------------------------------------------------
-
-    Xc_virtual[0]= X_vect[0]-0.5*dx;
-    for (j=0;j<Nx-1;j++) {
-        Xc_virtual[j+1]= 0.5*(X_vect[j+1]+X_vect[j]);
-    }
-    Xc_virtual[Nx]= X_vect[Nx-1]+0.5*dx;
-
-    //--------------------------------------------------------------
-    // compute Zc_virtual
-    //--------------------------------------------------------------
-
-    Zc_virtual[0]= Z_vect[0]-0.5*dz;
-    for (i=0;i<Nz-1;i++) {
-        Zc_virtual[i+1]= 0.5*(Z_vect[i+1]+Z_vect[i]);
-    }
-    Zc_virtual[Nz]= Z_vect[Nz-1]+0.5*dz;
-
-    //    for (j=0;j<Nz+1;j++) {
-    //        printf("Zc[%d]=%2.2e\n", j, Zc_virtual[j]);
-    //    }
-
-    //--------------------------------------------------------------
-    // Initialize Wm and BmWm
-    //--------------------------------------------------------------
-    Wm   = DoodzMalloc ( nthreads*sizeof(double*));    // allocate storage for the array
-    BmWm = DoodzMalloc ( nthreads*sizeof(double*));    // allocate storage for the array
-
-    for ( k=0; k<nthreads; k++ ) {
-        Wm[k]   = DoodzCalloc ( Nx*Nz, sizeof(double));
-        BmWm[k] = DoodzCalloc ( Nx*Nz, sizeof(double));
-    }
-
-    WM   = DoodzCalloc ( Nx*Nz, sizeof(double));
-    BMWM = DoodzCalloc ( Nx*Nz, sizeof(double));
-
-    //--------------------------------------------------------------
-    // Compute Wm and BmWm
-    //--------------------------------------------------------------
-
-#pragma omp parallel for shared ( particles, BmWm, Wm, flag, itp_type, mat_prop, Xc_virtual, Zc_virtual )    \
-private ( k, dxm, dzm, j_part, i_part, distance, mark_val, thread_num )    \
-firstprivate ( dx, dz, Nb_part, Nx, Nz, X_vect, Z_vect  ) //schedule( static )
-
-    for (k=0;k<Nb_part;k++) {
-
-        thread_num = omp_get_thread_num();
-
-        // Filter out particles that are inactive (out of the box)
-        if (particles.phase[k] != -1) {
-
-            // Get the column:
-            distance=(particles.x[k]-X_vect[0]);
-            j_part=ceil((distance/dx)+0.5) -1;
-
-            // Get the line:
-            distance=(particles.z[k]-Z_vect[0]);
-            i_part=ceil((distance/dz)+0.5) -1;
-
-//            dxm = fabs(0.5*(Xc_virtual[j_part]+Xc_virtual[j_part+1])-particles.x[k]);
-//            dzm = fabs(0.5*(Zc_virtual[i_part+1]+Zc_virtual[i_part])-particles.z[k]);
-            dxm = 2.0*fabs(X_vect[j_part] - particles.x[k]);
-            dzm = 2.0*fabs(Z_vect[i_part] - particles.z[k]);
-
-            if (flag==0) {
-                mark_val = mat_prop[particles.phase[k]];
-            }
-            if (flag==1) {
-                mark_val = mat_prop[k];
-            }
-            if (itp_type==1) {
-                mark_val =  1.0/mark_val;
-            }
-            if (itp_type==2) {
-                mark_val =  log(mark_val);
-            }
-            // Add contribution from the marker
-            Wm[thread_num][j_part+i_part*Nx]   +=          (1.0-dxm/dx)*(1.0-dzm/dz);
-            BmWm[thread_num][j_part+i_part*Nx] += mark_val*(1.0-dxm/dx)*(1.0-dzm/dz);
-        }
-    }
-
-    // Final reduction
-#pragma omp parallel for shared ( BmWm, Wm, BMWM, WM, Nx, Nz, nthreads ) private( i, k )  schedule( static )
-    for ( i=0; i<Nx*Nz; i++ ) {
-        for ( k=0; k<nthreads; k++ ) {
-            WM[i]   += Wm[k][i];
-            BMWM[i] += BmWm[k][i];
-        }
-    }
-
-    //--------------------------------------------------------------
-    // Get interpolated value on nodes
-    //--------------------------------------------------------------
-
-#pragma omp parallel for shared ( mesh, NodeField, BMWM, WM, Nx, Nz ) private( i )  firstprivate ( itp_type )  schedule( static )
-    for (i=0;i<Nx*Nz;i++) {
-
-        //        NodeField[i] = 0.0;
-
-        if (WM[i]<1e-30 || mesh->BCg.type[i]==30) {
-        }
-        else {
-            NodeField[i] = BMWM[i]/WM[i];
-            if (itp_type==1) {
-                NodeField[i] =  1.0 / NodeField[i];
-            }
-            if (itp_type==2) {
-                NodeField[i] =  exp(NodeField[i]);
-            }
-        }
-    }
-
-    // Periodic
-    double av;
-    if (model->periodic_x==1) {
-        for( l=0; l<Nz; l++) {
-            c1 = l*Nx + Nx-1;
-            av = 0.5*(NodeField[c1] + NodeField[l*Nx]);
-            NodeField[c1] = av; NodeField[l*Nx] = av;
-        }
-    }
-
-    // Clean up
-    DoodzFree(Xc_virtual);
-    DoodzFree(Zc_virtual);
-
-    DoodzFree(WM);
-    DoodzFree(BMWM);
-
-    for ( k=0; k<nthreads; k++ ) {
-        DoodzFree(Wm[k]);
-        DoodzFree(BmWm[k]);
-    }
-    DoodzFree(Wm);
-    DoodzFree(BmWm);
-}
-
-/*--------------------------------------------------------------------------------------------------------------------*/
-/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
-/*--------------------------------------------------------------------------------------------------------------------*/
-
-// Particles to reference nodes
-void Interp_P2C ( markers particles, DoodzFP* mat_prop, grid *mesh, double* NodeField, double* X_vect, double* Z_vect, int flag, int itp_type  ) {
-
-    // flag     == 0 --> interpolate from material properties structure
-    // flag     == 1 --> interpolate straight from the particle arrays
-    // itp_type == 0 --> arithmetic distance-weighted average
-    // itp_type == 1 --> harmonic distance-weighted average
-    // itp_type == 2 --> geometric distance-weighted average
-
-    int i, k, i_part,j_part, Nb_part, nthreads, thread_num, Nx, Nz;
-    double dx, dz, dxm, dzm,  distance, mark_val;
-    double *WM, *BMWM;
-    double **Wm, **BmWm;
-
-    Nx=mesh->Nx-1;
-    Nz=mesh->Nz-1;
-    Nb_part=particles.Nb_part;
-    dx=mesh->dx;
-    dz=mesh->dz;
-
-    //    printf("THIS ROUTINE (P2C) IS DEPRECATED!\n");
-
-#pragma omp parallel
-    {
-        nthreads = omp_get_num_threads();
-    }
-
-    //--------------------------------------------------------------
-    // Initialize Wm and BmWm
-    //--------------------------------------------------------------
-    Wm   = DoodzCalloc ( nthreads, sizeof(double*));    // allocate storage for the array
-    BmWm = DoodzCalloc ( nthreads, sizeof(double*));    // allocate storage for the array
-
-    for ( k=0; k<nthreads; k++ ) {
-        Wm[k]   = DoodzCalloc ( Nx*Nz, sizeof(double));
-        BmWm[k] = DoodzCalloc ( Nx*Nz, sizeof(double));
-    }
-
-    WM   = DoodzCalloc ( Nx*Nz, sizeof(double));
-    BMWM = DoodzCalloc ( Nx*Nz, sizeof(double));
-
-    //--------------------------------------------------------------
-    // Compute Wm and BmWm
-    //--------------------------------------------------------------
-
-#pragma omp parallel for shared ( particles, BmWm, Wm, X_vect, Z_vect )    \
-private ( k, dxm, dzm, j_part, i_part, distance, mark_val, thread_num )            \
-firstprivate ( mat_prop, dx, dz, Nb_part, Nx, Nz, mesh, flag, itp_type )  //schedule( dynamic )
-
-    for (k=0;k<Nb_part;k++) {
-
-        // Filter out particles that are inactive (out of the box)
-        if (particles.phase[k] != -1) {
-
-            thread_num = omp_get_thread_num();
-
-            // Get the column:
-            distance = ( particles.x[k] - mesh->xc_coord[0] );
-            j_part   = ceil( (distance/dx) + 0.5) - 1;
-
-            if (j_part<0)    {printf("AIE!!!\n"); j_part = 0;};
-            if (j_part>Nx-1) j_part = Nx-1;
-
-            // Get the line:
-            distance = ( particles.z[k] - mesh->zc_coord[0] );
-            i_part   = ceil( (distance/dz) + 0.5) - 1;
-
-            if (i_part<0)    i_part = 0;
-            if (i_part>Nz-1) i_part = Nz-1;
-
-//            dxm = fabs(0.5*(X_vect[j_part]  + X_vect[j_part+1]) - particles.x[k]);
-//            dzm = fabs(0.5*(Z_vect[i_part+1]+ Z_vect[i_part])   - particles.z[k]);
-            
-            dxm = 2.0*fabs( mesh->xc_coord[j_part] - particles.x[k]);
-            dzm = 2.0*fabs( mesh->zc_coord[i_part] - particles.z[k]);
-
-            // Get material properties (from particules or mat_prop array)
-            if (flag==0) {
-                mark_val = mat_prop[particles.phase[k]];
-            }
-            if (flag==1) {
-                mark_val = mat_prop[k];
-            }
-            if (itp_type==1) {
-                mark_val =  1.0/mark_val;
-            }
-            if (itp_type==2) {
-                mark_val =  log(mark_val);
-            }
-
-            Wm[thread_num][j_part+i_part*Nx]   +=          (1.0-dxm/dx)*(1.0-dzm/dz);
-            BmWm[thread_num][j_part+i_part*Nx] += mark_val*(1.0-dxm/dx)*(1.0-dzm/dz);
-            //            printf("%lf\n ", mark_val*400);
-        }
-    }
-
-    // Final reduction
-#pragma omp parallel for shared ( BmWm, Wm, BMWM, WM ) private( i, k ) firstprivate( Nx, Nz, nthreads ) schedule( static )
-    for ( i=0; i<Nx*Nz; i++ ) {
-        for ( k=0; k<nthreads; k++ ) {
-            WM[i]   += Wm[k][i];
-            BMWM[i] += BmWm[k][i];
-        }
-    }
-
-    //--------------------------------------------------------------
-    // Get interpolated value on nodes
-    //--------------------------------------------------------------
-
-#pragma omp parallel for shared ( NodeField, BMWM, WM, Nx, Nz ) private( i ) firstprivate ( itp_type ) schedule( static )
-    for (i=0;i<Nx*Nz;i++) {
-
-        //        NodeField[i] = 0.0;
-
-        if ( fabs(WM[i])<1e-30  || (mesh->BCp.type[i]==30 || mesh->BCp.type[i]==31) ) { //|| mesh->BCp.type[0][i]==0
-            //            NodeField[i] = 0.0;
-            //printf("WARNING: Need to seed more particles for interpolation (zero weights) P2C\n");
-        }
-        else {
-
-            NodeField[i] = BMWM[i]/WM[i];
-            //            printf("%lf %lf %lf\n",  NodeField[i]*400, BMWM[i], WM[i]);
-            if (itp_type==1) {
-                NodeField[i] =  1.0 / NodeField[i];
-            }
-            if (itp_type==2) {
-                NodeField[i] =  exp(NodeField[i]);
-            }
-        }
-    }
-
-    // Clean up
-    DoodzFree(WM);
-    DoodzFree(BMWM);
-
-    for ( k=0; k<nthreads; k++ ) {
-        DoodzFree(Wm[k]);
-        DoodzFree(BmWm[k]);
-    }
-    DoodzFree(Wm);
-    DoodzFree(BmWm);
-}
-
-/*--------------------------------------------------------------------------------------------------------------------*/
-/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
-/*--------------------------------------------------------------------------------------------------------------------*/
-
-// Particles to reference nodes
-void Interp_P2U ( markers particles, DoodzFP* PartField, grid *mesh, double* NodeField, double* X_vect, double* Z_vect, int Nx, int Nz, int flag, char* BCflag, params* model) {
-
-    int i, j, k, i_part,j_part, Nb_part, nthreads, thread_num;
-    double dx, dz, dxm, dzm,  distance, mark_val;
-    double *Xc_virtual, *Zc_virtual, *WM, *BMWM;
-    double **Wm, **BmWm;
-
-    Nb_part=particles.Nb_part;
-    dx=mesh->dx;
-    dz=mesh->dz;
-
-    //    printf("THIS ROUTINE (P2U) IS DEPRECATED!\n");
-
-#pragma omp parallel
-    {
-        nthreads = omp_get_num_threads();
-    }
-
-    //--------------------------------------------------------------
-    // On fait une grille plus grande...
-    //--------------------------------------------------------------
-
-    Xc_virtual = DoodzMalloc ((Nx+1)*sizeof(double));    // allocate storage for the array
-    Zc_virtual = DoodzMalloc ((Nz+1)*sizeof(double));    // allocate storage for the array
-
-    //--------------------------------------------------------------
-    // compute Xc_virtual
-    //--------------------------------------------------------------
-
-    Xc_virtual[0]= X_vect[0]-0.5*dx;
-    for (j=0;j<Nx-1;j++) {
-        Xc_virtual[j+1]= 0.5*(X_vect[j+1]+X_vect[j]);
-    }
-    Xc_virtual[Nx]= X_vect[Nx-1]+0.5*dx;
-
-    //--------------------------------------------------------------
-    // compute Zc_virtual
-    //--------------------------------------------------------------
-
-    Zc_virtual[0]= Z_vect[0]-0.5*dz;
-    for (i=0;i<Nz-1;i++) {
-        Zc_virtual[i+1]= 0.5*(Z_vect[i+1]+Z_vect[i]);
-    }
-    Zc_virtual[Nz]= Z_vect[Nz-1]+0.5*dz;
-
-    //--------------------------------------------------------------
-    // Initialize Wm and BmWm
-    //--------------------------------------------------------------
-    Wm   = DoodzMalloc ( nthreads*sizeof(double*));    // allocate storage for the array
-    BmWm = DoodzMalloc ( nthreads*sizeof(double*));    // allocate storage for the array
-
-    for ( k=0; k<nthreads; k++ ) {
-        Wm[k]   = DoodzCalloc ( Nx*Nz, sizeof(double));
-        BmWm[k] = DoodzCalloc ( Nx*Nz, sizeof(double));
-    }
-
-    WM   = DoodzCalloc ( Nx*Nz, sizeof(double));
-    BMWM = DoodzCalloc ( Nx*Nz, sizeof(double));
-
-    //--------------------------------------------------------------
-    // Compute Wm and BmWm
-    //--------------------------------------------------------------
-
-#pragma omp parallel for shared ( particles, BmWm, Wm, flag, PartField )    \
-private ( k, dxm, dzm, j_part, i_part, distance, mark_val, thread_num )    \
-firstprivate ( dx, dz, Nb_part, Nx, Nz ) //schedule( dynamic )
-    for (k=0;k<Nb_part;k++) {
-
-        thread_num = omp_get_thread_num();
-
-        // Filter out particles that are inactive (out of the box)
-        if (particles.phase[k] != -1) {
-
-            // Get the column:
-            //            distance=fabs(particles.x[k]-Xc_virtual[0]);
-            distance=(particles.x[k]-X_vect[0]);
-            j_part=ceil((distance/dx)+0.5) -1;
-
-            // Get the line:
-            //            distance=fabs(particles.z[k]-Zc_virtual[0]);
-            distance=(particles.z[k]-Z_vect[0]);
-            i_part=ceil((distance/dz)+0.5) -1;
-
-            dxm = 2.0*fabs(0.5*(Xc_virtual[j_part]   + Xc_virtual[j_part+1]) - particles.x[k]);
-            dzm = 2.0*fabs(0.5*(Zc_virtual[i_part+1] + Zc_virtual[i_part])   - particles.z[k]);
-
-            if (flag==1) {
-                mark_val = PartField[k];
-            }
-            if (flag==0) {
-                mark_val = PartField[particles.phase[k]];
-            }
-            Wm[thread_num][j_part+i_part*Nx]   +=          (1.0-dxm/dx)*(1.0-dzm/dz);
-            BmWm[thread_num][j_part+i_part*Nx] += mark_val*(1.0-dxm/dx)*(1.0-dzm/dz);
-        }
-    }
-
-    // Final reduction
-#pragma omp parallel for shared ( BmWm, Wm, BMWM, WM, Nx, Nz, nthreads ) private( i, k )  schedule( static )
-    for ( i=0; i<Nx*Nz; i++ ) {
-        for ( k=0; k<nthreads; k++ ) {
-            WM[i]   += Wm[k][i];
-            BMWM[i] += BmWm[k][i];
-        }
-    }
-
-    //--------------------------------------------------------------
-    // Get interpolated value on nodes
-    //--------------------------------------------------------------
-
-#pragma omp parallel for shared ( NodeField, BMWM, WM, Nx, Nz ) private( i ) schedule( static )
-    for (i=0;i<Nx*Nz;i++) {
-
-        //        NodeField[i] = 0.0;
-
-        if (WM[i]<1e-30 || BCflag[i]==30) {
-            //printf("WARNING: Need to seed more particles for interpolation (zero weights) : Wm = %2.2e BmWm = %2.2e i=%d\n", WM[k], BMWM[k], i);
-            //            NodeField[i] = 0;
-        }
-        else{
-            NodeField[i] = BMWM[i]/WM[i];
-        }
-    }
-
-    // Periodic - only for grid values
-    double av;
-    int l, c1;
-    if (model->periodic_x==1 ) {
-        for( l=0; l<Nz; l++) {
-            c1 = l*Nx + Nx-1;
-            av = 0.5*(NodeField[c1] + NodeField[l*Nx]);
-            NodeField[c1] = av; NodeField[l*Nx] = av;
-        }
-    }
-
-    // Clean up
-    DoodzFree(WM);
-    DoodzFree(BMWM);
-
-    for ( k=0; k<nthreads; k++ ) {
-        DoodzFree(Wm[k]);
-        DoodzFree(BmWm[k]);
-    }
-    DoodzFree(Wm);
-    DoodzFree(BmWm);
-
-    DoodzFree(Xc_virtual);
-    DoodzFree(Zc_virtual);
-}
-
-/*--------------------------------------------------------------------------------------------------------------------*/
-/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
-/*--------------------------------------------------------------------------------------------------------------------*/
-
-void Interp_Grid2P_centroids ( markers particles, DoodzFP* PartField, grid *mesh, double* CentroidArray, double* X_vect, double* Z_vect, int Nx, int Nz, char *tag, params* model ) {
-    
-    int Nxg = mesh->Nx;
-    int Nzg = mesh->Nz;
-    int Nxc = mesh->Nx-1;
-    int Nzc = mesh->Nz-1;
-    int i;
-    
-//    // Interp centroid 2 vertices before interp 2 P (not OK)
-//    double *VertexArray;
-//    VertexArray = DoodzCalloc(Nxg*Nzg, sizeof(DoodzFP));
-//    InterpCentroidsToVerticesDouble( CentroidArray, VertexArray, mesh, model );
-//    Interp_Grid2P ( particles, PartField, mesh, VertexArray, mesh->xg_coord, mesh->zg_coord, Nxg, Nzg, mesh->BCg.type );
-//    DoodzFree(VertexArray);
-
-//    // Standard interpolation (not really periodic)
-//    Interp_Grid2P ( particles, PartField, mesh, CentroidArray, mesh->xc_coord, mesh->zc_coord, Nxc, Nzc, tag );
-
-    // Expand centroid array before interp 2 P
-    double *ExpCentroidArray;
-    ExpCentroidArray = DoodzCalloc((Nxc+2)*(Nzc+2), sizeof(DoodzFP));
-    ExpandCentroidArray( CentroidArray, ExpCentroidArray, mesh, model );
-    Interp_Grid2P ( particles, PartField, mesh, ExpCentroidArray, mesh->xvz_coord, mesh->zvx_coord, Nxc+2, Nzc+2, mesh->BCp_exp.type);
-    DoodzFree(ExpCentroidArray);
-    
-    
-}
-
-/*--------------------------------------------------------------------------------------------------------------------*/
-/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
-/*--------------------------------------------------------------------------------------------------------------------*/
-
 void Interp_Grid2P ( markers particles, DoodzFP* PartField, grid *mesh, double* NodeField, double* X_vect, double* Z_vect, int Nx, int Nz, char *tag ) {
 
     int k;
@@ -1851,55 +1337,13 @@ private ( k, dxm, dzm, j_part, i_part, distance, iSW, iNW, iSE, iNE, sumW, Xp ) 
 
         // Filter out particles that are inactive (out of the box)
         if (particles.phase[k] != -1) {
-
-//            Xp       = particles.x[k];
-//            distance = (particles.x[k]-X_vect[0]);
-//            j_part   = ceil((distance/dx)) - 1;
-//
-//            // Get the line:
-//            distance = (particles.z[k]-Z_vect[0]);
-//            i_part   = ceil((distance/dz)) - 1;
-//
-//            if (j_part<0 && periodix == 0) j_part = 0;
-//            if (i_part<0 ) i_part = 0;
-//            if (j_part>Nx-1 && periodix == 0) j_part = Nx-1;
-//            if (i_part>Nz-1 ) i_part = Nz-1;
-//
-//            iSW = j_part+i_part*Nx;
-//            iSE = j_part+i_part*Nx+1;
-//            iNW = j_part+(i_part+1)*Nx;
-//            iNE = j_part+(i_part+1)*Nx+1;
-//
-//            if (j_part<0 && periodix == 1) {
-//                Xp = particles.x[k] + Lx;
-//                iSW = (j_part+Nx)+i_part*Nx;
-//                iSE = (j_part+Nx)+i_part*Nx+1;
-//                iNW = (j_part+Nx)+(i_part+1)*Nx;
-//                iNE = (j_part+Nx)+(i_part+1)*Nx+1;
-//                j_part = Nx-1;
-//            }
-//
-//            if (j_part>Nx-1 && periodix == 1) {
-//                Xp = particles.x[k] - Lx;
-//                iSW = (j_part-Nx)+i_part*Nx;
-//                iSE = (j_part-Nx)+i_part*Nx+1;
-//                iNW = (j_part-Nx)+(i_part+1)*Nx;
-//                iNE = (j_part-Nx)+(i_part+1)*Nx+1;
-//                j_part = 0;
-//            }
             
             distance = (particles.x[k]-X_vect[0]);
             j_part   = ceil((distance/dx)) - 1;
             
             if (j_part<0) {
                 j_part = 0;
-
-//                if (abs(Nx - (Nxg-1))>0) {
-//                    printf("Nx = %03d Nxc = %d --- px = %2.2e xg = %2.2e\n", Nx, Nxg-1, particles.x[k], X_vect[j_part]);
-//                     exit(89);
-//                }
             }
-
 
             if (j_part>Nx-2) {
                 j_part = Nx-2;
@@ -1907,8 +1351,7 @@ private ( k, dxm, dzm, j_part, i_part, distance, iSW, iNW, iSE, iNE, sumW, Xp ) 
                 if (abs(Nx - (Nxg-1))>0) {
                     printf("j_part = %d --- Nx = %03d Nxc = %d --- px = %2.2e xg = %2.2e\n", j_part, Nx, Nxg-1, particles.x[k], X_vect[j_part]);
                     printf("i_part = %d --- Nz = %03d Nzc = %d --- pi = %2.2e ig = %2.2e\n", i_part, Nz, Nz-1, particles.z[k], Z_vect[i_part]);
-
-                     exit(89);
+                    exit(89);
                 }
             }
 
@@ -1967,34 +1410,13 @@ private ( k, dxm, dzm, j_part, i_part, distance, iSW, iNW, iSE, iNE, sumW, Xp ) 
                 PartField[k] += (dxm/dx)  * (dzm/dz)    * NodeField[iSE];
                 sumW += (dxm/dx)  * (dzm/dz) ;
             }
-
-//            if(sumW>1e-13) PartField[k] /= sumW;
-//            if(sumW<0.5) {
-//                printf("New\n");
-//                if (tag[iSW]!=30 && tag[iSW]!=31) {
-//                    printf("SW %2.2e %2.2e\n", (1.0-dxm/dx)* (1.0-dzm/dz), NodeField[iSW]);
-//                    printf("%2.2e %2.2e\n", (1.0-dxm/dx), (1.0-dzm/dz));
-//                    inSW = 1;
-//                }
-//                if (tag[iSE]!=30 && tag[iSE]!=31) {
-//                    printf("SE %2.2e %2.2e\n", (dxm/dx)  * (1.0-dzm/dz)  , NodeField[iSE]);
-//                    inSE = 1;
-//                }
-//                if (tag[iNW]!=30 && tag[iNW]!=31) {
-//                    printf("NW %2.2e %2.2e\n", (1.0-dxm/dx)* (dzm/dz)    , NodeField[iNW]);
-//                    inNW = 1;
-//                }
-//                if (tag[iNE]!=30 && tag[iNE]!=31) {
-//                    printf("NE %2.2e %2.2e\n", (dxm/dx)  * (dzm/dz)    , NodeField[iNE]);
-//                    inNE = 1;
-//                }
-//                printf("%lf %d %d %d %d\n", sumW, inSW, inSE, inNE, inNE);
-//            }
         }
     }
 }
 
-
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
 
 void Interp_Grid2P_centroids2 ( markers particles, DoodzFP* PartField, grid *mesh, double* NodeField, double* X_vect, double* Z_vect, int Nx, int Nz, char *tag, params* model ) {
 
@@ -2021,7 +1443,6 @@ private ( k, dxm, dzm, j_part, i_part, distance, iSW, iNW, iSE, iNE, sumW, Xp, i
         // Filter out particles that are inactive (out of the box)
         if (particles.phase[k] != -1) {
 
-            
             // Check distance with regards to extended array
             distance = (particles.x[k]-X_vect[0]);
             j_part   = ceil((distance/dx)) - 1;
@@ -2981,10 +2402,12 @@ void CountPartCell ( markers* particles, grid *mesh, params model, surface topo,
     P2Mastah ( &model, *particles, NULL, mesh, NULL, mesh->BCg.type,  0, 0, prop, vert, model.interp_stencil);
     
     // Split the domain in N threads in x direction
-#pragma omp parallel
-    {
-        nthreads = omp_get_num_threads();
-    }
+// #pragma omp parallel
+//     {
+//         nthreads = omp_get_num_threads();
+//     }
+
+    nthreads = 1;
 
     int nx[nthreads], ncx[nthreads], nx_e[nthreads], ncx_e[nthreads], nz_e = Nz+2, ncz_e = Ncz+2;
     int num_new[nthreads], id_new[nthreads], npart[nthreads], npreuse[nthreads], nnewp[nthreads], npartr[nthreads], nb_new[nthreads];
@@ -3067,10 +2490,10 @@ void CountPartCell ( markers* particles, grid *mesh, params model, surface topo,
     }
 
     // start parallel section
-#pragma omp parallel private (ith, k, ip, distance, weight, dxm, dzm, ic, jc, kc, kd, l, neighs, oo, nb, offc, start, flag1, nxl) shared (ncx_e, ncz_e, nx_e, nz_e, xg, xg_e, xc, xc_e, dx, dz, nx, ncx, Nb_part, npart, particles, nthreads, pidx, phv, phc, npv, npc, npvolv, npvolc, npreuse, mesh, ind_list, nnewp, newi, newx, newz, pidxr, npartr, nb_new, id_new, num_new, topo, topo_ini) firstprivate(Nx, Nz, Ncx, Ncz, model, sed_phase )
-            //for (ith=0; ith<nthreads; ith++)
+//#pragma omp parallel private (ith, k, ip, distance, weight, dxm, dzm, ic, jc, kc, kd, l, neighs, oo, nb, offc, start, flag1, nxl) shared (ncx_e, ncz_e, nx_e, nz_e, xg, xg_e, xc, xc_e, dx, dz, nx, ncx, Nb_part, npart, particles, nthreads, pidx, phv, phc, npv, npc, npvolv, npvolc, npreuse, mesh, ind_list, nnewp, newi, newx, newz, pidxr, npartr, nb_new, id_new, num_new, topo, topo_ini) firstprivate(Nx, Nz, Ncx, Ncz, model, sed_phase )
+             for (ith=0; ith<nthreads; ith++)
     {
-        ith = omp_get_thread_num();
+        // ith = omp_get_thread_num();
         
         // Compute anchor for global cell index in x direction
         int igc, ii, ancrage_cell = 0;
@@ -3717,11 +3140,11 @@ void CountPartCell ( markers* particles, grid *mesh, params model, surface topo,
         
         
         // Generate new particles in global array
-       #pragma omp parallel private ( ip, k, ith ) shared( particles, nb_new, newi, newx, newz, id_new, ipreuse, npreuse, nnewp, mesh ) firstprivate( model )
-//                for (ith=0; ith<nthreads; ith++)
+    // #pragma omp parallel private ( ip, k, ith ) shared( particles, nb_new, newi, newx, newz, id_new, ipreuse, npreuse, nnewp, mesh ) firstprivate( model )
+               for (ith=0; ith<nthreads; ith++)
         {
 
-            ith         = omp_get_thread_num();
+            // ith         = omp_get_thread_num();
             nb_new[ith] = 0;
 
             // Loop on all new particles

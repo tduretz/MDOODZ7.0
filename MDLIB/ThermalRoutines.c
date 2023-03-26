@@ -138,7 +138,7 @@ void EnergyDirectSolve( grid *mesh, params model, double *rhoE, double *drhoE, d
         //----------------------------------------------------//
 
         // Build right-hand side
-#pragma omp parallel for shared ( b, Hs, Ha, eqn_t, mesh ) private ( l, k, c0, c1, c2, c3, eqn, rhoCp, dexx_el, dexx_th, dexx_tot, dezz_el, dezz_th, dezz_tot, deyy_el, deyy_th, deyy_tot, dexz_el, dexz_th, dexz_tot, Wth, Wel, Wtot, syyd, eyyd, eyyd_el, eyyd_diss  ) firstprivate ( nx, ncx, nxvz, shear_heating, adiab_heating, model, transient, dt, Hr, diss_limit, scaling ) reduction( +:dUe, dW )
+//#pragma omp parallel for shared ( b, Hs, Ha, eqn_t, mesh ) private ( l, k, c0, c1, c2, c3, eqn, rhoCp, dexx_el, dexx_th, dexx_tot, dezz_el, dezz_th, dezz_tot, deyy_el, deyy_th, deyy_tot, dexz_el, dexz_th, dexz_tot, Wth, Wel, Wtot, syyd, eyyd, eyyd_el, eyyd_diss  ) firstprivate ( nx, ncx, nxvz, shear_heating, adiab_heating, model, transient, dt, Hr, diss_limit, scaling ) reduction( +:dUe, dW )
         for( c2=0; c2<ncz*ncx; c2++) {
                 k   = mesh->kp[c2];
                 l   = mesh->lp[c2];
@@ -409,7 +409,7 @@ void EnergyDirectSolve( grid *mesh, params model, double *rhoE, double *drhoE, d
         MinMaxArrayTag( mesh->T, scaling.T, (mesh->Nx-1)*(mesh->Nz-1), "T", mesh->BCt.type );
         dUt          = 0.0;
         zero_celsius = zeroC;
-#pragma omp parallel for shared( mesh, scaling, x ) private( c2, eqn ) firstprivate( ncx, ncz, zero_celsius, model ) reduction (+:dUt)
+#pragma omp parallel for shared( mesh ) private( c2, c0, k, l, eqn ) firstprivate( ncx, ncz, zero_celsius, model, scaling, x, eqn_t ) reduction (+:dUt)
         // LOOP ON THE GRID TO CALCULATE FD COEFFICIENTS
         for( l=0; l<ncz; l++) {
             for( k=0; k<ncx; k++) {
@@ -531,7 +531,7 @@ void SetThermalPert( grid* mesh, params model, scale scaling ) {
 
     printf("Setting thermal perturbation of %3.1lf C...\n", pert*scaling.T);
 
-    #pragma omp parallel for shared( mesh ) private( x, z, l, k, c2 ) firstprivate( rad, pert, x0, z0, ncx)
+    //#pragma omp parallel for shared( mesh ) private( x, z, l, k, c2 ) firstprivate( rad, pert, x0, z0, ncx)
     for( l=0; l<ncz; l++) {
         for( k=0; k<ncx; k++) {
             c2 = k + l*ncx;
