@@ -4,7 +4,7 @@ import matplotlib.pyplot as mpl
 
 My     = 1e6*3600*24*365.25
 
-file   = h5py.File('/Users/tduretz/REPO/MDOODZ7.0/MDLIB/Output02000.gzip.h5', 'r')
+file   = h5py.File('/Users/tduretz/REPO/MDOODZ7.0/MDLIB/Output01000.gzip.h5', 'r')
 phases = file['/VizGrid/compo_hr']
 xv_ph  = file['/VizGrid/xviz_hr']
 zv_ph  = file['/VizGrid/zviz_hr']
@@ -18,10 +18,9 @@ Ncx_ph = xc_ph.shape[0]
 Ncz_ph = zc_ph.shape[0]
 phases = np.reshape(phases,(Ncz_ph, Ncx_ph))
 
-mpl.clf()
+fig, ax = mpl.subplots()
 mpl.pcolor(xc_ph, zc_ph, phases)
-mpl.set_cmap('jet')
-mpl.colorbar()
 mpl.tight_layout()
-mpl.title('Phases  at time = ' + str(t/My) + ' My')
+mpl.title('Phases at time = ' + str(t/My) + ' My')
+ax.set_aspect('equal', adjustable='box')
 mpl.show()
