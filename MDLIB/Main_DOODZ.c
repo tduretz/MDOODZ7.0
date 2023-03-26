@@ -83,6 +83,14 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
     if (input.model.anisotropy  == 1) input.model.Newton = 1; // activate Newton context is anisotropy is activated
     int IsNewtonStep = input.model.Newton == 1;
 
+    int num_threads = 1;
+    #pragma omp parallel
+    {
+        num_threads = omp_get_num_threads();
+    }
+
+    printf("Num threads = %03d\n", omp_get_num_threads());
+
     printf("*************************************\n");
     printf("******* Initialize particles ********\n");
     printf("*************************************\n");
@@ -656,11 +664,11 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
                 printf("**********************************************\n");
                 if ( IsNewtonStep == 1 ) {
-                    printf("*** Newton it. %02d of %02d (step = %05d) ***\n", Nmodel.nit, Nmodel.nit_max, input.model.step);
+                    printf("*** Newton it. %02d of %02d (step = %05d) on %03d threads ***\n", Nmodel.nit, Nmodel.nit_max, input.model.step, num_threads);
                     Nmodel.LogIsNewtonStep[Nmodel.nit] = 1;
                 }
                 else {
-                    printf("*** Picard it. %02d of %02d (step = %05d) ***\n", Nmodel.nit, Nmodel.nit_max, input.model.step);
+                    printf("*** Picard it. %02d of %02d (step = %05d) on %03d threads ***\n", Nmodel.nit, Nmodel.nit_max, input.model.step, num_threads);
                     Nmodel.LogIsNewtonStep[Nmodel.nit] = 0;
                 }
                 printf("**********************************************\n");
@@ -890,7 +898,6 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         //--------------------------------------------------------------------------------------------------------------------------------//
 
         if (input.model.chemical_diffusion == 1)  {
-            printf("HALO 1\n");
             if (input.model.unsplit_diff_reac == 0 ) ArrayEqualArray( mesh.X_n, mesh.X0_n,  (mesh.Nx-1)*(mesh.Nz-1) );
             printf("*************************************\n");
             printf("********** Chemical solver **********\n");
