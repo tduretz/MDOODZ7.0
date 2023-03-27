@@ -145,6 +145,7 @@
 - `bkg_div_rate`:   Background divergence rate. Default: 0
 - `bkg_pressure`:   Background pressure. Default: 0
 - `bkg_temperature`: Background temperature. Default: 0
+- `fix_temperature`: If 1: calls user defined function that sets temperature at each step  
 
 ## Surface processes
 - `surf_diff`: Surface diffusivity [m^2/s]. Default: 0
