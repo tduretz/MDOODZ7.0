@@ -10,9 +10,9 @@ My     = 1e6*3600*24*365.25
 path ="/REPO/MDOODZ7.0/MDLIB/"
 
 # File numbers
-file_start = 0
+file_start = 1000
 file_step  = 10
-file_end   = 00
+file_end   = 1000
 
 for step in range(file_start, file_end+1, file_step):
     filename    = home + path + 'Output%05d' % step + '.gzip.h5'

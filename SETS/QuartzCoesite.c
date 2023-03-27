@@ -79,6 +79,17 @@ int SetPhase(MdoodzInput *input, Coordinates coordinates) {
   }
 }
 
+double FixTemperature(MdoodzInput *input, double p) {
+  int thermal_evolution = (int) input->model.user0;
+  if (thermal_evolution) {
+    double a = input->model.user3, b = input->model.user4;
+ // Tfix = (log( mesh->p_in[0]*scaling.S/1e9 /b) / a + zeroC)/scaling.T;
+    return (log(p * input->scaling.S / 1e9 / b) / a + zeroC) / input->scaling.T;
+  } else {
+    return input->model.bkg_temperature;
+  }
+}
+
 double SetTemperature(MdoodzInput *input, Coordinates coordinates) {
   int thermal_evolution = (int) input->model.user0;
   if (thermal_evolution) {
@@ -100,6 +111,42 @@ double SetPressure(MdoodzInput *input, Coordinates coordinates, int phase) {
   return input->model.bkg_pressure;
 }
 
+SetBC SetBCVx(MdoodzInput *instance, POSITION position, Coordinates coordinates) {
+  SetBC bc;
+  const double x = coordinates.x;
+  
+  // Assign BC values
+  if (position == N || position == S || position == NW || position == SW || position == NE || position == SE) {
+    bc.value = 0;
+    bc.type  = 13;
+  } else if (position == W || position == E) {
+    bc.value =  -x * (instance->model.bkg_strain_rate - instance->model.bkg_div_rate/3.0);
+    bc.type  = 0;
+  } else {
+    bc.value = 0.0;
+    bc.type  = -1;
+  }
+  return bc;
+}
+
+SetBC SetBCVz(MdoodzInput *instance, POSITION position, Coordinates coordinates) {
+  SetBC bc;
+  const double z = coordinates.z;
+
+  // Set boundary nodes types and values
+  if (position == W || position == SW || position == NW || position == E || position == SE || position == NE ) {
+    bc.value = 0.0;
+    bc.type  = 13;
+  } else if (position == S || position == N) {
+    bc.value = z * (instance->model.bkg_strain_rate + instance->model.bkg_div_rate/3.0);
+    bc.type  = 0;
+  } else {
+    bc.value = 0;
+    bc.type  = -1;
+  }
+  return bc;
+}
+
 int main() {
   MdoodzSetup setup = {
           .SetParticles = &(SetParticles_ff){
@@ -109,8 +156,9 @@ int main() {
                   .SetTemperature = SetTemperature,
           },
           .SetBCs = &(SetBCs_ff){
-                  .SetBCVx = SetPureOrSimpleShearBCVx,
-                  .SetBCVz = SetPureOrSimpleShearBCVz,
+                  .SetBCVx    = SetBCVx, // manuel
+                  .SetBCVz    = SetBCVz,
+                  .FixTemperature = FixTemperature,
           },
           .MutateInput = MutateInput,
   };

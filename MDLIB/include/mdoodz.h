@@ -57,7 +57,7 @@ typedef struct {
   int    constant_dt, RK, line_search, initial_cooling, subgrid_diffusion, adiab_heating,
           shear_heating, advection, finite_strain, conserv_interp;
   int surface_processes, loc_iter, therm_perturb, surf_ised1,
-          surf_ised2, MantleID, topografix, reseed_markers, smooth_softening;
+          surf_ised2, MantleID, topografix, reseed_markers, smooth_softening, force_temperature;
   double bkg_strain_rate, bkg_div_rate, user0, user1, user2, user3, user4, user5, user6, user7,
           user8;
   char  *import_file;
@@ -245,6 +245,7 @@ typedef SetBC (*SetBCVx_f)(MdoodzInput *input, POSITION position, Coordinates co
 typedef SetBC (*SetBCVz_f)(MdoodzInput *input, POSITION position, Coordinates coordinates);
 typedef SetBC (*SetBCT_f)(MdoodzInput *input, POSITION position, double gridTemperature);
 typedef SetBC (*SetBCC_f)(MdoodzInput *input, POSITION position, double gridXvalue);
+typedef double (*FixTemperature_f)(MdoodzInput *input, double pressure);
 typedef char (*SetBCPType_f)(MdoodzInput *input, POSITION position);
 
 typedef struct {
@@ -253,6 +254,7 @@ typedef struct {
   SetBCT_f     SetBCT;
   SetBCC_f     SetBCC;
   SetBCPType_f SetBCPType;
+  FixTemperature_f  FixTemperature;
 } SetBCs_ff;
 
 typedef struct {
