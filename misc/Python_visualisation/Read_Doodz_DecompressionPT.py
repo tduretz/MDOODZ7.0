@@ -3,7 +3,7 @@ import h5py as h5py
 import numpy as np
 import matplotlib.pyplot as mpl
 
-file = h5py.File('/Users/tduretz/REPO_GIT/MDOODZ7.0/SOURCE/Output00200.gzip.h5', 'r')
+file = h5py.File('/Users/tduretz/REPO/MDOODZ7.0/MDLIB/Output00200.gzip.h5', 'r')
 P_mean    = file['TimeSeries/P_mean_time']
 T_mean    = file['TimeSeries/T_mean_time']
 time      = file['TimeSeries/Time_time']
