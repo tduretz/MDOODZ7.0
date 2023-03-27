@@ -1151,6 +1151,7 @@ Input ReadInputFile( char *fileName ) {
     model.bkg_div_rate       = ReadDou2( fin, "bkg_div_rate",      0.0)/scaling.E; // Background divergence rate
     model.bkg_pressure       = ReadDou2( fin, "bkg_pressure",      0.0)/scaling.S; // Background pressure
     model.bkg_temperature    = ReadDou2( fin, "bkg_temperature",   0.0)/scaling.T; // Background temperature
+    model.fix_temperature    = ReadInt2( fin, "fix_temperature",              0 ); // If 1: calls user defined function that sets temperature at each step  
     // Surface processes
     model.surf_diff          = ReadDou2( fin, "surf_diff",       0.0 ) / (pow(scaling.L,2.0)/scaling.t);
     model.surf_ised1         = ReadInt2( fin, "surf_ised1",      0.0 );

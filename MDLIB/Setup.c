@@ -342,7 +342,7 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
 
   /* -------------------------------------------------------------------------------------------------------*/
   /* Set the BCs for T on all grid levels */
-  /* Type  1: Dirichlet point that do not match the physical boundary (Vx:
+  /* Type  1: Dirichlet point that does not match the physical boundary (Vx:
    * bottom/top, Vz: left/right)      */
   /* Type  0: Neumann point that matches the physical boundary (Vx: bottom/top,
    * Vz: left/right)             */
@@ -350,6 +350,15 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
   /* Type -1: not a BC point (tag for inner points) */
   /* Type 30: not calculated (part of the "air") */
   /* -------------------------------------------------------------------------------------------------------*/
+
+  if (instance->model.fix_temperature==1){
+    for (int l = 0; l < NCZ; l++) {
+      for (int k = 0; k < NCX; k++) {
+        const int c  = k + l * (NCX);
+        mesh->T[c] = setBCs.FixTemperature( instance, mesh->p_in[0]);
+      }
+    }
+  }
 
   for (int l = 0; l < NCZ; l++) {
     for (int k = 0; k < NCX; k++) {
@@ -416,7 +425,6 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
   }
 
   // CHEMICAL DIFFUSION
-
   for (int l = 0; l < NCZ; l++) {
     for (int k = 0; k < NCX; k++) {
 
