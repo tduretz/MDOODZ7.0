@@ -162,5 +162,5 @@ int main() {
           },
           .MutateInput = MutateInput,
   };
-  RunMDOODZ("QuartzCoesite.txt", &setup);
+  RunMDOODZ("QuartzCoesite_paper.txt", &setup);
 }
