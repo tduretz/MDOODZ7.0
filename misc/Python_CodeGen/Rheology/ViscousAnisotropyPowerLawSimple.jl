@@ -3,7 +3,7 @@ import Statistics:mean
 
 function main_simple_ani_vis()
     # Material parameters
-    ani_fac_v  = 3.0 
+    ani_fac_v  = 4.0 
     # Kinematics
     pure_shear = 1
     ε̇xxd       = pure_shear*5.0
@@ -34,6 +34,7 @@ function main_simple_ani_vis()
     # Arrays
     θ          = LinRange( 0.0, π, 51 ) .-0* π/2
     τii_cart   = zero(θ)
+    ε̇ii_rot    = zero(θ)
     τii_rot1   = zero(θ)
     τii_rot2   = zero(θ)
     τii_rot3   = zero(θ)
@@ -52,6 +53,7 @@ function main_simple_ani_vis()
         τ           = D*ε̇
         Y2          = 0.5*(τ[1]^2 + τ[2]^2) + τ[3]^2*ani_fac_v^2
         τii_rot1[i] = sqrt(Y2)
+        ε̇ii_rot[i]  = sqrt(I2)
         # Check strain rate components
         τxx         = τ[1]
         τxy         = τ[3]
@@ -82,9 +84,7 @@ function main_simple_ani_vis()
     p1 = plot!(θ*180/π, τii_rot1, label="principal")
     p1 = plot!(θ*180/π, τii_rot2, label="τii_rot2", linewidth=0, marker =:cross)
     p1 = plot!(θ*180/π, τii_rot3, label="τii_rot3", linewidth=0, marker =:cross)
-    
-    
-
+    p1 = plot!(θ*180/π, ε̇ii_rot, label="ε̇ii_rot", linewidth=0, marker =:circle)
 end
 
 
