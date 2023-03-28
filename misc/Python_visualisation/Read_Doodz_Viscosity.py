@@ -10,9 +10,9 @@ My     = 1e6*3600*24*365.25
 path ="/REPO/MDOODZ7.0/MDLIB/"
 
 # File numbers
-file_start = 1000
+file_start = 1700
 file_step  = 10
-file_end   = 1000
+file_end   = 1700
 
 for step in range(file_start, file_end+1, file_step):
     filename    = home + path + 'Output%05d' % step + '.gzip.h5'
@@ -33,13 +33,15 @@ for step in range(file_start, file_end+1, file_step):
     P      = file['/Centers/P']
     P      = np.reshape( P, (Ncz, Ncx))
 
+    fig, ax = mpl.subplots()
     mpl.clf()
     mpl.pcolor(xc, zc, np.log10(eta_n), vmin=19, vmax=25)
     # mpl.pcolor(xc, zc, P)
     mpl.set_cmap('jet')
     mpl.colorbar()
-    mpl.tight_layout()
+    # mpl.tight_layout()
     mpl.title('eta at t = ' + str(t/My) + ' My')
+    ax.set_aspect('equal', adjustable='box')
     mpl.show()
 
     file.close()  
