@@ -192,10 +192,10 @@ void RheologicalOperators( grid* mesh, params* model, mat_prop* materials, scale
         double drhodp=0.;
         DerivativesOnTheFly_n( &detadexx, &detadezz, &detadgxz, &detadp, &ddivpdexx, &ddivpdezz, &ddivpdgxz, &ddivpdp, &danidexx, &danidezz, &danidgxz, &danidp, &drhodp, k, Exx, Ezz, Exz, mesh->p_in[k], ani_fstrain, ani_e, d1, d2, angle, lx2, lxlz, mesh, materials, model, scaling );
         mesh->drhodp_n[k] = drhodp;
-        if (mesh->drhodp_n[k] / (mesh->rho_n[k]) < mesh->bet_n[k]/10) {
-                printf("%2.2e %2.2e\n", mesh->drhodp_n[k] ,  mesh->bet_n[k]);
-                exit(1);
-        }
+        // if (mesh->drhodp_n[k] / (mesh->rho_n[k]) < mesh->bet_n[k]/10) {
+        //         printf("%2.2e %2.2e\n", mesh->drhodp_n[k] ,  mesh->bet_n[k]);
+        //         exit(1);
+        // }
         //----------------------------------------------------------//
         mesh->D11_n[k] = 2.0*(1.0 - aniS_vep*d1)*eta_vep + 2.0*detadexx*Dxx - K*dt*ddivpdexx + 2.0*danidexx*Axx;
         mesh->D12_n[k] =         2.0*aniS_vep*d1*eta_vep + 2.0*detadezz*Dxx - K*dt*ddivpdezz + 2.0*danidezz*Axx;
@@ -408,30 +408,6 @@ void UpdateNonLinearity( grid* mesh, markers* particles, markers* topo_chain, su
     // Stress update
     if (model->anisotropy==0) NonNewtonianViscosityGrid(      mesh, &materials, model, *Nmodel, &scaling, final_update);
     if (model->anisotropy==1) NonNewtonianViscosityGridAniso( mesh, &materials, model, *Nmodel, &scaling, final_update);
-
-
-    // MinMaxArrayTag( mesh->T,    scaling.T, (mesh->Nx-1)*(mesh->Nz-1), "T         ", mesh->BCt.type );
-    // MinMaxArrayTag( mesh->p0_n, scaling.S, (mesh->Nx-1)*(mesh->Nz-1), "P old     ", mesh->BCp.type );
-    // MinMaxArrayTag( mesh->p_in, scaling.S, (mesh->Nx-1)*(mesh->Nz-1), "P         ", mesh->BCp.type );
-    // MinMaxArrayTag( mesh->div_u,scaling.E, (mesh->Nx-1)*(mesh->Nz-1), "div       ", mesh->BCp.type );
-    // MinMaxArrayTag( mesh->exxd, scaling.E, (mesh->Nx-1)*(mesh->Nz-1), "exxd      ", mesh->BCp.type );
-    // MinMaxArrayTag( mesh->ezzd, scaling.E, (mesh->Nx-1)*(mesh->Nz-1), "ezzd      ", mesh->BCp.type );
-    // MinMaxArrayTag( mesh->exz,  scaling.E, (mesh->Nx-0)*(mesh->Nz-0), "exz       ", mesh->BCg.type );
-    // MinMaxArrayTag( mesh->sxxd,       scaling.S,   (mesh->Nx-1)*(mesh->Nz-1), "sxxd      ", mesh->BCp.type );
-    // MinMaxArrayTag( mesh->szzd,       scaling.S,   (mesh->Nx-1)*(mesh->Nz-1), "szzd      ", mesh->BCp.type );
-    // MinMaxArrayTag( mesh->sxz,        scaling.S,   (mesh->Nx-0)*(mesh->Nz-0), "sxz       ", mesh->BCg.type );
-    // MinMaxArrayTag( mesh->eta_s,      scaling.eta, (mesh->Nx-0)*(mesh->Nz-0), "eta_s     ", mesh->BCg.type );
-    // MinMaxArrayTag( mesh->eta_n,      scaling.eta, (mesh->Nx-1)*(mesh->Nz-1), "eta_n     ", mesh->BCp.type );
-    // MinMaxArrayTag( mesh->eta_phys_s, scaling.eta, (mesh->Nx-0)*(mesh->Nz-0), "eta_phys_s", mesh->BCg.type );
-    // MinMaxArrayTag( mesh->eta_phys_n, scaling.eta, (mesh->Nx-1)*(mesh->Nz-1), "eta_phys_n", mesh->BCp.type );
-    // MinMaxArrayTag( mesh->rho_s,      scaling.rho, (mesh->Nx-0)*(mesh->Nz-0), "rho_s     ", mesh->BCg.type );
-    // MinMaxArrayTag( mesh->rho_n,      scaling.rho, (mesh->Nx-1)*(mesh->Nz-1), "rho_n     ", mesh->BCp.type );
-    // MinMaxArrayTag( mesh->rho0_n,     scaling.rho, (mesh->Nx-1)*(mesh->Nz-1), "rho0_n    ", mesh->BCp.type );
-    // MinMaxArrayTag( mesh->d_n,        scaling.L,   (mesh->Nx-1)*(mesh->Nz-1), "d         ", mesh->BCp.type );
-    // if (model->anisotropy==1) MinMaxArrayTag( mesh->aniso_factor_n,  1.0,   (mesh->Nx-1)*(mesh->Nz-1), "ani_fac_n ",   mesh->BCp.type );
-    // if (model->anisotropy==1) MinMaxArrayTag( mesh->aniso_factor_s,  1.0,   (mesh->Nx-0)*(mesh->Nz-0), "ani_fac_s ",   mesh->BCg.type );
-    // if (model->anisotropy==1) MinMaxArrayTag( mesh->aniso_factor_e_n,  1.0, (mesh->Nx-1)*(mesh->Nz-1), "ani_fac_e_n ", mesh->BCp.type );
-    // if (model->anisotropy==1) MinMaxArrayTag( mesh->aniso_factor_e_s,  1.0, (mesh->Nx-0)*(mesh->Nz-0), "ani_fac_e_s ", mesh->BCg.type );
 
     // Evaluate right hand side
     EvaluateRHS( mesh, *model, scaling, materials.rho[0] );
@@ -760,8 +736,6 @@ void EvaluateStokesResidualDecoupled( SparseMat *Stokes, SparseMat *StokesA, Spa
 
     // Function evaluation
     BuildStokesOperatorDecoupled(   mesh, model, 0, mesh->p_corr, mesh->p_in,  mesh->u_in,  mesh->v_in, Stokes, StokesA, StokesB, StokesC, StokesD, 0 );
-    // if ( model.anisotropy == 0 ) BuildStokesOperatorDecoupled(   mesh, model, 0, mesh->p_corr, mesh->p_in,  mesh->u_in,  mesh->v_in, Stokes, StokesA, StokesB, StokesC, StokesD, 0 );
-    // if ( model.anisotropy == 1 ) BuildJacobianOperatorDecoupled( mesh, model, 0, mesh->p_corr, mesh->p_in,  mesh->u_in,  mesh->v_in, Stokes, StokesA, StokesB, StokesC, StokesD, 0 );
 
     // Integrate residuals
 #pragma omp parallel for shared( mesh, Stokes, StokesA ) private( cc ) firstprivate( nx, nzvx ) reduction(+:resx,ndofx)
@@ -769,20 +743,11 @@ void EvaluateStokesResidualDecoupled( SparseMat *Stokes, SparseMat *StokesA, Spa
         if ( mesh->BCu.type[cc] != 0 && mesh->BCu.type[cc] != 30 && mesh->BCu.type[cc] != 11 && mesh->BCu.type[cc] != 13 && mesh->BCu.type[cc] != -12) {
             ndofx++;
             resx                          += StokesA->F[Stokes->eqn_u[cc]]*StokesA->F[Stokes->eqn_u[cc]];
-        //     if (isnan(resx)) {
-        //         printf("%2.2e %2.2e \n", StokesA->F[Stokes->eqn_u[cc]], StokesA->F[Stokes->eqn_u[cc]]*StokesA->F[Stokes->eqn_u[cc]]);
-        //         exit(1);
-        // }
             mesh->ru[cc]                   = StokesA->F[Stokes->eqn_u[cc]];
             StokesA->F[Stokes->eqn_u[cc]] *= StokesA->d[Stokes->eqn_u[cc]]; // Need to scale the residual here for Defect Correction formulation (F is the RHS)
-//            if ( fabs(StokesA->F[Stokes->eqn_u[cc]]) > 1e5 ) printf( "%2.2e %2.2e %2.2e\n", StokesA->F[Stokes->eqn_u[cc]], StokesA->d[Stokes->eqn_u[cc]], mesh->ru[cc] );
         }
     }
     Nmodel->resx = resx;
-    // Print2DArrayDouble( mesh->ru, nx, nzvx, 1.0 );
-    // Print2DArrayDouble( mesh->exz, nx, nz, 1.0 );
-    // Print2DArrayDouble( mesh->u_in, nxvz, nz, 1.0 );
-    // printf("%2.8e\n", resx);
 
 #pragma omp parallel for shared( mesh, Stokes, StokesA ) private( cc ) firstprivate( nz, nxvz ) reduction(+:resz,ndofz)
     for( cc=0; cc<nz*nxvz; cc++) {
@@ -805,15 +770,6 @@ void EvaluateStokesResidualDecoupled( SparseMat *Stokes, SparseMat *StokesA, Spa
         }
     }
     Nmodel->resp = resp;
-
-    // printf("rho0\n");
-    // Print2DArrayDouble( mesh->rho0_n,  ncx, ncz, scaling.rho );
-    // printf("rho\n");
-    // Print2DArrayDouble( mesh->rho_n,  ncx, ncz, scaling.rho );
-    // printf("div\n");
-    // Print2DArrayDouble( mesh->div_u,  ncx, ncz, scaling.E );
-    // printf("rp\n");
-    // Print2DArrayDouble( mesh->rp,  ncx, ncz, 1.0 );
 
     // Sqrt
     Nmodel->resx =  sqrt(Nmodel->resx/ndofx);
