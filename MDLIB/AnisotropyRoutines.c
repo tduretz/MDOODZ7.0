@@ -75,7 +75,7 @@ void Solve2x2(double *x1, double *x2, double f1, double f2, double a11, double a
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-double ViscosityConciseAniso( int phase, double lxlz, double lx2, double angle, double ani_fstrain, double ani_fac_e, double G, double T, double P, double d0, double phi, double X0, double Exx, double Ezz, double Exz, double Txx0, double Tzz0, double Txz0, mat_prop* materials, params *model, scale *scaling, double *Txx, double *Tzz, double *Txz, double* eta_vep, double* ani_vep, double* Eii_el, double* Eii_pl, double* Eii_pwl, double* Eii_exp, double* Eii_lin, double* Eii_gbs, double* Eii_cst, double *d, double strain_acc, double dil, double fric, double C, double P0, double T0,  double *X1, double *OverS, double *Pcorr, double *rho, double beta, double div, double *div_el, double *div_pl, double *div_r, double *Wtot, double *Wel, double *Wdiss, int post_process, int centroid ) {
+double ViscosityConciseAniso( int phase, double lxlz, double lx2, double angle, double ani_fstrain, double ani_fac_e, double G, double T, double P, double d0, double phi, double X0, double Exx, double Ezz, double Exz, double Txx0, double Tzz0, double Txz0, mat_prop* materials, params *model, scale *scaling, double *Txx, double *Tzz, double *Txz, double* eta_vep, double* ani_vep, double* Eii_el, double* Eii_pl, double* Eii_pwl, double* Eii_exp, double* Eii_lin, double* Eii_gbs, double* Eii_cst, double *d, double strain_acc, double dil, double fric, double C, double P0, double T0,  double *X1, double *OverS, double *Pcorr, double *rho, double beta, double div, double *div_el, double *div_pl, double *div_r, double *Wtot, double *Wel, double *Wdiss, int post_process, int centroid, int final_update ) {
     // !!!!!!!!!!!!!!!!!!!!!!!!
     // ACTUNG FOR GSE:: d is now d0 and d1 is now d
     // !!!!!!!!!!!!!!!!!!!!!!!!
@@ -367,7 +367,7 @@ double ViscosityConciseAniso( int phase, double lxlz, double lx2, double angle, 
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-void NonNewtonianViscosityGridAniso( grid *mesh, mat_prop *materials, params *model, Nparams Nmodel, scale *scaling ) {
+void NonNewtonianViscosityGridAniso( grid *mesh, mat_prop *materials, params *model, Nparams Nmodel, scale *scaling, int final_update ) {
 
   int    p, k, l, Nx, Nz, Ncx, Ncz, c0, c1, k1;
   double eta, txx1, tzz1, txz1, eta_vep, ani_vep, ani_e, eII_el, eII_pl, eII_pwl, eII_exp, eII_lin, eII_gbs, eII_cst, dnew, div_el, div_pl, div_r;
@@ -471,7 +471,7 @@ void NonNewtonianViscosityGridAniso( grid *mesh, mat_prop *materials, params *mo
 
         if ( is_phase_active ) {
           const double aniso_factor_strain = AnisoFactorEvolv( mesh->FS_AR_n[c0], materials->ani_fac_max[p]);
-          eta =  ViscosityConciseAniso( p, lxlz, lx2, angle, aniso_factor_strain, mesh->aniso_factor_e_n[c0], mesh->mu_n[c0], mesh->T[c0], mesh->p_in[c0], mesh->d0_n[c0], mesh->phi0_n[c0], mesh->X0_n[c0], Exx, Ezz, Exz, mesh->sxxd0[c0], mesh->szzd0[c0], mesh->sxz0_n[c0], materials    , model, scaling, &txx1, &tzz1, &txz1, &eta_vep, &ani_vep, &eII_el, &eII_pl, &eII_pwl, &eII_exp, &eII_lin, &eII_gbs, &eII_cst, &dnew, mesh->strain_n[c0], mesh->dil_n[c0], mesh->fric_n[c0], mesh->C_n[c0], mesh->p0_n[c0], mesh->T0_n[c0], &Xreac, &OverS, &Pcorr, &rho, mesh->bet_n[c0], mesh->div_u[c0], &div_el, &div_pl, &div_r, &Wtot, &Wel, &Wdiss, 1, 1 );
+          eta =  ViscosityConciseAniso( p, lxlz, lx2, angle, aniso_factor_strain, mesh->aniso_factor_e_n[c0], mesh->mu_n[c0], mesh->T[c0], mesh->p_in[c0], mesh->d0_n[c0], mesh->phi0_n[c0], mesh->X0_n[c0], Exx, Ezz, Exz, mesh->sxxd0[c0], mesh->szzd0[c0], mesh->sxz0_n[c0], materials    , model, scaling, &txx1, &tzz1, &txz1, &eta_vep, &ani_vep, &eII_el, &eII_pl, &eII_pwl, &eII_exp, &eII_lin, &eII_gbs, &eII_cst, &dnew, mesh->strain_n[c0], mesh->dil_n[c0], mesh->fric_n[c0], mesh->C_n[c0], mesh->p0_n[c0], mesh->T0_n[c0], &Xreac, &OverS, &Pcorr, &rho, mesh->bet_n[c0], mesh->div_u[c0], &div_el, &div_pl, &div_r, &Wtot, &Wel, &Wdiss, 1, 1, final_update );
           mesh->phase_eta_n[p][c0] = eta_vep;
 
           switch ( average ) {
@@ -631,7 +631,7 @@ void NonNewtonianViscosityGridAniso( grid *mesh, mat_prop *materials, params *mo
 
         if ( is_phase_active ) {
           const double aniso_factor_strain = AnisoFactorEvolv( mesh->FS_AR_s[c1], materials->ani_fac_max[p]);
-          eta =  ViscosityConciseAniso( p, lxlz, lx2, angle, aniso_factor_strain, mesh->aniso_factor_e_s[c1], mesh->mu_s[c1], mesh->T_s[c1], mesh->P_s[c1], mesh->d0_s[c1], mesh->phi0_s[c1], mesh->X0_s[c1], Exx, Ezz, Exz, mesh->sxxd0_s[c1], mesh->szzd0_s[c1], mesh->sxz0[c1], materials, model, scaling, &txx1, &tzz1, &txz1, &eta_vep, &ani_vep, &eII_el, &eII_pl, &eII_pwl, &eII_exp, &eII_lin, &eII_gbs, &eII_cst, &dnew, mesh->strain_s[c1], mesh->dil_s[c1], mesh->fric_s[c1], mesh->C_s[c1], mesh->p0_s[c1], 0.0, &Xreac, &OverS, &Pcorr, &rho, mesh->bet_s[c1], mesh->div_u_s[c1], &div_el, &div_pl, &div_r, &Wtot, &Wel, &Wdiss, 1, 0 );
+          eta =  ViscosityConciseAniso( p, lxlz, lx2, angle, aniso_factor_strain, mesh->aniso_factor_e_s[c1], mesh->mu_s[c1], mesh->T_s[c1], mesh->P_s[c1], mesh->d0_s[c1], mesh->phi0_s[c1], mesh->X0_s[c1], Exx, Ezz, Exz, mesh->sxxd0_s[c1], mesh->szzd0_s[c1], mesh->sxz0[c1], materials, model, scaling, &txx1, &tzz1, &txz1, &eta_vep, &ani_vep, &eII_el, &eII_pl, &eII_pwl, &eII_exp, &eII_lin, &eII_gbs, &eII_cst, &dnew, mesh->strain_s[c1], mesh->dil_s[c1], mesh->fric_s[c1], mesh->C_s[c1], mesh->p0_s[c1], 0.0, &Xreac, &OverS, &Pcorr, &rho, mesh->bet_s[c1], mesh->div_u_s[c1], &div_el, &div_pl, &div_r, &Wtot, &Wel, &Wdiss, 1, 0, final_update );
           mesh->phase_eta_s[p][c1] = eta_vep;
 
           switch ( average ) {

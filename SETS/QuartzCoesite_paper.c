@@ -79,6 +79,10 @@ int SetPhase(MdoodzInput *input, Coordinates coordinates) {
   }
 }
 
+// int SetPhase(MdoodzInput *input, Coordinates coordinates) {
+// return 2;
+// }
+
 double FixTemperature(MdoodzInput *input, double p) {
   int thermal_evolution = (int) input->model.user0;
   if (thermal_evolution) {
@@ -103,7 +107,7 @@ double SetTemperature(MdoodzInput *input, Coordinates coordinates) {
 }
 
 double SetNoise(MdoodzInput *input, Coordinates coordinates, int phase) {
-  srand(69);
+  // srand(69);
   return ((double) rand() / (double) RAND_MAX) - 0.5;
 }
 

@@ -351,7 +351,7 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
   /* Type 30: not calculated (part of the "air") */
   /* -------------------------------------------------------------------------------------------------------*/
 
-  if (instance->model.fix_temperature==1){
+  if (instance->model.fix_temperature==1) {
     for (int l = 0; l < NCZ; l++) {
       for (int k = 0; k < NCX; k++) {
         const int c  = k + l * (NCX);

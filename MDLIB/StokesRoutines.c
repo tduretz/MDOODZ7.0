@@ -192,6 +192,10 @@ void RheologicalOperators( grid* mesh, params* model, mat_prop* materials, scale
         double drhodp=0.;
         DerivativesOnTheFly_n( &detadexx, &detadezz, &detadgxz, &detadp, &ddivpdexx, &ddivpdezz, &ddivpdgxz, &ddivpdp, &danidexx, &danidezz, &danidgxz, &danidp, &drhodp, k, Exx, Ezz, Exz, mesh->p_in[k], ani_fstrain, ani_e, d1, d2, angle, lx2, lxlz, mesh, materials, model, scaling );
         mesh->drhodp_n[k] = drhodp;
+        if (mesh->drhodp_n[k] / (mesh->rho_n[k]) < mesh->bet_n[k]/10) {
+                printf("%2.2e %2.2e\n", mesh->drhodp_n[k] ,  mesh->bet_n[k]);
+                exit(1);
+        }
         //----------------------------------------------------------//
         mesh->D11_n[k] = 2.0*(1.0 - aniS_vep*d1)*eta_vep + 2.0*detadexx*Dxx - K*dt*ddivpdexx + 2.0*danidexx*Axx;
         mesh->D12_n[k] =         2.0*aniS_vep*d1*eta_vep + 2.0*detadezz*Dxx - K*dt*ddivpdezz + 2.0*danidezz*Axx;
@@ -396,14 +400,14 @@ void ApplyBC( grid* mesh, params* model ) {
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-void UpdateNonLinearity( grid* mesh, markers* particles, markers* topo_chain, surface *topo, mat_prop materials, params *model, Nparams *Nmodel, scale scaling, int mode, double h_contin ) {
+void UpdateNonLinearity( grid* mesh, markers* particles, markers* topo_chain, surface *topo, mat_prop materials, params *model, Nparams *Nmodel, scale scaling, int mode, int final_update ) {
     
     // Strain rate component evaluation
     StrainRateComponents( mesh, scaling, model );
 
     // Stress update
-    if (model->anisotropy==0) NonNewtonianViscosityGrid(      mesh, &materials, model, *Nmodel, &scaling );
-    if (model->anisotropy==1) NonNewtonianViscosityGridAniso( mesh, &materials, model, *Nmodel, &scaling );
+    if (model->anisotropy==0) NonNewtonianViscosityGrid(      mesh, &materials, model, *Nmodel, &scaling, final_update);
+    if (model->anisotropy==1) NonNewtonianViscosityGridAniso( mesh, &materials, model, *Nmodel, &scaling, final_update);
 
 
     // MinMaxArrayTag( mesh->T,    scaling.T, (mesh->Nx-1)*(mesh->Nz-1), "T         ", mesh->BCt.type );

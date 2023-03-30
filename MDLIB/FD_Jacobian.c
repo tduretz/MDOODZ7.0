@@ -61,8 +61,8 @@ void PhaseRheologyLoop_v1( int is_centroid, double sign, double denom, double Ex
 
         if ( is_phase_active==true ) {
 
-            if (model->anisotropy==0) ViscosityConcise(      p,                                           G[c], T[c], P, gs0[c], phi0[c], X0[c], Exx, Ezz, Exz, txx0[c], tzz0[c], txz0[c], materials, model, scaling, &txx1, &tzz1, &txz1, &eta_vep, &VEcoeff, &eII_el, &eII_pl, &eII_pwl, &eII_exp, &eII_lin, &eII_gbs, &eII_cst, &dnew, strain[c], dil[c], fric[c], C[c], P0[c], T0, &Xreac, &OverS, &Pcorr, &rho, beta[c], div[c], &div_el, &div_pl, &div_r, &Wtot, &Wel, &Wdiss, 0, is_centroid );
-            if (model->anisotropy==1) ViscosityConciseAniso( p, lxlz, lx2, angle, ani_fstrain, ani_fac_e, G[c], T[c], P, gs0[c], phi0[c], X0[c], Exx, Ezz, Exz, txx0[c], tzz0[c], txz0[c], materials, model, scaling, &txx1, &tzz1, &txz1, &eta_vep, &ani_vep, &eII_el, &eII_pl, &eII_pwl, &eII_exp, &eII_lin, &eII_gbs, &eII_cst, &dnew, strain[c], dil[c], fric[c], C[c], P0[c], T0, &Xreac, &OverS, &Pcorr, &rho, beta[c], div[c], &div_el, &div_pl, &div_r, &Wtot, &Wel, &Wdiss, 0, is_centroid );
+            if (model->anisotropy==0) ViscosityConcise(      p,                                           G[c], T[c], P, gs0[c], phi0[c], X0[c], Exx, Ezz, Exz, txx0[c], tzz0[c], txz0[c], materials, model, scaling, &txx1, &tzz1, &txz1, &eta_vep, &VEcoeff, &eII_el, &eII_pl, &eII_pwl, &eII_exp, &eII_lin, &eII_gbs, &eII_cst, &dnew, strain[c], dil[c], fric[c], C[c], P0[c], T0, &Xreac, &OverS, &Pcorr, &rho, beta[c], div[c], &div_el, &div_pl, &div_r, &Wtot, &Wel, &Wdiss, 0, is_centroid, 0 );
+            if (model->anisotropy==1) ViscosityConciseAniso( p, lxlz, lx2, angle, ani_fstrain, ani_fac_e, G[c], T[c], P, gs0[c], phi0[c], X0[c], Exx, Ezz, Exz, txx0[c], tzz0[c], txz0[c], materials, model, scaling, &txx1, &tzz1, &txz1, &eta_vep, &ani_vep, &eII_el, &eII_pl, &eII_pwl, &eII_exp, &eII_lin, &eII_gbs, &eII_cst, &dnew, strain[c], dil[c], fric[c], C[c], P0[c], T0, &Xreac, &OverS, &Pcorr, &rho, beta[c], div[c], &div_el, &div_pl, &div_r, &Wtot, &Wel, &Wdiss, 0, is_centroid, 0 );
             if ( model->eta_average == ARITHMETIC) {
                 *detadE      += sign*vol[p][c] * eta_vep/(denom); 
             }
@@ -86,6 +86,7 @@ void PhaseRheologyLoop_v1( int is_centroid, double sign, double denom, double Ex
             // Density (default arithmetic average)
             if (is_centroid == 2) { // if centroid and pressure is varied compute drhodp
                 *drhodP      += sign*vol[p][c] * rho/(denom);
+                // printf("rho = %2.8e P = %2.8e\n", rho*scaling->rho, P*scaling->S);
             }
         }
     }
@@ -96,7 +97,7 @@ void PhaseRheologyLoop_v1( int is_centroid, double sign, double denom, double Ex
 /*--------------------------------------------------------------------------------------------------------------------*/
 
 void DerivativesOnTheFly_n( double* detadexx, double* detadezz, double* detadgxz, double* detadp, double* ddivpdexx, double* ddivpdezz, double* ddivpdgxz, double* ddivpdp, double* danidexx, double* danidezz, double* danidgxz, double* danidp, double* drhodp, int c0, double Exx_ref, double Ezz_ref, double Exz_ref, double P_ref, double ani, double ani_e, double d1, double d2, double angle, double lx2, double lxlz, grid *mesh, mat_prop *materials, params *model, scale *scaling ) {
-    const double tol = 1e-7;
+    const double tol = 1e-5;
     double pert_xx   = tol*fabs(Exx_ref) + tol/1e10;
     double pert_zz   = tol*fabs(Ezz_ref) + tol/1e10;
     double pert_xz   = tol*fabs(Exz_ref) + tol/1e10;
@@ -169,7 +170,8 @@ void DerivativesOnTheFly_n( double* detadexx, double* detadezz, double* detadgxz
                         detadgxz, ddivpdgxz, danidgxz, NULL, mesh->phase_eta_n );
 
     //----------------------------------------------------------------------------------------------------------------------------------------------------//
-
+// printf("=====\n");
+// printf("drhodp = %2.2e\n", *drhodp);
     // 1) Positive perturbation in P
     PhaseRheologyLoop_v1(  2, 1.0, 2.0*pert_p, Exx_ref, Ezz_ref, Exz_ref, P_ref+pert_p, ani, ani_e, d1, d2, angle, lx2, lxlz, c0, mesh->phase_perc_n,
                         mesh->mu_n, mesh->T, mesh->p0_n, mesh->T0_n[c0],
@@ -180,6 +182,7 @@ void DerivativesOnTheFly_n( double* detadexx, double* detadezz, double* detadgxz
                         model, materials, scaling,
                         detadp, ddivpdp, danidp, drhodp, mesh->phase_eta_n );
 
+// printf("drhodp = %2.2e\n", *drhodp);
     // 2) Negative perturbation in P
     PhaseRheologyLoop_v1( 2, -1.0, 2.0*pert_p, Exx_ref, Ezz_ref, Exz_ref, P_ref-pert_p, ani, ani_e, d1, d2, angle, lx2, lxlz, c0, mesh->phase_perc_n,
                         mesh->mu_n, mesh->T, mesh->p0_n, mesh->T0_n[c0],
@@ -189,7 +192,7 @@ void DerivativesOnTheFly_n( double* detadexx, double* detadezz, double* detadgxz
                         mesh->strain_n, mesh->dil_n, mesh->fric_n, mesh->C_n,
                         model, materials, scaling,
                         detadp, ddivpdp, danidp, drhodp, mesh->phase_eta_n );
-
+// printf("drhodp = %2.2e\n", *drhodp);
     // ----------------------------------------------------------------------------------------------------------------------------------------------------//
     if ( model->eta_average == HARMONIC ) {
         *detadexx *= pow(mesh->eta_n[c0] , 2);

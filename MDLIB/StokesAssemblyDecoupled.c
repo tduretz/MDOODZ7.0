@@ -861,6 +861,13 @@ void Continuity_InnerNodesDecoupled( SparseMat *Stokes, SparseMat *StokesC, Spar
         
         if ( model.density_variations == 0 )  StokesC->F[eqn] = comp_fact*mesh->bet_n[c2]*(mesh->p_in[c2] -  mesh->p0_n[c2] ) / model.dt + mesh->div_u[c2];
         if ( model.density_variations == 1 )  StokesC->F[eqn] = comp_fact*( log(mesh->rho_n[c2]) -  log(mesh->rho0_n[c2]) ) / model.dt + mesh->div_u[c2];
+       
+    //    if (eqn==1) {
+    //     printf( RED "%2.8e %2.8e\n" RESET,  mesh->bet_n[c2]*(mesh->p_in[c2] -  mesh->p0_n[c2] ), mesh->p0_n[c2] );
+    //     printf( RED "%2.8e %2.8e\n" RESET,  log(mesh->rho_n[c2]) -  log(mesh->rho0_n[c2]), mesh->rho0_n[c2] );
+    //    }
+    //    StokesC->F[eqn] = comp_fact*mesh->bet_n[c2]*(mesh->p_in[c2] -  mesh->p0_n[c2] ) / model.dt + mesh->div_u[c2];
+       
         StokesC->F[eqn] *= celvol;
         StokesD->F[eqn] = StokesC->F[eqn] ;
 //        printf("fp = %2.2e p = %2.2e p0 = %2.2e, div = %2.2e, div = %2.2e, rp = %2.2e\n",  StokesD->F[eqn], mesh->p_in[eqn],  mesh->p0_n[eqn], uW*u[c1] + uE*u[c1+1] + vS*v[c3] + vN*v[c3+nxvz], mesh->div_u[eqn], mesh->bet_n[c2]/model.dt*(mesh->p_in[eqn] -  mesh->p0_n[eqn]) + mesh->div_u[eqn] );

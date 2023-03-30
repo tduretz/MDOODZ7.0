@@ -68,7 +68,7 @@ typedef struct {
           *u_in, *v_in, *p_in, *p_corr, *sxxd, *szzd, *sxz, *exxd, *ezzd, *exz,
           *VE_s, *VE_n, *sxxd0, *szzd0, *sxz0, *mu_s, *mu_n, *u_adv, *v_adv,
           *eta_phys_n, *kx, *kz, *Cv, *Qr, *eta_phys_s, *u_start, *v_start,
-          *p_start, *divth0_n, *T0_n;
+          *p_start, *divth0_n;
   int    *iter_smooth;
   int    *nb_part_cell, *nb_part_vert;
   BC      BCu, BCv, BCp, BCp_exp, BCT_exp, BCt, BCg, BCC_exp, BCc;
@@ -103,7 +103,7 @@ typedef struct {
           *P_mean_time, *T_mean_time, 
           *sxxd_mean_time, *szzd_mean_time, *sxz_mean_time, *Tii_mean_time, 
           *exxd_mean_time, *ezzd_mean_time, *exz_mean_time, *Eii_mean_time;
-  double *T, *dT, *d_n, *d0_n, *phi_n, *phi0_n;
+  double *T, *T0_n, *d_n, *d0_n, *phi_n, *phi0_n;
   double *eII_el, *eII_pl, *eII_pl_s, *eII_pwl, *eII_exp, *eII_lin, *eII_gbs,
           *eII_cst;
   double *eII_pwl_s;
@@ -363,9 +363,9 @@ void            ShearModCompExpGrid( grid*, mat_prop*, params*, scale);
 void            CohesionFrictionDilationGrid(grid*, markers*, mat_prop, params, scale);
 
 // Non-Newtonian rheology
-void            UpdateNonLinearity(grid *, markers *, markers *, surface *, mat_prop, params *, Nparams *, scale, int, double);
+void            UpdateNonLinearity(grid *, markers *, markers *, surface *, mat_prop, params *, Nparams *, scale, int, int);
 double          LineSearch(SparseMat *, double *, grid *, params *, Nparams *, markers *, markers *, surface *, mat_prop, scale);
-void            NonNewtonianViscosityGrid(grid *, mat_prop *, params *, Nparams, scale *);
+void            NonNewtonianViscosityGrid(grid *, mat_prop *, params *, Nparams, scale *, int);
 void            StrainRateComponents(grid *, scale, params *);
 void            GenerateDeformationMaps(grid *, mat_prop *, params *, Nparams, scale *);
 void            UpdateParticleGrainSize(grid *, scale, params, markers *, mat_prop *);
@@ -373,7 +373,7 @@ void            UpdateParticleDensity(grid *, scale, params, markers *, mat_prop
 void            UpdateParticleX(grid *, scale, params, markers *, mat_prop *);
 void            UpdateParticlePhi(grid *, scale, params, markers *, mat_prop *);
 // Anisotropy
-void            NonNewtonianViscosityGridAniso(grid *, mat_prop *, params *, Nparams, scale *);
+void            NonNewtonianViscosityGridAniso(grid *, mat_prop *, params *, Nparams, scale *, int);
 double          AnisoFactorEvolv( double FS_AR, double aniso_fac_max );
 
 // Advection
@@ -396,11 +396,11 @@ void            DeformationGradient(grid, scale, params, markers *);
 
 // Energy
 void            UpdateParticleEnergy(grid *, scale, params, markers *, mat_prop *);
-void            EnergyDirectSolve(grid *, params, double *, double *, double *, double *, markers *, double, int, int, scale, int);
+void            EnergyDirectSolve(grid *, params, double *, markers *, double, int, int, scale, int);
 cholmod_factor *FactorEnergyCHOLMOD(cholmod_common *, cs_di *, double *, int *, int *, int, int, int);
 cs_di          *TransposeA(cholmod_common *, double *, int *, int *, int, int);
 void            SolveEnergyCHOLMOD(cholmod_common *, cs_di *, cholmod_factor *, double *, double *, int, int, int);
-void            ThermalSteps(grid *, params, double *, double *, double *, double *, markers *, double, scale);
+void            ThermalSteps(grid *, params, double *, markers *, double, scale);
 void            SetThermalPert(grid *, params, scale);
 void            UpdateMaxPT(scale, params, markers *);
 
@@ -557,8 +557,8 @@ void            DerivativesOnTheFly_n( double*, double*, double*, double*, doubl
 void            DerivativesOnTheFly_s( double*, double*, double*, double*, double*, double*, double*, double*, int, double, double, double, double, double, double, double, double, double, double, double, grid*, mat_prop*, params*, scale* );
 void            ViscosityDerivatives(grid *, mat_prop *, params *, scale *);
 void            EffectiveStrainRate( double*, double*, double*, double, double, double, double, double, double, double, double d2, double, double, int );
-double          ViscosityConcise(int, double, double, double, double, double, double, double, double, double, double, double, double, mat_prop *, params *, scale *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double, double, double, double, double, double, double *, double *, double *, double *, double, double, double *, double *, double *, double *, double *, double *, int, int);
-double          ViscosityConciseAniso(int, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, mat_prop *, params *, scale *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double, double, double, double, double, double, double *, double *, double *, double *, double, double, double *, double *, double *, double *, double *, double *, int, int);
+double          ViscosityConcise(int, double, double, double, double, double, double, double, double, double, double, double, double, mat_prop *, params *, scale *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double, double, double, double, double, double, double *, double *, double *, double *, double, double, double *, double *, double *, double *, double *, double *, int, int, int);
+double          ViscosityConciseAniso(int, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, mat_prop *, params *, scale *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double, double, double, double, double, double, double *, double *, double *, double *, double, double, double *, double *, double *, double *, double *, double *, int, int, int);
 
 double          EvaluateDensity(int, double, double, double, params *, mat_prop *);
 void            ComputeMeanQuantitesForTimeSeries(grid *mesh);
