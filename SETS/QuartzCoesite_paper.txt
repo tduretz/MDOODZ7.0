@@ -1,5 +1,5 @@
 /**** RESTART ****/
-istep = 00500
+istep = 00150
 irestart = 0
 
 /**** INPUT FILE ****/
@@ -8,7 +8,7 @@ import_file      = SetupCoesite2_nxy1921.bin /indicates the name in the input fi
 
 /**** OUTPUT FILES ****/
 writer             = 1
-writer_step        = 20
+writer_step        = 50
 writer_markers     = 0
 writer_debug       = 0
 writer_energies    = 0
@@ -21,8 +21,8 @@ V   = 1e-18
 T   = 600
 
 /**** SPACE ****/
-Nx      = 301
-Nz      = 301
+Nx      = 151
+Nz      = 151
 xmin    = -2.500000e-3
 zmin    = -2.500000e-3
 xmax    =  2.500000e-3
@@ -30,7 +30,7 @@ zmax    =  2.500000e-3
 dt      = 6.2500e+09
 
 /**** TIME  ****/
-Nt           = 0
+Nt           = 1700
 constant_dt  = 1
 Courant      = 0.3
 penalty      = 1e5
@@ -60,14 +60,14 @@ out_of_plane       = 1  / non zeros total Eyy
 shear_style        = 0
 bkg_strain_rate    = 1e-25
 bkg_div_rate       = 1e-14
-bkg_pressure       = 3.45e9  / pressure [Pa]
+bkg_pressure       = 4.3e9   / pressure [Pa]
 bkg_temperature    = 873.15  / temperature [K]
-user0              = 0       / 0: fix T=bkg_temperature, 1: use T=(P/b)^(1/a)
+user0              = 1       / 0: fix T=bkg_temperature, 1: use T=(P/b)^(1/a)
 user1              = 2       / 2: fancy set up --- 1: simple inclusion --- 0: homogeneous
 user2              = 0.5e-3  / inclusion radius [m]
 fix_temperature    = 1
-user3              = 6.9462     / fit coefficient a for T=(P/b)^(1/a)
-user4              = 5.5398e-20 / fit coefficient b for T=(P/b)^(1/a)
+user3              = 1.02e-2     / fit coefficient a for T=(P/b)^(1/a)
+user4              = 2.523e-3  / fit coefficient b for T=(P/b)^(1/a)
 
 /**** GRAVITY ****/
 gx = 0.0000
