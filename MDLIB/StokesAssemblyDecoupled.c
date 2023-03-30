@@ -814,7 +814,6 @@ void Zjacobian_InnerNodesDecoupled3( SparseMat *Stokes, SparseMat *StokesA, Spar
         StokesA->F[eqn] *= -1.0;
         StokesA->F[eqn] -= (StokesA->b[eqn]) - vC_corr*v[iVzC];
         StokesA->F[eqn] *= celvol;
-
     }
 }
 
@@ -851,78 +850,12 @@ void Continuity_InnerNodesDecoupled( SparseMat *Stokes, SparseMat *StokesC, Spar
     else {
         
         // d ln rho
-        //        dlnrhodt = (log(rhoc) - log(rhoc0)) /dt;
-        //        if comp==1, fp = -divc - dlnrhodt; resnlp = norm(fp(:))/length(fp); end
-        //                                               = beta*(p - p0)/dt + div(v)
-    //    if ( model.density_variations == 0 ) StokesC->F[eqn] =                      pc*p[c2] + uW*u[c1] + uE*u[c1+1] + vS*v[c3] + vN*v[c3+nxvz];
-    //    //                                               = d(ln(rho))/dt + div(v)
-    //    if ( model.density_variations == 1 ) StokesC->F[eqn] = log(mesh->rho_n[c2])/model.dt + uW*u[c1] + uE*u[c1+1] + vS*v[c3] + vN*v[c3+nxvz];
-    //    StokesC->F[eqn] -= StokesC->b[eqn];
-        
-        if ( model.density_variations == 0 )  StokesC->F[eqn] = comp_fact*mesh->bet_n[c2]*(mesh->p_in[c2] -  mesh->p0_n[c2] ) / model.dt + mesh->div_u[c2];
-        if ( model.density_variations == 1 )  StokesC->F[eqn] = comp_fact*( log(mesh->rho_n[c2]) -  log(mesh->rho0_n[c2]) ) / model.dt + mesh->div_u[c2];
-       
-    //    if (eqn==1) {
-    //     printf( RED "%2.8e %2.8e\n" RESET,  mesh->bet_n[c2]*(mesh->p_in[c2] -  mesh->p0_n[c2] ), mesh->p0_n[c2] );
-    //     printf( RED "%2.8e %2.8e\n" RESET,  log(mesh->rho_n[c2]) -  log(mesh->rho0_n[c2]), mesh->rho0_n[c2] );
-    //    }
-    //    StokesC->F[eqn] = comp_fact*mesh->bet_n[c2]*(mesh->p_in[c2] -  mesh->p0_n[c2] ) / model.dt + mesh->div_u[c2];
-       
-        StokesC->F[eqn] *= celvol;
-        StokesD->F[eqn] = StokesC->F[eqn] ;
-//        printf("fp = %2.2e p = %2.2e p0 = %2.2e, div = %2.2e, div = %2.2e, rp = %2.2e\n",  StokesD->F[eqn], mesh->p_in[eqn],  mesh->p0_n[eqn], uW*u[c1] + uE*u[c1+1] + vS*v[c3] + vN*v[c3+nxvz], mesh->div_u[eqn], mesh->bet_n[c2]/model.dt*(mesh->p_in[eqn] -  mesh->p0_n[eqn]) + mesh->div_u[eqn] );
-        
-    }
-}
-
-#if 0
-// MD6
-void Continuity_InnerNodesDecoupled( SparseMat *Stokes, SparseMat *StokesC, SparseMat *StokesD, int Assemble, int lev, int stab, int comp, double om, int sign, params model, double one_dx, double one_dz, double one_dx_dx, double one_dz_dz, double one_dx_dz, double celvol, grid* mesh, int ith, int c1, int c2, int c3, int nx, int ncx, int nxvz, int eqn, double* u, double* v, double* p, int **JtempC, double **AtempC, int *nnzc2C, int **JtempD, double **AtempD, int *nnzc2D, int i, int j ) {
-    
-    double pc=0.0, uW=0.0, uE=0.0, vN=0.0, vS=0.0, oop_fact = 1.0, comp_fact = 0.0;
-    
-    // Non-zero out-of-plane strain
-    if ( model.out_of_plane == 1 ) oop_fact = 3.0/2.0;
-
-    // Compressibility
-    if ( comp == 1 ) comp_fact = 1.0;
-    pc = comp_fact*mesh->bet_n[c2]/model.dt;
-    
-    // div u
-    if ( mesh->BCu.type[c1     ] != 13 ) uW = -one_dx * oop_fact;
-    if ( mesh->BCu.type[c1+1   ] != 13 ) uE =  one_dx * oop_fact;
-    if ( mesh->BCv.type[c3     ] != 13 ) vS = -one_dz * oop_fact;
-    if ( mesh->BCv.type[c3+nxvz] != 13 ) vN =  one_dz * oop_fact;
-    
-    // Stencil assembly / residual
-    if ( Assemble == 1 ) {
-        StokesC->b[eqn] *= celvol;
-        StokesD->b[eqn] *= celvol;
-        if ( mesh->BCu.type[c1     ] != 13 )    AddCoeff3( JtempC[ith], AtempC[ith], eqn, Stokes->eqn_u[c1],      &(nnzc2C[ith]), uW*celvol, mesh->BCu.type[c1],      mesh->BCu.val[c1],      StokesC->bbc );
-        if ( mesh->BCu.type[c1+1   ] != 13 )    AddCoeff3( JtempC[ith], AtempC[ith], eqn, Stokes->eqn_u[c1+1],    &(nnzc2C[ith]), uE*celvol, mesh->BCu.type[c1+1],    mesh->BCu.val[c1+1],    StokesC->bbc );
-        if ( mesh->BCv.type[c3     ] != 13 )    AddCoeff3( JtempC[ith], AtempC[ith], eqn, Stokes->eqn_v[c3],      &(nnzc2C[ith]), vS*celvol, mesh->BCv.type[c3],      mesh->BCv.val[c3],      StokesC->bbc );
-        if ( mesh->BCv.type[c3+nxvz] != 13 )    AddCoeff3( JtempC[ith], AtempC[ith], eqn, Stokes->eqn_v[c3+nxvz], &(nnzc2C[ith]), vN*celvol, mesh->BCv.type[c3+nxvz], mesh->BCv.val[c3+nxvz], StokesC->bbc );
-    }
-    else {
-        
-        // d ln rho
-        //        dlnrhodt = (log(rhoc) - log(rhoc0)) /dt;
-        //        if comp==1, fp = -divc - dlnrhodt; resnlp = norm(fp(:))/length(fp); end
-        //                                               = beta*(p - p0)/dt + div(v)
-    //    if ( model.density_variations == 0 ) StokesC->F[eqn] =                      pc*p[c2] + uW*u[c1] + uE*u[c1+1] + vS*v[c3] + vN*v[c3+nxvz];
-    //    //                                               = d(ln(rho))/dt + div(v)
-    //    if ( model.density_variations == 1 ) StokesC->F[eqn] = log(mesh->rho_n[c2])/model.dt + uW*u[c1] + uE*u[c1+1] + vS*v[c3] + vN*v[c3+nxvz];
-    //    StokesC->F[eqn] -= StokesC->b[eqn];
-        
         if ( model.density_variations == 0 )  StokesC->F[eqn] = comp_fact*mesh->bet_n[c2]*(mesh->p_in[c2] -  mesh->p0_n[c2] ) / model.dt + mesh->div_u[c2];
         if ( model.density_variations == 1 )  StokesC->F[eqn] = comp_fact*( log(mesh->rho_n[c2]) -  log(mesh->rho0_n[c2]) ) / model.dt + mesh->div_u[c2];
         StokesC->F[eqn] *= celvol;
-        StokesD->F[eqn] = StokesC->F[eqn] ;
-//        printf("fp = %2.2e p = %2.2e p0 = %2.2e, div = %2.2e, div = %2.2e, rp = %2.2e\n",  StokesD->F[eqn], mesh->p_in[eqn],  mesh->p0_n[eqn], uW*u[c1] + uE*u[c1+1] + vS*v[c3] + vN*v[c3+nxvz], mesh->div_u[eqn], mesh->bet_n[c2]/model.dt*(mesh->p_in[eqn] -  mesh->p0_n[eqn]) + mesh->div_u[eqn] );
-        
+        StokesD->F[eqn] = StokesC->F[eqn] ;        
     }
 }
-#endif
 
 /*--------------------------------------------------------------------------------------------------------------------*/
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
