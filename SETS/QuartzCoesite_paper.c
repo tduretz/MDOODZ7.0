@@ -25,8 +25,8 @@ void MutateInput(MdoodzInput *input) {
     char  inputFilePath[255];
     sprintf(inputFilePath, "%s/%s", input->model.import_files_dir, input->model.import_file);
     printf("Phase map will be built based on %s\n", fileName);
-    const int nx       = 1922;
-    const int nz       = 1922;
+    const int nx       = (int) (input->model.user7);
+    const int nz       = nx;
     const int nb_elems = nx * nz;
     input->geometry    = malloc(sizeof(Geometry));
     input->geometry[0] = (Geometry){
@@ -151,7 +151,16 @@ SetBC SetBCVz(MdoodzInput *instance, POSITION position, Coordinates coordinates)
   return bc;
 }
 
-int main() {
+int main(int nargs, char *args[]) {
+// Input file name
+  char *input_file;
+  if ( nargs < 2 ) {
+    asprintf(&input_file, "QuartzCoesite_paper.txt"); // Default
+  }
+  else {
+    asprintf(&input_file, "%s", args[1]);     // Custom
+  }
+  printf("Running MDoodz7.0 using %s\n", input_file);
   MdoodzSetup setup = {
           .SetParticles = &(SetParticles_ff){
                   .SetPhase       = SetPhase,
@@ -166,5 +175,5 @@ int main() {
           },
           .MutateInput = MutateInput,
   };
-  RunMDOODZ("QuartzCoesite_paper.txt", &setup);
+  RunMDOODZ(input_file, &setup);
 }

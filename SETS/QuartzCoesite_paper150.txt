@@ -1,0 +1,194 @@
+/**** RESTART ****/
+istep = 00150
+irestart = 0
+
+/**** INPUT FILE ****/
+import_files_dir = ../IMPORT/
+import_file      = SetupCoesite2_nxy2882.bin /indicates the name in the input file for geometry
+
+
+/**** OUTPUT FILES ****/
+writer             = 1
+writer_step        = 20
+writer_markers     = 0
+writer_debug       = 0
+writer_energies    = 0
+delete_breakpoints = 1
+
+/**** SCALES ****/
+eta = 1e22
+L   = 1e-3
+V   = 1e-18
+T   = 600
+
+/**** SPACE ****/
+Nx      = 451
+Nz      = 451
+xmin    = -3.7500000e-3
+zmin    = -3.7500000e-3
+xmax    =  3.7500000e-3
+zmax    =  3.7500000e-3
+dt      = 6.2500e+09
+
+/**** TIME  ****/
+Nt           = 1700
+constant_dt  = 1
+Courant      = 0.3
+penalty      = 1e5
+RK           = 4
+
+/**** SWITCHES ****/
+mechanical         = 1
+pure_shear_ALE     = 1
+thermal            = 0
+line_search        = 1
+subgrid_diffusion  = 1
+shear_heating      = 1
+adiab_heating      = 0
+finite_strain      = 1
+advection          = 1
+gnuplot_log_res    = 0
+kinetics           = 1
+density_variations = 1
+elastic            = 1
+compressible       = 1
+safe_mode          = 0
+eta_average        = 0
+marker_noise       = 1  / noise beau-gosse
+out_of_plane       = 1  / non zeros total Eyy
+
+/**** SETUP DEPENDANT ****/
+shear_style        = 0
+bkg_strain_rate    = 1e-25
+bkg_div_rate       = 1e-14
+bkg_pressure       = 4.3e9   / pressure [Pa]
+bkg_temperature    = 873.15  / temperature [K]
+user0              = 1       / 0: fix T=bkg_temperature, 1: use T=(P/b)^(1/a)
+user1              = 2       / 2: fancy set up --- 1: simple inclusion --- 0: homogeneous
+user2              = 0.5e-3  / inclusion radius [m]
+fix_temperature    = 1
+user3              = 1.02e-2     / fit coefficient a for T=(P/b)^(1/a)
+user4              = 2.523e-3    / fit coefficient b for T=(P/b)^(1/a)
+user7              = 2882        / size of pixel max
+
+/**** GRAVITY ****/
+gx = 0.0000
+gz = 0.000
+
+/**** MAT PROPERTIES ****/
+Nb_phases = 3
+
+/**** PHASE 0 ****/
+ID            = 0
+rho           = 2700.00  / matrix --- omphacite
+G             = 4e10
+Cv            = 1050
+k             = 2.5
+Qr            = 0
+C             = 1e7
+phi           = 35
+psi           = 10
+Slim          = 500e9
+alp           = 10.0e-6
+bet           = 1.890e-11
+drho          = 0
+cstv          = 0             / constant visc law
+pwlv          = 27            / disloc. creep
+linv          = 0             / diff. creep
+gbsv          = 0             / grain boundary sliding
+expv          = 0             / peierls creep
+gsel          = 0             / grain size evo.
+eta0          = 1e20
+npwl          = 1
+Qpwl          = 0
+eta_vp        = 5e19
+n_vp          = 1.0
+density_model = 2
+kin           = 0  / include kinetics law from Mosenfelder
+phase_diagram = 9
+
+/**** PHASE 1 ****/
+ID            = 1
+rho           = 3577.00 / inclusion 1 - garnet
+G             = 9e10
+Cv            = 1050
+k             = 2.5
+Qr            = 0
+C             = 1e7
+phi           = 20
+psi           = 5
+Slim          = 500e9
+alp           = 10.0e-6
+bet           = 5.8824e-12
+drho          = 0
+cstv          = 0             / constant visc law
+pwlv          = 33            / disloc. creep
+linv          = 0             / diff. creep
+gbsv          = 0             / grain boundary sliding
+expv          = 0             / peierls creep
+gsel          = 0             / grain size evo.
+eta0          = 1e20
+npwl          = 1
+Qpwl          = 0
+eta_vp        = 5e19
+n_vp          = 1.0
+density_model = 3
+
+/**** PHASE 2 ****/
+ID            = 2
+rho           = 2700.00 / inclusion
+G             = 4e10
+Cv            = 1050
+k             = 2.5
+Qr            = 0
+C             = 1e7
+phi           = 35
+psi           = 10
+Slim          = 500e9
+alp           = 10.0e-6
+bet           = 1.890e-11
+drho          = 0
+cstv          = 0             / constant visc law
+pwlv          = 27            / disloc. creep
+linv          = 0             / diff. creep
+gbsv          = 0             / grain boundary sliding
+expv          = 0             / peierls creep
+gsel          = 0             / grain size evo.
+eta0          = 1e20
+npwl          = 1
+Qpwl          = 0
+eta_vp        = 5e19
+n_vp          = 1.0
+density_model = 2
+kin           = 0  / include kinetics law from Mosenfelder
+phase_diagram = 9
+
+/**** DEFMAPS ****/
+nT    =    51      / Temperature resolution []
+nE    =    51      / Strain rate resolution []
+nd    =    2        / Grain size resolution []
+Tmin  =    240      / Temperature minimum [°C]
+Tmax  =    2000     / Temperature maximum [°C]
+Emin  =    -50      / Strain rate minimum log_10 [1/s]
+Emax  =    5        / Strain rate maximum log_10 [1/s]
+dmin  =    -7       / Grain size minimum log_10 [m]
+dmax  =    -2       / Grain size maximum log_10 [m]
+Pn    =  1e9        / Pressure [Pa]
+
+/**** PARTICLES ****/
+Nx_part  = 4
+Nz_part  = 4
+min_part_cell = 16
+
+/**** NON-LINEAR ITERATIONS ****/
+Newton            = 1
+Picard2Newton     = 1
+Picard2Newton_tol = 1e-1
+nit_max           = 15
+rel_tol_KSP       = 1e-4
+nonlin_abs_mom    = 1e-11
+nonlin_abs_div    = 1e-11
+lin_abs_div       = 1e-9
+lin_rel_div       = 1e-9
+min_eta           = 1e17
+max_eta           = 1e25
