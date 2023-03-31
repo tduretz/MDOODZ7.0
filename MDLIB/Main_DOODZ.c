@@ -340,7 +340,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         printf("******** Initialize timestep ********\n");
         printf("*************************************\n");
 
-        // DefineInitialTimestep( &input.model, &mesh, particles, input.materials, input.scaling );
+        DefineInitialTimestep( &input.model, &mesh, particles, input.materials, input.scaling );
 
         if (input.model.track_T_P_x_z == 1 ) {
             ArrayEqualArray( particles.T0,   particles.T, particles.Nb_part );
