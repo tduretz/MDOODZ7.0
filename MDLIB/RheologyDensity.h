@@ -15,6 +15,8 @@ typedef struct {
 
 // TODO organize it into subsections
 typedef struct {
+  double eta_up;
+  double eta_lo;
   double Eii;
   double f_ani;
   double Ag;
