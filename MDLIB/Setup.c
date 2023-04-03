@@ -412,14 +412,16 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
         }
 
         // FREE SURFACE
-        if ((mesh->BCt.type[c] == -1 || mesh->BCt.type[c] == 1 || mesh->BCt.type[c] == 0) && mesh->BCt.type[c + NCX] == 30) {
-          position = free_surface;
-          if (setBCs.SetBCT) {
-            SetBC bc          = setBCs.SetBCT(instance, position, mesh->T[c]);
-            mesh->BCT_exp.type[c1] = bc.type;
-            mesh->BCT_exp.val[c1]  = bc.value;
-          }
-        }      
+        if (l<NCZ-1) {
+          if ((mesh->BCt.type[c] == -1 || mesh->BCt.type[c] == 1 || mesh->BCt.type[c] == 0) && mesh->BCt.type[c + NCX] == 30) {
+            position = free_surface;
+            if (setBCs.SetBCT) {
+              SetBC bc          = setBCs.SetBCT(instance, position, mesh->T[c]);
+              mesh->BCT_exp.type[c1] = bc.type;
+              mesh->BCT_exp.val[c1]  = bc.value;
+            }
+          }  
+        }    
        }
     }
   }
@@ -477,14 +479,16 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
         }
 
         // FREE SURFACE
-        if ((mesh->BCc.type[c] == -1 || mesh->BCc.type[c] == 1 || mesh->BCt.type[c] == 0) && mesh->BCt.type[c + NCX] == 30) {
-          position = free_surface;
-          if (setBCs.SetBCC) {
-            SetBC bc          = setBCs.SetBCC(instance, position, mesh->T[c]);
-            mesh->BCC_exp.type[c1] = bc.type;
-            mesh->BCC_exp.val[c1]  = bc.value;
-          }
-        }      
+        if (l<NCZ-1) {
+          if ((mesh->BCc.type[c] == -1 || mesh->BCc.type[c] == 1 || mesh->BCt.type[c] == 0) && mesh->BCt.type[c + NCX] == 30) {
+            position = free_surface;
+            if (setBCs.SetBCC) {
+              SetBC bc          = setBCs.SetBCC(instance, position, mesh->T[c]);
+              mesh->BCC_exp.type[c1] = bc.type;
+              mesh->BCC_exp.val[c1]  = bc.value;
+            }
+          } 
+        }     
        }
     }
   }
