@@ -1175,7 +1175,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
     free(BaseParticleFileName);
     free(input.model.import_file);
     free(input.model.import_files_dir);
-    // free(input.model.writer_subfolder);
+    free(input.model.writer_subfolder);
     free(input.model.initial_markers_file);
     // free(input.model.description);
 
