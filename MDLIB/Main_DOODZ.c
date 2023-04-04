@@ -48,6 +48,11 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
     printf("********************************************************\n");
 
     Input       inputFile   = ReadInputFile(inputFileName);
+
+    char*  BaseOutputFileName, BaseParticleFileName;
+    asprintf(&BaseOutputFileName, "Output");
+    asprintf(&BaseParticleFileName, "Particles");
+
     MdoodzInput input = (MdoodzInput) {
       .model = inputFile.model,
       .scaling = inputFile.scaling,
@@ -359,8 +364,8 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
         // Write initial output
         if ( input.model.writer == 1 ) {
-            WriteOutputHDF5( &mesh, &particles, &topo, &topo_chain, input.model, Nmodel, "Output", input.materials, input.scaling );
-            if (input.model.writer_markers == 1 ) WriteOutputHDF5Particles( &mesh, &particles, &topo, &topo_chain, &topo_ini, &topo_chain_ini, input.model, "Particles", input.materials, input.scaling );
+            WriteOutputHDF5( &mesh, &particles, &topo, &topo_chain, input.model, Nmodel, BaseOutputFileName, input.materials, input.scaling );
+            if (input.model.writer_markers == 1 ) WriteOutputHDF5Particles( &mesh, &particles, &topo, &topo_chain, &topo_ini, &topo_chain_ini, input.model, BaseParticleFileName, input.materials, input.scaling );
         }
 
         // Set initial stresses and pressure to zero
@@ -1127,8 +1132,8 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             // Visualisation file
 #ifndef _VG_
             t_omp = (double)omp_get_wtime();
-            WriteOutputHDF5( &mesh, &particles, &topo, &topo_chain, input.model, Nmodel, "Output", input.materials, input.scaling );
-            if (input.model.writer_markers == 1 ) WriteOutputHDF5Particles( &mesh, &particles, &topo, &topo_chain, &topo_ini, &topo_chain_ini, input.model, "Particles", input.materials, input.scaling );
+            WriteOutputHDF5( &mesh, &particles, &topo, &topo_chain, input.model, Nmodel, BaseOutputFileName, input.materials, input.scaling );
+            if (input.model.writer_markers == 1 ) WriteOutputHDF5Particles( &mesh, &particles, &topo, &topo_chain, &topo_ini, &topo_chain_ini, input.model, BaseParticleFileName, input.materials, input.scaling );
             printf("** Time for Output file write = %lf sec\n", (double)((double)omp_get_wtime() - t_omp));
 #endif
         }
@@ -1161,6 +1166,8 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
     GridFree( &mesh, &input.model );
 
     // Free char*'s
+    free(BaseOutputFileName);
+    free(BaseParticleFileName);
     free(input.model.import_file);
     free(input.model.import_files_dir);
     // free(input.model.writer_subfolder);
