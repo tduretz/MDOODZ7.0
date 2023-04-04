@@ -176,7 +176,7 @@ TEST_F(ShearTemplate, NonLinearPureshearAnisotropic) {
   ASSERT_TRUE(stepsCount < 20);
 }
 
-TEST_F(ShearTemplate, NonLinearSimpleshearAnisotropic) {
+TEST_F(ShearTemplate, NonLinearSimpleshearAnisotropi) {
   const char        *testName          = testing::UnitTest::GetInstance()->current_test_info()->name();
   char *inputName;
   asprintf(&inputName, "ShearTemplate/%s.txt", testName);
