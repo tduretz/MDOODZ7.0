@@ -9,7 +9,7 @@ writer_markers    = 0
 writer_debug      = 0
 writer_energies   = 0
 gnuplot_log_res = 0
-writer_subfolder = NonLinearSimpleshearAnisotropic
+writer_subfolder = NonLinearSimpleshearAnisotropi
 
 /**** SCALES ****/
 eta = 1
