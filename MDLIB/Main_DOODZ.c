@@ -1165,6 +1165,11 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
     // Free arrays
     GridFree( &mesh, &input.model );
 
+
+    if (input.crazyConductivity) {
+        free(input.crazyConductivity->phases);
+        free(input.crazyConductivity);
+    }
     // Free char*'s
     free(BaseOutputFileName);
     free(BaseParticleFileName);
