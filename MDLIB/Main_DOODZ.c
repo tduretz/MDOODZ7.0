@@ -49,7 +49,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
     Input       inputFile   = ReadInputFile(inputFileName);
 
-    char*  BaseOutputFileName, BaseParticleFileName;
+    char *BaseOutputFileName, *BaseParticleFileName;
     asprintf(&BaseOutputFileName, "Output");
     asprintf(&BaseParticleFileName, "Particles");
 
