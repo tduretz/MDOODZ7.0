@@ -530,12 +530,6 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         // Detect compressible cells
         if (input.model.compressible == 1 ) DetectCompressibleCells ( &mesh, &input.model );
 
-        // // Compute cohesion and friction angle on the grid
-        // CohesionFrictionDilationGrid( &mesh, &particles, input.materials, input.model, input.scaling );
-
-        // // Detect compressible cells
-        // if (input.model.compressible == 1) DetectCompressibleCells ( &mesh, &input.model );
-
         // Get physical properties that are constant throughout each timestep
         UpdateDensity( &mesh, &particles, &input.materials, &input.model, &input.scaling );
 
