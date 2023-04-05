@@ -83,7 +83,8 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
     // Initialise data for logs of iterations
     Nparams Nmodel = NmodelAlloc(inputFile.Nmodel);
 
-    //input.model.Newton = input.model.anisotropy  == 1; // this statement is incorrect, Newton should also work for isotropic case
+    bool NeedJacobian = input.model.Newton == 1 || input.model.anisotropy == 1;
+
     int IsFullNewton = input.model.Newton == 1;
     if (input.model.anisotropy  == 1) input.model.Newton = 1; // activate Newton context is anisotropy is activated
     int IsNewtonStep = input.model.Newton == 1;
@@ -603,6 +604,26 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             // Allocate and initialise solution and RHS vectors
             SetBCs(*setup->SetBCs, &input, &mesh);
 
+            // Reset fields and BC values if needed
+            //        if ( input.model.pure_shear_ALE == 1 ) InitialiseSolutionFields( &mesh, &input.model );
+            InitialiseSolutionFields( &mesh, &input.model );
+            EvalNumberOfEquations( &mesh, &Stokes );
+            if ( NeedJacobian ) EvalNumberOfEquations( &mesh, &Jacob  );
+            SAlloc( &Stokes,  Stokes.neq );
+            if ( NeedJacobian ) SAlloc(  &Jacob,   Jacob.neq );
+            SAlloc( &StokesA, Stokes.neq_mom );
+            SAlloc( &StokesB, Stokes.neq_mom );
+            SAlloc( &StokesC, Stokes.neq_cont);
+            SAlloc( &StokesD, Stokes.neq_cont );
+            if ( NeedJacobian ) {
+              SAlloc( &JacobA, Stokes.neq_mom );
+              SAlloc( &JacobB, Stokes.neq_mom );
+              SAlloc( &JacobC, Stokes.neq_cont);
+              SAlloc( &JacobD, Stokes.neq_cont );
+            }
+            printf( "Linear systems allocated\n");
+            printf( "neq_tot = %d, neq_mom = %d, neq_cont = %d\n", Stokes.neq, Stokes.neq_mom, Stokes.neq_cont );
+
             // Non-linear iteration cycle
             Nmodel.nit         = 0;
             input.model.nit    = 0;
@@ -627,26 +648,6 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
               IsFirstNewtonStep  = 1;
             }
 
-            // Reset fields and BC values if needed
-            //        if ( input.model.pure_shear_ALE == 1 ) InitialiseSolutionFields( &mesh, &input.model );
-            InitialiseSolutionFields( &mesh, &input.model );
-            EvalNumberOfEquations( &mesh, &Stokes );
-            if ( IsNewtonStep == 1 ) EvalNumberOfEquations( &mesh, &Jacob  );
-            SAlloc( &Stokes,  Stokes.neq );
-            if ( IsNewtonStep == 1 ) SAlloc(  &Jacob,   Jacob.neq );
-            SAlloc( &StokesA, Stokes.neq_mom );
-            SAlloc( &StokesB, Stokes.neq_mom );
-            SAlloc( &StokesC, Stokes.neq_cont);
-            SAlloc( &StokesD, Stokes.neq_cont );
-            if ( IsNewtonStep == 1 ) {
-              SAlloc( &JacobA, Stokes.neq_mom );
-              SAlloc( &JacobB, Stokes.neq_mom );
-              SAlloc( &JacobC, Stokes.neq_cont);
-              SAlloc( &JacobD, Stokes.neq_cont );
-            }
-            printf( "Linear systems allocated\n");
-            printf( "neq_tot = %d, neq_mom = %d, neq_cont = %d\n", Stokes.neq, Stokes.neq_mom, Stokes.neq_cont );
-
             // Set vector x = [u;p]
             InitialiseSolutionVector( &mesh, &Stokes, &input.model );
 
@@ -656,7 +657,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
                 if ( Nmodel.nit > 0 && Nmodel.Picard2Newton == 1 ) {
                     printf("input.model.Newton = %d --- %d\n", input.model.Newton, Nmodel.rp_rel[Nmodel.nit-1] < Nmodel.Picard2Newton_tol);
-                    if ( Nmodel.rx_rel[Nmodel.nit-1] < Nmodel.Picard2Newton_tol || Nmodel.rz_rel[Nmodel.nit-1] < Nmodel.Picard2Newton_tol || Nmodel.rp_rel[Nmodel.nit-1] < Nmodel.Picard2Newton_tol || Nmodel.nit>= Nmodel.max_Pic_its) {
+                    if (Nmodel.rx_rel[Nmodel.nit-1] < Nmodel.Picard2Newton_tol || Nmodel.rz_rel[Nmodel.nit-1] < Nmodel.Picard2Newton_tol || Nmodel.rp_rel[Nmodel.nit-1] < Nmodel.Picard2Newton_tol || Nmodel.nit>= Nmodel.max_Pic_its) {
                         if ( IsFirstNewtonStep == 0 ) CholmodSolver.Analyze = 0;
                         if ( IsFirstNewtonStep == 1 ) {
                             cholmod_free_factor ( &CholmodSolver.Lfact, &CholmodSolver.c);
@@ -669,7 +670,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                 }
 
                 // Determine whether Jacobian matrix should be assembled
-                if (input.model.Newton == 1 || input.model.anisotropy == 1 ) IsJacobianUsed = 1;
+                if (input.model.Newton == 1 || input.model.anisotropy == 1) IsJacobianUsed = 1;
 
                 printf("**********************************************\n");
                 if ( IsNewtonStep == 1 ) {
@@ -1093,12 +1094,12 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
         // Free solution arrays
         SFree( &Stokes );
-        if ( IsNewtonStep == 1 ) SFree( &Jacob );
+        if ( NeedJacobian ) SFree( &Jacob );
         SFree( &StokesA );
         SFree( &StokesB );
         SFree( &StokesC );
         SFree( &StokesD );
-        if ( IsNewtonStep == 1 ) {
+        if ( NeedJacobian ) {
             SFree( &JacobA );
             SFree( &JacobB );
             SFree( &JacobC );
@@ -1107,7 +1108,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         DoodzFree( Stokes.eqn_u );
         DoodzFree( Stokes.eqn_v );
         DoodzFree( Stokes.eqn_p );
-        if ( IsNewtonStep == 1 ) {
+        if ( NeedJacobian ) {
             DoodzFree( Jacob.eqn_u );
             DoodzFree( Jacob.eqn_v );
             DoodzFree( Jacob.eqn_p );
@@ -1153,8 +1154,8 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
     if (input.model.gnuplot_log_res == 1) pclose(GNUplotPipe);
 
     //    // Free markers chains
-    if (input.model.free_surface == 1 )    FreeMarkerChain( &topo,     &topo_chain     );
-    if (input.model.free_surface == 1 )    FreeMarkerChain( &topo_ini, &topo_chain_ini );
+    if (input.model.free_surface == 1 ) FreeMarkerChain( &topo,     &topo_chain     );
+    if (input.model.free_surface == 1 ) FreeMarkerChain( &topo_ini, &topo_chain_ini );
 
     // Free Phase diagrams if activated
     if (input.model.isPD == 1 ) FreePhaseDiagrams( &input.model );
@@ -1164,7 +1165,6 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
     // Free arrays
     GridFree( &mesh, &input.model );
-
 
     if (input.crazyConductivity) {
         free(input.crazyConductivity->phases);
