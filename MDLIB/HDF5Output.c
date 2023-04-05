@@ -202,20 +202,16 @@ void AddFieldToGroup( const char filename[], const char group[], const char fiel
 	else if( d_type == 'c' ) {
 		coord_dataset_id = H5Dcreate( file_id, dataset_name, H5T_NATIVE_CHAR, coord_dataspace_id, H5P_DEFAULT,SET_CREATION_PLIST,H5P_DEFAULT);
         H5Dwrite(coord_dataset_id, H5T_NATIVE_CHAR, H5S_ALL, H5S_ALL, H5P_DEFAULT, data );
-
 	}
 
 	else if( d_type == 'i' ) {
 		coord_dataset_id = H5Dcreate( file_id, dataset_name, H5T_STD_I32BE, coord_dataspace_id, H5P_DEFAULT,SET_CREATION_PLIST,H5P_DEFAULT);
         H5Dwrite(coord_dataset_id, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, data );
-
 	}
 	else if( d_type == 'f' ) {
 		coord_dataset_id = H5Dcreate( file_id, dataset_name, H5T_NATIVE_FLOAT, coord_dataspace_id, H5P_DEFAULT,SET_CREATION_PLIST,H5P_DEFAULT);
         H5Dwrite(coord_dataset_id, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, data );
-
 	}
-
 	else {
 		printf("ERROR: Only know how to write doubles (d), ints (i), or chars (c) \n");
 		exit(1);
