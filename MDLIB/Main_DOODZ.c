@@ -603,31 +603,6 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             // Allocate and initialise solution and RHS vectors
             SetBCs(*setup->SetBCs, &input, &mesh);
 
-            // Reset fields and BC values if needed
-            //        if ( input.model.pure_shear_ALE == 1 ) InitialiseSolutionFields( &mesh, &input.model );
-            InitialiseSolutionFields( &mesh, &input.model );
-            EvalNumberOfEquations( &mesh, &Stokes );
-            if ( IsNewtonStep == 1 ) EvalNumberOfEquations( &mesh, &Jacob  );
-            SAlloc( &Stokes,  Stokes.neq );
-            if ( IsNewtonStep == 1 ) SAlloc(  &Jacob,   Jacob.neq );
-            SAlloc( &StokesA, Stokes.neq_mom );
-            SAlloc( &StokesB, Stokes.neq_mom );
-            SAlloc( &StokesC, Stokes.neq_cont);
-            SAlloc( &StokesD, Stokes.neq_cont );
-            if ( IsNewtonStep == 1 ) {
-                SAlloc( &JacobA, Stokes.neq_mom );
-                SAlloc( &JacobB, Stokes.neq_mom );
-                SAlloc( &JacobC, Stokes.neq_cont);
-                SAlloc( &JacobD, Stokes.neq_cont );
-            }
-            printf( "Linear systems allocated\n");
-            printf( "neq_tot = %d, neq_mom = %d, neq_cont = %d\n", Stokes.neq, Stokes.neq_mom, Stokes.neq_cont );
-
-            // Set vector x = [u;p]
-            InitialiseSolutionVector( &mesh, &Stokes, &input.model );
-
-            //------------------------------------------------------------------------------------------------------------------------------//
-
             // Non-linear iteration cycle
             Nmodel.nit         = 0;
             input.model.nit    = 0;
@@ -651,6 +626,31 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
               IsNewtonStep       = 0;
               IsFirstNewtonStep  = 1;
             }
+
+            // Reset fields and BC values if needed
+            //        if ( input.model.pure_shear_ALE == 1 ) InitialiseSolutionFields( &mesh, &input.model );
+            InitialiseSolutionFields( &mesh, &input.model );
+            EvalNumberOfEquations( &mesh, &Stokes );
+            if ( IsNewtonStep == 1 ) EvalNumberOfEquations( &mesh, &Jacob  );
+            SAlloc( &Stokes,  Stokes.neq );
+            if ( IsNewtonStep == 1 ) SAlloc(  &Jacob,   Jacob.neq );
+            SAlloc( &StokesA, Stokes.neq_mom );
+            SAlloc( &StokesB, Stokes.neq_mom );
+            SAlloc( &StokesC, Stokes.neq_cont);
+            SAlloc( &StokesD, Stokes.neq_cont );
+            if ( IsNewtonStep == 1 ) {
+              SAlloc( &JacobA, Stokes.neq_mom );
+              SAlloc( &JacobB, Stokes.neq_mom );
+              SAlloc( &JacobC, Stokes.neq_cont);
+              SAlloc( &JacobD, Stokes.neq_cont );
+            }
+            printf( "Linear systems allocated\n");
+            printf( "neq_tot = %d, neq_mom = %d, neq_cont = %d\n", Stokes.neq, Stokes.neq_mom, Stokes.neq_cont );
+
+            // Set vector x = [u;p]
+            InitialiseSolutionVector( &mesh, &Stokes, &input.model );
+
+            //------------------------------------------------------------------------------------------------------------------------------//
 
             while ( Nmodel.nit <= Nmax_picard && nstag< input.model.max_num_stag) {
 
