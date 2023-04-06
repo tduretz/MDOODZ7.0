@@ -8,9 +8,9 @@ home = expanduser("~")
 path ="/REPO/MDOODZ7.0/MDLIB/"
 
 # File numbers
-file_start = 0
+file_start = 10
 file_step  = 10
-file_end   = 100
+file_end   = 10
 
 viz_X = True
 

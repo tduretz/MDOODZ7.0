@@ -1,10 +1,10 @@
 # MDOODZ7.0
 
 Welcome to MDOODZ7.0 public repository!
-This version of MDOODZ is under construction, more testing will be progressively added...
 
 ![](/misc/images/Compression_Symmetric.gif)
 
+In addition to Continuous Integration (CI), MDOODZ7.0 also includes a series of more expensives tests. THe results can be compared to reference ones. Check out: 
 ## [Visual Test Results](/VISUAL_TESTS/readme.md)
 
 # Library usage

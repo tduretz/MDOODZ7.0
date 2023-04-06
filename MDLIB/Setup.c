@@ -342,7 +342,7 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
 
   /* -------------------------------------------------------------------------------------------------------*/
   /* Set the BCs for T on all grid levels */
-  /* Type  1: Dirichlet point that do not match the physical boundary (Vx:
+  /* Type  1: Dirichlet point that does not match the physical boundary (Vx:
    * bottom/top, Vz: left/right)      */
   /* Type  0: Neumann point that matches the physical boundary (Vx: bottom/top,
    * Vz: left/right)             */
@@ -350,6 +350,15 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
   /* Type -1: not a BC point (tag for inner points) */
   /* Type 30: not calculated (part of the "air") */
   /* -------------------------------------------------------------------------------------------------------*/
+
+  if (instance->model.fix_temperature==1) {
+    for (int l = 0; l < NCZ; l++) {
+      for (int k = 0; k < NCX; k++) {
+        const int c  = k + l * (NCX);
+        mesh->T[c] = setBCs.FixTemperature( instance, mesh->p_in[0]);
+      }
+    }
+  }
 
   for (int l = 0; l < NCZ; l++) {
     for (int k = 0; k < NCX; k++) {
@@ -403,20 +412,21 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
         }
 
         // FREE SURFACE
-        if ((mesh->BCt.type[c] == -1 || mesh->BCt.type[c] == 1 || mesh->BCt.type[c] == 0) && mesh->BCt.type[c + NCX] == 30) {
-          position = free_surface;
-          if (setBCs.SetBCT) {
-            SetBC bc          = setBCs.SetBCT(instance, position, mesh->T[c]);
-            mesh->BCT_exp.type[c1] = bc.type;
-            mesh->BCT_exp.val[c1]  = bc.value;
-          }
-        }      
+        if (l<NCZ-1) {
+          if ((mesh->BCt.type[c] == -1 || mesh->BCt.type[c] == 1 || mesh->BCt.type[c] == 0) && mesh->BCt.type[c + NCX] == 30) {
+            position = free_surface;
+            if (setBCs.SetBCT) {
+              SetBC bc          = setBCs.SetBCT(instance, position, mesh->T[c]);
+              mesh->BCT_exp.type[c1] = bc.type;
+              mesh->BCT_exp.val[c1]  = bc.value;
+            }
+          }  
+        }    
        }
     }
   }
 
   // CHEMICAL DIFFUSION
-
   for (int l = 0; l < NCZ; l++) {
     for (int k = 0; k < NCX; k++) {
 
@@ -469,14 +479,16 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
         }
 
         // FREE SURFACE
-        if ((mesh->BCc.type[c] == -1 || mesh->BCc.type[c] == 1 || mesh->BCt.type[c] == 0) && mesh->BCt.type[c + NCX] == 30) {
-          position = free_surface;
-          if (setBCs.SetBCC) {
-            SetBC bc          = setBCs.SetBCC(instance, position, mesh->T[c]);
-            mesh->BCC_exp.type[c1] = bc.type;
-            mesh->BCC_exp.val[c1]  = bc.value;
-          }
-        }      
+        if (l<NCZ-1) {
+          if ((mesh->BCc.type[c] == -1 || mesh->BCc.type[c] == 1 || mesh->BCt.type[c] == 0) && mesh->BCt.type[c + NCX] == 30) {
+            position = free_surface;
+            if (setBCs.SetBCC) {
+              SetBC bc          = setBCs.SetBCC(instance, position, mesh->T[c]);
+              mesh->BCC_exp.type[c1] = bc.type;
+              mesh->BCC_exp.val[c1]  = bc.value;
+            }
+          } 
+        }     
        }
     }
   }

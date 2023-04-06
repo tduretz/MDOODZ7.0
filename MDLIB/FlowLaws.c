@@ -407,6 +407,20 @@ void ReadDataPowerLaw( mat_prop* mat, params* model, int k, int number, scale* s
             mat->apwl[k] = 0.0;
             success      = 1;
             break;
+        
+        case 33:
+            printf("Garnet - Ji and Martignole (1994):\n" ); // Activation volume set to 10 for incompressible (like in Mei 2010)
+            mat->tpwl[k] = 1;
+            mat->npwl[k] = 2.22;
+            mat->mpwl[k] = 0.0;
+            mat->rpwl[k] = 0.0;
+            mat->Qpwl[k] = 485.0e3;
+            mat->Vpwl[k] = 10e-6;
+            mat->Apwl[k] = 2.7952e-07;
+            mat->fpwl[k] = 0.0;
+            mat->apwl[k] = 0.0;
+            success      = 1;
+            break;
             
         /******************************** Mantle flow laws ********************************/
             

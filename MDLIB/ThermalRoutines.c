@@ -69,7 +69,7 @@ void AddCoeffThermal( int* J, double*A, int neq, int jeq, int *nnzc, double coef
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-void EnergyDirectSolve( grid *mesh, params model, double *rhoE, double *drhoE, double *rhs_t, double *rhoE0, markers *particles, double dt, int shear_heating, int adiab_heating, scale scaling, int nit ) {
+void EnergyDirectSolve( grid *mesh, params model, double *rhs_t, markers *particles, double dt, int shear_heating, int adiab_heating, scale scaling, int nit ) {
 
     // Energy matrix
     double  *A;
@@ -409,7 +409,8 @@ void EnergyDirectSolve( grid *mesh, params model, double *rhoE, double *drhoE, d
         MinMaxArrayTag( mesh->T, scaling.T, (mesh->Nx-1)*(mesh->Nz-1), "T", mesh->BCt.type );
         dUt          = 0.0;
         zero_celsius = zeroC;
-#pragma omp parallel for shared( mesh ) private( c2, c0, k, l, eqn ) firstprivate( ncx, ncz, zero_celsius, model, scaling, x, eqn_t ) reduction (+:dUt)
+        double dT    = 0.0;
+#pragma omp parallel for shared( mesh ) private( c2, c0, k, l, eqn, dT ) firstprivate( ncx, ncz, zero_celsius, model, scaling, x, eqn_t ) reduction (+:dUt)
         // LOOP ON THE GRID TO CALCULATE FD COEFFICIENTS
         for( l=0; l<ncz; l++) {
             for( k=0; k<ncx; k++) {
@@ -417,9 +418,9 @@ void EnergyDirectSolve( grid *mesh, params model, double *rhoE, double *drhoE, d
                 c2  = k   + l*ncx;
                 eqn = eqn_t[c2];
                 if ( mesh->BCT_exp.type[c0] != 30 ) {
-                    mesh->dT[c2] = x[eqn] -  mesh->T[c2];
-                    mesh->T[c2]  = mesh->T[c2] + mesh->dT[c2];
-                    dUt         += mesh->rho_n[c2]*mesh->Cv[c2]*mesh->dT[c2];
+                    dT           = x[eqn] - mesh->T[c2];
+                    mesh->T[c2]  = x[eqn];
+                    dUt         += mesh->rho_n[c2]*mesh->Cv[c2]*dT;
                     if (mesh->T[c2] < 0.0) {
                         printf("Negative temperature --- Are you crazy! (EnergyDirectSolve)\n");
                         exit(1);
@@ -427,7 +428,6 @@ void EnergyDirectSolve( grid *mesh, params model, double *rhoE, double *drhoE, d
                 }
                 else {
                     // Outside the free surface
-                    mesh->dT[c2] = 0.0;
                     mesh->T[c2]  = zero_celsius/scaling.T;
                 }
             }
@@ -501,7 +501,7 @@ void EnergyDirectSolve( grid *mesh, params model, double *rhoE, double *drhoE, d
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-void ThermalSteps( grid *mesh, params model, double *rhoE, double *drhoE, double *rhs_t, double *rhoE0, markers *particles, double total_time, scale scaling ) {
+void ThermalSteps( grid *mesh, params model, double *rhs_t, markers *particles, double total_time, scale scaling ) {
 
     double dt = total_time/10.0;
     int nit = floor(total_time/dt);
@@ -510,7 +510,7 @@ void ThermalSteps( grid *mesh, params model, double *rhoE, double *drhoE, double
     printf( "Number of thermal steps = %d\n", nit );
 
     // Run thermal diffusion timesteps to generate initial temperature field
-    EnergyDirectSolve( mesh, model, mesh->T, mesh->dT, rhs_t, mesh->T, particles, dt, 0, 0, scaling, nit );
+    EnergyDirectSolve( mesh, model, rhs_t, particles, dt, 0, 0, scaling, nit );
 
 }
 
