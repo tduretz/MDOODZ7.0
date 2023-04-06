@@ -252,7 +252,7 @@ void MinMaxArrayTag( DoodzFP* array, double scale, int size, char* text, char* t
             }
         }
     }
-    printf( "min(%s) = %2.6e max(%s) = %2.6e\n", text, min*scale, text, max*scale);
+    printf( "min(%s) = %2.10e max(%s) = %2.10e\n", text, min*scale, text, max*scale);
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/

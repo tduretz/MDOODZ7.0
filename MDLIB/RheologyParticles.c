@@ -1178,7 +1178,7 @@ void UpdateParticleGrainSize( grid* mesh, scale scaling, params model, markers* 
 void UpdateParticleEnergy( grid* mesh, scale scaling, params model, markers* particles, mat_prop* materials ) {
     
     DoodzFP *T_inc_mark, *Tm0, dtm, *dTms, *dTgr, *dTmr, *rho_part;
-    double *Tg0, *dTgs, dx=model.dx, dz=model.dz, d=1.0;
+    double *dT, *dTgs, dx=model.dx, dz=model.dz, d=1.0;
     int    cent=1, vert=0, prop=1, interp=0;
     int Nx, Nz, Ncx, Ncz, k, c0, p;
     Nx = mesh->Nx; Ncx = Nx-1;
@@ -1186,15 +1186,17 @@ void UpdateParticleEnergy( grid* mesh, scale scaling, params model, markers* par
     
     // Allocations
     Tm0        = DoodzCalloc(particles->Nb_part, sizeof(DoodzFP));
-    Tg0        = DoodzCalloc(Ncx*Ncz, sizeof(DoodzFP));
+    dT         = DoodzCalloc(Ncx*Ncz, sizeof(DoodzFP));
     T_inc_mark = DoodzCalloc(particles->Nb_part, sizeof(DoodzFP));
-    
+
     // Old temperature grid
-#pragma omp parallel for shared(mesh, Tg0) private(c0) firstprivate(Ncx,Ncz)
+#pragma omp parallel for shared(mesh, dT) private(c0) firstprivate(Ncx,Ncz)
     for ( c0=0; c0<Ncx*Ncz; c0++ ) {
-        if (mesh->BCt.type[c0] != 30) Tg0[c0] = mesh->T[c0] - mesh->dT[c0];
+        if (mesh->BCt.type[c0] != 30) {
+            dT[c0]  = mesh->T[c0] - mesh->T0_n[c0];
+        }
     }
-    Interp_Grid2P_centroids2( *particles, Tm0, mesh, Tg0, mesh->xvz_coord,  mesh->zvx_coord, Nx-1, Nz-1, mesh->BCt.type, &model  );
+    Interp_Grid2P_centroids2( *particles, Tm0, mesh, mesh->T0_n, mesh->xvz_coord,  mesh->zvx_coord, Nx-1, Nz-1, mesh->BCt.type, &model  );
     
     // SUBGRID
     if ( model.subgrid_diffusion >= 1 ) { /* CASE WITH SUBGRID DIFFUSION */
@@ -1225,7 +1227,7 @@ void UpdateParticleEnergy( grid* mesh, scale scaling, params model, markers* par
         // Remaining temperature increments on the grid
 #pragma omp parallel for shared(mesh, dTgs, dTgr) private(c0) firstprivate(Ncx,Ncz)
         for ( c0=0; c0<Ncx*Ncz; c0++ ) {
-            if (mesh->BCt.type[c0] != 30) dTgr[c0] = mesh->dT[c0] - dTgs[c0];
+            if (mesh->BCt.type[c0] != 30) dTgr[c0] = dT[c0] - dTgs[c0];
         }
         
         // Remaining temperature increments grid --> markers
@@ -1246,14 +1248,14 @@ void UpdateParticleEnergy( grid* mesh, scale scaling, params model, markers* par
     else {  /* CASE WITHOUT SUBGRID DIFFUSION: INTERPOLATE INCREMENT DIRECTLY */
         
         // Interp increments to particles
-        Interp_Grid2P_centroids2( *particles, T_inc_mark, mesh, mesh->dT, mesh->xvz_coord,  mesh->zvx_coord, Nx-1, Nz-1, mesh->BCt.type, &model  );
+        Interp_Grid2P_centroids2( *particles, T_inc_mark, mesh, dT, mesh->xvz_coord,  mesh->zvx_coord, Nx-1, Nz-1, mesh->BCt.type, &model  );
 
         // Increment temperature on particles
         ArrayPlusArray( particles->T, T_inc_mark, particles->Nb_part );
     }
     
     // Freedom
-    DoodzFree(Tg0);
+    DoodzFree(dT);
     DoodzFree(Tm0);
     DoodzFree(T_inc_mark);
 }

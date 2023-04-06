@@ -1090,8 +1090,11 @@ void KillerSolver( SparseMat *matA,  SparseMat *matB,  SparseMat *matC,  SparseM
             // Here Dcm0 is the pressure block - This relates to physics (0 is incompressible, Beta/dt is compressible)
             if (mesh->comp_cells[k]==0) ((double*)D1cm0->x)[i] *= 0.0;
             if (mesh->comp_cells[k]==1 && vol_change == 0 ) ((double*)D1cm0->x)[i]  = mesh->bet_n[k] / model.dt * celvol * matD->d[i]*matD->d[i];
+            // if (mesh->drhodp_n[k] / (mesh->rho_n[k]) < mesh->bet_n[k]/10) {
+            //     printf("%2.2e %2.2e\n", mesh->drhodp_n[k] ,  mesh->bet_n[k]);
+            //     exit(1);
+            // }
             if (mesh->comp_cells[k]==1 && vol_change == 1 ) ((double*)D1cm0->x)[i]  = mesh->drhodp_n[k] / (mesh->rho_n[k]*model.dt) * celvol * matD->d[i]*matD->d[i];
-            // printf("%2.2e %2.2e\n", mesh->bet_n[k], mesh->drhodp_n[k]);
             // Here Dcm0 is the inverse of the pressure block - This relates to numerics in this incompressible case (penalty) or physics in the compressible case (dt/Beta)
             if (mesh->comp_cells[k]==0) ((double*)Dcm0->x)[i]  *= penalty;
             if (mesh->comp_cells[k]==1) ((double*)Dcm0->x)[i]   = 1.0 /  ((double*)D1cm0->x)[i];

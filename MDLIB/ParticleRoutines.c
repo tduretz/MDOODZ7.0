@@ -676,6 +676,8 @@ reduction(+:npW,npE )
     
     printf("** Time for particles inflow check = %lf sec\n",  (double)((double)omp_get_wtime() - t_omp) );
     
+    DoodzFree(ip_reuse);
+
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
