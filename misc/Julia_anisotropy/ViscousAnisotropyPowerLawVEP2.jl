@@ -83,29 +83,29 @@ function main_simple_ani_vis()
             τii = sqrt(Y2); τxxt = τ[1]; τyyt = τ[2]; τzzt = -τxxt-τyyt; τxyt = τ[3]
 
             # # PLASTICITY
-            # γ̇ = 0.
-            # F = τii - cos(fric)*C - P*sin(fric)*am + sin(fric)*( a1*τxxt + a2*τyyt + a3*τzzt)/3
-            # if F>0
-            #     γ̇    = F/(ηve + ηvp + K*Δt*sin(dil)*sin(fric)*am)
-            #     τiic = τii - γ̇*ηve
-            #     τxxc = τxxt*(1 - γ̇*ηve/τii)
-            #     τyyc = τyyt*(1 - γ̇*ηve/τii)
-            #     τzzc = τzzt*(1 - γ̇*ηve/τii)
-            #     Pc   = P    + K*Δt*sin(dil)*γ̇ 
-            #     F    = τiic - cos(fric)*C - Pc*sin(fric)*am - ηvp*γ̇ + sin(fric)*( a1*τxxt + a2*τyyt + a3*τzzt)/3
-            #     @show (F)
-            #     Y2   = τiic^2
-            #     ηvep = τiic/2/ε̇ii
-            #     ηve  = ηvep
-            #     D    = 2*ηve*[1 0 0; 0 1 0; 0 0 1.0/ani_fac;]
-            #     τ    = D*ε̇ 
-            #     Y2   = 0.5*(τ[1]^2 + τ[2]^2) + τ[3]^2*ani_fac^2
-            #     τiic = sqrt(Y2)
-            #     F    = τiic - cos(fric)*C - Pc*sin(fric)*am - ηvp*γ̇ + sin(fric)*( a1*τxxt + a2*τyyt + a3*τzzt)/3
-            #     @show (F)
-            # end
-            # τii_rot1[i] = sqrt(Y2)
-            # ε̇ii_rot[i]  = sqrt(I2)
+            γ̇ = 0.
+            F = τii - cos(fric)*C - P*sin(fric)*am + sin(fric)*( a1*τxxt + a2*τyyt + a3*τzzt)/3
+            if F>0
+                γ̇    = F/(ηve + ηvp + K*Δt*sin(dil)*sin(fric)*am)
+                τiic = τii - γ̇*ηve
+                τxxc = τxxt*(1 - γ̇*ηve/τii)
+                τyyc = τyyt*(1 - γ̇*ηve/τii)
+                τzzc = τzzt*(1 - γ̇*ηve/τii)
+                Pc   = P    + K*Δt*sin(dil)*γ̇ 
+                F    = τiic - cos(fric)*C - Pc*sin(fric)*am - ηvp*γ̇ + sin(fric)*( a1*τxxt + a2*τyyt + a3*τzzt)/3
+                @show (F)
+                Y2   = τiic^2
+                ηvep = τiic/2/ε̇ii
+                ηve  = ηvep
+                D    = 2*ηve*[1 0 0; 0 1 0; 0 0 1.0/ani_fac;]
+                τ    = D*ε̇ 
+                Y2   = 0.5*(τ[1]^2 + τ[2]^2) + τ[3]^2*ani_fac^2
+                τiic = sqrt(Y2)
+                F    = τiic - cos(fric)*C - Pc*sin(fric)*am - ηvp*γ̇ + sin(fric)*( a1*τxxt + a2*τyyt + a3*τzzt)/3
+                @show (F)
+            end
+            τii_rot1[i] = sqrt(Y2)
+            ε̇ii_rot[i]  = sqrt(I2)
 
             # Check strain rate components
             τxx         = τ[1]
