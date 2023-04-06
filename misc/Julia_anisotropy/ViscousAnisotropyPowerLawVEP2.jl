@@ -30,7 +30,7 @@ function main_simple_ani_vis()
     ηvp        = 0.0
     am         = 1//3*(a1+a2+a3)
     # Power law viscosity
-    npwl       = 1
+    npwl       = 10.0
     τbg        = 2.0
     Bpwl       = 2^npwl*ε̇bg/τbg^(npwl)
     τ_chk      = 2*Bpwl^(-1.0/npwl)*ε̇bg^(1.0/npwl)
@@ -48,8 +48,7 @@ function main_simple_ani_vis()
     τii_rot2   = zero(θ)
     # Loop over all orientations
     for i in eachindex(θ)
-        # τxx, τyy, τxy = -0.0, 0.0, 0.0
-        τxx, τyy, τxy = -.2, 0.2, -0.7
+        τxx, τyy, τxy = -0.0, 0.0, 0.0
         @show θ[i] 
         for it=1:nt
             τxx0, τyy0, τxy0 = τxx, τyy, τxy
@@ -57,15 +56,12 @@ function main_simple_ani_vis()
             Q           = [cos(θ[i]) sin(θ[i]); -sin(θ[i]) cos(θ[i])]
             ε̇_tens      = [ε̇xxd ε̇xyd; ε̇xyd ε̇yyd]
             τ0_tens     = [τxx0 τxy0; τxy0 τyy0]
-            # ε̇_tens     += ε̇_tens .+ τ0_tens./2.0/ηe
             ε̇_rot       = Q*ε̇_tens*Q' 
             τ0_rot      = Q*τ0_tens*Q' 
             
-            # VISCO ELASTICITY
-            ε̇           = [ε̇_rot[1,1]; ε̇_rot[2,2]; ε̇_rot[1,2]]
-    
+            # VISCO ELASTICITY    
             ε̇           = [ε̇_rot[1,1]+τ0_rot[1,1]/2/ηe; ε̇_rot[2,2]+τ0_rot[2,2]/2/ηe; ε̇_rot[1,2]+τ0_rot[1,2]/2/ηe*ani_fac]
-            I2          = 0.5*(ε̇[1]^2 + ε̇[2]^2) + ε̇[3]^2
+            I2          = 0.5*(ε̇[1]^2 + ε̇[2]^2) + ε̇[3]^2*ani_fac^2
             ε̇ii         = sqrt(I2)
             ηpwl        =  Bpwl^(-1.0/npwl)*sqrt(I2)^(1.0/npwl-1)
             ηve         = (1.0/ηpwl + 1.0/ηe).^(-1)
@@ -87,29 +83,29 @@ function main_simple_ani_vis()
             τii = sqrt(Y2); τxxt = τ[1]; τyyt = τ[2]; τzzt = -τxxt-τyyt; τxyt = τ[3]
 
             # # PLASTICITY
-            γ̇ = 0.
-            F = τii - cos(fric)*C - P*sin(fric)*am + sin(fric)*( a1*τxxt + a2*τyyt + a3*τzzt)/3
-            if F>0
-                γ̇    = F/(ηve + ηvp + K*Δt*sin(dil)*sin(fric)*am)
-                τiic = τii - γ̇*ηve
-                τxxc = τxxt*(1 - γ̇*ηve/τii)
-                τyyc = τyyt*(1 - γ̇*ηve/τii)
-                τzzc = τzzt*(1 - γ̇*ηve/τii)
-                Pc   = P    + K*Δt*sin(dil)*γ̇ 
-                F    = τiic - cos(fric)*C - Pc*sin(fric)*am - ηvp*γ̇ + sin(fric)*( a1*τxxt + a2*τyyt + a3*τzzt)/3
-                @show (F)
-                Y2   = τiic^2
-                ηvep = τiic/2/ε̇ii
-                ηve  = ηvep
-                D    = 2*ηve*[1 0 0; 0 1 0; 0 0 1.0/ani_fac;]
-                τ    = D*ε̇ 
-                Y2   = 0.5*(τ[1]^2 + τ[2]^2) + τ[3]^2*ani_fac^2
-                τiic = sqrt(Y2)
-                F    = τiic - cos(fric)*C - Pc*sin(fric)*am - ηvp*γ̇ + sin(fric)*( a1*τxxt + a2*τyyt + a3*τzzt)/3
-                @show (F)
-            end
-            τii_rot1[i] = sqrt(Y2)
-            ε̇ii_rot[i]  = sqrt(I2)
+            # γ̇ = 0.
+            # F = τii - cos(fric)*C - P*sin(fric)*am + sin(fric)*( a1*τxxt + a2*τyyt + a3*τzzt)/3
+            # if F>0
+            #     γ̇    = F/(ηve + ηvp + K*Δt*sin(dil)*sin(fric)*am)
+            #     τiic = τii - γ̇*ηve
+            #     τxxc = τxxt*(1 - γ̇*ηve/τii)
+            #     τyyc = τyyt*(1 - γ̇*ηve/τii)
+            #     τzzc = τzzt*(1 - γ̇*ηve/τii)
+            #     Pc   = P    + K*Δt*sin(dil)*γ̇ 
+            #     F    = τiic - cos(fric)*C - Pc*sin(fric)*am - ηvp*γ̇ + sin(fric)*( a1*τxxt + a2*τyyt + a3*τzzt)/3
+            #     @show (F)
+            #     Y2   = τiic^2
+            #     ηvep = τiic/2/ε̇ii
+            #     ηve  = ηvep
+            #     D    = 2*ηve*[1 0 0; 0 1 0; 0 0 1.0/ani_fac;]
+            #     τ    = D*ε̇ 
+            #     Y2   = 0.5*(τ[1]^2 + τ[2]^2) + τ[3]^2*ani_fac^2
+            #     τiic = sqrt(Y2)
+            #     F    = τiic - cos(fric)*C - Pc*sin(fric)*am - ηvp*γ̇ + sin(fric)*( a1*τxxt + a2*τyyt + a3*τzzt)/3
+            #     @show (F)
+            # end
+            # τii_rot1[i] = sqrt(Y2)
+            # ε̇ii_rot[i]  = sqrt(I2)
 
             # Check strain rate components
             τxx         = τ[1]
