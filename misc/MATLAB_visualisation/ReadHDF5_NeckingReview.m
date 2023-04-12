@@ -64,7 +64,7 @@ srate_ratio     = 0;
 TminusT0        = 0;
 emergency_benoit = 0;
 finite_strain          = 0;
-shear_heating    = 0;
+shear_heatinging    = 0;
 princi_stress    = 0;
 director_vector  = 0;
 Pl_soft          = 0;
@@ -2751,7 +2751,7 @@ for istep=istart:ijump:iend
                 %         xlabel(xLabel), ylabel(zLabel);
                 %         axis xy image, colorbar;
                 %         if crop == 1 xlim([lim.xmin lim.xmax]); ylim([lim.zmin lim.zmax]); end
-                %         if exist('minEta', 'var') caxis([minEta maxEta]); end
+                %         if exist('min_eta', 'var') caxis([min_eta max_eta]); end
                 
                 % eII
                 subplot(3,1,2),
@@ -3508,7 +3508,7 @@ for istep=istart:ijump:iend
             
             xlabel(xLabel), ylabel(zLabel);
             if crop == 1 xlim([lim.xmin lim.xmax]); ylim([lim.zmin lim.zmax]); end
-            if exist('minEta', 'var') caxis([minEta maxEta]); end
+            if exist('min_eta', 'var') caxis([min_eta max_eta]); end
             drawnow
             
             if printfig == 1
@@ -4178,7 +4178,7 @@ for istep=istart:ijump:iend
             % %         title('log Diss [MPa/s]', 'FontSize', 12, 'FontName', 'Myriad pro')
             %         title('log Diss [Pa/s]', 'FontSize', 12, 'FontName', 'Myriad pro')
             %
-            % %         ylabel('ln D [\mu m]','FontName', 'Myriad pro')
+            % %         ylabel('ln D [\G m]','FontName', 'Myriad pro')
             %         ylabel(' D [\mum]','FontName', 'Myriad pro')
             %
             % %         xlabel('1/T*10^{3} [K]','FontName', 'Myriad pro')
@@ -4674,7 +4674,7 @@ for istep=istart:ijump:iend
             %         save('Yoann_VP_initial', 'zc_plot', 'P', 'T', 'eta', 'sII')
         end
         
-        if shear_heating==1
+        if shear_heatinging==1
             
             sxxd  = hdf5read(filename,'/Centers/sxxd'); sxxd = cast(sxxd, 'double');
             sxz   = hdf5read(filename,'/Vertices/sxz'); sxz  = cast(sxz, 'double');

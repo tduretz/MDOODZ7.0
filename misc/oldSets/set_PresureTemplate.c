@@ -56,7 +56,7 @@ void SetParticles( markers *particles, scale scaling, params model, mat_prop *ma
     double Lx = (double) (model.xmax - model.xmin) ;
     double Lz = (double) (model.zmax - model.zmin) ;
     double T_init = (model.user0 + zeroC)/scaling.T;
-    double P_init = model.PrBG;
+    double P_init = model.bkg_pressure;
     double setup  = (int)model.user1;
     double radius = model.user2/scaling.L;
     double X, Z, Xn, Zn, xc = 0.0, zc = 0.0, sa=radius/2.0, la=radius*2.0, theta=-30.0*M_PI/180.0;
@@ -90,8 +90,8 @@ void SetParticles( markers *particles, scale scaling, params model, mat_prop *ma
     for( np=0; np<particles->Nb_part; np++ ) {
         
         // Standard initialisation of particles
-        particles->Vx[np]    = -1.0*particles->x[np]*model.EpsBG;               // set initial particle velocity (unused)
-        particles->Vz[np]    =  particles->z[np]*model.EpsBG;                   // set initial particle velocity (unused)
+        particles->Vx[np]    = -1.0*particles->x[np]*model.bkg_strain_rate;               // set initial particle velocity (unused)
+        particles->Vz[np]    =  particles->z[np]*model.bkg_strain_rate;                   // set initial particle velocity (unused)
         particles->phase[np] = 0;                                               // same phase number everywhere
         particles->d[np]     = 0;                                               // same grain size everywhere
         particles->phi[np]   = 0.0;                                             // zero porosity everywhere
@@ -223,13 +223,13 @@ void SetBCs( grid *mesh, params *model, scale scaling, markers* particles, mat_p
                     // Matching BC nodes WEST
                     if ( k==0 ) {
                         mesh->BCu.type[c] = 0;
-                        mesh->BCu.val[c]  = -mesh->xg_coord[k] * (model->EpsBG - model->DivBG/3.0);
+                        mesh->BCu.val[c]  = -mesh->xg_coord[k] * (model->bkg_strain_rate - model->bkg_div_rate/3.0);
                     }
                     
                     // Matching BC nodes EAST
                     if ( k==mesh->Nx-1 ) {
                         mesh->BCu.type[c] = 0;
-                        mesh->BCu.val[c]  = -mesh->xg_coord[k] * (model->EpsBG - model->DivBG/3.0);
+                        mesh->BCu.val[c]  = -mesh->xg_coord[k] * (model->bkg_strain_rate - model->bkg_div_rate/3.0);
                     }
                     
                     // Free slip SOUTH
@@ -252,25 +252,25 @@ void SetBCs( grid *mesh, params *model, scale scaling, markers* particles, mat_p
                     // Matching BC nodes WEST
                     if ( k==0 ) {
                         mesh->BCu.type[c] = -2;
-                        mesh->BCu.val[c]  = 0.0*model->EpsBG*Lx;
+                        mesh->BCu.val[c]  = 0.0*model->bkg_strain_rate*Lx;
                     }
                     
                     // Matching BC nodes EAST
                     if ( k==mesh->Nx-1 ) {
                         mesh->BCu.type[c] =  -12;
-                        mesh->BCu.val[c]  = -0.0*model->EpsBG*Lx;
+                        mesh->BCu.val[c]  = -0.0*model->bkg_strain_rate*Lx;
                     }
                     
                     // Free slip S
                     if ( l==0 ) { //&& (k>0 && k<NX-1) ) {
                         mesh->BCu.type[c] =  11;
-                        mesh->BCu.val[c]  = -1*model->EpsBG*Lz;
+                        mesh->BCu.val[c]  = -1*model->bkg_strain_rate*Lz;
                     }
                     
                     // Free slip N
                     if ( l==mesh->Nz ) {// && (k>0 && k<NX-1)) {
                         mesh->BCu.type[c] =  11;
-                        mesh->BCu.val[c]  =  1*model->EpsBG*Lz;
+                        mesh->BCu.val[c]  =  1*model->bkg_strain_rate*Lz;
                     }
                     
                 }
@@ -309,13 +309,13 @@ void SetBCs( grid *mesh, params *model, scale scaling, markers* particles, mat_p
                     // Matching BC nodes SOUTH
                     if ( l==0 ) {
                         mesh->BCv.type[c] = 0;
-                        mesh->BCv.val[c]  = mesh->zg_coord[l] * (model->EpsBG + model->DivBG/3.0);
+                        mesh->BCv.val[c]  = mesh->zg_coord[l] * (model->bkg_strain_rate + model->bkg_div_rate/3.0);
                     }
                     
                     // Matching BC nodes NORTH
                     if ( l==mesh->Nz-1 ) {
                         mesh->BCv.type[c] = 0;
-                        mesh->BCv.val[c]  = mesh->zg_coord[l] * (model->EpsBG + model->DivBG/3.0);
+                        mesh->BCv.val[c]  = mesh->zg_coord[l] * (model->bkg_strain_rate + model->bkg_div_rate/3.0);
                     }
                     
                     // Non-matching boundary WEST
@@ -336,13 +336,13 @@ void SetBCs( grid *mesh, params *model, scale scaling, markers* particles, mat_p
                     // Matching BC nodes SOUTH
                     if ( l==0 ) {
                         mesh->BCv.type[c] = 0;
-                        mesh->BCv.val[c]  = -0.0*model->EpsBG*Lz + model->DivBG/3.0;
+                        mesh->BCv.val[c]  = -0.0*model->bkg_strain_rate*Lz + model->bkg_div_rate/3.0;
                     }
                     
                     // Matching BC nodes NORTH
                     if ( l==mesh->Nz-1 ) {
                         mesh->BCv.type[c] = 0;
-                        mesh->BCv.val[c]  = 0.0*model->EpsBG*Lz + model->DivBG/3.0;
+                        mesh->BCv.val[c]  = 0.0*model->bkg_strain_rate*Lz + model->bkg_div_rate/3.0;
                     }
                     
                     // Non-matching boundary points

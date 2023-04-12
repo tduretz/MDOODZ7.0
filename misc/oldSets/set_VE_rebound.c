@@ -49,7 +49,7 @@ void SetParticles( markers *particles, scale scaling, params model, mat_prop *ma
     double Lx = (double) (model.xmax - model.xmin) ;
     double Lz = (double) (model.zmax - model.zmin) ;
 	
-    double xc=0.0, zc=-0.0, Tc=673/scaling.T, Tbg=673/scaling.T;
+    double xc=0.0, zc=-0.0, Tc=673/scaling.T, bkg_temperature=673/scaling.T;
     
     for( np=0; np<particles->Nb_part; np++ ) {
         
@@ -152,13 +152,13 @@ void SetBCs( grid *mesh, params *model, scale scaling, markers* particles, mat_p
                 // Matching BC nodes WEST
                 if (k==0 ) {
                     mesh->BCu.type[c] = 0;
-                    mesh->BCu.val[c]  = -mesh->xg_coord[k] * model->EpsBG;
+                    mesh->BCu.val[c]  = -mesh->xg_coord[k] * model->bkg_strain_rate;
                 }
                 
                 // Matching BC nodes EAST
                 if (k==mesh->Nx-1 ) {
                     mesh->BCu.type[c] = 0;
-                    mesh->BCu.val[c]  = -mesh->xg_coord[k] * model->EpsBG;
+                    mesh->BCu.val[c]  = -mesh->xg_coord[k] * model->bkg_strain_rate;
                 }
                 
                 // Free slip SOUTH
@@ -211,13 +211,13 @@ void SetBCs( grid *mesh, params *model, scale scaling, markers* particles, mat_p
                 // Matching BC nodes SOUTH
                 if (l==0 ) {
                     mesh->BCv.type[c] = 0;
-                    mesh->BCv.val[c]  = mesh->zg_coord[l] * model->EpsBG;
+                    mesh->BCv.val[c]  = mesh->zg_coord[l] * model->bkg_strain_rate;
                 }
                 
                 // Matching BC nodes NORTH
                 if (l==mesh->Nz-1 ) {
                     mesh->BCv.type[c] = 0;
-                    mesh->BCv.val[c]  = mesh->zg_coord[l] * model->EpsBG;
+                    mesh->BCv.val[c]  = mesh->zg_coord[l] * model->bkg_strain_rate;
                 }
                 
                 // Non-matching boundary WEST

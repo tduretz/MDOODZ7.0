@@ -1,0 +1,88 @@
+/**** RESTART ****/
+istep = 00050
+irestart = 0
+
+/**** OUTPUT FILES ****/
+writer         = 1
+writer_step    = 5
+writer_markers = 0
+
+/**** SCALES ****/ Scaling parameters for
+eta = 1.e+22      /viscosity
+L   = 1.e4        /length
+V   = 1.0e-9      /velocity
+T   = 1.e+02      /temperature
+ 
+/**** SPACE****/
+Nx      = 451 
+Nz      = 281
+xmin    = -500.000000e3
+xmax    =  500.000000e3
+zmin    = -200.000000e3
+zmax    =   10.000000e3 
+
+/**** TIME ****/
+Nt          = 50
+dt          = 2.63e10
+constant_dt = 1
+Courant     = 0.25
+RK          = 4
+
+/**** SWITCHES ****/
+mechanical        = 1
+pure_shear_ALE    = -1  /1: box stretched at constant strain rate; -1 box of constant size
+elastic           = 1
+free_surface      = 1
+free_surface_stab = 0.0
+subgrid_diffusion = 2
+
+/**** SETUP DEPENDANT ****/
+bkg_strain_rate = 1e-25 / Background strain rate [s-1] 
+user0           = 100.0e3   / Lithosphere thickness     
+user1           = 1000.0     / V0 (Turcotte & Schubert) 
+
+/**** GRAVITY ****/
+gx = 0.0000
+gz = -9.81
+
+/**** PHASE PROPERTIES ****/
+Nb_phases = 2 
+
+ID            = 0       / Lithosphere
+rho           = 3300.00 / ref. density
+G             = 2e10    / shear modulus
+bet           = 3e-11   / compressibility
+C             = 5e70    / cohesion
+cstv          = 1       / power law viscosity -> database flow_laws.c
+eta0          = 1e30
+density_model = 1
+
+ID            = 1       / Asthenosphere
+rho           = 3300.00 / ref. density
+G             = 2e20    / shear modulus
+bet           = 3e-13   / compressibility
+C             = 5e70    / cohesion
+cstv          = 1       / power law viscosity -> database flow_laws.c
+eta0          = 1e18
+density_model = 1
+
+/**** PARTICLES ****/
+Nx_part  = 4
+Nz_part  = 4
+min_part_cell = 16
+
+/**** LINEAR SOLVER ****/
+lin_abs_mom = 5.0e-8
+lin_abs_div = 5.0e-8
+lin_rel_mom = 5.0e-8
+lin_rel_div = 5.0e-8
+penalty     = 1e3
+
+/**** NON-LINEAR ITERATIONS ****/
+Newton         = 0
+nit_max        = 1 // for high resolution use from 10 to 20
+line_search    = 0
+nonlin_abs_mom = 5.0e-8
+nonlin_abs_div = 5.0e-8
+min_eta        = 5.0e18
+max_eta        = 1.0e25

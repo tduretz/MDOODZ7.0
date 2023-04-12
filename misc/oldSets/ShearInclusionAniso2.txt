@@ -26,33 +26,33 @@ zmax    =  5.000000e-1
 advection       = 1
 
 noisy = 0
-dt_constant = 0
+constant_dt = 0
 dt      = 0.05
 dt_min      = 1e-6
 RK              = 4
 Courant = 0.3
 penalty = 1e2
-lsolver = -1
+lin_solver = -1
 DefectCorrectionForm = 1
 diag_scaling = 0
-abs_tol_div = 1e-8
-rel_tol_div = 1e-8
+lin_abs_div = 1e-8
+lin_rel_div = 1e-8
 
 /**** SWITCHES ****/
-ismechanical    = 1
-isperiodic_x    = 0
-ispureshear_ALE = 0
-isinertial      = 0
-iselastic       = 1
-isthermal       = 0
+mechanical    = 1
+periodic_x    = 0
+pure_shear_ALE = 0
+
+elastic       = 1
+thermal       = 0
 line_search     = 0
-free_surf       = 0
-free_surf_stab  = 0
-eqn_state       = 0
-thermal_eq      = 0
-subgrid_diff    = 2
-shear_heat      = 1
-adiab_heat      = 0
+free_surface       = 0
+free_surface_stab  = 0
+
+initial_cooling      = 0
+subgrid_diffusion    = 2
+shear_heating      = 1
+adiab_heating      = 0
 fstrain         = 1
 GNUplot_residuals = 0
 
@@ -61,8 +61,8 @@ aniso           = 1
 aniso_fstrain   = 0 // finite strain anisotropy activated
 
 /**** SETUP DEPENDANT ****/
-pc_type = 1
-EpsBG           = 1
+preconditioner = 1
+bkg_strain_rate           = 1
 shear_style     = 1
 user0           = 1     / temperature [°C]
 user1           = 0.05  / inclusion radius [m]
@@ -79,7 +79,7 @@ Nb_phases = 2
 /**** PHASE 1 ****/
 ID   = 0
 rho  = 2700.00 / matrix
-mu   = 1e3
+G   = 1e3
 Cv   = 1050
 k    = 2.5
 Qr   = 0
@@ -104,7 +104,7 @@ aniso_factor = 10.0
 /**** PHASE 2 ****/
 ID   = 1
 rho  = 2700.00 / inclusion
-mu   = 1e3
+G   = 1e3
 Cv   = 1050
 k    = 2.5
 Qr   = 0
@@ -150,5 +150,5 @@ nit_max       = 20
 rel_tol_KSP   = 1e-4
 tol_u         = 1e-9
 tol_p         = 1e-9
-mineta        = 1e-3
-maxeta        = 1e6
+min_eta        = 1e-3
+max_eta        = 1e6

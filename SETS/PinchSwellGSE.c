@@ -30,12 +30,13 @@ double SetTemperature(MdoodzInput *instance, Coordinates coordinates) {
 //----------------------------- THERMAL SetBC -----------------------------//
 
 
-SetBC SetBCT(MdoodzInput *instance, POSITION position, double gridTemperature) {
-  return (SetBC){.value = gridTemperature, .type = 0};
-}
-
-SetBC SetBCTNew(MdoodzInput *instance, POSITION position, double gridTemperature) {
-  return (SetBC){.value = gridTemperature, .type = 0};
+SetBC SetBCT(MdoodzInput *instance, POSITION position, double particleTemperature) {
+  SetBC     bc;
+  if (position == W || position == E || position == S || position == N) {
+    bc.type  = constant_heatflux;
+    bc.value = 0.;
+  }
+  return bc;
 }
 
 //----------------------------- MAIN -----------------------------//
@@ -52,7 +53,6 @@ int main() {
                   .SetBCVz   = SetPureShearBCVz,
                   .SetBCVx   = SetPureShearBCVx,
                   .SetBCT    = SetBCT,
-                  .SetBCTNew = SetBCTNew,
           },
   };
   RunMDOODZ( "PinchSwellGSE.txt", &setup);
