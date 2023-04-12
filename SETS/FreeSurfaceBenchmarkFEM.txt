@@ -1,58 +1,55 @@
 /**** RESTART ****/
-istep = 000250
+istep = 000001
 irestart = 0
 
 /**** OUTPUT FILES ****/
 writer         = 1
-writer_step    = 10
+writer_step    = 1
 
 /**** SCALES ****/
-eta = 1e+22
-L   = 10e4
-V   = 1.0e-8
-T   = 1e+02
+eta = 1e-0
+L   = 1e-0
+V   = 1e-0
+T   = 1e-0
  
 /**** SPACE ****/
-Nx      = 50
-Nz      = 100
-Nt      = 100
-xmin    = -1400.000000e3
-xmax    =    00.000000e3
-zmin    =  -700.000000e3
-zmax    =    50.000000e3 
+Nx      = 100
+Nz      = 150
+xmin    = -3.0
+xmax    =  3.0
+zmin    = -5.0
+zmax    =  2.0 
 
 /**** TIME ****/
+Nt          = 1
 constant_dt = 1
-dt          = 5e9
+dt          = 1.0
 
 /**** LINEAR SOLVER ****/
 lin_abs_div     = 1e-9
 lin_rel_div     = 1e-9
-penalty         = 1e3
+penalty         = 1e5
 residual_form   = 0
 
 /**** SWITCHES ****/
+advection          = 0
 free_surface       = 1
-free_surface_stab  = 1
+free_surface_stab  = 0
 
 /**** GRAVITY ****/
-gz = -10.00
+gz = -1.00
 
 /**** PHASE PROPERTIES ****/
-Nb_phases = 2
+Nb_phases = 1
 
 /**** Phase 0 ****/
-ID            = 0 / Mantle
+ID            = 0 
 density_model = 0
-rho           = 3300.00 
+rho           = 1.0 
 cstv          = 1
-eta0          = 1e21
+eta0          = 1e0
 plast         = 0
 
-/**** Phase 1 ****/
-ID            = 1 / Lithosphere
-density_model = 0 
-rho           = 3300.00  
-cstv          = 1
-eta0          = 1e23
-plast         = 0
+/**** OVERRIDE DEFAULTS ****/
+min_eta = 1e-1
+max_eta = 1e2
