@@ -30,44 +30,44 @@ compressible      = 0
 
 advection         = 1
 dt                = 1e6
-dt_constant       = 1
+constant_dt       = 1
 Courant           = 0.2
 penalty           = 1e2
-lsolver           = 2
+lin_solver           = 2
 diag_scaling      = 0
-abs_tol_div       = 1e-5
-rel_tol_div       = 1e-5
+lin_abs_div       = 1e-5
+lin_rel_div       = 1e-5
 GNUplot_residuals = 0
-pc_type           = 0
-eta_avg           = 1
+preconditioner           = 0
+eta_average           = 1
 num_deriv         = 0
 StressRotation    = 1
 safe_mode         = 1
-nstagmax          = 5
+max_num_stag          = 5
 
 /**** SWITCHES ****/
-ismechanical    = 1
+mechanical    = 1
 RK              = 4
-isperiodic_x    = 0
-ispureshear_ALE = 0
-isinertial      = 0
-iselastic       = 1
-isthermal       = 1
+periodic_x    = 0
+pure_shear_ALE = 0
+
+elastic       = 1
+thermal       = 1
 line_search     = 1
-free_surf       = 0
-free_surf_stab  = 0
-eqn_state       = 0
-thermal_eq      = 0
-subgrid_diff    = 2
-shear_heat      = 1
-adiab_heat      = 0
+free_surface       = 0
+free_surface_stab  = 0
+
+initial_cooling      = 0
+subgrid_diffusion    = 2
+shear_heating      = 1
+adiab_heating      = 0
 fstrain         = 1
 ProgReac        = 0
-def_maps        = 0
+deformation_maps        = 0
 
 /**** SETUP DEPENDANT ****/
-EpsBG           = -1.0e-8
-PrBG            = 2.0e9
+bkg_strain_rate           = -1.0e-8
+bkg_pressure            = 2.0e9
 user0           = 550.0     / temperature [°C]
 user1           = 0
 user2           = 0
@@ -83,7 +83,7 @@ Nb_phases = 3
 /**** PHASE 0 ****/
 ID   = 0
 rho  = 2750.00 / matrix Anorthite wet 
-mu   = 1.0e10
+G   = 1.0e10
 Cv   = 1050.0
 k    = 2.3
 Qr   = 0.0
@@ -109,7 +109,7 @@ gsref = 1e-7
 /**** PHASE 1 ****/
 ID   = 1
 rho  = 2750.00 / matrix Anorthite Wet
-mu   = 1.0e10
+G   = 1.0e10
 Cv   = 1050.0
 k    = 2.3
 Qr   = 0.0
@@ -135,7 +135,7 @@ gsref = 1e-7
 /**** PHASE 2 ****/
 ID   = 2
 rho  = 2750.00 /reaction => Diffusion creep
-mu   = 3.5e10
+G   = 3.5e10
 Cv   = 1050.0
 k    = 2.3
 Qr   = 0.0
@@ -181,5 +181,5 @@ nit_max = 20
 rel_tol_KSP = 5e-4
 tol_u   = 1e-10
 tol_p   = 1e-10
-mineta  = 1e10
-maxeta  = 1e30
+min_eta  = 1e10
+max_eta  = 1e30

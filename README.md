@@ -1,10 +1,10 @@
 # MDOODZ7.0
 
 Welcome to MDOODZ7.0 public repository!
-This version of MDOODZ is under construction, more testing will be progressively added...
 
 ![](/misc/images/Compression_Symmetric.gif)
 
+In addition to Continuous Integration (CI), MDOODZ7.0 also includes a series of more expensives tests. THe results can be compared to reference ones. Check out: 
 ## [Visual Test Results](/VISUAL_TESTS/readme.md)
 
 # Library usage
@@ -19,7 +19,7 @@ To run the simulation `MdoodzInput` must be passed to `RunMDOODZ(MdoodzInput *in
 
 1) Setting models with pure or simple or shear boundary conditions: [ShearTemplate](SETS/ShearTemplate.c)
 2) Viscous relaxation of a free surface: [TopoBenchCase1](SETS/TopoBenchCase1.c)
-3) A continental rifting and thermal solution model: [RiftingPauline](SETS/RiftingChenin.c)
+3) A continental rifting and thermal solution model: [RiftingChenin](SETS/RiftingChenin.c)
 4) Grain size evolution model and necking in calcite: [PinchSwellGSE](SETS/PinchSwellGSE.c)
 5) Quartz-Coesite inclusion density change in Garnet: [QuartzCoesite](SETS/QuartzCoesite.c)
 
@@ -57,7 +57,7 @@ Some of those functions must be implemented, but others if not implemented will 
 ### BuildInitialTopography
 
 Aggregates pointers to functions for setting up topography chain properties. 
-Must have if `model.free_surf == 1`.
+Must have if `model.free_surface == 1`.
 
 
 - `SetSurfaceZCoord` describes an altitude in relation to the x coordinate. Default value is `1.0e3 / input->scaling.L`:  flat surface will be generated
@@ -69,8 +69,8 @@ Aggregates pointers to functions for setting up particle properties.
 Must have.
 
 
-- `SetHorizontalVelocity` describes a particle Horizontal Velocity (Vx) in relation to coordinates. Default value is `-coordinates.x * input->model.EpsBG`
-- `SetVerticalVelocity` describes a particle Vertical Velocity (Vz) in relation to coordinates. Default value is `coordinates.z * input->model.EpsBG`
+- `SetHorizontalVelocity` describes a particle Horizontal Velocity (Vx) in relation to coordinates. Default value is `-coordinates.x * input->model.bkg_strain_rate`
+- `SetVerticalVelocity` describes a particle Vertical Velocity (Vz) in relation to coordinates. Default value is `coordinates.z * input->model.bkg_strain_rate`
 - `SetPhase` describes a particle phase id in relation to coordinates. Default value is `0`: model will be homogeneous
 - `SetTemperature` describes a particle temperature in relation to coordinates. Default value is `273.15 / input->scaling.T`: model is 0°C
 - `SetGrainSize` describes a particle grain size in relation to coordinates. Default value is `0.0`
@@ -88,8 +88,8 @@ Must have.
 - `SetBCVx` describes the type and value of the Vx point. Must be implemented. Pre-made functions from mdoodz library can be used: `SetPureShearBCVx`, `SetSimpleShearBCVx`, `SetPureOrSimpleShearBCVx` (depends on `shear_style` input parameter)
 - `SetBCVz` describes the type and value of the Vz point. Must be implemented. Pre-made functions from mdoodz library can be used: `SetPureShearBCVz`, `SetSimpleShearBCVz`, `SetPureOrSimpleShearBCVz` (depends on `shear_style` input parameter)
 - `SetBCPType` describes the type of the Pressure Boundary conditions point. Default one is `-1`
-- `SetBCT` describes the Temperature Boundary type and value. Must be implemented if `model.isthermal == 1`
-- `SetBCTNew` describes the Temperature Boundary type and value on 1d boundary array. Must be implemented if `model.isthermal == 1`. Will be deprecated
+- `SetBCT` describes the Temperature Boundary type and value. Must be implemented if `model.thermal == 1`
+- `SetBCTNew` describes the Temperature Boundary type and value on 1d boundary array. Must be implemented if `model.thermal == 1`. Will be deprecated
 
 # How to build and run MDOODZ7.0?
 
@@ -154,7 +154,12 @@ Makefile related to cmake is located in a root directory
 To build library, tests and executables with OpenMP and in optimised mode:
 
 ```bash
-make build SET=RiftingPauline
+make build SET=RiftingChenin
+```
+An alternative `.txt` input file located in the `SETS/` folder can be used if specified as `TXT`. If not stated, the default `.txt` input file will be taken.
+
+```bash
+make build SET=RiftingChenin TXT=RiftingChenin_alternative.txt
 ```
 
 To explicitly set OPT (optimisation) and OMP (OpenMP). If not stated, it's OFF by default

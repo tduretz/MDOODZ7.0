@@ -83,11 +83,11 @@ double SetTemperature(MdoodzInput *input, Coordinates coordinates) {
   int thermal_evolution = (int) input->model.user0;
   if (thermal_evolution) {
     // TODO extract mesh->p_in[0]
-    // double a = input->model.user3, b = input->model.user4, Tfix = input->model.TBG;
+    // double a = input->model.user3, b = input->model.user4, Tfix = input->model.bkg_temperature;
     // return (log(mesh->p_in[0] * input->scaling.S / 1e9 / b) / a + zeroC) / input->scaling.T;
     return 0.0;
   } else {
-    return input->model.TBG;
+    return input->model.bkg_temperature;
   }
 }
 
@@ -97,7 +97,7 @@ double SetNoise(MdoodzInput *input, Coordinates coordinates, int phase) {
 }
 
 double SetPressure(MdoodzInput *input, Coordinates coordinates, int phase) {
-  return input->model.PrBG;
+  return input->model.bkg_pressure;
 }
 
 int main() {

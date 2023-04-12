@@ -88,8 +88,8 @@ void SetParticles( markers *particles, scale scaling, params model, mat_prop *ma
     for( np=0; np<particles->Nb_part; np++ ) {
 
         // Standard initialisation of particles
-        particles->Vx[np]    = -1.0*particles->x[np]*model.EpsBG;               // set initial particle velocity (unused)
-        particles->Vz[np]    =  particles->z[np]*model.EpsBG;                   // set initial particle velocity (unused)
+        particles->Vx[np]    = -1.0*particles->x[np]*model.bkg_strain_rate;               // set initial particle velocity (unused)
+        particles->Vz[np]    =  particles->z[np]*model.bkg_strain_rate;                   // set initial particle velocity (unused)
         particles->phase[np] = 0;                                               // same phase number everywhere
         particles->d[np]     = 0;                                               // same grain size everywhere
         particles->phi[np]   = 0.0;                                             // zero porosity everywhere
@@ -137,7 +137,7 @@ void SetParticles( markers *particles, scale scaling, params model, mat_prop *ma
 
         //--------------------------//
         // DENSITY
-        if ( model.eqn_state > 0 ) {
+        if ( 1 == 0 ) {
             particles->rho[np] = materials->rho[particles->phase[np]] * (1 -  materials->alp[particles->phase[np]] * (T_init - materials->T0[particles->phase[np]]) );
         }
         else {
@@ -161,12 +161,12 @@ void SetBCs( grid *mesh, params *model, scale scaling, markers* particles, mat_p
     double *X, *Z, *XC, *ZC;
     int   NX, NZ, NCX, NCZ, NXVZ, NZVX;
     double dmin, VzBC, width = 1 / scaling.L, eta = 1e4 / scaling.eta ;
-    double Lx, Lz, T1, T2, rate=model->EpsBG;
+    double Lx, Lz, T1, T2, rate=model->bkg_strain_rate;
     double Inflow = 0.0, VzOutflow = 0.0, x, z, V, tet, r, Vx, Vz, Vt, Vr;
     int    OutflowOnSides = (int)model->user4;
 
     // Inflow/Outflow velocities
-    double Vx_tot =  (model->xmax-model->xmin) * model->EpsBG;
+    double Vx_tot =  (model->xmax-model->xmin) * model->bkg_strain_rate;
     double VxOut_W = 0.0, VzOut_W = 0.0, VxIn_W = 0.5*Vx_tot, VzIn_W = 0.0;
     double VxOut_E = 0.0, VzOut_E = 0.0, VxIn_E =-0.5*Vx_tot, VzIn_E = 0.0;
     double VzOut_S = 0.0;
@@ -188,7 +188,7 @@ void SetBCs( grid *mesh, params *model, scale scaling, markers* particles, mat_p
 
 
 
-    printf("Vx_tot = %2.2e m/s --- VxW = %2.2e m/s --- VxE = %2.2e m/s --- EpsBG = %2.2e 1/s \n", Vx_tot*scaling.V, VxIn_W*scaling.V, VxIn_E*scaling.V, model->EpsBG*scaling.E);
+    printf("Vx_tot = %2.2e m/s --- VxW = %2.2e m/s --- VxE = %2.2e m/s --- bkg_strain_rate = %2.2e 1/s \n", Vx_tot*scaling.V, VxIn_W*scaling.V, VxIn_E*scaling.V, model->bkg_strain_rate*scaling.E);
 
     //-----------------------------------------------------//
 
@@ -436,10 +436,10 @@ void SetBCs( grid *mesh, params *model, scale scaling, markers* particles, mat_p
                 x  = mesh->xg_coord[k];
                 z  = mesh->zvx_coord[l];
 
-                if ( model->ismechanical ==0 && model->polar==1 ) {
+                if ( model->mechanical ==0 && model->polar==1 ) {
                     r           = sqrt(x*x + z*z);
                     tet         = atan(z/x);
-                    Vt          = 2.0*model->EpsBG*r*sin(tet);
+                    Vt          = 2.0*model->bkg_strain_rate*r*sin(tet);
                     mesh->u_in[c] = Vt*sin(tet);
                 }
                 
@@ -518,10 +518,10 @@ void SetBCs( grid *mesh, params *model, scale scaling, markers* particles, mat_p
                 x  = mesh->xvz_coord[k];
                 z  = mesh->zg_coord[l];
                 
-                 if ( model->ismechanical ==0 && model->polar==1 ) {
+                 if ( model->mechanical ==0 && model->polar==1 ) {
                      r           = sqrt(x*x + z*z);
                      tet         = atan(z/x);
-                     Vt          = 2.0*model->EpsBG*r*sin(tet);
+                     Vt          = 2.0*model->bkg_strain_rate*r*sin(tet);
                      mesh->v_in[c] =-Vt*cos(tet);
                  }
 
@@ -534,13 +534,13 @@ void SetBCs( grid *mesh, params *model, scale scaling, markers* particles, mat_p
                     // Matching BC nodes SOUTH
                     if (l==0 ) {
                         mesh->BCv.type[c] = 0;
-                        mesh->BCv.val[c]  = VzOut_S;//VzOutflow;//mesh->zg_coord[l] * model->EpsBG;
+                        mesh->BCv.val[c]  = VzOut_S;//VzOutflow;//mesh->zg_coord[l] * model->bkg_strain_rate;
                     }
 
                     // Matching BC nodes NORTH
                     if (l==mesh->Nz-1 ) {
                         mesh->BCv.type[c] = 0;
-                        mesh->BCv.val[c]  = 0.0;//mesh->zg_coord[l] * model->EpsBG;
+                        mesh->BCv.val[c]  = 0.0;//mesh->zg_coord[l] * model->bkg_strain_rate;
                     }
 
                     // Non-matching boundary WEST

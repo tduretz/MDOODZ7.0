@@ -168,7 +168,7 @@ void SetBCs( grid *mesh, params *model, scale scaling, markers* particles, mat_p
                         
 //                        eval_anal_Dani( &vx, &vz, &p, &m, &sxx, &syy, mesh->xg_coord[0][k], mesh->zvx_coord[0][l], 1, model->user1, materials->eta0[0], materials->eta0[1] );
                         mesh->BCu.type[c] = 0;
-                        mesh->BCu.val[c]  = -mesh->xg_coord[k] * model->EpsBG;
+                        mesh->BCu.val[c]  = -mesh->xg_coord[k] * model->bkg_strain_rate;
 //                        mesh->BCu.val[c]  = vx;
                         
 //                        if ( StressBC_W==1 ) {
@@ -182,7 +182,7 @@ void SetBCs( grid *mesh, params *model, scale scaling, markers* particles, mat_p
                     if (k==mesh->Nx-1 && l>0 && l<mesh->Nz) {
 //                        eval_anal_Dani( &vx, &vz, &p, &m, &sxx, &syy, mesh->xg_coord[0][k], mesh->zvx_coord[0][l], 1, model->user1, materials->eta0[0], materials->eta0[1]);
                         mesh->BCu.type[c] = 0;
-                        mesh->BCu.val[c]  = -mesh->xg_coord[k] * model->EpsBG;
+                        mesh->BCu.val[c]  = -mesh->xg_coord[k] * model->bkg_strain_rate;
 //                        mesh->BCu.val[c]  = vx;
                         
 //                        if ( StressBC_E==1 ) {
@@ -269,7 +269,7 @@ void SetBCs( grid *mesh, params *model, scale scaling, markers* particles, mat_p
                     if (l==0 && k>0 && k<mesh->Nx) {
 //                       eval_anal_Dani( &vx, &vz, &p, &m, &sxx, &syy, mesh->xvz_coord[0][k], mesh->zg_coord[0][l], 1, model->user1, materials->eta0[0], materials->eta0[1] );
                         mesh->BCv.type[c] = 0;
-                        mesh->BCv.val[c]  = mesh->zg_coord[l] * model->EpsBG;
+                        mesh->BCv.val[c]  = mesh->zg_coord[l] * model->bkg_strain_rate;
 //                        mesh->BCv.val[c]  = vz;
                         
 //                        if ( StressBC_S==1 ) {
@@ -285,7 +285,7 @@ void SetBCs( grid *mesh, params *model, scale scaling, markers* particles, mat_p
                     if (l==mesh->Nz-1 && k>0 && k<mesh->Nx) {
 //                        eval_anal_Dani( &vx, &vz, &p, &m, &sxx, &syy, mesh->xvz_coord[0][k], mesh->zg_coord[0][l], 1, model->user1, materials->eta0[0], materials->eta0[1]);
                         mesh->BCv.type[c] = 0;
-                        mesh->BCv.val[c]  = mesh->zg_coord[l] * model->EpsBG;
+                        mesh->BCv.val[c]  = mesh->zg_coord[l] * model->bkg_strain_rate;
 //                        mesh->BCv.val[c]  = vz;
                         
 //                        if ( StressBC_N==1 ) {

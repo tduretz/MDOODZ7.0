@@ -71,10 +71,10 @@ void OldDeviatoricStressesPressure( grid* mesh, markers* particles, scale scalin
     szz0 = DoodzCalloc(Ncx*Ncz, sizeof(DoodzFP));
     sxz0 = DoodzCalloc(Ncx*Ncz, sizeof(DoodzFP));
     
-    P2Mastah( model, *particles, particles->sxxd,    mesh, sxx0,   mesh->BCp.type,  1, 0, interp, cent, model->itp_stencil);
-    P2Mastah( model, *particles, particles->szzd,    mesh, szz0,   mesh->BCp.type,  1, 0, interp, cent, model->itp_stencil);
-    P2Mastah( model, *particles, particles->syy,     mesh, syy0,   mesh->BCp.type,  1, 0, interp, cent, model->itp_stencil);
-    P2Mastah( model, *particles, particles->sxz,     mesh, mesh->sxz0,   mesh->BCg.type,  1, 0, interp, vert, model->itp_stencil);
+    P2Mastah( model, *particles, particles->sxxd,    mesh, sxx0,   mesh->BCp.type,  1, 0, interp, cent, model->interp_stencil);
+    P2Mastah( model, *particles, particles->szzd,    mesh, szz0,   mesh->BCp.type,  1, 0, interp, cent, model->interp_stencil);
+    P2Mastah( model, *particles, particles->syy,     mesh, syy0,   mesh->BCp.type,  1, 0, interp, cent, model->interp_stencil);
+    P2Mastah( model, *particles, particles->sxz,     mesh, mesh->sxz0,   mesh->BCg.type,  1, 0, interp, vert, model->interp_stencil);
     
 #pragma omp parallel for shared( mesh, sxx0, syy0, szz0 ) private( k, k1, l, c0, c1, c2 ) firstprivate( Nx, Ncx, Ncz )
     for ( k1=0; k1<Ncx*Ncz; k1++ ) {
@@ -656,8 +656,8 @@ void FiniteStrainAspectRatio ( grid *mesh, scale scaling, params model, markers 
         FS_AR[k] = e1/e2;
     }
     
-    P2Mastah( &model, *particles, FS_AR, mesh, mesh->FS_AR_n,   mesh->BCp.type,  1, 0, interp, cent, model.itp_stencil);
-    P2Mastah( &model, *particles, FS_AR, mesh, mesh->FS_AR_s,   mesh->BCg.type,  1, 0, interp, vert, model.itp_stencil);
+    P2Mastah( &model, *particles, FS_AR, mesh, mesh->FS_AR_n,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil);
+    P2Mastah( &model, *particles, FS_AR, mesh, mesh->FS_AR_s,   mesh->BCg.type,  1, 0, interp, vert, model.interp_stencil);
     
     DoodzFree(FS_AR);
     
@@ -838,10 +838,264 @@ void UpdateParticlePhi( grid* mesh, scale scaling, params model, markers* partic
 
 void UpdateParticleX( grid* mesh, scale scaling, params model, markers* particles, mat_prop* materials ) {
     
+//     DoodzFP *T_inc_mark, *Tm0, dtm, *dTms, *dTgr, *dTmr, *rho_part;
+//     double *dT, *Tg0, *dTgs, dx=model.dx, dz=model.dz, d=1.0;
+//     int    cent=1, vert=0, prop=1, interp=0;
+//     int Nx, Nz, Ncx, Ncz, k, c0, p;
+//     Nx = mesh->Nx; Ncx = Nx-1;
+//     Nz = mesh->Nz; Ncz = Nz-1;
+    
+//     // Allocations
+//     Tm0        = DoodzCalloc(particles->Nb_part, sizeof(DoodzFP));
+//     Tg0        = DoodzCalloc(Ncx*Ncz, sizeof(DoodzFP));
+//     dT        = DoodzCalloc(Ncx*Ncz, sizeof(DoodzFP));
+//     T_inc_mark = DoodzCalloc(particles->Nb_part, sizeof(DoodzFP));
+    
+//     // Old temperature grid
+// #pragma omp parallel for shared(mesh, Tg0) private(c0) firstprivate(Ncx,Ncz)
+//     for ( c0=0; c0<Ncx*Ncz; c0++ ) {
+//         if (mesh->BCt.type[c0] != 30) { 
+//             Tg0[c0] = mesh->X0_n[c0];
+//             dT[c0]  = mesh->X_n[c0] - mesh->X0_n[c0];
+//         }
+//     }
+//     Interp_Grid2P_centroids2( *particles, Tm0, mesh, Tg0, mesh->xvz_coord,  mesh->zvx_coord, Nx-1, Nz-1, mesh->BCt.type, &model  );
+    
+ 
+//     /* CASE WITHOUT SUBGRID DIFFUSION: INTERPOLATE INCREMENT DIRECTLY */
+        
+//         // Interp increments to particles
+//         Interp_Grid2P_centroids2( *particles, T_inc_mark, mesh, dT, mesh->xvz_coord,  mesh->zvx_coord, Nx-1, Nz-1, mesh->BCt.type, &model  );
+
+//         // Increment temperature on particles
+//         ArrayPlusArray( particles->X, T_inc_mark, particles->Nb_part );
+    
+    
+//     // Freedom
+//     DoodzFree(dT);
+//     DoodzFree(Tg0);
+//     DoodzFree(Tm0);
+//     DoodzFree(T_inc_mark);
+
+    //--------------------------------------------------
     DoodzFP *X_inc_mark, *X_inc_grid;
     int Nx, Nz, Ncx, Ncz, k;
     Nx = mesh->Nx; Ncx = Nx-1;
     Nz = mesh->Nz; Ncz = Nz-1;
+    
+    // // Total update (do not use!!!)
+    // Interp_Grid2P_centroids2( *particles, particles->X, mesh, mesh->X_n, mesh->xvz_coord,  mesh->zvx_coord, Nx-1, Nz-1, mesh->BCp.type, &model  );
+    
+    // Incremental update
+    X_inc_mark = DoodzCalloc(particles->Nb_part, sizeof(DoodzFP));
+    X_inc_grid = DoodzCalloc(Ncx*Ncz, sizeof(DoodzFP));
+#pragma omp parallel for shared ( X_inc_grid, mesh ) private( k ) firstprivate( Ncx, Ncz )
+    for (k=0; k<Ncx*Ncz; k++) {
+        X_inc_grid[k] = 0.0;
+        if (mesh->BCp.type[k] != 30 && mesh->BCp.type[k] != 31) X_inc_grid[k] = mesh->X_n[k] - mesh->X0_n[k];
+    }
+    
+    // Interp increments to particles
+    Interp_Grid2P_centroids2( *particles, X_inc_mark, mesh, X_inc_grid, mesh->xvz_coord,  mesh->zvx_coord, Nx-1, Nz-1, mesh->BCp.type, &model  );
+    
+    // Increment X on particles
+    ArrayPlusArray( particles->X, X_inc_mark, particles->Nb_part );
+    
+    // Bounds: numerical capote
+#pragma omp parallel for shared ( particles ) private( k )
+    for (k=0; k<particles->Nb_part; k++) {
+        if (particles->X[k] <= 0.0) particles->X[k] = 0.0;
+        if (particles->X[k] >= 1.0) particles->X[k] = 1.0;
+    }
+    
+    DoodzFree(X_inc_grid);
+    DoodzFree(X_inc_mark);
+}
+
+//--------------------------------------------------
+void UpdateParticleXpips( grid* mesh, scale scaling, params model, markers* particles, mat_prop* materials ) {
+
+    DoodzFP *X_inc_mark, *X_inc_grid;
+    int Nx, Nz, Ncx, Ncz, k;
+    Nx = mesh->Nx; Ncx = Nx-1;
+    Nz = mesh->Nz; Ncz = Nz-1;
+    
+    //==================================================================
+    // Diffuse Xreac array ---------------------------------------------
+    //==================================================================
+    
+    //double diff = model.Reac_diff/(scaling->L*scaling->L/scaling->t);
+    //double diff = 1.0e-15/(scaling.L*scaling.L/scaling.t);
+    double DW, DE, DS, DN;
+    double diff_time = model.dt;
+    double dx = model.dx;
+    double dz = model.dz;
+    
+    double X_wanted, valmin, valmax, deltaval, valt_test, Xtest;
+    double d=1.0;
+    int nb_it, nb_itmax;
+    int i,c,l, c1, c2, c3;
+    
+    //    get min max kc
+    double min_kc=1.0e30, max_kc=0.0;
+    for ( k=0; k<materials->Nb_phases; k++) {
+        if (materials->k_chem[k]<min_kc) min_kc = materials->k_chem[k];
+        if (materials->k_chem[k]>max_kc) max_kc = materials->k_chem[k];
+    }
+    printf("--> min kc = %2.2e m2.s-1 - max kc = %2.2e m2.s-1 \n", min_kc*scaling.L*scaling.L/scaling.t, max_kc*scaling.L*scaling.L/scaling.t );
+    
+    
+    double *knodes,*newkx,*newkz;
+    
+    knodes  = DoodzCalloc(Nx*Nz, sizeof(DoodzFP));
+    newkx   = DoodzCalloc(Nx*(Nz+1), sizeof(DoodzFP));
+    newkz   = DoodzCalloc((Nx+1)*Nz, sizeof(DoodzFP));
+    
+    int interp=0, vert=0;
+
+    P2Mastah( &model, *particles, materials->k_chem, mesh, knodes, mesh->BCg.type,  0, 0, interp, vert, (&model)->interp_stencil);
+
+    // Interp_P2N ( *particles, materials->k_chem,  mesh, knodes, mesh->xg_coord,  mesh->zg_coord, 0, 0, &model );
+    MinMaxArray(knodes, scaling.L*scaling.L/scaling.t, Nx*Nz, "knodes" );
+    
+    // fill newkx
+    for( l=0; l<Nz+1; l++) {
+        for( k=0; k<Nx; k++) {
+            
+            c1 = k + l*Nx;     // current value
+            c3 = k + (l-1)*Nx; // value below
+            
+            if (l==0)          newkx[c1] = knodes[c1];
+            if (l==Nz)         newkx[c1] = knodes[c3];
+            if (l>0 && l<Nz)   newkx[c1] = 0.5*(knodes[c1] + knodes[c3]);
+            
+        }
+    }
+    MinMaxArray(newkx, scaling.L*scaling.L/scaling.t, Nx*(Nz+1), "newkx" );
+    
+    // fill newkz
+    for( l=0; l<Nz; l++) {
+        for( k=0; k<Nx+1; k++) {
+            
+            c1 = k   + l*(Nx+1);     // current value
+            c2 = k   + l*(Nx);       // value on nodes
+            c3 = k   + l*(Nx) - 1 ;     // value on nodes left
+            
+            //            if (k==0)          newkz[c1] = knodes[c2];
+            //            if (k==Nx)         newkz[c1] = knodes[c3];
+            
+            //          if (k==0 && model.isperiodic_x == 1)    newkz[c1] = knodes[c2 + Nx-1];
+            if (k==0 && model.periodic_x == 1)    newkz[c1] = 0.5*(knodes[c2] + knodes[c2+(Nx-2)]);
+            if (k==0 && model.periodic_x == 0)    newkz[c1] = knodes[c2];
+            
+            //          if (k==Nx && model.isperiodic_x == 1)   newkz[c1] = knodes[c3 - Nx-1];
+            if (k==Nx && model.periodic_x == 1)   newkz[c1] = 0.5*(knodes[c3 - (Nx-2)] + knodes[c3]);
+            if (k==Nx && model.periodic_x == 0)   newkz[c1] = knodes[c3];
+            
+            if (k>0 && k<Nz)   newkz[c1] = 0.5*(knodes[c2] + knodes[c3]);
+            
+        }
+    }
+    MinMaxArray(newkz, scaling.L*scaling.L/scaling.t, (Nx+1)*Nz, "newkz" );
+    
+    
+    
+    double dt   = 0.249*model.dx*model.dz/max_kc, time=0.0;
+    double dt_special = 0.0;
+    
+    
+    printf("\n--------\n");
+    printf("--> model time  = %f \n", model.dt );
+    printf("--> dt_explicit = %f \n", dt );
+    
+    if (dt>=diff_time) dt = diff_time;
+    
+    int nstep   = floor(diff_time/dt);
+    
+    double vN, vS, vE, vW, vC;
+    
+    double *temp;
+    
+    temp  = DoodzCalloc(Ncx*Ncz, sizeof(DoodzFP));
+    
+    //    printf("\n--------\n");
+    printf("--> dt_chosen   = %f \n", dt );
+    //    printf("--> K           = %f \n", diff );
+    printf("--> nstep       = %d \n", nstep );
+    //    printf("--> K           = %2.2e m2.s-1 \n", diff*scaling.L*scaling.L/scaling.t );
+    
+    
+    if (diff_time - (nstep*dt) > 0.0){
+        dt_special = diff_time - (nstep*dt);
+    }
+    
+    for (i=0; i<=nstep; i++) {
+        
+        ArrayEqualArray(temp, mesh->X_n,Ncx * Ncz);
+        
+        if (i==nstep){
+            time += dt_special;
+            dt = dt_special;
+        }
+        else{
+            time += dt;
+        }
+        
+        for( l=0; l<Ncz; l++) {
+            for( k=0; k<Ncx; k++) {
+                
+                c = k + l*Ncx;
+                
+                c1  = k   + (l+1)*Nx;
+                c3  = k   + l*(Nx+1)+1;
+                
+                //                DW    = mesh->kc_x[c1]         ;
+                //                DE    = mesh->kc_x[c1 + 1]     ;
+                //                DS    = mesh->kc_z[c3]         ;
+                //                DN    = mesh->kc_z[c3 + Nx+1]  ;
+                
+                DW    = newkx[c1]         ;
+                DE    = newkx[c1 + 1]     ;
+                DS    = newkz[c3]         ;
+                DN    = newkz[c3 + Nx+1]  ;
+                
+                
+                vC = temp[c];
+                
+                if (k==0 && model.periodic_x == 1)     vW = temp[c + Ncx-1];
+                if (k==0 && model.periodic_x == 0)     vW = temp[c]        ;
+                if (k>0)                                 vW = temp[c - 1]    ;
+                
+                if (k==Ncx-1 && model.periodic_x == 1) vE = temp[c-Ncx+1]  ;
+                if (k==Ncx-1 && model.periodic_x == 0) vE = temp[c]        ;
+                if (k<Ncx-1)                             vE = temp[c+1]      ;
+                
+                if (l==0) vS = temp[c];
+                if (l>0)  vS = temp[c - Ncx];
+                
+                if (l==Ncz-1) vN = temp[c];
+                if (l<Ncz-1)  vN = temp[c + Ncx];
+                
+                //mesh->X_n[c] += dt*diff*((vE-2.0*vC+vW)/(model.dx*model.dx)+(vN-2.0*vC+vS)/(model.dz*model.dz));
+                //mesh->X_n[c] += dt*1.0e-15/(scaling.L*scaling.L/scaling.t)*((vE-2.0*vC+vW)/(model.dx*model.dx)+(vN-2.0*vC+vS)/(model.dz*model.dz));
+                
+                mesh->X_n[c] += dt*( DE*(vE-vC)/(dx*dx) - DW*(vC-vW)/(dx*dx) + DN*(vN-vC)/(dz*dz) - DS*(vC-vS)/(dz*dz));
+                
+            }
+        }
+    }
+    
+    printf("--> end of loops, time = %2.2e s \n", time*scaling.t );
+    printf("--> model time  = %2.2e s \n", model.dt*scaling.t );
+    printf("\n--------\n");
+    MinMaxArrayTag( mesh->X_n,             1.0, Ncx*Ncz, "Xreac_n ", mesh->BCp.type );
+    
+    free(temp);
+    free(knodes);
+    free(newkx);
+    free(newkz);
+    //==================================================================
+    //==================================================================
     
     // // Total update (do not use!!!)
     //    Interp_Grid2P( *particles, particles->X, mesh, mesh->X_n, mesh->xc_coord,  mesh->zc_coord, Nx-1, Nz-1, mesh->BCt.type, &model  );
@@ -924,7 +1178,7 @@ void UpdateParticleGrainSize( grid* mesh, scale scaling, params model, markers* 
 void UpdateParticleEnergy( grid* mesh, scale scaling, params model, markers* particles, mat_prop* materials ) {
     
     DoodzFP *T_inc_mark, *Tm0, dtm, *dTms, *dTgr, *dTmr, *rho_part;
-    double *Tg0, *dTgs, dx=model.dx, dz=model.dz, d=1.0;
+    double *dT, *dTgs, dx=model.dx, dz=model.dz, d=1.0;
     int    cent=1, vert=0, prop=1, interp=0;
     int Nx, Nz, Ncx, Ncz, k, c0, p;
     Nx = mesh->Nx; Ncx = Nx-1;
@@ -932,18 +1186,20 @@ void UpdateParticleEnergy( grid* mesh, scale scaling, params model, markers* par
     
     // Allocations
     Tm0        = DoodzCalloc(particles->Nb_part, sizeof(DoodzFP));
-    Tg0        = DoodzCalloc(Ncx*Ncz, sizeof(DoodzFP));
+    dT         = DoodzCalloc(Ncx*Ncz, sizeof(DoodzFP));
     T_inc_mark = DoodzCalloc(particles->Nb_part, sizeof(DoodzFP));
-    
+
     // Old temperature grid
-#pragma omp parallel for shared(mesh, Tg0) private(c0) firstprivate(Ncx,Ncz)
+#pragma omp parallel for shared(mesh, dT) private(c0) firstprivate(Ncx,Ncz)
     for ( c0=0; c0<Ncx*Ncz; c0++ ) {
-        if (mesh->BCt.type[c0] != 30) Tg0[c0] = mesh->T[c0] - mesh->dT[c0];
+        if (mesh->BCt.type[c0] != 30) {
+            dT[c0]  = mesh->T[c0] - mesh->T0_n[c0];
+        }
     }
-    Interp_Grid2P_centroids2( *particles, Tm0, mesh, Tg0, mesh->xvz_coord,  mesh->zvx_coord, Nx-1, Nz-1, mesh->BCt.type, &model  );
+    Interp_Grid2P_centroids2( *particles, Tm0, mesh, mesh->T0_n, mesh->xvz_coord,  mesh->zvx_coord, Nx-1, Nz-1, mesh->BCt.type, &model  );
     
     // SUBGRID
-    if ( model.subgrid_diff >= 1 ) { /* CASE WITH SUBGRID DIFFUSION */
+    if ( model.subgrid_diffusion >= 1 ) { /* CASE WITH SUBGRID DIFFUSION */
         
         printf("Subgrid diffusion for temperature update\n");
         dTgs = DoodzCalloc(Ncx*Ncz, sizeof(DoodzFP));
@@ -971,7 +1227,7 @@ void UpdateParticleEnergy( grid* mesh, scale scaling, params model, markers* par
         // Remaining temperature increments on the grid
 #pragma omp parallel for shared(mesh, dTgs, dTgr) private(c0) firstprivate(Ncx,Ncz)
         for ( c0=0; c0<Ncx*Ncz; c0++ ) {
-            if (mesh->BCt.type[c0] != 30) dTgr[c0] = mesh->dT[c0] - dTgs[c0];
+            if (mesh->BCt.type[c0] != 30) dTgr[c0] = dT[c0] - dTgs[c0];
         }
         
         // Remaining temperature increments grid --> markers
@@ -992,14 +1248,14 @@ void UpdateParticleEnergy( grid* mesh, scale scaling, params model, markers* par
     else {  /* CASE WITHOUT SUBGRID DIFFUSION: INTERPOLATE INCREMENT DIRECTLY */
         
         // Interp increments to particles
-        Interp_Grid2P_centroids2( *particles, T_inc_mark, mesh, mesh->dT, mesh->xvz_coord,  mesh->zvx_coord, Nx-1, Nz-1, mesh->BCt.type, &model  );
-        
+        Interp_Grid2P_centroids2( *particles, T_inc_mark, mesh, dT, mesh->xvz_coord,  mesh->zvx_coord, Nx-1, Nz-1, mesh->BCt.type, &model  );
+
         // Increment temperature on particles
         ArrayPlusArray( particles->T, T_inc_mark, particles->Nb_part );
     }
     
     // Freedom
-    DoodzFree(Tg0);
+    DoodzFree(dT);
     DoodzFree(Tm0);
     DoodzFree(T_inc_mark);
 }
@@ -1011,37 +1267,22 @@ void UpdateParticleEnergy( grid* mesh, scale scaling, params model, markers* par
 void UpdateParticlePressure( grid* mesh, scale scaling, params model, markers* particles, mat_prop* materials ) {
     
     DoodzFP *P_inc_mark;
-    int Nx, Nz, Ncx, Ncz, k, c0, p, ptrick=model.Plith_trick;
+    int Nx, Nz, Ncx, Ncz, k, c0, p;
     double d=1.0, dtm;
     int    cent=1, vert=0, prop=1, interp=0;
     Nx = mesh->Nx; Ncx = Nx-1;
     Nz = mesh->Nz; Ncz = Nz-1;
     
     // Compute increment
-#pragma omp parallel for shared(mesh) private(c0) firstprivate( ptrick )
+#pragma omp parallel for shared(mesh) private(c0) 
     for ( c0=0; c0<Ncx*Ncz; c0++ ) {
         mesh->dp[c0] = 0.0;
         if (mesh->BCp.type[c0] != 30 ) {
-            if ( ptrick == 1 ) mesh->dp[c0] = (mesh->p_in[c0] - mesh->p_lith[c0]) - (mesh->p0_n[c0] - mesh->p_lith0[c0]); // dp dynamic pressure
-            if ( ptrick == 0 ) mesh->dp[c0] = (mesh->p_in[c0]-mesh->p0_n[c0]);
+            mesh->dp[c0] = (mesh->p_in[c0]-mesh->p0_n[c0]);
         }
     }
     
-    
-    //    double *p_s = DoodzCalloc(Nx*Nz, sizeof(DoodzFP));
-    //    double *dp = DoodzCalloc(Nx*Nz, sizeof(DoodzFP));
-    //    InterpCentroidsToVerticesDouble( mesh->p_in, p_s,mesh, &model );
-    //
-    //    // Compute increment
-    //    #pragma omp parallel for shared(mesh) private(c0) firstprivate( ptrick )
-    //        for ( c0=0; c0<Nx*Nz; c0++ ) {
-    //            dp[c0] = 0.0;
-    //            if (mesh->BCg.type[c0] != 30 ) {
-    //                dp[c0] = (p_s[c0]-mesh->p0_s[c0]);
-    //            }
-    //        }
-    
-    if ( model.subgrid_diff >= 2 ) {
+    if ( model.subgrid_diffusion >= 2 ) {
         
         printf("Subgrid diffusion for pressure update\n");
         double *Pg0  = DoodzCalloc(Ncx*Ncz, sizeof(DoodzFP));
@@ -1056,10 +1297,9 @@ void UpdateParticlePressure( grid* mesh, scale scaling, params model, markers* p
         
         /* -------------- */
         // Old Pressure grid
-#pragma omp parallel for shared(mesh, Pg0) private(c0) firstprivate(Ncx,Ncz) firstprivate( ptrick )
+#pragma omp parallel for shared(mesh, Pg0) private(c0) firstprivate(Ncx,Ncz)
         for ( c0=0; c0<Ncx*Ncz; c0++ ) {
-            if (mesh->BCt.type[c0] != 30 && ptrick == 1 ) Pg0[c0] = mesh->p0_n[c0] - mesh->p_lith0[c0];
-            if (mesh->BCt.type[c0] != 30 && ptrick == 0 ) Pg0[c0] = mesh->p0_n[c0];
+            if (mesh->BCt.type[c0] != 30) Pg0[c0] = mesh->p0_n[c0];
         }
         Interp_Grid2P_centroids2( *particles, Pm0, mesh, Pg0, mesh->xvz_coord,  mesh->zvx_coord, Nx-1, Nz-1, mesh->BCp.type, &model  );
         /* -------------- */
@@ -1136,7 +1376,6 @@ void UpdateParticleStress( grid* mesh, markers* particles, params* model, mat_pr
     double *dudx_n, *dvdz_n, *dudz_s, *dvdx_s, *om_s, *om_n, *dudz_n, *dvdx_n, *dudx_s, *dvdz_s;
     double angle, tzz, txx, txz, dx, dz, dt;
     double *txz_n, *txx_s, *tzz_s, *dtxxg0, *dtzzg0, *dtxzg0;
-    int style = model->StressUpdate;
     int    cent=1, vert=0, prop=1, interp=0;
     
     Nx = model->Nx;
@@ -1201,7 +1440,7 @@ firstprivate( model )
     InterpVerticesToCentroidsDouble( om_n, om_s, mesh, model );
 
     // // Rotate stress only if elasticity is activated 
-    if ( model->iselastic==1 ) {
+    if ( model->elastic==1 ) {
     
 #pragma omp parallel for shared ( mesh, dudz_n, dvdx_n, dudx_n, dvdz_n, om_n ) \
     private ( k1, txx, tzz, txz, angle)                     \
@@ -1211,12 +1450,12 @@ firstprivate( model )
             txx   = mesh->sxxd[k1];
             tzz   = mesh->szzd[k1];
             txz   = txz_n[k1];
-            if (model->StressRotation==1 && model->advection==1) { // Jaumann rate
+            if (model->stress_rotation==1 && model->advection==1) { // Jaumann rate
                 angle = dt*om_n[k1];
                 mesh->sxxd[k1] = (txx*cos(angle) - txz*sin(angle))*cos(angle) - (txz*cos(angle) - tzz*sin(angle))*sin(angle);
                 mesh->szzd[k1] = (txx*sin(angle) + txz*cos(angle))*sin(angle) + (txz*sin(angle) + tzz*cos(angle))*cos(angle);
             }
-            if (model->StressRotation==2 && model->advection==1) { // Upper convected rate
+            if (model->stress_rotation==2 && model->advection==1) { // Upper convected rate
                 mesh->sxxd[k1] = mesh->sxxd[k1] - dt * mesh->VE_n[k1] * ( -2.0*txx*dudx_n[k1] - 2.0*txz*dudz_n[k1]);
                 mesh->szzd[k1] = mesh->szzd[k1] - dt * mesh->VE_n[k1] * ( -2.0*tzz*dvdz_n[k1] - 2.0*txz*dvdx_n[k1]);
             }        
@@ -1230,27 +1469,27 @@ firstprivate( model )
             txx   = txx_s[k1];
             tzz   = tzz_s[k1];
             txz   = mesh->sxz[k1];
-            if (model->StressRotation==1 && model->advection==1) { // Jaumann rate
+            if (model->stress_rotation==1 && model->advection==1) { // Jaumann rate
                 angle = dt*om_s[k1];
                 mesh->sxz[k1] = (txx*cos(angle) - txz*sin(angle))*sin(angle) + (txz*cos(angle) - tzz*sin(angle))*cos(angle);
             }
-            if (model->StressRotation==2 && model->advection==1) { // Upper convected rate
+            if (model->stress_rotation==2 && model->advection==1) { // Upper convected rate
                 mesh->sxz[k1] = mesh->sxz[k1] - dt * mesh->VE_s[k1] * (      txx*dudz_s[k1] -     txx*dvdx_s[k1] - txz*(dudx_s[k1]+ dvdz_s[k1]) );
             }
         }
     }
     
     // Rotate director directly on particles
-    if ( model->aniso == 1 && model->advection==1) {
+    if ( model->anisotropy == 1 && model->advection==1) {
 
 #pragma omp parallel for shared( particles, mesh ) firstprivate( dt, model ) private( k )
         for ( k=0; k<particles->Nb_part; k++ ) {
             if (particles->phase[k] != -1) {
                 double nx = particles->nx[k];
                 double nz = particles->nz[k];
-                double mdudx =  Centers2Particle( particles, dudx_n,     mesh->xvz_coord, mesh->zvx_coord, mesh->Nx-1, mesh->Nz-1, mesh->BCp.type, mesh->dx, mesh->dz, k, model->isperiodic_x );
+                double mdudx =  Centers2Particle( particles, dudx_n,     mesh->xvz_coord, mesh->zvx_coord, mesh->Nx-1, mesh->Nz-1, mesh->BCp.type, mesh->dx, mesh->dz, k, model->periodic_x );
                 double mdudz = Vertices2Particle( particles, dudz_s,     mesh->xg_coord,  mesh->zg_coord,  mesh->Nx-0, mesh->Nz-0, mesh->BCg.type, mesh->dx, mesh->dz, k );
-                double mdvdz =  Centers2Particle( particles, dvdz_n,     mesh->xvz_coord, mesh->zvx_coord, mesh->Nx-1, mesh->Nz-1, mesh->BCp.type, mesh->dx, mesh->dz, k, model->isperiodic_x );
+                double mdvdz =  Centers2Particle( particles, dvdz_n,     mesh->xvz_coord, mesh->zvx_coord, mesh->Nx-1, mesh->Nz-1, mesh->BCp.type, mesh->dx, mesh->dz, k, model->periodic_x );
                 double mdvdx = Vertices2Particle( particles, dvdx_s,     mesh->xg_coord,  mesh->zg_coord,  mesh->Nx-0, mesh->Nz-0, mesh->BCg.type, mesh->dx, mesh->dz, k );
                 particles->nx[k] += dt*(-(mdudx - mdvdz)*nx*nz - mdvdx*nz*nz + mdudz*nx*nx)*nz;
                 particles->nz[k] += dt*( (mdudx - mdvdz)*nx*nz + mdvdx*nz*nz - mdudz*nx*nx)*nx;
@@ -1278,7 +1517,7 @@ firstprivate( model )
     Nx = mesh->Nx; Ncx = Nx-1;
     Nz = mesh->Nz; Ncz = Nz-1;
     
-    if ( model->subgrid_diff > -1 ) {
+    if ( model->subgrid_diffusion > -1 ) {
         
         // Alloc
         dtxxgs = DoodzCalloc(Ncx*Ncz, sizeof(DoodzFP));
@@ -1309,7 +1548,7 @@ firstprivate( model )
         MinMaxArray(etam, scaling->eta, particles->Nb_part, "eta phys part  ");
         
         
-        if ( model->subgrid_diff == 2 ) {
+        if ( model->subgrid_diffusion == 2 ) {
             
             printf("Subgrid diffusion for stress tensor component update\n");
             
@@ -1318,13 +1557,13 @@ firstprivate( model )
             for ( k=0; k<particles->Nb_part; k++ ) {
                 if (particles->phase[k] != -1) {
                     p         = particles->phase[k];
-                    dtaum     = etam[k] / materials->mu[p];
+                    dtaum     = etam[k] / materials->G[p];
                     dtxxms[k] = -( particles->sxxd[k] - txxm0[k]) * (1.0 - exp(-d*dt/dtaum));
                     dtzzms[k] = -( particles->szzd[k] - tzzm0[k]) * (1.0 - exp(-d*dt/dtaum));
                     dtxzms[k] = -( particles->sxz[k]  - txzm0[k]) * (1.0 - exp(-d*dt/dtaum));
                     if (isinf(dtxxms[k])) {
                         printf("Infinite dtxxms[k]: %2.2e %2.2e %2.2e\n", particles->sxxd[k], txxm0[k], exp(-d*dt/dtaum));
-                        printf("%2.2e %2.2e %2.2e %2.2e %2.2e", d, dt, dtaum, etam[k]*scaling->eta, materials->mu[p]*scaling->S );
+                        printf("%2.2e %2.2e %2.2e %2.2e %2.2e", d, dt, dtaum, etam[k]*scaling->eta, materials->G[p]*scaling->S );
                         exit(1);
                     }
                     if (isnan(dtxxms[k])) {
@@ -1335,9 +1574,9 @@ firstprivate( model )
             }
             
             // Subgrid stress increments markers --> grid
-            P2Mastah( model, *particles, dtxxms,     mesh, dtxxgs,   mesh->BCp.type,  1, 0, interp, cent, model->itp_stencil);
-            P2Mastah( model, *particles, dtzzms,     mesh, dtzzgs,   mesh->BCp.type,  1, 0, interp, cent, model->itp_stencil);
-            P2Mastah( model, *particles, dtxzms,     mesh, dtxzgs,   mesh->BCg.type,  1, 0, interp, vert, model->itp_stencil);
+            P2Mastah( model, *particles, dtxxms,     mesh, dtxxgs,   mesh->BCp.type,  1, 0, interp, cent, model->interp_stencil);
+            P2Mastah( model, *particles, dtzzms,     mesh, dtzzgs,   mesh->BCp.type,  1, 0, interp, cent, model->interp_stencil);
+            P2Mastah( model, *particles, dtxzms,     mesh, dtxzgs,   mesh->BCg.type,  1, 0, interp, vert, model->interp_stencil);
             
             // Remaining stress increments on the grid
 #pragma omp parallel for shared(mesh,dtxxgs,dtxxgr,dtzzgs,dtzzgr) private(c0) firstprivate(Ncx,Ncz)
@@ -1356,7 +1595,7 @@ firstprivate( model )
             Interp_Grid2P(           *particles, dtxzmr, mesh, dtxzgr, mesh->xg_coord,  mesh->zg_coord, Nx  , Nz  , mesh->BCg.type         );
             
             // Final stresses update on markers
-#pragma omp parallel for shared(particles,dtxxms,dtzzms,dtxzms,dtxxmr,dtzzmr,dtxzmr) private(k) firstprivate(style)
+#pragma omp parallel for shared(particles,dtxxms,dtzzms,dtxzms,dtxxmr,dtzzmr,dtxzmr) private(k) 
             for ( k=0; k<particles->Nb_part; k++ ) {
                 if (particles->phase[k] != -1) particles->sxxd[k]  = particles->sxxd[k] + dtxxms[k] + dtxxmr[k];
                 if (particles->phase[k] != -1) particles->szzd[k]  = particles->szzd[k] + dtzzms[k] + dtzzmr[k];
@@ -1383,7 +1622,7 @@ firstprivate( model )
         DoodzFree( etam   );
         
     }
-    if (model->subgrid_diff==0 || model->subgrid_diff==1 || model->subgrid_diff==4){
+    if (model->subgrid_diffusion==0 || model->subgrid_diffusion==1 || model->subgrid_diffusion==4){
         
         printf("No subgrid diffusion for stress tensor component update\n");
         

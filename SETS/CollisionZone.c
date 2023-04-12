@@ -34,7 +34,13 @@ double SetTemperature(MdoodzInput *input, Coordinates coordinates) {
 
 double SetDensity(MdoodzInput *input, Coordinates coordinates, int phase) {
   const double TPart = SetTemperature(input, coordinates);
-  if (input->model.eqn_state == 1) {
+  /* Hi Roman, there is an awkward 1==0 below. In fact the global switch `eqn_state` was never used.
+  Density is computed interally and the type of equation of state depends on the phase.
+  To update density on particles one may use the function:
+  EvaluateDensity( phase_ID, T, P, X,  model, materials );  where X is likely 0.0 in most cases (it's a depletion amount)
+  --> Consequence: SetDensity() should be aware `of materials`
+  */
+  if ( 1==0 ) {
     return input->materials.rho[phase] * (1 - input->materials.alp[phase] * (TPart - input->materials.T0[phase]));
   } else {
     return input->materials.rho[phase];
@@ -42,35 +48,20 @@ double SetDensity(MdoodzInput *input, Coordinates coordinates, int phase) {
 }
 
 SetBC SetBCT(MdoodzInput *instance, POSITION position, double particleTemperature) {
-  SetBC  bc;
-  double surfaceTemperature = zeroC / instance->scaling.T;
-  if (position == FREE_SURFACE) {
-    bc.value = surfaceTemperature;
-    bc.type  = 1;
-  } else {
-    bc.value = 0.0;
-    bc.type  = 0;
+  SetBC     bc;
+  double surface_temperature =          zeroC  / instance->scaling.T;
+  double mantle_temperature  = (1330. + zeroC) / instance->scaling.T;
+  if (position == S) {
+    bc.type  = constant_temperature;
+    bc.value = mantle_temperature;
   }
-  return bc;
-}
-
-
-SetBC SetBCTNew(MdoodzInput *instance, POSITION position, double particleTemperature) {
-  SetBC  bc;
-  double surfaceTemperature = zeroC / instance->scaling.T;
-  double mantleTemperature  = (1330. + zeroC) / instance->scaling.T;
-  if (position == S || position == SE || position == SW) {
-    bc.value = particleTemperature;
-    bc.type  = 1;
-  } else if (position == N || position == NE || position == NW) {
-    bc.value = surfaceTemperature;
-    bc.type  = 1;
-  } else if (position == W || position == E) {
-    bc.value = mantleTemperature;
-    bc.type  = 0;
-  } else {
-    bc.value = 0;
-    bc.type  = 0;
+  if (position == free_surface || position == N) {
+    bc.type  = constant_temperature;
+    bc.value = surface_temperature;
+  } 
+  if (position == W || position == E) {
+    bc.type  = constant_heatflux;
+    bc.value = 0.;
   }
   return bc;
 }
@@ -97,7 +88,6 @@ int main() {
                   // the top and bottom boundaries are characterized by a constant temperature (0 and 1330◦C, respectively).
                   // Zero heat flow boundary conditions are prescribed at the lateral sides of the model;
                   .SetBCT    = SetBCT,
-                  .SetBCTNew = SetBCTNew,
           },
   };
   RunMDOODZ("CollisionZone.txt", &setup);

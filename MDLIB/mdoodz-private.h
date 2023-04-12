@@ -34,6 +34,7 @@ typedef struct {
   double *T0, *P0, *x0, *z0, *Tmax, *Pmax, *divth;
   double *dsxxd, *dszzd, *dsxz;
   double *noise, *rho;
+  double *aniso_angle;
 } markers;
 
 
@@ -67,14 +68,13 @@ typedef struct {
           *u_in, *v_in, *p_in, *p_corr, *sxxd, *szzd, *sxz, *exxd, *ezzd, *exz,
           *VE_s, *VE_n, *sxxd0, *szzd0, *sxz0, *mu_s, *mu_n, *u_adv, *v_adv,
           *eta_phys_n, *kx, *kz, *Cv, *Qr, *eta_phys_s, *u_start, *v_start,
-          *p_start, *divth0_n, *T0_n;
+          *p_start, *divth0_n;
   int    *iter_smooth;
   int    *nb_part_cell, *nb_part_vert;
-  BC      BCu, BCv, BCp, BCp_exp;
+  BC      BCu, BCv, BCp, BCp_exp, BCT_exp, BCt, BCg, BCC_exp, BCc;
   // TODO rename BCu and rename BCv to BCVx and BCVz
   // TODO rename BCp to BCP (P as pressure is always capital P)
   // TODO find and and do the same for (T as temperature)
-  BCT     BCt, BCg, BCc;
   // TODO rename BCg to BCv (v is not capital and stands for vertex)
   double *xg_coord, *zg_coord, *xc_coord, *zc_coord, *xvz_coord, *zvx_coord,
           *xg_coord0, *zg_coord0, *xg_coord_ext, *zg_coord_ext;
@@ -95,10 +95,15 @@ typedef struct {
           **phase_eta_s;// TODO: refactor to _c and _v
   double *sxxd0_s, *szzd0_s, *sxz0_n, *exxd_s, *ezzd_s, *exz_n, *sxz_n;   
   double *rho0_n;
-  double  Uthermal, Uelastic, Work, Tii_mean, Eii_mean, T_mean, P_mean;
+  double  Uthermal, Uelastic, Work, 
+          P_mean, T_mean,
+          sxxd_mean, szzd_mean, sxz_mean, Tii_mean, 
+          exxd_mean, ezzd_mean, exz_mean, Eii_mean;
   double *Work_time, *Uelastic_time, *Uthermal_time, *Time_time, *Short_time,
-          *P_mean_time, *T_mean_time, *Tii_mean_time, *Eii_mean_time;
-  double *T, *dT, *d_n, *d0_n, *phi_n, *phi0_n;
+          *P_mean_time, *T_mean_time, 
+          *sxxd_mean_time, *szzd_mean_time, *sxz_mean_time, *Tii_mean_time, 
+          *exxd_mean_time, *ezzd_mean_time, *exz_mean_time, *Eii_mean_time;
+  double *T, *T0_n, *d_n, *d0_n, *phi_n, *phi0_n;
   double *eII_el, *eII_pl, *eII_pl_s, *eII_pwl, *eII_exp, *eII_lin, *eII_gbs,
           *eII_cst;
   double *eII_pwl_s;
@@ -147,13 +152,13 @@ struct _SparseMat {
 typedef struct _n_params Nparams;
 struct _n_params {
   int     nit, nit_max, stagnated;
-  double  abs_tol_u, rel_tol_u, abs_tol_p, rel_tol_p;
+  double  nonlin_abs_mom, nonlin_rel_mom, nonlin_abs_div, nonlin_rel_div;
   double  resx, resz, resp, rest;
   double  resx0, resz0, resp0;
   double  resx_f, resz_f, resp_f;
   double  vrlx, prlx, trlx;
-  int     Picard2Newton, let_res_grow, nit_Pic_max, *LogIsNewtonStep;
-  double  Pic2NewtCond;
+  int     Picard2Newton, let_res_grow, max_Pic_its, *LogIsNewtonStep;
+  double  Picard2Newton_tol;
   double *rx_abs, *rz_abs, *rp_abs, *rx_rel, *rz_rel, *rp_rel;
 };
 
@@ -358,9 +363,9 @@ void            ShearModCompExpGrid( grid*, mat_prop*, params*, scale);
 void            CohesionFrictionDilationGrid(grid*, markers*, mat_prop, params, scale);
 
 // Non-Newtonian rheology
-void            UpdateNonLinearity(grid *, markers *, markers *, surface *, mat_prop, params *, Nparams *, scale, int, double);
+void            UpdateNonLinearity(grid *, markers *, markers *, surface *, mat_prop, params *, Nparams *, scale, int, int);
 double          LineSearch(SparseMat *, double *, grid *, params *, Nparams *, markers *, markers *, surface *, mat_prop, scale);
-void            NonNewtonianViscosityGrid(grid *, mat_prop *, params *, Nparams, scale *);
+void            NonNewtonianViscosityGrid(grid *, mat_prop *, params *, Nparams, scale *, int);
 void            StrainRateComponents(grid *, scale, params *);
 void            GenerateDeformationMaps(grid *, mat_prop *, params *, Nparams, scale *);
 void            UpdateParticleGrainSize(grid *, scale, params, markers *, mat_prop *);
@@ -368,7 +373,8 @@ void            UpdateParticleDensity(grid *, scale, params, markers *, mat_prop
 void            UpdateParticleX(grid *, scale, params, markers *, mat_prop *);
 void            UpdateParticlePhi(grid *, scale, params, markers *, mat_prop *);
 // Anisotropy
-void            NonNewtonianViscosityGridAniso(grid *, mat_prop *, params *, Nparams, scale *);
+void            NonNewtonianViscosityGridAniso(grid *, mat_prop *, params *, Nparams, scale *, int);
+double          AnisoFactorEvolv( double FS_AR, double aniso_fac_max );
 
 // Advection
 void            DefineInitialTimestep(params *, grid *, markers, mat_prop, scale);
@@ -390,11 +396,11 @@ void            DeformationGradient(grid, scale, params, markers *);
 
 // Energy
 void            UpdateParticleEnergy(grid *, scale, params, markers *, mat_prop *);
-void            EnergyDirectSolve(grid *, params, double *, double *, double *, double *, markers *, double, int, int, scale, int);
+void            EnergyDirectSolve(grid *, params, double *, markers *, double, int, int, scale, int);
 cholmod_factor *FactorEnergyCHOLMOD(cholmod_common *, cs_di *, double *, int *, int *, int, int, int);
 cs_di          *TransposeA(cholmod_common *, double *, int *, int *, int, int);
 void            SolveEnergyCHOLMOD(cholmod_common *, cs_di *, cholmod_factor *, double *, double *, int, int, int);
-void            ThermalSteps(grid *, params, double *, double *, double *, double *, markers *, double, scale);
+void            ThermalSteps(grid *, params, double *, markers *, double, scale);
 void            SetThermalPert(grid *, params, scale);
 void            UpdateMaxPT(scale, params, markers *);
 
@@ -422,7 +428,7 @@ void            EvaluateStokesResidualDecoupled(SparseMat *, SparseMat *, Sparse
 void            BuildStokesOperatorDecoupled(grid *, params, int, double *, double *, double *, double *, SparseMat *, SparseMat *, SparseMat *, SparseMat *, SparseMat *, int);
 void            SolveStokesDecoupled(SparseMat *, SparseMat *, SparseMat *, SparseMat *, SparseMat *, DirectSolver *, params, grid *, scale);
 void            SolveStokesDefectDecoupled(SparseMat *, SparseMat *, SparseMat *, SparseMat *, SparseMat *, DirectSolver *, Nparams *, grid *, params *, markers *, markers *, surface *, mat_prop, scale, SparseMat *, SparseMat *, SparseMat *);
-void            AddCoeff2(int *, double *, int, int, int *, double, int, double, double *);
+void            AddCoeff3(int *, double *, int, int, int *, double, int, double, double *);
 void            MergeParallelMatrix(SparseMat *, double **, int **, int **, grid *, int *, int *, int *, int *, int *, int, char *, int *);
 void            DirectStokesDecoupled(SparseMat *, SparseMat *, SparseMat *, SparseMat *, DirectSolver *, double *, double *, double *, params, grid *, scale, SparseMat *);
 void            DirectStokesDecoupledComp(SparseMat *, SparseMat *, SparseMat *, SparseMat *, DirectSolver *, double *, double *, double *, params, grid *, scale, SparseMat *);
@@ -465,8 +471,6 @@ void            AssignMarkerProperties(markers *, int, int, params *, grid *, in
 
 
 // GLOBAL
-//void Interp_P2G( markers, DoodzFP*, grid*, double*, double*, double*, int, int, double, double, int, int, params*, char*  );
-
 void            AdvectFreeSurf_BEN(markers *, params, scale);
 void            BuildInitialTopography_BEN(surface *, markers *, params, grid, scale);
 void            SetTopoChainHorizontalCoords_BEN(surface *, markers *, params, grid, scale);
@@ -518,7 +522,7 @@ void            RogerGuntherII(markers *, params, grid, int, scale);
 void            AccumulatedStrainII(grid *, scale, params, markers *, double *, double *, int, int, char *);
 void            AdvectFreeSurf(markers *, params, scale);
 
-void            InitialiseDirectorVector(grid *, markers *, params *, mat_prop *);
+void            InitialiseDirectorVector(grid *, markers *, params *, mat_prop *, double);
 void            NormalizeDirector(grid *, DoodzFP *, DoodzFP *, DoodzFP *, DoodzFP *, params *);
 void            RotateDirectorVector(grid, markers *, params, scale *);
 void            UpdateParticlePressure(grid *, scale, params, markers *, mat_prop *);
@@ -538,7 +542,6 @@ void            Print2DArrayInt(int*, int, int, double);
 void            OldDeviatoricStressesPressure(grid *, markers *, scale, params *);
 void            TotalStresses(grid *, markers *, scale, params *);
 
-void            Interp_P2G(markers *, DoodzFP *, grid *, double *, double *, double *, int, int, params *, char *, int, int);
 void            Interp_Grid2P_centroids(markers, DoodzFP *, grid *, double *, double *, double *, int, int, char *, params *);
 void            Interp_Grid2P_centroids2(markers, DoodzFP *, grid *, double *, double *, double *, int, int, char *, params *);
 void            ExpandCentroidArray(double *, double *, grid *, params *);
@@ -554,8 +557,12 @@ void            DerivativesOnTheFly_n( double*, double*, double*, double*, doubl
 void            DerivativesOnTheFly_s( double*, double*, double*, double*, double*, double*, double*, double*, int, double, double, double, double, double, double, double, double, double, double, double, grid*, mat_prop*, params*, scale* );
 void            ViscosityDerivatives(grid *, mat_prop *, params *, scale *);
 void            EffectiveStrainRate( double*, double*, double*, double, double, double, double, double, double, double, double d2, double, double, int );
-double          ViscosityConcise(int, double, double, double, double, double, double, double, double, double, double, double, double, mat_prop *, params *, scale *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double, double, double, double, double, double, double *, double *, double *, double *, double, double, double *, double *, double *, double *, double *, double *, int, int);
-double          ViscosityConciseAniso(int, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, mat_prop *, params *, scale *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double, double, double, double, double, double, double *, double *, double *, double *, double, double, double *, double *, double *, double *, double *, double *, int, int);
+double          ViscosityConcise(int, double, double, double, double, double, double, double, double, double, double, double, double, mat_prop *, params *, scale *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double, double, double, double, double, double, double *, double *, double *, double *, double, double, double *, double *, double *, double *, double *, double *, int, int, int);
+double          ViscosityConciseAniso(int, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, mat_prop *, params *, scale *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double, double, double, double, double, double, double *, double *, double *, double *, double, double, double *, double *, double *, double *, double *, double *, int, int, int);
+void            HuetAveragingModel( double *, double *, double *, int, double, double, int, double, double, mat_prop*);
+double          ItpRho1D( double, params*, int );
+double          Interpolate2Ddata( double, double, double, double, double, double, int, int, double* );
+
 
 double          EvaluateDensity(int, double, double, double, params *, mat_prop *);
 void            ComputeMeanQuantitesForTimeSeries(grid *mesh);

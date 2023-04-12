@@ -6,7 +6,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Install packages with apt
-        run: sudo apt install -y cmake gcc g++ libhdf5-serial-dev libsuitesparse-dev
+        run: sudo apt update &&  sudo apt install -y cmake gcc g++ libhdf5-serial-dev libsuitesparse-dev
       - name: Builds cmake project
         run: cmake -B ./cmake-build -DTEST=ON && cmake --build ./cmake-build
       - name: Runs tests

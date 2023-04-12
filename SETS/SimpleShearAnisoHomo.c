@@ -57,7 +57,7 @@ int SetPhase(MdoodzInput *input, Coordinates coordinates) {
 
 double SetDensity(MdoodzInput *input, Coordinates coordinates, int phase) {
   const double T_init = (input->model.user0 + zeroC) / input->scaling.T;
-  if (input->model.eqn_state > 0) {
+  if (1 == 0) {
     return input->materials.rho[phase] * (1 - input->materials.alp[phase] * (T_init - input->materials.T0[phase]));
   } else {
     return input->materials.rho[phase];
@@ -69,7 +69,7 @@ double SetVerticalVelocity(MdoodzInput *input, Coordinates coordinates) {
 }
 
 double SetHorizontalVelocity(MdoodzInput *input, Coordinates coordinates) {
-  return -0.5 * input->model.EpsBG * (coordinates.z + (input->model.zmax - input->model.zmin) / 2);
+  return -0.5 * input->model.bkg_strain_rate * (coordinates.z + (input->model.zmax - input->model.zmin) / 2);
 }
 
 double SetGrainSize(MdoodzInput *input, Coordinates coordinates, int phase) {

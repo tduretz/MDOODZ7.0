@@ -328,7 +328,7 @@ void DirectStokesDecoupled( SparseMat *matA,  SparseMat *matB,  SparseMat *matC,
     int nitmax=20, k;
     double mone[2] = {-1.0,0.0}, one[2] = {1.0,0.0}, zero[2] = {0.0,0.0};
     DoodzFP ru, rp;
-    double maxdiv0, mindiv, maxdiv, maxdivit=0, rel_tol_div=model.rel_tol_div;
+    double maxdiv0, mindiv, maxdiv, maxdivit=0, lin_rel_div=model.lin_rel_div;
     double minru0, maxru0, minru, maxru;
     
     cholmod_common c ;
@@ -560,16 +560,16 @@ void DirectStokesDecoupled( SparseMat *matA,  SparseMat *matB,  SparseMat *matC,
             //cholmod_sdmult ( Dcm, 0, mone, one, p, fp, &c) ;
             //            NormResidualCholmod( &ru, &rp, fu, fp, matA->neq, matC->neq, model, scaling, 0 );
         }
-        //        if (fabs(maxdiv/maxdiv0)<rel_tol_div) break;
+        //        if (fabs(maxdiv/maxdiv0)<lin_rel_div) break;
         //        if (k>0 && fabs(maxdiv)/fabs(maxdivit)>0.75) break;
-        if (k>1 && (fabs(maxdiv)<model.abs_tol_div || maxdiv/maxdiv0<rel_tol_div ) ) break;
+        if (k>1 && (fabs(maxdiv)<model.lin_abs_div || maxdiv/maxdiv0<lin_rel_div ) ) break;
         
         //        if ( ru<1e-11/(scaling.F/pow(scaling.L,3)) && rp<1e-11/scaling.E) break;
     }
     
-    //    if (fabs(maxdiv/maxdiv0)>rel_tol_div || fabs(maxdiv) > rel_tol_div ){
-    if (fabs(maxdiv)>model.abs_tol_div && maxdiv/maxdiv0>rel_tol_div) {
-        printf("The code has exited since the incompressibility constrain was not satisfied to abs. tol. = %2.2e and rel. tol. = %2.2e\n Try modifying the PENALTY factor or check MIN/MAX viscosities\n Good luck!\n", model.abs_tol_div, rel_tol_div);
+    //    if (fabs(maxdiv/maxdiv0)>lin_rel_div || fabs(maxdiv) > lin_rel_div ){
+    if (fabs(maxdiv)>model.lin_abs_div && maxdiv/maxdiv0>lin_rel_div) {
+        printf("The code has exited since the incompressibility constrain was not satisfied to abs. tol. = %2.2e and rel. tol. = %2.2e\n Try modifying the PENALTY factor or check MIN/MAX viscosities\n Good luck!\n", model.lin_abs_div, lin_rel_div);
         exit(1);
     }
     printf("** PH - iterations = %lf sec\n", (double)((double)omp_get_wtime() - t_omp));
@@ -689,7 +689,7 @@ void DirectStokesDecoupledComp( SparseMat *matA,  SparseMat *matB,  SparseMat *m
     int nitmax=20, k, i;
     double mone[2] = {-1.0,0.0}, one[2] = {1.0,0.0}, zero[2] = {0.0,0.0};
     DoodzFP ru, rp;
-    double maxdiv0, mindiv, maxdiv, maxdivit=0, rel_tol_div=model.rel_tol_div;
+    double maxdiv0, mindiv, maxdiv, maxdivit=0, lin_rel_div=model.lin_rel_div;
     double minru0, maxru0, minru, maxru;
     
     cholmod_common c ;
@@ -902,7 +902,7 @@ void DirectStokesDecoupledComp( SparseMat *matA,  SparseMat *matB,  SparseMat *m
         MinMaxArrayVal( fu->x, matA->neq, &minru , &maxru  );
         if (k==0) maxdiv0 = maxdiv;
         if ( noisy == 1 ) printf("PH comp it. %01d. rel. max. div. = %2.2e -- max. abs. div = %2.2e-- max. rel. div = %2.2e  / max. mom. = %2.2e rel. max. mom. = %2.2e\n", k, fabs(maxdiv/maxdiv0), maxdiv, maxdivit, maxru, maxru/maxru0);
-        if (k>1 && (fabs(maxdiv)<model.abs_tol_div || maxdiv/maxdiv0<rel_tol_div ) ) break;
+        if (k>1 && (fabs(maxdiv)<model.lin_abs_div || maxdiv/maxdiv0<lin_rel_div ) ) break;
 
         // Schur complement
         cholmod_sdmult( Dcm, 0, one, zero, fp, pdum, &c) ;   // pdum <-- D * fp
@@ -931,8 +931,8 @@ void DirectStokesDecoupledComp( SparseMat *matA,  SparseMat *matB,  SparseMat *m
         //        p        = p + dp;
         // // ----- Original MATLAB version ----- //
     }
-    if (fabs(maxdiv)>model.abs_tol_div && maxdiv/maxdiv0>rel_tol_div) {
-        printf("The code has exited since the incompressibility constrain was not satisfied to abs. tol. = %2.2e and rel. tol. = %2.2e\n Try modifying the PENALTY factor or check MIN/MAX viscosities\n Good luck!\n", model.abs_tol_div, rel_tol_div);
+    if (fabs(maxdiv)>model.lin_abs_div && maxdiv/maxdiv0>lin_rel_div) {
+        printf("The code has exited since the incompressibility constrain was not satisfied to abs. tol. = %2.2e and rel. tol. = %2.2e\n Try modifying the PENALTY factor or check MIN/MAX viscosities\n Good luck!\n", model.lin_abs_div, lin_rel_div);
         exit(1);
     }
     printf("** PH - iterations = %lf sec\n", (double)((double)omp_get_wtime() - t_omp));
@@ -1050,7 +1050,7 @@ void KillerSolver( SparseMat *matA,  SparseMat *matB,  SparseMat *matC,  SparseM
     cs_di  AJ, BJ, CJ, *AJc, *BJc, *CJc;
     cs_di  *PC, *Jt, *Jts, *Js;
     DoodzFP  *u0, *p0, *F;
-    int  noisy = 1, pc_type = model.pc_type, nitmax = 20, k, cc, i;
+    int  noisy = 1, preconditioner = model.preconditioner, nitmax = 20, k, cc, i;
     double celvol = model.dx*model.dz;
     double maxdiv0, mindiv, maxdiv, maxdivit=0;
 
@@ -1073,7 +1073,7 @@ void KillerSolver( SparseMat *matA,  SparseMat *matB,  SparseMat *matC,  SparseM
     // ************** D ************** //
     SuiteSparse_long rsize;
     double gamma        = model.penalty, penalty;
-    int vol_change = model.dens_var;
+    int vol_change = model.density_variations;
 
     rsize               = Stokes->neq_cont;
     Dcm0                = cholmod_speye( rsize, rsize, CHOLMOD_REAL, &c );
@@ -1090,8 +1090,11 @@ void KillerSolver( SparseMat *matA,  SparseMat *matB,  SparseMat *matC,  SparseM
             // Here Dcm0 is the pressure block - This relates to physics (0 is incompressible, Beta/dt is compressible)
             if (mesh->comp_cells[k]==0) ((double*)D1cm0->x)[i] *= 0.0;
             if (mesh->comp_cells[k]==1 && vol_change == 0 ) ((double*)D1cm0->x)[i]  = mesh->bet_n[k] / model.dt * celvol * matD->d[i]*matD->d[i];
+            // if (mesh->drhodp_n[k] / (mesh->rho_n[k]) < mesh->bet_n[k]/10) {
+            //     printf("%2.2e %2.2e\n", mesh->drhodp_n[k] ,  mesh->bet_n[k]);
+            //     exit(1);
+            // }
             if (mesh->comp_cells[k]==1 && vol_change == 1 ) ((double*)D1cm0->x)[i]  = mesh->drhodp_n[k] / (mesh->rho_n[k]*model.dt) * celvol * matD->d[i]*matD->d[i];
-            // printf("%2.2e %2.2e\n", mesh->bet_n[k], mesh->drhodp_n[k]);
             // Here Dcm0 is the inverse of the pressure block - This relates to numerics in this incompressible case (penalty) or physics in the compressible case (dt/Beta)
             if (mesh->comp_cells[k]==0) ((double*)Dcm0->x)[i]  *= penalty;
             if (mesh->comp_cells[k]==1) ((double*)Dcm0->x)[i]   = 1.0 /  ((double*)D1cm0->x)[i];
@@ -1136,12 +1139,12 @@ void KillerSolver( SparseMat *matA,  SparseMat *matB,  SparseMat *matC,  SparseM
     //------------------------------------------------------------------------------------------------//
 
     // Construct preconditionner:
-    if ( pc_type == 0 ) {
+    if ( preconditioner == 0 ) {
         printf("Construct preconditionner:   PC  = K\n");
         PC = cs_di_add( Ac, Ac, 1.0, 0.0 );
     }
 
-    if ( pc_type == 1 ) {
+    if ( preconditioner == 1 ) {
         printf("Construct preconditionner:   PC  = 1/2 * (J'+ J)\n");
         Jt = cs_di_transpose( AJc, 1);
         PC = cs_di_add( AJc, Jt, 0.5, 0.5);
@@ -1301,12 +1304,12 @@ void KillerSolver( SparseMat *matA,  SparseMat *matB,  SparseMat *matC,  SparseM
         if (k==0) { maxdiv0 = maxdiv; maxru0 = maxru; }
 
         if ( noisy > 0 ) printf("PH comp it. %01d. its_KSP = %02d: max. cont. = %2.2e - rel. max. div. = %2.2e / max. mom. = %2.2e - rel. max. mom. = %2.2e\n", k, its_KSP, maxdiv, fabs(maxdiv/maxdiv0), maxru, maxru/maxru0);
-        if ( k>1 && (fabs(maxdiv)<model.abs_tol_div || maxdiv/maxdiv0<model.rel_tol_div )  && (fabs(maxru)<model.abs_tol_mom || maxru/maxru0<model.rel_tol_mom ) ) break;
+        if ( k>1 && (fabs(maxdiv)<model.lin_abs_div || maxdiv/maxdiv0<model.lin_rel_div )  && (fabs(maxru)<model.lin_abs_mom || maxru/maxru0<model.lin_rel_mom ) ) break;
     }
 
     // A posteriori checks
-    if (fabs(maxdiv)>model.abs_tol_div && maxdiv/maxdiv0>model.rel_tol_div) {
-        printf("The code has exited since the incompressibility constrain was not satisfied to abs. tol. = %2.2e and rel. tol. = %2.2e\n Try modifying the PENALTY factor or check MIN/MAX viscosities\n Good luck!\n", model.abs_tol_div, model.rel_tol_div);
+    if (fabs(maxdiv)>model.lin_abs_div && maxdiv/maxdiv0>model.lin_rel_div) {
+        printf("The code has exited since the incompressibility constrain was not satisfied to abs. tol. = %2.2e and rel. tol. = %2.2e\n Try modifying the PENALTY factor or check MIN/MAX viscosities\n Good luck!\n", model.lin_abs_div, model.lin_rel_div);
         exit(1);
     }
     printf("** PH - iterations = %lf sec - its_KSP_tot = %02d\n", (double)((double)omp_get_wtime() - t_omp), its_KSP_tot);
@@ -1458,7 +1461,7 @@ void KSPStokesDecoupled( SparseMat *matA,  SparseMat *matB,  SparseMat *matC,  S
     // ************** D ************** //
     SuiteSparse_long rsize;
     double gamma  = model.penalty, penalty;//1e12;//1e10*model.Nx*model.Nz;
-    int vol_change = model.dens_var;
+    int vol_change = model.density_variations;
 
     rsize = Stokes->neq_cont;
     Dcm0  = cholmod_speye (rsize, rsize, CHOLMOD_REAL, &c );
