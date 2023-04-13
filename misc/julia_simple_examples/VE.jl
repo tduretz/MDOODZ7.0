@@ -9,7 +9,7 @@ function get_tau_ij(ϵij; Δt=1e10, η=1e20, G=1e10, Τij0=[0. 0.; 0. 0.])
 end
 
 n_steps = 20
-
+Δt      = 1e10
 
 function get_second_invariant(ϵij)
     J2_values = zeros(n_steps+1)
@@ -34,11 +34,6 @@ simple_shear_ϵij = [0 1e-14; 1e-14 0]
 τ2_simple_shear  = get_second_invariant(simple_shear_ϵij)
 
 # Viz
-plot()
-plot!(0:n_steps, τ2_pure_shear,   xlabel="Time", ylabel="J2", title="pure shear",   label="PS")
-plot!(0:n_steps, τ2_simple_shear, xlabel="Time", ylabel="J2", title="simple shear", label="SS")
-
-#########
-
-#
-#get_tau_ij(simple_shear_ϵij)
+plot(title="Stress build-up",   xlabel="Time [s]", ylabel="τ2 [Pa]")
+plot!([0:n_steps].*Δt, τ2_pure_shear,   label="PS - VE")
+plot!([0:n_steps].*Δt, τ2_simple_shear, label="SS - VE")
