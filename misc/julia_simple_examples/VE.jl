@@ -1,12 +1,44 @@
-function get_tau_ij(ϵij; Δt=1e10, η=1e20, G=1e10, Τij0=0)
-    Eij = ϵij .+ Τij0 / (2 * G * Δt)
-    ηVE = 1/G * Δt + 1 / η
+using Plots
 
+Inv2(Mij) = sqrt(1/2 * sum(Mij.^2))
+
+function get_tau_ij(ϵij; Δt=1e10, η=1e20, G=1e10, Τij0=[0. 0.; 0. 0.])
+    Eij = ϵij .+ Τij0 ./ (2 * G * Δt)
+    ηVE = (1 / (G * Δt)+ 1 / η)^-1
     return 2 * ηVE .* Eij
 end
 
-pure_shear_ϵij = [1e-14 0; 0 -1e14]
-get_tau_ij(pure_shear_ϵij)
+n_steps = 20
 
-simple_shear_ϵij = [0 1e-14; 2e-14 0]
-get_tau_ij(simple_shear_ϵij)
+
+function get_second_invariant(ϵij)
+    J2_values = zeros(n_steps+1)
+
+    Τij = [0. 0.; 0. 0.]
+
+    for i = 1:n_steps+1
+        Τij0         = Τij
+        Τij          = get_tau_ij(ϵij, Τij0=Τij0)
+        J2_values[i] = Inv2(Τij)
+    end
+
+    return J2_values
+end
+
+# PS
+pure_shear_ϵij = [1e-14 0; 0 -1e-14]
+τ2_pure_shear  = get_second_invariant(pure_shear_ϵij)
+
+# SS
+simple_shear_ϵij = [0 1e-14; 1e-14 0]
+τ2_simple_shear  = get_second_invariant(simple_shear_ϵij)
+
+# Viz
+plot()
+plot!(0:n_steps, τ2_pure_shear,   xlabel="Time", ylabel="J2", title="pure shear",   label="PS")
+plot!(0:n_steps, τ2_simple_shear, xlabel="Time", ylabel="J2", title="simple shear", label="SS")
+
+#########
+
+#
+#get_tau_ij(simple_shear_ϵij)
