@@ -1,3 +1,5 @@
+import Pkg
+Pkg.activate(normpath(joinpath(@__DIR__, ".")))
 using HDF5, PlotlyJS, Printf
 
 function ExtractData( file_path, data_path)
@@ -10,6 +12,7 @@ end
 function main_PlotlyJS()
 
     path ="/Users/imac/REPO_GIT/MDOODZ7.0/MDLIB/"
+    path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/"
     # path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/MD67_assembly_LR/"
     # path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/MD7_assembly_LR/"
     # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/RiverTom/"
@@ -18,17 +21,18 @@ function main_PlotlyJS()
     # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/qcoe_x200/"
 
     # File numbers
-    file_start = 1
+    file_start = 500
     file_step  = 10
-    file_end   = 1
+    file_end   = 500
 
-    Lc = 1
+    Lc = 1e3
+    τc = 1e9
 
     # field = :phases
     field = :density
-    field = :viscosity
+    # field = :viscosity
     # field = :pl_srate
-    field = :pressure
+    # field = :pressure
     # field = :velocity_x
     # field = :velocity_z
     # field = :grain_size
@@ -51,6 +55,7 @@ function main_PlotlyJS()
         ncz_ph = length(zc_ph)
         xmin, xmax = xc[1], xc[end]
         zmin, zmax = zc[1], zc[end]
+        Lx, Ly = xv[end]-xv[1], zv[end]-zv[1]
 
         @show model
         t   = model[1]
@@ -72,23 +77,39 @@ function main_PlotlyJS()
 
         # p = plot()
 
-        # if field==:phases      p = heatmap!(xc_ph./Lc, zc_ph./Lc, ph', c=:turbo)   end
-        # if field==:density     p = heatmap!(xc./Lc, zc./Lc, (ρc'), c=:turbo) end
-        # if field==:viscosity   p = heatmap!(xc./Lc, zc./Lc, log10.(ηc'), c=:turbo) end
-        # if field==:pl_srate    p = heatmap!(xc./Lc, zc./Lc, log10.(ε̇pl'), c=:turbo) end
-        # if field==:pressure    p = heatmap!(xc./Lc, zc./Lc, (P'), c=:turbo) end
-        # if field==:grain_size  p = heatmap!(xc./Lc, zc./Lc, log10.(d'), c=:turbo) end
-        # if field==:velocity_x  p = heatmap!(xc./Lc, zc./Lc, Vxc', c=:turbo) end
-        # if field==:velocity_z  p = heatmap!(xc./Lc, zc./Lc, Vzc', c=:turbo) end
+        if field==:phases      Xc = xc_ph; Zc = zc_ph; f = ph            end
+        if field==:density     Xc = xc;    Zc = zc;    f = ρc            end
+        if field==:viscosity   Xc = xc;    Zc = zc;    f = log10.(ηc)    end
+        if field==:pl_srate    Xc = xc;    Zc = zc;    f = log10.(ε̇pl)   end
+        if field==:pressure    Xc = xc;    Zc = zc;    f = P./τc         end
+        if field==:grain_size  Xc = xc;    Zc = zc;    f = log10.(d)     end
+        if field==:velocity_x  Xc = xv;    Zc = zc;    f = Vx[:,2:end-1] end
+        if field==:velocity_z  Xc = xc;    Zc = zv;    f = Vz[2:end-1,:] end
 
         # if phase_contours  p = contour!(xc_ph./1e3, zc_ph./1e3, ph', c=:black) end
         # p = plot!(aspect_ratio=1)
+        
+        if @isdefined(cont)
 
-        p = Plot([PlotlyJS.heatmap(x=xc_ph./Lc, y=zc_ph./Lc, z=P', colorscale=colors.turbo, colorbar_thickness=24), 
-        #PlotlyJS.contour(x=xc_ph./1e3, y=zc_ph./1e3, z=ph',
-                #line_width=2, line_color="black")
-                ],
-        PlotlyJS.Layout(xaxis_range=[-3, 3], yaxis_range=[zmin/Lc, zmax/Lc], height=400, yaxis_scaleanchor="x", yaxis_scaleratio=1))
+        end
+
+
+        p = Plot(
+            [
+            heatmap(x=Xc./Lc, y=Zc./Lc, z=f', colorscale=colors.turbo, colorbar_thickness=24), 
+            contour(x=xc_ph./Lc, y=zc_ph./1e3, z=ph', mode="lines", line_width=1, color="white", contours_coloring="none"),
+            heatmap(x=Xc./Lc, y=Zc./Lc, z=f', colorscale=colors.turbo, colorbar_thickness=24), 
+            ],
+            Layout(width=800, height=800*Ly/Lx,
+            xaxis = attr(;
+            range = [xmin, xmax]./Lc,
+            constrain = "domain",
+            ),
+            yaxis = attr(;
+                range = [zmin, zmax]./Lc,
+                scaleanchor = "x",
+                scaleratio = 1,
+            )))
         
         display(p)
         sleep(0.1)
