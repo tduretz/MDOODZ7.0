@@ -484,7 +484,6 @@ void CellFlagging( grid *mesh, params model, surface topo, scale scaling ) {
     PVtag0 = DoodzCalloc( (ncx+2)*(ncz+2), sizeof(int) );
     PVtag  = DoodzCalloc( (ncx+2)*(ncz+2), sizeof(int) );
     
-    
     Initialise1DArrayChar(   mesh->BCp.type, ncx*ncz, -1  );
     Initialise1DArrayChar(   mesh->BCt.type,    ncx*ncz, -1  );
     Initialise1DArrayChar(   mesh->BCu.type, nx*nzvx, -1  );
@@ -543,23 +542,25 @@ void CellFlagging( grid *mesh, params model, surface topo, scale scaling ) {
             
         }
     }
+
+    ArrayEqualArrayI(PVtag0, PVtag, (ncx+2)*(ncz+2));
     
     for( i=1; i<ncx+1; i++ ) {
         for( j=0; j<ncz+2; j++ ) {
             
             c1 = i + j*(ncx+2);
             
-            if ( PVtag[c1]==-1 && (PVtag[c1-1]==60 && PVtag[c1+1]==60) ) {
+            if ( PVtag0[c1]==-1 && (PVtag0[c1-1]==60 && PVtag0[c1+1]==60) ) {
                 PVtag[c1] = 60;
             }
             
             // Correction at Lausanne Gare - this is important
-            // It corrects for large slopes, Stoke matrix would become asymmetric otherwise
-            if ( PVtag[c1]==30 && PVtag[c1+1]==-1 && (PVtag[c1-1]==30 || PVtag[c1-1]==60 ) ) {
+            // It corrects for large slopes, Stokes matrix would become asymmetric otherwise
+            if ( PVtag0[c1]==30 && PVtag0[c1+1]==-1 && (PVtag0[c1-1]==30 || PVtag0[c1-1]==60 ) ) {
                 PVtag[c1] = 60;
             }
             
-            if ( PVtag[c1]==30 && PVtag[c1-1]==-1 && (PVtag[c1+1]==30 || PVtag[c1+1]==60) ) {
+            if ( PVtag0[c1]==30 && PVtag0[c1-1]==-1 && (PVtag0[c1+1]==30 || PVtag0[c1+1]==60) ) {
                 PVtag[c1] = 60;
             }
             
@@ -567,9 +568,6 @@ void CellFlagging( grid *mesh, params model, surface topo, scale scaling ) {
             if ( PVtag[c1]==30 && PVtag[c1-1]==-1 && PVtag[c1+1]==-1) {
                 PVtag[c1] = 60;
             }
-            
-            
-            
         }
     }
     
@@ -603,15 +601,13 @@ void CellFlagging( grid *mesh, params model, surface topo, scale scaling ) {
             // Above surface pressure nodes
             if ( PVtag[c2] == 60 ) {
                 mesh->BCp.type[c1] = 31;
-                mesh->BCp.val[c1]  = 0.0*7.0e6/scaling.S;//0*mesh->p_lith[c1-ncx];
+                mesh->BCp.val[c1]  = 0.0/scaling.S;//0*mesh->p_lith[c1-ncx];
                 
                 // TEMPERATURE above THE SURFACE
                 mesh->BCt.type[c1] = 30;
-                //                mesh->BCt.val[c1]  = zeroC/scaling.T;
                 mesh->T[c1]        = zeroC/scaling.T ;
                 // activate first layer above surface for interpolation
                 mesh->BCp_exp.type[c2] = -1;
-                
             }
         }
     }
