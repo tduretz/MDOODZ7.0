@@ -839,8 +839,8 @@ void SurfaceDensityCorrection( grid *mesh, params model, surface topo, scale sca
                 h  = topo.b[i] + topo.a[i]*mesh->xc_coord[i];
                 h0               = fabs(h - mesh->zc_coord[j]);
                 // double rho_ini = mesh->rho_n[c1];
-                mesh->rho_n[c1]  *= h0/dz;
-                mesh->rho0_n[c1] *= h0/dz;
+                // mesh->rho_n[c1]  *= h0/dz;
+                // mesh->rho0_n[c1] *= h0/dz;
                 mesh->FreeSurfW_n[c1] = h0/dz;
                 // printf("rho_ini = %3.3lf --- rho = %3.3lf -- h = %3.3lf --- h0/dz = %3.3lf \n", rho_ini*scaling.rho, mesh->rho_n[c1]*scaling.rho, h*scaling.L, h0/dz);
             }
@@ -866,7 +866,7 @@ void SurfaceDensityCorrection( grid *mesh, params model, surface topo, scale sca
                     h += 0.5*(topo.b[i-1] + topo.a[i-1]*mesh->xc_coord[i-1]);
                 }
                 h0               = fabs(h - mesh->zg_coord[j]);
-                mesh->rho_s[c1] *= h0/dz;
+                // mesh->rho_s[c1] *= h0/dz;
                 mesh->FreeSurfW_s[c1] = h0/dz;
             }
             if ( mesh->BCg.type[c1] == 30 ) {
