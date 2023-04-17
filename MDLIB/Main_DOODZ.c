@@ -808,10 +808,10 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             ArrayEqualArray( mesh.p_in, mesh.p_corr, (mesh.Nx-1)*(mesh.Nz-1) ); // make sure corrected pressure is used
 
             // Min/Max velocities
-            MinMaxArray( mesh.u_in, input.scaling.V, (mesh.Nx)*(mesh.Nz+1),   "Vx. grid" );
-            MinMaxArray( mesh.v_in, input.scaling.V, (mesh.Nx+1)*(mesh.Nz),   "Vz. grid" );
-            MinMaxArray( mesh.p_in, input.scaling.S, (mesh.Nx-1)*(mesh.Nz-1), "       P" );
-            MinMaxArray( mesh.div_u, input.scaling.E, (mesh.Nx-1)*(mesh.Nz-1), "  div(V)" );
+            MinMaxArray( mesh.u_in, input.scaling.V, (mesh.Nx)*(mesh.Nz+1),   "Vx grid" );
+            MinMaxArray( mesh.v_in, input.scaling.V, (mesh.Nx+1)*(mesh.Nz),   "Vz grid" );
+            MinMaxArray( mesh.p_in, input.scaling.S, (mesh.Nx-1)*(mesh.Nz-1), "      P" );
+            MinMaxArray( mesh.div_u, input.scaling.E, (mesh.Nx-1)*(mesh.Nz-1), " div(V)" );
 
             printf("--------------------------------------------------------------\n");
             int i, nit;
@@ -1121,7 +1121,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             t_omp = (double)omp_get_wtime();
             if (input.model.delete_breakpoints == 1 ) DeletePreviousBreakpoint(input.model.step, input.model.writer_step  );
             MakeBreakpointParticles( &particles, &mesh, &topo_chain, &topo_chain_ini, input.model, &topo, &topo_ini, input.scaling );
-            UpdateInputFile( inputFileName, input.model.step);
+            // UpdateInputFile( inputFileName, input.model.step);
             printf("** Time for Breakpoint file write = %lf sec\n", (double)((double)omp_get_wtime() - t_omp));
 
             // Visualisation file

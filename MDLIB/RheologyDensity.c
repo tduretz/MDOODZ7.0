@@ -453,7 +453,7 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
   //    if ( model->gz<0.0 && P<0.0     ) { P = 0.0; printf("Aie aie aie P < 0 !!!\n"); exit(122);}
 
   // Visco-plastic limit
-  if ( elastic==0                 ) { G = 1e1; dil = 0.0;}; //K = 1e1;
+  if ( elastic==0                 ) { G = 1e1; dil = 0.0; K = 1e10;}; //K = 1e1;
 
   // Zero C limit
   if ( T< zeroC/scaling->T        ) T = zeroC/scaling->T;
