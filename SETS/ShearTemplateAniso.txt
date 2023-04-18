@@ -18,7 +18,7 @@ T   = 1
 /**** SPACE ****/
 Nx      = 101
 Nz      = 101
-Nt      = 5
+Nt      = 1
 xmin    = -5.000000e-1
 zmin    = -5.000000e-1 
 xmax    =  5.000000e-1
@@ -35,9 +35,8 @@ dt          = 0.5
 RK          = 4
 
 /**** LINEAR SOLVER ****/
-noisy        = 0
+noisy        = 1
 penalty      = 1e5
-lin_solver      = -1
 diag_scaling = 0
 lin_abs_div  = 1e-8
 lin_rel_div  = 1e-8
@@ -57,18 +56,19 @@ min_eta      = 1e-3
 max_eta      = 1e6
 
 /**** SWITCHES ****/
-elastic         = 0
-free_surface         = 0
-free_surface_stab    = 0
-finite_strain           = 1
+anisotropy        = 1
+elastic           = 0
+free_surface      = 0
+free_surface_stab = 0
+finite_strain     = 1
 advection         = 0
-gnuplot_log_res = 0
+gnuplot_log_res   = 0
 
 /**** SETUP-DEPENDANT ****/
 shear_style     = 1
-periodic_x    = 0
-pure_shear_ALE = 1
-bkg_strain_rate           = 1
+periodic_x      = 0
+pure_shear_ALE  = 1
+bkg_strain_rate = 1
 user0           = 1     / temperature [°C]
 user1           = 0.05  / inclusion radius [m]
 user2           = 0
@@ -95,7 +95,7 @@ alp  = 10.0e-6
 bet  = 1e-11
 drho = 0
 cstv = 1             / constant visc law
-pwlv = 0            / disloc. creep
+pwlv = 0             / disloc. creep
 linv = 0             / diff. creep
 gbsv = 0             / grain boundary sliding
 expv = 0             / peierls creep
@@ -103,6 +103,7 @@ gsel = 0             / grain size evo.
 eta0 = 1
 npwl = 30
 Qpwl = 0
+aniso_factor = 10
 
 /**** PHASE 2 ****/
 ID   = 1
