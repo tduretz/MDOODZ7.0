@@ -1296,7 +1296,7 @@ void ShearModCompExpGrid( grid* mesh, mat_prop *materials, params *model, scale 
       mesh->mu_n[c0]  = 0.0;
       mesh->bet_n[c0] = 0.0;
       mesh->alp[c0]   = 0.0;
-      if ( model->anisotropy == 1 ) mesh->aniso_factor_e_n[c0] = 0.0;
+      if ( model->anisotropy == 1 ) mesh->aniso_factor_n[c0] = 0.0;
 
       // Compute only if below free surface
       if ( mesh->BCp.type[c0] != 30 && mesh->BCp.type[c0] != 31) {
@@ -1358,7 +1358,7 @@ void ShearModCompExpGrid( grid* mesh, mat_prop *materials, params *model, scale 
       // First - initialize to 0
       mesh->mu_s[c1]  = 0.0;
       mesh->bet_s[c1] = 0.0;
-      if ( model->anisotropy == 1 ) mesh->aniso_factor_e_s[c1] = 0.0;
+      if ( model->anisotropy == 1 ) mesh->aniso_factor_s[c1] = 0.0;
 
       // Compute only if below free surface
       if ( mesh->BCg.type[c1] != 30 ) {
@@ -1421,8 +1421,8 @@ void ShearModCompExpGrid( grid* mesh, mat_prop *materials, params *model, scale 
       av = 0.5*(mesh->bet_s[c1] + mesh->bet_s[l*Nx]);
       mesh->bet_s[c1] = av; mesh->bet_s[l*Nx] = av;
       if ( model->anisotropy == 1 ) {
-        av = 0.5*(mesh->aniso_factor_e_s[c1] + mesh->aniso_factor_e_s[l*Nx]);
-        mesh->aniso_factor_e_s[c1] = av; mesh->aniso_factor_e_s[l*Nx] = av;
+        av = 0.5*(mesh->aniso_factor_s[c1] + mesh->aniso_factor_s[l*Nx]);
+        mesh->aniso_factor_s[c1] = av; mesh->aniso_factor_s[l*Nx] = av;
       }
 
       

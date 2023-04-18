@@ -628,12 +628,6 @@ grid GridAlloc(params *model) {
   if (model->anisotropy == 1) Initialise1DArrayDouble(mesh.FS_AR_s, (Nx - 0) * (Nz - 0), 1.0);
   if (model->anisotropy == 1) mesh.aniso_factor_n = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double)); // To delete
   if (model->anisotropy == 1) mesh.aniso_factor_s = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double)); // To delete
-  if (model->anisotropy == 1) mesh.aniso_factor_v_n = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
-  if (model->anisotropy == 1) mesh.aniso_factor_v_s = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double));
-  if (model->anisotropy == 1) mesh.aniso_factor_e_n = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
-  if (model->anisotropy == 1) mesh.aniso_factor_e_s = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double)); 
-  if (model->anisotropy == 1) mesh.aniso_factor_p_n = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
-  if (model->anisotropy == 1) mesh.aniso_factor_p_s = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double));
   // Compressibility
   mesh.p0_n    = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
   mesh.p0_s    = DoodzCalloc((Nx) * (Nz), sizeof(double));
@@ -957,12 +951,6 @@ void GridFree(grid *mesh, params *model) {
     if ( model->anisotropy == 1 ) DoodzFree(mesh->FS_AR_s);
     if ( model->anisotropy == 1 ) DoodzFree(mesh->aniso_factor_n);
     if ( model->anisotropy == 1 ) DoodzFree(mesh->aniso_factor_s);
-    if ( model->anisotropy == 1 ) DoodzFree(mesh->aniso_factor_v_n);
-    if ( model->anisotropy == 1 ) DoodzFree(mesh->aniso_factor_v_s);
-    if ( model->anisotropy == 1 ) DoodzFree(mesh->aniso_factor_e_n);
-    if ( model->anisotropy == 1 ) DoodzFree(mesh->aniso_factor_e_s);
-    if ( model->anisotropy == 1 ) DoodzFree(mesh->aniso_factor_p_n);
-    if ( model->anisotropy == 1 ) DoodzFree(mesh->aniso_factor_p_s);
     // Compressibility
     DoodzFree(mesh->p0_n);
     DoodzFree(mesh->p0_s);
