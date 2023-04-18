@@ -552,8 +552,8 @@ void            CheckSym(DoodzFP *, double, int, int, char *, int, int);
 void            ChemicalDirectSolve(grid *, params, markers *, mat_prop *, double, scale);
 void            InitialiseGrainSizeParticles(markers *, mat_prop *);
 
-void            DerivativesOnTheFly_n( double*, double*, double*, double*, double*, double*, double*, double*, double*, double*, double*, double*, double*, int, double, double, double, double, double, double, double, double, double, double, double, grid*, mat_prop*, params*, scale* );
-void            DerivativesOnTheFly_s( double*, double*, double*, double*, double*, double*, double*, double*, int, double, double, double, double, double, double, double, double, double, double, double, grid*, mat_prop*, params*, scale* );
+void            DerivativesOnTheFly_n( double*, double*, double*, double*, double*, double*, double*, double*, double*, double*, double*, double*, double*, int, double, double, double, double, double, double, double, double, double, double, grid*, mat_prop*, params*, scale* );
+void            DerivativesOnTheFly_s( double*, double*, double*, double*, double*, double*, double*, double*, int, double, double, double, double, double, double, double, double, double, double, grid*, mat_prop*, params*, scale* );
 void            ViscosityDerivatives(grid *, mat_prop *, params *, scale *);
 void            EffectiveStrainRate( double*, double*, double*, double, double, double, double, double, double, double, double d2, double, double, int );
 double          ViscosityConcise(int, double, double, double, double, double, double, double, double, double, double, double, double, mat_prop *, params *, scale *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double, double, double, double, double, double, double *, double *, double *, double *, double, double, double *, double *, double *, double *, double *, double *, int, int, int);

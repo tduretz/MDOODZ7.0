@@ -188,7 +188,7 @@ void RheologicalOperators( grid* mesh, params* model, mat_prop* materials, scale
         double ddivpdexx=0., ddivpdezz=0., ddivpdgxz=0., ddivpdp=0.;
         double danidexx =0., danidezz =0., danidgxz =0., danidp =0.;
         double drhodp=0.;
-        DerivativesOnTheFly_n( &detadexx, &detadezz, &detadgxz, &detadp, &ddivpdexx, &ddivpdezz, &ddivpdgxz, &ddivpdp, &danidexx, &danidezz, &danidgxz, &danidp, &drhodp, k, Exx, Ezz, Exz, mesh->p_in[k], ani_fstrain, ani_vep, d1, d2, angle, lx2, lxlz, mesh, materials, model, scaling );
+        DerivativesOnTheFly_n( &detadexx, &detadezz, &detadgxz, &detadp, &ddivpdexx, &ddivpdezz, &ddivpdgxz, &ddivpdp, &danidexx, &danidezz, &danidgxz, &danidp, &drhodp, k, Exx, Ezz, Exz, mesh->p_in[k], ani_vep, d1, d2, angle, lx2, lxlz, mesh, materials, model, scaling );
         mesh->drhodp_n[k] = drhodp;
         // if (mesh->drhodp_n[k] / (mesh->rho_n[k]) < mesh->bet_n[k]/10) {
         //         printf("%2.2e %2.2e\n", mesh->drhodp_n[k] ,  mesh->bet_n[k]);
@@ -253,7 +253,7 @@ void RheologicalOperators( grid* mesh, params* model, mat_prop* materials, scale
         // Compute derivatives on the fly
         double detadexx=0., detadezz=0., detadgxz=0., detadp=0.;
         double danidexx =0., danidezz =0., danidgxz =0., danidp =0.;
-        DerivativesOnTheFly_s( &detadexx, &detadezz, &detadgxz, &detadp, &danidexx, &danidezz, &danidgxz, &danidp, k, Exx, Ezz, Exz, mesh->P_s[k], ani_fstrain, ani_vep, d1, d2, angle, lx2, lxlz, mesh, materials, model, scaling );
+        DerivativesOnTheFly_s( &detadexx, &detadezz, &detadgxz, &detadp, &danidexx, &danidezz, &danidgxz, &danidp, k, Exx, Ezz, Exz, mesh->P_s[k], ani_vep, d1, d2, angle, lx2, lxlz, mesh, materials, model, scaling );
         //----------------------------------------------------------//
         mesh->D31_s[k] =               - 2.0*aniS_vep*d2*eta_vep + 2.0*detadexx*Dxz + 2.0*danidexx*Axz;
         mesh->D32_s[k] =                 2.0*aniS_vep*d2*eta_vep + 2.0*detadezz*Dxz + 2.0*danidezz*Axz;
