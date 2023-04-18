@@ -1302,9 +1302,10 @@ Input ReadInputFile( char *fileName ) {
         materials.phase_two[k]  = (int)ReadMatProps( fin, "phase_mix",k,    (double)k  );
         // Anisotropy
         materials.aniso_angle[k]    =  ReadMatProps( fin, "aniso_angle",  k,   90.0  )  * M_PI/ 180.0;
-        materials.ani_fac_v[k]      =  ReadMatProps( fin, "ani_fac_v",    k,    1.0  );        // viscous anisotropy strength
-        materials.ani_fac_e[k]      =  ReadMatProps( fin, "ani_fac_e",    k,    1.0  );        // elastic anisotropy strength
-        materials.ani_fac_p[k]      =  ReadMatProps( fin, "ani_fac_p",    k,    1.0  );        // plastic anisotropy strength
+        materials.aniso_factor[k]   =  ReadMatProps( fin, "aniso_factor",    k,    1.0  ); 
+        // materials.ani_fac_v[k]      =  ReadMatProps( fin, "ani_fac_v",    k,    1.0  );        // viscous anisotropy strength
+        // materials.ani_fac_e[k]      =  ReadMatProps( fin, "ani_fac_e",    k,    1.0  );        // elastic anisotropy strength
+        // materials.ani_fac_p[k]      =  ReadMatProps( fin, "ani_fac_p",    k,    1.0  );        // plastic anisotropy strength
         materials.ani_fac_max[k]    =  ReadMatProps( fin, "ani_fac_max",  k, 1000.0  );        // maximum anisotropy strength
         materials.ani_fstrain[k]    =  (int)ReadMatProps( fin, "ani_fstrain",    k,    0.0  ); // strain dependent anisotropy per phase
         materials.axx[k]            =  ReadMatProps( fin, "axx",    k,    1.0  );              // plastic directional factor xx
