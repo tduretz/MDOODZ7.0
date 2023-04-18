@@ -142,8 +142,8 @@ double ViscosityConciseAniso( int phase, double lxlz, double lx2, double angle, 
     // Cases where no local iterations are needed
     if (dislocation) eta_ve_n = eta_pwl;
     if (dislocation) eta_ve_s = eta_pwl/ani_fac;
-    if (constant) eta_ve_n = eta_cst;
-    if (constant) eta_ve_s = eta_cst/ani_fac;
+    if (constant)    eta_ve_n = eta_cst;
+    if (constant)    eta_ve_s = eta_cst/ani_fac;
     T_rot.xx = 2.0 * eta_ve_n * E_rot.xx;
     T_rot.zz = 2.0 * eta_ve_n * E_rot.zz;
     T_rot.xz = 2.0 * eta_ve_s * E_rot.xz;
