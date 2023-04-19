@@ -82,7 +82,7 @@ double ViscosityConciseAniso( int phase, double lxlz, double lx2, double angle, 
     // General paramaters
     const double tol    = 1.0e-11, R = materials->R, dt = model->dt, min_eta = model->min_eta, max_eta = model->max_eta;
     const int    nitmax = 20, noisy = 0;
-    double eta = 0.0, eta_el, eta_cst;
+    double eta = 0.0, eta_el = 1e20, eta_cst = 0.0;
     int    plastic = 0, constant = 0, dislocation = 0, peierls = 0, diffusion = 0, gbs = 0, elastic = model->elastic, kinetics = 0, is_pl = 0;
     double eta_pwl = 0.0, B_pwl = 0.0, C_pwl = 0.0, Q_pwl = materials->Qpwl[phase], V_pwl = materials->Vpwl[phase], n_pwl = materials->npwl[phase], m_pwl = materials->mpwl[phase], r_pwl = materials->rpwl[phase], A_pwl = materials->Apwl[phase], f_pwl = materials->fpwl[phase], a_pwl = materials->apwl[phase], F_pwl = materials->Fpwl[phase], pre_factor = materials->pref_pwl[phase], t_pwl = materials->tpwl[phase];
     const double E_lin = materials->Qlin[phase], V_lin = materials->Vlin[phase], n_lin = materials->nlin[phase], m_lin = materials->mlin[phase], r_lin = materials->rlin[phase], A_lin = materials->Alin[phase], f_lin = materials->flin[phase], a_lin = materials->alin[phase], F_lin = materials->Flin[phase];
@@ -147,7 +147,7 @@ double ViscosityConciseAniso( int phase, double lxlz, double lx2, double angle, 
     // Iterations for visco-elastic trial
     if (noisy) printf("Start local VE iterations for phase %d (cst: %d --- el: %d --- pwl: %d)\n", phase, constant, elastic, dislocation);
     if (noisy) printf("ani_fac = %1.1f\n", ani_fac );    // DELETE
-    if (noisy) printf("eta=%2.2e eta_el=%2.2e eta_pwl=%2.2e\n", eta_ve, eta_el, eta_pwl); // DELETE
+    if (noisy) printf("eta_ve=%2.2e eta_el=%2.2e eta_pwl=%2.2e eta_cst=%2.2e eta_up=%2.2e\n", eta_ve, eta_el, eta_pwl, eta_cst, eta_up); // DELETE
     // VISCO ELASTICITY
     double r, r0, drdeta;
     for (int it = 0; it < nitmax; it++) {
@@ -156,8 +156,13 @@ double ViscosityConciseAniso( int phase, double lxlz, double lx2, double angle, 
         if (dislocation) *Eii_pwl = C_pwl * pow(Tii, n_pwl);
         Eii_vis       =  *Eii_pwl + *Eii_cst;
         r             = Eii - elastic*Tii/2/eta_el - Eii_vis;
+        if (isnan(r))printf("r= %2.2e Tii=%2.2e eta_ve=%2.2e Eii=%2.2e %2.2e %2.2e\n", r, Tii, eta_ve, Eii, elastic*Tii/2/eta_el, Eii_vis);    
+        if (isnan(r)) exit(1);
         if (it==0) r0 = r;
-        drdeta        = - elastic*Eii/eta_el - *Eii_pwl*n_pwl/eta_ve - constant*Eii/eta_cst;
+        drdeta = 0.0;
+        if (elastic)     drdeta += - elastic*Eii/eta_el;
+        if (dislocation) drdeta += - *Eii_pwl*n_pwl/eta_ve;
+        if (constant)    drdeta += - constant*Eii/eta_cst;
         eta_ve       -= r/drdeta;
         // Make some noise!!!!!
         if (noisy) printf("VE It. %02d: r = %2.2e\n", it, r);
@@ -170,154 +175,53 @@ double ViscosityConciseAniso( int phase, double lxlz, double lx2, double angle, 
           exit(0);
         }
     }
+        if (isnan(r))exit(0);
+
+
+    // Evaluate stress components
     T_rot.xx = 2.0 * eta_ve * E_rot.xx;
     T_rot.zz = 2.0 * eta_ve * E_rot.zz;
     T_rot.xz = 2.0 * eta_ve * E_rot.xz/ani_fac;
     T_rot.yy = -T_rot.xx - T_rot.xx; 
+    *eta_vep = eta_ve;
 
-  //   for (int it = 0; it < nitmax; it++) {
-  //     // Compute stress in principal plane
-  //     T_rot.xx = 2.0 * eta_ve_n * E_rot.xx;
-  //     T_rot.zz = 2.0 * eta_ve_n * E_rot.zz;
-  //     T_rot.xz = 2.0 * eta_ve_s * E_rot.xz;
-  //     T_rot.yy = -T_rot.xx - T_rot.zz; 
-  //     Y2_v     = Y2( &T_rot, ani_fac);
-  //     // ---------- Strain rates
-      // if (constant)    *Eii_cst = sqrt(Y2_v)  / 2.0 / eta_cst;
-      // if (dislocation) *Eii_pwl = C_pwl * pow(Y2_v, 0.5*n_pwl);
-      // Eii_vis = *Eii_pwl + *Eii_cst;
-  //     // ---------- Viscosities
-  //     // eta_pwl = pow( B_pwl, -1.0/n_pwl ) * pow( *Eii_pwl, (1-n_pwl)/n_pwl );
-  //     eta_pwl = B_pwl * pow( *Eii_pwl, (1-n_pwl)/n_pwl );
-  //     // ---------- Residuals
-  //     f_n = 1.0; f_s = 1.0;
-  //     if (constant)    { f_n -= eta_ve_n/eta_cst; f_s -= eta_ve_s/(eta_cst/ani_fac); }
-  //     if (elastic)     { f_n -= eta_ve_n/eta_el;  f_s -= eta_ve_s/(eta_el /ani_fac); }
-  //     if (dislocation) { f_n -= eta_ve_n/eta_pwl; f_s -= eta_ve_s/(eta_pwl/ani_fac); }
-  //     W_n       = 2.0*(E_rot.xx*T_rot.xx + E_rot.zz*T_rot.zz + E_rot.yy*T_rot.yy);
-  //     W_s       = 2.0*E_rot.xz*T_rot.xz;
-  //     ieta_pwl  = 1.0 / eta_pwl;
-      // // Make some noise!!!!!
-      // if (noisy) printf("VE It. %02d: f_n = %2.2e --- f_s = %2.2e\n", it, f_n, f_s);
-      // // Exit criteria
-      // if ( fabs(f_n) < tol / 100 && fabs(f_s) < tol / 100 ) {
-      //   if (it > 10) printf("V-E L.I. Warnung: more that 10 local iterations, there might be a problem...\n");
-      //   break;
-      // } else if (it == nitmax - 1 && (fabs(f_n) > tol || fabs(f_s) > tol) ) {
-      //   printf("Visco-Elastic iterations failed!\n");
-      //   exit(0);
-      // }
-  //     // Compute Jacobian
-  //     dfnden = 0.0; dfndes = 0.0; dfsden = 0.0; dfsdes = 0.0;
-  //     if (constant) {
-  //       dfnden -= 1.0     / eta_cst;
-  //       dfsdes -= ani_fac / eta_cst;
-  //     }
-  //     if (elastic) {
-  //       dfnden -= 1.0     / eta_el;
-  //       dfsdes -= ani_fac / eta_el;
-  //     }
-  //     if (dislocation) {
-  //       dfnden += W_n *                     eta_ve_n * ieta_pwl * (1.0 - n_pwl) / (2.0 * Y2_v)  - ieta_pwl;
-  //       dfndes += W_s * ani_fac         * eta_ve_n * ieta_pwl * (1.0 - n_pwl) / Y2_v;
-  //       dfsden += W_n * ani_fac         * eta_ve_s * ieta_pwl * (1.0 - n_pwl) / (2.0 * Y2_v);
-  //       dfsdes += W_s * pow(ani_fac, 2) * eta_ve_s * ieta_pwl * (1.0 - n_pwl) / Y2_v - ani_fac * ieta_pwl;
-  //     }
-  //     // Inverse of the Jacobian
-  //     Solve2x2(&deta_n, &deta_s, f_n, f_s, dfnden, dfndes, dfsden, dfsdes);
-  //     // Coupled update of normal and shear viscosities
-  //     eta_ve_n -= deta_n;
-  //     eta_ve_s -= deta_s;
-  //   }
-  //   Tii      = sqrt(Y2_v);
-  //   *eta_vep = eta_ve_n;
-
-  //   // Iterations for visco-elasto-viscoplastic correction
-  //   double eta_vp0 = materials->eta_vp[phase], n_vp = materials->n_vp[phase], eta_vp = materials->eta_vp[phase];
-  //   double a1=materials->axx[phase], a2=materials->azz[phase], a3=materials->ayy[phase];
-  //   double Coh = C, K = 1.0 / beta;
-  //   double Y2_p = Y2( &T_rot, ani_fac);
-  //   double Ft   = sqrt(Y2_p) - Coh - P*sin(fric)/3*(a1+a2+a3) +  sin(fric)/3.0*( a1*T_rot.xx + a2*T_rot.zz + a3*T_rot.yy);
-  //   double Fc = Ft;
-  //   double ap_n, ap_s, eta_ve=eta_ve_n; 
-  //   double gdot=sqrt(I2_v)/1000; 
-  //   double a_ve=sqrt(eta_ve_n/eta_ve_s), eta_pl, divp;
+    // Iterations for visco-elasto-viscoplastic correction
+    double eta_vp0 = materials->eta_vp[phase], n_vp = materials->n_vp[phase], eta_vp = materials->eta_vp[phase];
+    double a1 = materials->axx[phase], a2 = materials->azz[phase], a3 = materials->ayy[phase];
+    double am = (1.0/3.0)*(a1 + a2 + a3);
+    double Coh = C, K = 1.0 / beta;
+    double soon = 0.0;
+    double Ft   = Tii - Coh*cos(fric) - P*sin(fric)*am +  soon*sin(fric)/3.0*( a1*T_rot.xx + a2*T_rot.zz + a3*T_rot.yy);
+    double Fc = Ft, Tiic = Tii;
+    double gdot = 0.0; 
+    double eta_pl, divp;
   //   double Y1_p_c, Y2_p_c, dFdgdot;
-  //   double txx = T_rot.xx, tzz=T_rot.zz, tyy=T_rot.yy, txz=T_rot.xz;
-  //   double Pc = P;
-  //   if (Ft>1e-17) {
-  //     is_pl = 1;
-  //     if (noisy) printf("Start local VP iterations (cst: %d --- el: %d --- pwl: %d)\n", constant, elastic, dislocation);
-  //     // printf("Start local VP iterations (cst: %d --- el: %d --- pwl: %d)\n", constant, elastic, dislocation);
-  //     // printf("Plastic!! Ft = %2.4e --- Y2_v = %2.4e Y2_p = %2.4e\n", Ft, Y2_v, Y2_p);  
-  //     for (int it = 0; it < nitmax; it++) {
+    double txx = T_rot.xx, tzz = T_rot.zz, tyy = T_rot.yy, txz=T_rot.xz;
+    double Pc = P;
+    if (Ft>1e-17) {
+      is_pl = 1;
+      if (noisy) printf("Start local VP iterations (cst: %d --- el: %d --- pwl: %d)\n", constant, elastic, dislocation);
+      if (noisy) printf("Start local VP iterations (cst: %d --- el: %d --- pwl: %d)\n", constant, elastic, dislocation);
+      if (noisy) printf("%2.2e %2.2e %2.2e  %2.2e\n", a1, a2, a3,  2.0*eta_ve*pow(sin(fric),2)/9.0 * (a1*a1 - a1*a3 + a2*a2 - a2*a3));
+      gdot = Ft/(eta_ve + eta_vp0 + K*dt*sin(dil)*sin(fric)*am + soon*2.0*eta_ve*pow(sin(fric),2)/9.0 * (a1*a1 - a1*a3 + a2*a2 - a2*a3));
+      Tiic = Tii - gdot*eta_ve;
+      Pc   = P   + K*dt*sin(dil)*gdot; 
+      txx  = 2*eta_ve*(Exx-gdot*(txx/2/Tii + a1*sin(fric)/3.0) );
+      tzz  = 2*eta_ve*(Ezz-gdot*(tzz/2/Tii + a2*sin(fric)/3.0) );
+      tyy  = -txx-tzz;
+      Fc   = Tiic - Coh*cos(fric) - Pc*sin(fric)*am +  soon*sin(fric)/3.0*( a1*txx + a2*tzz + a3*tyy ) - eta_vp0*gdot;
+      if (noisy) printf("Ft = %2.2e --- Fc = %2.2e\n", Ft, Fc);
 
-  //       ap_n   = 1 - eta_ve*gdot/sqrt(Y2_p);
-  //       ap_s   = 1 - pow(a_p, 2)*eta_ve*gdot/(sqrt(Y2_p)*pow(a_ve, 2));
-  //       Y1_p_c = a1*ap_n*txx + a2*ap_n*tzz + a3*(-ap_n*txx - ap_n*tzz);
-  //       Y2_p_c = pow(a_p, 2)*pow(ap_s, 2)*pow(txz, 2) + (1.0/2.0)*pow(ap_n, 2)*pow(txx, 2) + (1.0/2.0)*pow(ap_n, 2)*pow(tyy, 2) + (1.0/2.0)*pow(ap_n, 2)*pow(tzz, 2);
-  //       Pc     = P + K*dt*gdot*sin(dil)/3.*(a1+a2+a3);
-  //       Fc     = -Coh - 1.0/3.0*Pc*(a1 + a2 + a3)*sin(fric) + (1.0/3.0)*Y1_p_c*sin(fric) + sqrt(Y2_p_c) - eta_vp*gdot;
-
-  //       // double exxp      = gdot*( (a1/3-a3/3)*sin(fric) + txx/sqrt(Y2_p)/2);
-  //       // double ezzp      = gdot*( (a2/3-a3/3)*sin(fric) + tzz/sqrt(Y2_p)/2);
-  //       // double exzp      = gdot*txz/sqrt(Y2_p)*a_p*a_p;
-  //       // T_rot.xx = 2.0 * eta_ve_n * (E_rot.xx - exxp);
-  //       // T_rot.zz = 2.0 * eta_ve_n * (E_rot.zz - ezzp);
-  //       // T_rot.xz = 2.0 * eta_ve_s * (E_rot.xz - 0.5*exzp);
-  //       // T_rot.yy = -T_rot.xx-T_rot.zz;
-  //       // double Y2_p_c1   = Y2(&T_rot, ani_fac);
-  //       // double txx1 = sqrt(pow(ap_n, 2)*pow(txx, 2));
-  //       // double tzz1 = sqrt(pow(ap_n, 2)*pow(tzz, 2));
-  //       // double txz1 = sqrt(pow(ap_s, 2)*pow(txz, 2));
-
-  //       // Make some noise!!!!!
-  //       if (noisy) printf(" VP It. %02d: f_n abs. = %2.2e |f_n rel.| = %2.2e\n", it, Fc*scaling->S, fabs(Fc/Ft));
-  //       // printf("It. %02d: f_n = %2.2e\n", it, fabs(Fc/Ft));
-
-  //       if ( fabs(Fc/Ft) < 1e-8 ) {
-  //       if (it > 10) printf("VP L.I. Warnung: more that 10 local iterations, there might be a problem...\n");
-  //       // if (model->step>0)exit(0);
-  //       break;
-  //       } else if (it == nitmax - 1 && fabs(Fc/Ft) > 1e-8 ) {
-  //         printf("Viscoplastic iterations failed! tol=%2.2e\n", tol);
-  //         exit(0);
-  //       }
-  //       // Newton update
-  //       dFdgdot = -1.0/9.0*K*dt*pow(a1 + a2 + a3, 2)*sin(dil)*sin(fric) - eta_vp + (1.0/3.0)*(a3*(eta_ve*txx/sqrt(Y2_p) + eta_ve*tzz/sqrt(Y2_p)) - a1*eta_ve*txx/sqrt(Y2_p) - a2*eta_ve*tzz/sqrt(Y2_p))*sin(fric) + (-pow(a_p, 4)*ap_s*eta_ve*pow(txz, 2)/(sqrt(Y2_p)*pow(a_ve, 2)) - 1.0/2.0*ap_n*eta_ve*pow(txx, 2)/sqrt(Y2_p) - 1.0/2.0*ap_n*eta_ve*pow(tyy, 2)/sqrt(Y2_p) - 1.0/2.0*ap_n*eta_ve*pow(tzz, 2)/sqrt(Y2_p))/sqrt(Y2_p_c);
-  //       gdot    -= Fc/dFdgdot;
-  //     }
-  
-  //     // Y2_p_c   = Y2(&T_rot, ani_fac);
-  //     // Y1_p_c   = a1*T_rot.xx + a2*T_rot.zz + a3*T_rot.yy;
-  //     // double Fchk0 = sqrt(Y2_p_c) - Coh - Pc*sin(fric)/3.0*(a1+a2+a3) +  sin(fric)/3.0*Y1_p_c - eta_vp*gdot;
-
-  //     double axx   = (sqrt(Y2_p)             -            eta_ve*gdot)/(sqrt(Y2_p));
-  //     double axz   = (sqrt(Y2_p)*pow(a_ve,2) - pow(a_p,2)*eta_ve*gdot)/(sqrt(Y2_p)*pow(a_ve,2));
-  //     // T_rot.xx = 2.0 * eta_ve_n*axx * E_rot.xx;
-  //     // T_rot.zz = 2.0 * eta_ve_n*axx * E_rot.zz;
-  //     // T_rot.xz = 2.0 * eta_ve_s*axz * E_rot.xz;
-  //     // T_rot.yy = -T_rot.xx -T_rot.zz;
-  //     // Y2_p_c   = Y2(&T_rot, ani_fac);
-  //     // Y1_p_c   = a1*T_rot.xx + a2*T_rot.zz + a3*T_rot.yy;
-  //     // double Fchk1 = sqrt(Y2_p_c) - Coh - Pc*sin(fric)/3.0*(a1+a2+a3) +  sin(fric)/3.0*Y1_p_c - eta_vp*gdot;
-
-  //     *eta_vep = eta_ve*axx;
-  //     eta_ve_n = *eta_vep;
-  //     eta_ve_s = *eta_vep/(ani_fac);
-  //     T_rot.xx = 2.0 * eta_ve_n * E_rot.xx;
-  //     T_rot.zz = 2.0 * eta_ve_n * E_rot.zz;
-  //     T_rot.xz = 2.0 * eta_ve_s * E_rot.xz;
-  //     T_rot.yy = -T_rot.xx - T_rot.zz; 
-  //     *div_pl  = gdot*sin(dil)/3.*(a1+a2+a3);
-  //     *Eii_pl  = gdot/2.0;
-  //     Tii      = sqrt(Y2_p);
-  //     // Y2_p_c   = Y2(&T_rot, ani_fac);
-  //     // Y1_p_c   = a1*T_rot.xx + a2*T_rot.zz + a3*T_rot.yy;
-  //     // double Fchk2 = sqrt(Y2_p_c) - Coh - Pc*sin(fric)/3*(a1+a2+a3) +  sin(fric)/3.0*Y1_p_c - eta_vp*gdot;
-  //     // printf("Ft = %2.6e --- Fc = %2.2e --- Fchk0 = %2.6e --- Fchk1 = %2.6e --- Fchk2 = %2.6e\n", Ft, Fc, Fchk0, Fchk1, Fchk2);
-  //     // exit(1);
-  //   }
+      // Evaluate stress components
+      *eta_vep = Tiic/2.0/Eii;
+      T_rot.xx = 2.0 * (*eta_vep) * E_rot.xx;
+      T_rot.zz = 2.0 * (*eta_vep) * E_rot.zz;
+      T_rot.xz = 2.0 * (*eta_vep) * E_rot.xz / ani_fac;
+      T_rot.yy = -T_rot.xx - T_rot.zz; 
+      *div_pl  = gdot*sin(dil)/3.*(a1+a2+a3);
+      *Eii_pl  = gdot/2.0;
+      Tii      = Tiic;
+    }
     // Back-transform stress: Qt*E*Q
     *Txx =   lx2*T_rot.xx +  nz2*T_rot.zz -   2.*lxlz*T_rot.xz;
     *Tzz =   nz2*T_rot.xx +  lx2*T_rot.zz +   2.*lxlz*T_rot.xz;
@@ -326,54 +230,47 @@ double ViscosityConciseAniso( int phase, double lxlz, double lx2, double angle, 
     // printf("%2.2e %2.2e %2.2e %2.2e %2.2e\n", *Txx, T_rot.xx, T_rot.zz, T_rot.xz, ani_fac);
     // exit(1);
 
-    *eta_vep = eta_ve;
-
-    // // Update effective viscosity and anisotropy factor
-    // *Pcorr   = Pc;
+    // Update effective viscosity and anisotropy factor
+    *Pcorr   = Pc;
     eta      = *eta_vep;
-    // eta_pl   = Tii/gdot;
-    // divp     = gdot*sin(dil);
+    eta_pl   = Tii/gdot;
+    divp     = gdot*sin(dil);
 
-  //     //-------- Post-Processing
-  // if ( post_process == 1) {
+      //-------- Post-Processing
+  if ( post_process == 1) {
 
-  //   // Strain rates: VEP partitioning
-  //   if ( dislocation == 1 )              eta_pwl  = B_pwl * pow( *Eii_pwl, 1.0/n_pwl - 1.0 ); 
+    // Strain rates: VEP partitioning
+    if ( dislocation == 1 )              eta_pwl  = B_pwl * pow( *Eii_pwl, 1.0/n_pwl - 1.0 ); 
 
-  //   // Compute dissipative strain rate components
-  //   if (elastic) *Eii_el   = Tii*Tii/(4*eta_el*eta_el);
-  //   if (is_pl)   *Eii_pl   = gdot/2.0;
+    // Compute dissipative strain rate components
+    if (elastic) *Eii_el   = Tii*Tii/(4*eta_el*eta_el);
+    if (is_pl)   *Eii_pl   = gdot/2.0;
 
-  //   // Partitioning of volumetric strain
-  //   *div_pl  = divp;
-  //   *div_el  = - (Pc - P0) / (K*dt);
-  //   // *div_r   = divr;
+    // Partitioning of volumetric strain
+    *div_pl  = divp;
+    *div_el  = - (Pc - P0) / (K*dt);
+    // *div_r   = divr;
 
-  //   double inv_eta_diss = 0.0;
-  //   if (dislocation== 1)  inv_eta_diss += (1.0/eta_pwl);
-  //   if (constant   == 1)  inv_eta_diss += (1.0/eta_cst);
-  //   if (is_pl      == 1)  inv_eta_diss += (1.0/eta_pl ); 
-  //   eta        = 1.0/(inv_eta_diss);
+    double inv_eta_diss = 0.0;
+    if (dislocation== 1)  inv_eta_diss += (1.0/eta_pwl);
+    if (constant   == 1)  inv_eta_diss += (1.0/eta_cst);
+    if (is_pl      == 1)  inv_eta_diss += (1.0/eta_pl ); 
+    eta        = 1.0/(inv_eta_diss);
 
-  //   // Viscoplastic overstress
-  //   *OverS = eta_vp*gdot;
+    // Viscoplastic overstress
+    *OverS = eta_vp*gdot;
 
-  //   // Work(s)
-  //   if (centroid==1) {
-  //     *Wtot  = Tii*Tii/eta_ve;
-  //     *Wel   = Tii*Tii/eta_el;
-  //     *Wdiss = Tii*Tii/eta;
-  //     // printf("Wtot = %2.6e Wdiss = %2.6e Wel = %2.6e\n", *Wtot, *Wdiss, *Wel);
-  //     // printf("Wtot - (Wdiss + Wel) = %2.6e\n", *Wtot - (*Wdiss + *Wel));
-  //     // printf("eta = %2.6e --- eta_ve = %2.6e --- eta_ve1 = %2.6e\n", eta, eta_ve, 1.0/(1./eta+1./eta_el));
-  //   }
-  // }
-      // *div_el  = - (Pc - P0) / (K*dt);
-      // double Tii = sqrt( *Txx* *Txx + *Tzz * *Tzz + (-*Txx - *Tzz)*(-*Txx - *Tzz));
-      // // double Eii = sqrt( Exx*Exx+Ezz*Ezz+(-Exx-Ezz)*(-Exx-Ezz));
-      // if (elastic==1) *Eii_el  = Tii*Tii/(4*eta_el*eta_el); //fabs(Eii-*Eii_pwl-*Eii_pl); // this is a big shortcut, ideally one should compute E^e = 1/(2G)*Dani_e*(T-T0)/dt
-    
-    return eta;
+    // Work(s)
+    if (centroid==1) {
+      *Wtot  = Tii*Tii/eta_ve;
+      *Wel   = Tii*Tii/eta_el;
+      *Wdiss = Tii*Tii/eta;
+      // printf("Wtot = %2.6e Wdiss = %2.6e Wel = %2.6e\n", *Wtot, *Wdiss, *Wel);
+      // printf("Wtot - (Wdiss + Wel) = %2.6e\n", *Wtot - (*Wdiss + *Wel));
+      // printf("eta = %2.6e --- eta_ve = %2.6e --- eta_ve1 = %2.6e\n", eta, eta_ve, 1.0/(1./eta+1./eta_el));
+    }
+  }
+  return eta;
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/

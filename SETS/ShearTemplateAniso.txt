@@ -88,8 +88,9 @@ G    = 1
 Cv   = 1050
 k    = 2.5
 Qr   = 0
-C    = 1e90
+C    = 0.2
 phi  = 30
+eta_vp = .1
 Slim = 500e9
 alp  = 10.0e-6
 bet  = 1e-11
@@ -104,6 +105,7 @@ eta0 = 1
 npwl = 3
 Qpwl = 0
 aniso_factor = 10
+aniso_angle = 30
 
 /**** PHASE 2 ****/
 ID   = 1
