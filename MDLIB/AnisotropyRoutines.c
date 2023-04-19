@@ -56,8 +56,8 @@ double Y2( Tensor2D *T, double ani_fac ) {
 }
 
 // Squared second invariant of deviatoric strain rate
-double I2( Tensor2D *E, double ani_fac ) {
-    return 0.5*( pow(E->xx,2) + pow(E->zz,2) + pow(E->yy,2)) + pow(E->xz,2)/ani_fac;
+double I2( Tensor2D *E ) {
+    return 0.5*( pow(E->xx,2) + pow(E->zz,2) + pow(E->yy,2)) + pow(E->xz,2);
 }
 
 // Solution of 2x2 system: TODO: move to MiscFunction.c, make x and f vectors and A matrix
@@ -86,7 +86,7 @@ double ViscosityConciseAniso( int phase, double lxlz, double lx2, double angle, 
     int    plastic = 0, constant = 0, dislocation = 0, peierls = 0, diffusion = 0, gbs = 0, elastic = model->elastic, kinetics = 0, is_pl = 0;
     double eta_pwl = 0.0, B_pwl = 0.0, C_pwl = 0.0, Q_pwl = materials->Qpwl[phase], V_pwl = materials->Vpwl[phase], n_pwl = materials->npwl[phase], m_pwl = materials->mpwl[phase], r_pwl = materials->rpwl[phase], A_pwl = materials->Apwl[phase], f_pwl = materials->fpwl[phase], a_pwl = materials->apwl[phase], F_pwl = materials->Fpwl[phase], pre_factor = materials->pref_pwl[phase], t_pwl = materials->tpwl[phase];
     const double E_lin = materials->Qlin[phase], V_lin = materials->Vlin[phase], n_lin = materials->nlin[phase], m_lin = materials->mlin[phase], r_lin = materials->rlin[phase], A_lin = materials->Alin[phase], f_lin = materials->flin[phase], a_lin = materials->alin[phase], F_lin = materials->Flin[phase];
-    double eta_ve_n, eta_ve_s, a_e, a_v, a_p, Tii;
+    double eta_ve, Tii;
     Tensor2D E_rot, T_rot, T0_rot;
     // Clean up
     *eta_vep   = 0.0;
@@ -114,16 +114,6 @@ double ViscosityConciseAniso( int phase, double lxlz, double lx2, double angle, 
       B_pwl = pre_factor * F_pwl * pow(A_pwl,-1.0/n_pwl) * exp( (Q_pwl + P*V_pwl)/R/n_pwl/T ) * pow(d0, m_pwl/n_pwl) * pow(f_pwl, -r_pwl/n_pwl) * exp(-a_pwl*phi/n_pwl);
       C_pwl   = pow(2.0*B_pwl, -n_pwl);
     }
-    // Isolated anisotropy factors
-    if ( materials->ani_fstrain[phase] == 0 ) {
-        ani_fac = ani_fac;
-        ani_fac = ani_fac;
-    }
-    else {
-        ani_fac = ani_fac;
-        ani_fac = ani_fac;
-    }
-    a_e = sqrt(ani_fac), a_v = sqrt(ani_fac), a_p = sqrt(ani_fac);
     // Transform strain rate: Q*E*Qt
     const double nz2 = 1.0-lx2;
     E_rot.xx  =   lx2*Exx +  nz2*Ezz +   2.*lxlz*Exz;
@@ -134,37 +124,57 @@ double ViscosityConciseAniso( int phase, double lxlz, double lx2, double angle, 
     double f0_n, f0_s, f_n, f_s, dfnden, dfndes, dfsden, dfsdes;
     double I2_v, Y2_v, Eii_vis, W_n, W_s, ieta_pwl, deta_n, deta_s;
     // Construct initial guess for viscosity: Isolated viscosities 
-    I2_v     = I2( &E_rot, ani_fac ); 
+    double Eii = sqrt(I2( &E_rot )); 
     if (constant)    eta_cst  = materials->eta0[phase];
-    if (dislocation) eta_pwl  = B_pwl * pow( I2_v, 0.5*(1-n_pwl)/n_pwl );
+    if (dislocation) eta_pwl  = B_pwl * pow( Eii, (1-n_pwl)/n_pwl );
     if (elastic)     eta_el   = G*dt; 
 
     // Cases where no local iterations are needed
-    if (dislocation) eta_ve_n = eta_pwl;
-    if (dislocation) eta_ve_s = eta_pwl/ani_fac;
-    if (constant)    eta_ve_n = eta_cst;
-    if (constant)    eta_ve_s = eta_cst/ani_fac;
-    T_rot.xx = 2.0 * eta_ve_n * E_rot.xx;
-    T_rot.zz = 2.0 * eta_ve_n * E_rot.zz;
-    T_rot.xz = 2.0 * eta_ve_s * E_rot.xz;
+    // if (dislocation) eta_ve = eta_pwl;
+    // if (constant)    eta_ve = eta_cst;
+    // T_rot.xx = 2.0 * eta_ve * E_rot.xx;
+    // T_rot.zz = 2.0 * eta_ve * E_rot.zz;
+    // T_rot.xz = 2.0 * eta_ve * E_rot.xz/ani_fac;
+    // T_rot.yy = -T_rot.xx - T_rot.xx; 
+
+    // Define viscosity bounds
+    double eta_up = 1.0e100 / scaling->eta;
+    if (constant)    eta_up = MINV(eta_up, eta_cst);
+    if (dislocation) eta_up = MINV(eta_up, eta_pwl);
+    if (elastic)     eta_up = MINV(eta_up, eta_el);
+    // Initial guess
+    eta_ve = eta_up;
+    // Iterations for visco-elastic trial
+    if (noisy) printf("Start local VE iterations for phase %d (cst: %d --- el: %d --- pwl: %d)\n", phase, constant, elastic, dislocation);
+    if (noisy) printf("ani_fac = %1.1f\n", ani_fac );    // DELETE
+    if (noisy) printf("eta=%2.2e eta_el=%2.2e eta_pwl=%2.2e\n", eta_ve, eta_el, eta_pwl); // DELETE
+    // VISCO ELASTICITY
+    double r, r0, drdeta;
+    for (int it = 0; it < nitmax; it++) {
+        Tii           = 2.0*eta_ve*Eii;
+        if (constant)    *Eii_cst = Tii  / 2.0 / eta_cst;
+        if (dislocation) *Eii_pwl = C_pwl * pow(Tii, n_pwl);
+        Eii_vis       =  *Eii_pwl + *Eii_cst;
+        r             = Eii - elastic*Tii/2/eta_el - Eii_vis;
+        if (it==0) r0 = r;
+        drdeta        = - elastic*Eii/eta_el - *Eii_pwl*n_pwl/eta_ve - constant*Eii/eta_cst;
+        eta_ve       -= r/drdeta;
+        // Make some noise!!!!!
+        if (noisy) printf("VE It. %02d: r = %2.2e\n", it, r);
+        // Exit criteria
+        if ( fabs(r) < tol / 100 ) {
+          if (it > 10) printf("V-E L.I. Warnung: more that 10 local iterations, there might be a problem...\n");
+          break;
+        } else if (it == nitmax - 1 && (fabs(r) > tol) ) {
+          printf("Visco-Elastic iterations failed!\n");
+          exit(0);
+        }
+    }
+    T_rot.xx = 2.0 * eta_ve * E_rot.xx;
+    T_rot.zz = 2.0 * eta_ve * E_rot.zz;
+    T_rot.xz = 2.0 * eta_ve * E_rot.xz/ani_fac;
     T_rot.yy = -T_rot.xx - T_rot.xx; 
 
-  //   // Define viscosity bounds
-  //   double eta_up_n  = 1.0e100 / scaling->eta, eta_up_s  = 1.0e100 / scaling->eta;
-  //   if (constant)    eta_up_n = MINV(eta_up_n, eta_cst);
-  //   if (dislocation) eta_up_n = MINV(eta_up_n, eta_pwl);
-  //   if (elastic)     eta_up_n = MINV(eta_up_n, eta_el);
-  //   //-----------
-  //   if (constant)    eta_up_s = MINV(eta_up_s, eta_cst/ani_fac);
-  //   if (dislocation) eta_up_s = MINV(eta_up_s, eta_pwl/ani_fac);
-  //   if (elastic)     eta_up_s = MINV(eta_up_s, eta_el /ani_fac);
-  //   // Initial guess
-  //   eta_ve_n = eta_up_n;
-  //   eta_ve_s = eta_up_s;
-  //   // Iterations for visco-elastic trial
-  //   if (noisy) printf("Start local VE iterations for phase %d (cst: %d --- el: %d --- pwl: %d)\n", phase, constant, elastic, dislocation);
-  //   if (noisy) printf("ani_fac = %1.1f  ani_fac = %1.1f\n", ani_fac, ani_fac );    // DELETE
-  //   if (noisy) printf("e_n=%2.2e e_s=%2.2e eta_pwl=%2.2e\n", eta_ve_n, eta_ve_s, eta_pwl); // DELETE
   //   for (int it = 0; it < nitmax; it++) {
   //     // Compute stress in principal plane
   //     T_rot.xx = 2.0 * eta_ve_n * E_rot.xx;
@@ -173,9 +183,9 @@ double ViscosityConciseAniso( int phase, double lxlz, double lx2, double angle, 
   //     T_rot.yy = -T_rot.xx - T_rot.zz; 
   //     Y2_v     = Y2( &T_rot, ani_fac);
   //     // ---------- Strain rates
-  //     if (constant)    *Eii_cst = sqrt(Y2_v)  / 2.0 / eta_cst;
-  //     if (dislocation) *Eii_pwl = C_pwl * pow(Y2_v, 0.5*n_pwl);
-  //     Eii_vis = *Eii_pwl + *Eii_cst;
+      // if (constant)    *Eii_cst = sqrt(Y2_v)  / 2.0 / eta_cst;
+      // if (dislocation) *Eii_pwl = C_pwl * pow(Y2_v, 0.5*n_pwl);
+      // Eii_vis = *Eii_pwl + *Eii_cst;
   //     // ---------- Viscosities
   //     // eta_pwl = pow( B_pwl, -1.0/n_pwl ) * pow( *Eii_pwl, (1-n_pwl)/n_pwl );
   //     eta_pwl = B_pwl * pow( *Eii_pwl, (1-n_pwl)/n_pwl );
@@ -187,16 +197,16 @@ double ViscosityConciseAniso( int phase, double lxlz, double lx2, double angle, 
   //     W_n       = 2.0*(E_rot.xx*T_rot.xx + E_rot.zz*T_rot.zz + E_rot.yy*T_rot.yy);
   //     W_s       = 2.0*E_rot.xz*T_rot.xz;
   //     ieta_pwl  = 1.0 / eta_pwl;
-  //     // Make some noise!!!!!
-  //     if (noisy) printf("VE It. %02d: f_n = %2.2e --- f_s = %2.2e\n", it, f_n, f_s);
-  //     // Exit criteria
-  //     if ( fabs(f_n) < tol / 100 && fabs(f_s) < tol / 100 ) {
-  //       if (it > 10) printf("V-E L.I. Warnung: more that 10 local iterations, there might be a problem...\n");
-  //       break;
-  //     } else if (it == nitmax - 1 && (fabs(f_n) > tol || fabs(f_s) > tol) ) {
-  //       printf("Visco-Elastic iterations failed!\n");
-  //       exit(0);
-  //     }
+      // // Make some noise!!!!!
+      // if (noisy) printf("VE It. %02d: f_n = %2.2e --- f_s = %2.2e\n", it, f_n, f_s);
+      // // Exit criteria
+      // if ( fabs(f_n) < tol / 100 && fabs(f_s) < tol / 100 ) {
+      //   if (it > 10) printf("V-E L.I. Warnung: more that 10 local iterations, there might be a problem...\n");
+      //   break;
+      // } else if (it == nitmax - 1 && (fabs(f_n) > tol || fabs(f_s) > tol) ) {
+      //   printf("Visco-Elastic iterations failed!\n");
+      //   exit(0);
+      // }
   //     // Compute Jacobian
   //     dfnden = 0.0; dfndes = 0.0; dfsden = 0.0; dfsdes = 0.0;
   //     if (constant) {
@@ -316,7 +326,7 @@ double ViscosityConciseAniso( int phase, double lxlz, double lx2, double angle, 
     // printf("%2.2e %2.2e %2.2e %2.2e %2.2e\n", *Txx, T_rot.xx, T_rot.zz, T_rot.xz, ani_fac);
     // exit(1);
 
-    *eta_vep = eta_ve_n;
+    *eta_vep = eta_ve;
 
     // // Update effective viscosity and anisotropy factor
     // *Pcorr   = Pc;
@@ -635,17 +645,14 @@ void NonNewtonianViscosityGridAniso( grid *mesh, mat_prop *materials, params *mo
             case 0 :
               mesh->eta_s[c1]            += mesh->phase_perc_s[p][c1] * eta_vep;
               mesh->eta_phys_s[c1]       += mesh->phase_perc_s[p][c1] * eta;
-              mesh->aniso_factor_s[c1]   += mesh->phase_perc_s[p][c1] * ani_vep;
               break;
             case 1:
               mesh->eta_s[c1]            += mesh->phase_perc_s[p][c1] * 1.0/eta_vep;
               mesh->eta_phys_s[c1]       += mesh->phase_perc_s[p][c1] * 1.0/eta;
-              mesh->aniso_factor_s[c1]   += mesh->phase_perc_s[p][c1] * 1.0/ani_vep;
               break;
             case 2:
               mesh->eta_s[c1]            += mesh->phase_perc_s[p][c1] * log(eta_vep);
               mesh->eta_phys_s[c1]       += mesh->phase_perc_s[p][c1] * log(eta);
-              mesh->aniso_factor_s[c1]   += mesh->phase_perc_s[p][c1] * log(ani_vep);
               break;
           }
           if (unsplit_diff_reac == 0) mesh->X_s[c1]        += mesh->phase_perc_s[p][c1] * Xreac;
@@ -655,7 +662,6 @@ void NonNewtonianViscosityGridAniso( grid *mesh, mat_prop *materials, params *mo
       if (average == 1) {
         mesh->eta_s[c1]            = 1.0/mesh->eta_s[c1];
         mesh->eta_phys_s[c1]       = 1.0/mesh->eta_phys_s[c1];
-        mesh->aniso_factor_s[c1]   = 1.0/mesh->aniso_factor_s[c1];
         if (isinf (mesh->eta_phys_s[c1]) ) {
           printf("Inf: Problem on cell vertices:\n");
           for ( p=0; p<model->Nb_phases; p++) printf("phase %d vol=%2.2e\n", p, mesh->phase_perc_s[p][c1]);
@@ -675,7 +681,6 @@ void NonNewtonianViscosityGridAniso( grid *mesh, mat_prop *materials, params *mo
       if (average == 2) {
         mesh->eta_s[c1]            = exp(mesh->eta_s[c1]);
         mesh->eta_phys_s[c1]       = exp(mesh->eta_phys_s[c1]);
-        mesh->aniso_factor_s[c1]   = exp(mesh->aniso_factor_s[c1]);
       }
 
       // // Effective strain rate

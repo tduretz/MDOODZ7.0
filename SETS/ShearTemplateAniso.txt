@@ -18,7 +18,7 @@ T   = 1
 /**** SPACE ****/
 Nx      = 101
 Nz      = 101
-Nt      = 1
+Nt      = 10
 xmin    = -5.000000e-1
 zmin    = -5.000000e-1 
 xmax    =  5.000000e-1
@@ -42,10 +42,10 @@ lin_abs_div  = 1e-8
 lin_rel_div  = 1e-8
 
 /**** NON-LINEAR SOLVER ****/
-Newton      = 1 
-line_search = 1
-nit_max     = 100
-rel_tol_KSP = 1e-4
+Newton           = 1 
+line_search      = 1
+nit_max          = 100
+rel_tol_KSP      = 1e-4
 nonlin_abs_mom   = 1e-8
 nonlin_abs_mom   = 1e-8
 nonlin_rel_div   = 1e-8
@@ -57,7 +57,7 @@ max_eta      = 1e6
 
 /**** SWITCHES ****/
 anisotropy        = 1
-elastic           = 0
+elastic           = 1
 free_surface      = 0
 free_surface_stab = 0
 finite_strain     = 1
@@ -65,7 +65,7 @@ advection         = 0
 gnuplot_log_res   = 0
 
 /**** SETUP-DEPENDANT ****/
-shear_style     = 1
+shear_style     = 0
 periodic_x      = 0
 pure_shear_ALE  = 1
 bkg_strain_rate = 1
@@ -84,7 +84,7 @@ Nb_phases = 2
 /**** PHASE 1 ****/
 ID   = 0
 rho  = 2700.00 / matrix
-G   = 1
+G    = 1
 Cv   = 1050
 k    = 2.5
 Qr   = 0
@@ -94,21 +94,21 @@ Slim = 500e9
 alp  = 10.0e-6
 bet  = 1e-11
 drho = 0
-cstv = 1             / constant visc law
-pwlv = 0             / disloc. creep
+cstv = 0             / constant visc law
+pwlv = 1             / disloc. creep
 linv = 0             / diff. creep
 gbsv = 0             / grain boundary sliding
 expv = 0             / peierls creep
 gsel = 0             / grain size evo.
 eta0 = 1
-npwl = 30
+npwl = 3
 Qpwl = 0
 aniso_factor = 10
 
 /**** PHASE 2 ****/
 ID   = 1
 rho  = 2700.00 / inclusion
-G   = 1
+G    = 1
 Cv   = 1050
 k    = 2.5
 Qr   = 0
