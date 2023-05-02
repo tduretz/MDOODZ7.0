@@ -20,7 +20,7 @@ function main()
     GLMakie.Colorbar(fig[1, 2], fs, label = L"\log_{10}[(u^2+v^2)^{1/2}]", width = 20,
         labelsize = 14, ticklabelsize = 14)
         GLMakie.colgap!(fig.layout, 20)
-    # mouse_selection(scene[, range])
+    DataInspector(fig)
     display(fig)
 
 end

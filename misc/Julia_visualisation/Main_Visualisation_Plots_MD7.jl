@@ -10,27 +10,29 @@ function main()
     # path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/MD67_assembly_LR/"
     path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/"
     # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/RiverTom/"
-    # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/qcoe_x100/"
+    path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/qcoe_x100/"
     # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/qcoe_x150/"
     # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/qcoe_x200/"
-    path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/qcoe_el_gt/"
-    path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/qcoe_el_gt_inc/"
-    path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/qcoe_el_gt_inc_eyy0/"
-    path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/qcoe_x100_LR_noPTmatrix/"
-    path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/qcoe_x100_LR_noPTmatrix_el_inc_eyy0_1e-13/"
-    path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/qcoe_x100_eta_drop/"
+    # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/qcoe_el_gt/"
+    # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/qcoe_el_gt_inc/"
+    # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/qcoe_el_gt_inc_eyy0/"
+    # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/qcoe_x100_LR_noPTmatrix/"
+    # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/qcoe_x100_LR_noPTmatrix_el_inc_eyy0_1e-13/"
+    # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/qcoe_x100_eta_drop/"
+    path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/qcoe_x100_Ebg-15/"
 
     # File numbers
-    file_start = 960
+    file_start = 400
     file_step  = 20
-    file_end   = 960
+    file_end   = 400
 
     Lc = 1
 
     field = :phases
-    # field = :density
+    field = :density
     field = :viscosity
     # field = :pl_srate
+    field = :stress
     # field = :pressure
     # field = :temperature
     # field = :velocity_x
@@ -72,6 +74,9 @@ function main()
         ph  = Float64.(reshape(ExtractData( filename, "/VizGrid/compo_hr"), ncx_ph, ncz_ph))
         Vx  = Float64.(reshape(ExtractData( filename, "/VxNodes/Vx"), (ncx+1), (ncz+2)))
         Vz  = Float64.(reshape(ExtractData( filename, "/VzNodes/Vz"), (ncx+2), (ncz+1)))
+        τxx  = Float64.(reshape(ExtractData( filename, "/Centers/sxxd"),  ncx, ncz))
+        τxz  = Float64.(reshape(ExtractData( filename, "/Vertices/sxz"), nvx, nvz))
+        τII  = sqrt.( 0.5*(2*τxx.^2 .+ 0.5*(τxz[1:end-1,1:end-1].^2 .+ τxz[2:end,1:end-1].^2 .+ τxz[1:end-1,2:end].^2 .+ τxz[2:end,2:end].^2 ) ) )
 
         Vxc = 0.5 .* (Vx[1:end-1,2:end-1] .+ Vx[2:end-0,2:end-1])
         Vzc = 0.5 .* (Vz[2:end-1,1:end-1] .+ Vz[2:end-1,2:end-0])
@@ -82,16 +87,17 @@ function main()
         if field==:density     p = heatmap!(xc./Lc, zc./Lc, (ρc'), c=:turbo, title="Density [kg/m3]") end
         if field==:viscosity   p = heatmap!(xc./Lc, zc./Lc, log10.(ηc'), c=:turbo) end
         if field==:pl_srate    p = heatmap!(xc./Lc, zc./Lc, log10.(ε̇pl'), c=:turbo) end
+        if field==:stress      p = heatmap!(xc./Lc, zc./Lc, τII', c=:turbo) end
         if field==:pressure    p = heatmap!(xc./Lc, zc./Lc, (P'), c=:turbo) end
         if field==:temperature p = heatmap!(xc./Lc, zc./Lc, (T'.-273.15), c=:turbo) end
         if field==:grain_size  p = heatmap!(xc./Lc, zc./Lc, log10.(d'), c=:turbo) end
-        if field==:velocity_x  p = heatmap!(xc./Lc, zc./Lc, Vxc', c=:turbo, clims=(-0.05, 0.05)) end
+        if field==:velocity_x  p = heatmap!(xc./Lc, zc./Lc, Vxc', c=:turbo) end #, clims=(-0.05, 0.05)
         if field==:velocity_z  p = heatmap!(xc./Lc, zc./Lc, Vzc', c=:turbo, clims=(-0.2, 0.1)) end
 
         if phase_contours  p = contour!(xc_ph./1e3, zc_ph./1e3, ph', c=:black) end
         p = plot!(aspect_ratio=Lx/Lz, xlims=(xmin, xmax), ylims=(zmin, zmax))
         display(p)
-        sleep(0.1)
+        sleep(0.5)
         @show P[1]
     end
 
