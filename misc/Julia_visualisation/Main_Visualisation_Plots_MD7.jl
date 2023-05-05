@@ -2,7 +2,7 @@ import Pkg
 Pkg.activate(normpath(joinpath(@__DIR__, ".")))
 using HDF5, Plots, Printf
 gr()
-plotlyjs()
+My = 1e6*365*24*3600
 
 function main()
 
@@ -10,7 +10,9 @@ function main()
     # path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/MD67_assembly_LR/"
     path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/"
     # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/RiverTom/"
-    path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/qcoe_x100/"
+    path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/NR03_ALE0/"
+    path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/NR09_miroir/"
+    # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/qcoe_x100/"
     # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/qcoe_x150/"
     # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/qcoe_x200/"
     # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/qcoe_el_gt/"
@@ -19,20 +21,21 @@ function main()
     # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/qcoe_x100_LR_noPTmatrix/"
     # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/qcoe_x100_LR_noPTmatrix_el_inc_eyy0_1e-13/"
     # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/qcoe_x100_eta_drop/"
-    path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/qcoe_x100_Ebg-15/"
+    # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/qcoe_x100_Ebg-14/"
+    # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/qcoe_x130/"
 
     # File numbers
-    file_start = 400
+    file_start = 1700
     file_step  = 20
-    file_end   = 400
+    file_end   = 1700
 
     Lc = 1
 
     field = :phases
-    field = :density
-    field = :viscosity
+    # field = :density
+    # field = :viscosity
     # field = :pl_srate
-    field = :stress
+    # field = :stress
     # field = :pressure
     # field = :temperature
     # field = :velocity_x
@@ -64,6 +67,8 @@ function main()
         xmin, xmax = xv[1], xv[end]
         zmin, zmax = zv[1], zv[end]
         Lx, Lz = (xmax-xmin)/Lc, (zv[end]-zv[1])/Lc
+        @show Lx
+        @show t/My
 
         ηc  = Float64.(reshape(ExtractData( filename, "/Centers/eta_n"), ncx, ncz))
         ρc  = Float64.(reshape(ExtractData( filename, "/Centers/rho_n"), ncx, ncz))
@@ -81,6 +86,8 @@ function main()
         Vxc = 0.5 .* (Vx[1:end-1,2:end-1] .+ Vx[2:end-0,2:end-1])
         Vzc = 0.5 .* (Vz[2:end-1,1:end-1] .+ Vz[2:end-1,2:end-0])
 
+        @show Vx[1,1]
+
         p = plot()
 
         if field==:phases      p = heatmap!(xc_ph./Lc, zc_ph./Lc, ph', c=:turbo)   end
@@ -95,7 +102,7 @@ function main()
         if field==:velocity_z  p = heatmap!(xc./Lc, zc./Lc, Vzc', c=:turbo, clims=(-0.2, 0.1)) end
 
         if phase_contours  p = contour!(xc_ph./1e3, zc_ph./1e3, ph', c=:black) end
-        p = plot!(aspect_ratio=Lx/Lz, xlims=(xmin, xmax), ylims=(zmin, zmax))
+        p = plot!(aspect_ratio=1, xlims=(xmin, xmax), ylims=(zmin, zmax))
         display(p)
         sleep(0.5)
         @show P[1]

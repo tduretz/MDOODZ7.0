@@ -1,3 +1,8 @@
+import Pkg
+Pkg.activate(normpath(joinpath(@__DIR__, ".")))
+gr()
+plotlyjs()
+
 using Plots, FileIO, ImageCore, Printf
 
 function ReadBinFileVisualise()

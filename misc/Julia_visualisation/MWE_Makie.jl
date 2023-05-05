@@ -15,7 +15,7 @@ function main()
     # Compose figure
     fig = Figure(resolution = (600, 400), fontsize = 22, fonts = (;regular="CMU Serif"))
     ax = fig[1, 1] = Axis(fig, xlabel = L"x", ylabel = L"y", aspect=Lx/Ly)
-    fs = GLMakie.heatmap!(ax, x, y, f, colormap = Reverse(:plasma))
+    fs = GLMakie.heatmap!(ax, x, y, f, colormap = (:plasma))
     GLMakie.contour!(ax, x, y, g)
     GLMakie.Colorbar(fig[1, 2], fs, label = L"\log_{10}[(u^2+v^2)^{1/2}]", width = 20,
         labelsize = 14, ticklabelsize = 14)
