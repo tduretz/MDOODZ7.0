@@ -16,28 +16,25 @@ function LoadGrainSize(path, istep)
     nvz    = Int(model[5])
     ncx, ncz = nvx-1, nvz-1
     d      = Float64.(reshape(ExtractData( filename, "/Centers/d"), ncx, ncz));
-
     return (xc=xc, zc=zc, d=d, tMy=tMy)
 end
 
 function main()
 
     path_ref = "/Users/tduretz/REPO/MDOODZ7.0/VISUAL_TESTS/GSE_REF/"
-    path_new = "/Users/tduretz/REPO/MDOODZ7.0/MDLIB/"
+    path_new = "/Users/tduretz/REPO/MDOODZ7.0/MDLIB/PinchSwellGSE_NEW/"
 
     step_ref = 100
     step_new = 110
     printfig = true
 
-    ref = LoadGrainSize(path_new, step_new)
+    ref = LoadGrainSize(path_ref, step_ref)
     new = LoadGrainSize(path_new, step_new)
         
     xminz, xmaxz = -0.4, 0.4
     zminz, zmaxz = -0.17, 0.17
     Lx, Lz       = xmaxz - xminz, zmaxz - zminz            
     
-    # #####################################
-
     # #####################################
 
     f = Figure(resolution = ( Lx/Lz*1000, 1000), fontsize=25, aspect = 2.0)
