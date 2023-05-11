@@ -24,28 +24,28 @@ function main()
     # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/qcoe_x100_LR_noPTmatrix_el_inc_eyy0_1e-13/"
     # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/qcoe_x100_eta_drop/"
     # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/qcoe_x100_Ebg5e-14/"
-    # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/qcoe_x130/"
+    path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/NR00/"
 
     # File numbers
-    file_start = 100
+    file_start = 500
     file_step  = 20
-    file_end   = 100
+    file_end   = 500
 
-    Lc = 1
+    Lc = 1000
 
     field = :phases
     # field = :density
     # field = :viscosity
-    # field = :pl_srate
+    field = :plastic_strain_rate
     # field = :stress
     # field = :strain_rate
     # field = :pressure
     # field = :temperature
     # field = :velocity_x
     # field = :velocity_z
-    field = :grain_size
+    # field = :grain_size
 
-    printfig    = true
+    printfig    = false
     ph_contours = true
     T_contours  = true
 
@@ -72,7 +72,7 @@ function main()
         xmin, xmax = xv[1], xv[end]
         zmin, zmax = zv[1], zv[end]
         Lx, Lz = (xmax-xmin)/Lc, (zv[end]-zv[1])/Lc
-        @show "Model length" Lx
+        @show "Model apect ratio" Lx/Lz
         @show "Model time" t/My
 
         ph    = Float64.(reshape(ExtractData( filename, "/VizGrid/compo"), ncx, ncz));          mask_air = ph .== -1.00 
@@ -116,7 +116,7 @@ function main()
 
         #####################################
 
-        f = Figure(resolution = ( Lx/Lz*1000, 1000), fontsize=25, aspect = 2.0)
+        f = Figure(resolution = ( Lx/Lz*1000, 1000), fontsize=25)
 
         if field==:phases
             ax1 = Axis(f[1, 1], title = L"Phases at $t$ = %$(tMy) Ma", xlabel = "x [km]", ylabel = "y [km]")
@@ -131,20 +131,20 @@ function main()
         end
 
         if field==:stress
-            ax1 = Axis(f[1, 1], title = "τII", xlabel = "x [km]", ylabel = "y [km]")
+            ax1 = Axis(f[1, 1], title = L"$\tau_\textrm{II}$ at $t$ = %$(tMy) Ma", xlabel = "x [km]", ylabel = "y [km]")
             hm = heatmap!(ax1, xc./Lc, zc./Lc, τII, colormap = (:turbo,0.85))
             if T_contours 
                 contour!(ax1, xc./Lc, zc./Lc, T, levels=0:200:1400, linewidth = 4, color=:white )  
             end            
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
-            GLMakie.Colorbar(f[1, 2], hm, label = "τII", width = 20, labelsize = 25, ticklabelsize = 14 )
+            GLMakie.Colorbar(f[1, 2], hm, label = L"$\tau_\textrm{II}$ [Pa]", width = 20, labelsize = 25, ticklabelsize = 14 )
             GLMakie.colgap!(f.layout, 20)
             if printfig save(path*"Stress"*@sprintf("%05d", istep)*".png", f, px_per_unit = 4) end
         end
 
 
         if field==:strain_rate
-            ax1 = Axis(f[1, 1], title = "ε̇II", xlabel = "x [km]", ylabel = "y [km]")
+            ax1 = Axis(f[1, 1], title = L"$\dot{\varepsilon}_\textrm{II}$ at $t$ = %$(tMy) Ma", xlabel = "x [km]", ylabel = "y [km]")
             hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(ε̇II), colormap = (:turbo, 0.85))
             if T_contours 
                 contour!(ax1, xc./Lc, zc./Lc, T, levels=0:200:1400, linewidth = 4, color=:white )  
@@ -153,9 +153,24 @@ function main()
                 contour!(ax1, xc_hr./Lc, zc_hr./Lc, group_phases, levels=-1:1:maximum(group_phases), linewidth = 4, color=:white )  
             end
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
-            GLMakie.Colorbar(f[1, 2], hm, label = "ε̇II", width = 20, labelsize = 25, ticklabelsize = 14 )
+            GLMakie.Colorbar(f[1, 2], hm, label =  L"$\dot{\varepsilon}_\textrm{II}$ [s$^{-1}$]", width = 20, labelsize = 25, ticklabelsize = 14 )
             GLMakie.colgap!(f.layout, 20)
             if printfig save(path*"StrainRate"*@sprintf("%05d", istep)*".png", f, px_per_unit = 4) end
+        end
+
+        if field==:plastic_strain_rate
+            ax1 = Axis(f[1, 1], title = L"$\dot{\varepsilon}_\textrm{II}^\textrm{pl}$ at $t$ = %$(tMy) Ma", xlabel = "x [km]", ylabel = "y [km]")
+            hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(ε̇pl), colormap = (:turbo, 0.85))
+            if T_contours 
+                contour!(ax1, xc./Lc, zc./Lc, T, levels=0:200:1400, linewidth = 4, color=:white )  
+            end
+            if ph_contours 
+                contour!(ax1, xc_hr./Lc, zc_hr./Lc, group_phases, levels=-1:1:maximum(group_phases), linewidth = 4, color=:white )  
+            end
+            colsize!(f.layout, 1, Aspect(1, Lx/Lz))
+            GLMakie.Colorbar(f[1, 2], hm, label = L"$\dot{\varepsilon}_\textrm{II}^\textrm{pl}$ [s$^{-1}$]", width = 20, labelsize = 25, ticklabelsize = 14 )
+            GLMakie.colgap!(f.layout, 20)
+            if printfig save(path*"PlasticStrainRate"*@sprintf("%05d", istep)*".png", f, px_per_unit = 4) end
         end
 
         if field==:grain_size
