@@ -5,6 +5,12 @@ Makie.update_theme!(fonts = (regular = texfont(), bold = texfont(:bold), italic 
 
 My = 1e6*365*24*3600
 
+function Print2Disk( f, path, field, istep; res=4)
+    path1 = path*"/_$field/"
+    mkpath(path1)
+    save(path1*"$field"*@sprintf("%05d", istep)*".png", f, px_per_unit = res) 
+end
+
 function main()
 
     # path ="/Users/imac/REPO_GIT/MDOODZ7.0/MDLIB/"
@@ -27,25 +33,25 @@ function main()
     path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/NR00/"
 
     # File numbers
-    file_start = 500
-    file_step  = 20
-    file_end   = 500
+    file_start = 0
+    file_step  = 50
+    file_end   = 100
 
     Lc = 1000
 
-    field = :phases
-    # field = :density
-    # field = :viscosity
-    field = :plastic_strain_rate
-    # field = :stress
-    # field = :strain_rate
-    # field = :pressure
-    # field = :temperature
-    # field = :velocity_x
-    # field = :velocity_z
-    # field = :grain_size
+    field = :Phases
+    # field = :Density
+    # field = :Viscosity
+    # field = :PlasticStrainrate
+    # field = :Stress
+    # field = :StrainRate
+    # field = :Pressure
+    # field = :Temperature
+    # field = :Velocity_x
+    # field = :Velocity_z
+    # field = :GrainSize
 
-    printfig    = false
+    printfig    = true
     ph_contours = true
     T_contours  = true
 
@@ -118,7 +124,7 @@ function main()
 
         f = Figure(resolution = ( Lx/Lz*1000, 1000), fontsize=25)
 
-        if field==:phases
+        if field==:Phases
             ax1 = Axis(f[1, 1], title = L"Phases at $t$ = %$(tMy) Ma", xlabel = "x [km]", ylabel = "y [km]")
             hm = heatmap!(ax1, xc_hr./Lc, zc_hr./Lc, ph_hr, colormap = phase_colors)
             if T_contours 
@@ -127,10 +133,10 @@ function main()
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
             GLMakie.Colorbar(f[1, 2], hm, label = "Phases", width = 20, labelsize = 25, ticklabelsize = 14 )
             GLMakie.colgap!(f.layout, 20)
-            if printfig save(path*"Phase"*@sprintf("%05d", istep)*".png", f, px_per_unit = 4) end
+            if printfig Print2Disk( f, path, string(field), istep) end
         end
 
-        if field==:stress
+        if field==:Stress
             ax1 = Axis(f[1, 1], title = L"$\tau_\textrm{II}$ at $t$ = %$(tMy) Ma", xlabel = "x [km]", ylabel = "y [km]")
             hm = heatmap!(ax1, xc./Lc, zc./Lc, τII, colormap = (:turbo,0.85))
             if T_contours 
@@ -139,11 +145,11 @@ function main()
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
             GLMakie.Colorbar(f[1, 2], hm, label = L"$\tau_\textrm{II}$ [Pa]", width = 20, labelsize = 25, ticklabelsize = 14 )
             GLMakie.colgap!(f.layout, 20)
-            if printfig save(path*"Stress"*@sprintf("%05d", istep)*".png", f, px_per_unit = 4) end
+            if printfig Print2Disk( f, path, string(field), istep) end
         end
 
 
-        if field==:strain_rate
+        if field==:StrainRate
             ax1 = Axis(f[1, 1], title = L"$\dot{\varepsilon}_\textrm{II}$ at $t$ = %$(tMy) Ma", xlabel = "x [km]", ylabel = "y [km]")
             hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(ε̇II), colormap = (:turbo, 0.85))
             if T_contours 
@@ -155,10 +161,10 @@ function main()
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
             GLMakie.Colorbar(f[1, 2], hm, label =  L"$\dot{\varepsilon}_\textrm{II}$ [s$^{-1}$]", width = 20, labelsize = 25, ticklabelsize = 14 )
             GLMakie.colgap!(f.layout, 20)
-            if printfig save(path*"StrainRate"*@sprintf("%05d", istep)*".png", f, px_per_unit = 4) end
+            if printfig Print2Disk( f, path, string(field), istep) end
         end
 
-        if field==:plastic_strain_rate
+        if field==:PlasticStrainrate
             ax1 = Axis(f[1, 1], title = L"$\dot{\varepsilon}_\textrm{II}^\textrm{pl}$ at $t$ = %$(tMy) Ma", xlabel = "x [km]", ylabel = "y [km]")
             hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(ε̇pl), colormap = (:turbo, 0.85))
             if T_contours 
@@ -170,10 +176,10 @@ function main()
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
             GLMakie.Colorbar(f[1, 2], hm, label = L"$\dot{\varepsilon}_\textrm{II}^\textrm{pl}$ [s$^{-1}$]", width = 20, labelsize = 25, ticklabelsize = 14 )
             GLMakie.colgap!(f.layout, 20)
-            if printfig save(path*"PlasticStrainRate"*@sprintf("%05d", istep)*".png", f, px_per_unit = 4) end
+            if printfig Print2Disk( f, path, string(field), istep) end
         end
 
-        if field==:grain_size
+        if field==:GrainSize
             ax1 = Axis(f[1, 1], title = L"$d$ at $t$ = %$(tMy) Ma", xlabel = "x [km]", ylabel = "y [km]")
             hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(d.*1e6), colormap = (:turbo, 0.85), colorrange=(1, 3))
             if T_contours 
@@ -191,7 +197,7 @@ function main()
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
             GLMakie.Colorbar(f[1, 2], hm, label = "d", width = 20, labelsize = 25, ticklabelsize = 14 )
             GLMakie.colgap!(f.layout, 20)
-            if printfig save(path*"GrainSize"*@sprintf("%05d", istep)*".png", f, px_per_unit = 4) end
+            if printfig Print2Disk( f, path, string(field), istep) end
         end
 
         DataInspector(f)
