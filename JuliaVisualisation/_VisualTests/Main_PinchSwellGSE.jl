@@ -37,16 +37,24 @@ function main()
     
     # #####################################
 
-    f = Figure(resolution = ( Lx/Lz*1000, 1000), fontsize=25, aspect = 2.0)
+    f = Figure(resolution = (1000, 800), fontsize=25)
     
-    ax1 = Axis(f[1, 1], title = L"$d$ at $t$ = %$(new.tMy) Ma", xlabel = "x [km]", ylabel = "y [km]")
+    ax1 = Axis(f[1, 1], title = L"$d$ at $t$ = %$(ref.tMy) Ma - $\varepsilon$ = %$(ref.tMy*My*1e-14*100) %", xlabel = "x [km]", ylabel = "y [km]")
+    hm = heatmap!(ax1, ref.xc, ref.zc, log10.(ref.d.*1e6), colormap = (:turbo, 0.85), colorrange=(1, 3))
+    xlims!(ax1, xminz, xmaxz)
+    ylims!(ax1, zminz, zmaxz)
+    colsize!(f.layout, 1, Aspect(1, Lx/Lz))
+    GLMakie.Colorbar(f[1, 2], hm, label = L"$\log_{10} d$ [$\mu$m]", width = 20, labelsize = 25, ticklabelsize = 14 )
+    GLMakie.colgap!(f.layout, 20)
+
+    ax1 = Axis(f[2, 1], title = L"$d$ at $t$ = %$(new.tMy) Ma - $\varepsilon$ = %$(ref.tMy*My*1e-14*100) %", xlabel = "x [km]", ylabel = "y [km]")
     hm = heatmap!(ax1, new.xc, new.zc, log10.(new.d.*1e6), colormap = (:turbo, 0.85), colorrange=(1, 3))
     xlims!(ax1, xminz, xmaxz)
     ylims!(ax1, zminz, zmaxz)
     colsize!(f.layout, 1, Aspect(1, Lx/Lz))
-    GLMakie.Colorbar(f[1, 2], hm, label = "d", width = 20, labelsize = 25, ticklabelsize = 14 )
+    GLMakie.Colorbar(f[2, 2], hm, label = L"$\log_{10} d$ [$\mu$m]", width = 20, labelsize = 25, ticklabelsize = 14 )
     GLMakie.colgap!(f.layout, 20)
-    if printfig save(path*"GrainSize"*@sprintf("%05d", istep)*".png", f, px_per_unit = 4) end
+    if printfig save("_VisualTests/PinchSwellGSE.png", f, px_per_unit = 4) end
 
     DataInspector(f)
     display(f)
