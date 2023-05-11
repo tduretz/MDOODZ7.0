@@ -5,40 +5,17 @@ Makie.update_theme!(fonts = (regular = texfont(), bold = texfont(:bold), italic 
 
 My = 1e6*365*24*3600
 
-function Print2Disk( f, path, field, istep; res=4)
-    path1 = path*"/_$field/"
-    mkpath(path1)
-    save(path1*"$field"*@sprintf("%05d", istep)*".png", f, px_per_unit = res) 
-end
-
 function main()
 
-    # path ="/Users/imac/REPO_GIT/MDOODZ7.0/MDLIB/"
-    # path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/MD67_assembly_LR/"
+    # Set the path to your files
     path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/"
-    # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/RiverTom/"
-    # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/NR03_ALE0/"
-    # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/1_NR09/"
-    # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/NR09_miroir/"
-    # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/qcoe_x100/"
-    # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/qcoe_x150/"
-    # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/qcoe_x200/"
-    # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/qcoe_el_gt/"
-    # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/qcoe_el_gt_inc/"
-    # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/qcoe_el_gt_inc_eyy0/"
-    # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/qcoe_x100_LR_noPTmatrix/"
-    # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/qcoe_x100_LR_noPTmatrix_el_inc_eyy0_1e-13/"
-    # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/qcoe_x100_eta_drop/"
-    # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/qcoe_x100_Ebg5e-14/"
-    path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/NR00/"
 
     # File numbers
     file_start = 0
     file_step  = 50
     file_end   = 100
 
-    Lc = 1000
-
+    # Select field to visualise
     field = :Phases
     # field = :Density
     # field = :Viscosity
@@ -51,10 +28,15 @@ function main()
     # field = :Velocity_z
     # field = :GrainSize
 
+    # Switches
     printfig    = true
     ph_contours = true
     T_contours  = true
 
+    # Scalig
+    Lc = 1000
+
+    # Time loop
     for istep=file_start:file_step:file_end
     
         filename = string(path, @sprintf("Output%05d.gzip.h5", istep))
@@ -212,6 +194,12 @@ function ExtractData( file_path, data_path)
         read(file, data_path)
     end
     return data
+end
+
+function Print2Disk( f, path, field, istep; res=4)
+    path1 = path*"/_$field/"
+    mkpath(path1)
+    save(path1*"$field"*@sprintf("%05d", istep)*".png", f, px_per_unit = res) 
 end
 
 main()
