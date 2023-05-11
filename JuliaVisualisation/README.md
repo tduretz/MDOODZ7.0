@@ -30,6 +30,7 @@ Define which field, for example the phases:
 ## Visual tests
 
 Results obtained with new code versions can be compared to reference models. Here is an example for `PinchSwellGSE` which models pinch-and-swell formation with grain size evolution:
+
 <img src="https://github.com/tduretz/MDOODZ7.0/blob/update_aniso/JuliaVisualisation/_VisualTests/PinchSwellGSE.png" alt="PinchSwellGSE.png" width="600">
 
 Another example with the `Shrinking` model configuration which models the stress perturbation due to densification:
