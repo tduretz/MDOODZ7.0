@@ -40,4 +40,5 @@ int main(int nargs, char *args[]) {
           },
   };
   RunMDOODZ(input_file, &setup);
+  free(input_file);
 }

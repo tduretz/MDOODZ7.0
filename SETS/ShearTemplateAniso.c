@@ -1,5 +1,6 @@
 #include "mdoodz.h"
-
+#include "stdlib.h"
+#include "stdio.h"
 
 int SetPhase(MdoodzInput *input, Coordinates coordinates) {
   const double radius = input->model.user1 / input->scaling.L;
@@ -19,7 +20,16 @@ double SetDensity(MdoodzInput *input, Coordinates coordinates, int phase) {
   }
 }
 
-int main() {
+int main(int nargs, char *args[]) {
+// Input file name
+  char *input_file;
+  if ( nargs < 2 ) {
+    asprintf(&input_file, "ShearTemplateAniso.txt"); // Default
+  }
+  else {
+    asprintf(&input_file, "%s", args[1]);     // Custom
+    printf("Input file: %s \n", input_file);
+  }
   MdoodzSetup setup = {
           .SetParticles  = &(SetParticles_ff){
                    .SetPhase              = SetPhase,
@@ -30,5 +40,6 @@ int main() {
                   .SetBCVz = SetPureOrSimpleShearBCVz,
           },
   };
-  RunMDOODZ("ShearTemplateAniso.txt", &setup);
+  RunMDOODZ(input_file, &setup);
+  free(input_file);
 }

@@ -10,9 +10,10 @@ function main()
     # Set the path to your files
     path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/NonLinearPureshearAnisotropic/"
     # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/NR00/"
+    path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/"
 
     # File numbers
-    file_start = 0
+    file_start = 50
     file_step  = 10
     file_end   = 50
 
@@ -31,14 +32,14 @@ function main()
 
     # Switches
     printfig    = false  # print figures to disk
-    ph_contours = true   # add phase contours
-    T_contours  = true   # add temperature contours
-    fabric      = true   # add fabric quiver (normal to director)
+    ph_contours = false  # add phase contours
+    T_contours  = true  # add temperature contours
+    fabric      = true  # add fabric quiver (normal to director)
     α_heatmap   = 0.85   # transparency of heatmap 
     nap         = 0.3    # pause for animation 
 
     # Scaling
-    Lc = 1
+    Lc = 1000.
     tc = 1.0
 
     # Time loop
@@ -54,8 +55,7 @@ function main()
         zv_hr  = ExtractData( filename, "/VizGrid/zviz_hr")
         xc_hr  = 0.5.*(xv_hr[1:end-1] .+ xv_hr[2:end])
         zc_hr  = 0.5.*(zv_hr[1:end-1] .+ zv_hr[2:end])
-        ncx_hr = length(xc_hr)
-        ncz_hr = length(zc_hr)
+        ncx_hr, ncz_hr = length(xc_hr), length(zc_hr)
 
         t      = model[1]
         tMy    = round(t/tc, digits=6)
@@ -64,7 +64,8 @@ function main()
         ncx, ncz = nvx-1, nvz-1
         xmin, xmax = xv[1], xv[end]
         zmin, zmax = zv[1], zv[end]
-        Lx, Lz = (xmax-xmin)/Lc, (zv[end]-zv[1])/Lc
+        Lx, Lz    = (xmax-xmin)/Lc, (zv[end]-zv[1])/Lc
+        Δx, Δz, Δ = Lx/ncx, Lz/ncz, sqrt( (Lx/ncx)^2 + (Lz/ncz)^2)
         @show "Model apect ratio" Lx/Lz
         @show "Model time" t/My
 
@@ -85,8 +86,10 @@ function main()
         ε̇xz   = Float64.(reshape(ExtractData( filename, "/Vertices/exz"), nvx, nvz))
         τII   = sqrt.( 0.5*(2*τxx.^2 .+ 0.5*(τxz[1:end-1,1:end-1].^2 .+ τxz[2:end,1:end-1].^2 .+ τxz[1:end-1,2:end].^2 .+ τxz[2:end,2:end].^2 ) ) ); τII[mask_air] .= NaN
         ε̇II   = sqrt.( 0.5*(2*ε̇xx.^2 .+ 0.5*(ε̇xz[1:end-1,1:end-1].^2 .+ ε̇xz[2:end,1:end-1].^2 .+ ε̇xz[1:end-1,2:end].^2 .+ ε̇xz[2:end,2:end].^2 ) ) ); ε̇II[mask_air] .= NaN
-        Nx    = Float64.(reshape(ExtractData( filename, "/Centers/nx"), ncx, ncz)); 
-        Nz    = Float64.(reshape(ExtractData( filename, "/Centers/nz"), ncx, ncz));
+        if fabric
+            Nx    = Float64.(reshape(ExtractData( filename, "/Centers/nx"), ncx, ncz)); 
+            Nz    = Float64.(reshape(ExtractData( filename, "/Centers/nz"), ncx, ncz));
+        end
         Vxc   = 0.5 .* (Vx[1:end-1,2:end-1] .+ Vx[2:end-0,2:end-1])
         Vzc   = 0.5 .* (Vz[2:end-1,1:end-1] .+ Vz[2:end-1,2:end-0])
 
@@ -110,7 +113,7 @@ function main()
 
         #####################################
 
-        f = Figure(resolution = (1000, 1000), fontsize=25)
+        f = Figure(resolution = (Lx/Lz*1000, 1000), fontsize=25)
 
         if field==:Phases
             ax1 = Axis(f[1, 1], title = L"Phases at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
@@ -119,7 +122,7 @@ function main()
                 contour!(ax1, xc./Lc, zc./Lc, T, levels=0:200:1400, linewidth = 4, color=:white )  
             end
             if fabric 
-                arrows!(ax1, xc, zc, Nz, Nx, arrowsize = 0, lengthscale=0.02)
+                arrows!(ax1, xc./Lc, zc./Lc, Nz, Nx, arrowsize = 0, lengthscale=Δ/1.5)
             end            
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
             GLMakie.Colorbar(f[1, 2], hm, label = "Phases", width = 20, labelsize = 25, ticklabelsize = 14 )
@@ -137,7 +140,7 @@ function main()
                 contour!(ax1, xc_hr./Lc, zc_hr./Lc, group_phases, levels=-1:1:maximum(group_phases), linewidth = 4, color=:white )  
             end
             if fabric 
-                arrows!(ax1, xc, zc, Nz, Nx, arrowsize = 0, lengthscale=0.02)
+                arrows!(ax1, xc./Lc, zc./Lc, Nz, Nx, arrowsize = 0, lengthscale=Δ/1.5)
             end           
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
             GLMakie.Colorbar(f[1, 2], hm, label = L"$\eta$ [Pa.s]", width = 20, labelsize = 25, ticklabelsize = 14 )
@@ -155,7 +158,7 @@ function main()
                 contour!(ax1, xc_hr./Lc, zc_hr./Lc, group_phases, levels=-1:1:maximum(group_phases), linewidth = 4, color=:white )  
             end
             if fabric 
-                arrows!(ax1, xc, zc, Nz, Nx, arrowsize = 0, lengthscale=0.02)
+                arrows!(ax1, xc./Lc, zc./Lc, Nz, Nx, arrowsize = 0, lengthscale=Δ/1.5)
             end          
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
             GLMakie.Colorbar(f[1, 2], hm, label = L"$\tau_\textrm{II}$ [Pa]", width = 20, labelsize = 25, ticklabelsize = 14 )
@@ -173,7 +176,7 @@ function main()
                 contour!(ax1, xc_hr./Lc, zc_hr./Lc, group_phases, levels=-1:1:maximum(group_phases), linewidth = 4, color=:white )  
             end
             if fabric 
-                arrows!(ax1, xc, zc, Nz, Nx, arrowsize = 0, lengthscale=0.02)
+                arrows!(ax1, xc./Lc, zc./Lc, Nz, Nx, arrowsize = 0, lengthscale=Δ/1.5)
             end
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
             GLMakie.Colorbar(f[1, 2], hm, label =  L"$\dot{\varepsilon}_\textrm{II}$ [s$^{-1}$]", width = 20, labelsize = 25, ticklabelsize = 14 )
@@ -191,7 +194,7 @@ function main()
                 contour!(ax1, xc_hr./Lc, zc_hr./Lc, group_phases, levels=-1:1:maximum(group_phases), linewidth = 4, color=:white )  
             end
             if fabric 
-                arrows!(ax1, xc, zc, Nz, Nx, arrowsize = 0, lengthscale=0.02)
+                arrows!(ax1, xc./Lc, zc./Lc, Nz, Nx, arrowsize = 0, lengthscale=Δ/1.5)
             end
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
             GLMakie.Colorbar(f[1, 2], hm, label = L"$\dot{\varepsilon}_\textrm{II}^\textrm{pl}$ [s$^{-1}$]", width = 20, labelsize = 25, ticklabelsize = 14 )
@@ -209,7 +212,7 @@ function main()
                 contour!(ax1, xc_hr./Lc, zc_hr./Lc, group_phases, levels=-1:1:maximum(group_phases), linewidth = 4, color=:white )  
             end
             if fabric 
-                arrows!(ax1, xc, zc, Nz, Nx, arrowsize = 0, lengthscale=0.02)
+                arrows!(ax1, xc./Lc, zc./Lc, Nz, Nx, arrowsize = 0, lengthscale=Δ/1.5)
             end
             xminz, xmaxz = -0.4, 0.4
             zminz, zmaxz = -0.17, 0.17
