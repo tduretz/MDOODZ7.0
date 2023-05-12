@@ -443,11 +443,16 @@ grid GridAlloc(params *model) {
 
   // Derived quantities
   mesh.sxxd           = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  mesh.sxxd_s         = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double));
   mesh.szzd           = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
-  mesh.sxz            = DoodzCalloc((Nx) * (Nz), sizeof(double));
+  mesh.szzd_s         = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double));
+  mesh.sxz            = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double));
+  mesh.sxz_n          = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
   mesh.exxd           = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
   mesh.ezzd           = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
-  mesh.exz            = DoodzCalloc((Nx) * (Nz), sizeof(double));
+  mesh.exz            = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double));
+  mesh.wxz            = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double));
+  mesh.wxz_n          = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
 
   // Right-hand side viscoelastic coefficient
   mesh.mu_s           = DoodzCalloc((Nx) * (Nz), sizeof(double));
@@ -465,7 +470,6 @@ grid GridAlloc(params *model) {
   mesh.exxd_s         = DoodzCalloc((Nx) * (Nz), sizeof(double));   
   mesh.ezzd_s         = DoodzCalloc((Nx) * (Nz), sizeof(double));  
   mesh.exz_n          = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));   
-  mesh.sxz_n          = DoodzCalloc((Nx) * (Nz), sizeof(double));  
 
   mesh.u_adv          = DoodzCalloc(Nx * NzVx, sizeof(double));
   mesh.v_adv          = DoodzCalloc(NxVz * Nz, sizeof(double));
@@ -703,11 +707,16 @@ void GridFree(grid *mesh, params *model) {
 
 	// Stresses and strain rates
     DoodzFree(mesh->sxxd);
+    DoodzFree(mesh->sxxd_s);
     DoodzFree(mesh->szzd);
+    DoodzFree(mesh->szzd_s);
     DoodzFree(mesh->sxz);
+    DoodzFree(mesh->sxz_n);
     DoodzFree(mesh->exxd);
     DoodzFree(mesh->ezzd);
     DoodzFree(mesh->exz);
+    DoodzFree(mesh->wxz);
+    DoodzFree(mesh->wxz_n);
 
     // Previously multigrid structures
     DoodzFree(mesh->xg_coord);
@@ -764,7 +773,6 @@ void GridFree(grid *mesh, params *model) {
     DoodzFree(mesh->exxd_s);
     DoodzFree(mesh->ezzd_s);
     DoodzFree(mesh->exz_n);
-    DoodzFree(mesh->sxz_n);
 
     DoodzFree(mesh->u_adv);
     DoodzFree(mesh->v_adv);

@@ -547,6 +547,18 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
   if ( constant_mix== 1 && mix_avg==2) eta_cst  = exp(X0*log(materials->eta0[phase]) + (1-X0)*log(materials->eta0[phase_two]));
   if ( dislocation == 1 )              eta_pwl  = B_pwl * pow( Eii, 1.0/n_pwl - 1.0 ); 
 
+  // if (phase==2 && constant    == 1) {
+  //   double rho_test = EvaluateDensity( phase, T, P, X, model, materials );
+  //   // printf("%lf\n", rho_test*scaling->rho);
+  //   if (rho_test<2850./scaling->rho) {
+  //     eta_cst = 1e19/scaling->eta;
+  //     // B_pwl   = eta_pwl;
+  //     // C_pwl   = 1.0/2.0/B_pwl;
+  //     // n_pwl   = 1.0;
+  //     // exit(1);
+  //   }
+  // }
+
   if (gs == 1) {
     double Kg = materials->Kpzm[phase], Qg = materials->Qpzm[phase];
     Ag = Kg * exp(-Qg / R / T);
@@ -723,7 +735,7 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
         Vkin          = kkin*T*( exp(-Qkin/R/T) * (1.0 - exp(-dG/R/T)) ); // growth rate [m/s]
         tau_kin       = log(1-0.6666666) * pow(-2*Skin*Vkin, -1);
         rho0          = EvaluateDensity( phase, T0, P0, X, model, materials );
-        *rho          = 1.0/(tau_kin+dt) * (tau_kin*rho0 + dt*rho_eq);
+        *rho          = 1.0/(tau_kin + dt) * (tau_kin*rho0 + dt*rho_eq);
       }
       else {
         *rho          = rho_eq;
@@ -856,6 +868,7 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
     mesh->VE_n[c0]        = 0.0;
     mesh->sxxd[c0]        = 0.0;
     mesh->szzd[c0]        = 0.0;
+    mesh->sxz_n[c0]       = 0.0;
     mesh->eII_el[c0]      = 0.0;
     mesh->eII_pl[c0]      = 0.0;
     mesh->eII_pwl[c0]     = 0.0;
@@ -990,8 +1003,9 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
       }
 
       // Final stress update
-      mesh->sxxd[c0] = 2.0*mesh->eta_n[c0]*Exx;
-      mesh->szzd[c0] = 2.0*mesh->eta_n[c0]*Ezz;
+      mesh->sxxd[c0]  = 2.0*mesh->eta_n[c0]*Exx;
+      mesh->szzd[c0]  = 2.0*mesh->eta_n[c0]*Ezz;
+      mesh->sxz_n[c0] = 2.0*mesh->eta_n[c0]*Exz;
 
     }
   }
@@ -1004,6 +1018,8 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
     l  = mesh->ln[k1];
     c1 = k + l*Nx;
 
+    mesh->sxxd_s[c1]     = 0.0;
+    mesh->szzd_s[c1]     = 0.0;
     mesh->sxz[c1]        = 0.0;
     mesh->eta_phys_s[c1] = 0.0;
     mesh->eta_s[c1]      = 0.0;
@@ -1078,7 +1094,9 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
       }
 
       // Final stress update
-      mesh->sxz[c1] = 2.0*mesh->eta_s[c1]*Exz;
+      mesh->sxxd_s[c1] = 2.0*mesh->eta_s[c1]*Exx;
+      mesh->szzd_s[c1] = 2.0*mesh->eta_s[c1]*Ezz;
+      mesh->sxz[c1]    = 2.0*mesh->eta_s[c1]*Exz;
     }
   }
   // printf("Txz:\n");
@@ -1690,9 +1708,6 @@ void StrainRateComponents( grid* mesh, scale scaling, params* model ) {
       // Normal strain rates
       mesh->exxd[c0]  = dvxdx - 1.0/3.0*mesh->div_u[c0];
       mesh->ezzd[c0]  = dvzdz - 1.0/3.0*mesh->div_u[c0];
-
-      // printf("%2.2e %2.2e %2.2e\n", mesh->exxd[c0], mesh->ezzd[c0], mesh->div_u[c0]);
-
     }
   }
 
@@ -1714,10 +1729,7 @@ void StrainRateComponents( grid* mesh, scale scaling, params* model ) {
       const double dvxdz = (mesh->u_in[c1+Nx] - mesh->u_in[c1])/dz;
       const double dvzdx = (mesh->v_in[c2+1]  - mesh->v_in[c2])/dx;
       mesh->exz[c1] =  0.5 * (dvxdz + dvzdx);
-      // if (c1==Nx-1) {
-      //   printf("exz=%2.4e %2.4e %2.4e\n",mesh->exz[c1], dvxdz, dvzdx );
-      //   printf("VxW = %2.6e --- VxE = %2.6e\n", mesh->u_in[c1], mesh->u_in[c1+Nx]);
-      // }
+      mesh->wxz[c1] =  0.5 * (dvzdx - dvxdz);
     }
   }
 
@@ -1731,12 +1743,17 @@ void StrainRateComponents( grid* mesh, scale scaling, params* model ) {
     int c1 = k  + l*(Nx);
 
     mesh->exz_n[c0] = 0.0;
+    mesh->wxz_n[c0] = 0.0;
 
     if ( mesh->BCp.type[c0] != 30 && mesh->BCp.type[c0] != 31 ) {
       if (mesh->BCg.type[c1]      != 30 ) { mesh->exz_n[c0] += 0.25*mesh->exz[c1];      }
       if (mesh->BCg.type[c1+1]    != 30 ) { mesh->exz_n[c0] += 0.25*mesh->exz[c1+1];    }
       if (mesh->BCg.type[c1+Nx]   != 30 ) { mesh->exz_n[c0] += 0.25*mesh->exz[c1+Nx];   }
       if (mesh->BCg.type[c1+Nx+1] != 30 ) { mesh->exz_n[c0] += 0.25*mesh->exz[c1+Nx+1]; }
+      if (mesh->BCg.type[c1]      != 30 ) { mesh->wxz_n[c0] += 0.25*mesh->wxz[c1];      }
+      if (mesh->BCg.type[c1+1]    != 30 ) { mesh->wxz_n[c0] += 0.25*mesh->wxz[c1+1];    }
+      if (mesh->BCg.type[c1+Nx]   != 30 ) { mesh->wxz_n[c0] += 0.25*mesh->wxz[c1+Nx];   }
+      if (mesh->BCg.type[c1+Nx+1] != 30 ) { mesh->wxz_n[c0] += 0.25*mesh->wxz[c1+Nx+1]; }
     }
   }
 

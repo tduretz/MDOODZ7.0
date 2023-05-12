@@ -380,6 +380,7 @@ void NonNewtonianViscosityGridAniso( grid *mesh, mat_prop *materials, params *mo
     mesh->sxxd[c0]        = 0.0;
     mesh->szzd[c0]        = 0.0;
     mesh->sxz_n[c0]       = 0.0;
+    mesh->sxz_n[c0]       = 0.0;
     mesh->eII_el[c0]      = 0.0;
     mesh->eII_pl[c0]      = 0.0;
     mesh->eII_pwl[c0]     = 0.0;
@@ -409,7 +410,7 @@ void NonNewtonianViscosityGridAniso( grid *mesh, mat_prop *materials, params *mo
 
       //----------------------------------------------------------//
       if ( model->elastic==1 ) eta_e      = model->dt*mesh->mu_n[c0];
-      else                       eta_e      = 1.0; // set to arbitrary value to avoid division by 0.0
+      else                     eta_e      = 1.0; // set to arbitrary value to avoid division by 0.0
       //----------------------------------------------------------//
       // Anisotropy
       d1      = mesh->d1_n[c0];  // d1 = 2*lx^2*lz^2 
@@ -465,7 +466,7 @@ void NonNewtonianViscosityGridAniso( grid *mesh, mat_prop *materials, params *mo
               break;
           }
 
-        //   mesh->VE_n[c0]       += mesh->phase_perc_n[p][c0] * VEcoeff;
+          mesh->VE_n[c0]       += mesh->phase_perc_n[p][c0] * eta_vep/eta_e;
           mesh->eII_el[c0]     += mesh->phase_perc_n[p][c0] * eII_el;
           mesh->eII_pl[c0]     += mesh->phase_perc_n[p][c0] * eII_pl;
           mesh->eII_pwl[c0]    += mesh->phase_perc_n[p][c0] * eII_pwl;
@@ -503,7 +504,6 @@ void NonNewtonianViscosityGridAniso( grid *mesh, mat_prop *materials, params *mo
         mesh->eta_n[c0]            = 1.0/mesh->eta_n[c0];
         mesh->eta_phys_n[c0]       = 1.0/mesh->eta_phys_n[c0];
         mesh->aniso_factor_n[c0]   = 1.0/mesh->aniso_factor_n[c0];
-        // mesh->aniso_factor_n[c0] = 1.0/mesh->aniso_factor_n[c0];
 
         if (isinf (mesh->eta_phys_n[c0]) ) {
           printf("Inf: Problem on cell centers:\n");
@@ -539,8 +539,10 @@ void NonNewtonianViscosityGridAniso( grid *mesh, mat_prop *materials, params *mo
       // Normal stress
       const double Dxx = Exx*(1.0 - aniS_vep*d1) + Ezz*aniS_vep*d1 - 2.0*Exz*aniS_vep*d2;
       const double Dzz = Ezz*(1.0 - aniS_vep*d1) + Exx*aniS_vep*d1 + 2.0*Exz*aniS_vep*d2;
-      mesh->sxxd[c0] = 2.0 * mesh->eta_n[c0] * Dxx;
-      mesh->szzd[c0] = 2.0 * mesh->eta_n[c0] * Dzz;
+      const double Dxz = -Exx*aniS_vep*d2 + Ezz*aniS_vep*d2 + 2*Exz*(aniS_vep*(d1 - 0.5) + 0.5); 
+      mesh->sxxd[c0]  = 2.0 * mesh->eta_n[c0] * Dxx;
+      mesh->szzd[c0]  = 2.0 * mesh->eta_n[c0] * Dzz;
+      mesh->sxz_n[c0] = 2.0 * mesh->eta_n[c0] * Dxz;
     }
   }
 
@@ -552,9 +554,12 @@ void NonNewtonianViscosityGridAniso( grid *mesh, mat_prop *materials, params *mo
     l  = mesh->ln[k1];
     c1 = k + l*Nx;
 
+    mesh->sxxd_s[c1]           = 0.0;
+    mesh->szzd_s[c1]           = 0.0;
     mesh->sxz[c1]              = 0.0;
     mesh->eta_phys_s[c1]       = 0.0;
     mesh->eta_s[c1]            = 0.0;
+    mesh->VE_s[c1]             = 0.0;
 
     if (unsplit_diff_reac == 0) mesh->X_s[c1]        = 0.0;
 
@@ -616,7 +621,8 @@ void NonNewtonianViscosityGridAniso( grid *mesh, mat_prop *materials, params *mo
               mesh->eta_phys_s[c1]       += mesh->phase_perc_s[p][c1] * log(eta);
               break;
           }
-          if (unsplit_diff_reac == 0) mesh->X_s[c1]        += mesh->phase_perc_s[p][c1] * Xreac;
+          mesh->VE_s[c1]                            += mesh->phase_perc_s[p][c1] * eta_vep/eta_e;
+          if (unsplit_diff_reac == 0) mesh->X_s[c1] += mesh->phase_perc_s[p][c1] * Xreac;
         }
       }
       // HARMONIC AVERAGE
@@ -652,9 +658,13 @@ void NonNewtonianViscosityGridAniso( grid *mesh, mat_prop *materials, params *mo
 
       // Final stress update
       aniS_vep = 1.0 - 1.0 / mesh->aniso_factor_s[c1];
+      const double Dxx = Exx*(1.0 - aniS_vep*d1) + Ezz*aniS_vep*d1 - 2.0*Exz*aniS_vep*d2;
+      const double Dzz = Ezz*(1.0 - aniS_vep*d1) + Exx*aniS_vep*d1 + 2.0*Exz*aniS_vep*d2;
       const double Dxz  = -Exx*aniS_vep*d2 + Ezz*aniS_vep*d2 + 2*Exz*(aniS_vep*(d1 - 0.5) + 0.5); 
       // Shear stress
-      mesh->sxz[c1]  = 2.0 * mesh->eta_s[c1] * Dxz;
+      mesh->sxxd_s[c1] = 2.0*mesh->eta_s[c1]*Dxx;
+      mesh->szzd_s[c1] = 2.0*mesh->eta_s[c1]*Dzz;
+      mesh->sxz[c1]    = 2.0*mesh->eta_s[c1]*Dxz;
     }
   }
 
