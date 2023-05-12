@@ -329,10 +329,18 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             MinMaxArrayTag( mesh.eta_phys_n, input.scaling.eta, (mesh.Nx-1)*(mesh.Nz-1), "eta_phys_n", mesh.BCp.type );
             MinMaxArrayTag( mesh.rho_s, input.scaling.rho, (mesh.Nx-0)*(mesh.Nz-0), "rho_s     ", mesh.BCg.type );
             MinMaxArrayTag( mesh.rho_n, input.scaling.rho, (mesh.Nx-1)*(mesh.Nz-1), "rho_n     ", mesh.BCp.type );
-            MinMaxArrayTag( mesh.X_n,  1.0,   (mesh.Nx-1)*(mesh.Nz-1), "X_n         ", mesh.BCp.type );
-            MinMaxArrayTag( mesh.X0_n, 1.0,   (mesh.Nx-1)*(mesh.Nz-1), "X0_n         ", mesh.BCp.type );
-            MinMaxArrayTag( mesh.X0_s, 1.0,   (mesh.Nx-0)*(mesh.Nz-0), "X0_s         ", mesh.BCg.type );
+            MinMaxArrayTag( mesh.X_n,  1.0,   (mesh.Nx-1)*(mesh.Nz-1),              "X_n       ", mesh.BCp.type );
+            MinMaxArrayTag( mesh.X0_n, 1.0,   (mesh.Nx-1)*(mesh.Nz-1),              "X0_n      ", mesh.BCp.type );
+            MinMaxArrayTag( mesh.X0_s, 1.0,   (mesh.Nx-0)*(mesh.Nz-0),              "X0_s      ", mesh.BCg.type );
             MinMaxArray(particles.X, 1.0, particles.Nb_part, "X part" );
+            if ( input.model.anisotropy == 1 ) {
+                MinMaxArrayTag( mesh.FS_AR_n,  1.0,   (mesh.Nx-1)*(mesh.Nz-1),      "FS_AR_n   ", mesh.BCp.type );
+                MinMaxArrayTag( mesh.FS_AR_s,  1.0,   (mesh.Nx)*(mesh.Nz),          "FS_AR_s   ", mesh.BCg.type );
+                MinMaxArrayTag( mesh.angle_n,  180/M_PI,   (mesh.Nx-1)*(mesh.Nz-1), "angle_n   ", mesh.BCp.type );
+                MinMaxArrayTag( mesh.angle_s,  180/M_PI,   (mesh.Nx)*(mesh.Nz),     "angle_s   ", mesh.BCg.type );
+                MinMaxArray(particles.nx, 1.0, particles.Nb_part,                   "nx        " );
+                MinMaxArray(particles.nz, 1.0, particles.Nb_part,                   "nz        " );
+            }
             if (input.model.marker_noise == 1) MinMaxArrayTag( mesh.noise_s, 1.0, (mesh.Nx-0)*(mesh.Nz-0), "noise_s     ", mesh.BCg.type );
             if (input.model.marker_noise == 1) MinMaxArrayTag( mesh.noise_n, 1.0, (mesh.Nx-1)*(mesh.Nz-1), "noise_n     ", mesh.BCp.type );
             for (int p=0; p< input.model.Nb_phases; p++) {
@@ -506,15 +514,6 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         P2Mastah( &input.model, particles, particles.noise, &mesh, mesh.noise_s, mesh.BCg.type,  1, 0, interp, vert, input.model.interp_stencil);
         P2Mastah( &input.model, particles, particles.noise, &mesh, mesh.noise_n, mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil);
 
-        // Diffuse rheological contrasts
-        //            if (input.model.diffuse_X == 1) {
-        //                Interp_P2C ( particles, particles.X, &mesh, mesh.X0_n, mesh.xg_coord, mesh.zg_coord, 1, 0 );
-        //                Diffuse_X(&mesh, &input.model, &input.scaling);
-        //                Interp_Grid2P( particles, particles.X, &mesh, mesh.Xreac_n, mesh.xc_coord,  mesh.zc_coord,  mesh.Nx-1, mesh.Nz-1, mesh.BCp.type );
-        //                Interp_P2C ( particles, particles.X, &mesh, mesh.Xreac_n, mesh.xg_coord, mesh.zg_coord, 1, 0 );
-        //                Interp_P2N ( particles, particles.X, &mesh, mesh.Xreac_s, mesh.xg_coord, mesh.zg_coord, 1, 0, &input.model );
-        //            }
-
         // Interpolate Grain size
         P2Mastah( &input.model, particles, particles.d,     &mesh, mesh.d0_n , mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil);
         ArrayEqualArray(  mesh.d_n,  mesh.d0_n, Ncx*Ncz );
@@ -567,8 +566,8 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             MinMaxArrayTag( mesh.rho_s, input.scaling.rho, (mesh.Nx)*(mesh.Nz),     "rho_s     ", mesh.BCg.type );
             MinMaxArrayTag( mesh.rho_n, input.scaling.rho, (mesh.Nx-1)*(mesh.Nz-1), "rho_n     ", mesh.BCp.type );
             MinMaxArrayTag( mesh.rho0_n, input.scaling.rho, (mesh.Nx-1)*(mesh.Nz-1), "rho0_n    ", mesh.BCp.type );
-            MinMaxArrayTag( mesh.X0_s, 1.0, (mesh.Nx)*(mesh.Nz),     "X0_s     ", mesh.BCg.type );
-            MinMaxArrayTag( mesh.X0_n, 1.0, (mesh.Nx-1)*(mesh.Nz-1), "X0_n     ", mesh.BCp.type );
+            MinMaxArrayTag( mesh.X0_s, 1.0, (mesh.Nx)*(mesh.Nz),     "X0_s      ", mesh.BCg.type );
+            MinMaxArrayTag( mesh.X0_n, 1.0, (mesh.Nx-1)*(mesh.Nz-1), "X0_n      ", mesh.BCp.type );
 
             for (int p=0; p< input.model.Nb_phases; p++) {
                 printf("Phase number %d:\n", p);
@@ -577,10 +576,12 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             }
 
             if ( input.model.anisotropy == 1 ) {
-                MinMaxArrayTag( mesh.FS_AR_n,  1.0,   (mesh.Nx-1)*(mesh.Nz-1), "FS_AR_n", mesh.BCp.type );
-                MinMaxArrayTag( mesh.FS_AR_s,  1.0,   (mesh.Nx)*(mesh.Nz),     "FS_AR_s", mesh.BCg.type );
-                MinMaxArrayTag( mesh.angle_n,  180/M_PI,   (mesh.Nx-1)*(mesh.Nz-1), "angle_n", mesh.BCp.type );
-                MinMaxArrayTag( mesh.angle_s,  180/M_PI,   (mesh.Nx)*(mesh.Nz),     "angle_s", mesh.BCg.type );
+                MinMaxArrayTag( mesh.FS_AR_n,  1.0,   (mesh.Nx-1)*(mesh.Nz-1),      "FS_AR_n   ", mesh.BCp.type );
+                MinMaxArrayTag( mesh.FS_AR_s,  1.0,   (mesh.Nx)*(mesh.Nz),          "FS_AR_s   ", mesh.BCg.type );
+                MinMaxArrayTag( mesh.angle_n,  180/M_PI,   (mesh.Nx-1)*(mesh.Nz-1), "angle_n   ", mesh.BCp.type );
+                MinMaxArrayTag( mesh.angle_s,  180/M_PI,   (mesh.Nx)*(mesh.Nz),     "angle_s   ", mesh.BCg.type );
+                MinMaxArray(particles.nx, 1.0, particles.Nb_part,                   "nx        " );
+                MinMaxArray(particles.nz, 1.0, particles.Nb_part,                   "nz        " );
             }
         }
 

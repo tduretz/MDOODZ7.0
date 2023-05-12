@@ -681,7 +681,7 @@ void InitialiseDirectorVector (grid* mesh, markers* particles, params* model, ma
   double angle, norm;
   const double Earth_radius = 6370e3/scaling_L;
 
-#pragma omp parallel for shared( particles ) private( angle, norm )
+// #pragma omp parallel for shared( particles ) private( angle, norm )
   for (k=0; k<particles->Nb_part; k++) {
 
     if ( particles->phase[k] != -1 ) {

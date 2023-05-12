@@ -8,20 +8,21 @@ My = 1e6*365*24*3600
 function main()
 
     # Set the path to your files
-    path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/"
+    path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/NonLinearPureshearAnisotropic/"
+    # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/NR00/"
 
     # File numbers
     file_start = 0
-    file_step  = 50
-    file_end   = 100
+    file_step  = 10
+    file_end   = 50
 
     # Select field to visualise
-    field = :Phases
+    # field = :Phases
     # field = :Density
-    # field = :Viscosity
+    # field = :Viscosity 
     # field = :PlasticStrainrate
     # field = :Stress
-    # field = :StrainRate
+    field = :StrainRate
     # field = :Pressure
     # field = :Temperature
     # field = :Velocity_x
@@ -29,12 +30,16 @@ function main()
     # field = :GrainSize
 
     # Switches
-    printfig    = true
-    ph_contours = true
-    T_contours  = true
+    printfig    = false  # print figures to disk
+    ph_contours = true   # add phase contours
+    T_contours  = true   # add temperature contours
+    fabric      = true   # add fabric quiver (normal to director)
+    α_heatmap   = 0.85   # transparency of heatmap 
+    nap         = 0.3    # pause for animation 
 
-    # Scalig
-    Lc = 1000
+    # Scaling
+    Lc = 1
+    tc = 1.0
 
     # Time loop
     for istep=file_start:file_step:file_end
@@ -52,10 +57,10 @@ function main()
         ncx_hr = length(xc_hr)
         ncz_hr = length(zc_hr)
 
-        t   = model[1]
-        tMy = round(t/My, digits=2)
-        nvx = Int(model[4])
-        nvz = Int(model[5])
+        t      = model[1]
+        tMy    = round(t/tc, digits=6)
+        nvx    = Int(model[4])
+        nvz    = Int(model[5])
         ncx, ncz = nvx-1, nvz-1
         xmin, xmax = xv[1], xv[end]
         zmin, zmax = zv[1], zv[end]
@@ -80,9 +85,10 @@ function main()
         ε̇xz   = Float64.(reshape(ExtractData( filename, "/Vertices/exz"), nvx, nvz))
         τII   = sqrt.( 0.5*(2*τxx.^2 .+ 0.5*(τxz[1:end-1,1:end-1].^2 .+ τxz[2:end,1:end-1].^2 .+ τxz[1:end-1,2:end].^2 .+ τxz[2:end,2:end].^2 ) ) ); τII[mask_air] .= NaN
         ε̇II   = sqrt.( 0.5*(2*ε̇xx.^2 .+ 0.5*(ε̇xz[1:end-1,1:end-1].^2 .+ ε̇xz[2:end,1:end-1].^2 .+ ε̇xz[1:end-1,2:end].^2 .+ ε̇xz[2:end,2:end].^2 ) ) ); ε̇II[mask_air] .= NaN
-        Vxc = 0.5 .* (Vx[1:end-1,2:end-1] .+ Vx[2:end-0,2:end-1])
-        Vzc = 0.5 .* (Vz[2:end-1,1:end-1] .+ Vz[2:end-1,2:end-0])
-
+        Nx    = Float64.(reshape(ExtractData( filename, "/Centers/nx"), ncx, ncz)); 
+        Nz    = Float64.(reshape(ExtractData( filename, "/Centers/nz"), ncx, ncz));
+        Vxc   = 0.5 .* (Vx[1:end-1,2:end-1] .+ Vx[2:end-0,2:end-1])
+        Vzc   = 0.5 .* (Vz[2:end-1,1:end-1] .+ Vz[2:end-1,2:end-0])
 
         #####################################
 
@@ -104,13 +110,16 @@ function main()
 
         #####################################
 
-        f = Figure(resolution = ( Lx/Lz*1000, 1000), fontsize=25)
+        f = Figure(resolution = (1000, 1000), fontsize=25)
 
         if field==:Phases
-            ax1 = Axis(f[1, 1], title = L"Phases at $t$ = %$(tMy) Ma", xlabel = "x [km]", ylabel = "y [km]")
+            ax1 = Axis(f[1, 1], title = L"Phases at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
             hm = heatmap!(ax1, xc_hr./Lc, zc_hr./Lc, ph_hr, colormap = phase_colors)
             if T_contours 
                 contour!(ax1, xc./Lc, zc./Lc, T, levels=0:200:1400, linewidth = 4, color=:white )  
+            end
+            if fabric 
+                arrows!(ax1, xc, zc, Nz, Nx, arrowsize = 0, lengthscale=0.02)
             end            
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
             GLMakie.Colorbar(f[1, 2], hm, label = "Phases", width = 20, labelsize = 25, ticklabelsize = 14 )
@@ -118,27 +127,53 @@ function main()
             if printfig Print2Disk( f, path, string(field), istep) end
         end
 
-        if field==:Stress
-            ax1 = Axis(f[1, 1], title = L"$\tau_\textrm{II}$ at $t$ = %$(tMy) Ma", xlabel = "x [km]", ylabel = "y [km]")
-            hm = heatmap!(ax1, xc./Lc, zc./Lc, τII, colormap = (:turbo,0.85))
+        if field==:Viscosity
+            ax1 = Axis(f[1, 1], title = L"$\eta$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
+            hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(ηc), colormap = (:turbo, α_heatmap))
             if T_contours 
                 contour!(ax1, xc./Lc, zc./Lc, T, levels=0:200:1400, linewidth = 4, color=:white )  
-            end            
+            end 
+            if ph_contours 
+                contour!(ax1, xc_hr./Lc, zc_hr./Lc, group_phases, levels=-1:1:maximum(group_phases), linewidth = 4, color=:white )  
+            end
+            if fabric 
+                arrows!(ax1, xc, zc, Nz, Nx, arrowsize = 0, lengthscale=0.02)
+            end           
+            colsize!(f.layout, 1, Aspect(1, Lx/Lz))
+            GLMakie.Colorbar(f[1, 2], hm, label = L"$\eta$ [Pa.s]", width = 20, labelsize = 25, ticklabelsize = 14 )
+            GLMakie.colgap!(f.layout, 20)
+            if printfig Print2Disk( f, path, string(field), istep) end
+        end
+
+        if field==:Stress
+            ax1 = Axis(f[1, 1], title = L"$\tau_\textrm{II}$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
+            hm = heatmap!(ax1, xc./Lc, zc./Lc, τII, colormap = (:turbo, α_heatmap)) 
+            if T_contours 
+                contour!(ax1, xc./Lc, zc./Lc, T, levels=0:200:1400, linewidth = 4, color=:white )  
+            end  
+            if ph_contours 
+                contour!(ax1, xc_hr./Lc, zc_hr./Lc, group_phases, levels=-1:1:maximum(group_phases), linewidth = 4, color=:white )  
+            end
+            if fabric 
+                arrows!(ax1, xc, zc, Nz, Nx, arrowsize = 0, lengthscale=0.02)
+            end          
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
             GLMakie.Colorbar(f[1, 2], hm, label = L"$\tau_\textrm{II}$ [Pa]", width = 20, labelsize = 25, ticklabelsize = 14 )
             GLMakie.colgap!(f.layout, 20)
             if printfig Print2Disk( f, path, string(field), istep) end
         end
 
-
         if field==:StrainRate
-            ax1 = Axis(f[1, 1], title = L"$\dot{\varepsilon}_\textrm{II}$ at $t$ = %$(tMy) Ma", xlabel = "x [km]", ylabel = "y [km]")
-            hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(ε̇II), colormap = (:turbo, 0.85))
+            ax1 = Axis(f[1, 1], title = L"$\dot{\varepsilon}_\textrm{II}$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
+            hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(ε̇II), colormap = (:turbo, α_heatmap))
             if T_contours 
                 contour!(ax1, xc./Lc, zc./Lc, T, levels=0:200:1400, linewidth = 4, color=:white )  
             end
             if ph_contours 
                 contour!(ax1, xc_hr./Lc, zc_hr./Lc, group_phases, levels=-1:1:maximum(group_phases), linewidth = 4, color=:white )  
+            end
+            if fabric 
+                arrows!(ax1, xc, zc, Nz, Nx, arrowsize = 0, lengthscale=0.02)
             end
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
             GLMakie.Colorbar(f[1, 2], hm, label =  L"$\dot{\varepsilon}_\textrm{II}$ [s$^{-1}$]", width = 20, labelsize = 25, ticklabelsize = 14 )
@@ -147,13 +182,16 @@ function main()
         end
 
         if field==:PlasticStrainrate
-            ax1 = Axis(f[1, 1], title = L"$\dot{\varepsilon}_\textrm{II}^\textrm{pl}$ at $t$ = %$(tMy) Ma", xlabel = "x [km]", ylabel = "y [km]")
-            hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(ε̇pl), colormap = (:turbo, 0.85))
+            ax1 = Axis(f[1, 1], title = L"$\dot{\varepsilon}_\textrm{II}^\textrm{pl}$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
+            hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(ε̇pl), colormap = (:turbo, α_heatmap))
             if T_contours 
                 contour!(ax1, xc./Lc, zc./Lc, T, levels=0:200:1400, linewidth = 4, color=:white )  
             end
             if ph_contours 
                 contour!(ax1, xc_hr./Lc, zc_hr./Lc, group_phases, levels=-1:1:maximum(group_phases), linewidth = 4, color=:white )  
+            end
+            if fabric 
+                arrows!(ax1, xc, zc, Nz, Nx, arrowsize = 0, lengthscale=0.02)
             end
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
             GLMakie.Colorbar(f[1, 2], hm, label = L"$\dot{\varepsilon}_\textrm{II}^\textrm{pl}$ [s$^{-1}$]", width = 20, labelsize = 25, ticklabelsize = 14 )
@@ -162,13 +200,16 @@ function main()
         end
 
         if field==:GrainSize
-            ax1 = Axis(f[1, 1], title = L"$d$ at $t$ = %$(tMy) Ma", xlabel = "x [km]", ylabel = "y [km]")
-            hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(d.*1e6), colormap = (:turbo, 0.85), colorrange=(1, 3))
+            ax1 = Axis(f[1, 1], title = L"$d$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
+            hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(d.*1e6), colormap = (:turbo, α_heatmap), colorrange=(1, 3))
             if T_contours 
                 contour!(ax1, xc./Lc, zc./Lc, T, levels=0:200:1400, linewidth = 4, color=:white )  
             end
             if ph_contours 
                 contour!(ax1, xc_hr./Lc, zc_hr./Lc, group_phases, levels=-1:1:maximum(group_phases), linewidth = 4, color=:white )  
+            end
+            if fabric 
+                arrows!(ax1, xc, zc, Nz, Nx, arrowsize = 0, lengthscale=0.02)
             end
             xminz, xmaxz = -0.4, 0.4
             zminz, zmaxz = -0.17, 0.17
@@ -184,6 +225,7 @@ function main()
 
         DataInspector(f)
         display(f)
+        sleep(nap)
         
     end
 

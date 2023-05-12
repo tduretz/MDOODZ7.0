@@ -559,6 +559,9 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
         Cnz = DoodzMalloc( sizeof(float)*(model.Nx-1)*(model.Nz-1));
         DoubleToFloat( nz, Cnz, (model.Nx-1)*(model.Nz-1) );
 
+        MinMaxArray( nx, 1.0, (model.Nx-1)*(model.Nz-1),   "nx" );
+        MinMaxArray( nz, 1.0, (model.Nx-1)*(model.Nz-1),   "nz" );
+
         // anisotropy factor on centroids
         Cani_fac = DoodzMalloc( sizeof(float)*(model.Nx-1)*(model.Nz-1));
         DoubleToFloat( mesh->aniso_factor_n, Cani_fac, (model.Nx-1)*(model.Nz-1) );
