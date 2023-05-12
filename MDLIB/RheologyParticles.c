@@ -1612,7 +1612,7 @@ firstprivate( model )
             double *wxzm   = DoodzCalloc(particles->Nb_part, sizeof(DoodzFP));
             P2Mastah( model, *particles, wxzm,     mesh, mesh->wxz,   mesh->BCg.type,  1, 0, interp, vert, model->interp_stencil);
 
-            #pragma omp parallel for shared( particles, mesh ) firstprivate( dt, model ) private( k )
+#pragma omp parallel for shared( particles, wxzm ) firstprivate( dt, model ) private( k, angle, txx, tzz, txz )
             for ( k=0; k<particles->Nb_part; k++ ) {
                 if (particles->phase[k] != -1) {
                     double txx = particles->sxxd[k];
