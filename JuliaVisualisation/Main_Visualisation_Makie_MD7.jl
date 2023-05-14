@@ -11,19 +11,20 @@ function main()
     path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/NonLinearPureshearAnisotropic/"
     # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/NR00/"
     path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/"
+    path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/1_NR07/"
 
     # File numbers
-    file_start = 50
+    file_start = 3500
     file_step  = 10
-    file_end   = 50
+    file_end   = 3500
 
     # Select field to visualise
-    # field = :Phases
+    field = :Phases
     # field = :Density
     # field = :Viscosity 
     # field = :PlasticStrainrate
     # field = :Stress
-    field = :StrainRate
+    # field = :StrainRate
     # field = :Pressure
     # field = :Temperature
     # field = :Velocity_x
@@ -34,13 +35,13 @@ function main()
     printfig    = false  # print figures to disk
     ph_contours = false  # add phase contours
     T_contours  = true  # add temperature contours
-    fabric      = true  # add fabric quiver (normal to director)
+    fabric      = false  # add fabric quiver (normal to director)
     α_heatmap   = 0.85   # transparency of heatmap 
     nap         = 0.3    # pause for animation 
 
     # Scaling
     Lc = 1000.
-    tc = 1.0
+    tc = My
 
     # Time loop
     for istep=file_start:file_step:file_end
@@ -97,12 +98,12 @@ function main()
 
         # Color palette for phase map
         cmap    = zeros(RGB{Float64}, 7)
-        cmap[1] = RGBA{Float64}(  244/255,  218/255, 205/255, 1.)  
-        cmap[2] = RGBA{Float64}(  217/255,  99/255, 97/255, 1.)  
-        cmap[3] = RGBA{Float64}(117/255,164/255, 148/255, 1.) 
+        cmap[1] = RGBA{Float64}(244/255, 218/255, 205/255, 1.)  
+        cmap[2] = RGBA{Float64}(217/255, 099/255, 097/255, 1.)  
+        cmap[3] = RGBA{Float64}(117/255, 164/255, 148/255, 1.) 
         cmap[4] = RGBA{Float64}(223/255, 233/255, 219/255, 1.) 
-        cmap[5] = RGBA{Float64}(217/255,  99/255, 97/255, 1.) 
-        cmap[6] = RGBA{Float64}(244/255,  218/255, 205/255, 1.) 
+        cmap[5] = RGBA{Float64}(217/255, 099/255, 097/255, 1.) 
+        cmap[6] = RGBA{Float64}(244/255, 218/255, 205/255, 1.) 
         cmap[7] = RGBA{Float64}(223/255, 233/255, 219/255, 1.) 
         phase_colors = cgrad(cmap, length(cmap), categorical=true, rev=false)
 
@@ -226,7 +227,7 @@ function main()
             if printfig Print2Disk( f, path, string(field), istep) end
         end
 
-        DataInspector(f)
+        # DataInspector(f)
         display(f)
         sleep(nap)
         
