@@ -30,6 +30,9 @@ Some useful switches:
     printfig    = true             # <-------------- will print figures to disk as .png
     ph_contours = true             # <-------------- will overlay phase contours on top of heatmap
     T_contours  = true             # <-------------- will overlay temperature contours on top of heatmap
+    fabric      = true             # <-------------- will add fabric quiver (normal to director vector)
+    α_heatmap   = 0.85             # <-------------- transparency of heatmap 
+    nap         = 0.3              # <-------------- pause for animation 
 ```
 
 ... customize and contribute!
