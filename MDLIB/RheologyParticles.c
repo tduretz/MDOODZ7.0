@@ -1633,16 +1633,16 @@ firstprivate( model )
             }      
             DoodzFree(wxzm);
         }
-
-        DoodzFree(dudx_n);
-        DoodzFree(dvdz_n);
-        DoodzFree(dvdx_s);
-        DoodzFree(dudz_s);
-        DoodzFree(dudz_n);
-        DoodzFree(dvdx_n);
-        DoodzFree(dvdz_s);
-        DoodzFree(dudx_s);
     }
+
+    DoodzFree(dudx_n);
+    DoodzFree(dvdz_n);
+    DoodzFree(dvdx_s);
+    DoodzFree(dudz_s);
+    DoodzFree(dudz_n);
+    DoodzFree(dvdx_n);
+    DoodzFree(dvdz_s);
+    DoodzFree(dudx_s);
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
