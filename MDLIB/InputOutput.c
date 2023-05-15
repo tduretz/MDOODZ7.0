@@ -1240,13 +1240,41 @@ Input ReadInputFile( char *fileName ) {
         materials.drho[k] = ReadMatProps( fin, "drho",k,      0.0 )  / (scaling.rho);
         materials.T0[k]   = (zeroC) / (scaling.T); 
         materials.P0[k]   = 1e5 / (scaling.S);
+        // Read plasticity switches
+        materials.plast[k]    = (int)ReadMatProps( fin, "plast",    k,    1.0   );     // 0: No plasticity --- 1: Yes 
+        materials.yield[k]    = (int)ReadMatProps( fin, "yield",    k,    1.0   );     // 1: Drucker-Prager
         // Read plasticity parameters
-        materials.plast[k]= (int)ReadMatProps( fin, "plast",k,     1.0 );
-        materials.C[k]    = ReadMatProps( fin, "C",    k,   1.0e7 )  / scaling.S;
-        materials.phi[k]  = ReadMatProps( fin, "phi",  k,    30.0 )  * M_PI/ 180.0;
-        materials.psi[k]  = ReadMatProps( fin, "psi",  k,     0.0 )  * M_PI/ 180.0;
+        materials.sig_tens[k] = ReadMatProps( fin, "sig_tens", k,  1.0e7 )/ scaling.S; // Tension stress for hyperbolic Drucker-Prager
+        materials.sig1[k]     = ReadMatProps( fin, "sig1",     k,  1.0e7 )/ scaling.S; // Transition stress to 0 dilatancy for hyperbolic Drucker-Prager
+        materials.dsig1[k]    = ReadMatProps( fin, "dsig1",    k,  1.0e7 )/ scaling.S; // Width of transition for hyperbolic Drucker-Prager
+        materials.C[k]        = ReadMatProps( fin, "C",        k,  1.0e7 )  / scaling.S;
+        materials.phi[k]      = ReadMatProps( fin, "phi",      k,   30.0 )  * M_PI/ 180.0;
+        materials.psi[k]      = ReadMatProps( fin, "psi",      k,    0.0 )  * M_PI/ 180.0;
         if (materials.psi[k]>0.0 && model.compressible==0) { printf("Set compressible=1 to activate dilation\n"); exit(1); }
         materials.Slim[k] = ReadMatProps( fin, "Slim" ,k,  1.0e90 )  / scaling.S;
+        // Viscoplasticity
+        materials.n_vp[k]      = ReadMatProps( fin, "n_vp",   k,       1.0 ) ;
+        materials.eta_vp[k]    = ReadMatProps( fin, "eta_vp", k,       0.0 ) / scaling.S / pow(scaling.t, 1.0/materials.n_vp[k]);
+        if ( materials.n_vp[k]>1.0001 ) {
+            printf("Power-law viscoplasticity is not implemented in MD7, please complain!\n");
+            exit(1);
+        }
+        // Strain softening
+        materials.coh_soft[k]   = (int)ReadMatProps( fin, "coh_soft",   k,    0.0   );
+        materials.phi_soft[k]   = (int)ReadMatProps( fin, "phi_soft",   k,    0.0   );
+        materials.psi_soft[k]   = (int)ReadMatProps( fin, "psi_soft",   k,    0.0   );
+        if (materials.psi_soft[k]>0 && model.compressible==0) { printf("Set compressible=1 to activate dilation softening\n"); exit(1); }
+        materials.C_end[k]     = ReadMatProps( fin, "Ce",     k,    materials.C[k]*scaling.S    ) / scaling.S;
+        materials.phi_end[k]   = ReadMatProps( fin, "phie",   k,    materials.phi[k]*180.0/M_PI  ) * M_PI / 180.0;
+        materials.psi_end[k]   = ReadMatProps( fin, "psie",   k,    materials.psi[k]*180.0/M_PI  ) * M_PI / 180.0;
+        double eps_coh = 1.0 / scaling.S;
+        double eps_phi = 0.1  * M_PI / 180.0;
+        double eps_psi = 0.1  * M_PI / 180.0;
+        if ( materials.coh_soft[k] == 1 && fabs( materials.C_end[k]   - materials.C[k]  ) < eps_coh ) { printf("Please set a difference in cohesion, if not set coh_soft of phase %d to 0.0\n", k); exit(122); };
+        if ( materials.phi_soft[k] == 1 && fabs( materials.phi_end[k] - materials.phi[k]) < eps_phi ) { printf("Please set a difference in friction angle, if not set phi_soft of phase %d to 0.0\n", k); exit(122); };
+        if ( materials.psi_soft[k] == 1 && fabs( materials.psi_end[k] - materials.psi[k]) < eps_psi ) { printf("Please set a difference in dilation angle, if not set psi_soft of phase %d to 0.0\n", k); exit(122); };
+        materials.pls_start[k] = ReadMatProps( fin, "plss",   k,    1.0    );
+        materials.pls_end[k]   = ReadMatProps( fin, "plse",   k,    2.0    );
         // Read flow law parameters
         materials.cstv[k]     = ReadMatProps( fin,     "cstv", k,    0.0  );
         materials.pwlv[k]     = ReadMatProps( fin,     "pwlv", k,    0.0  );
@@ -1263,23 +1291,6 @@ Input ReadInputFile( char *fileName ) {
         materials.gs[k]       = ReadMatProps( fin,       "gs", k,    0.0  );
         materials.gs_ref[k]   = ReadMatProps( fin,   "gs_ref", k, 2.0e-3  ) / scaling.L;
         materials.kin[k]      = ReadMatProps( fin,      "kin", k,    0.0  );
-        // Strain softening
-        materials.coh_soft[k]   = (int)ReadMatProps( fin, "coh_soft",   k,    0.0   );
-        materials.phi_soft[k]   = (int)ReadMatProps( fin, "phi_soft",   k,    0.0   );
-        materials.psi_soft[k]   = (int)ReadMatProps( fin, "psi_soft",   k,    0.0   );
-        if (materials.psi_soft[k]>0 && model.compressible==0) { printf("Set compressible=1 to activate dilation softening\n"); exit(1); }
-        materials.is_tensile[k] = (int)ReadMatProps( fin, "is_tensile", k,    0.0   );
-        materials.C_end[k]     = ReadMatProps( fin, "Ce",     k,    materials.C[k]*scaling.S    ) / scaling.S;
-        materials.phi_end[k]   = ReadMatProps( fin, "phie",   k,    materials.phi[k]*180.0/M_PI  ) * M_PI / 180.0;
-        materials.psi_end[k]   = ReadMatProps( fin, "psie",   k,    materials.psi[k]*180.0/M_PI  ) * M_PI / 180.0;
-        double eps_coh = 1.0 / scaling.S;
-        double eps_phi = 0.1  * M_PI / 180.0;
-        double eps_psi = 0.1  * M_PI / 180.0;
-        if ( materials.coh_soft[k] == 1 && fabs( materials.C_end[k]   - materials.C[k]  ) < eps_coh ) { printf("Please set a difference in cohesion, if not set coh_soft of phase %d to 0.0\n", k); exit(122); };
-        if ( materials.phi_soft[k] == 1 && fabs( materials.phi_end[k] - materials.phi[k]) < eps_phi ) { printf("Please set a difference in friction angle, if not set phi_soft of phase %d to 0.0\n", k); exit(122); };
-        if ( materials.psi_soft[k] == 1 && fabs( materials.psi_end[k] - materials.psi[k]) < eps_psi ) { printf("Please set a difference in dilation angle, if not set psi_soft of phase %d to 0.0\n", k); exit(122); };
-        materials.pls_start[k] = ReadMatProps( fin, "plss",   k,    1.0    );
-        materials.pls_end[k]   = ReadMatProps( fin, "plse",   k,    2.0    );
         // Reaction stuff
         materials.reac_soft[k]  = (int)ReadMatProps( fin, "reac_soft",   k,    0.0  );
         materials.reac_phase[k] = (int)ReadMatProps( fin, "reac_phase",   k,    0.0  );
@@ -1290,21 +1301,15 @@ Input ReadInputFile( char *fileName ) {
         // Density models
         materials.density_model[k]     = (int)ReadMatProps( fin, "density_model",     k,    3  );
         materials.phase_diagram[k]     = (int)ReadMatProps( fin, "phase_diagram",     k,   -1  );
-        // Viscoplasticity
-        materials.n_vp[k]      = ReadMatProps( fin, "n_vp",   k,       1.0 ) ;
-        materials.eta_vp[k]    = ReadMatProps( fin, "eta_vp", k,       0.0 ) / scaling.S / pow(scaling.t, 1.0/materials.n_vp[k]);
-        if ( materials.is_tensile[k]==1 && materials.n_vp[k]>1.0001 ) {
-            printf("Power-law visco-plasticity not yet compatible with tensile yielding\n");
-            exit(1);
-        }
         // Diffused rheological contrasts
         materials.phase_mix[k]  = (int)ReadMatProps( fin, "phase_mix",k,          0.0  );
         materials.phase_two[k]  = (int)ReadMatProps( fin, "phase_mix",k,    (double)k  );
         // Anisotropy
         materials.aniso_angle[k]    =  ReadMatProps( fin, "aniso_angle",  k,   90.0  )  * M_PI/ 180.0;
-        materials.ani_fac_v[k]      =  ReadMatProps( fin, "ani_fac_v",    k,    1.0  );        // viscous anisotropy strength
-        materials.ani_fac_e[k]      =  ReadMatProps( fin, "ani_fac_e",    k,    1.0  );        // elastic anisotropy strength
-        materials.ani_fac_p[k]      =  ReadMatProps( fin, "ani_fac_p",    k,    1.0  );        // plastic anisotropy strength
+        materials.aniso_factor[k]   =  ReadMatProps( fin, "aniso_factor",    k,    1.0  ); 
+        // materials.ani_fac_v[k]      =  ReadMatProps( fin, "ani_fac_v",    k,    1.0  );        // viscous anisotropy strength
+        // materials.ani_fac_e[k]      =  ReadMatProps( fin, "ani_fac_e",    k,    1.0  );        // elastic anisotropy strength
+        // materials.ani_fac_p[k]      =  ReadMatProps( fin, "ani_fac_p",    k,    1.0  );        // plastic anisotropy strength
         materials.ani_fac_max[k]    =  ReadMatProps( fin, "ani_fac_max",  k, 1000.0  );        // maximum anisotropy strength
         materials.ani_fstrain[k]    =  (int)ReadMatProps( fin, "ani_fstrain",    k,    0.0  ); // strain dependent anisotropy per phase
         materials.axx[k]            =  ReadMatProps( fin, "axx",    k,    1.0  );              // plastic directional factor xx

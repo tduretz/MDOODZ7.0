@@ -479,11 +479,9 @@ void CellFlagging( grid *mesh, params model, surface topo, scale scaling ) {
     int nzvx = nz+1;
     int i, j, c1, c2;
     double h;
-    //int PVtag0[(ncx+2)*(ncz+2)], PVtag[(ncx+2)*(ncz+2)];
     int *PVtag0, *PVtag;
     PVtag0 = DoodzCalloc( (ncx+2)*(ncz+2), sizeof(int) );
     PVtag  = DoodzCalloc( (ncx+2)*(ncz+2), sizeof(int) );
-    
     
     Initialise1DArrayChar(   mesh->BCp.type, ncx*ncz, -1  );
     Initialise1DArrayChar(   mesh->BCt.type,    ncx*ncz, -1  );
@@ -544,32 +542,31 @@ void CellFlagging( grid *mesh, params model, surface topo, scale scaling ) {
         }
     }
     
+    ArrayEqualArrayI(PVtag0, PVtag, (ncx+2)*(ncz+2));
+    
     for( i=1; i<ncx+1; i++ ) {
         for( j=0; j<ncz+2; j++ ) {
             
             c1 = i + j*(ncx+2);
             
-            if ( PVtag[c1]==-1 && (PVtag[c1-1]==60 && PVtag[c1+1]==60) ) {
+            if ( PVtag0[c1]==-1 && (PVtag0[c1-1]==60 && PVtag0[c1+1]==60) ) {
                 PVtag[c1] = 60;
             }
             
             // Correction at Lausanne Gare - this is important
-            // It corrects for large slopes, Stoke matrix would become asymmetric otherwise
-            if ( PVtag[c1]==30 && PVtag[c1+1]==-1 && (PVtag[c1-1]==30 || PVtag[c1-1]==60 ) ) {
+            // It corrects for large slopes, Stokes matrix would become asymmetric otherwise
+            if ( PVtag0[c1]==30 && PVtag0[c1+1]==-1 && (PVtag0[c1-1]==30 || PVtag0[c1-1]==60 ) ) {
                 PVtag[c1] = 60;
             }
             
-            if ( PVtag[c1]==30 && PVtag[c1-1]==-1 && (PVtag[c1+1]==30 || PVtag[c1+1]==60) ) {
+            if ( PVtag0[c1]==30 && PVtag0[c1-1]==-1 && (PVtag0[c1+1]==30 || PVtag0[c1+1]==60) ) {
                 PVtag[c1] = 60;
             }
             
             // Additional fix on 28/02/19
-            if ( PVtag[c1]==30 && PVtag[c1-1]==-1 && PVtag[c1+1]==-1) {
+            if ( PVtag0[c1]==30 && PVtag0[c1-1]==-1 && PVtag0[c1+1]==-1) {
                 PVtag[c1] = 60;
             }
-            
-            
-            
         }
     }
     

@@ -37,7 +37,7 @@ double SetSurfaceZCoord(MdoodzInput *instance, double x_coord) {
   const double basin_width = 30.0e3 / instance->scaling.L;
   const double h_pert      = instance->model.user3 / instance->scaling.L;
   const double x           = x_coord - instance->model.user4 / instance->scaling.L;
-  return TopoLevel + 0*h_pert * exp( - (x*x) / (2.0*basin_width*basin_width)   );
+  return TopoLevel + h_pert * exp( - (x*x) / (2.0*basin_width*basin_width)   );
 }
 
 double SetNoise(MdoodzInput *instance, Coordinates coordinates, int phase) {
@@ -137,7 +137,17 @@ void AddCrazyConductivity(MdoodzInput *input) {
   input->crazyConductivity               = crazyConductivity;
 }
 
-int main() {
+int main(int nargs, char *args[]) {
+  // Input file name
+  char *input_file;
+  if ( nargs < 2 ) {
+    asprintf(&input_file, "NeckingReview.txt"); // Default
+  }
+  else {
+    printf("dodo %s\n", args[1]);
+    asprintf(&input_file, "%s", args[1]);     // Custom
+  }
+  printf("Running MDoodz7.0 using %s\n", input_file);
   srand(69); // Force random generator seed for reproducibility 
   MdoodzSetup setup = {
           .BuildInitialTopography = &(BuildInitialTopography_ff){
@@ -160,5 +170,6 @@ int main() {
           .MutateInput = AddCrazyConductivity,
 
   };
-  RunMDOODZ("NeckingReview.txt", &setup);
+  RunMDOODZ(input_file, &setup);
+  free(input_file);
 }

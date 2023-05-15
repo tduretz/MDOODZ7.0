@@ -65,7 +65,8 @@ typedef struct {
   int     Nx, Nz, NN, NC;
   double  dx, dz;
   double *roger_x, *roger_z, *div_u, *div_u_s, *div_u_el, *div_u_pl, *div_u_r,
-          *u_in, *v_in, *p_in, *p_corr, *sxxd, *szzd, *sxz, *exxd, *ezzd, *exz,
+          *u_in, *v_in, *p_in, *p_corr, *sxxd, *sxxd_s, *szzd, *szzd_s, *sxz, *sxz_n, 
+          *exxd, *ezzd, *exz, *wxz, *wxz_n,
           *VE_s, *VE_n, *sxxd0, *szzd0, *sxz0, *mu_s, *mu_n, *u_adv, *v_adv,
           *eta_phys_n, *kx, *kz, *Cv, *Qr, *eta_phys_s, *u_start, *v_start,
           *p_start, *divth0_n;
@@ -93,7 +94,7 @@ typedef struct {
   int     *kvx, *lvx, *kvz, *lvz, *kp, *lp, *kn, *ln;
   double **phase_perc_n, **phase_perc_s, **phase_eta_n,
           **phase_eta_s;// TODO: refactor to _c and _v
-  double *sxxd0_s, *szzd0_s, *sxz0_n, *exxd_s, *ezzd_s, *exz_n, *sxz_n;   
+  double *sxxd0_s, *szzd0_s, *sxz0_n, *exxd_s, *ezzd_s, *exz_n;   
   double *rho0_n;
   double  Uthermal, Uelastic, Work, 
           P_mean, T_mean,
@@ -119,7 +120,6 @@ typedef struct {
   double *phi0_s, *d0_s, *T_s, *P_s;
   // For anisotropy
   double *FS_AR_n, *FS_AR_s, *aniso_factor_n, *aniso_factor_s;
-  double *aniso_factor_v_n, *aniso_factor_v_s, *aniso_factor_e_n, *aniso_factor_e_s, *aniso_factor_p_n, *aniso_factor_p_s;
   double *d1_n, *d2_n, *d1_s, *d2_s, *angle_n, *angle_s;
 
   double *cell_min_z, *cell_max_z, *vert_min_z, *vert_max_z;
@@ -553,12 +553,12 @@ void            CheckSym(DoodzFP *, double, int, int, char *, int, int);
 void            ChemicalDirectSolve(grid *, params, markers *, mat_prop *, double, scale);
 void            InitialiseGrainSizeParticles(markers *, mat_prop *);
 
-void            DerivativesOnTheFly_n( double*, double*, double*, double*, double*, double*, double*, double*, double*, double*, double*, double*, double*, int, double, double, double, double, double, double, double, double, double, double, double, grid*, mat_prop*, params*, scale* );
-void            DerivativesOnTheFly_s( double*, double*, double*, double*, double*, double*, double*, double*, int, double, double, double, double, double, double, double, double, double, double, double, grid*, mat_prop*, params*, scale* );
+void            DerivativesOnTheFly_n( double*, double*, double*, double*, double*, double*, double*, double*, double*, double*, double*, double*, double*, int, double, double, double, double, double, double, double, double, double, double, grid*, mat_prop*, params*, scale* );
+void            DerivativesOnTheFly_s( double*, double*, double*, double*, double*, double*, double*, double*, int, double, double, double, double, double, double, double, double, double, double, grid*, mat_prop*, params*, scale* );
 void            ViscosityDerivatives(grid *, mat_prop *, params *, scale *);
 void            EffectiveStrainRate( double*, double*, double*, double, double, double, double, double, double, double, double d2, double, double, int );
 double          ViscosityConcise(int, double, double, double, double, double, double, double, double, double, double, double, double, mat_prop *, params *, scale *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double, double, double, double, double, double, double *, double *, double *, double *, double, double, double *, double *, double *, double *, double *, double *, int, int, int);
-double          ViscosityConciseAniso(int, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, mat_prop *, params *, scale *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double, double, double, double, double, double, double *, double *, double *, double *, double, double, double *, double *, double *, double *, double *, double *, int, int, int);
+double          ViscosityConciseAniso(int, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, mat_prop *, params *, scale *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double, double, double, double, double, double, double *, double *, double *, double *, double, double, double *, double *, double *, double *, double *, double *, int, int, int);
 void            HuetAveragingModel( double *, double *, double *, int, double, double, int, double, double, mat_prop*);
 double          ItpRho1D( double, params*, int );
 double          Interpolate2Ddata( double, double, double, double, double, double, int, int, double* );

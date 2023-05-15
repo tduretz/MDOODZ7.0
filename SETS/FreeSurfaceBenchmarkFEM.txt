@@ -1,0 +1,55 @@
+/**** RESTART ****/
+istep = 000001
+irestart = 0
+
+/**** OUTPUT FILES ****/
+writer         = 1
+writer_step    = 1
+
+/**** SCALES ****/
+eta = 1e-0
+L   = 1e-0
+V   = 1e-0
+T   = 1e-0
+ 
+/**** SPACE ****/
+Nx      = 100
+Nz      = 150
+xmin    = -3.0
+xmax    =  3.0
+zmin    = -5.0
+zmax    =  2.0 
+
+/**** TIME ****/
+Nt          = 1
+constant_dt = 1
+dt          = 1.0
+
+/**** LINEAR SOLVER ****/
+lin_abs_div     = 1e-9
+lin_rel_div     = 1e-9
+penalty         = 1e5
+residual_form   = 0
+
+/**** SWITCHES ****/
+advection          = 0
+free_surface       = 1
+free_surface_stab  = 0
+
+/**** GRAVITY ****/
+gz = -1.00
+
+/**** PHASE PROPERTIES ****/
+Nb_phases = 1
+
+/**** Phase 0 ****/
+ID            = 0 
+density_model = 0
+rho           = 1.0 
+cstv          = 1
+eta0          = 1e0
+plast         = 0
+
+/**** OVERRIDE DEFAULTS ****/
+min_eta = 1e-1
+max_eta = 1e2

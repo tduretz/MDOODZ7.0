@@ -2,7 +2,7 @@
 #include "mdoodz.h"
 #include "stdbool.h"
 #include "stdlib.h"
-
+#include "stdio.h"
 
 double SetSurfaceZCoord(MdoodzInput *instance, double x_coord) {
   const double TopoLevel = -0.0e3 / instance->scaling.L;
@@ -101,7 +101,16 @@ void AddCrazyConductivity(MdoodzInput *input) {
   input->crazyConductivity               = crazyConductivity;
 }
 
-int main() {
+int main(int nargs, char *args[]) {
+  // Input file name
+  char *input_file;
+  if ( nargs < 2 ) {
+    asprintf(&input_file, "RiftingChenin.txt"); // Default
+  }
+  else {
+    asprintf(&input_file, "%s", args[1]);     // Custom
+  }
+  printf("Running MDoodz7.0 using %s\n", input_file);
   MdoodzSetup setup = {
           .BuildInitialTopography = &(BuildInitialTopography_ff){
                   .SetSurfaceZCoord = SetSurfaceZCoord,
@@ -122,5 +131,6 @@ int main() {
           .MutateInput = AddCrazyConductivity,
 
   };
-  RunMDOODZ("RiftingChenin.txt", &setup);
+  RunMDOODZ(input_file, &setup);
+  free(input_file);
 }
