@@ -202,16 +202,20 @@ void AddFieldToGroup( const char filename[], const char group[], const char fiel
 	else if( d_type == 'c' ) {
 		coord_dataset_id = H5Dcreate( file_id, dataset_name, H5T_NATIVE_CHAR, coord_dataspace_id, H5P_DEFAULT,SET_CREATION_PLIST,H5P_DEFAULT);
         H5Dwrite(coord_dataset_id, H5T_NATIVE_CHAR, H5S_ALL, H5S_ALL, H5P_DEFAULT, data );
+
 	}
 
 	else if( d_type == 'i' ) {
 		coord_dataset_id = H5Dcreate( file_id, dataset_name, H5T_STD_I32BE, coord_dataspace_id, H5P_DEFAULT,SET_CREATION_PLIST,H5P_DEFAULT);
         H5Dwrite(coord_dataset_id, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, data );
+
 	}
 	else if( d_type == 'f' ) {
 		coord_dataset_id = H5Dcreate( file_id, dataset_name, H5T_NATIVE_FLOAT, coord_dataspace_id, H5P_DEFAULT,SET_CREATION_PLIST,H5P_DEFAULT);
         H5Dwrite(coord_dataset_id, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, data );
+
 	}
+
 	else {
 		printf("ERROR: Only know how to write doubles (d), ints (i), or chars (c) \n");
 		exit(1);
@@ -249,7 +253,7 @@ void AddFieldToGroup( const char filename[], const char group[], const char fiel
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* topo_chain, params model, Nparams Nmodel, char *txtout, mat_prop materials, scale scaling ) {
+void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* topo_chain, params model, Nparams Nmodel, char* txtout, mat_prop materials, scale scaling ) {
 
     char *FileName;
     double A[8];
@@ -555,6 +559,9 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
         Cnz = DoodzMalloc( sizeof(float)*(model.Nx-1)*(model.Nz-1));
         DoubleToFloat( nz, Cnz, (model.Nx-1)*(model.Nz-1) );
 
+        MinMaxArray( nx, 1.0, (model.Nx-1)*(model.Nz-1),   "nx" );
+        MinMaxArray( nz, 1.0, (model.Nx-1)*(model.Nz-1),   "nz" );
+
         // anisotropy factor on centroids
         Cani_fac = DoodzMalloc( sizeof(float)*(model.Nx-1)*(model.Nz-1));
         DoubleToFloat( mesh->aniso_factor_n, Cani_fac, (model.Nx-1)*(model.Nz-1) );
@@ -669,7 +676,7 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
     }
 
     // Generate file name
-    asprintf( &FileName, "%s%05d%s",txtout, model.step, ".gzip.h5");
+    asprintf( &FileName, "%s%05d%s", txtout, model.step, ".gzip.h5");
     if (model.writer_subfolder && strcmp(model.writer_subfolder, "")) {
       CreateDir(model.writer_subfolder);
       asprintf( &FileName, "%s/%s", model.writer_subfolder, FileName);

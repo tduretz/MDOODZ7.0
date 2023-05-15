@@ -150,7 +150,7 @@ void RheologicalOperators( grid* mesh, params* model, mat_prop* materials, scale
 
       if ( mesh->BCp.type[k] != 30 && mesh->BCp.type[k] != 31 ) {
         const double eta_vep = mesh->eta_n[k];
-        double ani_vep  = 1., ani_e  = 1., ani_fstrain = 1.;
+        double ani_vep  = 1., ani_fstrain = 1.;
         double aniS_vep = 0., aniS_e = 0.;
         //----------------------------------------------------------//
         if ( model->elastic==1 ) eta_e = model->dt*mesh->mu_n[k];
@@ -164,10 +164,8 @@ void RheologicalOperators( grid* mesh, params* model, mat_prop* materials, scale
         else {
           // Anisotropy
           ani_vep     = mesh->aniso_factor_n[k];
-          ani_e       = mesh->aniso_factor_e_n[k];
           ani_fstrain = mesh->FS_AR_n[k];
           aniS_vep = 1.0 - 1.0 / ani_vep;
-          aniS_e   = 1.0 - 1.0 / ani_e;
           d1      = mesh->d1_n[k];
           d2      = mesh->d2_n[k];
           angle   = mesh->angle_n[k];
@@ -177,7 +175,7 @@ void RheologicalOperators( grid* mesh, params* model, mat_prop* materials, scale
         }
         //----------------------------------------------------------//
         // Exx = mesh->exxd[k]; Ezz = mesh->ezzd[k]; Exz = mesh->exz_n[k];
-        EffectiveStrainRate( &Exx, &Ezz, &Exz, mesh->exxd[k], mesh->ezzd[k], mesh->exz_n[k], mesh->sxxd0[k], mesh->szzd0[k], mesh->sxz0_n[k], d1, d2, aniS_e, eta_e, model->elastic ); 
+        EffectiveStrainRate( &Exx, &Ezz, &Exz, mesh->exxd[k], mesh->ezzd[k], mesh->exz_n[k], mesh->sxxd0[k], mesh->szzd0[k], mesh->sxz0_n[k], d1, d2, aniS_vep, eta_e, model->elastic ); 
         const double e_a2 = eta_vep/(ani_vep*ani_vep);      
         const double Gxz = 2.0*Exz;
         const double Dxx = Exx*(1.0 - aniS_vep*d1) + Ezz*aniS_vep*d1 - Gxz*aniS_vep*d2;
@@ -190,7 +188,7 @@ void RheologicalOperators( grid* mesh, params* model, mat_prop* materials, scale
         double ddivpdexx=0., ddivpdezz=0., ddivpdgxz=0., ddivpdp=0.;
         double danidexx =0., danidezz =0., danidgxz =0., danidp =0.;
         double drhodp=0.;
-        DerivativesOnTheFly_n( &detadexx, &detadezz, &detadgxz, &detadp, &ddivpdexx, &ddivpdezz, &ddivpdgxz, &ddivpdp, &danidexx, &danidezz, &danidgxz, &danidp, &drhodp, k, Exx, Ezz, Exz, mesh->p_in[k], ani_fstrain, ani_e, d1, d2, angle, lx2, lxlz, mesh, materials, model, scaling );
+        DerivativesOnTheFly_n( &detadexx, &detadezz, &detadgxz, &detadp, &ddivpdexx, &ddivpdezz, &ddivpdgxz, &ddivpdp, &danidexx, &danidezz, &danidgxz, &danidp, &drhodp, k, Exx, Ezz, Exz, mesh->p_in[k], ani_vep, d1, d2, angle, lx2, lxlz, mesh, materials, model, scaling );
         mesh->drhodp_n[k] = drhodp;
         // if (mesh->drhodp_n[k] / (mesh->rho_n[k]) < mesh->bet_n[k]/10) {
         //         printf("%2.2e %2.2e\n", mesh->drhodp_n[k] ,  mesh->bet_n[k]);
@@ -223,7 +221,7 @@ void RheologicalOperators( grid* mesh, params* model, mat_prop* materials, scale
 
       if ( mesh->BCg.type[k] != 30 ) {
         const double eta_vep = mesh->eta_s[k];
-        double ani_vep  = 1., ani_e  = 1., ani_fstrain = 1.;
+        double ani_vep  = 1., ani_fstrain = 1.;
         double aniS_vep = 0., aniS_e = 0.;
         //----------------------------------------------------------//
         if ( model->elastic==1 ) eta_e = model->dt*mesh->mu_s[k];
@@ -235,10 +233,8 @@ void RheologicalOperators( grid* mesh, params* model, mat_prop* materials, scale
         else {
           // Anisotropy
           ani_vep     = mesh->aniso_factor_s[k];
-          ani_e       = mesh->aniso_factor_e_s[k];
           ani_fstrain = mesh->FS_AR_s[k];
           aniS_vep = 1.0 - 1.0 / ani_vep;
-          aniS_e   = 1.0 - 1.0 / ani_e;
           d1    = mesh->d1_s[k];
           d2    = mesh->d2_s[k];
           angle = mesh->angle_s[k];
@@ -247,7 +243,7 @@ void RheologicalOperators( grid* mesh, params* model, mat_prop* materials, scale
           lx2     = cos(lay_ang)*cos(lay_ang);
         }
         //----------------------------------------------------------//
-        EffectiveStrainRate( &Exx, &Ezz, &Exz, mesh->exxd_s[k], mesh->ezzd_s[k], mesh->exz[k], mesh->sxxd0_s[k], mesh->szzd0_s[k], mesh->sxz0[k], d1, d2, aniS_e, eta_e, model->elastic );
+        EffectiveStrainRate( &Exx, &Ezz, &Exz, mesh->exxd_s[k], mesh->ezzd_s[k], mesh->exz[k], mesh->sxxd0_s[k], mesh->szzd0_s[k], mesh->sxz0[k], d1, d2, aniS_vep, eta_e, model->elastic );
         // Exx = mesh->exxd_s[k]; Ezz = mesh->ezzd_s[k]; Exz = mesh->exz[k];
         const double e_a2 = eta_vep/(ani_vep*ani_vep);
         const double Gxz  = 2.*Exz;
@@ -257,7 +253,7 @@ void RheologicalOperators( grid* mesh, params* model, mat_prop* materials, scale
         // Compute derivatives on the fly
         double detadexx=0., detadezz=0., detadgxz=0., detadp=0.;
         double danidexx =0., danidezz =0., danidgxz =0., danidp =0.;
-        DerivativesOnTheFly_s( &detadexx, &detadezz, &detadgxz, &detadp, &danidexx, &danidezz, &danidgxz, &danidp, k, Exx, Ezz, Exz, mesh->P_s[k], ani_fstrain, ani_e, d1, d2, angle, lx2, lxlz, mesh, materials, model, scaling );
+        DerivativesOnTheFly_s( &detadexx, &detadezz, &detadgxz, &detadp, &danidexx, &danidezz, &danidgxz, &danidp, k, Exx, Ezz, Exz, mesh->P_s[k], ani_vep, d1, d2, angle, lx2, lxlz, mesh, materials, model, scaling );
         //----------------------------------------------------------//
         mesh->D31_s[k] =               - 2.0*aniS_vep*d2*eta_vep + 2.0*detadexx*Dxz + 2.0*danidexx*Axz;
         mesh->D32_s[k] =                 2.0*aniS_vep*d2*eta_vep + 2.0*detadezz*Dxz + 2.0*danidezz*Axz;
@@ -944,13 +940,13 @@ void EvaluateRHS( grid* mesh, params model, scale scaling, double RHO_REF ) {
                     
                     mesh->roger_z[c]  = - gz * rhoVz;
 
-//                    // Additional stabilisation term from surface processes
-//                    if (model.surface_processes >= 1 && ( mesh->BCp.type[iPrS] == 30 || mesh->BCp.type[iPrS] == 31 || mesh->BCp.type[iPrN] == 30 || mesh->BCp.type[iPrN] == 31 ) ) {
-//                        drhodz = ( mesh->rho_n[iPrN] - mesh->rho_n[iPrS] ) / dz;
-//                        if ( fabs(mesh->xvz_coord[k]) <= 0.5*Wvalley ) {
-//                            mesh->roger_z[c]  += -1.0*om*Vinc*model.dt*gz*drhodz;
-//                        }
-//                    }
+                   // Additional stabilisation term from surface processes
+                   if (model.surface_processes >= 1 && ( mesh->BCp.type[iPrS] == 30 || mesh->BCp.type[iPrS] == 31 || mesh->BCp.type[iPrN] == 30 || mesh->BCp.type[iPrN] == 31 ) ) {
+                       drhodz = ( mesh->rho_n[iPrN] - mesh->rho_n[iPrS] ) / dz;
+                       if ( fabs(mesh->xvz_coord[k]) <= 0.5*Wvalley ) {
+                           mesh->roger_z[c]  += -1.0*om*Vinc*model.dt*gz*drhodz*2;
+                       }
+                   }
                     
                     // // Elastic force
                     // if  (model.elastic == 1 && model.residual_form==0 ) {

@@ -610,7 +610,7 @@ void EvaluateCourantCriterion( double* Vx, double* Vz, params *model, scale scal
         
         // Surface dt
         if ( model->surface_processes>0 ) {
-            dt_surf = C * dmin / fabs(Vinc);
+            dt_surf = C * dmin / fabs(Vinc*10) ;
             printf("Courant number = %2.2e --- dt_surf = %2.2e\n", C, dt_surf*scaling.t);
         }
 

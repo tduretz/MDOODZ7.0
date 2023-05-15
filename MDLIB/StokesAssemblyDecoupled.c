@@ -1498,7 +1498,7 @@ void Zmomentum_InnerNodesDecoupled( SparseMat *Stokes, SparseMat *StokesA, Spars
         double drhodz  = (mesh->rho_n[c2+ncx] - mesh->rho_n[c2])*one_dz;
         vC_corr = 1.00 * om * model.dt * mesh->gz[c3] * drhodz;
         // Importante trique, voire meme gigantesque!
-        if (vC+vC_corr<0.0) vC_corr = 0.0;
+        if ((vC+vC_corr)<0.0 || (vC+vC_corr)<vW || (vC+vC_corr)<vE) vC_corr = 0.0;
         vC += vC_corr;
     }
 

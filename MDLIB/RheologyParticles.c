@@ -1384,13 +1384,6 @@ void UpdateParticleStress( grid* mesh, markers* particles, params* model, mat_pr
     dz = model->dz;
     dt = model->dt;
     
-    om_s   = DoodzCalloc ((Nx-0)*(Nz-0), sizeof(double));
-    om_n   = DoodzCalloc ((Nx-1)*(Nz-1), sizeof(double));
-    
-    txz_n   = DoodzCalloc ((Nx-1)*(Nz-1), sizeof(double));
-    txx_s   = DoodzCalloc ((Nx-0)*(Nz-0), sizeof(double));
-    tzz_s   = DoodzCalloc ((Nx-0)*(Nz-0), sizeof(double));
-    
     dudx_n = DoodzCalloc ((Nx-1)*(Nz-1), sizeof(double));
     dvdz_n = DoodzCalloc ((Nx-1)*(Nz-1), sizeof(double));
     dudz_s = DoodzCalloc ((Nx-0)*(Nz-0), sizeof(double));
@@ -1409,7 +1402,6 @@ firstprivate( model )
         c1 = k + l*Nx;
         c3 = k + l*(Nx+1);
         if ( mesh->BCg.type[c1] != 30 ) {
-            om_s[c1]   = 0.5*( (mesh->v_in[c3+1] - mesh->v_in[c3])/dx - (mesh->u_in[c1+Nx] - mesh->u_in[c1])/dz);
             dudz_s[c1] = (mesh->u_in[c1+Nx] - mesh->u_in[c1])/dz;
             dvdx_s[c1] = (mesh->v_in[c3+1 ] - mesh->v_in[c3])/dx;
         }
@@ -1434,52 +1426,8 @@ firstprivate( model )
     InterpCentroidsToVerticesDouble( dvdz_n, dvdz_s, mesh, model );
     InterpVerticesToCentroidsDouble( dudz_n, dudz_s, mesh, model );
     InterpVerticesToCentroidsDouble( dvdx_n, dvdx_s, mesh, model );
-    InterpCentroidsToVerticesDouble( mesh->sxxd, txx_s, mesh, model );
-    InterpCentroidsToVerticesDouble( mesh->szzd, tzz_s, mesh, model );
-    InterpVerticesToCentroidsDouble( txz_n, mesh->sxz, mesh, model );
-    InterpVerticesToCentroidsDouble( om_n, om_s, mesh, model );
 
-    // // Rotate stress only if elasticity is activated 
-    if ( model->elastic==1 ) {
-    
-#pragma omp parallel for shared ( mesh, dudz_n, dvdx_n, dudx_n, dvdz_n, om_n ) \
-    private ( k1, txx, tzz, txz, angle)                     \
-    firstprivate( model, dt )
-        for ( k1=0; k1<(Nx-1)*(Nz-1); k1++ ) {
-            
-            txx   = mesh->sxxd[k1];
-            tzz   = mesh->szzd[k1];
-            txz   = txz_n[k1];
-            if (model->stress_rotation==1 && model->advection==1) { // Jaumann rate
-                angle = dt*om_n[k1];
-                mesh->sxxd[k1] = (txx*cos(angle) - txz*sin(angle))*cos(angle) - (txz*cos(angle) - tzz*sin(angle))*sin(angle);
-                mesh->szzd[k1] = (txx*sin(angle) + txz*cos(angle))*sin(angle) + (txz*sin(angle) + tzz*cos(angle))*cos(angle);
-            }
-            if (model->stress_rotation==2 && model->advection==1) { // Upper convected rate
-                mesh->sxxd[k1] = mesh->sxxd[k1] - dt * mesh->VE_n[k1] * ( -2.0*txx*dudx_n[k1] - 2.0*txz*dudz_n[k1]);
-                mesh->szzd[k1] = mesh->szzd[k1] - dt * mesh->VE_n[k1] * ( -2.0*tzz*dvdz_n[k1] - 2.0*txz*dvdx_n[k1]);
-            }        
-        }
-            
-#pragma omp parallel for shared ( mesh, dudz_s, dvdx_s, dudx_s, dvdz_s, om_s ) \
-    private ( k1, txx, tzz, txz, angle )                     \
-    firstprivate( model, dt )
-        for ( k1=0; k1<(Nx-0)*(Nz-0); k1++ ) {
-            
-            txx   = txx_s[k1];
-            tzz   = tzz_s[k1];
-            txz   = mesh->sxz[k1];
-            if (model->stress_rotation==1 && model->advection==1) { // Jaumann rate
-                angle = dt*om_s[k1];
-                mesh->sxz[k1] = (txx*cos(angle) - txz*sin(angle))*sin(angle) + (txz*cos(angle) - tzz*sin(angle))*cos(angle);
-            }
-            if (model->stress_rotation==2 && model->advection==1) { // Upper convected rate
-                mesh->sxz[k1] = mesh->sxz[k1] - dt * mesh->VE_s[k1] * (      txx*dudz_s[k1] -     txx*dvdx_s[k1] - txz*(dudx_s[k1]+ dvdz_s[k1]) );
-            }
-        }
-    }
-    
-    // Rotate director directly on particles
+// Rotate director directly on particles
     if ( model->anisotropy == 1 && model->advection==1) {
 
 #pragma omp parallel for shared( particles, mesh ) firstprivate( dt, model ) private( k )
@@ -1500,11 +1448,193 @@ firstprivate( model )
         }
     }
 
-    DoodzFree(txx_s);
-    DoodzFree(tzz_s);
-    DoodzFree(txz_n);
-    DoodzFree(om_s);
-    DoodzFree(om_n);
+    // Marker stress update 
+    if ( model->elastic==1 ) {
+        
+        Nx = mesh->Nx; Ncx = Nx-1;
+        Nz = mesh->Nz; Ncz = Nz-1;
+        
+        if ( model->subgrid_diffusion == 2 ) {
+            
+            // Alloc
+            dtxxgs = DoodzCalloc(Ncx*Ncz, sizeof(DoodzFP));
+            dtzzgs = DoodzCalloc(Ncx*Ncz, sizeof(DoodzFP));
+            dtxzgs = DoodzCalloc(Nx*Nz,   sizeof(DoodzFP));
+            dtxxgr = DoodzCalloc(Ncx*Ncz, sizeof(DoodzFP));
+            dtzzgr = DoodzCalloc(Ncx*Ncz, sizeof(DoodzFP));
+            dtxzgr = DoodzCalloc(Nx*Nz,   sizeof(DoodzFP));
+            txxm0  = DoodzCalloc(particles->Nb_part, sizeof(DoodzFP));
+            tzzm0  = DoodzCalloc(particles->Nb_part, sizeof(DoodzFP));
+            txzm0  = DoodzCalloc(particles->Nb_part, sizeof(DoodzFP));
+            dtxxms = DoodzCalloc(particles->Nb_part, sizeof(DoodzFP));
+            dtzzms = DoodzCalloc(particles->Nb_part, sizeof(DoodzFP));
+            dtxzms = DoodzCalloc(particles->Nb_part, sizeof(DoodzFP));
+            dtxxmr = DoodzCalloc(particles->Nb_part, sizeof(DoodzFP));
+            dtzzmr = DoodzCalloc(particles->Nb_part, sizeof(DoodzFP));
+            dtxzmr = DoodzCalloc(particles->Nb_part, sizeof(DoodzFP));
+            etam   = DoodzCalloc(particles->Nb_part, sizeof(DoodzFP));
+            
+            // Old stresses grid --> markers
+            Interp_Grid2P_centroids2( *particles, txxm0, mesh, mesh->sxxd0, mesh->xvz_coord,  mesh->zvx_coord, Nx-1, Nz-1, mesh->BCp.type, model  );
+            Interp_Grid2P_centroids2( *particles, tzzm0, mesh, mesh->szzd0, mesh->xvz_coord,  mesh->zvx_coord, Nx-1, Nz-1, mesh->BCp.type, model  );
+            Interp_Grid2P( *particles, txzm0, mesh, mesh->sxz0 , mesh->xg_coord,  mesh->zg_coord, Nx  , Nz  , mesh->BCg.type     );
+            Interp_Grid2P( *particles, etam,  mesh, mesh->eta_phys_s, mesh->xg_coord,  mesh->zg_coord, Nx  , Nz  , mesh->BCg.type);
+            
+            MinMaxArray(mesh->eta_phys_s, scaling->eta, Nx*Nz, "eta grid  ");
+            MinMaxArrayTag( mesh->eta_phys_s, scaling->eta, Nx*Nz,   "eta_s", mesh->BCg.type );
+            MinMaxArray(etam, scaling->eta, particles->Nb_part, "eta phys part  ");
+            
+            if ( model->subgrid_diffusion == 2 ) {
+                
+                printf("Subgrid diffusion for stress tensor component update\n");
+                
+                // Compute subgrid stress increments on markers
+    #pragma omp parallel for shared(particles,txxm0,tzzm0,txzm0,dtxxms,dtzzms,dtxzms,etam) private(k,p,dtaum) firstprivate(materials,model,d)
+                for ( k=0; k<particles->Nb_part; k++ ) {
+                    if (particles->phase[k] != -1) {
+                        p         = particles->phase[k];
+                        dtaum     = etam[k] / materials->G[p];
+                        dtxxms[k] = -( particles->sxxd[k] - txxm0[k]) * (1.0 - exp(-d*dt/dtaum));
+                        dtzzms[k] = -( particles->szzd[k] - tzzm0[k]) * (1.0 - exp(-d*dt/dtaum));
+                        dtxzms[k] = -( particles->sxz[k]  - txzm0[k]) * (1.0 - exp(-d*dt/dtaum));
+                        if (isinf(dtxxms[k])) {
+                            printf("Infinite dtxxms[k]: %2.2e %2.2e %2.2e\n", particles->sxxd[k], txxm0[k], exp(-d*dt/dtaum));
+                            printf("%2.2e %2.2e %2.2e %2.2e %2.2e", d, dt, dtaum, etam[k]*scaling->eta, materials->G[p]*scaling->S );
+                            exit(1);
+                        }
+                        if (isnan(dtxxms[k])) {
+                            printf("Infinite dtxxms[k]: %2.2e %2.2e %2.2e\n", particles->sxxd[k], txxm0[k], exp(-d*dt/dtaum));
+                            exit(1);
+                        }
+                    }
+                }
+                
+                // Subgrid stress increments markers --> grid
+                P2Mastah( model, *particles, dtxxms,     mesh, dtxxgs,   mesh->BCp.type,  1, 0, interp, cent, model->interp_stencil);
+                P2Mastah( model, *particles, dtzzms,     mesh, dtzzgs,   mesh->BCp.type,  1, 0, interp, cent, model->interp_stencil);
+                P2Mastah( model, *particles, dtxzms,     mesh, dtxzgs,   mesh->BCg.type,  1, 0, interp, vert, model->interp_stencil);
+                
+                // Remaining stress increments on the grid
+    #pragma omp parallel for shared(mesh,dtxxgs,dtxxgr,dtzzgs,dtzzgr) private(c0) firstprivate(Ncx,Ncz)
+                for ( c0=0; c0<Ncx*Ncz; c0++ ) {
+                    if (mesh->BCp.type[c0]!=30 && mesh->BCp.type[c0]!=31) dtxxgr[c0] = (mesh->sxxd[c0] - mesh->sxxd0[c0]) - dtxxgs[c0];
+                    if (mesh->BCp.type[c0]!=30 && mesh->BCp.type[c0]!=31) dtzzgr[c0] = (mesh->szzd[c0] - mesh->szzd0[c0]) - dtzzgs[c0];
+                }
+    #pragma omp parallel for shared(mesh,dtxzgs,dtxzgr) private(c0) firstprivate(Nx,Nz)
+                for ( c0=0; c0<Nx*Nz; c0++ ) {
+                    if (mesh->BCg.type[c0]!=30) dtxzgr[c0] = (mesh->sxz[c0]-mesh->sxz0[c0]) - dtxzgs[c0];
+                }
+                
+                // Remaining stress increments grid --> markers
+                Interp_Grid2P_centroids2( *particles, dtxxmr, mesh, dtxxgr, mesh->xvz_coord,  mesh->zvx_coord, Nx-1, Nz-1, mesh->BCp.type, model  );
+                Interp_Grid2P_centroids2( *particles, dtzzmr, mesh, dtzzgr, mesh->xvz_coord,  mesh->zvx_coord, Nx-1, Nz-1, mesh->BCp.type, model  );
+                Interp_Grid2P(           *particles, dtxzmr, mesh, dtxzgr, mesh->xg_coord,  mesh->zg_coord, Nx  , Nz  , mesh->BCg.type         );
+                
+                // Final stresses update on markers
+    #pragma omp parallel for shared(particles,dtxxms,dtzzms,dtxzms,dtxxmr,dtzzmr,dtxzmr) private(k) 
+                for ( k=0; k<particles->Nb_part; k++ ) {
+                    if (particles->phase[k] != -1) particles->sxxd[k]  = particles->sxxd[k] + dtxxms[k] + dtxxmr[k];
+                    if (particles->phase[k] != -1) particles->szzd[k]  = particles->szzd[k] + dtzzms[k] + dtzzmr[k];
+                    if (particles->phase[k] != -1) particles->sxz[k]   = particles->sxz[k]  + dtxzms[k] + dtxzmr[k];
+                }
+            }
+            
+            // Free
+            DoodzFree( dtxxgs );
+            DoodzFree( dtzzgs );
+            DoodzFree( dtxzgs );
+            DoodzFree( dtxxgr );
+            DoodzFree( dtzzgr );
+            DoodzFree( dtxzgr );
+            DoodzFree( txxm0  );
+            DoodzFree( tzzm0  );
+            DoodzFree( txzm0  );
+            DoodzFree( dtxxms );
+            DoodzFree( dtzzms );
+            DoodzFree( dtxzms );
+            DoodzFree( dtxxmr );
+            DoodzFree( dtzzmr );
+            DoodzFree( dtxzmr );
+            DoodzFree( etam   );  
+        }
+
+        if (model->subgrid_diffusion==0 || model->subgrid_diffusion==1){
+            
+            printf("No subgrid diffusion for stress tensor component update\n");
+            
+            // Alloc
+            dsxxd  = DoodzCalloc((Nx-1)*(Nz-1), sizeof(double));
+            dszzd  = DoodzCalloc((Nx-1)*(Nz-1), sizeof(double));
+            dsxz   = DoodzCalloc((Nx)*(Nz), sizeof(double));
+            mdsxxd = DoodzCalloc(particles->Nb_part, sizeof(DoodzFP));
+            mdszzd = DoodzCalloc(particles->Nb_part, sizeof(DoodzFP));
+            mdsxz  = DoodzCalloc(particles->Nb_part, sizeof(DoodzFP));
+            
+            // Cell: normal stress change
+            for (k=0; k<Nx-1; k++) {
+                for (l=0; l<Nz-1; l++) {
+                    c0 = k  + l*(Nx-1);
+                    if (mesh->BCp.type[c0] !=30 && mesh->BCp.type[c0] !=31) dsxxd[c0] = mesh->sxxd[c0] - mesh->sxxd0[c0];
+                    if (mesh->BCp.type[c0] !=30 && mesh->BCp.type[c0] !=31) dszzd[c0] = mesh->szzd[c0] - mesh->szzd0[c0];
+                }
+            }
+            
+            // Vertex: shear stress change
+            for (k=0; k<Nx; k++) {
+                for (l=0; l<Nz; l++) {
+                    c1 = k  + l*(Nx);
+                    if (mesh->BCg.type[c1] !=30 ) dsxz[c1] =  mesh->sxz[c1] - mesh->sxz0[c1];
+                }
+            }
+            
+            // Interpolate stress changes to markers
+            Interp_Grid2P_centroids2( *particles, mdsxxd, mesh, dsxxd, mesh->xvz_coord,  mesh->zvx_coord,  mesh->Nx-1, mesh->Nz-1, mesh->BCp.type, model  );
+            Interp_Grid2P_centroids2( *particles, mdszzd, mesh, dszzd, mesh->xvz_coord,  mesh->zvx_coord,  mesh->Nx-1, mesh->Nz-1, mesh->BCp.type, model  );
+            Interp_Grid2P( *particles, mdsxz,  mesh, dsxz,  mesh->xg_coord,  mesh->zg_coord,  mesh->Nx,   mesh->Nz,   mesh->BCg.type  );
+            
+            // Update marker stresses
+            ArrayPlusArray(  particles->sxxd, mdsxxd, particles->Nb_part );
+            ArrayPlusArray(  particles->szzd, mdszzd, particles->Nb_part );
+            ArrayPlusArray(  particles->sxz,  mdsxz,  particles->Nb_part );
+
+            // Free
+            DoodzFree(dsxxd);
+            DoodzFree(dszzd);
+            DoodzFree(dsxz);
+            DoodzFree(mdsxxd);
+            DoodzFree(mdszzd);
+            DoodzFree(mdsxz);
+        }
+
+        // Large strain: stress rotation/deformation
+        if (model->elastic==1) { 
+
+            double *wxzm   = DoodzCalloc(particles->Nb_part, sizeof(DoodzFP));
+            P2Mastah( model, *particles, wxzm,     mesh, mesh->wxz,   mesh->BCg.type,  1, 0, interp, vert, model->interp_stencil);
+
+#pragma omp parallel for shared( particles, wxzm ) firstprivate( dt, model ) private( k, angle, txx, tzz, txz )
+            for ( k=0; k<particles->Nb_part; k++ ) {
+                if (particles->phase[k] != -1) {
+                    double txx = particles->sxxd[k];
+                    double tzz = particles->szzd[k];
+                    double txz = particles->sxz[k];
+                    if (model->stress_rotation==1) { // Jaumann rate
+                        particles->sxxd[k] -=  dt*2.0*txz*wxzm[k];
+                        particles->szzd[k] -= -dt*2.0*txz*wxzm[k];
+                        particles->sxz[k]  -=  dt*(tzz-txx)*wxzm[k];
+                    }
+                    if (model->stress_rotation==2) { // Analytical rotation
+                        double angle = dt*wxzm[k];
+                        particles->sxxd[k] =  ( txx*cos(angle) + txz*sin(angle))*cos(angle) + ( txz*cos(angle) + tzz*sin(angle))*sin(angle);
+                        particles->szzd[k] = -(-txx*sin(angle) + txz*cos(angle))*sin(angle) + (-txz*sin(angle) + tzz*cos(angle))*cos(angle);
+                        particles->sxz[k]  = -( txx*cos(angle) + txz*sin(angle))*sin(angle) + ( txz*cos(angle) + tzz*sin(angle))*cos(angle);
+                    }
+                }
+            }      
+            DoodzFree(wxzm);
+        }
+    }
+
     DoodzFree(dudx_n);
     DoodzFree(dvdz_n);
     DoodzFree(dvdx_s);
@@ -1513,162 +1643,6 @@ firstprivate( model )
     DoodzFree(dvdx_n);
     DoodzFree(dvdz_s);
     DoodzFree(dudx_s);
-    
-    Nx = mesh->Nx; Ncx = Nx-1;
-    Nz = mesh->Nz; Ncz = Nz-1;
-    
-    if ( model->subgrid_diffusion > -1 ) {
-        
-        // Alloc
-        dtxxgs = DoodzCalloc(Ncx*Ncz, sizeof(DoodzFP));
-        dtzzgs = DoodzCalloc(Ncx*Ncz, sizeof(DoodzFP));
-        dtxzgs = DoodzCalloc(Nx*Nz,   sizeof(DoodzFP));
-        dtxxgr = DoodzCalloc(Ncx*Ncz, sizeof(DoodzFP));
-        dtzzgr = DoodzCalloc(Ncx*Ncz, sizeof(DoodzFP));
-        dtxzgr = DoodzCalloc(Nx*Nz,   sizeof(DoodzFP));
-        txxm0  = DoodzCalloc(particles->Nb_part, sizeof(DoodzFP));
-        tzzm0  = DoodzCalloc(particles->Nb_part, sizeof(DoodzFP));
-        txzm0  = DoodzCalloc(particles->Nb_part, sizeof(DoodzFP));
-        dtxxms = DoodzCalloc(particles->Nb_part, sizeof(DoodzFP));
-        dtzzms = DoodzCalloc(particles->Nb_part, sizeof(DoodzFP));
-        dtxzms = DoodzCalloc(particles->Nb_part, sizeof(DoodzFP));
-        dtxxmr = DoodzCalloc(particles->Nb_part, sizeof(DoodzFP));
-        dtzzmr = DoodzCalloc(particles->Nb_part, sizeof(DoodzFP));
-        dtxzmr = DoodzCalloc(particles->Nb_part, sizeof(DoodzFP));
-        etam   = DoodzCalloc(particles->Nb_part, sizeof(DoodzFP));
-        
-        // Old stresses grid --> markers
-        Interp_Grid2P_centroids2( *particles, txxm0, mesh, mesh->sxxd0, mesh->xvz_coord,  mesh->zvx_coord, Nx-1, Nz-1, mesh->BCp.type, model  );
-        Interp_Grid2P_centroids2( *particles, tzzm0, mesh, mesh->szzd0, mesh->xvz_coord,  mesh->zvx_coord, Nx-1, Nz-1, mesh->BCp.type, model  );
-        Interp_Grid2P( *particles, txzm0, mesh, mesh->sxz0 , mesh->xg_coord,  mesh->zg_coord, Nx  , Nz  , mesh->BCg.type     );
-        Interp_Grid2P( *particles, etam,  mesh, mesh->eta_phys_s, mesh->xg_coord,  mesh->zg_coord, Nx  , Nz  , mesh->BCg.type);
-        
-        MinMaxArray(mesh->eta_phys_s, scaling->eta, Nx*Nz, "eta grid  ");
-        MinMaxArrayTag( mesh->eta_phys_s, scaling->eta, Nx*Nz,   "eta_s", mesh->BCg.type );
-        MinMaxArray(etam, scaling->eta, particles->Nb_part, "eta phys part  ");
-        
-        
-        if ( model->subgrid_diffusion == 2 ) {
-            
-            printf("Subgrid diffusion for stress tensor component update\n");
-            
-            // Compute subgrid stress increments on markers
-#pragma omp parallel for shared(particles,txxm0,tzzm0,txzm0,dtxxms,dtzzms,dtxzms,etam) private(k,p,dtaum) firstprivate(materials,model,d)
-            for ( k=0; k<particles->Nb_part; k++ ) {
-                if (particles->phase[k] != -1) {
-                    p         = particles->phase[k];
-                    dtaum     = etam[k] / materials->G[p];
-                    dtxxms[k] = -( particles->sxxd[k] - txxm0[k]) * (1.0 - exp(-d*dt/dtaum));
-                    dtzzms[k] = -( particles->szzd[k] - tzzm0[k]) * (1.0 - exp(-d*dt/dtaum));
-                    dtxzms[k] = -( particles->sxz[k]  - txzm0[k]) * (1.0 - exp(-d*dt/dtaum));
-                    if (isinf(dtxxms[k])) {
-                        printf("Infinite dtxxms[k]: %2.2e %2.2e %2.2e\n", particles->sxxd[k], txxm0[k], exp(-d*dt/dtaum));
-                        printf("%2.2e %2.2e %2.2e %2.2e %2.2e", d, dt, dtaum, etam[k]*scaling->eta, materials->G[p]*scaling->S );
-                        exit(1);
-                    }
-                    if (isnan(dtxxms[k])) {
-                        printf("Infinite dtxxms[k]: %2.2e %2.2e %2.2e\n", particles->sxxd[k], txxm0[k], exp(-d*dt/dtaum));
-                        exit(1);
-                    }
-                }
-            }
-            
-            // Subgrid stress increments markers --> grid
-            P2Mastah( model, *particles, dtxxms,     mesh, dtxxgs,   mesh->BCp.type,  1, 0, interp, cent, model->interp_stencil);
-            P2Mastah( model, *particles, dtzzms,     mesh, dtzzgs,   mesh->BCp.type,  1, 0, interp, cent, model->interp_stencil);
-            P2Mastah( model, *particles, dtxzms,     mesh, dtxzgs,   mesh->BCg.type,  1, 0, interp, vert, model->interp_stencil);
-            
-            // Remaining stress increments on the grid
-#pragma omp parallel for shared(mesh,dtxxgs,dtxxgr,dtzzgs,dtzzgr) private(c0) firstprivate(Ncx,Ncz)
-            for ( c0=0; c0<Ncx*Ncz; c0++ ) {
-                if (mesh->BCp.type[c0]!=30 && mesh->BCp.type[c0]!=31) dtxxgr[c0] = (mesh->sxxd[c0] - mesh->sxxd0[c0]) - dtxxgs[c0];
-                if (mesh->BCp.type[c0]!=30 && mesh->BCp.type[c0]!=31) dtzzgr[c0] = (mesh->szzd[c0] - mesh->szzd0[c0]) - dtzzgs[c0];
-            }
-#pragma omp parallel for shared(mesh,dtxzgs,dtxzgr) private(c0) firstprivate(Nx,Nz)
-            for ( c0=0; c0<Nx*Nz; c0++ ) {
-                if (mesh->BCg.type[c0]!=30) dtxzgr[c0] = (mesh->sxz[c0]-mesh->sxz0[c0]) - dtxzgs[c0];
-            }
-            
-            // Remaining stress increments grid --> markers
-            Interp_Grid2P_centroids2( *particles, dtxxmr, mesh, dtxxgr, mesh->xvz_coord,  mesh->zvx_coord, Nx-1, Nz-1, mesh->BCp.type, model  );
-            Interp_Grid2P_centroids2( *particles, dtzzmr, mesh, dtzzgr, mesh->xvz_coord,  mesh->zvx_coord, Nx-1, Nz-1, mesh->BCp.type, model  );
-            Interp_Grid2P(           *particles, dtxzmr, mesh, dtxzgr, mesh->xg_coord,  mesh->zg_coord, Nx  , Nz  , mesh->BCg.type         );
-            
-            // Final stresses update on markers
-#pragma omp parallel for shared(particles,dtxxms,dtzzms,dtxzms,dtxxmr,dtzzmr,dtxzmr) private(k) 
-            for ( k=0; k<particles->Nb_part; k++ ) {
-                if (particles->phase[k] != -1) particles->sxxd[k]  = particles->sxxd[k] + dtxxms[k] + dtxxmr[k];
-                if (particles->phase[k] != -1) particles->szzd[k]  = particles->szzd[k] + dtzzms[k] + dtzzmr[k];
-                if (particles->phase[k] != -1) particles->sxz[k]   = particles->sxz[k]  + dtxzms[k] + dtxzmr[k];
-            }
-        }
-        
-        // Free
-        DoodzFree( dtxxgs );
-        DoodzFree( dtzzgs );
-        DoodzFree( dtxzgs );
-        DoodzFree( dtxxgr );
-        DoodzFree( dtzzgr );
-        DoodzFree( dtxzgr );
-        DoodzFree( txxm0  );
-        DoodzFree( tzzm0  );
-        DoodzFree( txzm0  );
-        DoodzFree( dtxxms );
-        DoodzFree( dtzzms );
-        DoodzFree( dtxzms );
-        DoodzFree( dtxxmr );
-        DoodzFree( dtzzmr );
-        DoodzFree( dtxzmr );
-        DoodzFree( etam   );
-        
-    }
-    if (model->subgrid_diffusion==0 || model->subgrid_diffusion==1 || model->subgrid_diffusion==4){
-        
-        printf("No subgrid diffusion for stress tensor component update\n");
-        
-        // Alloc
-        dsxxd  = DoodzCalloc((Nx-1)*(Nz-1), sizeof(double));
-        dszzd  = DoodzCalloc((Nx-1)*(Nz-1), sizeof(double));
-        dsxz   = DoodzCalloc((Nx)*(Nz), sizeof(double));
-        mdsxxd = DoodzCalloc(particles->Nb_part, sizeof(DoodzFP));
-        mdszzd = DoodzCalloc(particles->Nb_part, sizeof(DoodzFP));
-        mdsxz  = DoodzCalloc(particles->Nb_part, sizeof(DoodzFP));
-        
-        // Cell: normal stress change
-        for (k=0; k<Nx-1; k++) {
-            for (l=0; l<Nz-1; l++) {
-                c0 = k  + l*(Nx-1);
-                if (mesh->BCp.type[c0] !=30 && mesh->BCp.type[c0] !=31) dsxxd[c0] = mesh->sxxd[c0] - mesh->sxxd0[c0];
-                if (mesh->BCp.type[c0] !=30 && mesh->BCp.type[c0] !=31) dszzd[c0] = mesh->szzd[c0] - mesh->szzd0[c0];
-            }
-        }
-        
-        // Vertex: shear stress change
-        for (k=0; k<Nx; k++) {
-            for (l=0; l<Nz; l++) {
-                c1 = k  + l*(Nx);
-                if (mesh->BCg.type[c1] !=30 ) dsxz[c1] =  mesh->sxz[c1] - mesh->sxz0[c1];
-            }
-        }
-        
-        // Interpolate stress changes to markers
-        Interp_Grid2P_centroids2( *particles, mdsxxd, mesh, dsxxd, mesh->xvz_coord,  mesh->zvx_coord,  mesh->Nx-1, mesh->Nz-1, mesh->BCp.type, model  );
-        Interp_Grid2P_centroids2( *particles, mdszzd, mesh, dszzd, mesh->xvz_coord,  mesh->zvx_coord,  mesh->Nx-1, mesh->Nz-1, mesh->BCp.type, model  );
-        Interp_Grid2P( *particles, mdsxz,  mesh, dsxz,  mesh->xg_coord,  mesh->zg_coord,  mesh->Nx,   mesh->Nz,   mesh->BCg.type  );
-        
-        // Update marker stresses
-        ArrayPlusArray(  particles->sxxd, mdsxxd, particles->Nb_part );
-        ArrayPlusArray(  particles->szzd, mdszzd, particles->Nb_part );
-        ArrayPlusArray(  particles->sxz,  mdsxz,  particles->Nb_part );
-        
-        // Free
-        DoodzFree(dsxxd);
-        DoodzFree(dszzd);
-        DoodzFree(dsxz);
-        DoodzFree(mdsxxd);
-        DoodzFree(mdszzd);
-        DoodzFree(mdsxz);
-    }
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/

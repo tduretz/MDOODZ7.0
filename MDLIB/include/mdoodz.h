@@ -139,12 +139,12 @@ typedef struct {
   int    kin[20], gs[20], cstv[20], pwlv[20], linv[20], expv[20], gbsv[20],
           phase_diagram[20], density_model[20];
   double C_end[20], phi_end[20], psi_end[20], pls_start[20], pls_end[20],
-          eta_vp[20], n_vp[20];
-  int    plast[20], phi_soft[20], psi_soft[20], coh_soft[20], is_tensile[20];
+          eta_vp[20], n_vp[20], sig_tens[20], sig1[20], dsig1[20];
+  int    plast[20], phi_soft[20], psi_soft[20], coh_soft[20], yield[20];
   double Pr[20], tau_kin[20], dPr[20], k_chem[20];
   int    reac_soft[20], reac_phase[20];
   int    phase_mix[20], phase_two[20];
-  double aniso_angle[20], ani_fac_v[20], ani_fac_e[20], ani_fac_p[20], ani_fac_max[20];
+  double aniso_angle[20], ani_fac_max[20], aniso_factor[20];   //ani_fac_v[20], ani_fac_e[20], ani_fac_p[20]
   double axx[20], azz[20], ayy[20];
   int    ani_fstrain[20];
 } mat_prop;
