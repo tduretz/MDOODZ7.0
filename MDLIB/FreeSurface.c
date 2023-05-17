@@ -255,8 +255,8 @@ void RemeshMarkerChain( markers *topo_chain, surface *topo, params model, scale 
                     if (in<0)    in = 0;
                     if (in>Ncx-1)in = Ncx-1;
                     // Topography computed from the coarse grid column
-                    topo_chain->z[NewInd]  = (topo->b[in] + topo->a[in] * ( topo_chain->x[NewInd] ));
-                    topo_chain->z0[NewInd] = topo_chain->z[NewInd] ;
+                    topo_chain->z[NewInd]  = topo->b[in]  + topo->a[in]  * topo_chain->x[NewInd];
+                    topo_chain->z0[NewInd] = topo->b0[in] + topo->a0[in] * topo_chain->x[NewInd];
 
                     // Add one particle on the EAST side of the fine column
                     if (recycle==0) NewInd                = topo_chain->Nb_part;
@@ -272,8 +272,8 @@ void RemeshMarkerChain( markers *topo_chain, surface *topo, params model, scale 
                     if (in<0)    in = 0;
                     if (in>Ncx-1)in = Ncx-1;
                     // Topography computed from the coarse grid column
-                    topo_chain->z[NewInd]  = (topo->b[in] + topo->a[in] * ( topo_chain->x[NewInd] ));
-                    topo_chain->z0[NewInd] = topo_chain->z[NewInd] ;
+                    topo_chain->z[NewInd]  = topo->b[in]  + topo->a[in]  * topo_chain->x[NewInd];
+                    topo_chain->z0[NewInd] = topo->b0[in] + topo->a0[in] * topo_chain->x[NewInd];
                 }
                 else {
                     printf("The max. number of topographic particles (currently %d) needs to be increased (number of particles %d)\n", topo_chain->Nb_part_max, topo_chain->Nb_part);
