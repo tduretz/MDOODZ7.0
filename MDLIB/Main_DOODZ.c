@@ -442,6 +442,8 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             CellFlagging( &mesh, input.model, topo, input.scaling );
             ArrayEqualArray(     topo.height0,     topo.height, mesh.Nx );
             ArrayEqualArray( topo_ini.height0, topo_ini.height, mesh.Nx );
+            ArrayEqualArray( topo_chain.z0, topo_chain.z, topo_chain.Nb_part ); // save old z
+            ArrayEqualArray( topo_chain_ini.z0, topo_chain_ini.z, topo_chain.Nb_part ); // save old z
         }
 
         // Interpolate material properties from particles to nodes
@@ -965,10 +967,6 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                 }
 
                 if (input.model.free_surface == 1 ) {
-                    // Save old topo
-                    ArrayEqualArray( topo_chain.z0, topo_chain.z, topo_chain.Nb_part ); // save old z
-                    ArrayEqualArray( topo_chain_ini.z0, topo_chain_ini.z, topo_chain.Nb_part ); // save old z
-
                     // Advect free surface with RK4
                     RogerGuntherII( &topo_chain, input.model, mesh, 1, input.scaling );
                     RogerGuntherII( &topo_chain_ini, input.model, mesh, 1, input.scaling );

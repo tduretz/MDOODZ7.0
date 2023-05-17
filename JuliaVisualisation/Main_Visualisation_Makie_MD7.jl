@@ -91,6 +91,13 @@ function main()
             Nx    = Float64.(reshape(ExtractData( filename, "/Centers/nx"), ncx, ncz)); 
             Nz    = Float64.(reshape(ExtractData( filename, "/Centers/nz"), ncx, ncz));
         end
+        height  = Float64.(ExtractData( filename, "/Topo/z_grid")); 
+        Vx_grid = Float64.(ExtractData( filename, "/Topo/Vx_grid"));
+        Vz_grid = Float64.(ExtractData( filename, "/Topo/Vz_grid"));  
+        Vx_mark = Float64.(ExtractData( filename, "/Topo/Vx_mark"));
+        Vz_mark = Float64.(ExtractData( filename, "/Topo/Vz_mark"));
+        x_mark  = Float64.(ExtractData( filename, "/Topo/x_mark"));
+        z_mark  = Float64.(ExtractData( filename, "/Topo/z_mark"));
         Vxc   = 0.5 .* (Vx[1:end-1,2:end-1] .+ Vx[2:end-0,2:end-1])
         Vzc   = 0.5 .* (Vz[2:end-1,1:end-1] .+ Vz[2:end-1,2:end-0])
 
@@ -225,6 +232,25 @@ function main()
             GLMakie.Colorbar(f[1, 2], hm, label = "d", width = 20, labelsize = 25, ticklabelsize = 14 )
             GLMakie.colgap!(f.layout, 20)
             if printfig Print2Disk( f, path, string(field), istep) end
+        end
+
+        if field==:Topography
+            ax1 = Axis(f[1, 1], title = L"Topography at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$h$ [km]")
+            lines!(ax1, xv./Lc, height./Lc)
+            scatter!(ax1, x_mark./Lc, z_mark./Lc)
+
+            ax2 = Axis(f[2, 1], xlabel = L"$x$ [km]", ylabel = L"$Vx$ [km]")
+            lines!(ax2, xv./Lc, Vx_grid./Vc)
+            scatter!(ax2, x_mark./Lc, Vx_mark./Vc)
+
+            ax3 = Axis(f[3, 1], xlabel = L"$x$ [km]", ylabel = L"$Vz$ [km]")
+            lines!(ax3, xc./Lc, Vz_grid[2:end-1]./Vc)
+            scatter!(ax3, x_mark/Lc, Vz_mark./Vc)
+
+            @show minimum(Vx_grid)
+            @show minimum(Vx_mark)
+            @show maximum(Vx_grid)
+            @show maximum(Vx_mark)
         end
 
         # DataInspector(f)
