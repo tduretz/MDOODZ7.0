@@ -27,8 +27,8 @@ function main()
     a_v       = sqrt(ani_fac_v)  # VISCOUS anisotropy strength in Ray's formulation a_v = sqrt(η_n/η_s)
     a_e       = sqrt(ani_fac_e)  # ELASTIC anisotropy strength -------------------- a_e = sqrt(G_n/G_s)
     a_p       =     (ani_fac_p)  # PLASTIC anisotropy strength                      a_p = τxx/τxy
-    # aniso_ang = LinRange( 0.0, π/2, 11 )
-    aniso_ang = 135*π/180.0
+    aniso_ang = LinRange( 0.0, π/2, 11 )
+    # aniso_ang = 135*π/180.0
     layer_ang = aniso_ang .- π/2 # in 2D the layers are orthogonal to the director
     
     # Numerics

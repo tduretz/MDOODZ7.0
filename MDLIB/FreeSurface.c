@@ -255,7 +255,9 @@ void RemeshMarkerChain( markers *topo_chain, surface *topo, params model, scale 
                     if (in<0)    in = 0;
                     if (in>Ncx-1)in = Ncx-1;
                     // Topography computed from the coarse grid column
-                    topo_chain->z[NewInd] = (topo->b[in] + topo->a[in] * ( topo_chain->x[NewInd] ));
+                    topo_chain->z[NewInd]  = (topo->b[in] + topo->a[in] * ( topo_chain->x[NewInd] ));
+                    topo_chain->z0[NewInd] = topo_chain->z[NewInd] ;
+
                     // Add one particle on the EAST side of the fine column
                     if (recycle==0) NewInd                = topo_chain->Nb_part;
                     if (recycle==0) topo_chain->Nb_part++;
@@ -270,7 +272,8 @@ void RemeshMarkerChain( markers *topo_chain, surface *topo, params model, scale 
                     if (in<0)    in = 0;
                     if (in>Ncx-1)in = Ncx-1;
                     // Topography computed from the coarse grid column
-                    topo_chain->z[NewInd] = (topo->b[in] + topo->a[in] * ( topo_chain->x[NewInd] ));
+                    topo_chain->z[NewInd]  = (topo->b[in] + topo->a[in] * ( topo_chain->x[NewInd] ));
+                    topo_chain->z0[NewInd] = topo_chain->z[NewInd] ;
                 }
                 else {
                     printf("The max. number of topographic particles (currently %d) needs to be increased (number of particles %d)\n", topo_chain->Nb_part_max, topo_chain->Nb_part);
@@ -292,7 +295,8 @@ void RemeshMarkerChain( markers *topo_chain, surface *topo, params model, scale 
             if (in>Ncx-1)in = Ncx-1;
             grid_topo       = (topo->b[in] + topo->a[in] * ( topo_chain->x[k] ));
             //if ( fabs((grid_topo-topo_chain->z[k]) / grid_topo) > mismax) {
-                topo_chain->z[k]   = grid_topo;
+                topo_chain->z[k]  = grid_topo;
+                topo_chain->z0[k] = grid_topo;
                 inc++;
             //}
         }
@@ -313,40 +317,36 @@ void ProjectTopography( surface *topo, markers *topo_chain, params model, grid m
 
     int k, in, Nx=mesh.Nx;
     double dx=mesh.dx, distance, dxm, mark_val, *Xc_virtual, *Wm, *BmWm;
-
-   Wm              = DoodzCalloc ( Nx-1, sizeof(double));
-   BmWm            = DoodzCalloc ( Nx-1, sizeof(double));
-   double *heightc = DoodzCalloc ( Nx-1, sizeof(double));
+    Wm              = DoodzCalloc ( Nx-1, sizeof(double));
+    BmWm            = DoodzCalloc ( Nx-1, sizeof(double));
+    double *heightc = DoodzCalloc ( Nx-1, sizeof(double));
     double *Delta_heightc = DoodzCalloc ( Nx-1, sizeof(double));
-   for (k=0;k<topo_chain->Nb_part;k++) {
+    for (k=0; k<topo_chain->Nb_part; k++) {
 
         if ( topo_chain->phase[k] != -1 ) {
-
-            distance = ( topo_chain->x[k] - mesh.xc_coord[0] );
-            in   = ceil( (distance/dx) + 0.5) - 1;
-            dxm = 2.0*fabs( mesh.xc_coord[in] - topo_chain->x[k]);
-            mark_val = topo_chain->z[k]-topo_chain->z0[k];
-
-            Wm[in]   += (1.0-(dxm/dx));
-            BmWm[in] += mark_val*(1.0-(dxm/dx));
-
+            distance  = ( topo_chain->x[k] - mesh.xc_coord[0] );
+            in        = ceil( (distance/dx) + 0.5) - 1;
+            dxm       = 2.0*fabs( mesh.xc_coord[in] - topo_chain->x[k]);
+            mark_val  = topo_chain->z[k] - topo_chain->z0[k];
+            Wm[in]   += 1.0 - dxm/dx;
+            BmWm[in] += mark_val*(1.0-dxm/dx);
         }
-   }
-
-   for (k=0;k<Nx-1;k++) {
-       if (Wm[k]==0.0){
-                  Delta_heightc[k]+= 0.0;
-        }
-       else {
-                  Delta_heightc[k]+= BmWm[k]/Wm[k];
-        }
-   }
-
-   for (k=1;k<Nx-1;k++) {
-       topo->height[k] = topo->height0[k] + 0.5*(Delta_heightc[k]+Delta_heightc[k-1]);
     }
-   topo->height[0]=topo->height[1];
-   topo->height[Nx-1]=topo->height[Nx-2];
+
+    for (k=0;k<Nx-1;k++) {
+        if (Wm[k]<1e-30){
+            Delta_heightc[k] = 0.0;
+        }
+        else {
+            Delta_heightc[k] = BmWm[k]/Wm[k];
+        }
+    }
+
+    for (k=1;k<Nx-1;k++) {
+        topo->height[k] = topo->height0[k] + 0.5*(Delta_heightc[k] + Delta_heightc[k-1]);
+    }
+   topo->height[0]    = topo->height[1];
+   topo->height[Nx-1] = topo->height[Nx-2];
 
     // Correct for sides is the box in case of inflow conditions
     for (k=0;k<Nx;k++) {
