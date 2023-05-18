@@ -1,8 +1,8 @@
-# MDOODZ 6.0 makefile
+# MDOODZ 7.0 makefile
 SHELL := /bin/bash
 
 # Compiler
-CC = gcc-12
+CC = gcc-13
 
 # Path to setup file folder
 SET_PATH = ../SETS
