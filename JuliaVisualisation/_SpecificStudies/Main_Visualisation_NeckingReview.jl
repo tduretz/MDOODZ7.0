@@ -1,22 +1,22 @@
 import Pkg
-Pkg.activate(normpath(joinpath(@__DIR__, ".")))
-using HDF5, GLMakie, Printf, Colors, ColorSchemes, MathTeXEngine, LinearAlgebra
+Pkg.activate(normpath(joinpath(@__DIR__, "..")))
+using HDF5, GLMakie, Printf, Colors, ColorSchemes, MathTeXEngine
 Makie.update_theme!(fonts = (regular = texfont(), bold = texfont(:bold), italic = texfont(:italic)))
-
+Makie.inline!(false)
 My = 1e6*365*24*3600
 
 function main()
 
-    # Set the path to your files
-    path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/NonLinearPureshearAnisotropic/"
-    # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/NR00/"
+    # Set the path to your files"
+    path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/1_NR07/"
     path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/"
-    # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/1_NR07/"
+    path ="/Users/tduretz/REPO/DEBUG/MDLIB/"
+
 
     # File numbers
-    file_start = 500
+    file_start = 5
     file_step  = 10
-    file_end   = 500
+    file_end   = 5
 
     # Select field to visualise
     field = :Phases
@@ -24,13 +24,13 @@ function main()
     # field = :Viscosity 
     # field = :PlasticStrainrate
     # field = :Stress
-    # field = :StrainRate
+    field = :StrainRate
     # field = :Pressure
     # field = :Temperature
     # field = :Velocity_x
     # field = :Velocity_z
     # field = :GrainSize
-    # field = :Topography
+    field = :Topography
 
     # Switches
     printfig    = false  # print figures to disk
@@ -38,8 +38,8 @@ function main()
     T_contours  = true  # add temperature contours
     fabric      = false  # add fabric quiver (normal to director)
     α_heatmap   = 0.85   # transparency of heatmap 
-    σ1_axis     = true
     nap         = 0.3    # pause for animation 
+    resolution  = 500
 
     # Scaling
     Lc = 1000.
@@ -85,7 +85,6 @@ function main()
         Vx    = Float64.(reshape(ExtractData( filename, "/VxNodes/Vx"), (ncx+1), (ncz+2)))
         Vz    = Float64.(reshape(ExtractData( filename, "/VzNodes/Vz"), (ncx+2), (ncz+1)))
         τxx   = Float64.(reshape(ExtractData( filename, "/Centers/sxxd"), ncx, ncz))
-        τzz   = Float64.(reshape(ExtractData( filename, "/Centers/szzd"), ncx, ncz))
         τxz   = Float64.(reshape(ExtractData( filename, "/Vertices/sxz"), nvx, nvz))
         ε̇xx   = Float64.(reshape(ExtractData( filename, "/Centers/exxd"), ncx, ncz))
         ε̇xz   = Float64.(reshape(ExtractData( filename, "/Vertices/exz"), nvx, nvz))
@@ -102,14 +101,9 @@ function main()
         Vz_mark = Float64.(ExtractData( filename, "/Topo/Vz_mark"));
         x_mark  = Float64.(ExtractData( filename, "/Topo/x_mark"));
         z_mark  = Float64.(ExtractData( filename, "/Topo/z_mark"));
+
         Vxc   = 0.5 .* (Vx[1:end-1,2:end-1] .+ Vx[2:end-0,2:end-1])
         Vzc   = 0.5 .* (Vz[2:end-1,1:end-1] .+ Vz[2:end-1,2:end-0])
-
-
-        if σ1_axis
-        
-        end
-
 
         #####################################
 
@@ -129,22 +123,25 @@ function main()
         group_phases[ ph_hr.==2 .|| ph_hr.==6   ]                             .= 1
         group_phases[ ph_hr.==3 ]                                             .= 3
 
+        # Transparent turbo
+        cbarPal= :turbo
+        cmap = get(colorschemes[cbarPal], LinRange(0,1,100))
+        turboα = [(cmap[i],i/100) for i in 1:100]
+
         #####################################
 
-        f = Figure(resolution = (Lx/Lz*1000, 1000), fontsize=25)
+        f = Figure(resolution = (Lx/Lz*resolution, resolution), fontsize=25)
 
         if field==:Phases
             ax1 = Axis(f[1, 1], title = L"Phases at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
             hm = heatmap!(ax1, xc_hr./Lc, zc_hr./Lc, ph_hr, colormap = phase_colors)
+            hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(ε̇pl), colormap = turboα)
+
             if T_contours 
                 contour!(ax1, xc./Lc, zc./Lc, T, levels=0:200:1400, linewidth = 4, color=:white )  
             end
             if fabric 
                 arrows!(ax1, xc./Lc, zc./Lc, Nz, Nx, arrowsize = 0, lengthscale=Δ/1.5)
-            end
-            if σ1_axis
-                arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
-
             end            
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
             GLMakie.Colorbar(f[1, 2], hm, label = "Phases", width = 20, labelsize = 25, ticklabelsize = 14 )
@@ -267,26 +264,12 @@ function main()
             @show maximum(Vx_mark)
         end
 
-        # DataInspector(f)
+        DataInspector(f)
         display(f)
         sleep(nap)
         
     end
 
-end
-
-function PrincipalStress(τxx, τzz, τxz, P)
-    σ1   = (x=zeros(size(τxx)), z=zeros(size(τxx)) )
-    τxzc = 0.25*(τxz[1:end-1,1:end-1] .+ τxz[2:end-0,1:end-1] .+ τxz[1:end-1,2:end-0] .+ τxz[2:end-0,2:end-0]) 
-    for i in eachindex(τxzc)
-        if P[i]>1e-13
-            σ = [-P[i]+τxx[i] τxzc[i]; τxzc[i] -P[i]+τzz[i]]
-            v = eigvecs(σ)
-            σ1.x[i] = v[1,1]
-            σ1.z[i] = v[2,1]
-        end
-    end
-    return σ1
 end
 
 function ExtractData( file_path, data_path)
