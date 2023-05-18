@@ -10,23 +10,20 @@ int SetDualPhase(MdoodzInput *input, Coordinates coordinate, int phase) {
     double Lx = input->model.xmax - input->model.xmin;
     double Lz = input->model.zmax - input->model.zmin;
     double Ax, Az;
+    double f = 4.;
 
     // Set checkerboard for phase 0
-    Az = sin( 48.0*2.0*M_PI*coordinate.z / Lz  );
-    if ( Az>0.0 && dual_phase==0 ) {
-        dual_phase += input->model.Nb_phases;
+    Ax = cos( f*2.0*M_PI*coordinate.x / Lx  );
+    Az = sin( f*2.0*M_PI*coordinate.z / Lz  );
+    if ( ( (Az<0.0 && Ax<0.0) || (Az>0.0 && Ax>0.0) ) && dual_phase==0 && phase==0 ) {
+        dual_phase = input->model.Nb_phases;
     }
 
     // Set checkerboard for phase 1
-    Az = sin( 48.0*2.0*M_PI*coordinate.z / Lz  );
-    if ( Az>0.0 && dual_phase==1 ) {
-        dual_phase += input->model.Nb_phases;
-    }
-
-    // Set checkerboard for phase 2
-    Az = sin( 48.0*2.0*M_PI*coordinate.z / Lz  );
-    if ( Az>0.0 && dual_phase==2 ) {
-        dual_phase += input->model.Nb_phases;
+    Az = sin( 3*f*2.0*M_PI*coordinate.z / Lz  );
+    Ax = cos( 3*f*2.0*M_PI*coordinate.x / Lx  );
+    if ( ( (Az<0.0 && Ax<0.0) || (Az>0.0 && Ax>0.0) ) && dual_phase==1 && phase==1 ) {
+        dual_phase = input->model.Nb_phases;
     }
 
   return dual_phase;
@@ -41,39 +38,25 @@ double SetSurfaceZCoord(MdoodzInput *instance, double x_coord) {
   return TopoLevel;// + h_pert * exp( - (x*x) / (2.0*basin_width*basin_width)   );
 }
 
-int SetPhase(MdoodzInput *instance, Coordinates coordinates) {
-  // const double basin_width           = 30.0e3 / instance->scaling.L;
-  // const double h_pert                = instance->model.user3 / instance->scaling.L;
-  // const double lithosphereThickness  = instance->model.user1 / instance->scaling.L;
-  // const double crustThickness        = instance->model.user2 / instance->scaling.L;
-  // const double perturbationAmplitude = instance->model.user3 / instance->scaling.L;
-  // const double x                     = coordinates.x - instance->model.user4 / instance->scaling.L;
-  // const double mohoLevel             = -crustThickness + 0*h_pert * exp( - (x*x) / (2.0*basin_width*basin_width)   );
-  // const bool   isBelowLithosphere    = coordinates.z < -lithosphereThickness;
-  // const bool   isAboveMoho           = coordinates.z > mohoLevel;
-  // const bool   isLowerCrust          = coordinates.z < (mohoLevel + 0.5*crustThickness);
-
+int SetPhase(MdoodzInput *instance, Coordinates X) {
   // Define parameters
   const double lithosphereThickness = instance->model.user1 / instance->scaling.L;
   const double weakZoneWidth        = 10e3/instance->scaling.L;
-  const double mohoLevel        = -5e3 / instance->scaling.L;
-  const bool   isBelowLithosphere     = coordinates.z < -lithosphereThickness;
-  const bool   isAboveMoho          = coordinates.z > mohoLevel;
+  const double mohoLevel            = -5e3 / instance->scaling.L;
+  const bool   isBelowLithosphere   = X.z < -lithosphereThickness;
+  const bool   isAboveMoho          = X.z > mohoLevel;
   int phase = 0;
-  // if ()
-  // {
-  //   /* code */
-  // }
+  if (X.z > - lithosphereThickness) phase = 1;
   return phase;
   
 }
 
-double SetTemperature(MdoodzInput *instance, Coordinates coordinates) {
+double SetTemperature(MdoodzInput *instance, Coordinates X) {
   const double lithosphereThickness = instance->model.user1 / instance->scaling.L;
   const double surfaceTemperature   = 273.15 / instance->scaling.T;
   const double mantleTemperature    = (instance->model.user0 + 273.15) / instance->scaling.T;
   
-  const double particleTemperature  = ((mantleTemperature - surfaceTemperature) / lithosphereThickness) * (-coordinates.z) + surfaceTemperature;
+  const double particleTemperature  = ((mantleTemperature - surfaceTemperature) / lithosphereThickness) * (-X.z) + surfaceTemperature;
   if (particleTemperature > mantleTemperature) {
     return mantleTemperature;
   } else {
