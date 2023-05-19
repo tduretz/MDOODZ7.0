@@ -1134,6 +1134,7 @@ Input ReadInputFile( char *fileName ) {
     model.pure_shear_ALE     = ReadInt2( fin, "pure_shear_ALE",        0 ); // Activates Arbitrary Lagarangian Eulerian mode (pure shear box deformation)
     model.free_surface       = ReadInt2( fin, "free_surface",          0 ); // Activates free surface
     model.free_surface_stab  = ReadDou2( fin, "free_surface_stab",   0.0 ); // Activate free surface stabilisation: range 0.0-2.0
+    model.topo_update        = ReadInt2( fin, "topo_update",           1 ); // 0: total topography update (diffusive); 1: incremental
     // Model configurations
     model.initial_cooling    = ReadInt2( fin, "initial_cooling",       0 ); // Activates initial cooling
     model.cooling_duration   = ReadDou2( fin, "cooling_duration",     Ga ); // Initial cooling duration
