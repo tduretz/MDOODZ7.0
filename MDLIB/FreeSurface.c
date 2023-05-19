@@ -217,7 +217,6 @@ void RemeshMarkerChain( markers *topo_chain, surface *topo, params model, scale 
             if (topo_chain->phase[k]!=-1) NumMarkCell[in]++;
             // NEW
             if (topo_chain->phase[k]== -1) nout++;
-            
         }
         
         // NEW
@@ -321,7 +320,7 @@ void ProjectTopography( surface *topo, markers *topo_chain, params model, grid m
     BmWm            = DoodzCalloc ( Nx-1, sizeof(double));
     double *heightc = DoodzCalloc ( Nx-1, sizeof(double));
     double *Delta_heightc = DoodzCalloc ( Nx-1, sizeof(double));
-
+    
     for (k=0; k<topo_chain->Nb_part; k++) {
 
         if ( topo_chain->phase[k] != -1 ) {
