@@ -14,9 +14,9 @@ function main()
     # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/1_NR07/"
 
     # File numbers
-    file_start = 500
+    file_start = 200
     file_step  = 10
-    file_end   = 500
+    file_end   = 200
 
     # Select field to visualise
     field = :Phases
@@ -38,8 +38,9 @@ function main()
     T_contours  = true  # add temperature contours
     fabric      = false  # add fabric quiver (normal to director)
     α_heatmap   = 0.85   # transparency of heatmap 
-    σ1_axis     = true
+    σ1_axis     = false
     nap         = 0.3    # pause for animation 
+    resol       = 800
 
     # Scaling
     Lc = 1000.
@@ -104,18 +105,15 @@ function main()
         z_mark  = Float64.(ExtractData( filename, "/Topo/z_mark"));
         Vxc   = 0.5 .* (Vx[1:end-1,2:end-1] .+ Vx[2:end-0,2:end-1])
         Vzc   = 0.5 .* (Vz[2:end-1,1:end-1] .+ Vz[2:end-1,2:end-0])
-
-
-        if σ1_axis
-        
+        if σ1_axis 
+            σ1 = PrincipalStress(τxx, τzz, τxz, P) 
         end
-
-
+        
         #####################################
 
         # Color palette for phase map
         cmap    = zeros(RGB{Float64}, 7)
-        cmap[1] = RGBA{Float64}(244/255, 218/255, 205/255, 1.)  
+        cmap[1] = RGBA{Float64}(210/255, 218/255, 205/255, 1.)  
         cmap[2] = RGBA{Float64}(217/255, 099/255, 097/255, 1.)  
         cmap[3] = RGBA{Float64}(117/255, 164/255, 148/255, 1.) 
         cmap[4] = RGBA{Float64}(223/255, 233/255, 219/255, 1.) 
@@ -131,7 +129,7 @@ function main()
 
         #####################################
 
-        f = Figure(resolution = (Lx/Lz*1000, 1000), fontsize=25)
+        f = Figure(resolution = (Lx/Lz*resol, resol), fontsize=25)
 
         if field==:Phases
             ax1 = Axis(f[1, 1], title = L"Phases at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
@@ -144,7 +142,6 @@ function main()
             end
             if σ1_axis
                 arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
-
             end            
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
             GLMakie.Colorbar(f[1, 2], hm, label = "Phases", width = 20, labelsize = 25, ticklabelsize = 14 )
@@ -163,7 +160,10 @@ function main()
             end
             if fabric 
                 arrows!(ax1, xc./Lc, zc./Lc, Nz, Nx, arrowsize = 0, lengthscale=Δ/1.5)
-            end           
+            end 
+            if σ1_axis
+                arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
+            end            
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
             GLMakie.Colorbar(f[1, 2], hm, label = L"$\eta$ [Pa.s]", width = 20, labelsize = 25, ticklabelsize = 14 )
             GLMakie.colgap!(f.layout, 20)
@@ -181,7 +181,10 @@ function main()
             end
             if fabric 
                 arrows!(ax1, xc./Lc, zc./Lc, Nz, Nx, arrowsize = 0, lengthscale=Δ/1.5)
-            end          
+            end   
+            if σ1_axis
+                arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
+            end         
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
             GLMakie.Colorbar(f[1, 2], hm, label = L"$\tau_\textrm{II}$ [Pa]", width = 20, labelsize = 25, ticklabelsize = 14 )
             GLMakie.colgap!(f.layout, 20)
@@ -200,6 +203,9 @@ function main()
             if fabric 
                 arrows!(ax1, xc./Lc, zc./Lc, Nz, Nx, arrowsize = 0, lengthscale=Δ/1.5)
             end
+            if σ1_axis
+                arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
+            end  
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
             GLMakie.Colorbar(f[1, 2], hm, label =  L"$\dot{\varepsilon}_\textrm{II}$ [s$^{-1}$]", width = 20, labelsize = 25, ticklabelsize = 14 )
             GLMakie.colgap!(f.layout, 20)
@@ -218,6 +224,9 @@ function main()
             if fabric 
                 arrows!(ax1, xc./Lc, zc./Lc, Nz, Nx, arrowsize = 0, lengthscale=Δ/1.5)
             end
+            if σ1_axis
+                arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
+            end  
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
             GLMakie.Colorbar(f[1, 2], hm, label = L"$\dot{\varepsilon}_\textrm{II}^\textrm{pl}$ [s$^{-1}$]", width = 20, labelsize = 25, ticklabelsize = 14 )
             GLMakie.colgap!(f.layout, 20)
@@ -236,6 +245,9 @@ function main()
             if fabric 
                 arrows!(ax1, xc./Lc, zc./Lc, Nz, Nx, arrowsize = 0, lengthscale=Δ/1.5)
             end
+            if σ1_axis
+                arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
+            end  
             xminz, xmaxz = -0.4, 0.4
             zminz, zmaxz = -0.17, 0.17
             Lx = xmaxz - xminz
@@ -267,7 +279,7 @@ function main()
             @show maximum(Vx_mark)
         end
 
-        # DataInspector(f)
+        DataInspector(f)
         display(f)
         sleep(nap)
         
