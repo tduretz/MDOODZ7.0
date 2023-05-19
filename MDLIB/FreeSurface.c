@@ -321,13 +321,15 @@ void ProjectTopography( surface *topo, markers *topo_chain, params model, grid m
     BmWm            = DoodzCalloc ( Nx-1, sizeof(double));
     double *heightc = DoodzCalloc ( Nx-1, sizeof(double));
     double *Delta_heightc = DoodzCalloc ( Nx-1, sizeof(double));
+
     for (k=0; k<topo_chain->Nb_part; k++) {
 
         if ( topo_chain->phase[k] != -1 ) {
             distance  = ( topo_chain->x[k] - mesh.xc_coord[0] );
             in        = ceil( (distance/dx) + 0.5) - 1;
             dxm       = 2.0*fabs( mesh.xc_coord[in] - topo_chain->x[k]);
-            mark_val  = topo_chain->z[k] - topo_chain->z0[k];
+            if (model.topo_update==0) mark_val  = topo_chain->z[k];
+            if (model.topo_update==1) mark_val  = topo_chain->z[k] - topo_chain->z0[k];
             Wm[in]   += 1.0 - dxm/dx;
             BmWm[in] += mark_val*(1.0-dxm/dx);
         }
@@ -343,7 +345,8 @@ void ProjectTopography( surface *topo, markers *topo_chain, params model, grid m
     }
 
     for (k=1;k<Nx-1;k++) {
-        topo->height[k] = topo->height0[k] + 0.5*(Delta_heightc[k] + Delta_heightc[k-1]);
+        if (model.topo_update==0) topo->height[k] = 0.5*(Delta_heightc[k] + Delta_heightc[k-1]);
+        if (model.topo_update==1) topo->height[k] = topo->height0[k] + 0.5*(Delta_heightc[k] + Delta_heightc[k-1]);
     }
    topo->height[0]    = topo->height[1];
    topo->height[Nx-1] = topo->height[Nx-2];

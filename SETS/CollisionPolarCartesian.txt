@@ -16,42 +16,40 @@ V   = 1e-9
 T   = 100
  
 /**** SPACE ****/
-Nx      = 400
-Nz      = 250
+Nx      = 200
+Nz      = 150
 xmin    = -9.959000e5
 xmax    =  9.959000e5
 zmin    =  5969400     / model bottom 
 zmax    =  6.400000e6  / Earth surface
 
 /**** TIME ****/
-Nt      = 500
+Nt      = 200
 dt      = 1.2623e+11
 Courant = 0.45
 
 /**** SWITCHES ****/
-penalty         = 1e3
-eta_average         = 1
-interp_stencil     = 9
-mechanical    = 1
-constant_dt     = 0
-RK              = 4
-periodic_x    = 0
-pure_shear_ALE = 0  /1: box stretched at constant strain rate; -1 box of constant size
-
-elastic       = 1
-thermal       = 1
-isPl_soft       = 0
-free_surface       = 1
-free_surface_stab  = 1
-
-initial_cooling      = 1
-subgrid_diffusion    = 2
-shear_heating      = 1
-adiab_heating      = 0
-polar           = 1
-anisotropy      = 0
-stress_rotation = 2
-
+penalty           = 1e3
+eta_average       = 1
+interp_stencil    = 9
+mechanical        = 1
+constant_dt       = 0
+RK                = 4
+periodic_x        = 0
+pure_shear_ALE    = 0  /1: box stretched at constant strain rate; -1 box of constant size
+elastic           = 1
+thermal           = 1
+isPl_soft         = 0
+free_surface      = 1
+free_surface_stab = 1
+topo_update       = 0 / 0: total update of topotgraphy (likely diffusive)
+initial_cooling   = 1
+subgrid_diffusion = 2
+shear_heating     = 1
+adiab_heating     = 0
+polar             = 1
+anisotropy        = 0
+stress_rotation   = 2
 
 /**** NON-LINEAR ITERATIONS ****/
 Newton      = 0 
