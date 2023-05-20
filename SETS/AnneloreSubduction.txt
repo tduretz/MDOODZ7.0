@@ -65,8 +65,13 @@ gz = -9.81
 Nb_phases = 3 
 
 ID   = 0
+<<<<<<< HEAD
 rho  = 3250.00 /mantle 1
 G    = 1e10
+=======
+rho  = 3250.00 /asthenosphere
+G   = 1e10
+>>>>>>> a995361ca112c348839b55b4fec68d5b142928dc
 Cv   = 1050
 k    = 3.0
 Qr   = 1e-10
@@ -87,8 +92,13 @@ npwl = 1
 Qpwl = 0
 
 ID   = 1
+<<<<<<< HEAD
 rho  = 3250.00 /mantle 2
 G    = 1e10
+=======
+rho  = 3250.00 /lithosphere
+G   = 1e10
+>>>>>>> a995361ca112c348839b55b4fec68d5b142928dc
 Cv   = 1050
 k    = 3.0
 Qr   = 1e-10
