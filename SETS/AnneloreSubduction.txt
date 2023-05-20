@@ -1,10 +1,10 @@
 /**** RESTART ****/
-istep = 00000250
+istep    = 00000250
 irestart = 0
 
 /**** OUTPUT FILES ****/
-writer = 1
-writer_step = 10
+writer         = 1
+writer_step    = 10
 writer_markers = 0
 writer_debug   = 0 
 
@@ -15,47 +15,47 @@ V   = 1.0e-9     /velocity
 T   = 4.0e+02      /temperature
  
 /**** SPACE-TIME ****/
-Nx      = 301
-Nz      = 201 
-Nt      = 0
-xmin    = -700.000000e3
-xmax    =  700.000000e3
-zmin    = -660.000000e3
-zmax    = 20.000000e3 
-dt      = 1.2623e+11
-Courant = 0.4
-penalty = 1e2
-eta_average = 1
+Nx             = 301
+Nz             = 201 
+Nt             = 0
+xmin           = -1600.000000e3
+xmax           =  1600.000000e3
+zmin           = -660.000000e3
+zmax           = 20.000000e3 
+dt             = 1.2623e+11
+Courant        = 0.4
+penalty        = 1e2
+eta_average    = 1
 interp_stencil = 1
 
 /**** SWITCHES ****/
-mechanical    = 1
+mechanical      = 1
 constant_dt     = 0
 RK              = 4
-pure_shear_ALE = 0  /1: box stretched at constant strain rate; -1 box of constant size
+pure_shear_ALE  = 0  /1: box stretched at constant strain rate; -1 box of constant size
 
-elastic       = 1
-thermal       = 1
+elastic            = 1
+thermal            = 1
 free_surface       = 1
 free_surface_stab  = 1
 
-initial_cooling      = 1
-subgrid_diffusion    = 2
+initial_cooling    = 1
+subgrid_diffusion  = 2
 shear_heating      = 1
 adiab_heating      = 0
 
 surface_processes  = 0 /0 = none; 1 = diffusion only; 2 = fills instantaneously the basin up to the
-track_T_P_x_z     = 1 / initial P and T field record
-polar           = 0
-anisotropy           = 0
+track_T_P_x_z      = 1 / initial P and T field record
+polar              = 0
+anisotropy         = 0
 
 /**** SETUP DEPENDANT ****/
-marker_noise        = 1
-bkg_strain_rate           = -1e-150 /Background strain rate [s-1] => extension rate = 1 cm/yr
-user0           = 1400   /mantle temperature [oC]
-user1           = 80e3   /lithospheric thickness [m]
-user2           = -1e-9  /plate velocity [m/s]
-user3           = 0.5    /amount of push from left side
+marker_noise       = 1
+bkg_strain_rate    = -1e-15 /Background strain rate [s-1] => extension rate = 1 cm/yr
+user0              = 1450   /mantle temperature [oC]
+user1              = 80e3   /lithospheric thickness [m]
+user2              = -1e-9  /plate velocity [m/s]
+user3              = 0.5    /amount of push from left side
 
 /**** GRAVITY ****/
 gx = 0.0000
@@ -66,7 +66,7 @@ Nb_phases = 3
 
 ID   = 0
 rho  = 3250.00 /mantle 1
-G   = 1e10
+G    = 1e10
 Cv   = 1050
 k    = 3.0
 Qr   = 1e-10
@@ -77,10 +77,10 @@ alp  = 8e-6
 bet  = 1e-11
 drho = 0
 cstv = 0
-pwlv = 0
+pwlv = 40
 linv = 40
 gbsv = 0
-expv = 0
+expv = 40
 gsel = 0
 eta0 = 1e22
 npwl = 1
@@ -88,7 +88,7 @@ Qpwl = 0
 
 ID   = 1
 rho  = 3250.00 /mantle 2
-G   = 1e10
+G    = 1e10
 Cv   = 1050
 k    = 3.0
 Qr   = 1e-10
@@ -110,9 +110,9 @@ Qpwl = 0
 
 ID   = 2
 rho  = 3250.00 /wet mantle
-G   = 1e10
+G    = 1e10
 Cv   = 1050
-k    = 3e3 / unrealistically high to mimic convecting mantle
+k    = 3.0 / unrealistically high to mimic convecting mantle
 Qr   = 1e-10
 C    = 1e6
 phi  = 5
@@ -120,11 +120,11 @@ Slim = 500e9
 alp  = 8e-6
 bet  = 1e-11
 drho = 0
-cstv = 1
-pwlv = 0
-linv = 0
+cstv = 0
+pwlv = 40
+linv = 40
 gbsv = 0
-expv = 0
+expv = 40
 gsel = 0
 eta0 = 5e20
 npwl = 1
@@ -143,15 +143,15 @@ dmax  =    -2       / Grain size maximum log_10 [m]
 Pn    =  1.0e9        / Pressure [Pa]
 
 /**** PARTICLES ****/
-Nx_part  = 4
-Nz_part  = 4
+Nx_part       = 4
+Nz_part       = 4
 min_part_cell = 16
 
 /**** NON-LINEAR ITERATIONS ****/
-Newton      = 0
-nit_max     = 1 // for high resolution use from 10 to 20
-line_search = 0
+Newton           = 0
+nit_max          = 1 // for high resolution use from 10 to 20
+line_search      = 0
 nonlin_abs_mom   = 5.0e-8
 nonlin_abs_div   = 5.0e-8
-min_eta      = 5.0e18
-max_eta      = 1.0e25
+min_eta          = 5.0e18
+max_eta          = 1.0e25

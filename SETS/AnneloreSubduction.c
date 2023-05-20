@@ -35,35 +35,39 @@ int SetDualPhase(MdoodzInput *input, Coordinates coordinate, int phase) {
 
 double SetSurfaceZCoord(MdoodzInput *instance, double x_coord) {
   const double TopoLevel   = -0.0e3 / instance->scaling.L;
-  // const double basin_width = 30.0e3 / instance->scaling.L;
-  // const double h_pert      = instance->model.user3 / instance->scaling.L;
-  // const double x           = x_coord - instance->model.user4 / instance->scaling.L;
-  return TopoLevel;// + h_pert * exp( - (x*x) / (2.0*basin_width*basin_width)   );
+
+  return TopoLevel;
 }
 
 int SetPhase(MdoodzInput *instance, Coordinates coordinates) {
-  // const double basin_width           = 30.0e3 / instance->scaling.L;
-  // const double h_pert                = instance->model.user3 / instance->scaling.L;
-  // const double lithosphereThickness  = instance->model.user1 / instance->scaling.L;
-  // const double crustThickness        = instance->model.user2 / instance->scaling.L;
-  // const double perturbationAmplitude = instance->model.user3 / instance->scaling.L;
-  // const double x                     = coordinates.x - instance->model.user4 / instance->scaling.L;
-  // const double mohoLevel             = -crustThickness + 0*h_pert * exp( - (x*x) / (2.0*basin_width*basin_width)   );
-  // const bool   isBelowLithosphere    = coordinates.z < -lithosphereThickness;
-  // const bool   isAboveMoho           = coordinates.z > mohoLevel;
-  // const bool   isLowerCrust          = coordinates.z < (mohoLevel + 0.5*crustThickness);
 
   // Define parameters
   const double lithosphereThickness = instance->model.user1 / instance->scaling.L;
   const double weakZoneWidth        = 10e3/instance->scaling.L;
-  const double mohoLevel        = -5e3 / instance->scaling.L;
-  const bool   isBelowLithosphere     = coordinates.z < -lithosphereThickness;
+  const double mohoLevel            = -5e3 / instance->scaling.L;
+  const bool   isBelowLithosphere   = coordinates.z < -lithosphereThickness;
   const bool   isAboveMoho          = coordinates.z > mohoLevel;
   int phase = 0;
-  // if ()
-  // {
-  //   /* code */
-  // }
+  
+  // Set all lithosphere
+  if (coordinates.z>-lithosphereThickness) 
+  {
+    phase = 1;
+  }
+  
+  // Set weak zone
+   if (coordinates.z>-lithosphereThickness && coordinates.x>-weakZoneWidth + coordinates.z*1.3 && coordinates.x<weakZoneWidth + coordinates.z*1.3)
+   {
+     phase = 2;
+   }
+
+  // Set crustal layer
+  if (isAboveMoho)
+  {
+    phase = 2;
+  }
+  
+  // Return
   return phase;
   
 }
@@ -76,7 +80,8 @@ double SetTemperature(MdoodzInput *instance, Coordinates coordinates) {
   const double particleTemperature  = ((mantleTemperature - surfaceTemperature) / lithosphereThickness) * (-coordinates.z) + surfaceTemperature;
   if (particleTemperature > mantleTemperature) {
     return mantleTemperature;
-  } else {
+  } 
+  else {
     return particleTemperature;
   }
 }
@@ -96,8 +101,8 @@ char SetBCPType(MdoodzInput *instance, POSITION position) {
 
 SetBC SetBCT(MdoodzInput *instance, POSITION position, double particleTemperature) {
   SetBC     bc;
-  double surface_temperature =          zeroC  / instance->scaling.T;
-  double mantle_temperature  = (1330. + zeroC) / instance->scaling.T;
+  double surface_temperature = (0.0 + 273.15) / instance->scaling.T ;
+  double mantle_temperature  = (instance->model.user0 + 273.15) / instance->scaling.T;
   if (position == S) {
     bc.type  = constant_temperature;
     bc.value = mantle_temperature;
@@ -108,7 +113,7 @@ SetBC SetBCT(MdoodzInput *instance, POSITION position, double particleTemperatur
   } 
   if (position == W || position == E) {
     bc.type  = constant_heatflux;
-    bc.value = 0.;
+    bc.value = 0.0;
   }
   return bc;
 }
