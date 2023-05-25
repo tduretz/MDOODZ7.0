@@ -575,7 +575,7 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
   // if (gbs == 1)         {eta_up = MINV(eta_up, eta_gbs); eta_lo += 1.0/eta_gbs;}
   // eta_lo = 1.0/eta_lo;
 
-   eta_up = 1.0e100 / scaling->eta;
+   eta_up =  1.0e100 / scaling->eta;
    eta_lo = -1.0e100 / scaling->eta;
   if (constant == 1)    {eta_up = MINV(eta_up, eta_cst); eta_lo = MAXV(eta_lo, eta_cst);}
   if (dislocation == 1) {eta_up = MINV(eta_up, eta_pwl); eta_lo = MAXV(eta_lo, eta_pwl);}
@@ -667,8 +667,7 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
         divp    = -gdot*dQdP;
         Pc      = P + K*dt*divp; // P0 - k*dt*(div-divp) = P + k*dt*divp
         eta_vp  = eta_vp0 * pow(fabs(gdot), 1.0/n_vp - 1.0);
-        //            if (tens==1) sin_dil = (F_trial0 - eta_ve*gdot - eta_vp*gdot)/(K*dt*gdot*sin_fric);
-        Tyield  = C*cos_fric + Pc*sin_fric + gdot*eta_vp;
+        Tyield  = Tyield + gdot*eta_vp;
         Tiic    = Tii - eta_ve*gdot;
         F_trial = Tiic - Tyield;
 
@@ -777,9 +776,13 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
       *Wtot  = Tii*Tii/eta_ve;
       *Wel   = Tii*Tii/eta_el;
       *Wdiss = Tii*Tii/eta;
-      // printf("Wtot = %2.6e Wdiss = %2.6e Wel = %2.6e\n", *Wtot, *Wdiss, *Wel);
-      // printf("Wtot - (Wdiss + Wel) = %2.6e\n", *Wtot - (*Wdiss + *Wel));
-      // printf("eta = %2.6e --- eta_ve = %2.6e --- eta_ve1 = %2.6e\n", eta, eta_ve, 1.0/(1./eta+1./eta_el));
+      if (*Wdiss<0.0) {
+       printf("Wtot = %2.6e Wdiss = %2.6e Wel = %2.6e\n", *Wtot, *Wdiss, *Wel);
+       printf("Wtot - (Wdiss + Wel) = %2.6e\n", *Wtot - (*Wdiss + *Wel));
+       printf("eta = %2.6e --- eta_ve = %2.6e --- eta_ve1 = %2.6e\n", eta, eta_ve, 1.0/(1./eta+1./eta_el));
+       printf("constant = %d %2.2e %2.2e %2.2e %2.2e, Tii=%2.2e gdot=%2.2e\n", constant, eta*scaling->eta, eta_pwl*scaling->eta, eta_pl*scaling->eta, eta_cst*scaling->eta, Tii*scaling->S, gdot*scaling->E);
+       exit(1);
+      }
     }
   }
 
@@ -932,7 +935,7 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
           mesh->Wdiss[c0]      += mesh->phase_perc_n[p][c0] * Wdiss;
           mesh->Wel[c0]        += mesh->phase_perc_n[p][c0] * Wel;
 
-          if (mesh->Wdiss[c0]<0.0) {printf("negative dissipation: you crazy! --> Wdiss = %2.2e\n", mesh->Wdiss[c0]*scaling->S*scaling->E); }
+          if (mesh->Wdiss[c0]<0.0) {printf("negative dissipation: you crazy! --> Wdiss = %2.2e Wdiss = %2.2e\n", mesh->Wdiss[c0]*scaling->S*scaling->E, Wdiss*scaling->S*scaling->E); }
 
           mesh->p_corr[c0]      += mesh->phase_perc_n[p][c0] * Pcorr;
           mesh->div_u_el[c0]    += mesh->phase_perc_n[p][c0] * div_el;
