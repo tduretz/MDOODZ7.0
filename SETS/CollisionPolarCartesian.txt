@@ -16,15 +16,15 @@ V   = 1e-9
 T   = 100
  
 /**** SPACE ****/
-Nx      = 200
-Nz      = 150
+Nx      = 800
+Nz      = 500
 xmin    = -9.959000e5
 xmax    =  9.959000e5
 zmin    =  5969400     / model bottom 
 zmax    =  6.400000e6  / Earth surface
 
 /**** TIME ****/
-Nt      = 200
+Nt      = 500
 dt      = 1.2623e+11
 Courant = 0.45
 
@@ -50,6 +50,8 @@ adiab_heating     = 0
 polar             = 1
 anisotropy        = 0
 stress_rotation   = 2
+surface_processes = 1
+surf_diff = 1e-6 / surface diffusivity
 
 /**** NON-LINEAR ITERATIONS ****/
 Newton      = 0 
@@ -101,6 +103,7 @@ gsel = 0             / grain size evo.
 eta0 = 1e23
 npwl = 1
 Qpwl = 0
+/Slim = 300e6          / 300 MPa
 
 /**** PHASE 1 ****/
 ID   = 1
@@ -125,6 +128,7 @@ gsel = 0             / grain size evo.
 eta0 = 1e22
 npwl = 1
 Qpwl = 0
+/Slim = 300e6          / 300 MPa
 
 /**** PHASE 2 ****/
 ID   = 2
@@ -149,3 +153,4 @@ gsel = 0             / grain size evo.
 eta0 = 5e21
 npwl = 1
 Qpwl = 0
+/Slim = 300e6          / 300 MPa

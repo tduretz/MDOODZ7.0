@@ -250,6 +250,27 @@ SetBC SetBCVz(MdoodzInput *instance, POSITION position, Coordinates coordinates)
   return bc;
 }
 
+double SetAnisoAngle(MdoodzInput *input, Coordinates coordinates, int phase) {
+  // radial anisotropy
+  if (coordinates.x >= 0) {
+    if (coordinates.z >= 0) {
+      // x>0, y>0
+      return atan(coordinates.z/coordinates.x) * 180.0 / M_PI;
+      } else {
+        // x>0, y<0
+        return 270.0 + atan(coordinates.x/-coordinates.z) * 180.0 / M_PI;
+      }
+    }
+    else {
+          if (coordinates.z >= 0) {
+            // x<0, y>0
+            return 90.0 + atan(-coordinates.x/coordinates.z) * 180.0 / M_PI;
+    } else {
+      // x<0, y<0
+      return 180.0 + atan(coordinates.z/coordinates.x) * 180.0 / M_PI;        
+    }
+  }
+}
 
 int main(int nargs, char *args[]) {
   // Input file name
@@ -268,6 +289,7 @@ int main(int nargs, char *args[]) {
           .SetParticles = &(SetParticles_ff){
                   .SetPhase              = SetPhase,
                   .SetTemperature        = SetTemperature,
+                   .SetAnisoAngle         = SetAnisoAngle,
           },
           .SetBCs = &(SetBCs_ff){
                   .SetBCVx    = SetBCVx,
