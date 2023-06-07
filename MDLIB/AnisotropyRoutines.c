@@ -47,7 +47,8 @@ double AnisoFactorEvolv( double FS_AR, double aniso_fac_max ) {
   const double delta_ratio = aniso_fac_max / 4.0;
   const double FS_AR_crit  = aniso_fac_max / 2.0;
   const double x = 0.5*erfc((FS_AR - FS_AR_crit) / delta_ratio);
-  return x * FS_AR + (1.0-x) * aniso_fac_max;
+  // return x * FS_AR + (1.0-x) * aniso_fac_max;
+  return MINV(FS_AR, aniso_fac_max);
 }
 
 // Squared second invariant of deviatoric stress
