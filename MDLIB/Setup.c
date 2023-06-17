@@ -283,7 +283,7 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
         SetBC bc          = setBCs.SetBCVz(instance, position, coordinates);
         mesh->BCv.type[c] = bc.type;
         mesh->BCv.val[c]  = bc.value;
-        if (bc.type==11) mesh->BCu.val[c] = 2.0*bc.value;
+        if (bc.type==11) mesh->BCv.val[c] = 2.0*bc.value;
         ValidateInternalPoint(position, mesh->BCv.type[c], coordinates, "SetBCVzType");
       }
     }

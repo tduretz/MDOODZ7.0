@@ -254,6 +254,8 @@ void RemeshMarkerChain( markers *topo_chain, surface *topo, params model, scale 
                     if (in<0)    in = 0;
                     if (in>Ncx-1)in = Ncx-1;
                     // Topography computed from the coarse grid column
+                    topo_chain->Vx[NewInd] = 0.5*(topo->vx[in] + topo->vx[in+1]);
+                    topo_chain->Vz[NewInd] = 0.5*(topo->vz[in] + topo->vz[in+1]);
                     topo_chain->z[NewInd]  = topo->b[in]  + topo->a[in]  * topo_chain->x[NewInd];
                     topo_chain->z0[NewInd] = topo->b0[in] + topo->a0[in] * topo_chain->x[NewInd];
 
@@ -271,6 +273,8 @@ void RemeshMarkerChain( markers *topo_chain, surface *topo, params model, scale 
                     if (in<0)    in = 0;
                     if (in>Ncx-1)in = Ncx-1;
                     // Topography computed from the coarse grid column
+                    topo_chain->Vx[NewInd] = 0.5*(topo->vx[in] + topo->vx[in+1]);
+                    topo_chain->Vz[NewInd] = 0.5*(topo->vz[in+1] + topo->vz[in+2]);
                     topo_chain->z[NewInd]  = topo->b[in]  + topo->a[in]  * topo_chain->x[NewInd];
                     topo_chain->z0[NewInd] = topo->b0[in] + topo->a0[in] * topo_chain->x[NewInd];
                 }
