@@ -967,7 +967,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                 }
 
                 if (input.model.free_surface == 1 ) {
-                    // Advect free surface with RK4
+                    // Advect free surface with RK2
                     RogerGuntherII( &topo_chain, input.model, mesh, 1, input.scaling );
                     RogerGuntherII( &topo_chain_ini, input.model, mesh, 1, input.scaling );
                 }
