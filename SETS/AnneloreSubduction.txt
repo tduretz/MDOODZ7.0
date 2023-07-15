@@ -1,167 +1,166 @@
+/**** GENERAL INFO ****/
+/ 1. All physical parameters have to be in SI-Units 
+/ 2. Any comment to this input file has to be preceded by /
+
 /**** RESTART ****/
-istep    = 00000250
-irestart = 0
+istep    	= 500	/ Restart file number
+irestart 	= 1	/ Restart switch
 
 /**** OUTPUT FILES ****/
-writer         = 1
-writer_step    = 10
-writer_markers = 0
-writer_debug   = 0 
+writer         	= 1	/ Write grid data switch
+writer_step    	= 25	/ Write interval 
+writer_markers 	= 0	/ Write marker data switch
+writer_debug   	= 0	/ Write debug data switch 
 
-/**** SCALES ****/ Scaling parameters for
-eta = 1.0e+15      /viscosity
-L   = 5.0e3       /length
-V   = 1.0e-9     /velocity
-T   = 4.0e+02      /temperature
+/**** SCALES ****/ (Setup dependent) Scaling parameters for
+eta 		= 1.0e+23	/viscosity
+L   		= 5.0e3       	/length
+V   		= 1.0e-9     	/velocity
+T   		= 4.0e+02      	/temperature
  
 /**** SPACE-TIME ****/
-Nx             = 301
-Nz             = 201 
-Nt             = 0
-xmin           = -1600.000000e3
-xmax           =  1600.000000e3
-zmin           = -660.000000e3
-zmax           = 20.000000e3 
-dt             = 1.2623e+11
-Courant        = 0.4
-penalty        = 1e2
+Nx             = 1001			/ No. grid points x
+Nz             = 601 			/ No. grid points z
+Nt             = 750			/ No. time steps
+xmin           = -1600.000000e3		/ Minimum x-coordinate
+xmax           =  1600.000000e3		/ Maximum x-coordinate
+zmin           = -660.000000e3		/ Minimum z-coordinate
+zmax           = 20.000000e3 		/ Maximum z-coordinate
+dt             = 1.2623e+11		/ Initial time step 
+Courant        = 0.4			/ CFL-Criterion: should be between 0.1 and 0.5
+penalty        = 1e2			/ Numerical parameter for matrix penalization 
 eta_average    = 1
-interp_stencil = 1
+interp_stencil = 1			
 
 /**** SWITCHES ****/
-mechanical      = 1
-constant_dt     = 0
-RK              = 4
-pure_shear_ALE  = 0  /1: box stretched at constant strain rate; -1 box of constant size
+mechanical      	= 1		/ Mechanical solver switch
+constant_dt     	= 0		/ Constant time stepping switch
+RK              	= 4		/ Runge-Kutta scheme. 4: most accurate
+pure_shear_ALE  	= 0  		/ 1: box stretched at constant strain rate; -1 box of constant size
 
-elastic            = 1
-thermal            = 1
-free_surface       = 1
-free_surface_stab  = 1
+elastic            	= 1		/ Elastic rheology switch
+thermal            	= 1		/ Thermal solver switch
+free_surface       	= 1		/ Free evolution of topography switch
+free_surface_stab  	= 1		/ Free surface stabilization switch
 
-initial_cooling    = 1
-subgrid_diffusion  = 2
-shear_heating      = 1
-adiab_heating      = 0
+initial_cooling    	= 1		/ Initial thermal equilibration switch
+subgrid_diffusion  	= 2		/ Subgrid diffusion algorithm switch
+shear_heating      	= 1		/ Shear heating switch
+adiab_heating      	= 0		/ Adiabatic heating switch
 
-surface_processes  = 0 /0 = none; 1 = diffusion only; 2 = fills instantaneously the basin up to the
-track_T_P_x_z      = 1 / initial P and T field record
-polar              = 0
-anisotropy         = 0
+surface_processes  = 0 			/ 0 = none; 1 = diffusion only; 2 = fills instantaneously the basin up to the
+track_T_P_x_z      = 1 			/ initial P and T field record
+polar              = 0			/ Switch to polar coordinate representation
+anisotropy         = 0			/ Viscous anisotropy switch
 
 /**** SETUP DEPENDANT ****/
-marker_noise       = 1
-bkg_strain_rate    = -1e-15 /Background strain rate [s-1] => extension rate = 1 cm/yr
-user0              = 1450   /mantle temperature [oC]
-user1              = 80e3   /lithospheric thickness [m]
-user2              = -1e-9  /plate velocity [m/s]
-user3              = 0.5    /amount of push from left side
+marker_noise       = 1			/ Marker noise switch
+bkg_strain_rate    = 1e-15 		/ Background strain rate [s-1] => extension rate = 1 cm/yr
+user0              = 1450   		/ Mantle temperature [oC]
+user1              = 80e3   		/ Lithospheric thickness [m]
+user2              = -3.17e-9  		/ Plate velocity [m/s] (compression -> negative)
+user3              = 0.5    		/ Amount of push from left side
 
 /**** GRAVITY ****/
-gx = 0.0000
-gz = -9.81
+gx = 0.0000				/ Gravitational acceleration in x
+gz = -9.81				/ Gravitational acceleration in z
 
 /**** PHASE PROPERTIES ****/
 Nb_phases = 3 
 
-ID   = 0
-<<<<<<< HEAD
-rho  = 3250.00 /mantle 1
-G    = 1e10
-=======
-rho  = 3250.00 /asthenosphere
-G   = 1e10
->>>>>>> a995361ca112c348839b55b4fec68d5b142928dc
-Cv   = 1050
-k    = 3.0
-Qr   = 1e-10
-C    = 1e7
-phi  = 30
-Slim = 500e9
-alp  = 8e-6
-bet  = 1e-11
-drho = 0
-cstv = 0
-pwlv = 40
-linv = 40
-gbsv = 0
-expv = 40
-gsel = 0
-eta0 = 1e22
-npwl = 1
-Qpwl = 0
+ID     = 0				/ Phase identity used to assign material to phase
+rho    = 3250.00 /asthenosphere		/ Reference density
+G      = 1e10				/ Shear modulus
+Cv     = 1050				/ Heat capacity
+k      = 3.0				/ Thermal conductivity
+Qr     = 1e-10				/ Amount of radiogenic heat production
+C      = 1e6				/ Cohesion
+phi    = 5				/ Friction angle
+Slim   = 500e9				/ Stress cutoff. Should remain untouched unless one really wants to artificially prevent stresses to rise above this level
+alp    = 8e-6				/ Coefficient of thermal expansion
+bet    = 1e-11				/ Coefficient of compressibility
+drho   = 0
+cstv   = 0				/ Constant viscosity switch
+pwlv   = 40				/ Choose dislocation creep parameters from database. Number can be taken from FlowLaws.c
+linv   = 40				/ Choose diffusion creep parameters from database. Number can be taken from Flow Laws.c
+gbsv   = 0				/ Choose grain boundary sliding parameters from database. Number can be taken from Flow Laws.c
+expv   = 40				/ Choose Peierls creep parameters from database. Number can be taken from Flow Laws.c
+gsel   = 0				/ Grain size evolution switch
+eta0   = 1e22				/ Constant viscosity value
+npwl   = 1				/ Custom power-law exponent
+Qpwl   = 0				/ Custom power-law activation energy
+gs_ref = 5e-3				/ Reference grain size
 
-ID   = 1
-<<<<<<< HEAD
-rho  = 3250.00 /mantle 2
-G    = 1e10
-=======
-rho  = 3250.00 /lithosphere
-G   = 1e10
->>>>>>> a995361ca112c348839b55b4fec68d5b142928dc
-Cv   = 1050
-k    = 3.0
-Qr   = 1e-10
-C    = 1e6
-phi  = 0
-Slim = 500e9
-alp  = 8e-6
-bet  = 1e-11
-drho = 0
-cstv = 0
-pwlv = 40
-linv = 40
-gbsv = 0
-expv = 40
-gsel = 0
-eta0 = 1e22
-npwl = 2
-Qpwl = 0
+ID     = 1
+rho    = 3250.00 /mantle 2
+G      = 1e10
+rho    = 3250.00 /lithosphere
+G      = 1e10
+Cv     = 1050
+k      = 3.0
+Qr     = 1e-10
+C      = 1e7
+phi    = 30
+Slim   = 500e9
+alp    = 8e-6
+bet    = 1e-11
+drho   = 0
+cstv   = 0
+pwlv   = 40
+linv   = 40
+gbsv   = 0
+expv   = 40
+gsel   = 0
+eta0   = 1e22
+npwl   = 2
+Qpwl   = 0
+gs_ref = 5e-3
 
-ID   = 2
-rho  = 3250.00 /wet mantle
-G    = 1e10
-Cv   = 1050
-k    = 3.0 / unrealistically high to mimic convecting mantle
-Qr   = 1e-10
-C    = 1e6
-phi  = 5
-Slim = 500e9
-alp  = 8e-6
-bet  = 1e-11
-drho = 0
-cstv = 0
-pwlv = 40
-linv = 40
-gbsv = 0
-expv = 40
-gsel = 0
-eta0 = 5e20
-npwl = 1
-Qpwl = 0
+ID     = 2
+rho    = 3250.00 /wet mantle
+G      = 1e10
+Cv     = 1050
+k      = 3.0 / unrealistically high to mimic convecting mantle
+Qr     = 1e-10
+C      = 1e6
+phi    = 0
+Slim   = 500e9
+alp    = 8e-6
+bet    = 1e-11
+drho   = 0
+cstv   = 0
+pwlv   = 40
+linv   = 40
+gbsv   = 0
+expv   = 40
+gsel   = 0
+eta0   = 5e20
+npwl   = 1
+Qpwl   = 0
+gs_ref = 5e-3
 
 /**** DEFMAPS ****/
-nT    =    200      / Temperature resolution []
-nE    =    200      / Strain rate resolution []
-nd    =    6        / Grain size resolution []
-Tmin  =    127.0      / Temperature minimum [°C]
-Tmax  =    1827.0     / Temperature maximum [°C]
-Emin  =    -50      / Strain rate minimum log_10 [1/s]
-Emax  =    5        / Strain rate maximum log_10 [1/s]
-dmin  =    -7       / Grain size minimum log_10 [m]
-dmax  =    -2       / Grain size maximum log_10 [m]
-Pn    =  1.0e9        / Pressure [Pa]
+nT    =    200      	/ Temperature resolution []
+nE    =    200      	/ Strain rate resolution []
+nd    =    6        	/ Grain size resolution []
+Tmin  =    127.0      	/ Temperature minimum [°C]
+Tmax  =    1827.0     	/ Temperature maximum [°C]
+Emin  =    -50      	/ Strain rate minimum log_10 [1/s]
+Emax  =    5        	/ Strain rate maximum log_10 [1/s]
+dmin  =    -7       	/ Grain size minimum log_10 [m]
+dmax  =    -2       	/ Grain size maximum log_10 [m]
+Pn    =  1.0e9        	/ Pressure [Pa]
 
 /**** PARTICLES ****/
-Nx_part       = 4
-Nz_part       = 4
-min_part_cell = 16
+Nx_part       = 4	/ No. Particles in x per cell
+Nz_part       = 4	/ No. Particles in z per cell
+min_part_cell = 16	/ Minimum no. particles per cell
 
 /**** NON-LINEAR ITERATIONS ****/
-Newton           = 0
-nit_max          = 1 // for high resolution use from 10 to 20
-line_search      = 0
-nonlin_abs_mom   = 5.0e-8
+Newton           = 0		/ Newton iteration switch
+nit_max          = 5 		/ No. Nonlinear iterations. At least 5, for high resolution use from 10 to 20
+line_search      = 0		/ Activate line search algorithm
+nonlin_abs_mom   = 5.0e-8	/ Residual tolerances
 nonlin_abs_div   = 5.0e-8
-min_eta          = 5.0e18
+min_eta          = 5.0e18	/ Viscosity cutoffs for numerical stabilisation
 max_eta          = 1.0e25

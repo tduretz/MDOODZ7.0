@@ -6,6 +6,7 @@
 
 int SetDualPhase(MdoodzInput *input, Coordinates coordinate, int phase) {
     
+    // Passive tracer function. Useful for visualisation
     int    dual_phase = phase;
     double Lx = input->model.xmax - input->model.xmin;
     double Lz = input->model.zmax - input->model.zmin;
@@ -36,17 +37,12 @@ double SetSurfaceZCoord(MdoodzInput *instance, double x_coord) {
   return TopoLevel;
 }
 
-<<<<<<< HEAD
 int SetPhase(MdoodzInput *instance, Coordinates coordinates) {
 
-=======
-int SetPhase(MdoodzInput *instance, Coordinates X) {
->>>>>>> a995361ca112c348839b55b4fec68d5b142928dc
-  // Define parameters
+  // Define parameters and initialise phases according to coordinates
   const double lithosphereThickness = instance->model.user1 / instance->scaling.L;
   const double weakZoneWidth        = 10e3/instance->scaling.L;
   const double mohoLevel            = -5e3 / instance->scaling.L;
-<<<<<<< HEAD
   const bool   isBelowLithosphere   = coordinates.z < -lithosphereThickness;
   const bool   isAboveMoho          = coordinates.z > mohoLevel;
   int phase = 0;
@@ -70,12 +66,6 @@ int SetPhase(MdoodzInput *instance, Coordinates X) {
   }
   
   // Return
-=======
-  const bool   isBelowLithosphere   = X.z < -lithosphereThickness;
-  const bool   isAboveMoho          = X.z > mohoLevel;
-  int phase = 0;
-  if (X.z > - lithosphereThickness) phase = 1;
->>>>>>> a995361ca112c348839b55b4fec68d5b142928dc
   return phase;
   
 }
@@ -99,6 +89,7 @@ double SetGrainSize(MdoodzInput *instance, Coordinates coordinates, int phase) {
   return instance->materials.gs_ref[asthenospherePhase];
 }
 
+// Boundary conditions
 char SetBCPType(MdoodzInput *instance, POSITION position) {
   if (position == NE || position == NW) {
     return 0;
@@ -126,6 +117,7 @@ SetBC SetBCT(MdoodzInput *instance, POSITION position, double particleTemperatur
   return bc;
 }
 
+// Mimicking heat loss by mantle convection via artificially high thermal conductivity during thermal equilibration steps
 void AddCrazyConductivity(MdoodzInput *input) {
   int               *asthenospherePhases = (int *) malloc(sizeof(int));
   CrazyConductivity *crazyConductivity   = (CrazyConductivity *) malloc(sizeof(CrazyConductivity));
@@ -136,6 +128,94 @@ void AddCrazyConductivity(MdoodzInput *input) {
   input->crazyConductivity               = crazyConductivity;
 }
 
+// Smooth transition of vertical boundary velocity profile
+double BoundaryVelocityProfile(double V, double z, double z_LAB, double dz_smooth) {
+  return -0.5*V*erfc( (z-z_LAB)/dz_smooth ) + V;
+}
+
+double BoundaryVelocityProfilePrimitive(double V, double z, double z_LAB, double dz_smooth) {
+  return V*(z - 0.5*(z-z_LAB) * erfc( (z-z_LAB)/dz_smooth ) );
+}
+
+SetBC SetBCVx(MdoodzInput *instance, POSITION position, Coordinates coordinates) {
+  SetBC bc;
+  const double dz_smooth = 10e3/instance->scaling.L;
+  double V_tot    =  instance->model.user2/instance->scaling.V; // |VxW| + |VxE|
+  double VxW, VxE;
+  double z_LAB = -instance->model.user1/instance->scaling.L, z_top = instance->model.zmax;
+  const double x = coordinates.x, z = coordinates.z;
+
+  // Evaluate velocity of W and E boundaries
+    VxW =  -0.5*V_tot;
+    VxE =  0.5*V_tot;
+
+  // Apply smooth transition with depth
+  VxW = BoundaryVelocityProfile(VxW, z, z_LAB, dz_smooth);
+  VxE = BoundaryVelocityProfile(VxE, z, z_LAB, dz_smooth);
+
+  // Assign BC values
+  if (position == N || position == S || position == NW || position == SW || position == NE || position == SE) {
+    bc.value = 0;
+    bc.type  = 13;
+  } else if (position == W) {
+    bc.value = VxW;
+    bc.type  = 0;
+  } else if (position == E) {
+    bc.value = VxE;
+    bc.type  = 0;
+  } else {
+    bc.value = 0.0;
+    bc.type  = -1;
+  }
+  return bc;
+}
+
+SetBC SetBCVz(MdoodzInput *instance, POSITION position, Coordinates coordinates) {
+  SetBC bc;
+  const double Lx = instance->model.xmax - instance->model.xmin, dz_smooth = 10e3/instance->scaling.L;
+  double V_tot    =  instance->model.user2/instance->scaling.V; // |VxW| + |VxE|
+  double tet_W, alp_W, tet_E, alp_E;
+  double VxW, VxE, VzW, VzE, VzS=0.0;
+  double z_LAB = -instance->model.user1/instance->scaling.L, z_top = instance->model.zmax;
+  const double x = coordinates.x, z = coordinates.z;  
+
+  // Evaluate velocity of W and E boundaries
+    VxW = -0.5*V_tot;
+    VxE =  0.5*V_tot;
+    VzW =  0.0;
+    VzE =  0.0;
+
+  // Compute compensating VzS value
+  const double z_min       = instance->model.zmin; 
+  const double prim_W_zmax = BoundaryVelocityProfilePrimitive(VxW, z_top, z_LAB, dz_smooth);
+  const double prim_W_zmin = BoundaryVelocityProfilePrimitive(VxW, z_min, z_LAB, dz_smooth);
+  const double prim_E_zmax = BoundaryVelocityProfilePrimitive(VxE, z_top, z_LAB, dz_smooth);
+  const double prim_E_zmin = BoundaryVelocityProfilePrimitive(VxE, z_min, z_LAB, dz_smooth);
+  const double intW = prim_W_zmax - prim_W_zmin;
+  const double intE = prim_E_zmax - prim_E_zmin;
+  VzS = - ( fabs(intW) + fabs(intE) ) / Lx;
+
+  // Apply smooth transition with depth
+  VzW = -BoundaryVelocityProfile(VzW, z, z_LAB, dz_smooth);
+  VzE = -BoundaryVelocityProfile(VzE, z, z_LAB, dz_smooth);
+
+  if (position == W || position == SW || position == NW ) {
+    bc.value = VzW;
+    bc.type  = 11;
+  } else if ( position == E || position == SE || position == NE) {
+    bc.value = VzE;
+    bc.type  = 11;
+  } else if (position == S || position == N) {
+    bc.value = VzS;
+    bc.type  = 0;
+  } else {
+    bc.value = 0;
+    bc.type  = -1;
+  }
+  return bc;
+}
+
+// Main function applies all of the above defined
 int main(int nargs, char *args[]) {
   // Input file name
   char *input_file;
@@ -159,8 +239,8 @@ int main(int nargs, char *args[]) {
 
           },
           .SetBCs = &(SetBCs_ff){
-                  .SetBCVx    = SetPureShearBCVx,
-                  .SetBCVz    = SetPureShearBCVz,
+                  .SetBCVx    = SetBCVx, // SetPureShearBCVx
+                  .SetBCVz    = SetBCVz, // SetPureShearBCVz
                   .SetBCPType = SetBCPType,
                   .SetBCT     = SetBCT,
           },
