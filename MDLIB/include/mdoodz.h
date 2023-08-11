@@ -155,6 +155,8 @@ typedef struct MdoodzSetup    MdoodzSetup;
 typedef struct MdoodzInput    MdoodzInput;
 
 typedef struct {
+  double l;
+  double k;
   double x;
   double z;
 } Coordinates;
