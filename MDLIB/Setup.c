@@ -247,7 +247,7 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
   printf("VxWestSum: %f, VxEastSum: %f\n", VxWestSum, VxEastSum);
   const double tolerance = 0.000001;
 
-  if (VxWestSum > tolerance || VxWestSum < -tolerance) {
+  if (instance->model.balance_boundaries && (VxWestSum > tolerance || VxWestSum < -tolerance)) {
     int zeroValuesCount = 0;
     for (int l = 1; l < mesh->Nz; l++) {
       const int c = 0 + l * (mesh->Nx);
@@ -317,7 +317,7 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
     free(newBoundary);
   }
 
-  if (VxEastSum > tolerance || VxEastSum < -tolerance) {
+  if (instance->model.balance_boundaries && (VxEastSum > tolerance || VxEastSum < -tolerance)) {
     int zeroValuesCount = 0;
     for (int l = 1; l < mesh->Nz; l++) {
       const int c = (mesh->Nx - 1) + l * (mesh->Nx);
@@ -461,7 +461,7 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
   printf("VzWestSum: %f, VzEastSum: %f: \n", VzWestSum, VzEastSum);
   printf("total West+East+South sum: %f\n", VxWestSum + VxEastSum - VzSouthSum);
 
-  if (VzSouthSum > tolerance || VzSouthSum < -tolerance) {
+  if (instance->model.balance_boundaries && (VzSouthSum > tolerance || VzSouthSum < -tolerance)) {
     int zeroValuesCount = 0;
     for (int k = 0; k < mesh->Nx + 1; k++) {
       const int c = k;
