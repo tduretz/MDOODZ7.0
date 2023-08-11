@@ -15,25 +15,25 @@ T   = 1e+02
 /**** SPACE ****/
 Nx      = 50
 Nz      = 100
-Nt      = 250
+Nt      = 100
 xmin    = -1400.000000e3
 xmax    =    00.000000e3
 zmin    =  -700.000000e3
 zmax    =    50.000000e3 
 
 /**** TIME ****/
-dt_constant = 1
+constant_dt = 1
 dt          = 5e9
 
 /**** LINEAR SOLVER ****/
-abs_tol_div     = 1e-9
-rel_tol_div     = 1e-9
+lin_abs_div     = 1e-9
+lin_rel_div     = 1e-9
 penalty         = 1e3
 residual_form   = 0
 
 /**** SWITCHES ****/
-free_surf       = 1
-free_surf_stab  = 1
+free_surface       = 1
+free_surface_stab  = 1
 
 /**** GRAVITY ****/
 gz = -10.00

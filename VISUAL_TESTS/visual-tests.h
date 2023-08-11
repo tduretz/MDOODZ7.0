@@ -7,6 +7,8 @@ void PlotTopoBenchCase1();
 void PlotShearTemplateReference();
 void PlotShearTemplate();
 void PlotShearTemplate1Reference();
+void PlotShearTemplateAniso();
+void PlotShearTemplateAnisoReference();
 void PlotShearTemplate1();
 void PlotShearHeatingDuretz14Reference();
 void PlotShearHeatingDuretz14();
@@ -14,5 +16,7 @@ void PlotGSE();
 void PlotGSERef();
 void PlotVEP();
 void PlotVEPRef();
+void PlotShrinkingGif();
+void PlotShrinkingGifRef();
 
 #endif

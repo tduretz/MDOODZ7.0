@@ -12,7 +12,7 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(googletest)
 
-configure_file("${PROJECT_SOURCE_DIR}/TESTS/ShearTemplate.txt" "${PROJECT_BINARY_DIR}/TESTS/ShearTemplate.txt" COPYONLY)
+file(COPY ${PROJECT_SOURCE_DIR}/TESTS/ShearTemplate DESTINATION ${PROJECT_BINARY_DIR}/TESTS)
 add_executable(NewtownIterationConvergence_test NewtonIterationConvergence.cpp)
 target_link_libraries(NewtownIterationConvergence_test LINK_PUBLIC mdoodz GTest::gtest_main)
 add_test(NewtownIterationConvergence NewtownIterationConvergence_test)

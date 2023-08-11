@@ -213,7 +213,7 @@ void MinMaxArray( double * array, double scale, int size, char* text ) {
             }
         }
     }
-    printf( "min(%s) = %2.6e max(%s) = %2.6e\n", text, min*scale, text, max*scale);
+    printf( "min(%s) = %2.10e max(%s) = %2.10e\n", text, min*scale, text, max*scale);
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
@@ -252,7 +252,7 @@ void MinMaxArrayTag( DoodzFP* array, double scale, int size, char* text, char* t
             }
         }
     }
-    printf( "min(%s) = %2.6e max(%s) = %2.6e\n", text, min*scale, text, max*scale);
+    printf( "min(%s) = %2.10e max(%s) = %2.10e\n", text, min*scale, text, max*scale);
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
@@ -498,8 +498,8 @@ void  Print2DArrayDouble( DoodzFP* arr, int nx, int nz, double scale ) {
         for(cx=0;cx<nx;cx++) {
             
             k = cx + cz*nx;
-            //        printf("%.2lf ", arr[k]*scale);
-            printf("%.2e ", arr[k]*scale);
+                   printf("%.2lf ", arr[k]*scale);
+            // printf("%.4e ", arr[k]*scale);
         }
         printf("\n");
     }
@@ -537,7 +537,7 @@ void Print2DArrayChar( char* arr, int nx, int nz, double scale ) {
             
             k = cx + cz*nx;
             //        printf("%.2lf ", arr[k]*scale);
-            printf("%d ", arr[k]);
+            printf("%02d ", arr[k]);
         }
         printf("\n");
     }

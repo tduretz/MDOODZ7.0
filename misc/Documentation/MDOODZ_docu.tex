@@ -182,7 +182,7 @@ Results after 50 time steps
 Need to use the following options:
 \begin{verbatim} 
 compressible = 1
-\end{verbatim} %lsolver           = -1 (modified Powell and Hestenes) or 1 (Preconditionned KSP solver)
+\end{verbatim} %lin_solver           = -1 (modified Powell and Hestenes) or 1 (Preconditionned KSP solver)
  
 The results of the simulation can be visualised with the file:
 \begin{verbatim} 
@@ -205,7 +205,7 @@ M2Di_CompressibleViscoElasticVangelis2_Beta.m
 Need to use the following options:
 \begin{verbatim} 
 compressible = 1
-\end{verbatim} %lsolver      = -1 (modified Powell-Hestenes) or 1 (Preconditionned KSP solver)
+\end{verbatim} %lin_solver      = -1 (modified Powell-Hestenes) or 1 (Preconditionned KSP solver)
 
 The results can also be reproduced using the M2Di example:
 \begin{verbatim} 
@@ -227,7 +227,7 @@ Inc2Boules.txt
 
 Need to use the following options:
 \begin{verbatim} 
-isperiodic_x = 1
+periodic_x = 1
 \end{verbatim}
 
 \begin{figure}[ht!]
@@ -428,8 +428,8 @@ Adjust regularisation viscosity of each phase with
 eta_vp = 1e21
 \end{verbatim}
 
-Compression: \begin{verbatim} EpsBG<0 \end{verbatim}
-and extension \begin{verbatim} EpsBG>0 \end{verbatim}
+Compression: \begin{verbatim} bkg_strain_rate<0 \end{verbatim}
+and extension \begin{verbatim} bkg_strain_rate>0 \end{verbatim}
 
 \begin{figure}[ht!]
 \centerline{\includegraphics[height=3.0in]{./Figures/Extension_Compression_MDOODZ.png}}

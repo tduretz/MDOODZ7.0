@@ -138,8 +138,8 @@ void SetParticles( markers *particles, scale scaling, params model, mat_prop *ma
     
     for( np=0; np<particles->Nb_part; np++ ) {
         
-        particles->Vx[np]    = -1.0*particles->x[np]*model.EpsBG;
-        particles->Vz[np]    =  particles->z[np]*model.EpsBG;
+        particles->Vx[np]    = -1.0*particles->x[np]*model.bkg_strain_rate;
+        particles->Vz[np]    =  particles->z[np]*model.bkg_strain_rate;
         particles->d[np]     = gsbg;                          // same grain size everywhere
         particles->phi[np]   = 0.0;                           // zero porosity everywhere
         particles->X[np]     = 0.0;                           // X set to 0

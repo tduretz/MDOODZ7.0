@@ -10,7 +10,7 @@ void SetBCs_MD6( grid *mesh, params *model, scale scaling, markers* particles, m
     double *X, *Z, *XC, *ZC;
     int   NX, NZ, NCX, NCZ, NXVZ, NZVX;
     double dmin, VzBC, width = 1 / scaling.L, eta = 1e4 / scaling.eta ;
-    double Lx, Lz, T1, T2, rate=model->EpsBG,  z_comp=-140e3/scaling.L;
+    double Lx, Lz, T1, T2, rate=model->bkg_strain_rate,  z_comp=-140e3/scaling.L;
     double Vx_r, Vx_l, Vz_b, Vz_t, Vx_tot, Vz_tot;
     double Lxinit = 1400e3/scaling.L, ShortSwitchV0 = 0.40;
     double Vfix = (50.0/(1000.0*365.25*24.0*3600.0))/(scaling.L/scaling.t); // [50.0 == 5 cm/yr]
@@ -81,13 +81,13 @@ void SetBCs_MD6( grid *mesh, params *model, scale scaling, markers* particles, m
                     // Matching BC nodes WEST
                     if (k==0 ) {
                         mesh->BCu.type[c] = 0;
-                        mesh->BCu.val[c]  = -mesh->xg_coord[k] * model->EpsBG;
+                        mesh->BCu.val[c]  = -mesh->xg_coord[k] * model->bkg_strain_rate;
                     }
                     
                     // Matching BC nodes EAST
                     if (k==mesh->Nx-1 ) {
                         mesh->BCu.type[c] = 0;
-                        mesh->BCu.val[c]  = -mesh->xg_coord[k] * model->EpsBG;
+                        mesh->BCu.val[c]  = -mesh->xg_coord[k] * model->bkg_strain_rate;
                     }
                     
                     // Free slip SOUTH
@@ -108,25 +108,25 @@ void SetBCs_MD6( grid *mesh, params *model, scale scaling, markers* particles, m
                         // Matching BC nodes WEST
                         if (k==0 ) {
                             mesh->BCu.type[c] = -2;
-                            mesh->BCu.val[c]  = 0.0*model->EpsBG*Lx;
+                            mesh->BCu.val[c]  = 0.0*model->bkg_strain_rate*Lx;
                         }
                         
                         // Matching BC nodes EAST
                         if (k==mesh->Nx-1 ) {
                             mesh->BCu.type[c] =  -12;
-                            mesh->BCu.val[c]  = -0.0*model->EpsBG*Lx;
+                            mesh->BCu.val[c]  = -0.0*model->bkg_strain_rate*Lx;
                         }
                         
                         // Free slip S
                         if (l==0 ) { //&& (k>0 && k<NX-1) ) {
                             mesh->BCu.type[c] =  11;
-                            mesh->BCu.val[c]  = -1*model->EpsBG*Lz;
+                            mesh->BCu.val[c]  = -1*model->bkg_strain_rate*Lz;
                         }
                         
                         // Free slip N
                         if ( l==mesh->Nz) {// && (k>0 && k<NX-1)) {
                             mesh->BCu.type[c] =  11;
-                            mesh->BCu.val[c]  =  1*model->EpsBG*Lz;
+                            mesh->BCu.val[c]  =  1*model->bkg_strain_rate*Lz;
                         }
                         
                     }
@@ -171,13 +171,13 @@ void SetBCs_MD6( grid *mesh, params *model, scale scaling, markers* particles, m
                         // Matching BC nodes SOUTH
                         if (l==0 ) {
                             mesh->BCv.type[c] = 0;
-                            mesh->BCv.val[c]  = mesh->zg_coord[l] * model->EpsBG;
+                            mesh->BCv.val[c]  = mesh->zg_coord[l] * model->bkg_strain_rate;
                         }
                         
                         // Matching BC nodes NORTH
                         if (l==mesh->Nz-1 ) {
                             mesh->BCv.type[c] = 0;
-                            mesh->BCv.val[c]  = mesh->zg_coord[l] * model->EpsBG;
+                            mesh->BCv.val[c]  = mesh->zg_coord[l] * model->bkg_strain_rate;
                         }
                         
                         // Non-matching boundary WEST
@@ -198,13 +198,13 @@ void SetBCs_MD6( grid *mesh, params *model, scale scaling, markers* particles, m
                         // Matching BC nodes SOUTH
                         if (l==0 ) {
                             mesh->BCv.type[c] = 0;
-                            mesh->BCv.val[c]  = -0.0*model->EpsBG*Lz;
+                            mesh->BCv.val[c]  = -0.0*model->bkg_strain_rate*Lz;
                         }
                         
                         // Matching BC nodes NORTH
                         if (l==mesh->Nz-1 ) {
                             mesh->BCv.type[c] = 0;
-                            mesh->BCv.val[c]  = 0.0*model->EpsBG*Lz;
+                            mesh->BCv.val[c]  = 0.0*model->bkg_strain_rate*Lz;
                         }
                         
                         // Non-matching boundary points
@@ -335,8 +335,6 @@ void SetBCs_MD6( grid *mesh, params *model, scale scaling, markers* particles, m
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-
-//---------------------------------------------//
 void eval_anal_Dani(double *vx, double *vz, double *p, double *eta, double *sxx, double *syy, double x, double z, int ps, double rc, double mm, double mc) {
 
   double          gr, er, A;
@@ -401,20 +399,53 @@ void eval_anal_Dani(double *vx, double *vz, double *p, double *eta, double *sxx,
     *sxx         = 4 * creal(d_phi_z) - *syy;
   }
 }
-//---------------------------------------------//
+
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
+
+double SetSurfaceZCoord(MdoodzInput *instance, double x_coord) {
+  const double TopoLevel = 0.3;
+  const double h_pert    = instance->model.user0 / instance->scaling.L;
+  const double x0        = 0.5*(instance->model.xmax + instance->model.xmin);
+  return TopoLevel + h_pert * exp(  -pow(x_coord - x0, 2) / pow(h_pert,2)  );
+}
+
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
 
 int SetPhase(MdoodzInput *instance, Coordinates coordinates) {
-  const double radius = instance->model.user1 / instance->scaling.L;
-  if (coordinates.x * coordinates.x + coordinates.z * coordinates.z < radius * radius) {
-    return 1;
-  } else {
-    return 0;
+  const double rad = instance->model.user1 / instance->scaling.L;
+  const double x = coordinates.x;
+  const double z = coordinates.z;
+  if ( instance->model.shear_style==0 ) {
+    if ( pow(x,2) + pow(z,2) < pow(rad,2) ) {
+      return 1;
+    } else {
+      return 0;
+    }
+  }
+  else {
+    if ( (pow(x-instance->model.xmin,2) + pow(z,2) < pow(rad,2)) || (pow(x-instance->model.xmax,2) + pow(z,2) < pow(rad,2)) ) {
+      return 1;
+    } else {
+      return 0;
+    }
   }
 }
+
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
 
 double SetDensity(MdoodzInput *instance, Coordinates coordinates, int phase) {
   return instance->materials.rho[phase];
 }
+
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
 
 SetBC SetBCVx(MdoodzInput *instance, POSITION position, Coordinates coord) {
   SetBC           bc;
@@ -475,6 +506,10 @@ SetBC SetBCVx(MdoodzInput *instance, POSITION position, Coordinates coord) {
   return bc;
 }
 
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
+
 SetBC SetBCVz(MdoodzInput *instance, POSITION position, Coordinates coord) {
   SetBC           bc;
   const double radius = instance->model.user1 / instance->scaling.L;
@@ -522,8 +557,15 @@ SetBC SetBCVz(MdoodzInput *instance, POSITION position, Coordinates coord) {
   return bc;
 }
 
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
+
 int main() {
   MdoodzSetup instance = {
+          .BuildInitialTopography = &(BuildInitialTopography_ff){
+                  .SetSurfaceZCoord = SetSurfaceZCoord,
+          },
           .SetParticles = &(SetParticles_ff){
                   .SetPhase   = SetPhase,
                   .SetDensity = SetDensity,

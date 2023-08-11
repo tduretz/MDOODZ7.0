@@ -61,8 +61,8 @@ void SetParticles( markers *particles, scale scaling, params model, mat_prop *ma
         // Standard initialisation of particles
         particles->x[np]    += A * (((double)rand() / RAND_MAX) - 0.5);
         particles->x[np]    += A * (((double)rand() / RAND_MAX) - 0.5);
-        particles->Vx[np]    = -1.0*particles->x[np]*model.EpsBG;
-        particles->Vz[np]    =  particles->z[np]*model.EpsBG;
+        particles->Vx[np]    = -1.0*particles->x[np]*model.bkg_strain_rate;
+        particles->Vz[np]    =  particles->z[np]*model.bkg_strain_rate;
         particles->phase[np] = 0;
         particles->T[np]     = zeroC;
         particles->d[np]     = 0.0;
@@ -112,7 +112,7 @@ void SetBCs( grid *mesh, params *model, scale scaling, markers* particles, mat_p
 		ZC[l] = mesh->zc_coord[l];
 	}
 
-    VxBC = -model->EpsBG*mesh->xg_coord[0];
+    VxBC = -model->bkg_strain_rate*mesh->xg_coord[0];
 	
 	/* --------------------------------------------------------------------------------------------------------*/
 	/* Set the BCs for Vx on all grid levels                                                                   */
@@ -204,13 +204,13 @@ void SetBCs( grid *mesh, params *model, scale scaling, markers* particles, mat_p
                     // Matching BC nodes SOUTH
                     if (l==0 ) {
                         mesh->BCv.type[c] = 0;
-                        mesh->BCv.val[c]  = model->EpsBG*mesh->zg_coord[l];
+                        mesh->BCv.val[c]  = model->bkg_strain_rate*mesh->zg_coord[l];
                     }
                     
                     // Matching BC nodes NORTH
                     if (l==mesh->Nz-1 ) {
                         mesh->BCv.type[c] = 0;
-                        mesh->BCv.val[c]  = model->EpsBG*mesh->zg_coord[l];
+                        mesh->BCv.val[c]  = model->bkg_strain_rate*mesh->zg_coord[l];
                     }
                     
                     // Non-matching boundary points

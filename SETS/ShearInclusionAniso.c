@@ -44,7 +44,7 @@ int SetPhase(MdoodzInput *input, Coordinates coordinates) {
   }
 }
 
-int SetDual(MdoodzInput *input, Coordinates coordinates, int phase) {
+int SetDualPhase(MdoodzInput *input, Coordinates coordinates, int phase) {
   if (phase != 0) {
     return phase;
   }
@@ -62,8 +62,8 @@ int SetDual(MdoodzInput *input, Coordinates coordinates, int phase) {
 int main() {
   MdoodzSetup setup = {
           .SetParticles = &(SetParticles_ff){
-                  .SetPhase = SetPhase,
-                  .SetDual  = SetDual,
+                  .SetPhase     = SetPhase,
+                  .SetDualPhase = SetDualPhase,
 
           },
           .SetBCs = &(SetBCs_ff){

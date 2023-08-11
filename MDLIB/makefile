@@ -2,10 +2,10 @@
 SHELL := /bin/bash
 
 # Compiler
-CC = /usr/local/Cellar/gcc/11.2.0_3/bin/gcc-11
+CC = gcc-13
 
 # Path to setup file folder
-MODEL_PATH = ../SETS
+SET_PATH = ../SETS
 
 #---------------------------------------------------#
 # C flags
@@ -46,13 +46,13 @@ endif
 
 #---------------------------------------------------#
 # Rules
-FILES = Main_DOODZ.o FD_Jacobian.o  RheologyParticles.o ChemicalRoutines.o ParticleReseeding.o Solvers.o Routines_BEN.o StokesRoutines.o StokesAssemblyCoupled.o StokesAssemblyDecoupled.o AdvectionRoutines.o RheologyDensity.o HDF5Output.o SparseTools.o ThermalRoutines.o ThermalSolver.o ParticleRoutines.o free_surf.o FlowLaws.o MemoryAllocFree.o InputOutput.o MiscFunctions.o GridRoutines.o setup.o $(MODEL_PATH)/$(MODEL).o 
+FILES = AnisotropyRoutines.o Main_DOODZ.o FD_Jacobian.o  RheologyParticles.o ChemicalRoutines.o ParticleReseeding.o Solvers.o StokesRoutines.o StokesAssemblyDecoupled.o AdvectionRoutines.o RheologyDensity.o HDF5Output.o SparseTools.o ThermalRoutines.o ThermalSolver.o ParticleRoutines.o FreeSurface.o FlowLaws.o MemoryAllocFree.o InputOutput.o MiscFunctions.o GridRoutines.o Setup.o $(SET_PATH)/$(SET).o 
 
 
-all: Doodzi_$(MODEL) 
-Doodzi_$(MODEL): ${FILES}
-	cp $(MODEL_PATH)/$(MODEL).txt . 
-	$(CC) ${FILES} -o $(MODEL) ${LIBS}
+all: Doodzi_$(SET) 
+Doodzi_$(SET): ${FILES}
+	$(CC) ${FILES} -o $(SET) ${LIBS}
 
 clean:
-	rm -rf *o ./$(MODEL_PATH)/*.o $(MODEL) 
+	cp $(SET_PATH)/$(SET).txt . 
+	rm -rf *o ./$(SET_PATH)/*.o $(SET) 

@@ -1,13 +1,13 @@
 /**** Original name: Pauline_marylDiabCC_dryOlM ****/
 /**** RESTART ****/
-istep = 00000000000000000000000000300
+istep = 00000160
 irestart = 0
 
 /**** OUTPUT FILES ****/
 writer = 1
 writer_step = 10
 writer_markers = 0
-writer_debug   = 0
+writer_debug   = 0 
 
 /**** INPUT FILE FOR PARTICLES ****/
 input_file = setup_r501x501_fsp40.bin
@@ -17,51 +17,51 @@ eta = 1.e+22      /viscosity
 L   = 30.e4       /length
 V   = 1.5e-8     /velocity
 T   = 1.e+02      /temperature
-
+ 
 /**** SPACE-TIME ****/
-Nx      = 150 // 300/600 = 0.5 km horizontal resolution
+Nx      = 150 // 300/600 = 0.5 km horizontal resolution 
 Nz      = 100 // 200/800 = 0.25 km vertical resolution
-Nt      = 300
-xmin    = -600.000000e3
-zmin    = -700.000000e3
-xmax    =  600.000000e3
-zmax    = 10.000000e3
+Nt      = 50
+xmin    = -150.000000e3
+zmin    = -200.000000e3
+xmax    =  150.000000e3
+zmax    = 10.000000e3 
 dt      = 1.2623e+11
 Courant = 0.45
 penalty = 1e2
-eta_avg = 0
-itp_stencil = 1
+eta_average = 0
+interp_stencil = 1
 
 /**** SWITCHES ****/
-ismechanical    = 1
-dt_constant     = 0
+mechanical    = 1
+constant_dt     = 0
 RK              = 4
-isperiodic_x    = 0
-ispureshear_ALE = 1  /1: box stretched at constant strain rate; -1 box of constant size
-isinertial      = 0
-iselastic       = 1
-isthermal       = 1
+periodic_x    = 0
+pure_shear_ALE = 1  /1: box stretched at constant strain rate; -1 box of constant size
+
+elastic       = 1
+thermal       = 1
 isPl_soft       = 0
-free_surf       = 1
-free_surf_stab  = 1
-eqn_state       = 1
-thermal_eq      = 1
-subgrid_diff    = 2
-shear_heat      = 1
-adiab_heat      = 0
-surf_remesh     = 1
-surf_processes  = 1 /0 = none; 1 = diffusion only; 2 = fills instantaneously the basin up to the base level;  3 = diffusion + source term
+free_surface       = 1
+free_surface_stab  = 1
+
+initial_cooling      = 1
+subgrid_diffusion    = 2
+shear_heating      = 1
+adiab_heating      = 0
+
+surface_processes  = 1 /0 = none; 1 = diffusion only; 2 = fills instantaneously the basin up to the base level;  3 = diffusion + source term
 surf_diff       = 5.0e-6 /topography diffusion coefficient
-surf_ised1      = 4 /sediment phase indices
+surf_ised1      = 4 /sediment phase indices 
 surf_ised2      = 5
 surf_sedirate   = 0.0 / sedimentation rate [m/s]:3.1688e-12 <-> 0.01 cm/yr
 surf_baselev    = 0.0e3 / base level for sedimentation
-rec_T_P_x_z     = 1 / initial P and T field record
+track_T_P_x_z     = 1 / initial P and T field record
 polar           = 0
-aniso           = 0
+anisotropy           = 0
 
 /**** SETUP DEPENDANT ****/
-EpsBG           = 1.0056e-15 /Background strain rate [s-1] => extension rate = 1 cm/yr
+bkg_strain_rate           = -1.056e-15 /Background strain rate [s-1] => extension rate = 1 cm/yr
 user0           = 0.0e3     /Radius of perturbation [m]
 user1           = 125.0e3   /Initial lithosphere thickness [m]
 user2           = 30.0e3    /Initial crust thickness [m]
@@ -76,13 +76,13 @@ gx = 0.0000
 gz = -9.81
 
 /**** PHASE PROPERTIES ****/
-Nb_phases = 9
+Nb_phases = 9 
 
 ID   = 0       / Seed
 rho  = 2700.00 / ref. density
 alp  = 32.0e-6 / thermal expansivity
 bet  = 1e-11   / compressibility
-mu   = 1e10    / shear modulus
+G   = 1e10    / shear modulus
 Cv   = 1050    / heat capacity
 k    = 2       / thermal conductivity
 Qr   = 1e-6    / radiogenic heat production
@@ -96,7 +96,7 @@ expv = 0       / Pierls viscosity -> database flow_laws.c
 
 ID   = 1
 rho  = 2800.00 / Crust - Maryland Diabase
-mu   = 1.0e10
+G   = 1.0e10
 Cv   = 1050.0
 k    = 2.5
 Qr   = 1.0e-6
@@ -117,7 +117,7 @@ ID   = 2
 rho  = 3330.00 / lithospheric mantle - Dry Olivine
 alp  = 32.0e-6
 bet  = 1.5e-11
-mu   = 1.0e10
+G   = 1.0e10
 Cv   = 1050.0
 k    = 3.0
 Qr   = 0.0
@@ -131,10 +131,10 @@ gbsv = 0
 expv = 40
 
 ID   = 3
-rho  = 3520.00 / asthenosphere (same as 2)
+rho  = 3330.00 / asthenosphere (same as 2)
 alp  = 32.0e-6
 bet  = 1.5e-11
-mu   = 1.0e10
+G   = 1.0e10
 Cv   = 1050.0
 k    = 3.0
 Qr   = 0.0
@@ -149,7 +149,7 @@ expv = 40
 
 ID   = 4
 rho  = 2300.00 / sediments
-mu   = 1e10
+G   = 1e10
 Cv   = 1050
 k    = 2
 Qr   = 0.5e-6
@@ -171,11 +171,11 @@ Qpwl = 0
 
 ID   = 5
 rho  = 2300.00 / sediments
-mu   = 1e10
+G   = 1e10
 Cv   = 1050
-k    = 2
+k    = 2   
 Qr   = 0.5e-6
-C    = 1e7
+C    = 1e7 
 phi  = 30
 Slim = 500e9
 alp  = 10.0e-6
@@ -195,7 +195,7 @@ ID   = 6
 rho  = 3200.00 / impregnated asthenosphere (less dense and more conductive than 3)
 alp  = 32.0e-6
 bet  = 1.5e-11
-mu   = 1.0e10
+G   = 1.0e10
 Cv   = 1050.0
 k    = 30.0
 Qr   = 0.0
@@ -210,7 +210,7 @@ expv = 40
 
 ID   = 7
 rho  = 2800.00 / Crust - Dry Quartz
-mu   = 1.0e10
+G   = 1.0e10
 Cv   = 1050.0
 k    = 2.5
 Qr   = 1.0e-6
@@ -228,8 +228,8 @@ niso_factor = 1.0
 aniso_angle  = 45
 
 ID   = 8
-rho  = 3000.00 / Crust - Dry Quartz// edited
-mu   = 1.0e10
+rho  = 2800.00 / Crust - Dry Quartz
+G   = 1.0e10
 Cv   = 1050.0
 k    = 2.5
 Qr   = 1.0e-6
@@ -267,7 +267,7 @@ min_part_cell = 16
 Newton      = 0
 nit_max     = 1 // for high resolution use from 10 to 20
 line_search = 0
-abs_tol_u   = 5.0e-8
-abs_tol_p   = 5.0e-8
-mineta      = 5.0e18
-maxeta      = 1.0e25
+nonlin_abs_mom   = 5.0e-8
+nonlin_abs_div   = 5.0e-8
+min_eta      = 5.0e18
+max_eta      = 1.0e25

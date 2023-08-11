@@ -65,11 +65,11 @@ double SetGrainSize(MdoodzInput *instance, Coordinates coordinates, int phase) {
 }
 
 double SetHorizontalVelocity(MdoodzInput *instance, Coordinates coordinates) {
-  return -coordinates.x * instance->model.EpsBG;
+  return -coordinates.x * instance->model.bkg_strain_rate;
 }
 
 double SetVerticalVelocity(MdoodzInput *instance, Coordinates coordinates) {
-  return coordinates.z * instance->model.EpsBG;
+  return coordinates.z * instance->model.bkg_strain_rate;
 }
 
 char SetBCPType(MdoodzInput *instance, POSITION position) {
@@ -81,35 +81,20 @@ char SetBCPType(MdoodzInput *instance, POSITION position) {
 }
 
 SetBC SetBCT(MdoodzInput *instance, POSITION position, double particleTemperature) {
-  SetBC  bc;
-  double surfaceTemperature = zeroC / instance->scaling.T;
-  if (position == FREE_SURFACE) {
-    bc.value = surfaceTemperature;
-    bc.type  = 1;
-  } else {
-    bc.value = 0.0;
-    bc.type  = 0;
+  SetBC     bc;
+  double surface_temperature =          zeroC  / instance->scaling.T;
+  double mantle_temperature  = (1330. + zeroC) / instance->scaling.T;
+  if (position == S) {
+    bc.type  = constant_temperature;
+    bc.value = mantle_temperature;
   }
-  return bc;
-}
-
-
-SetBC SetBCTNew(MdoodzInput *instance, POSITION position, double particleTemperature) {
-  SetBC  bc;
-  double surfaceTemperature = zeroC / instance->scaling.T;
-  double mantleTemperature  = (1330. + zeroC) / instance->scaling.T;
-  if (position == S || position == SE || position == SW) {
-    bc.value = particleTemperature;
-    bc.type  = 1;
-  } else if (position == N || position == NE || position == NW) {
-    bc.value = surfaceTemperature;
-    bc.type  = 1;
-  } else if (position == W || position == E) {
-    bc.value = mantleTemperature;
-    bc.type  = 0;
-  } else {
-    bc.value = 0;
-    bc.type  = 0;
+  if (position == free_surface || position == N) {
+    bc.type  = constant_temperature;
+    bc.value = surface_temperature;
+  } 
+  if (position == W || position == E) {
+    bc.type  = constant_heatflux;
+    bc.value = 0.;
   }
   return bc;
 }
@@ -122,21 +107,6 @@ void AddCrazyConductivity(MdoodzInput *input) {
   crazyConductivity->nPhases             = 1;
   crazyConductivity->multiplier          = 1000;
   input->crazyConductivity               = crazyConductivity;
-}
-
-void AddAnisotropy(MdoodzInput *input, MutateInputParams *mutateInputParams) {
-  AddCrazyConductivity(input);
-  input->model.aniso                              = 1;
-  input->model.fstrain                            = 1;
-  const int crustalPhase                          = 1;
-  input->materials.aniso_factor[crustalPhase]     = mutateInputParams->double1;
-  input->materials.aniso_angle[crustalPhase]      = mutateInputParams->double2;
-  const int crustalPhase2                         = 9;
-  input->materials.aniso_factor[crustalPhase2]    = mutateInputParams->double3;
-  input->materials.aniso_angle[crustalPhase2]     = mutateInputParams->double4;
-
-  snprintf(input->model.description, sizeof(input->model.description), "CrustalPhase: {cstv: %i, aniso_factor: %f, aniso_angle: %f}, UpperMantlePhase: {cstv: %i, aniso_factor: %f, aniso_angle: %f}}", mutateInputParams->int1, mutateInputParams->double1, mutateInputParams->double2, mutateInputParams->int2, mutateInputParams->double3, mutateInputParams->double4);
-  printf("%s", input->model.description);
 }
 
 int main() {
@@ -156,7 +126,6 @@ int main() {
                   .SetBCVz    = SetPureShearBCVz,
                   .SetBCPType = SetBCPType,
                   .SetBCT     = SetBCT,
-                  .SetBCTNew  = SetBCTNew,
           },
           .MutateInput = AddCrazyConductivity,
   };

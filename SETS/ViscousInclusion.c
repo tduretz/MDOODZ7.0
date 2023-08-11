@@ -25,7 +25,7 @@ void eval_anal_Dani(double *vx, double *vz, double *p, double *eta, double *sxx,
     er = -1;// Strain rate
   } 
   else {
-    gr = -1;// Simple shear: gr=1, er=0
+    gr = -2.0;// Simple shear: gr=1, er=0
     er = 0; // Strain rate
   }
   A = mm * (mc - mm) / (mc + mm);
@@ -100,41 +100,63 @@ SetBC SetBCVx(MdoodzInput *instance, POSITION position, Coordinates coord) {
       z = coord.z + instance->model.dx / 2.0;// make sure it lives on the boundary
       eval_anal_Dani(&Vx, &Vz, &P, &eta, &sxx, &szz, x, z, 1, radius, mm, mc);
       bc.type  = 11;
-      bc.value = 2.0*Vx;
+      bc.value = 1.0*Vx;
     } else if (position == N || position == NE || position == NW) {
       x = coord.x;
       z = coord.z - instance->model.dx / 2.0;// make sure it lives on the boundary
       eval_anal_Dani(&Vx, &Vz, &P, &eta, &sxx, &szz, x, z, 1, radius, mm, mc);
       bc.type  = 11;
-      bc.value = 2.0*Vx;
+      bc.value = 1.0*Vx;
     } else {
       bc.type  = -1;
       bc.value = 0.0;
     }
   } else {
-    const double Lz = (double) (instance->model.zmax - instance->model.zmin);
-    if (position == S || position == SE || position == SW) {
+    if (position == W || position == E) {
+      x = coord.x;
+      z = coord.z;
+      eval_anal_Dani(&Vx, &Vz, &P, &eta, &sxx, &szz, x, z, 0, radius, mm, mc);
+      bc.type  = 0;
+      bc.value = Vx;
+    } else if (position == S || position == SE || position == SW) {
       x = coord.x;
       z = coord.z + instance->model.dx / 2.0;// make sure it lives on the boundary
-      eval_anal_Dani(&Vx, &Vz, &P, &eta, &sxx, &szz, x, z, 1, radius, mm, mc);
+      eval_anal_Dani(&Vx, &Vz, &P, &eta, &sxx, &szz, x, z, 0, radius, mm, mc);
       bc.type  = 11;
-      bc.value = 2.0*Vx;
+      bc.value = 1.0*Vx;
     } else if (position == N || position == NE || position == NW) {
       x = coord.x;
       z = coord.z - instance->model.dx / 2.0;// make sure it lives on the boundary
-      eval_anal_Dani(&Vx, &Vz, &P, &eta, &sxx, &szz, x, z, 1, radius, mm, mc);
+      eval_anal_Dani(&Vx, &Vz, &P, &eta, &sxx, &szz, x, z, 0, radius, mm, mc);
       bc.type  = 11;
-      bc.value = 2.0*Vx;
-    } else if (position == E) {
-      bc.value = 0.0;
-      bc.type  = -12;
-    } else if (position == W) {
-      bc.value = 0.0;
-      bc.type  = -2;
+      bc.value = 1.0*Vx;
     } else {
-      bc.value = 0.0;
       bc.type  = -1;
+      bc.value = 0.0;
     }
+    // const double Lz = (double) (instance->model.zmax - instance->model.zmin);
+    // if (position == S || position == SE || position == SW) {
+    //   x = coord.x;
+    //   z = coord.z + instance->model.dz / 2.0;// make sure it lives on the boundary
+    //   eval_anal_Dani(&Vx, &Vz, &P, &eta, &sxx, &szz, x, z, 0, radius, mm, mc);
+    //   bc.type  = 11;
+    //   bc.value = Vx;
+    // } else if (position == N || position == NE || position == NW) {
+    //   x = coord.x;
+    //   z = coord.z - instance->model.dz / 2.0;// make sure it lives on the boundary
+    //   eval_anal_Dani(&Vx, &Vz, &P, &eta, &sxx, &szz, x, z, 0, radius, mm, mc);
+    //   bc.type  = 11;
+    //   bc.value = Vx;
+    // } else if (position == E) {
+    //   bc.value = 0.0;
+    //   bc.type  = -12;
+    // } else if (position == W) {
+    //   bc.value = 0.0;
+    //   bc.type  = -2;
+    // } else {
+    //   bc.value = 0.0;
+    //   bc.type  = -1;
+    // }
   }
   return bc;
 }
@@ -158,30 +180,57 @@ SetBC SetBCVz(MdoodzInput *instance, POSITION position, Coordinates coord) {
       z = coord.z;
       eval_anal_Dani(&Vx, &Vz, &P, &eta, &sxx, &szz, x, z, 1, radius, mm, mc);
       bc.type  = 11;
-      bc.value = 2.0*Vz;
+      bc.value = Vz;
     }
     else if (position == E) {
-      x = coord.x + instance->model.dx / 2.0;
+      x = coord.x - instance->model.dx / 2.0;
       z = coord.z;
       eval_anal_Dani(&Vx, &Vz, &P, &eta, &sxx, &szz, x, z, 1, radius, mm, mc);
       bc.type  = 11;
-      bc.value = 2.0*Vz;
+      bc.value = Vz;
     } else {
       bc.type  = -1;
       bc.value = 0.0;
     }
   } 
   else {
-    if (position == E || position == W || position == NE || position == NW || position == SE || position == SW) {
-      bc.value = 0.0;
-      bc.type = -12;
-    } else if (position == S || position == N) {
-      bc.value = 0.0;
-      bc.type = 0;
-    } else {
-      bc.value = 0.0;
-      bc.type = -1;
+
+     if (position == N || position == NE || position == NW || position == S || position == SE || position == SW) {
+      x = coord.x;
+      z = coord.z;
+      eval_anal_Dani(&Vx, &Vz, &P, &eta, &sxx, &szz, x, z, 0, radius, mm, mc);
+      bc.type  = 0;
+      bc.value = Vz;
     }
+    else if (position == W) {
+      x = coord.x + instance->model.dx / 2.0;
+      z = coord.z;
+      eval_anal_Dani(&Vx, &Vz, &P, &eta, &sxx, &szz, x, z, 0, radius, mm, mc);
+      bc.type  = 11;
+      bc.value = Vz;
+    }
+    else if (position == E) {
+      x = coord.x - instance->model.dx / 2.0;
+      z = coord.z;
+      eval_anal_Dani(&Vx, &Vz, &P, &eta, &sxx, &szz, x, z, 0, radius, mm, mc);
+      bc.type  = 11;
+      bc.value = Vz;
+    } else {
+      bc.type  = -1;
+      bc.value = 0.0;
+    }
+
+
+    // if (position == E || position == W || position == NE || position == NW || position == SE || position == SW) {
+    //   bc.type = -12;
+    //   bc.value = 0.0;
+    // } else if (position == S || position == N) {
+    //   bc.type = 0;
+    //   bc.value = 0.0;
+    // } else {
+    //   bc.type = -1;
+    //   bc.value = 0.0;
+    // }
   }
   return bc;
 }

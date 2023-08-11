@@ -68,7 +68,7 @@ void RogerGunther( markers *particles, params model, grid mesh, int precise, sca
     zA  = DoodzCalloc( Nb_part,sizeof(DoodzFP));
 
     // Caculate rotation rate of the stress tensor
-    if ( model.iselastic == 1 ) {
+    if ( model.elastic == 1 ) {
 
         om_n = DoodzMalloc ((model.Nx)*(model.Nz)*sizeof(double));
         OmA  = DoodzCalloc( Nb_part,sizeof(DoodzFP));
@@ -89,7 +89,7 @@ firstprivate( model ) // schedule( static )
             c3 = k + l*(model.Nx+1);
             om_n[c1] = -(mesh.v_in[c3+1] - mesh.v_in[c3])/model.dx + (mesh.u_in[c1+model.Nx] - mesh.u_in[c1])/model.dz;
             om_n[c1] = 0.5*om_n[c1];
-            //            om_n[c1] = model.EpsBG/2.0;
+            //            om_n[c1] = model.bkg_strain_rate/2.0;
             //}
         }
         Interp_Grid2P( *particles, OmA, &mesh, om_n, mesh.xg_coord,  mesh.zg_coord,  mesh.Nx,   mesh.Nz, mesh.BCg.type   );
@@ -130,7 +130,7 @@ firstprivate( Nb_part, model ) // schedule( static )
         //        Interp_Grid2P( *particles, VzB, &mesh, mesh.v_in, mesh.xvz_coord, mesh.zg_coord,  mesh.Nx+1, mesh.Nz, mesh.BCv.type   );
 
 //        VelocitiesToParticles( &mesh, particles, VxB, VzB, model, scaling );
-        if (model.iselastic == 1) Interp_Grid2P( *particles, OmB, &mesh, om_n, mesh.xg_coord,  mesh.zg_coord,  mesh.Nx,   mesh.Nz, mesh.BCg.type   );
+        if (model.elastic == 1) Interp_Grid2P( *particles, OmB, &mesh, om_n, mesh.xg_coord,  mesh.zg_coord,  mesh.Nx,   mesh.Nz, mesh.BCg.type   );
 
         // Get the velocity after dt/2
         Interp_Grid2P( *particles, VxB, &mesh, mesh.u_in, mesh.xg_coord,  mesh.zvx_coord, mesh.Nx,   mesh.Nz+1, mesh.BCu.type );
@@ -165,7 +165,7 @@ firstprivate( Nb_part, model )  //schedule( static )
             Interp_Grid2P( *particles, VxC, &mesh, mesh.u_in, mesh.xg_coord,  mesh.zvx_coord, mesh.Nx,   mesh.Nz+1,  mesh.BCu.type );
             Interp_Grid2P( *particles, VzC, &mesh, mesh.v_in, mesh.xvz_coord, mesh.zg_coord,  mesh.Nx+1, mesh.Nz,  mesh.BCv.type   );
 
-            if (model.iselastic == 1) Interp_Grid2P( *particles, OmC, &mesh, om_n, mesh.xg_coord,  mesh.zg_coord,  mesh.Nx,   mesh.Nz, mesh.BCg.type   );
+            if (model.elastic == 1) Interp_Grid2P( *particles, OmC, &mesh, om_n, mesh.xg_coord,  mesh.zg_coord,  mesh.Nx,   mesh.Nz, mesh.BCg.type   );
 
             // Get xC and zC
 #pragma omp parallel for shared ( particles, xA, zA, VxC, VzC ) \
@@ -194,7 +194,7 @@ firstprivate( Nb_part, model )  //schedule( static )
             Interp_Grid2P( *particles, VxD, &mesh, mesh.u_in, mesh.xg_coord,  mesh.zvx_coord, mesh.Nx,   mesh.Nz+1, mesh.BCu.type );
             Interp_Grid2P( *particles, VzD, &mesh, mesh.v_in, mesh.xvz_coord, mesh.zg_coord,  mesh.Nx+1, mesh.Nz,  mesh.BCv.type   );
 
-            if (model.iselastic == 1) Interp_Grid2P( *particles, OmD, &mesh, om_n, mesh.xg_coord,  mesh.zg_coord,  mesh.Nx,   mesh.Nz, mesh.BCg.type   );
+            if (model.elastic == 1) Interp_Grid2P( *particles, OmD, &mesh, om_n, mesh.xg_coord,  mesh.zg_coord,  mesh.Nx,   mesh.Nz, mesh.BCg.type   );
             //-----------------------------------------------------------------------------------------------------------------------
 
         }
@@ -211,7 +211,7 @@ firstprivate( Nb_part, model ) //schedule( static )
                 if (particles->phase[k] != -1) {
                     VxA[k] = 0.5 * (VxA[k] +  VxB[k]);
                     VzA[k] = 0.5 * (VzA[k] +  VzB[k]);
-                    if ( model.iselastic == 1 ) OmA[k] = 0.5 * (OmA[k] +  OmB[k]);
+                    if ( model.elastic == 1 ) OmA[k] = 0.5 * (OmA[k] +  OmB[k]);
                 }
             }
 
@@ -220,7 +220,7 @@ firstprivate( Nb_part, model ) //schedule( static )
                 if (particles->phase[k] != -1) {
                     VxA[k] = (1.0/6.0) * ( VxA[k] + 2.0 * VxB[k] + 2.0 * VxC[k] + VxD[k]);
                     VzA[k] = (1.0/6.0) * ( VzA[k] + 2.0 * VzB[k] + 2.0 * VzC[k] + VzD[k]);
-                    if ( model.iselastic == 1 ) OmA[k] = (1.0/6.0) * ( OmA[k] + 2.0 * OmB[k] + 2.0 * OmC[k] + OmD[k]);
+                    if ( model.elastic == 1 ) OmA[k] = (1.0/6.0) * ( OmA[k] + 2.0 * OmB[k] + 2.0 * OmC[k] + OmD[k]);
                 }
             }
         }
@@ -253,7 +253,7 @@ firstprivate( Nb_part, model ) //schedule ( static )
     DoodzFree(xA);
     DoodzFree(zA);
 
-    if ( model.iselastic == 1 ) {
+    if ( model.elastic == 1 ) {
         DoodzFree(om_n);
         DoodzFree(OmA);
         DoodzFree(OmB);
@@ -275,7 +275,7 @@ void isout( markers *particles, params model ) {
     int k, count=0;
 
     // x periodic case
-    if ( model.isperiodic_x) {
+    if ( model.periodic_x) {
 #pragma omp parallel for shared ( particles )    \
 private ( k )                        \
 firstprivate ( model ) reduction (+:count) //schedule( static )
@@ -317,24 +317,24 @@ firstprivate ( model ) reduction (+:count) //schedule( static )
 
 void isoutPart( markers *particles, params *model, int k ) {
 
-     if ( model->isperiodic_x == 1 ) {
-         if ( particles->x[k] < model->xmin ) {
-             // Correct position in x
-             particles->x[k] = model->xmax - ABSV(model->xmin - particles->x[k]);
-         }
-         if ( particles->x[k] > model->xmax ) {
-             // Correct position in x
-             particles->x[k] = model->xmin + ABSV(model->xmax - particles->x[k]);
-         }
-         if ( particles->z[k] < model->zmin || particles->z[k] > model->zmax ) {
-             particles->phase[k] = -1;
-         }
-     }
-     else {
-         if (particles->x[k] < model->xmin || particles->x[k] > model->xmax || particles->z[k] < model->zmin || particles->z[k] > model->zmax) {
-             particles->phase[k] = -1;
-         }
-     }
+    if ( model->periodic_x == 1 ) {
+        if ( particles->x[k] < model->xmin ) {
+            // Correct position in x
+            particles->x[k] = model->xmax - ABSV(model->xmin - particles->x[k]);
+        }
+        if ( particles->x[k] > model->xmax ) {
+            // Correct position in x
+            particles->x[k] = model->xmin + ABSV(model->xmax - particles->x[k]);
+        }
+        if ( particles->z[k] < model->zmin || particles->z[k] > model->zmax ) {
+            particles->phase[k] = -1;
+        }
+    }
+    else {
+        if (particles->x[k] < model->xmin || particles->x[k] > model->xmax || particles->z[k] < model->zmin || particles->z[k] > model->zmax) {
+            particles->phase[k] = -1;
+        }
+    }
 
 }
 
@@ -344,63 +344,61 @@ void isoutPart( markers *particles, params *model, int k ) {
 
 void RogerGuntherII( markers *particles, params model, grid mesh, int precise, scale scaling ) {
 
-    DoodzFP VxA, VxB, VxC, VxD;
-    DoodzFP VzA, VzB, VzC, VzD;
-    DoodzFP OmA, OmB, OmC, OmD, *om_s;
-    DoodzFP xA, zA;
-    int k, k1, l, c0, c1, c2, c3, Nb_part = particles->Nb_part;
-    clock_t t_omp = (double)omp_get_wtime();
-    double dx, dz;
-    double txx, tzz, txz, angle;
-    double *dudx_n, *dvdz_n, *dudz_s, *dvdx_s;
-    double dudxA, dvdzA, dudzA, dvdxA, dudxB, dvdzB, dudzB, dvdxB, dudxC, dvdzC, dudzC, dvdxC, dudxD, dvdzD, dudzD, dvdxD, VEA,VEB,VEC,VED;
-    double nx, nz, ndotx, ndotz, w12, norm;
+DoodzFP VxA, VxB, VxC, VxD;
+DoodzFP VzA, VzB, VzC, VzD;
+DoodzFP OmA, OmB, OmC, OmD, *om_s;
+DoodzFP xA, zA;
+int k, k1, l, c0, c1, c2, c3, Nb_part = particles->Nb_part;
+clock_t t_omp = (double)omp_get_wtime();
+double dx, dz;
+double txx, tzz, txz, angle;
+double *dudx_n, *dvdz_n, *dudz_s, *dvdx_s;
+double dudxA, dvdzA, dudzA, dvdxA, dudxB, dvdzB, dudzB, dvdxB, dudxC, dvdzC, dudzC, dvdxC, dudxD, dvdzD, dudzD, dvdxD, VEA,VEB,VEC,VED;
+double nx, nz, ndotx, ndotz, w12, norm;
 
-    int new = model.ConservInterp; // DO NOT activate Taras trick: so far it is a source of asymmetry (conservative interpolation)
-    dx = mesh.dx;
-    dz = mesh.dz;
+int new = model.conserv_interp; // DO NOT activate Taras trick: so far it is a source of asymmetry (conservative interpolation)
+dx = mesh.dx;
+dz = mesh.dz;
 
 #pragma omp parallel for shared ( particles, mesh, om_s ) \
 private ( k, xA, zA, VxA, VzA, VxB, VzB, VxC, VzC, VxD, VzD, OmA, OmB, OmC, OmD, txx, tzz, txz, angle, dudxA, dvdzA, dudzA, dvdxA, dudxB, dvdzB, dudzB, dvdxB, dudxC, dvdzC, dudzC, dvdxC, dudxD, dvdzD, dudzD, dvdxD, VEA,VEB,VEC,VED, nx, nz, ndotx, ndotz, w12, norm ) \
 firstprivate( model, dx, dz, new )
-    for (k=0;k<Nb_part;k++) {
+for (k=0;k<Nb_part;k++) {
 
 
-        xA           = particles->x[k];
-        zA           = particles->z[k];
-        V2P( &VxA, &VzA, particles, mesh.u_in,  mesh.v_in, mesh.xg_coord, mesh.zg_coord, mesh.zvx_coord, mesh.xvz_coord, mesh.Nx, mesh.Nz, mesh.Nz+1, mesh.Nx+1, mesh.BCu.type, mesh.BCv.type, dx, dz, k, new );
-        if (particles->phase[k] != -1) {
-            particles->x[k] = xA + 0.5 * model.dt * VxA;
-            particles->z[k] = zA + 0.5 * model.dt * VzA;
-        }
-       isoutPart( particles, &model, k );
-        V2P( &VxB, &VzB, particles, mesh.u_in,  mesh.v_in, mesh.xg_coord, mesh.zg_coord, mesh.zvx_coord, mesh.xvz_coord, mesh.Nx, mesh.Nz, mesh.Nz+1, mesh.Nx+1, mesh.BCu.type, mesh.BCv.type, dx, dz, k, new );
-        if (particles->phase[k] != -1) {
-            particles->x[k] = xA + 0.5 * model.dt * VxB;
-            particles->z[k] = zA + 0.5 * model.dt * VzB;
-        }
-       isoutPart( particles, &model, k );
-        V2P( &VxC, &VzC, particles, mesh.u_in,  mesh.v_in, mesh.xg_coord, mesh.zg_coord, mesh.zvx_coord, mesh.xvz_coord, mesh.Nx, mesh.Nz, mesh.Nz+1, mesh.Nx+1, mesh.BCu.type, mesh.BCv.type, dx, dz, k, new );
-        if (particles->phase[k] != -1) {
-            particles->x[k] = xA + 1.0 * model.dt * VxC;
-            particles->z[k] = zA + 1.0 * model.dt * VzC;
-        }
-       isoutPart( particles, &model, k );
-        V2P( &VxD, &VzD, particles, mesh.u_in,  mesh.v_in, mesh.xg_coord, mesh.zg_coord, mesh.zvx_coord, mesh.xvz_coord, mesh.Nx, mesh.Nz, mesh.Nz+1, mesh.Nx+1, mesh.BCu.type, mesh.BCv.type, dx, dz, k, new );
-        VxA = (1.0/6.0) * ( VxA + 2.0 * VxB + 2.0 * VxC + VxD);
-        VzA = (1.0/6.0) * ( VzA + 2.0 * VzB + 2.0 * VzC + VzD);
-
-        if (particles->phase[k] != -1) {
-            particles->x[k]    = xA + model.dt * VxA;
-            particles->z[k]    = zA + model.dt * VzA;
-            particles->Vx[k]   = VxA;
-            particles->Vz[k]   = VzA;
-        }
-        isoutPart( particles, &model, k );
+    xA           = particles->x[k];
+    zA           = particles->z[k];
+    V2P( &VxA, &VzA, particles, mesh.u_in,  mesh.v_in, mesh.xg_coord, mesh.zg_coord, mesh.zvx_coord, mesh.xvz_coord, mesh.Nx, mesh.Nz, mesh.Nz+1, mesh.Nx+1, mesh.BCu.type, mesh.BCv.type, dx, dz, k, new );
+    if (particles->phase[k] != -1) {
+        particles->x[k] = xA + 0.5 * model.dt * VxA;
+        particles->z[k] = zA + 0.5 * model.dt * VzA;
     }
+    isoutPart( particles, &model, k );
+    V2P( &VxB, &VzB, particles, mesh.u_in,  mesh.v_in, mesh.xg_coord, mesh.zg_coord, mesh.zvx_coord, mesh.xvz_coord, mesh.Nx, mesh.Nz, mesh.Nz+1, mesh.Nx+1, mesh.BCu.type, mesh.BCv.type, dx, dz, k, new );
+    if (particles->phase[k] != -1) {
+        particles->x[k] = xA + 0.5 * model.dt * VxB;
+        particles->z[k] = zA + 0.5 * model.dt * VzB;
+    }
+    isoutPart( particles, &model, k );
+    V2P( &VxC, &VzC, particles, mesh.u_in,  mesh.v_in, mesh.xg_coord, mesh.zg_coord, mesh.zvx_coord, mesh.xvz_coord, mesh.Nx, mesh.Nz, mesh.Nz+1, mesh.Nx+1, mesh.BCu.type, mesh.BCv.type, dx, dz, k, new );
+    if (particles->phase[k] != -1) {
+        particles->x[k] = xA + 1.0 * model.dt * VxC;
+        particles->z[k] = zA + 1.0 * model.dt * VzC;
+    }
+    isoutPart( particles, &model, k );
+    V2P( &VxD, &VzD, particles, mesh.u_in,  mesh.v_in, mesh.xg_coord, mesh.zg_coord, mesh.zvx_coord, mesh.xvz_coord, mesh.Nx, mesh.Nz, mesh.Nz+1, mesh.Nx+1, mesh.BCu.type, mesh.BCv.type, dx, dz, k, new );
+    VxA = (1.0/6.0) * ( VxA + 2.0 * VxB + 2.0 * VxC + VxD);
+    VzA = (1.0/6.0) * ( VzA + 2.0 * VzB + 2.0 * VzC + VzD);
 
-    printf("** Time for Roger Gunther = %lf sec --- using conservative interpolation: %0d\n",  (double)((double)omp_get_wtime() - t_omp), model.ConservInterp );
-
+    if (particles->phase[k] != -1) {
+        particles->x[k]    = xA + model.dt * VxA;
+        particles->z[k]    = zA + model.dt * VzA;
+        particles->Vx[k]   = VxA;
+        particles->Vz[k]   = VzA;
+    }
+    isoutPart( particles, &model, k );
+}
+    printf("** Time for Roger Gunther = %lf sec --- using conservative interpolation: %0d\n",  (double)((double)omp_get_wtime() - t_omp), model.conserv_interp );
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
@@ -415,7 +413,7 @@ void PureShearALE( params *model, grid *mesh, markers *topo_chain, scale scaling
     double MinFreeSurfaceAltitude   = 0.0, MaxFreeSurfaceAltitude   = 0.0;
 
     // Get max. surface uplift velocity and max. altitude
-    if (model->ispureshear_ale == 2) {
+    if (model->pure_shear_ALE == 2) {
         MinMaxArrayVal( topo_chain->Vz, topo_chain->Nb_part, &MinFreeSurfaceUpliftRate, &MaxFreeSurfaceUpliftRate );
         MinMaxArrayVal( topo_chain->z, topo_chain->Nb_part, &MinFreeSurfaceAltitude, &MaxFreeSurfaceAltitude );
     }
@@ -445,7 +443,7 @@ void PureShearALE( params *model, grid *mesh, markers *topo_chain, scale scaling
         c2 = i + (mesh->Nz-1)*(mesh->Nx+1);
 
         if (mesh->BCv.type[c1] == 0) {
-            if (model->free_surf == 0) {
+            if (model->free_surface == 0) {
                 VzS += mesh->v_in[c1];
             }
             else {
@@ -455,14 +453,14 @@ void PureShearALE( params *model, grid *mesh, markers *topo_chain, scale scaling
             icount1++;
         }
         if (mesh->BCv.type[c2] == 0 || mesh->BCv.type[c2] == 30) {
-            if (model->free_surf == 0) {
+            if (model->free_surface == 0) {
                 VzN += mesh->v_in[c2];
             }
             else {
-                // Force the N boundary velocity in case ispureshear_ale == 2
-                if (model->ispureshear_ale == 2) VzN += MaxFreeSurfaceUpliftRate;
+                // Force the N boundary velocity in case pure_shear_ALE == 2
+                if (model->pure_shear_ALE == 2) VzN += MaxFreeSurfaceUpliftRate;
                 if (mesh->BCv.type[c2] == 0) VzN += mesh->BCv.val[c2];
-                //                if (model->ispureshear_ale == 2) VzN += mesh->BCv.val[c2];
+                //                if (model->pure_shear_ALE == 2) VzN += mesh->BCv.val[c2];
                 //                if (mesh->BCv.type[c2] == 0) VzN += mesh->BCv.val[c2];
             }
             icount2++;
@@ -488,16 +486,16 @@ void PureShearALE( params *model, grid *mesh, markers *topo_chain, scale scaling
 
     // Update min/max z-position of the mesh
     model->zmin +=  dzmin;
-    if (model->ispureshear_ale == 2)  model->zmax  = MaxFreeSurfaceAltitude + 10e3/scaling.L;// dzmax + 0.25*dzmax;//model->zmax = MaxFreeSurfaceAltitude + 0.25*MaxFreeSurfaceAltitude;
+    if (model->pure_shear_ALE == 2)  model->zmax  = MaxFreeSurfaceAltitude + 10e3/scaling.L;// dzmax + 0.25*dzmax;//model->zmax = MaxFreeSurfaceAltitude + 0.25*MaxFreeSurfaceAltitude;
     else                              model->zmax +=  dzmax;
 
     //    printf ("Max alt. %2.2e Max new %2.2e\n", (MaxFreeSurfaceAltitude + 0.25*MaxFreeSurfaceAltitude)*scaling.L, model->zmax*scaling.L);
 
-    //    if (model->ispureshear_ale == 2)  model->zmax +=  dzmax;
+    //    if (model->pure_shear_ALE == 2)  model->zmax +=  dzmax;
     //    else                              model->zmax +=  dzmax;
 
 
-    printf("Adjusting the mesh: Epsilon_xx = %2.2e, Volume = %2.2e\n", model->EpsBG * model->dt, (model->xmax - model->xmin) *(model->zmax - model->zmin) * scaling.L*scaling.L);
+    printf("Adjusting the mesh: Epsilon_xx = %2.2e, Volume = %2.2e\n", model->bkg_strain_rate * model->dt, (model->xmax - model->xmin) *(model->zmax - model->zmin) * scaling.L*scaling.L);
     printf("xmin = %lf, xmax = %lf\n", model->xmin*scaling.L, model->xmax*scaling.L);
     printf("zmin = %lf, zmax = %lf\n", model->zmin*scaling.L, model->zmax*scaling.L);
 
@@ -518,10 +516,10 @@ void DefineInitialTimestep( params *model, grid *mesh, markers particles, mat_pr
     int interp = 0, vert = 0, cent = 1;
 
 // Define initial timestep is elasticity is turned on
-if ( model->iselastic == 1 && model->dt_constant != 1 ) {
+if ( model->elastic == 1 && model->constant_dt != 1 ) {
 
-    P2Mastah( model, particles, materials.mu,     mesh, mesh->mu_n,   mesh->BCp.type,  0, 0, interp, cent, model->itp_stencil );
-    P2Mastah( model, particles, materials.mu,     mesh, mesh->mu_s,   mesh->BCg.type,  0, 0, interp, vert, model->itp_stencil );
+    P2Mastah( model, particles, materials.G,     mesh, mesh->mu_n,   mesh->BCp.type,  0, 0, interp, cent, model->interp_stencil );
+    P2Mastah( model, particles, materials.G,     mesh, mesh->mu_s,   mesh->BCg.type,  0, 0, interp, vert, model->interp_stencil );
 
     for ( k=0; k<mesh->Nx*mesh->Nz; k++) {
 
@@ -544,16 +542,16 @@ if ( model->iselastic == 1 && model->dt_constant != 1 ) {
 }
 
 //// Initial Courant limit
-//    if ( model->dt_constant != 1 && fabs(model->EpsBG>0.0) && model->dt > 0.1*model->dx/(fabs(model->EpsBG) * (model->xmax - model->xmin)) ) {
+//    if ( model->constant_dt != 1 && fabs(model->bkg_strain_rate>0.0) && model->dt > 0.1*model->dx/(fabs(model->bkg_strain_rate) * (model->xmax - model->xmin)) ) {
 //    printf("Initial Courant check:\n");
-//    printf("Suggested dt = %2.2e s (Vchar= %2.2e m/s)\n", model->dt*scaling.t, model->EpsBG * (model->xmax - model->xmin)*scaling.V);
-//    model->dt  = 0.1*model->dx/(fabs(model->EpsBG) * (model->xmax - model->xmin));
+//    printf("Suggested dt = %2.2e s (Vchar= %2.2e m/s)\n", model->dt*scaling.t, model->bkg_strain_rate * (model->xmax - model->xmin)*scaling.V);
+//    model->dt  = 0.1*model->dx/(fabs(model->bkg_strain_rate) * (model->xmax - model->xmin));
 //    model->dt0 = model->dt;
 //    printf("new dt = %2.2e s\n", model->dt*scaling.t);
 //}
 
-if (model->iselastic == 1) printf("min. Maxwell = %2.2e s, max. Maxwell = %2.2e s\n", minMaxwell*scaling.t, maxMaxwell*scaling.t);
-if (model->iselastic == 1) printf("Suggested dt = %2.2e s, VE dt = %2.2e s\n", model->dt*scaling.t, exp((log(minMaxwell)+log(maxMaxwell))/2.0)*scaling.t );
+if (model->elastic == 1) printf("min. Maxwell = %2.2e s, max. Maxwell = %2.2e s\n", minMaxwell*scaling.t, maxMaxwell*scaling.t);
+if (model->elastic == 1) printf("Suggested dt = %2.2e s, VE dt = %2.2e s\n", model->dt*scaling.t, exp((log(minMaxwell)+log(maxMaxwell))/2.0)*scaling.t );
 printf("Initial timestep = %2.2e s\n", model->dt*scaling.t);
 
 }
@@ -594,12 +592,12 @@ void EvaluateCourantCriterion( double* Vx, double* Vz, params *model, scale scal
     vmin = MAXV(fabs(minVx), fabs(minVz));
     vmax = MAXV(fabs(vmax),  fabs(vmin));
     
-    if (model->dt_constant == 0) {
+    if (model->constant_dt == 0) {
 
         double fact = 1.0;
 
         // Timestep increase factor
-        if ( model->iselastic == 1 ) {
+        if ( model->elastic == 1 ) {
             fact = 1.25;
         }
         else {
@@ -611,8 +609,8 @@ void EvaluateCourantCriterion( double* Vx, double* Vz, params *model, scale scal
         printf("Courant number = %2.2e --- dtc     = %2.2e\n", C, dtc*scaling.t);
         
         // Surface dt
-        if ( model->surf_processes>0 ) {
-            dt_surf = C * dmin / fabs(Vinc);
+        if ( model->surface_processes>0 ) {
+            dt_surf = C * dmin / fabs(Vinc*10) ;
             printf("Courant number = %2.2e --- dt_surf = %2.2e\n", C, dt_surf*scaling.t);
         }
 
@@ -623,17 +621,17 @@ void EvaluateCourantCriterion( double* Vx, double* Vz, params *model, scale scal
         }
 
         // If timestep is adaptive
-        if ( model->dt_constant != 1 ) {
+        if ( model->constant_dt != 1 ) {
             printf("Timestep limited by advection\n");
             model->dt = dtc;
-            if ( model->surf_processes>0 && dt_surf<model->dt) {
+            if ( model->surface_processes>0 && dt_surf<model->dt) {
                 printf("Timestep limited by surface processes\n");
                 model->dt = dt_surf;
             }
         }
         
         // If timestep is adaptive: Chemical limitation
-        if ( model->dt_constant != 1 && model->ProgReac == 1 && dt_reac<model->dt ) {
+        if ( model->constant_dt != 1 && model->chemical_diffusion == 1 && dt_reac<model->dt ) {
                 printf("EvaluateCourantCriterion: --> min_tau_kin = %2.2e s \n", min_tau_kin*scaling.t);
                 printf("Timestep limited by Chemical Reaction\n");
                 model->dt = dt_reac;
@@ -676,7 +674,7 @@ void Check_dt_for_advection( double* Vx, double* Vz, params *model, scale scalin
     double C = model->Courant;
     double dt_solve =0.0;
 
-    if (model->dt_constant == 0) {
+    if (model->constant_dt == 0) {
     // Get current dt value;
     dt_solve = model->dt;
 
@@ -827,7 +825,7 @@ void PureShearALE_X( params *model,  grid *mesh, markers *topo_chain, scale scal
     double dxmin, dxmax, dzmin, dzmax;
 
     // Get max. surface uplift velocity and max. altitude
-    if (model->ispureshear_ale == 2) {
+    if (model->pure_shear_ALE == 2) {
         MinMaxArrayVal( topo_chain->Vz, topo_chain->Nb_part, &MinFreeSurfaceUpliftRate, &MaxFreeSurfaceUpliftRate );
         MinMaxArrayVal( topo_chain->z, topo_chain->Nb_part, &MinFreeSurfaceAltitude, &MaxFreeSurfaceAltitude );
     }
@@ -857,7 +855,7 @@ void PureShearALE_X( params *model,  grid *mesh, markers *topo_chain, scale scal
         c2 = i + (mesh->Nz-1)*(mesh->Nx+1);
 
         if (mesh->BCv.type[c1] == 0) {
-            if (model->free_surf == 0) {
+            if (model->free_surface == 0) {
                 VzS += mesh->v_in[c1];
             }
             else {
@@ -867,12 +865,12 @@ void PureShearALE_X( params *model,  grid *mesh, markers *topo_chain, scale scal
             icount1++;
         }
         if (mesh->BCv.type[c2] == 0 || mesh->BCv.type[c2] == 30) {
-            if (model->free_surf == 0) {
+            if (model->free_surface == 0) {
                 VzN += mesh->v_in[c2];
             }
             else {
-                // Force the N boundary velocity in case ispureshear_ale == 2
-                if (model->ispureshear_ale == 2) VzN += MaxFreeSurfaceUpliftRate;
+                // Force the N boundary velocity in case pure_shear_ALE == 2
+                if (model->pure_shear_ALE == 2) VzN += MaxFreeSurfaceUpliftRate;
                 if (mesh->BCv.type[c2] == 0) VzN += mesh->BCv.val[c2];
             }
             icount2++;
@@ -894,12 +892,12 @@ void PureShearALE_X( params *model,  grid *mesh, markers *topo_chain, scale scal
 
     // Update min/max z-position of the mesh
     model->zmin +=  dzmin;
-    if (model->ispureshear_ale == 2) model->zmax = MaxFreeSurfaceAltitude + 10.0e3/scaling.L;
+    if (model->pure_shear_ALE == 2) model->zmax = MaxFreeSurfaceAltitude + 10.0e3/scaling.L;
     else         {
        model->zmax +=  dzmax;
     }
 
-    printf("Adjusting the mesh: Epsilon_xx = %2.2e, Volume = %2.2e\n", model->EpsBG * model->dt, (model->xmax - model->xmin) *(model->zmax - model->zmin) * scaling.L*scaling.L);
+    printf("Adjusting the mesh: Epsilon_xx = %2.2e, Volume = %2.2e\n", model->bkg_strain_rate * model->dt, (model->xmax - model->xmin) *(model->zmax - model->zmin) * scaling.L*scaling.L);
     printf("xmin = %lf, xmax = %lf\n", model->xmin*scaling.L, model->xmax*scaling.L);
     printf("zmin = %lf, zmax = %lf\n", model->zmin*scaling.L, model->zmax*scaling.L);
 
@@ -919,7 +917,7 @@ void PureShearALE_Z( params *model,  grid *mesh, markers *topo_chain, scale scal
     double MinFreeSurfaceAltitude   = 0.0, MaxFreeSurfaceAltitude   = 0.0;
 
     // Get max. surface uplift velocity and max. altitude
-    if (model->ispureshear_ale == 2) {
+    if (model->pure_shear_ALE == 2) {
         MinMaxArrayVal( topo_chain->Vz, topo_chain->Nb_part, &MinFreeSurfaceUpliftRate, &MaxFreeSurfaceUpliftRate );
         MinMaxArrayVal( topo_chain->z, topo_chain->Nb_part, &MinFreeSurfaceAltitude, &MaxFreeSurfaceAltitude );
     }
@@ -949,7 +947,7 @@ void PureShearALE_Z( params *model,  grid *mesh, markers *topo_chain, scale scal
         c2 = i + (mesh->Nz-1)*(mesh->Nx+1);
 
         if (mesh->BCv.type[c1] == 0) {
-            if (model->free_surf == 0) {
+            if (model->free_surface == 0) {
                 VzS += mesh->v_in[c1];
             }
             else {
@@ -959,12 +957,12 @@ void PureShearALE_Z( params *model,  grid *mesh, markers *topo_chain, scale scal
             icount1++;
         }
         if (mesh->BCv.type[c2] == 0 || mesh->BCv.type[c2] == 30) {
-            if (model->free_surf == 0) {
+            if (model->free_surface == 0) {
                 VzN += mesh->v_in[c2];
             }
             else {
-                // Force the N boundary velocity in case ispureshear_ale == 2
-                if (model->ispureshear_ale == 2) VzN += MaxFreeSurfaceUpliftRate;
+                // Force the N boundary velocity in case pure_shear_ALE == 2
+                if (model->pure_shear_ALE == 2) VzN += MaxFreeSurfaceUpliftRate;
                 if (mesh->BCv.type[c2] == 0) VzN += mesh->BCv.val[c2];
             }
             icount2++;
@@ -987,10 +985,10 @@ void PureShearALE_Z( params *model,  grid *mesh, markers *topo_chain, scale scal
 
     // Update min/max z-position of the mesh
     model->zmin +=  dzmin;
-    if (model->ispureshear_ale == 2)  model->zmax = MaxFreeSurfaceAltitude + 10.0e3/scaling.L;
+    if (model->pure_shear_ALE == 2)  model->zmax = MaxFreeSurfaceAltitude + 10.0e3/scaling.L;
     else                              model->zmax +=  dzmax;
 
-    printf("Adjusting the mesh: Epsilon_xx = %2.2e, Volume = %2.2e\n", model->EpsBG * model->dt, (model->xmax - model->xmin) *(model->zmax - model->zmin) * scaling.L*scaling.L);
+    printf("Adjusting the mesh: Epsilon_xx = %2.2e, Volume = %2.2e\n", model->bkg_strain_rate * model->dt, (model->xmax - model->xmin) *(model->zmax - model->zmin) * scaling.L*scaling.L);
     printf("xmin = %lf, xmax = %lf\n", model->xmin*scaling.L, model->xmax*scaling.L);
     printf("zmin = %lf, zmax = %lf\n", model->zmin*scaling.L, model->zmax*scaling.L);
 

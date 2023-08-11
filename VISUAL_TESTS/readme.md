@@ -1,6 +1,6 @@
 # Visual Tests
 
-Last run date: 2022-09-22.11:17:02
+Last run date: 2023-04-04.16:35:34
 
 ## Usage 
 
@@ -71,6 +71,13 @@ the model domain, and used these values as Dirichlet boundary conditions.
 | ------------- |-----------------------------|
 | ![](img/ShearTemplate1.png)  | ![](img/ShearTemplate1Reference.png) |
 
+### ShearTemplate (Simple Shear) with anisotropy
+
+| Result                          | Reference                   |
+|---------------------------------|-----------------------------|
+| ![](img/ShearTemplateAniso.png) | ![](img/ShearTemplateAnisoReference.png) |
+
+
 ### ShearHeatingDuretz14
 
 Based on [Duretz et. al., 2014](https://agupubs.onlinelibrary.wiley.com/doi/pdfdirect/10.1002/2014GL060438) model and shows deformation of power law viscous 
@@ -82,6 +89,16 @@ which yields to upper estimates of the temperature  increase due to shear heatin
 | Result  | Reference                   |
 | ------------- |-----------------------------|
 | ![](img/ShearHeatingDuretz14.png)  | ![](img/ShearHeatingDuretz14Reference.png) |
+
+### Shrinking
+
+Based on [Yamato et. al., 2022](https://www.sciencedirect.com/science/article/abs/pii/S0012821X2200156X).
+Figure show the evolution of shear stress for an inclusion submitted to positive density change 
+(compressible mechanical code with linear viscous material fitting the analytical solution).
+
+| Result                 | Reference                 |
+|------------------------|---------------------------|
+| ![](img/shrinking.gif) | ![](img/shrinkingRef.gif) |
 
 
 ### TopoBenchCase1 Result with Analytical solution

@@ -28,44 +28,44 @@ zmin    = -2.500000e-3
 xmax    =  2.500000e-3
 zmax    =  2.500000e-3
 dt      = 6.250e+09
-dt_constant  = 1
+constant_dt  = 1
 Courant      = 0.3
 penalty      = 1e5
 safe_mode    = 1
 
 /**** SWITCHES ****/
-ismechanical    = 1
-dt_constant     = 0
+mechanical    = 1
+constant_dt     = 0
 RK              = 4
-isperiodic_x    = 0
-ispureshear_ALE = 1
-isinertial      = 0
-isthermal       = 0
+periodic_x    = 0
+pure_shear_ALE = 1
+
+thermal       = 0
 line_search     = 1
-free_surf       = 0
-free_surf_stab  = 0
-thermal_eq      = 0
-subgrid_diff    = 1
-shear_heat      = 1
-adiab_heat      = 0
+free_surface       = 0
+free_surface_stab  = 0
+initial_cooling      = 0
+subgrid_diffusion    = 1
+shear_heating      = 1
+adiab_heating      = 0
 fstrain         = 1
 advection       = 1
 GNUplot_residuals = 0
 kinetics          = 1 
 
 /**** SETUP DEPENDANT ****/
-eta_avg         = 0
+eta_average         = 0
 VolChangeReac   = 1
-noise_bg        = 1     / noise beau-gosse
-oop             = 1     / non zeros total Eyy
+marker_noise        = 1     / noise beau-gosse
+out_of_plane             = 1     / non zeros total Eyy
 compressible    = 1
 shear_style     = 0
-iselastic       = 1
-EpsBG           = 1e-25
-DivBG           = 1e-14
-PrBG            = 3.45e9  / pressure [Pa]
-TBG             = 973.15  / temperature [K]
-user0           = 1       / 0: fix T=TBG, 1: use T=(1/a)*ln(P/b)
+elastic       = 1
+bkg_strain_rate           = 1e-25
+bkg_div_rate           = 1e-14
+bkg_pressure            = 3.45e9  / pressure [Pa]
+bkg_temperature             = 973.15  / temperature [K]
+user0           = 1       / 0: fix T=bkg_temperature, 1: use T=(1/a)*ln(P/b)
 user1           = 2       / 2: fancy set up --- 1: simple inclusion --- 0: homogeneous
 user2           = 0.5e-3  / inclusion radius [m]
 user3           = 1.02e-2     / fit coefficient a for T=(1/a)*ln(P/b) 
@@ -81,7 +81,7 @@ Nb_phases = 3
 /**** PHASE 0 ****/
 ID   = 0
 rho  = 3295.00 / matrix --- omphacite
-mu   = 6e10
+G   = 6e10
 Cv   = 1050
 k    = 2.5
 Qr   = 0
@@ -108,7 +108,7 @@ density_model = 3
 /**** PHASE 1 ****/
 ID   = 1
 rho  = 3577.00 / inclusion 1 - garnet
-mu   = 9e10
+G   = 9e10
 Cv   = 1050
 k    = 2.5
 Qr   = 0
@@ -135,7 +135,7 @@ density_model = 3
 /**** PHASE 2 ****/
 ID   = 2
 rho  = 2700.00 / inclusion
-mu   = 6e10
+G   = 6e10
 Cv   = 1050
 k    = 2.5
 Qr   = 0
@@ -181,12 +181,12 @@ min_part_cell = 16
 /**** NON-LINEAR ITERATIONS ****/
 Newton        = 1
 Picard2Newton = 1
-Pic2NewtCond  = 1e-1
+Picard2Newton_tol  = 1e-1
 nit_max  = 101
 rel_tol_KSP = 1e-4
-abs_tol_u   = 1e-11
-abs_tol_p   = 1e-11
-abs_tol_div = 1e-9
-rel_tol_div = 1e-9
-mineta  = 1e17
-maxeta  = 1e25
+nonlin_abs_mom   = 1e-11
+nonlin_abs_div   = 1e-11
+lin_abs_div = 1e-9
+lin_rel_div = 1e-9
+min_eta  = 1e17
+max_eta  = 1e25
