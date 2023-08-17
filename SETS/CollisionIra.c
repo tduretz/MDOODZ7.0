@@ -2,25 +2,24 @@
 #include "mdoodz.h"
 #include "stdbool.h"
 #include "stdlib.h"
+#include "stdio.h"
 
 
 double SetSurfaceZCoord(MdoodzInput *instance, double x_coord) {
-  const double TopoLevel = -0.0e3 / instance->scaling.L;
-  const double h_pert    = instance->model.user3 / instance->scaling.L;
-  return TopoLevel + h_pert * (3330.0 - 2800.0) / 2800.0 * cos(2 * PI * x_coord / (instance->model.xmax - instance->model.xmin));
+  return 0.0;
 }
 
 int SetPhase(MdoodzInput *instance, Coordinates coordinates) {
   Rectangle westernContinent = {
           .sizeZ   = 180e3,
-          .sizeX   = 500e3,
+          .sizeX   = 600e3,
           .centreZ = -90e3,
           .centreX = -350e3,
           .angle   = 0,
   };
   Rectangle easternContinent = {
           .sizeZ   = 140e3,
-          .sizeX   = 500e3,
+          .sizeX   = 600e3,
           .centreZ = -70e3,
           .centreX = 350e3,
           .angle   = 0,
@@ -37,24 +36,24 @@ int SetPhase(MdoodzInput *instance, Coordinates coordinates) {
   // const double HOceanicPlate = 20e3 / instance->scaling.L;
   if (IsRectangleCoordinates(coordinates, westernContinent, instance->scaling.L)) {
     if (coordinates.z > -40e3 / instance->scaling.L) {
-      return 1;}
+      return 7;}
     else {
       return 2;
     }
   } else if (IsRectangleCoordinates(coordinates, easternContinent, instance->scaling.L)) {
     if (coordinates.z > -30e3 / instance->scaling.L) {
-      return 1;}
+      return 7;}
     else {
       return 2;
     }
   } else if (IsRectangleCoordinates(coordinates, HOceanicPlate, instance->scaling.L)) {
     if (coordinates.z > -20e3 / instance->scaling.L) {
-      return 8;
+      return 1;
     } else {
       return 2;
     }
   }
-  return 6;
+  return 3;
 }
 
 double SetTemperature(MdoodzInput *instance, Coordinates coordinates) {
@@ -75,11 +74,11 @@ double SetGrainSize(MdoodzInput *instance, Coordinates coordinates, int phase) {
 }
 
 double SetHorizontalVelocity(MdoodzInput *instance, Coordinates coordinates) {
-  return -coordinates.x * instance->model.bkg_strain_rate;
+  return 0.0;
 }
 
 double SetVerticalVelocity(MdoodzInput *instance, Coordinates coordinates) {
-  return coordinates.z * instance->model.bkg_strain_rate;
+  return 0.0;
 }
 
 char SetBCPType(MdoodzInput *instance, POSITION position) {
@@ -105,7 +104,7 @@ SetBC SetBCT(MdoodzInput *instance, POSITION position, double particleTemperatur
 
 
 SetBC SetBCTNew(MdoodzInput *instance, POSITION position, double particleTemperature) {
-  SetBC     bc;
+  SetBC  bc;
   double surfaceTemperature = zeroC / instance->scaling.T;
   double mantleTemperature  = (1330. + zeroC) / instance->scaling.T;
   if (position == S || position == SE || position == SW) {
@@ -124,6 +123,35 @@ SetBC SetBCTNew(MdoodzInput *instance, POSITION position, double particleTempera
   return bc;
 }
 
+SetBC SetBCVx(MdoodzInput *input, POSITION position, Coordinates coordinates) {
+  const double plateThickness = 180e3;
+  SetBC bc;
+  if (position == N || position == S || position == NW || position == SW || position == NE || position == SE) {
+    bc.value = 0;
+    bc.type  = 13;
+  } else if (position == W) {
+    if (coordinates.z > -plateThickness / input->scaling.L) {
+      bc.value = -coordinates.x * input->model.bkg_strain_rate;
+    } else {
+      bc.value = 0.0;
+    }
+    bc.type  = 0;
+  } else if (position == E) {
+    if (coordinates.z > -200e3 / input->scaling.L) {
+      bc.value = (-coordinates.x / 1) * input->model.bkg_strain_rate;
+    } else if (coordinates.z < -250e3 / input->scaling.L && coordinates.z > -400e3 / input->scaling.L) {
+      bc.value = -coordinates.x * input->model.bkg_strain_rate;
+    } else {
+      bc.value = 0.0;
+    }
+    bc.type  = 0;
+  } else {
+    bc.value = 0.0;
+    bc.type  = -1;
+  }
+  return bc;
+}
+
 SetBC SetBCVz(MdoodzInput *input, POSITION position, Coordinates coordinates) {
   SetBC bc;
   if (position == W || position == E || position == SW || position == SE || position == NW || position == NE) {
@@ -133,7 +161,11 @@ SetBC SetBCVz(MdoodzInput *input, POSITION position, Coordinates coordinates) {
     bc.value = coordinates.z * input->model.bkg_strain_rate;
     bc.type  = 0;
   } else if (position == S) {
-    bc.value = coordinates.z * input->model.bkg_strain_rate;
+    if (coordinates.x > -100e3 / input->scaling.L && coordinates.x < 100e3 / input->scaling.L) {
+      bc.value = -coordinates.z * input->model.bkg_strain_rate;
+    } else {
+      bc.value = 0.0;
+    }
     bc.type  = 0;
   } else {
     bc.value = 0;
@@ -165,7 +197,7 @@ int main() {
                   .SetVerticalVelocity   = SetVerticalVelocity,
           },
           .SetBCs = &(SetBCs_ff){
-                  .SetBCVx    = SetPureShearBCVx,
+                  .SetBCVx    = SetBCVx,
                   .SetBCVz    = SetBCVz,
                   .SetBCPType = SetBCPType,
                   .SetBCT     = SetBCT,
@@ -173,5 +205,5 @@ int main() {
           .MutateInput = AddCrazyConductivity,
 
   };
-  RunMDOODZ("RiftingChenin.txt", &setup);
+  RunMDOODZ("CollisionIra.txt", &setup);
 }

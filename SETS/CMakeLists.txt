@@ -20,5 +20,6 @@ else()
     add_set(Multilayers)
     add_set(Shrinking)
     add_set(RiverTom)
+    add_set(CollisionIra)
 endif()
 
