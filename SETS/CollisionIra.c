@@ -102,27 +102,6 @@ SetBC SetBCT(MdoodzInput *instance, POSITION position, double particleTemperatur
   return bc;
 }
 
-
-SetBC SetBCTNew(MdoodzInput *instance, POSITION position, double particleTemperature) {
-  SetBC  bc;
-  double surfaceTemperature = zeroC / instance->scaling.T;
-  double mantleTemperature  = (1330. + zeroC) / instance->scaling.T;
-  if (position == S || position == SE || position == SW) {
-    bc.value = particleTemperature;
-    bc.type  = 1;
-  } else if (position == N || position == NE || position == NW) {
-    bc.value = mantleTemperature;
-    bc.type  = 1;
-  } else if (position == W || position == E) {
-    bc.value = mantleTemperature;
-    bc.type  = 0;
-  } else {
-    bc.value = 0;
-    bc.type  = 0;
-  }
-  return bc;
-}
-
 SetBC SetBCVx(MdoodzInput *input, POSITION position, Coordinates coordinates) {
   const double plateThickness = 180e3;
   SetBC bc;
