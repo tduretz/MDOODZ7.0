@@ -1,12 +1,17 @@
 #include "math.h"
 #include "mdoodz.h"
-#include "stdbool.h"
 #include "stdlib.h"
 #include "stdio.h"
 
 
-double SetSurfaceZCoord(MdoodzInput *instance, double x_coord) {
-  return 0.0;
+double SetNoise(MdoodzInput *instance, Coordinates coordinates, int phase) {
+  const double x        = coordinates.x - instance->model.user4 / instance->scaling.L;
+  const double z        = coordinates.z;
+  const double basin_width = 30.0e3 / instance->scaling.L;
+  const double noise = ((double) rand() / (double) RAND_MAX) - 0.5;
+  const double filter_x = exp( - (x*x)/ (2.0*basin_width*basin_width) );
+  const double filter_z = exp( - (z*z)/ (2.0*basin_width*basin_width*4.0) );
+  return  noise * filter_x * filter_z;
 }
 
 int SetPhase(MdoodzInput *instance, Coordinates coordinates) {
@@ -14,55 +19,60 @@ int SetPhase(MdoodzInput *instance, Coordinates coordinates) {
           .sizeZ   = 180e3,
           .sizeX   = 600e3,
           .centreZ = -90e3,
-          .centreX = -350e3,
+          .centreX = -500e3,
           .angle   = 0,
   };
   Rectangle easternContinent = {
-          .sizeZ   = 140e3,
+          .sizeZ   = 180e3,
           .sizeX   = 600e3,
-          .centreZ = -70e3,
-          .centreX = 350e3,
+          .centreZ = -90e3,
+          .centreX = 500e3,
           .angle   = 0,
   };
   Rectangle HOceanicPlate = {
           .sizeZ   = 60e3,
-          .sizeX   = 200e3,
+          .sizeX   = 400e3,
           .centreZ = -30e3,
           .centreX = 0e3,
           .angle   = 0,
   };
 
-
-  // const double HOceanicPlate = 20e3 / instance->scaling.L;
   if (IsRectangleCoordinates(coordinates, westernContinent, instance->scaling.L)) {
     if (coordinates.z > -40e3 / instance->scaling.L) {
-      return 7;}
-    else {
-      return 2;
-    }
-  } else if (IsRectangleCoordinates(coordinates, easternContinent, instance->scaling.L)) {
-    if (coordinates.z > -30e3 / instance->scaling.L) {
-      return 7;}
-    else {
-      return 2;
-    }
-  } else if (IsRectangleCoordinates(coordinates, HOceanicPlate, instance->scaling.L)) {
-    if (coordinates.z > -20e3 / instance->scaling.L) {
       return 1;
     } else {
       return 2;
     }
+  } else if (IsRectangleCoordinates(coordinates, easternContinent, instance->scaling.L)) {
+    if (coordinates.z > -30e3 / instance->scaling.L) {
+      return 1;
+    } else {
+      return 2;
+    }
+  } else if (IsRectangleCoordinates(coordinates, HOceanicPlate, instance->scaling.L)) {
+    if (coordinates.z > -20e3 / instance->scaling.L) {
+      return 4;
+    } else {
+      return 2;
+    }
+  } else {
+    return 3;
   }
-  return 3;
 }
 
 double SetTemperature(MdoodzInput *instance, Coordinates coordinates) {
   const double lithosphereThickness = instance->model.user1 / instance->scaling.L;
   const double surfaceTemperature   = 273.15 / instance->scaling.T;
   const double mantleTemperature    = (1330.0 + 273.15) / instance->scaling.T;
+
+  const double Tamp               =  50.0 / instance->scaling.T;
+  const double x                  = coordinates.x - instance->model.user4 / instance->scaling.L;
+  const double basin_width        = 30.0e3 / instance->scaling.L;
+  const double filter_x           = Tamp * exp( - (x*x)/ (2.0*basin_width*basin_width) );
+
   const double particleTemperature  = ((mantleTemperature - surfaceTemperature) / lithosphereThickness) * (-coordinates.z) + surfaceTemperature;
   if (particleTemperature > mantleTemperature) {
-    return mantleTemperature;
+    return mantleTemperature + filter_x;
   } else {
     return particleTemperature;
   }
@@ -71,14 +81,6 @@ double SetTemperature(MdoodzInput *instance, Coordinates coordinates) {
 double SetGrainSize(MdoodzInput *instance, Coordinates coordinates, int phase) {
   const int asthenospherePhase = 3;
   return instance->materials.gs_ref[asthenospherePhase];
-}
-
-double SetHorizontalVelocity(MdoodzInput *instance, Coordinates coordinates) {
-  return 0.0;
-}
-
-double SetVerticalVelocity(MdoodzInput *instance, Coordinates coordinates) {
-  return 0.0;
 }
 
 char SetBCPType(MdoodzInput *instance, POSITION position) {
@@ -91,13 +93,19 @@ char SetBCPType(MdoodzInput *instance, POSITION position) {
 
 SetBC SetBCT(MdoodzInput *instance, POSITION position, double particleTemperature) {
   SetBC     bc;
-  double surfaceTemperature = zeroC / instance->scaling.T;
-  if (position == free_surface) {
-    bc.value = surfaceTemperature;
-    bc.type  = 1;
-  } else {
-    bc.value = 0.0;
-    bc.type  = 0;
+  double surface_temperature =          zeroC  / instance->scaling.T;
+  double mantle_temperature  = (1330. + zeroC) / instance->scaling.T;
+  if (position == S) {
+    bc.type  = constant_temperature;
+    bc.value = mantle_temperature;
+  }
+  if (position == free_surface || position == N) {
+    bc.type  = constant_temperature;
+    bc.value = surface_temperature;
+  }
+  if (position == W || position == E) {
+    bc.type  = constant_heatflux;
+    bc.value = 0.;
   }
   return bc;
 }
@@ -163,17 +171,27 @@ void AddCrazyConductivity(MdoodzInput *input) {
   input->crazyConductivity               = crazyConductivity;
 }
 
-int main() {
+int main(int nargs, char *args[]) {
+  // Input file name
+  char *input_file;
+  if ( nargs < 2 ) {
+    asprintf(&input_file, "CollisionIra.txt"); // Default
+  }
+  else {
+    printf("dodo %s\n", args[1]);
+    asprintf(&input_file, "%s", args[1]);     // Custom
+  }
+  printf("Running MDoodz7.0 using %s\n", input_file);
+  srand(69); // Force random generator seed for reproducibility
   MdoodzSetup setup = {
-          .BuildInitialTopography = &(BuildInitialTopography_ff){
-                  .SetSurfaceZCoord = SetSurfaceZCoord,
+          .BuildInitialTopography = &(BuildInitialTopography_ff) {
           },
           .SetParticles = &(SetParticles_ff){
                   .SetPhase              = SetPhase,
                   .SetTemperature        = SetTemperature,
                   .SetGrainSize          = SetGrainSize,
-                  .SetHorizontalVelocity = SetHorizontalVelocity,
-                  .SetVerticalVelocity   = SetVerticalVelocity,
+                  .SetNoise              = SetNoise,
+
           },
           .SetBCs = &(SetBCs_ff){
                   .SetBCVx    = SetBCVx,
@@ -184,5 +202,6 @@ int main() {
           .MutateInput = AddCrazyConductivity,
 
   };
-  RunMDOODZ("CollisionIra.txt", &setup);
+  RunMDOODZ(input_file, &setup);
+  free(input_file);
 }

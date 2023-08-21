@@ -3,10 +3,10 @@ irestart = 0
 
 /**** OUTPUT FILES ****/
 writer         = 1
-writer_step    = 50
+writer_step    = 10
 writer_markers = 0
 writer_debug   = 0
-writer_subfolder = aniso1
+writer_subfolder = collision
 
 /**** SCALES ****/ Scaling parameters for
 eta = 1.e+22      /viscosity
@@ -14,16 +14,16 @@ L   = 30.e4       /length
 V   = 1.5e-8      /velocity
 T   = 1.e+02      /temperature
 
-/**** SPACE-TIME ****/
-Nx      = 150 // 300/600 = 0.5 km horizontal resolution
-Nz      = 100 // 200/800 = 0.25 km vertical resolutionCollisionIra
-xmin    = -800.000000e3
+/**** SPACE ****/
+Nx      = 150
+Nz      = 100
+xmin    = -600.000000e3
 zmin    = -660.000000e3
-xmax    =  800.000000e3
+xmax    =  600.000000e3
 zmax    = 20.000000e3
 
 /**** TIME ****/
-Nt          = 500
+Nt          = 300
 dt          = 1.2623e+11
 Courant     = 0.45
 penalty     = 1e2
@@ -36,7 +36,7 @@ interp_stencil    = 9
 mechanical        = 1
 RK                = 4
 periodic_x        = 0
-pure_shear_ALE    = 1  /1: box stretched at constant strain rate; -1 box of constant size
+pure_shear_ALE    = -1  /1: box stretched at constant strain rate; -1 box of constant size
 elastic           = 1
 thermal           = 1
 isPl_soft         = 0
@@ -59,12 +59,12 @@ reseed_markers    = 1
 
 /**** SETUP DEPENDANT ****/
 marker_noise      = 0
-bkg_strain_rate   = -1e-15 /Background strain rate [s-1] => extension rate = 1 cm/yr
+bkg_strain_rate   = 1e-15 /Background strain rate [s-1] => extension rate = 1 cm/yr
 user0             = 0.0e3     /Radius of perturbation [m]
 user1             = 125.0e3   /Initial lithosphere thickness [m]
-user2             = 30.0e3    /Initial crust thickness [m]
-user3             = 2.5e3    /Initial basin amplitude [m]
-user4             = 1     /lateral shift of pertubation
+user2             = 35.0e3    /Initial crust thickness [m]
+user3             = 5.0e3    /Initial basin amplitude [m]
+user4             = 0.0      /lateral shift of pertubation
 user5             = 0
 user6             = 0
 user7             = 0
@@ -80,29 +80,29 @@ nit_max        = 15 // for high resolution use from 10 to 20
 line_search    = 0
 nonlin_abs_mom = 5.0e-8
 nonlin_abs_div = 5.0e-8
-min_eta        = 5.0e18
-max_eta        = 1.0e25
+min_eta        = 5.0e16
+max_eta        = 1.0e27
 
 /**** GRAVITY ****/
 gx = 0.0000
 gz = -9.81
 
 /**** PHASE PROPERTIES ****/
-Nb_phases = 9
+Nb_phases = 5
 
 ID           = 0
-rho          = 2700.00 / Upper Crust - Westerly granite
+rho          = 2800.00 / Upper Crust - Westerly granite
 G            = 1.0e10
 Cv           = 1050.0
 k            = 2.5
 Qr           = 1.0e-6
-C            = 1e7
+C            = 5.0e7
 phi          = 30.0
 Slim         = 500.0e9
 alp          = 32.0e-6
-bet          = 1e-11
+bet          = 1.5e-11
 cstv         = 0
-pwlv         = 19
+pwlv         = 10
 linv         = 0
 gbsv         = 0
 expv         = 0
@@ -110,9 +110,9 @@ coh_soft     = 1
 Ce           = 1e6
 plss         = 0.5
 plse         = 1.5
-aniso_factor = 2
+aniso_factor = 3
 aniso_angle  = 80
-eta_vp     = 5e21
+eta_vp     = 1e22
 
 ID       = 1
 rho      = 2800.00 / Lower crust
@@ -120,13 +120,13 @@ G        = 1.0e10
 Cv       = 1050.0
 k        = 2.5
 Qr       = 1.0e-6
-C        = 5.0e7
+C        = 1.0e7
 phi      = 30.0
 Slim     = 500.0e9
 alp      = 32.0e-6
 bet      = 1.5e-11
 cstv     = 0
-pwlv     = 11
+pwlv     = 27
 linv     = 0
 gbsv     = 0
 expv     = 0
@@ -134,12 +134,12 @@ Ce       = 1e6
 cohe     = 1e6
 plss     = 0.5
 plse     = 1.5
-aniso_factor = 2
+aniso_factor = 5
 aniso_angle  = 80
-eta_vp     = 5e21
+eta_vp     = 1e22
 
 ID           = 2
-rho          = 3330.00 / lithospheric mantle - Dry Olivine
+rho          = 3520.00 / lithospheric mantle - Dry Olivine
 alp          = 32.0e-6
 bet          = 1.5e-11
 G            = 1.0e10
@@ -158,12 +158,12 @@ Ce           = 1e6
 cohe         = 1e6
 plss         = 0.5
 plse         = 1.5
-aniso_factor = 2
+aniso_factor = 5
 aniso_angle  = 80
-eta_vp     = 5e21
+eta_vp     = 1e22
 
 ID         = 3
-rho        = 3520.00 / asthenosphere
+rho        = 3330.00 / asthenosphere
 alp        = 32.0e-6
 bet        = 1.5e-11
 G          = 1.0e10
@@ -182,71 +182,10 @@ coh_soft   = 1
 Ce         = 1e6
 plss       = 0.5
 plse       = 1.5
-eta_vp     = 5e21
+eta_vp     = 5e22
 
 ID   = 4
-rho  = 2300.00 / sediments
-G   = 1e10
-Cv   = 1050
-k    = 2
-Qr   = 0.5e-6
-C    = 1e7
-phi  = 30
-Slim = 500e9
-alp  = 10.0e-6
-bet  = 1e-11
-drho = 0
-cstv = 0
-pwlv = 13
-linv = 0
-gbsv = 0
-expv = 0
-gsel = 0
-eta0 = 0
-npwl = 0
-Qpwl = 0
-
-ID   = 5
-rho  = 2300.00 / sediments
-G   = 1e10
-Cv   = 1050
-k    = 2
-Qr   = 0.5e-6
-C    = 1e7
-phi  = 30
-Slim = 500e9
-alp  = 10.0e-6
-bet  = 1e-11
-drho = 0
-cstv = 0
-pwlv = 13
-linv = 0
-gbsv = 0
-expv = 0
-gsel = 0
-eta0 = 0
-npwl = 0
-Qpwl = 0
-
-ID   = 6
-rho  = 3200.00 / impregnated asthenosphere (less dense and more conductive than 3)
-alp  = 32.0e-6
-bet  = 1.5e-11
-G   = 1.0e10
-Cv   = 1050.0
-k    = 30.0
-Qr   = 0.0
-C    = 1.0e7
-phi  = 30.0
-Slim = 500.0e9
-cstv = 0
-pwlv = 40
-linv = 40
-gbsv = 0
-expv = 40
-
-ID   = 7
-rho  = 2800.00 / Crust - Dry Quartz
+rho  = 2800.00
 G   = 1.0e10
 Cv   = 1050.0
 k    = 2.5
@@ -257,28 +196,10 @@ Slim = 500.0e9
 alp  = 32.0e-6
 bet  = 1.5e-11
 cstv = 0
-pwlv = 27
+pwlv = 11
 linv = 0
 gbsv = 0
 expv = 0
-niso_factor = 1.0
-aniso_angle  = 45
-
-ID   = 8
-rho  = 3000.00 / Crust - Dry Quartz
-G   = 1.0e10
-Cv   = 1050.0
-k    = 2.5
-Qr   = 1.0e-6
-C    = 1.0e7
-phi  = 30.0
-Slim = 500.0e9
-alp  = 32.0e-6
-bet  = 1.5e-11
-cstv = 0
-pwlv = 27
-linv = 0
-gbsv = 0
-expv = 0
-niso_factor = 1.0
-aniso_angle  = 45
+aniso_factor = 1.0
+aniso_angle  = 80
+eta_vp     = 1e22
