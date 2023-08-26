@@ -29,17 +29,28 @@ double LithosphereDepth(double x) {
   }
 }
 
-// For Moho depths (keeping it simple for now)
-double MohoDepth(double x, double L) {
-  return -35e3 + 5e3 * sin(2 * M_PI * x / (400e3 * L));
+double MohoDepth(double x) {
+  if (x < -200e3) {
+    // western continent, starts at -40 and ends at -20
+    return -40e3 + (20e3 / pow(600e3, 3)) * pow((x + 800e3), 3);
+  }
+  else if (x >= -200e3 && x < 200e3) {
+    // Constant depth for the oceanic plate
+    return -20e3;
+  }
+  else {
+    // eastern continent, starts at -20 and ends at -30
+    return -30e3 + (10e3 / pow(600e3, 3)) * pow((-x + 800e3), 3);
+  }
 }
+
 
 int SetPhase(MdoodzInput *instance, Coordinates coordinates) {
   double z_scaled = coordinates.z * instance->scaling.L;
   double x_scaled = coordinates.x * instance->scaling.L;
 
   double litho_depth = LithosphereDepth(x_scaled);
-  double moho_depth = MohoDepth(x_scaled, instance->scaling.L);
+  double moho_depth = MohoDepth(x_scaled);
 
   if (x_scaled < -200e3) {
     if (z_scaled > moho_depth) {
