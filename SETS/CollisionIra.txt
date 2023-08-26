@@ -6,7 +6,7 @@ writer         = 1
 writer_step    = 10
 writer_markers = 0
 writer_debug   = 0
-writer_subfolder = collision1
+writer_subfolder = collision2
 
 /**** SCALES ****/ Scaling parameters for
 eta = 1.e+22      /viscosity
@@ -23,7 +23,7 @@ xmax    =  800.000000e3
 zmax    = 20.000000e3
 
 /**** TIME ****/
-Nt          = 200
+Nt          = 1000
 dt          = 1.2623e+11
 Courant     = 0.45
 
@@ -127,7 +127,7 @@ linv = 0             / diff. creep
 gbsv = 0             / grain boundary sliding
 expv = 0             / peierls creep
 gsel = 0             / grain size evo.
-eta0 = 1e23
+eta0 = 2e23
 npwl = 1
 Qpwl = 0
 
@@ -150,7 +150,7 @@ linv = 0             / diff. creep
 gbsv = 0             / grain boundary sliding
 expv = 0             / peierls creep
 gsel = 0             / grain size evo.
-eta0 = 1e22
+eta0 = 1.3e22
 npwl = 1
 Qpwl = 0
 

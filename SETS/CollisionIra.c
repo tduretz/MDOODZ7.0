@@ -149,13 +149,12 @@ SetBC SetBCT(MdoodzInput *instance, POSITION position, double particleTemperatur
 }
 
 SetBC SetBCVx(MdoodzInput *input, POSITION position, Coordinates coordinates) {
-  const double plateThickness = 180e3;
   SetBC bc;
   if (position == N || position == S || position == NW || position == SW || position == NE || position == SE) {
     bc.value = 0;
     bc.type  = 13;
   } else if (position == W) {
-    if (coordinates.z > -plateThickness / input->scaling.L) {
+    if (coordinates.z > WEST_LITHOSPHERE_DEPTH / input->scaling.L) {
       bc.value = -coordinates.x * input->model.bkg_strain_rate;
     } else {
       bc.value = 0.0;
@@ -163,9 +162,7 @@ SetBC SetBCVx(MdoodzInput *input, POSITION position, Coordinates coordinates) {
     bc.type  = 0;
   } else if (position == E) {
     if (coordinates.z > -200e3 / input->scaling.L) {
-      bc.value = (-coordinates.x / 1) * input->model.bkg_strain_rate;
-    } else if (coordinates.z < -250e3 / input->scaling.L && coordinates.z > -400e3 / input->scaling.L) {
-      bc.value = -coordinates.x * input->model.bkg_strain_rate;
+      bc.value = (-coordinates.x / 5) * input->model.bkg_strain_rate;
     } else {
       bc.value = 0.0;
     }
