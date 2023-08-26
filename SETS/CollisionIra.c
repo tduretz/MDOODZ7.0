@@ -14,6 +14,7 @@ const double EAST_MOHO = -30e3;
 
 const double WEST_LATERAL_BORDER    = -300e3;
 const double EAST_LATERAL_BORDER    = 300e3;
+const int OCEAN_MANTLE = 0;
 const int CONTINENTAL_CRUST = 1;
 const int LITHOSPHERIC_MANTLE = 2;
 const int ASTHENOSPHERE = 3;
@@ -28,7 +29,7 @@ double computeCubicTerm(double x, double startX, double endX, double startDepth,
 double MohoDepth(double x) {
   if (x < WEST_LATERAL_BORDER) {
     // western continent
-    return computeCubicTerm(x, -800e3, WEST_LATERAL_BORDER, WEST_MOHO, OCEAN_MOHO);
+    return computeCubicTerm(x, -1200e3, WEST_LATERAL_BORDER, WEST_MOHO, OCEAN_MOHO);
   } else if (x >= WEST_LATERAL_BORDER && x < EAST_LATERAL_BORDER) {
     if (x < 0) {
       return computeCubicTerm(x, WEST_LATERAL_BORDER, 0, OCEAN_MOHO, -2e3);
@@ -37,14 +38,14 @@ double MohoDepth(double x) {
     }
   } else {
     // eastern continent
-    return computeCubicTerm(x, 800e3, EAST_LATERAL_BORDER, EAST_MOHO, OCEAN_MOHO);
+    return computeCubicTerm(x, 1200e3, EAST_LATERAL_BORDER, EAST_MOHO, OCEAN_MOHO);
   }
 }
 
 double LithosphereDepth(double x) {
   if (x < WEST_LATERAL_BORDER) {
     // western continent
-    return computeCubicTerm(x, -800e3, WEST_LATERAL_BORDER, WEST_LITHOSPHERE_DEPTH, OCEAN_LITHOSPHERE_DEPTH);
+    return computeCubicTerm(x, -1200e3, WEST_LATERAL_BORDER, WEST_LITHOSPHERE_DEPTH, OCEAN_LITHOSPHERE_DEPTH);
   } else if (x >= WEST_LATERAL_BORDER && x < EAST_LATERAL_BORDER) {
     if (x < 0) {
       return computeCubicTerm(x, WEST_LATERAL_BORDER, 0, OCEAN_LITHOSPHERE_DEPTH, -5e3);
@@ -53,7 +54,7 @@ double LithosphereDepth(double x) {
     }
   } else {
     // eastern continent
-    return computeCubicTerm(x, 800e3, EAST_LATERAL_BORDER, EAST_LITHOSPHERE_DEPTH, OCEAN_LITHOSPHERE_DEPTH);
+    return computeCubicTerm(x, 1200e3, EAST_LATERAL_BORDER, EAST_LITHOSPHERE_DEPTH, OCEAN_LITHOSPHERE_DEPTH);
   }
 }
 
@@ -78,7 +79,7 @@ int SetPhase(MdoodzInput *instance, Coordinates coordinates) {
     if (z_scaled > moho_depth) {
       return OCEANIC_CRUST;
     } else if (z_scaled > litho_depth) {
-      return LITHOSPHERIC_MANTLE;
+      return OCEAN_MANTLE;
     } else {
       return ASTHENOSPHERE;
     }
@@ -155,14 +156,14 @@ SetBC SetBCVx(MdoodzInput *input, POSITION position, Coordinates coordinates) {
     bc.type  = 13;
   } else if (position == W) {
     if (coordinates.z > WEST_LITHOSPHERE_DEPTH / input->scaling.L) {
-      bc.value = -coordinates.x * input->model.bkg_strain_rate;
+      bc.value = (-coordinates.x / 2) * input->model.bkg_strain_rate;
     } else {
       bc.value = 0.0;
     }
     bc.type  = 0;
   } else if (position == E) {
     if (coordinates.z > -200e3 / input->scaling.L) {
-      bc.value = (-coordinates.x / 5) * input->model.bkg_strain_rate;
+      bc.value = (-coordinates.x / 10) * input->model.bkg_strain_rate;
     } else {
       bc.value = 0.0;
     }

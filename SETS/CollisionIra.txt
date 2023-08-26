@@ -6,7 +6,7 @@ writer         = 1
 writer_step    = 10
 writer_markers = 0
 writer_debug   = 0
-writer_subfolder = collision2
+writer_subfolder = collision_iso
 
 /**** SCALES ****/ Scaling parameters for
 eta = 1.e+22      /viscosity
@@ -15,11 +15,11 @@ V   = 1.5e-8      /velocity
 T   = 1.e+02      /temperature
 
 /**** SPACE ****/
-Nx      = 150
-Nz      = 100
-xmin    = -800.000000e3
+Nx      = 450
+Nz      = 300
+xmin    = -1200.000000e3
 zmin    = -660.000000e3
-xmax    =  800.000000e3
+xmax    =  1200.000000e3
 zmax    = 20.000000e3
 
 /**** TIME ****/
@@ -92,21 +92,30 @@ gz = -9.81
 /**** PHASE PROPERTIES ****/
 Nb_phases = 5
 
-ID   = 0       / Seed
-rho  = 2700.00 / ref. density
-alp  = 32.0e-6 / thermal expansivity
-bet  = 1e-11   / compressibility
-mu   = 1e10    / shear modulus
-Cv   = 1050    / heat capacity
-k    = 2       / thermal conductivity
-Qr   = 1e-6    / radiogenic heat production
-C    = 1e7     / cohesion
-phi  = 30      / friction angle
-cstv = 0       / constant viscosity
-pwlv = 19      / power law viscosity -> database flow_laws.c
-linv = 0       / linear viscous viscosity -> database flow_laws.c
-gbsv = 0       / grain boundary sliding viscosity -> database flow_laws.c
-expv = 0       / Pierls viscosity -> database flow_laws.c
+ID   = 0                    / Oceanic Mantle Lithosphere
+rho  = 3300.00              / Density (kg/m^3)
+G    = 3e10                 / Shear modulus (Pa)
+Cv   = 1050                 / Specific heat capacity (J/(kg*K))
+k    = 2.5                  / Thermal conductivity (W/(m*K))
+Qr   = 0                    / Radioactive heat production (W/m^3)
+C    = 5e7                  / Cohesion (Pa)
+phi  = 30                   / Internal friction angle (degrees)
+eta_vp = 1e21               / Viscosity (Pa s)
+Slim = 500e9                / Stress Limiter (Pa)
+alp  = 10.0e-6              / Coefficient of thermal expansion (1/K)
+bet  = 1e-11                / Compressibility (1/Pa)
+drho = 0                    / Density anomaly (kg/m^3)
+cstv = 0                    / constant visc law
+pwlv = 40                   / disloc. creep
+linv = 0                    / diff. creep
+gbsv = 0                    / grain boundary sliding
+expv = 0                    / peierls creep
+gsel = 0                    / grain size evo.
+eta0 = 1.1e22               / Reference viscosity (Pa s)
+npwl = 1                    / Stress exponent for dislocation creep
+Qpwl = 0                    / Activation energy for dislocation creep (J/mol)
+aniso_factor = 1
+aniso_angle = 80
 
 ID   = 1
 rho  = 2800.00 / Crust
@@ -130,6 +139,8 @@ gsel = 0             / grain size evo.
 eta0 = 2e23
 npwl = 1
 Qpwl = 0
+aniso_factor = 1.5
+aniso_angle = 80
 
 ID   = 2
 rho  = 3300.00 / Mantle lithosphere
@@ -153,6 +164,8 @@ gsel = 0             / grain size evo.
 eta0 = 1.3e22
 npwl = 1
 Qpwl = 0
+aniso_factor = 1.8
+aniso_angle = 80
 
 ID   = 3
 rho  = 3300.00 / Astehenosphere
@@ -176,6 +189,8 @@ gsel = 0             / grain size evo.
 eta0 = 5e19
 npwl = 1
 Qpwl = 0
+aniso_factor = 1.1
+aniso_angle = 80
 
 ID   = 4                    / Oceanic Crust
 rho  = 2900.00              / Density (kg/m^3)
@@ -191,7 +206,7 @@ alp  = 3.0e-5               / Coefficient of thermal expansion (1/K)
 bet  = 1e-11                / Compressibility (1/Pa)
 drho = 0                    / Density anomaly (kg/m^3)
 cstv = 0                    / constant visc law
-pwlv = 10                   / disloc. creep
+pwlv = 29                   / disloc. creep
 linv = 0                    / diff. creep
 gbsv = 0                    / grain boundary sliding
 expv = 0                    / peierls creep
@@ -199,3 +214,5 @@ gsel = 0                    / grain size evo.
 eta0 = 5e20                 / Reference viscosity (Pa s)
 npwl = 1                    / Stress exponent for dislocation creep
 Qpwl = 0                    / Activation energy for dislocation creep (J/mol)
+aniso_factor = 1.2
+aniso_angle = 80
