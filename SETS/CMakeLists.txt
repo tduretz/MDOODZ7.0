@@ -22,5 +22,6 @@ else()
     add_set(RiverTom)
     add_set(CollisionIra)
     add_set(NeckingReview)
+    add_set(CollisionPolarCartesian)
 endif()
 
