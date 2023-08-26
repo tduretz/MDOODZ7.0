@@ -162,7 +162,7 @@ k    = 2.5
 Qr   = 0
 C    = 5e7
 phi  = 30
-eta_vp = 1e21
+eta_vp = 5e19
 Slim = 500e9
 alp  = 10.0e-6
 bet  = 1e-11
@@ -173,7 +173,7 @@ linv = 0             / diff. creep
 gbsv = 0             / grain boundary sliding
 expv = 0             / peierls creep
 gsel = 0             / grain size evo.
-eta0 = 5e21
+eta0 = 5e19
 npwl = 1
 Qpwl = 0
 
