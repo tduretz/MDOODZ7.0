@@ -3,8 +3,17 @@
 #include "stdlib.h"
 #include "stdio.h"
 
-const double WEST_BOUNDARY = -200e3;
-const double EAST_BOUNDARY = 200e3;
+
+const double WEST_LITHOSPHERE_DEPTH = -180e3;
+const double OCEAN_LITHOSPHERE_DEPTH = -60e3;
+const double EAST_LITHOSPHERE_DEPTH = -120e3;
+const double WEST_MOHO = -40e3;
+const double OCEAN_MOHO = -20e3;
+const double EAST_MOHO = -30e3;
+
+
+const double WEST_LATERAL_BORDER    = -300e3;
+const double EAST_LATERAL_BORDER    = 300e3;
 const int CONTINENTAL_CRUST = 1;
 const int LITHOSPHERIC_MANTLE = 2;
 const int ASTHENOSPHERE = 3;
@@ -16,27 +25,35 @@ double computeCubicTerm(double x, double startX, double endX, double startDepth,
   return startDepth + (deltaDepth / pow(deltaX, 3)) * pow((x - startX), 3);
 }
 
-double LithosphereDepth(double x) {
-  if (x < WEST_BOUNDARY) {
+double MohoDepth(double x) {
+  if (x < WEST_LATERAL_BORDER) {
     // western continent
-    return computeCubicTerm(x, -800e3, WEST_BOUNDARY, -180e3, -60e3);
-  } else if (x >= WEST_BOUNDARY && x < EAST_BOUNDARY) {
-    return -60e3;
+    return computeCubicTerm(x, -800e3, WEST_LATERAL_BORDER, WEST_MOHO, OCEAN_MOHO);
+  } else if (x >= WEST_LATERAL_BORDER && x < EAST_LATERAL_BORDER) {
+    if (x < 0) {
+      return computeCubicTerm(x, WEST_LATERAL_BORDER, 0, OCEAN_MOHO, -2e3);
+    } else {
+      return computeCubicTerm(x, EAST_LATERAL_BORDER, 0, OCEAN_MOHO, -2e3);
+    }
   } else {
     // eastern continent
-    return computeCubicTerm(x, 800e3, EAST_BOUNDARY, -120e3, -60e3);
+    return computeCubicTerm(x, 800e3, EAST_LATERAL_BORDER, EAST_MOHO, OCEAN_MOHO);
   }
 }
 
-double MohoDepth(double x) {
-  if (x < WEST_BOUNDARY) {
+double LithosphereDepth(double x) {
+  if (x < WEST_LATERAL_BORDER) {
     // western continent
-    return computeCubicTerm(x, -800e3, WEST_BOUNDARY, -40e3, -20e3);
-  } else if (x >= WEST_BOUNDARY && x < EAST_BOUNDARY) {
-    return -20e3;
+    return computeCubicTerm(x, -800e3, WEST_LATERAL_BORDER, WEST_LITHOSPHERE_DEPTH, OCEAN_LITHOSPHERE_DEPTH);
+  } else if (x >= WEST_LATERAL_BORDER && x < EAST_LATERAL_BORDER) {
+    if (x < 0) {
+      return computeCubicTerm(x, WEST_LATERAL_BORDER, 0, OCEAN_LITHOSPHERE_DEPTH, -5e3);
+    } else {
+      return computeCubicTerm(x, EAST_LATERAL_BORDER, 0, OCEAN_LITHOSPHERE_DEPTH, -5e3);
+    }
   } else {
     // eastern continent
-    return computeCubicTerm(x, 800e3, EAST_BOUNDARY, -30e3, -20e3);
+    return computeCubicTerm(x, 800e3, EAST_LATERAL_BORDER, EAST_LITHOSPHERE_DEPTH, OCEAN_LITHOSPHERE_DEPTH);
   }
 }
 
@@ -44,11 +61,11 @@ double MohoDepth(double x) {
 int SetPhase(MdoodzInput *instance, Coordinates coordinates) {
   double z_scaled = coordinates.z * instance->scaling.L;
   double x_scaled = coordinates.x * instance->scaling.L;
-  
-  double litho_depth = LithosphereDepth(x_scaled);
-  double moho_depth = MohoDepth(x_scaled);
 
-  if (x_scaled < WEST_BOUNDARY) {
+  double moho_depth = MohoDepth(x_scaled);
+  double litho_depth = LithosphereDepth(x_scaled);
+
+  if (x_scaled < WEST_LATERAL_BORDER) {
     if (z_scaled > moho_depth) {
       return CONTINENTAL_CRUST;
     } else if (z_scaled > litho_depth) {
@@ -57,7 +74,7 @@ int SetPhase(MdoodzInput *instance, Coordinates coordinates) {
       return ASTHENOSPHERE;
     }
   }
-  else if (x_scaled >= WEST_BOUNDARY && x_scaled < EAST_BOUNDARY) {
+  else if (x_scaled >= WEST_LATERAL_BORDER && x_scaled < EAST_LATERAL_BORDER) {
     if (z_scaled > moho_depth) {
       return OCEANIC_CRUST;
     } else if (z_scaled > litho_depth) {
@@ -66,7 +83,7 @@ int SetPhase(MdoodzInput *instance, Coordinates coordinates) {
       return ASTHENOSPHERE;
     }
   }
-  else if (x_scaled >= EAST_BOUNDARY) {
+  else if (x_scaled >= EAST_LATERAL_BORDER) {
     if (z_scaled > moho_depth) {
       return CONTINENTAL_CRUST;
     } else if (z_scaled > litho_depth) {
