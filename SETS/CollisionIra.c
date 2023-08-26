@@ -3,19 +3,12 @@
 #include "stdlib.h"
 #include "stdio.h"
 
-
-double SetNoise(MdoodzInput *instance, Coordinates coordinates, int phase) {
-  const double x        = coordinates.x - instance->model.user4 / instance->scaling.L;
-  const double z        = coordinates.z;
-  const double basin_width = 30.0e3 / instance->scaling.L;
-  const double noise = ((double) rand() / (double) RAND_MAX) - 0.5;
-  const double filter_x = exp( - (x*x)/ (2.0*basin_width*basin_width) );
-  const double filter_z = exp( - (z*z)/ (2.0*basin_width*basin_width*4.0) );
-  return  noise * filter_x * filter_z;
-}
-
-const double WEST_LIMIT = -200e3;
-const double EAST_LIMIT = 200e3;
+const double WEST_BOUNDARY = -200e3;
+const double EAST_BOUNDARY = 200e3;
+const int CONTINENTAL_CRUST = 1;
+const int LITHOSPHERIC_MANTLE = 2;
+const int ASTHENOSPHERE = 3;
+const int OCEANIC_CRUST = 4;
 
 double computeCubicTerm(double x, double startX, double endX, double startDepth, double endDepth) {
   double deltaX = endX - startX;
@@ -24,26 +17,26 @@ double computeCubicTerm(double x, double startX, double endX, double startDepth,
 }
 
 double LithosphereDepth(double x) {
-  if (x < WEST_LIMIT) {
+  if (x < WEST_BOUNDARY) {
     // western continent
-    return computeCubicTerm(x, -800e3, WEST_LIMIT, -180e3, -60e3);
-  } else if (x >= WEST_LIMIT && x < EAST_LIMIT) {
+    return computeCubicTerm(x, -800e3, WEST_BOUNDARY, -180e3, -60e3);
+  } else if (x >= WEST_BOUNDARY && x < EAST_BOUNDARY) {
     return -60e3;
   } else {
     // eastern continent
-    return computeCubicTerm(x, 800e3, EAST_LIMIT, -120e3, -60e3);
+    return computeCubicTerm(x, 800e3, EAST_BOUNDARY, -120e3, -60e3);
   }
 }
 
 double MohoDepth(double x) {
-  if (x < WEST_LIMIT) {
+  if (x < WEST_BOUNDARY) {
     // western continent
-    return computeCubicTerm(x, -800e3, WEST_LIMIT, -40e3, -20e3);
-  } else if (x >= WEST_LIMIT && x < EAST_LIMIT) {
+    return computeCubicTerm(x, -800e3, WEST_BOUNDARY, -40e3, -20e3);
+  } else if (x >= WEST_BOUNDARY && x < EAST_BOUNDARY) {
     return -20e3;
   } else {
     // eastern continent
-    return computeCubicTerm(x, 800e3, EAST_LIMIT, -30e3, -20e3);
+    return computeCubicTerm(x, 800e3, EAST_BOUNDARY, -30e3, -20e3);
   }
 }
 
@@ -51,39 +44,39 @@ double MohoDepth(double x) {
 int SetPhase(MdoodzInput *instance, Coordinates coordinates) {
   double z_scaled = coordinates.z * instance->scaling.L;
   double x_scaled = coordinates.x * instance->scaling.L;
-
+  
   double litho_depth = LithosphereDepth(x_scaled);
   double moho_depth = MohoDepth(x_scaled);
 
-  if (x_scaled < -200e3) {
+  if (x_scaled < WEST_BOUNDARY) {
     if (z_scaled > moho_depth) {
-      return 1; // continental crust
+      return CONTINENTAL_CRUST;
     } else if (z_scaled > litho_depth) {
-      return 2; // lithospheric mantle
+      return LITHOSPHERIC_MANTLE;
     } else {
-      return 3; // asthenosphere
+      return ASTHENOSPHERE;
     }
   }
-  else if (x_scaled >= -200e3 && x_scaled < 200e3) {
+  else if (x_scaled >= WEST_BOUNDARY && x_scaled < EAST_BOUNDARY) {
     if (z_scaled > moho_depth) {
-      return 4; // oceanic crust
+      return OCEANIC_CRUST;
     } else if (z_scaled > litho_depth) {
-      return 2; // lithospheric mantle
+      return LITHOSPHERIC_MANTLE;
     } else {
-      return 3; // asthenosphere
+      return ASTHENOSPHERE;
     }
   }
-  else if (x_scaled >= 200e3) {
+  else if (x_scaled >= EAST_BOUNDARY) {
     if (z_scaled > moho_depth) {
-      return 1; // continental crust
+      return CONTINENTAL_CRUST;
     } else if (z_scaled > litho_depth) {
-      return 2; // lithospheric mantle
+      return LITHOSPHERIC_MANTLE;
     } else {
-      return 3; // asthenosphere
+      return ASTHENOSPHERE;
     }
   }
   else {
-    return 3; // asthenosphere
+    return ASTHENOSPHERE; // Default case, should ideally never be reached
   }
 }
 
@@ -197,6 +190,16 @@ void AddCrazyConductivity(MdoodzInput *input) {
   crazyConductivity->nPhases             = 1;
   crazyConductivity->multiplier          = 1000;
   input->crazyConductivity               = crazyConductivity;
+}
+
+double SetNoise(MdoodzInput *instance, Coordinates coordinates, int phase) {
+  const double x        = coordinates.x - instance->model.user4 / instance->scaling.L;
+  const double z        = coordinates.z;
+  const double basin_width = 30.0e3 / instance->scaling.L;
+  const double noise = ((double) rand() / (double) RAND_MAX) - 0.5;
+  const double filter_x = exp( - (x*x)/ (2.0*basin_width*basin_width) );
+  const double filter_z = exp( - (z*z)/ (2.0*basin_width*basin_width*4.0) );
+  return  noise * filter_x * filter_z;
 }
 
 int main(int nargs, char *args[]) {
