@@ -51,7 +51,7 @@ int SetPhase(MdoodzInput *instance, Coordinates coordinates) {
     }
   } else if (IsRectangleCoordinates(coordinates, HOceanicPlate, instance->scaling.L)) {
     if (coordinates.z > -20e3 / instance->scaling.L) {
-      return 2;
+      return 4;
     } else {
       return 2;
     }
