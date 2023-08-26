@@ -23,9 +23,9 @@ int SetPhase(MdoodzInput *instance, Coordinates coordinates) {
           .angle   = 0,
   };
   Rectangle easternContinent = {
-          .sizeZ   = 180e3,
+          .sizeZ   = 120e3,
           .sizeX   = 600e3,
-          .centreZ = -90e3,
+          .centreZ = -60e3,
           .centreX = 500e3,
           .angle   = 0,
   };
@@ -51,7 +51,7 @@ int SetPhase(MdoodzInput *instance, Coordinates coordinates) {
     }
   } else if (IsRectangleCoordinates(coordinates, HOceanicPlate, instance->scaling.L)) {
     if (coordinates.z > -20e3 / instance->scaling.L) {
-      return 4;
+      return 2;
     } else {
       return 2;
     }
