@@ -14,51 +14,65 @@ double SetNoise(MdoodzInput *instance, Coordinates coordinates, int phase) {
   return  noise * filter_x * filter_z;
 }
 
-int SetPhase(MdoodzInput *instance, Coordinates coordinates) {
-  Rectangle westernContinent = {
-          .sizeZ   = 180e3,
-          .sizeX   = 600e3,
-          .centreZ = -90e3,
-          .centreX = -500e3,
-          .angle   = 0,
-  };
-  Rectangle easternContinent = {
-          .sizeZ   = 120e3,
-          .sizeX   = 600e3,
-          .centreZ = -60e3,
-          .centreX = 500e3,
-          .angle   = 0,
-  };
-  Rectangle HOceanicPlate = {
-          .sizeZ   = 60e3,
-          .sizeX   = 400e3,
-          .centreZ = -30e3,
-          .centreX = 0e3,
-          .angle   = 0,
-  };
-
-  if (IsRectangleCoordinates(coordinates, westernContinent, instance->scaling.L)) {
-    if (coordinates.z > -40e3 / instance->scaling.L) {
-      return 1;
-    } else {
-      return 2;
-    }
-  } else if (IsRectangleCoordinates(coordinates, easternContinent, instance->scaling.L)) {
-    if (coordinates.z > -30e3 / instance->scaling.L) {
-      return 1;
-    } else {
-      return 2;
-    }
-  } else if (IsRectangleCoordinates(coordinates, HOceanicPlate, instance->scaling.L)) {
-    if (coordinates.z > -20e3 / instance->scaling.L) {
-      return 4;
-    } else {
-      return 2;
-    }
-  } else {
-    return 3;
+double LithosphereDepth(double x) {
+  if (x < -200e3) {
+    // western continent
+    return -180e3 + (120e3 / pow(600e3, 3)) * pow((x + 800e3), 3);
+  }
+  else if (x >= -200e3 && x < 200e3) {
+    // Constant depth for the oceanic plate
+    return -60e3;
+  }
+  else {
+    //  eastern continent
+    return -120e3 + (60e3 / pow(600e3, 3)) * pow((-x + 800e3), 3);
   }
 }
+
+// For Moho depths (keeping it simple for now)
+double MohoDepth(double x, double L) {
+  return -35e3 + 5e3 * sin(2 * M_PI * x / (400e3 * L));
+}
+
+int SetPhase(MdoodzInput *instance, Coordinates coordinates) {
+  double z_scaled = coordinates.z * instance->scaling.L;
+  double x_scaled = coordinates.x * instance->scaling.L;
+
+  double litho_depth = LithosphereDepth(x_scaled);
+  double moho_depth = MohoDepth(x_scaled, instance->scaling.L);
+
+  if (x_scaled < -200e3) {
+    if (z_scaled > moho_depth) {
+      return 1; // continental crust
+    } else if (z_scaled > litho_depth) {
+      return 2; // lithospheric mantle
+    } else {
+      return 3; // asthenosphere
+    }
+  }
+  else if (x_scaled >= -200e3 && x_scaled < 200e3) {
+    if (z_scaled > moho_depth) {
+      return 4; // oceanic crust
+    } else if (z_scaled > litho_depth) {
+      return 2; // lithospheric mantle
+    } else {
+      return 3; // asthenosphere
+    }
+  }
+  else if (x_scaled >= 200e3) {
+    if (z_scaled > moho_depth) {
+      return 1; // continental crust
+    } else if (z_scaled > litho_depth) {
+      return 2; // lithospheric mantle
+    } else {
+      return 3; // asthenosphere
+    }
+  }
+  else {
+    return 3; // asthenosphere
+  }
+}
+
 
 double SetTemperature(MdoodzInput *instance, Coordinates coordinates) {
   const double lithosphereThickness = instance->model.user1 / instance->scaling.L;
