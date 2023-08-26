@@ -14,33 +14,36 @@ double SetNoise(MdoodzInput *instance, Coordinates coordinates, int phase) {
   return  noise * filter_x * filter_z;
 }
 
+const double WEST_LIMIT = -200e3;
+const double EAST_LIMIT = 200e3;
+
+double computeCubicTerm(double x, double startX, double endX, double startDepth, double endDepth) {
+  double deltaX = endX - startX;
+  double deltaDepth = endDepth - startDepth;
+  return startDepth + (deltaDepth / pow(deltaX, 3)) * pow((x - startX), 3);
+}
+
 double LithosphereDepth(double x) {
-  if (x < -200e3) {
+  if (x < WEST_LIMIT) {
     // western continent
-    return -180e3 + (120e3 / pow(600e3, 3)) * pow((x + 800e3), 3);
-  }
-  else if (x >= -200e3 && x < 200e3) {
-    // Constant depth for the oceanic plate
+    return computeCubicTerm(x, -800e3, WEST_LIMIT, -180e3, -60e3);
+  } else if (x >= WEST_LIMIT && x < EAST_LIMIT) {
     return -60e3;
-  }
-  else {
-    //  eastern continent
-    return -120e3 + (60e3 / pow(600e3, 3)) * pow((-x + 800e3), 3);
+  } else {
+    // eastern continent
+    return computeCubicTerm(x, 800e3, EAST_LIMIT, -120e3, -60e3);
   }
 }
 
 double MohoDepth(double x) {
-  if (x < -200e3) {
-    // western continent, starts at -40 and ends at -20
-    return -40e3 + (20e3 / pow(600e3, 3)) * pow((x + 800e3), 3);
-  }
-  else if (x >= -200e3 && x < 200e3) {
-    // Constant depth for the oceanic plate
+  if (x < WEST_LIMIT) {
+    // western continent
+    return computeCubicTerm(x, -800e3, WEST_LIMIT, -40e3, -20e3);
+  } else if (x >= WEST_LIMIT && x < EAST_LIMIT) {
     return -20e3;
-  }
-  else {
-    // eastern continent, starts at -20 and ends at -30
-    return -30e3 + (10e3 / pow(600e3, 3)) * pow((-x + 800e3), 3);
+  } else {
+    // eastern continent
+    return computeCubicTerm(x, 800e3, EAST_LIMIT, -30e3, -20e3);
   }
 }
 
