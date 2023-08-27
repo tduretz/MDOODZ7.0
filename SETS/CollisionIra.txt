@@ -6,7 +6,7 @@ writer         = 1
 writer_step    = 10
 writer_markers = 0
 writer_debug   = 0
-writer_subfolder = collision_iso
+writer_subfolder = collision_aniso3
 
 /**** SCALES ****/ Scaling parameters for
 eta = 1.e+22      /viscosity
@@ -15,15 +15,15 @@ V   = 1.5e-8      /velocity
 T   = 1.e+02      /temperature
 
 /**** SPACE ****/
-Nx      = 450
-Nz      = 300
+Nx      = 300
+Nz      = 150
 xmin    = -1200.000000e3
 zmin    = -660.000000e3
 xmax    =  1200.000000e3
 zmax    = 20.000000e3
 
 /**** TIME ****/
-Nt          = 1000
+Nt          = 3000
 dt          = 1.2623e+11
 Courant     = 0.45
 
@@ -54,7 +54,7 @@ surf_sedirate     = 0.0 / sedimentation rate [m/s]:3.1688e-12 <-> 0.01 cm/yr
 surf_baselev      = 0.0e3 / base level for sedimentation
 track_T_P_x_z     = 1 / initial P and T field record
 polar             = 0
-anisotropy        = 0
+anisotropy        = 1
 reseed_markers    = 1
 
 /**** SETUP DEPENDANT ****/
@@ -76,7 +76,7 @@ min_part_cell = 16
 
 /**** NON-LINEAR ITERATIONS ****/
 Newton      = 0
-nit_max     = 5
+nit_max     = 15
 rel_tol_KSP = 1e-4
 nonlin_abs_mom   = 1e-10
 nonlin_abs_div   = 1e-10
@@ -98,7 +98,7 @@ G    = 3e10                 / Shear modulus (Pa)
 Cv   = 1050                 / Specific heat capacity (J/(kg*K))
 k    = 2.5                  / Thermal conductivity (W/(m*K))
 Qr   = 0                    / Radioactive heat production (W/m^3)
-C    = 5e7                  / Cohesion (Pa)
+C    = 4e8                  / Cohesion (Pa)
 phi  = 30                   / Internal friction angle (degrees)
 eta_vp = 1e21               / Viscosity (Pa s)
 Slim = 500e9                / Stress Limiter (Pa)
@@ -119,12 +119,12 @@ aniso_angle = 80
 
 ID   = 1
 rho  = 2800.00 / Crust
-G   = 3e10
+G   = 2.7e10
 Cv   = 1050
 k    = 2.5
 Qr   = 1e-6
-C    = 5e7
-phi  = 30
+C    = 3e7
+phi  = 35
 eta_vp = 1e21
 Slim = 500e9
 alp  = 10.0e-6
@@ -143,12 +143,12 @@ aniso_factor = 1.5
 aniso_angle = 80
 
 ID   = 2
-rho  = 3300.00 / Mantle lithosphere
+rho  = 3250.00 / Mantle lithosphere
 G   = 3e10
 Cv   = 1050
 k    = 2.5
 Qr   = 0
-C    = 5e7
+C    = 4e8
 phi  = 30
 eta_vp = 1e21
 Slim = 500e9
@@ -169,12 +169,12 @@ aniso_angle = 80
 
 ID   = 3
 rho  = 3300.00 / Astehenosphere
-G   = 3e10
+G   = 1.5e10
 Cv   = 1050
 k    = 2.5
 Qr   = 0
-C    = 5e7
-phi  = 30
+C    = 1e7
+phi  = 25
 eta_vp = 5e19
 Slim = 500e9
 alp  = 10.0e-6
@@ -198,7 +198,7 @@ G    = 3e10                 / Shear modulus (Pa)
 Cv   = 1050                 / Specific heat capacity (J/(kg*K))
 k    = 2.5                  / Thermal conductivity (W/(m*K))
 Qr   = 1e-6                 / Radioactive heat production (W/m^3)
-C    = 5e7                  / Cohesion (Pa)
+C    = 1e8                  / Cohesion (Pa)
 phi  = 30                   / Internal friction angle (degrees)
 eta_vp = 5e20               / Viscosity (Pa s)
 Slim = 500e9                / Stress Limiter (Pa)

@@ -10,10 +10,9 @@ const double EAST_LITHOSPHERE_DEPTH = -120e3;
 const double WEST_MOHO = -40e3;
 const double OCEAN_MOHO = -20e3;
 const double EAST_MOHO = -30e3;
+const double WEST_LATERAL_BORDER    = -150e3;
+const double EAST_LATERAL_BORDER    = 150e3;
 
-
-const double WEST_LATERAL_BORDER    = -300e3;
-const double EAST_LATERAL_BORDER    = 300e3;
 const int OCEAN_MANTLE = 0;
 const int CONTINENTAL_CRUST = 1;
 const int LITHOSPHERIC_MANTLE = 2;
@@ -32,9 +31,9 @@ double MohoDepth(double x) {
     return computeCubicTerm(x, -1200e3, WEST_LATERAL_BORDER, WEST_MOHO, OCEAN_MOHO);
   } else if (x >= WEST_LATERAL_BORDER && x < EAST_LATERAL_BORDER) {
     if (x < 0) {
-      return computeCubicTerm(x, WEST_LATERAL_BORDER, 0, OCEAN_MOHO, -2e3);
+      return computeCubicTerm(x, WEST_LATERAL_BORDER, 0, OCEAN_MOHO, -10e3);
     } else {
-      return computeCubicTerm(x, EAST_LATERAL_BORDER, 0, OCEAN_MOHO, -2e3);
+      return computeCubicTerm(x, EAST_LATERAL_BORDER, 0, OCEAN_MOHO, -10e3);
     }
   } else {
     // eastern continent
@@ -48,9 +47,9 @@ double LithosphereDepth(double x) {
     return computeCubicTerm(x, -1200e3, WEST_LATERAL_BORDER, WEST_LITHOSPHERE_DEPTH, OCEAN_LITHOSPHERE_DEPTH);
   } else if (x >= WEST_LATERAL_BORDER && x < EAST_LATERAL_BORDER) {
     if (x < 0) {
-      return computeCubicTerm(x, WEST_LATERAL_BORDER, 0, OCEAN_LITHOSPHERE_DEPTH, -5e3);
+      return computeCubicTerm(x, WEST_LATERAL_BORDER, 0, OCEAN_LITHOSPHERE_DEPTH, -12e3);
     } else {
-      return computeCubicTerm(x, EAST_LATERAL_BORDER, 0, OCEAN_LITHOSPHERE_DEPTH, -5e3);
+      return computeCubicTerm(x, EAST_LATERAL_BORDER, 0, OCEAN_LITHOSPHERE_DEPTH, -12e3);
     }
   } else {
     // eastern continent
@@ -74,8 +73,7 @@ int SetPhase(MdoodzInput *instance, Coordinates coordinates) {
     } else {
       return ASTHENOSPHERE;
     }
-  }
-  else if (x_scaled >= WEST_LATERAL_BORDER && x_scaled < EAST_LATERAL_BORDER) {
+  } else if (x_scaled >= WEST_LATERAL_BORDER && x_scaled < EAST_LATERAL_BORDER) {
     if (z_scaled > moho_depth) {
       return OCEANIC_CRUST;
     } else if (z_scaled > litho_depth) {
@@ -83,8 +81,7 @@ int SetPhase(MdoodzInput *instance, Coordinates coordinates) {
     } else {
       return ASTHENOSPHERE;
     }
-  }
-  else if (x_scaled >= EAST_LATERAL_BORDER) {
+  } else {
     if (z_scaled > moho_depth) {
       return CONTINENTAL_CRUST;
     } else if (z_scaled > litho_depth) {
@@ -93,11 +90,33 @@ int SetPhase(MdoodzInput *instance, Coordinates coordinates) {
       return ASTHENOSPHERE;
     }
   }
-  else {
-    return ASTHENOSPHERE; // Default case, should ideally never be reached
-  }
 }
 
+double SetSurfaceZCoord(MdoodzInput *instance, double x) {
+  double x_scaled = x * instance->scaling.L;
+
+  if (x_scaled < WEST_LATERAL_BORDER) {
+    // western continent
+    if (x_scaled >= WEST_LATERAL_BORDER - 200) {
+      return computeCubicTerm(x_scaled, WEST_LATERAL_BORDER - 200, WEST_LATERAL_BORDER, 2e3, 0e3) / instance->scaling.L;
+    } else {
+      return 2e3 / instance->scaling.L;
+    }
+  } else if (x_scaled >= WEST_LATERAL_BORDER && x_scaled < EAST_LATERAL_BORDER) {
+    if (x_scaled < 0) {
+      return computeCubicTerm(x_scaled, WEST_LATERAL_BORDER, 0, 0e3, -2e3) / instance->scaling.L;
+    } else {
+      return computeCubicTerm(x_scaled, EAST_LATERAL_BORDER, 0, 0e3, -2e3) / instance->scaling.L;
+    }
+  } else {
+    // eastern continent
+    if (x_scaled <= EAST_LATERAL_BORDER + 200) {
+      return computeCubicTerm(x_scaled, EAST_LATERAL_BORDER + 200, EAST_LATERAL_BORDER, 1e3, 0e3) / instance->scaling.L;
+    } else {
+      return 1e3 / instance->scaling.L;
+    }
+  }
+}
 
 double SetTemperature(MdoodzInput *instance, Coordinates coordinates) {
   const double lithosphereThickness = instance->model.user1 / instance->scaling.L;
@@ -156,14 +175,14 @@ SetBC SetBCVx(MdoodzInput *input, POSITION position, Coordinates coordinates) {
     bc.type  = 13;
   } else if (position == W) {
     if (coordinates.z > WEST_LITHOSPHERE_DEPTH / input->scaling.L) {
-      bc.value = (-coordinates.x / 2) * input->model.bkg_strain_rate;
+      bc.value = -coordinates.x * input->model.bkg_strain_rate;
     } else {
       bc.value = 0.0;
     }
     bc.type  = 0;
   } else if (position == E) {
     if (coordinates.z > -200e3 / input->scaling.L) {
-      bc.value = (-coordinates.x / 10) * input->model.bkg_strain_rate;
+      bc.value = (-coordinates.x / 5) * input->model.bkg_strain_rate;
     } else {
       bc.value = 0.0;
     }
@@ -231,6 +250,7 @@ int main(int nargs, char *args[]) {
   srand(69); // Force random generator seed for reproducibility
   MdoodzSetup setup = {
           .BuildInitialTopography = &(BuildInitialTopography_ff) {
+                  .SetSurfaceZCoord = SetSurfaceZCoord,
           },
           .SetParticles = &(SetParticles_ff){
                   .SetPhase              = SetPhase,
