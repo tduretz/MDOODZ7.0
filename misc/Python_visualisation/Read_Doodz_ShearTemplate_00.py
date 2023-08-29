@@ -2,8 +2,9 @@ import h5py as h5py
 import numpy as np
 import matplotlib.pyplot as mpl
 
-file = h5py.File('/home/roman/CLionProjects/MDOODZ7.0/cmake-exec/RiftingChenin/result4/Output00200.gzip.h5', 'r')
-P    = file['Centers/T']
+# file = h5py.File('/Users/romankulakov/MDOODZ7.0/cmake-exec/ShearTemplate/Output00005.gzip.h5', 'r')
+file = h5py.File('/Users/tduretz/REPO/MDOODZ7.0/MDLIB/Output00001.gzip.h5', 'r')
+P    = file['Centers/P']
 Vx   = file['VxNodes/Vx']
 Vz   = file['VzNodes/Vz']
 Txx  = file['Centers/sxxd']
