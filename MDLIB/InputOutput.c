@@ -1061,6 +1061,7 @@ Input ReadInputFile( char *fileName ) {
     model.xmax               = ReadDou2( fin, "xmax",     1.0 )/scaling.L;  // Spatial domain extent
     model.zmin               = ReadDou2( fin, "zmin",    -1.0 )/scaling.L;  // Spatial domain extent  
     model.zmax               = ReadDou2( fin, "zmax",     1.0 )/scaling.L;  // Spatial domain extent
+    model.balance_boundaries = ReadInt2( fin, "balance_boundaries",   0 );  // Switch this to activate boundary velocity balancing
     // Time domain
     model.Nt                 = ReadInt2( fin, "Nt",         1 );            // Number of time steps    
     model.dt                 = ReadDou2( fin, "dt",       0.0 ) /scaling.t; // Time step
