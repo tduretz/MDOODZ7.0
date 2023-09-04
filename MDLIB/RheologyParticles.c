@@ -1440,7 +1440,7 @@ firstprivate( model )
                 double mdvdz =  Centers2Particle( particles, dvdz_n,     mesh->xvz_coord, mesh->zvx_coord, mesh->Nx-1, mesh->Nz-1, mesh->BCp.type, mesh->dx, mesh->dz, k, model->periodic_x );
                 double mdvdx = Vertices2Particle( particles, dvdx_s,     mesh->xg_coord,  mesh->zg_coord,  mesh->Nx-0, mesh->Nz-0, mesh->BCg.type, mesh->dx, mesh->dz, k );
                 particles->nx[k] += dt*(-(mdudx - mdvdz)*nx*nz - mdvdx*nz*nz + mdudz*nx*nx)*nz;
-                particles->nz[k] += dt*( (mdudx - mdvdz)*nx*nz + mdvdx*nz*nz + mdudz*nx*nx)*nx;
+                particles->nz[k] += dt*( (mdudx - mdvdz)*nx*nz + mdvdx*nz*nz - mdudz*nx*nx)*nx;
                 double norm = sqrt( pow(particles->nx[k],2) + pow(particles->nz[k],2));
                 particles->nx[k] /= norm;
                 particles->nz[k] /= norm;
