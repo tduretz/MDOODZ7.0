@@ -81,7 +81,7 @@ double ViscosityConciseAniso( int phase, double lxlz, double lx2, double angle, 
     // ACTUNG FOR GSE:: d is now d0 and d1 is now d
     // !!!!!!!!!!!!!!!!!!!!!!!!
     // General paramaters
-    const double tol    = 1.0e-11, R = materials->R, dt = model->dt, min_eta = model->min_eta, max_eta = model->max_eta;
+    const double tol    = 1.0e-9, R = materials->R, dt = model->dt, min_eta = model->min_eta, max_eta = model->max_eta;
     const int    nitmax = 20, noisy = 0;
     double eta = 0.0, eta_el = 1e20, eta_cst = 0.0;
     double TmaxPeierls = (1200.0 + zeroC) / scaling->T;// max. T for Peierls
