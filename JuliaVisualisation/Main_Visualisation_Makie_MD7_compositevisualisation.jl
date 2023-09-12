@@ -506,10 +506,7 @@ function main()
         sleep(nap)
     end
     if printfig && printvid
-        #anim = @animate for istep=file_start:file_step:file_end
-        #    circleplot(x, y, istep)
-        #end
-        #gif(anim, "anim_fps15.gif", fps = 15)
+        # make video here (read all png, write gif or mp4)
     end
 end
 
