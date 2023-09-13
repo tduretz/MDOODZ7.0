@@ -1,8 +1,8 @@
 import Pkg
 Pkg.activate(normpath(joinpath(@__DIR__, ".")))
-using HDF5, Printf, Colors, ColorSchemes, MathTeXEngine, LinearAlgebra
+using HDF5, Printf, Colors, ColorSchemes, MathTeXEngine, LinearAlgebra, FFMPEG
 
-# Select your Makie of Choice:
+# Select your Makie of Choice: NOTE one has to quit the session when switching from CairoMakie to GLMakie or vice versa.
 choice = 2 # 1 => GLMakie; 2 => CairoMakie
 MakieOptions = ["import GLMakie as MoC",        # necessary for    interactive 'DataInspector', not supported on any 'headless server'
                 "import CairoMakie as MoC"]     # does not support interactive 'DataInspector', runs also on any     'headless server'
@@ -22,14 +22,14 @@ function main()
     path ="/users/whalter1/MDOODZ_output_folders_ready_for_download/CollisionPolarCartesian_v22_polar/"
     path ="/users/whalter1/work/william/MDOODZ_output_folders_ready_for_download/CollisionPolarCartesian_v27_polar/"
     #path ="/users/whalter1/MDOODZ7.0/cmake-exec/ShearTemplate"
-
+    path = "/Users/lcandiot/Developer/MDOODZ7.0/RUNS/RiftingChenin/"
     # File numbers
-    file_start = 1050
+    file_start = 0
     file_step  = 10
-    file_end   = file_start
+    file_end   = 200
 
     # Select field to visualise
-    #field = :Phases
+    field = :Phases
     #field = :Density
     #field = :Viscosity 
     #field = :Stress
@@ -37,7 +37,7 @@ function main()
     #field = :PlasticStrainrate
     #field = :Pressure
     #field = :Temperature
-    field = :Velocity
+    # field = :Velocity
     #field = :Velocity_x
     #field = :Velocity_z
     #field = :Strain # cumulated strain
@@ -57,6 +57,8 @@ function main()
     nap         = 0.3       # pause for animation 
     resol       = 800
     inspector   = false     # (not possible on any "headless server")
+    framerate   = 2         # Frame rate for the movie
+    movieName   = "$(path)/_$(field)/$(field)"  # Name of the movie
 
     # Scaling
     Lc = 1000.
@@ -506,7 +508,7 @@ function main()
         sleep(nap)
     end
     if printfig && printvid
-        # make video here (read all png, write gif or mp4)
+            FFMPEG.ffmpeg_exe(`-framerate $(framerate) -f image2 -pattern_type glob -i $(path)_$(field)/'*'.png -vf "scale=1920:1080" -c:v libx264 -pix_fmt yuv420p -y "$(movieName).mov"`)
     end
 end
 
@@ -538,3 +540,8 @@ function Print2Disk( f, path, field, istep; res=4)
 end
 
 main()
+
+#run(`ffmpeg -framerate 2 -i /Users/lcandiot/Developer/MDOODZ7.0/RUNS/RiftingChenin/_Phases/Phases%05d.png -c libx264 -pix_fmt yuv420p -y out_movie.mp4`)
+
+# Working command
+#ffmpeg -framerate 30 -pattern_type glob -i '*.png' -c:v libx264 -pix_fmt yuv420p out.mp4
