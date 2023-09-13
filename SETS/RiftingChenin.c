@@ -2,59 +2,41 @@
 #include "mdoodz.h"
 #include "stdbool.h"
 #include "stdlib.h"
-
+#include "stdio.h"
 
 double SetSurfaceZCoord(MdoodzInput *instance, double x_coord) {
   const double TopoLevel = -0.0e3 / instance->scaling.L;
   const double h_pert    = instance->model.user3 / instance->scaling.L;
-  return TopoLevel + h_pert * (3330.0 - 2800.0) / 2800.0 * cos(2 * PI * x_coord / (instance->model.xmax - instance->model.xmin));
+  return TopoLevel + h_pert * (3330.0 - 2800.0) / 2800.0 * cos(2 * M_PI * x_coord / (instance->model.xmax - instance->model.xmin));
 }
 
 int SetPhase(MdoodzInput *instance, Coordinates coordinates) {
-  Rectangle westernContinent = {
-          .sizeZ   = 180e3,
-          .sizeX   = 500e3,
-          .centreZ = -90e3,
-          .centreX = -350e3,
-          .angle   = 0,
-  };
-  Rectangle easternContinent = {
-          .sizeZ   = 140e3,
-          .sizeX   = 500e3,
-          .centreZ = -70e3,
-          .centreX = 350e3,
-          .angle   = 0,
-  };
-  Rectangle HOceanicPlate = {
-          .sizeZ   = 60e3,
-          .sizeX   = 200e3,
-          .centreZ = -30e3,
-          .centreX = 0e3,
-          .angle   = 0,
-  };
+  const double lithosphereThickness  = instance->model.user1 / instance->scaling.L;
+  const double crustThickness        = instance->model.user2 / instance->scaling.L;
+  const double perturbationAmplitude = instance->model.user3 / instance->scaling.L;
+  const double mohoLevel             = -crustThickness - perturbationAmplitude * cos(2 * M_PI * coordinates.x / (instance->model.xmax - instance->model.xmin));
+  const bool   isBelowLithosphere    = coordinates.z < -lithosphereThickness;
+  const bool   isAboveMoho           = coordinates.z > mohoLevel;
 
-
-  // const double HOceanicPlate = 20e3 / instance->scaling.L;
-  if (IsRectangleCoordinates(coordinates, westernContinent, instance->scaling.L)) {
-    if (coordinates.z > -40e3 / instance->scaling.L) {
-      return 1;}
-    else {
-      return 2;
-    }
-  } else if (IsRectangleCoordinates(coordinates, easternContinent, instance->scaling.L)) {
-    if (coordinates.z > -30e3 / instance->scaling.L) {
-      return 1;}
-    else {
-      return 2;
-    }
-  } else if (IsRectangleCoordinates(coordinates, HOceanicPlate, instance->scaling.L)) {
-    if (coordinates.z > -20e3 / instance->scaling.L) {
+  if (instance->model.user4 && isAboveMoho) {
+    const bool is2500MAboveMoho = coordinates.z > mohoLevel + 2500 / instance->scaling.L;
+    const bool is4500MAboveMoho = coordinates.z > mohoLevel + 4500 / instance->scaling.L;
+    const bool is7000MAboveMoho = coordinates.z > mohoLevel + 7000 / instance->scaling.L;
+    const bool is9000MAboveMoho = coordinates.z > mohoLevel + 9000 / instance->scaling.L;
+    if (is2500MAboveMoho && !is4500MAboveMoho) {
+      return 7;
+    } else if (is7000MAboveMoho && !is9000MAboveMoho) {
       return 8;
     } else {
-      return 2;
+      return 1;
     }
+  } else if (isAboveMoho) {
+    return 1;
+  } else if (isBelowLithosphere) {
+    return 3;
+  } else {
+    return 2;
   }
-  return 6;
 }
 
 double SetTemperature(MdoodzInput *instance, Coordinates coordinates) {
@@ -92,52 +74,19 @@ char SetBCPType(MdoodzInput *instance, POSITION position) {
 
 SetBC SetBCT(MdoodzInput *instance, POSITION position, double particleTemperature) {
   SetBC     bc;
-  double surfaceTemperature = zeroC / instance->scaling.T;
-  if (position == free_surface) {
-    bc.value = surfaceTemperature;
-    bc.type  = 1;
-  } else {
-    bc.value = 0.0;
-    bc.type  = 0;
+  double surface_temperature =          zeroC  / instance->scaling.T;
+  double mantle_temperature  = (1330. + zeroC) / instance->scaling.T;
+  if (position == S) {
+    bc.type  = constant_temperature;
+    bc.value = mantle_temperature;
   }
-  return bc;
-}
-
-
-SetBC SetBCTNew(MdoodzInput *instance, POSITION position, double particleTemperature) {
-  SetBC     bc;
-  double surfaceTemperature = zeroC / instance->scaling.T;
-  double mantleTemperature  = (1330. + zeroC) / instance->scaling.T;
-  if (position == S || position == SE || position == SW) {
-    bc.value = particleTemperature;
-    bc.type  = 1;
-  } else if (position == N || position == NE || position == NW) {
-    bc.value = mantleTemperature;
-    bc.type  = 1;
-  } else if (position == W || position == E) {
-    bc.value = mantleTemperature;
-    bc.type  = 0;
-  } else {
-    bc.value = 0;
-    bc.type  = 0;
-  }
-  return bc;
-}
-
-SetBC SetBCVz(MdoodzInput *input, POSITION position, Coordinates coordinates) {
-  SetBC bc;
-  if (position == W || position == E || position == SW || position == SE || position == NW || position == NE) {
-    bc.value = 0;
-    bc.type  = 13;
-  } else if (position == N) {
-    bc.value = coordinates.z * input->model.bkg_strain_rate;
-    bc.type  = 0;
-  } else if (position == S) {
-    bc.value = coordinates.z * input->model.bkg_strain_rate;
-    bc.type  = 0;
-  } else {
-    bc.value = 0;
-    bc.type  = -1;
+  if (position == free_surface || position == N) {
+    bc.type  = constant_temperature;
+    bc.value = surface_temperature;
+  } 
+  if (position == W || position == E) {
+    bc.type  = constant_heatflux;
+    bc.value = 0.;
   }
   return bc;
 }
@@ -152,7 +101,16 @@ void AddCrazyConductivity(MdoodzInput *input) {
   input->crazyConductivity               = crazyConductivity;
 }
 
-int main() {
+int main(int nargs, char *args[]) {
+  // Input file name
+  char *input_file;
+  if ( nargs < 2 ) {
+    asprintf(&input_file, "RiftingChenin.txt"); // Default
+  }
+  else {
+    asprintf(&input_file, "%s", args[1]);     // Custom
+  }
+  printf("Running MDoodz7.0 using %s\n", input_file);
   MdoodzSetup setup = {
           .BuildInitialTopography = &(BuildInitialTopography_ff){
                   .SetSurfaceZCoord = SetSurfaceZCoord,
@@ -166,12 +124,13 @@ int main() {
           },
           .SetBCs = &(SetBCs_ff){
                   .SetBCVx    = SetPureShearBCVx,
-                  .SetBCVz    = SetBCVz,
+                  .SetBCVz    = SetPureShearBCVz,
                   .SetBCPType = SetBCPType,
                   .SetBCT     = SetBCT,
           },
           .MutateInput = AddCrazyConductivity,
 
   };
-  RunMDOODZ("RiftingChenin.txt", &setup);
+  RunMDOODZ(input_file, &setup);
+  free(input_file);
 }
