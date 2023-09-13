@@ -8,15 +8,17 @@ My = 1e6*365*24*3600
 function main()
 
     # Set the path to your files
-    path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/NonLinearPureshearAnisotropic/"
+    # path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/NonLinearPureshearAnisotropic/"
     # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/NR00/"
     path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/"
+    # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/qcoe_x100/"
+    # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/qcoe_chk/"
     # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/1_NR07/"
 
     # File numbers
-    file_start = 200
+    file_start = 100
     file_step  = 10
-    file_end   = 200
+    file_end   = 100
 
     # Select field to visualise
     field = :Phases
@@ -29,23 +31,30 @@ function main()
     # field = :Temperature
     # field = :Velocity_x
     # field = :Velocity_z
+    # field = :Velocity
     # field = :GrainSize
     # field = :Topography
+    # field = :TimeSeries
 
     # Switches
     printfig    = false  # print figures to disk
     ph_contours = false  # add phase contours
     T_contours  = true  # add temperature contours
-    fabric      = false  # add fabric quiver (normal to director)
-    α_heatmap   = 0.85   # transparency of heatmap 
+    fabric      = true  # add fabric quiver (normal to director)
+    topo        = false
+    α_heatmap   = 1.0 #0.85   # transparency of heatmap 
     σ1_axis     = false
     nap         = 0.3    # pause for animation 
-    resol       = 800
+    resol       = 1000
 
     # Scaling
-    Lc = 1000.
+    # Lc = 1000.
+    # tc = My
+    # Vc = 1e-9
+
+    Lc = 1.0
     tc = My
-    Vc = 1e-9
+    Vc = 1.0
 
     # Time loop
     for istep=file_start:file_step:file_end
@@ -58,6 +67,9 @@ function main()
         zv     = ExtractData( filename, "/Model/zg_coord")
         xv_hr  = ExtractData( filename, "/VizGrid/xviz_hr")
         zv_hr  = ExtractData( filename, "/VizGrid/zviz_hr")
+        τxz_t  = ExtractData( filename, "TimeSeries/sxz_mean_time")
+        t_t    = ExtractData( filename, "TimeSeries/Time_time")
+
         xc_hr  = 0.5.*(xv_hr[1:end-1] .+ xv_hr[2:end])
         zc_hr  = 0.5.*(zv_hr[1:end-1] .+ zv_hr[2:end])
         ncx_hr, ncz_hr = length(xc_hr), length(zc_hr)
@@ -93,16 +105,23 @@ function main()
         τII   = sqrt.( 0.5*(2*τxx.^2 .+ 0.5*(τxz[1:end-1,1:end-1].^2 .+ τxz[2:end,1:end-1].^2 .+ τxz[1:end-1,2:end].^2 .+ τxz[2:end,2:end].^2 ) ) ); τII[mask_air] .= NaN
         ε̇II   = sqrt.( 0.5*(2*ε̇xx.^2 .+ 0.5*(ε̇xz[1:end-1,1:end-1].^2 .+ ε̇xz[2:end,1:end-1].^2 .+ ε̇xz[1:end-1,2:end].^2 .+ ε̇xz[2:end,2:end].^2 ) ) ); ε̇II[mask_air] .= NaN
         if fabric
-            Nx    = Float64.(reshape(ExtractData( filename, "/Centers/nx"), ncx, ncz)); 
-            Nz    = Float64.(reshape(ExtractData( filename, "/Centers/nz"), ncx, ncz));
+            Nx    = Float64.(reshape(ExtractData( filename, "/Centers/nx"), ncx, ncz))
+            Nz    = Float64.(reshape(ExtractData( filename, "/Centers/nz"), ncx, ncz))
+            Fab_x = -Nz./Nx
+            Fab_z = ones(size(Nz))
+            nrm   = sqrt.(Fab_x.^2 .+ Fab_z.^2)
+            Fab_x ./= nrm
+            Fab_z ./= nrm
         end
-        height  = Float64.(ExtractData( filename, "/Topo/z_grid")); 
-        Vx_grid = Float64.(ExtractData( filename, "/Topo/Vx_grid"));
-        Vz_grid = Float64.(ExtractData( filename, "/Topo/Vz_grid"));  
-        Vx_mark = Float64.(ExtractData( filename, "/Topo/Vx_mark"));
-        Vz_mark = Float64.(ExtractData( filename, "/Topo/Vz_mark"));
-        x_mark  = Float64.(ExtractData( filename, "/Topo/x_mark"));
-        z_mark  = Float64.(ExtractData( filename, "/Topo/z_mark"));
+        if topo
+            height  = Float64.(ExtractData( filename, "/Topo/z_grid")); 
+            Vx_grid = Float64.(ExtractData( filename, "/Topo/Vx_grid"));
+            Vz_grid = Float64.(ExtractData( filename, "/Topo/Vz_grid"));  
+            Vx_mark = Float64.(ExtractData( filename, "/Topo/Vx_mark"));
+            Vz_mark = Float64.(ExtractData( filename, "/Topo/Vz_mark"));
+            x_mark  = Float64.(ExtractData( filename, "/Topo/x_mark"));
+            z_mark  = Float64.(ExtractData( filename, "/Topo/z_mark"));
+        end
         Vxc   = 0.5 .* (Vx[1:end-1,2:end-1] .+ Vx[2:end-0,2:end-1])
         Vzc   = 0.5 .* (Vz[2:end-1,1:end-1] .+ Vz[2:end-1,2:end-0])
         if σ1_axis 
@@ -138,7 +157,7 @@ function main()
                 contour!(ax1, xc./Lc, zc./Lc, T, levels=0:200:1400, linewidth = 4, color=:white )  
             end
             if fabric 
-                arrows!(ax1, xc./Lc, zc./Lc, Nz, Nx, arrowsize = 0, lengthscale=Δ/1.5)
+                arrows!(ax1, xc./Lc, zc./Lc, Fab_x, Fab_z, arrowsize = 0, lengthscale=Δ/1.5)
             end
             if σ1_axis
                 arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
@@ -159,7 +178,7 @@ function main()
                 contour!(ax1, xc_hr./Lc, zc_hr./Lc, group_phases, levels=-1:1:maximum(group_phases), linewidth = 4, color=:white )  
             end
             if fabric 
-                arrows!(ax1, xc./Lc, zc./Lc, Nz, Nx, arrowsize = 0, lengthscale=Δ/1.5)
+                arrows!(ax1, xc./Lc, zc./Lc, Fab_x, Fab_z, arrowsize = 0, lengthscale=Δ/1.5)
             end 
             if σ1_axis
                 arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
@@ -180,7 +199,7 @@ function main()
                 contour!(ax1, xc_hr./Lc, zc_hr./Lc, group_phases, levels=-1:1:maximum(group_phases), linewidth = 4, color=:white )  
             end
             if fabric 
-                arrows!(ax1, xc./Lc, zc./Lc, Nz, Nx, arrowsize = 0, lengthscale=Δ/1.5)
+                arrows!(ax1, xc./Lc, zc./Lc, Fab_x, Fab_z, arrowsize = 0, lengthscale=Δ/1.5)
             end   
             if σ1_axis
                 arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
@@ -201,7 +220,7 @@ function main()
                 contour!(ax1, xc_hr./Lc, zc_hr./Lc, group_phases, levels=-1:1:maximum(group_phases), linewidth = 4, color=:white )  
             end
             if fabric 
-                arrows!(ax1, xc./Lc, zc./Lc, Nz, Nx, arrowsize = 0, lengthscale=Δ/1.5)
+                arrows!(ax1, xc./Lc, zc./Lc, Fab_x, Fab_z, arrowsize = 0, lengthscale=Δ/1.5)
             end
             if σ1_axis
                 arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
@@ -222,13 +241,38 @@ function main()
                 contour!(ax1, xc_hr./Lc, zc_hr./Lc, group_phases, levels=-1:1:maximum(group_phases), linewidth = 4, color=:white )  
             end
             if fabric 
-                arrows!(ax1, xc./Lc, zc./Lc, Nz, Nx, arrowsize = 0, lengthscale=Δ/1.5)
+                arrows!(ax1, xc./Lc, zc./Lc, Fab_x, Fab_z, arrowsize = 0, lengthscale=Δ/1.5)
             end
             if σ1_axis
                 arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
             end  
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
             GLMakie.Colorbar(f[1, 2], hm, label = L"$\dot{\varepsilon}_\textrm{II}^\textrm{pl}$ [s$^{-1}$]", width = 20, labelsize = 25, ticklabelsize = 14 )
+            GLMakie.colgap!(f.layout, 20)
+            if printfig Print2Disk( f, path, string(field), istep) end
+        end
+
+        if field==:Velocity
+            ax1 = Axis(f[1, 1], title = L"$V$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
+            Vx_BG = 0*xc .- 2*zc'  
+            V     = sqrt.( (Vxc .- Vx_BG).^2 + (Vzc).^2)
+            hm = heatmap!(ax1, xc./Lc, zc./Lc, V, colormap = (:jet, α_heatmap))#, colorrange=(0., 0.6)
+            if T_contours 
+                contour!(ax1, xc./Lc, zc./Lc, T, levels=0:200:1400, linewidth = 4, color=:white )  
+            end
+            if ph_contours 
+                contour!(ax1, xc_hr./Lc, zc_hr./Lc, group_phases, levels=-1:1:maximum(group_phases), linewidth = 4, color=:white )  
+            end
+            if fabric 
+                arrows!(ax1, xc./Lc, zc./Lc, Fab_x, Fab_z, arrowsize = 0, lengthscale=Δ/1.5)
+            end
+            if σ1_axis
+                arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
+            end  
+            xlims!(ax1, 0., 3.e-3)
+            ylims!(ax1, 0., 3.e-3)
+            colsize!(f.layout, 1, Aspect(1, Lx/Lz))
+            GLMakie.Colorbar(f[1, 2], hm, label = L"$V$ [m.s$^{-1}$]", width = 20, labelsize = 25, ticklabelsize = 14 )
             GLMakie.colgap!(f.layout, 20)
             if printfig Print2Disk( f, path, string(field), istep) end
         end
@@ -243,7 +287,7 @@ function main()
                 contour!(ax1, xc_hr./Lc, zc_hr./Lc, group_phases, levels=-1:1:maximum(group_phases), linewidth = 4, color=:white )  
             end
             if fabric 
-                arrows!(ax1, xc./Lc, zc./Lc, Nz, Nx, arrowsize = 0, lengthscale=Δ/1.5)
+                arrows!(ax1, xc./Lc, zc./Lc, Fab_x, Fab_z, arrowsize = 0, lengthscale=Δ/1.5)
             end
             if σ1_axis
                 arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
@@ -272,11 +316,11 @@ function main()
             ax3 = Axis(f[3, 1], xlabel = L"$x$ [km]", ylabel = L"$Vz$ [km]")
             lines!(ax3, xc./Lc, Vz_grid[2:end-1]./Vc)
             scatter!(ax3, x_mark/Lc, Vz_mark./Vc)
+        end
 
-            @show minimum(Vx_grid)
-            @show minimum(Vx_mark)
-            @show maximum(Vx_grid)
-            @show maximum(Vx_mark)
+        if field==:TimeSeries
+            ax1 = Axis(f[1, 1], title = L"$τ_{xz}$", xlabel = L"$t$", ylabel = L"$\tau_{xz}$")
+            lines!(ax1, t_t, τxz_t)
         end
 
         DataInspector(f)
