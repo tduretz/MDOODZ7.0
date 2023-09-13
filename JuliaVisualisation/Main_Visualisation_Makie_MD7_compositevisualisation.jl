@@ -23,24 +23,26 @@ function main()
     path ="/users/whalter1/work/william/MDOODZ_output_folders_ready_for_download/CollisionPolarCartesian_v27_polar/"
     #path ="/users/whalter1/MDOODZ7.0/cmake-exec/ShearTemplate"
     path = "/Users/lcandiot/Developer/MDOODZ7.0/RUNS/RiftingChenin/"
+    path = "/home/whalter1/lib/MDOODZ7.0/cmake-exec/ShearTemplateAniso/"
+
     # File numbers
     file_start = 0
-    file_step  = 10
-    file_end   = 200
+    file_step  = 1
+    file_end   = 10
 
     # Select one field to visualise
     #field = :Phases
     #field = :Density
     #field = :Viscosity 
     #field = :Stress
-    field = :Stress_xx
+    #field = :Stress_xx
     #field = :Stress_zz
     #field = :Stress_xz
     #field = :StrainRate
     #field = :PlasticStrainrate
     #field = :Pressure
     #field = :Temperature
-    #field = :Velocity
+    field = :Velocity
     #field = :Velocity_x
     #field = :Velocity_z
     #field = :Strain # cumulated strain
@@ -50,10 +52,10 @@ function main()
     # Switches
     displayfig  = false     # display figures on screen (not possible on any "headless server")
     printfig    = true      # print figures to disk
-    printvid    = true      # print a video (printfig must be on)
+    printvid    = false      # print a video (printfig must be on)
     ph_contours = false     # add phase contours
     T_contours  = false     # add temperature contours
-    fabric      = false     # add fabric quiver (normal to director)
+    fabric      = true     # add fabric quiver (normal to director)
     velocity    = false     # add velocity quiver
     α_heatmap   = 0.85      # transparency of heatmap 
     σ1_axis     = false
@@ -64,7 +66,7 @@ function main()
     movieName   = "$(path)/_$(field)/$(field)"  # Name of the movie
 
     # Scaling
-    Lc = 1000.
+    Lc = 1.
     tc = My
     Vc = 1e-9
 
@@ -119,13 +121,15 @@ function main()
             Nx    = Float64.(reshape(ExtractData( filename, "/Centers/nx"), ncx, ncz)); 
             Nz    = Float64.(reshape(ExtractData( filename, "/Centers/nz"), ncx, ncz));
         end
-        height  = Float64.(ExtractData( filename, "/Topo/z_grid")); 
-        Vx_grid = Float64.(ExtractData( filename, "/Topo/Vx_grid"));
-        Vz_grid = Float64.(ExtractData( filename, "/Topo/Vz_grid"));  
-        Vx_mark = Float64.(ExtractData( filename, "/Topo/Vx_mark"));
-        Vz_mark = Float64.(ExtractData( filename, "/Topo/Vz_mark"));
-        x_mark  = Float64.(ExtractData( filename, "/Topo/x_mark"));
-        z_mark  = Float64.(ExtractData( filename, "/Topo/z_mark"));
+        if field==:Topography
+            height  = Float64.(ExtractData( filename, "/Topo/z_grid")); 
+            Vx_grid = Float64.(ExtractData( filename, "/Topo/Vx_grid"));
+            Vz_grid = Float64.(ExtractData( filename, "/Topo/Vz_grid"));  
+            Vx_mark = Float64.(ExtractData( filename, "/Topo/Vx_mark"));
+            Vz_mark = Float64.(ExtractData( filename, "/Topo/Vz_mark"));
+            x_mark  = Float64.(ExtractData( filename, "/Topo/x_mark"));
+            z_mark  = Float64.(ExtractData( filename, "/Topo/z_mark"));
+        end
         Vxc     = 0.5 .* (Vx[1:end-1,2:end-1] .+ Vx[2:end-0,2:end-1]); Vxc[mask_air] .= NaN
         Vzc     = 0.5 .* (Vz[2:end-1,1:end-1] .+ Vz[2:end-1,2:end-0]); Vzc[mask_air] .= NaN
         Vc      = (Vxc.^2 .+ Vzc.^2).^0.5
@@ -161,20 +165,12 @@ function main()
             if T_contours 
                 contour!(ax1, xc./Lc, zc./Lc, T, levels=0:200:1400, linewidth = 4, color=:white )  
             end
-            if fabric 
-                arrows!(ax1, xc./Lc, zc./Lc, Nz, Nx, arrowsize = 0, lengthscale=Δ/1.5)
-            end
-            if velocity 
-                qv,qh = 6,3
-                arrows!(ax1, xc[1:qh:end]./Lc, zc[1:qv:end]./Lc, Vxc[1:qh:end,1:qv:end], Vzc[1:qh:end,1:qv:end], arrowsize = 1e1, lengthscale=Δ/1.5*1e10)
-            end
             if σ1_axis
-                arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
+                MoC.arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
             end            
             MoC.colsize!(f.layout, 1, MoC.Aspect(1, Lx/Lz))
             MoC.Colorbar(f[1, 2], hm, label = "Phases", width = 20, labelsize = 25, ticklabelsize = 14 )
             MoC.colgap!(f.layout, 20)
-            if printfig Print2Disk( f, path, string(field), istep) end
         end
 
         if field==:Density
@@ -186,20 +182,12 @@ function main()
             if ph_contours 
                 contour!(ax1, xc_hr./Lc, zc_hr./Lc, group_phases, levels=-1:1:maximum(group_phases), linewidth = 4, color=:white )  
             end
-            if fabric 
-                arrows!(ax1, xc./Lc, zc./Lc, Nz, Nx, arrowsize = 0, lengthscale=Δ/1.5)
-            end 
-            if velocity 
-                qv,qh = 6,3
-                arrows!(ax1, xc[1:qh:end]./Lc, zc[1:qv:end]./Lc, Vxc[1:qh:end,1:qv:end], Vzc[1:qh:end,1:qv:end], arrowsize = 1e1, lengthscale=Δ/1.5*1e10)
-            end
             if σ1_axis
-                arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
+                MoC.arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
             end            
             MoC.colsize!(f.layout, 1, MoC.Aspect(1, Lx/Lz))
             MoC.Colorbar(f[1, 2], hm, label = L"Density $ρ$ [kg/m^3]", width = 20, labelsize = 25, ticklabelsize = 14 )
             MoC.colgap!(f.layout, 20)
-            if printfig Print2Disk( f, path, string(field), istep) end
         end
 
         if field==:Viscosity
@@ -211,20 +199,12 @@ function main()
             if ph_contours 
                 contour!(ax1, xc_hr./Lc, zc_hr./Lc, group_phases, levels=-1:1:maximum(group_phases), linewidth = 4, color=:white )  
             end
-            if fabric 
-                arrows!(ax1, xc./Lc, zc./Lc, Nz, Nx, arrowsize = 0, lengthscale=Δ/1.5)
-            end 
-            if velocity 
-                qv,qh = 6,3
-                arrows!(ax1, xc[1:qh:end]./Lc, zc[1:qv:end]./Lc, Vxc[1:qh:end,1:qv:end], Vzc[1:qh:end,1:qv:end], arrowsize = 1e1, lengthscale=Δ/1.5*1e10)
-            end
             if σ1_axis
-                arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
+                MoC.arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
             end            
             MoC.colsize!(f.layout, 1, MoC.Aspect(1, Lx/Lz))
             MoC.Colorbar(f[1, 2], hm, label = L"$\eta$ [Pa.s]", width = 20, labelsize = 25, ticklabelsize = 14 )
             MoC.colgap!(f.layout, 20)
-            if printfig Print2Disk( f, path, string(field), istep) end
         end
 
         if field==:Stress
@@ -236,20 +216,12 @@ function main()
             if ph_contours 
                 contour!(ax1, xc_hr./Lc, zc_hr./Lc, group_phases, levels=-1:1:maximum(group_phases), linewidth = 4, color=:white )  
             end
-            if fabric 
-                arrows!(ax1, xc./Lc, zc./Lc, Nz, Nx, arrowsize = 0, lengthscale=Δ/1.5)
-            end   
-            if velocity 
-                qv,qh = 6,3
-                arrows!(ax1, xc[1:qh:end]./Lc, zc[1:qv:end]./Lc, Vxc[1:qh:end,1:qv:end], Vzc[1:qh:end,1:qv:end], arrowsize = 1e1, lengthscale=Δ/1.5*1e10)
-            end
             if σ1_axis
-                arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
+                MoC.arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
             end         
             MoC.colsize!(f.layout, 1, MoC.Aspect(1, Lx/Lz))
             MoC.Colorbar(f[1, 2], hm, label = L"$\tau_\textrm{II}$ [Pa]", width = 20, labelsize = 25, ticklabelsize = 14 )
             MoC.colgap!(f.layout, 20)
-            if printfig Print2Disk( f, path, string(field), istep) end
         end
 
         if field==:Stress_xx
@@ -261,20 +233,12 @@ function main()
             if ph_contours 
                 contour!(ax1, xc_hr./Lc, zc_hr./Lc, group_phases, levels=-1:1:maximum(group_phases), linewidth = 4, color=:white )  
             end
-            if fabric 
-                arrows!(ax1, xc./Lc, zc./Lc, Nz, Nx, arrowsize = 0, lengthscale=Δ/1.5)
-            end   
-            if velocity 
-                qv,qh = 6,3
-                arrows!(ax1, xc[1:qh:end]./Lc, zc[1:qv:end]./Lc, Vxc[1:qh:end,1:qv:end], Vzc[1:qh:end,1:qv:end], arrowsize = 1e1, lengthscale=Δ/1.5*1e10)
-            end
             if σ1_axis
-                arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
+                MoC.arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
             end         
             MoC.colsize!(f.layout, 1, MoC.Aspect(1, Lx/Lz))
             MoC.Colorbar(f[1, 2], hm, label = L"$\tau_\textrm{xx}$ [Pa]", width = 20, labelsize = 25, ticklabelsize = 14 )
             MoC.colgap!(f.layout, 20)
-            if printfig Print2Disk( f, path, string(field), istep) end
         end
 
         if field==:Stress_zz
@@ -286,20 +250,12 @@ function main()
             if ph_contours 
                 contour!(ax1, xc_hr./Lc, zc_hr./Lc, group_phases, levels=-1:1:maximum(group_phases), linewidth = 4, color=:white )  
             end
-            if fabric 
-                arrows!(ax1, xc./Lc, zc./Lc, Nz, Nx, arrowsize = 0, lengthscale=Δ/1.5)
-            end   
-            if velocity 
-                qv,qh = 6,3
-                arrows!(ax1, xc[1:qh:end]./Lc, zc[1:qv:end]./Lc, Vxc[1:qh:end,1:qv:end], Vzc[1:qh:end,1:qv:end], arrowsize = 1e1, lengthscale=Δ/1.5*1e10)
-            end
             if σ1_axis
-                arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
+                MoC.arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
             end         
             MoC.colsize!(f.layout, 1, MoC.Aspect(1, Lx/Lz))
             MoC.Colorbar(f[1, 2], hm, label = L"$\tau_\textrm{zz}$ [Pa]", width = 20, labelsize = 25, ticklabelsize = 14 )
             MoC.colgap!(f.layout, 20)
-            if printfig Print2Disk( f, path, string(field), istep) end
         end
 
         if field==:Stress_xz
@@ -311,20 +267,12 @@ function main()
             if ph_contours 
                 contour!(ax1, xc_hr./Lc, zc_hr./Lc, group_phases, levels=-1:1:maximum(group_phases), linewidth = 4, color=:white )  
             end
-            if fabric 
-                arrows!(ax1, xc./Lc, zc./Lc, Nz, Nx, arrowsize = 0, lengthscale=Δ/1.5)
-            end   
-            if velocity 
-                qv,qh = 6,3
-                arrows!(ax1, xc[1:qh:end]./Lc, zc[1:qv:end]./Lc, Vxc[1:qh:end,1:qv:end], Vzc[1:qh:end,1:qv:end], arrowsize = 1e1, lengthscale=Δ/1.5*1e10)
-            end
             if σ1_axis
-                arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
+                MoC.arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
             end         
             MoC.colsize!(f.layout, 1, MoC.Aspect(1, Lx/Lz))
             MoC.Colorbar(f[1, 2], hm, label = L"$\tau_\textrm{xz}$ [Pa]", width = 20, labelsize = 25, ticklabelsize = 14 )
             MoC.colgap!(f.layout, 20)
-            if printfig Print2Disk( f, path, string(field), istep) end
         end
 
         if field==:StrainRate
@@ -336,20 +284,12 @@ function main()
             if ph_contours 
                 contour!(ax1, xc_hr./Lc, zc_hr./Lc, group_phases, levels=-1:1:maximum(group_phases), linewidth = 4, color=:white )  
             end
-            if fabric 
-                arrows!(ax1, xc./Lc, zc./Lc, Nz, Nx, arrowsize = 0, lengthscale=Δ/1.5)
-            end
-            if velocity 
-                qv,qh = 6,3
-                arrows!(ax1, xc[1:qh:end]./Lc, zc[1:qv:end]./Lc, Vxc[1:qh:end,1:qv:end], Vzc[1:qh:end,1:qv:end], arrowsize = 1e1, lengthscale=Δ/1.5*1e10)
-            end
             if σ1_axis
-                arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
+                MoC.arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
             end  
             MoC.colsize!(f.layout, 1, MoC.Aspect(1, Lx/Lz))
             MoC.Colorbar(f[1, 2], hm, label =  L"$\dot{\varepsilon}_\textrm{II}$ [s$^{-1}$]", width = 20, labelsize = 25, ticklabelsize = 14 )
             MoC.colgap!(f.layout, 20)
-            if printfig Print2Disk( f, path, string(field), istep) end
         end
 
         if field==:PlasticStrainrate
@@ -362,20 +302,12 @@ function main()
             if ph_contours 
                 contour!(ax1, xc_hr./Lc, zc_hr./Lc, group_phases, levels=-1:1:maximum(group_phases), linewidth = 4, color=:white )  
             end
-            if fabric 
-                arrows!(ax1, xc./Lc, zc./Lc, Nz, Nx, arrowsize = 0, lengthscale=Δ/1.5)
-            end
-            if velocity 
-                qv,qh = 6,3
-                arrows!(ax1, xc[1:qh:end]./Lc, zc[1:qv:end]./Lc, Vxc[1:qh:end,1:qv:end], Vzc[1:qh:end,1:qv:end], arrowsize = 1e1, lengthscale=Δ/1.5*1e10)
-            end
             if σ1_axis
-                arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
+                MoC.arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
             end  
             MoC.colsize!(f.layout, 1, MoC.Aspect(1, Lx/Lz))
             MoC.Colorbar(f[1, 2], hm, label = L"$\dot{\varepsilon}_\textrm{II}^\textrm{pl}$ [s$^{-1}$]", width = 20, labelsize = 25, ticklabelsize = 14 )
             MoC.colgap!(f.layout, 20)
-            if printfig Print2Disk( f, path, string(field), istep) end
         end
 
         if field==:Pressure
@@ -387,20 +319,12 @@ function main()
             if ph_contours 
                 contour!(ax1, xc_hr./Lc, zc_hr./Lc, group_phases, levels=-1:1:maximum(group_phases), linewidth = 4, color=:white )  
             end
-            if fabric 
-                arrows!(ax1, xc./Lc, zc./Lc, Nz, Nx, arrowsize = 0, lengthscale=Δ/1.5)
-            end
-            if velocity 
-                qv,qh = 6,3
-                arrows!(ax1, xc[1:qh:end]./Lc, zc[1:qv:end]./Lc, Vxc[1:qh:end,1:qv:end], Vzc[1:qh:end,1:qv:end], arrowsize = 1e1, lengthscale=Δ/1.5*1e10)
-            end
             if σ1_axis
-                arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
+                MoC.arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
             end  
             MoC.colsize!(f.layout, 1, MoC.Aspect(1, Lx/Lz))
             MoC.Colorbar(f[1, 2], hm, label =  L"$P$ [s$^{-1}$]", width = 20, labelsize = 25, ticklabelsize = 14 )
             MoC.colgap!(f.layout, 20)
-            if printfig Print2Disk( f, path, string(field), istep) end
         end
 
         if field==:Temperature
@@ -412,20 +336,12 @@ function main()
             if ph_contours 
                 contour!(ax1, xc_hr./Lc, zc_hr./Lc, group_phases, levels=-1:1:maximum(group_phases), linewidth = 4, color=:white )  
             end
-            if fabric 
-                arrows!(ax1, xc./Lc, zc./Lc, Nz, Nx, arrowsize = 0, lengthscale=Δ/1.5)
-            end
-            if velocity 
-                qv,qh = 6,3
-                arrows!(ax1, xc[1:qh:end]./Lc, zc[1:qv:end]./Lc, Vxc[1:qh:end,1:qv:end], Vzc[1:qh:end,1:qv:end], arrowsize = 1e1, lengthscale=Δ/1.5*1e10)
-            end
             if σ1_axis
-                arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
+                MoC.arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
             end  
             MoC.colsize!(f.layout, 1, MoC.Aspect(1, Lx/Lz))
             MoC.Colorbar(f[1, 2], hm, label =  L"$T$ [s$^{-1}$]", width = 20, labelsize = 25, ticklabelsize = 14 )
             MoC.colgap!(f.layout, 20)
-            if printfig Print2Disk( f, path, string(field), istep) end
         end
 
         if field==:Velocity
@@ -437,20 +353,12 @@ function main()
             if ph_contours 
                 contour!(ax1, xc_hr./Lc, zc_hr./Lc, group_phases, levels=-1:1:maximum(group_phases), linewidth = 4, color=:white )  
             end
-            if fabric 
-                arrows!(ax1, xc./Lc, zc./Lc, Nz, Nx, arrowsize = 0, lengthscale=Δ/1.5)
-            end
-            if velocity 
-                qv,qh = 6,3
-                arrows!(ax1, xc[1:qh:end]./Lc, zc[1:qv:end]./Lc, Vxc[1:qh:end,1:qv:end], Vzc[1:qh:end,1:qv:end], arrowsize = 1e1, lengthscale=Δ/1.5*1e10)
-            end
             if σ1_axis
-                arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
+                MoC.arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
             end  
             MoC.colsize!(f.layout, 1, MoC.Aspect(1, Lx/Lz))
             MoC.Colorbar(f[1, 2], hm, label = L"$V$ [s$^{-1}$]", width = 20, labelsize = 25, ticklabelsize = 14 )
             MoC.colgap!(f.layout, 20)
-            if printfig Print2Disk( f, path, string(field), istep) end
         end
 
         if field==:Velocity_x
@@ -462,20 +370,12 @@ function main()
             if ph_contours 
                 contour!(ax1, xc_hr./Lc, zc_hr./Lc, group_phases, levels=-1:1:maximum(group_phases), linewidth = 4, color=:white )  
             end
-            if fabric 
-                arrows!(ax1, xc./Lc, zc./Lc, Nz, Nx, arrowsize = 0, lengthscale=Δ/1.5)
-            end
-            if velocity 
-                qv,qh = 6,3
-                arrows!(ax1, xc[1:qh:end]./Lc, zc[1:qv:end]./Lc, Vxc[1:qh:end,1:qv:end], Vzc[1:qh:end,1:qv:end], arrowsize = 1e1, lengthscale=Δ/1.5*1e10)
-            end
             if σ1_axis
-                arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
+                MoC.arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
             end  
             MoC.colsize!(f.layout, 1, MoC.Aspect(1, Lx/Lz))
             MoC.Colorbar(f[1, 2], hm, label = L"$V_{x}$ [s$^{-1}$]", width = 20, labelsize = 25, ticklabelsize = 14 )
             MoC.colgap!(f.layout, 20)
-            if printfig Print2Disk( f, path, string(field), istep) end
         end
 
         if field==:Velocity_z
@@ -487,20 +387,12 @@ function main()
             if ph_contours 
                 contour!(ax1, xc_hr./Lc, zc_hr./Lc, group_phases, levels=-1:1:maximum(group_phases), linewidth = 4, color=:white )  
             end
-            if fabric 
-                arrows!(ax1, xc./Lc, zc./Lc, Nz, Nx, arrowsize = 0, lengthscale=Δ/1.5)
-            end
-            if velocity 
-                qv,qh = 6,3
-                arrows!(ax1, xc[1:qh:end]./Lc, zc[1:qv:end]./Lc, Vxc[1:qh:end,1:qv:end], Vzc[1:qh:end,1:qv:end], arrowsize = 1e1, lengthscale=Δ/1.5*1e10)
-            end
             if σ1_axis
-                arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
+                MoC.arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
             end  
             MoC.colsize!(f.layout, 1, MoC.Aspect(1, Lx/Lz))
             MoC.Colorbar(f[1, 2], hm, label = L"$V_{z}$ [s$^{-1}$]", width = 20, labelsize = 25, ticklabelsize = 14 )
             MoC.colgap!(f.layout, 20)
-            if printfig Print2Disk( f, path, string(field), istep) end
         end
 
         if field==:Strain
@@ -512,20 +404,12 @@ function main()
             if ph_contours 
                 contour!(ax1, xc_hr./Lc, zc_hr./Lc, group_phases, levels=-1:1:maximum(group_phases), linewidth = 4, color=:white )  
             end
-            if fabric 
-                arrows!(ax1, xc./Lc, zc./Lc, Nz, Nx, arrowsize = 0, lengthscale=Δ/1.5)
-            end
-            if velocity 
-                qv,qh = 6,3
-                arrows!(ax1, xc[1:qh:end]./Lc, zc[1:qv:end]./Lc, Vxc[1:qh:end,1:qv:end], Vzc[1:qh:end,1:qv:end], arrowsize = 1e1, lengthscale=Δ/1.5*1e10)
-            end
             if σ1_axis
-                arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
+                MoC.arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
             end  
             MoC.colsize!(f.layout, 1, MoC.Aspect(1, Lx/Lz))
             MoC.Colorbar(f[1, 2], hm, label = L"$\varepsilon_{II}$ []", width = 20, labelsize = 25, ticklabelsize = 14 )
             MoC.colgap!(f.layout, 20)
-            if printfig Print2Disk( f, path, string(field), istep) end
         end
 
         if field==:GrainSize
@@ -537,15 +421,8 @@ function main()
             if ph_contours 
                 contour!(ax1, xc_hr./Lc, zc_hr./Lc, group_phases, levels=-1:1:maximum(group_phases), linewidth = 4, color=:white )  
             end
-            if fabric 
-                arrows!(ax1, xc./Lc, zc./Lc, Nz, Nx, arrowsize = 0, lengthscale=Δ/1.5)
-            end
-            if velocity 
-                qv,qh = 6,3
-                arrows!(ax1, xc[1:qh:end]./Lc, zc[1:qv:end]./Lc, Vxc[1:qh:end,1:qv:end], Vzc[1:qh:end,1:qv:end], arrowsize = 1e1, lengthscale=Δ/1.5*1e10)
-            end
             if σ1_axis
-                arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
+                MoC.arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
             end  
             xminz, xmaxz = -0.4, 0.4
             zminz, zmaxz = -0.17, 0.17
@@ -556,7 +433,6 @@ function main()
             MoC.colsize!(f.layout, 1, MoC.Aspect(1, Lx/Lz))
             MoC.Colorbar(f[1, 2], hm, label = "d", width = 20, labelsize = 25, ticklabelsize = 14 )
             MoC.colgap!(f.layout, 20)
-            if printfig Print2Disk( f, path, string(field), istep) end
         end
 
         if field==:Topography
@@ -577,6 +453,19 @@ function main()
             @show maximum(Vx_grid)
             @show maximum(Vx_mark)
         end
+        
+        if velocity 
+            qv,qh = 10,10
+            MoC.arrows!(ax1, xc[1:qh:end]./Lc, zc[1:qv:end]./Lc, Vxc[1:qh:end,1:qv:end], Vzc[1:qh:end,1:qv:end], arrowsize = Δ*1000, lengthscale=Δ*20)
+            #qv,qh = 6,3
+            #MoC.arrows!(ax1, xc[1:qh:end]./Lc, zc[1:qv:end]./Lc, Vxc[1:qh:end,1:qv:end], Vzc[1:qh:end,1:qv:end], arrowsize = 1e1, lengthscale=Δ/1.5*1e10)
+        end
+        if fabric 
+            qv,qh = 10,10
+            MoC.arrows!(ax1, xc[1:qh:end]./Lc, zc[1:qv:end]./Lc, Nx[1:qh:end,1:qv:end], Nz[1:qh:end,1:qv:end], arrowsize = 0, lengthscale=Δ*7)
+            #MoC.arrows!(ax1, xc./Lc, zc./Lc, Nz, Nx, arrowsize = 0, lengthscale=Δ/1.5)
+        end
+        if printfig Print2Disk( f, path, string(field), istep) end
 
         if inspector
             DataInspector(f)
