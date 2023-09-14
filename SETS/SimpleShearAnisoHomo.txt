@@ -15,49 +15,46 @@ V   = 1e0
 T   = 1
  
 /**** SPACE-TIME ****/
-Nx   = 101
-Nz   = 101
-Nt   = 100
-xmin = -0.5000000
-zmin = -0.5000000
-xmax =  0.5000000
-zmax =  0.5000000 
-dt   = 1e-2
+Nx           = 51
+Nz           = 51
+Nt           = 100
+xmin         = -0.5000000
+zmin         = -0.5000000
+xmax         =  0.5000000
+zmax         =  0.5000000 
+dt           = 1e-2
 dt_min       = 1e-10
 Courant      = 0.5
-lin_solver      = 0
+lin_solver   = 0
 penalty      = 1e5
 diag_scaling = 1
 
 /**** SWITCHES ****/
-mechanical    = 1
-constant_dt     = 1
-RK              = 4
-periodic_x    = 1
-pure_shear_ALE = 0
-
-elastic       = 0
-thermal       = 0
-line_search     = 0
-free_surface       = 0
-free_surface_stab  = 0
-
-initial_cooling      = 0
-subgrid_diffusion    = 0
-shear_heating      = 0
-adiab_heating      = 0
-isPl_soft       = 0
-surface_processes  = 0
-shear_style     = 1
-finite_strain         = 1
+mechanical        = 1
+constant_dt       = 1
+RK                = 4
+periodic_x        = 1
+pure_shear_ALE    = 0
+elastic           = 0
+thermal           = 0
+line_search       = 0
+free_surface      = 0
+free_surface_stab = 0
+initial_cooling   = 0
+subgrid_diffusion = 0
+shear_heating     = 0
+adiab_heating     = 0
+isPl_soft         = 0
+surface_processes = 0
+shear_style       = 1
+finite_strain     = 1
 
 /**** ANISOTROPY ****/
-anisotropy           = 1
-aniso_fstrain   = 1 // finite strain anisotropy activated
+anisotropy        = 1
  
 /**** SETUP DEPENDANT ****/
-bkg_strain_rate           = 0.5 /Background strain rate
-bkg_pressure            = 0
+bkg_strain_rate = 0.5 /Background strain rate
+bkg_pressure    = 0
 surf_diff       = 0
 user0           = 0
 user1           = 0
@@ -72,11 +69,11 @@ gx = 0.0000
 gz = 0.0000
 
 /**** PHASE PROPERTIES ****/
-Nb_phases = 4
+Nb_phases = 2
 
 ID   = 0
-rho  = 2800.00 /inclusions omphacite 0
-G   = 1e10
+rho  = 2800.00 / Matrix
+G    = 1e10
 Cv   = 1050
 k    = 2.3
 Qr   = 0
@@ -95,13 +92,15 @@ gsel = 0
 eta0 = 1e0
 npwl = 1
 Qpwl = 0
-anisotropy        = 1
 aniso_angle  = 45
 aniso_factor = 10
+ani_fstrain  = 1    / activates finite strain anisotropy
+ani_fac_max  = 100
+
 
 ID   = 1
-rho  = 2800.00 /inclusions omphacite 1
-G   = 1e10
+rho  = 2800.00 /inclusion
+G    = 1e10
 Cv   = 1050
 k    = 2.3
 Qr   = 0
@@ -120,59 +119,10 @@ gsel = 0
 eta0 = 1e0
 npwl = 1
 Qpwl = 0
-anisotropy        = 1
 aniso_angle  = 45
 aniso_factor = 10
-
-ID   = 2
-rho  = 3300.00 /matrix garnet
-G   = 1e10
-Cv   = 1050
-k    = 3.0
-Qr   = 0
-C    = 2e7
-phi  = 30
-Slim = 500e9
-alp  = 10.0e-6
-bet  = 1e-11
-drho = 0
-cstv = 0
-pwlv = 1
-linv = 0
-gbsv = 0
-expv = 0
-gsel = 0
-eta0 = 1e0
-npwl = 1
-Qpwl = 0
-anisotropy        = 1
-aniso_angle  = 45
-aniso_factor = 10
-
-ID   = 3
-rho  = 3300.00 /matrix garnet
-G   = 1e10
-Cv   = 1050
-k    = 3.0
-Qr   = 0
-C    = 2e7
-phi  = 30
-Slim = 500e9
-alp  = 10.0e-6
-bet  = 1e-11
-drho = 0
-cstv = 0
-pwlv = 1
-linv = 0
-gbsv = 0
-expv = 0
-gsel = 0
-eta0 = 1e0
-npwl = 1
-Qpwl = 0
-anisotropy        = 1
-aniso_angle  = 45
-aniso_factor = 10
+ani_fstrain  = 1    / activates finite strain anisotropy/
+ani_fac_max  = 100
 
 /**** DEFMAPS ****/
 deformation_maps = 0
