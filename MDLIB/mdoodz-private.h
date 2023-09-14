@@ -522,6 +522,7 @@ void            RogerGuntherII(markers *, params, grid, int, scale);
 void            AccumulatedStrainII(grid *, scale, params, markers *, double *, double *, int, int, char *);
 void            AdvectFreeSurf(markers *, params, scale);
 
+void            UpdateAnisoFactor( grid*, mat_prop*, params*, scale*); 
 void            InitialiseDirectorVector(grid *, markers *, params *, mat_prop *, double);
 void            NormalizeDirector(grid *, DoodzFP *, DoodzFP *, DoodzFP *, DoodzFP *, params *);
 void            RotateDirectorVector(grid, markers *, params, scale *);
