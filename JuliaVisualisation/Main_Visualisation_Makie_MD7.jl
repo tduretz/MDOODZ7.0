@@ -16,9 +16,9 @@ function main()
     # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/1_NR07/"
 
     # File numbers
-    file_start = 100
+    file_start = 0
     file_step  = 10
-    file_end   = 100
+    file_end   = 0
 
     # Select field to visualise
     field = :Phases
