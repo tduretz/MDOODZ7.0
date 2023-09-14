@@ -17,7 +17,6 @@ free_surface_stab  = 0
 finite_strain      = 1
 advection          = 1
 anisotropy         = 1
-marker_aniso_angle = 1
 
 /**** SCALES ****/
 eta = 1
@@ -26,9 +25,9 @@ V   = 1
 T   = 1
 
 /**** SPACE ****/
-Nx      = 501
-Nz      = 501
-Nt      = 10
+Nx      = 251
+Nz      = 251
+Nt      = 0
 xmin    = -5.000000e-1
 zmin    = -5.000000e-1
 xmax    =  5.000000e-1
@@ -51,8 +50,8 @@ lin_solver   = -1
 diag_scaling = 0
 lin_abs_div  = 1e-9
 lin_rel_div  = 1e-9
-lin_abs_mom  = 1e-9
-lin_rel_mom  = 1e-9
+lin_abs_mom  = 1e-11
+lin_rel_mom  = 1e-11
 
 /**** NON-LINEAR SOLVER ****/
 Newton          = 1
@@ -71,7 +70,7 @@ max_eta      = 1e6
 /**** SETUP-DEPENDANT ****/
 shear_style     = 1
 periodic_x      = 1
-pure_shear_ALE  = 1
+pure_shear_ALE  = 0
 bkg_strain_rate = 1
 user0           = 0.0   / nothing
 user1           = 0.0   / nothing
@@ -107,13 +106,13 @@ linv         = 0             / diff. creep
 gbsv         = 0             / grain boundary sliding
 expv         = 0             / peierls creep
 gsel         = 0             / grain size evo.
-eta0         = 1e0
-npwl         = 0.0
+eta0         = 1e2
+npwl         = 0
 Qpwl         = 0
 ani_fstrain  = 0    / activates finite strain anisotropy
-ani_fac_max  = 1000
-aniso_factor = 10.0
-aniso_angle  = 45
+ani_fac_max  = 1000.0
+aniso_factor = 1.0
+aniso_angle  = 135.0
 
 /**** PHASE 2 ****/
 ID           = 1
@@ -134,10 +133,10 @@ linv         = 0             / diff. creep
 gbsv         = 0             / grain boundary sliding
 expv         = 0             / peierls creep
 gsel         = 0             / grain size evo.
-eta0         = 1e3
+eta0         = 1e2
 npwl         = 0
 Qpwl         = 0
 ani_fstrain  = 0    / activates finite strain anisotropy
-ani_fac_max  = 1000
+ani_fac_max  = 1000.0
 aniso_factor = 1.0
-aniso_angle  = 45
+aniso_angle  = 135.0
