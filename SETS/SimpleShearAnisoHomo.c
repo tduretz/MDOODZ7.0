@@ -1,28 +1,29 @@
 #include "mdoodz.h"
+#include "math.h"
 
-bool IsInHorizontalZones(double zCoord, double H) {
-  if (zCoord > 1.0 * H / 6.0 && zCoord < 2.0 * H / 6.0) {
-    return true;
-  } else if (zCoord < 0.0 * H / 6.0 && zCoord > -1.0 * H / 6.0) {
-    return true;
-  } else if (zCoord < -2.0 * H / 6.0 && zCoord > -3.0 * H / 6.0) {
-    return true;
-  } else {
-    return false;
-  }
-}
+// bool IsInHorizontalZones(double zCoord, double H) {
+//   if (zCoord > 1.0 * H / 6.0 && zCoord < 2.0 * H / 6.0) {
+//     return true;
+//   } else if (zCoord < 0.0 * H / 6.0 && zCoord > -1.0 * H / 6.0) {
+//     return true;
+//   } else if (zCoord < -2.0 * H / 6.0 && zCoord > -3.0 * H / 6.0) {
+//     return true;
+//   } else {
+//     return false;
+//   }
+// }
 
-bool IsInVerticalZones(double xCoord, double H) {
-  if (xCoord > 1.0 * H / 6.0 && xCoord < 2.0 * H / 6.0) {
-    return true;
-  } else if (xCoord > -1.0 * H / 6.0 && xCoord < 0.0 * H / 6.0) {
-    return true;
-  } else if (xCoord > -3.0 * H / 6.0 && xCoord < -2.0 * H / 6.0) {
-    return true;
-  } else {
-    return false;
-  }
-}
+// bool IsInVerticalZones(double xCoord, double H) {
+//   if (xCoord > 1.0 * H / 6.0 && xCoord < 2.0 * H / 6.0) {
+//     return true;
+//   } else if (xCoord > -1.0 * H / 6.0 && xCoord < 0.0 * H / 6.0) {
+//     return true;
+//   } else if (xCoord > -3.0 * H / 6.0 && xCoord < -2.0 * H / 6.0) {
+//     return true;
+//   } else {
+//     return false;
+//   }
+// }
 
 int SetPhase(MdoodzInput *input, Coordinates coordinates) {
   const double  H      = (input->model.zmax - input->model.zmin);
@@ -35,24 +36,36 @@ int SetPhase(MdoodzInput *input, Coordinates coordinates) {
           .centreZ = 0.0,
   };
   if (IsEllipseCoordinates(coordinates, circle, input->scaling.L)) {
-    if ((coordinates.x < 0 && coordinates.z < 0) || (coordinates.x > 0 && coordinates.z > 0)) {
-      return 1;
+     return 1;
     } else {
       return 0;
     }
-  } else if (IsInVerticalZones(coordinates.x, H)) {
-    if (IsInHorizontalZones(coordinates.z, H)) {
-      return 2;
-    } else {
-      return 3;
+}
+
+int SetDualPhase(MdoodzInput *input, Coordinates coordinate, int phase) {
+    
+    int    dual_phase = phase;
+    double Lx = input->model.xmax - input->model.xmin;
+    double Lz = input->model.zmax - input->model.zmin;
+    double Ax, Az;
+
+    // This checker board looks weird at low resolution (?)
+
+    // Set checkerboard for phase 0
+    Ax = cos( 2*3.0*M_PI*coordinate.x / Lx  );
+    Az = sin( 2*3.0*M_PI*coordinate.z / Lz  );
+    if ( ( (Az<0.0 && Ax<0.0) || (Az>0.0 && Ax>0.0) ) && dual_phase==0 ) {
+        dual_phase += input->model.Nb_phases;
     }
-  } else {
-    if (!IsInHorizontalZones(coordinates.z, H)) {
-      return 2;
-    } else {
-      return 3;
+
+    // Set checkerboard for phase 1
+    Ax = cos( 2*3.0*M_PI*coordinate.x / Lx  );
+    Az = sin( 2*3.0*M_PI*coordinate.z / Lz  );
+    if ( ( (Az<0.0 && Ax<0.0) || (Az>0.0 && Ax>0.0) ) && dual_phase==1 ) {
+        dual_phase += input->model.Nb_phases;
     }
-  }
+
+  return dual_phase;
 }
 
 double SetDensity(MdoodzInput *input, Coordinates coordinates, int phase) {
@@ -80,6 +93,7 @@ int main() {
   MdoodzSetup setup = {
           .SetParticles = &(SetParticles_ff){
                   .SetPhase              = SetPhase,
+                  .SetDualPhase          = SetDualPhase,
                   .SetDensity            = SetDensity,
                   .SetVerticalVelocity   = SetVerticalVelocity,
                   .SetHorizontalVelocity = SetHorizontalVelocity,
