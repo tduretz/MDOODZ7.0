@@ -4,7 +4,7 @@ irestart = 0
 
 /**** OUTPUT FILES ****/
 writer          = 1
-writer_step     = 1
+writer_step     = 10
 writer_markers  = 0
 writer_debug    = 0
 writer_energies = 0
@@ -25,9 +25,9 @@ V   = 1
 T   = 1
 
 /**** SPACE ****/
-Nx      = 251
-Nz      = 251
-Nt      = 0
+Nx      = 501
+Nz      = 501
+Nt      = 1000
 xmin    = -5.000000e-1
 zmin    = -5.000000e-1
 xmax    =  5.000000e-1
@@ -39,8 +39,8 @@ Nz_part = 4
 
 /**** TIME ****/
 constant_dt = 0
-Courant     = 0.5
-dt          = 0.1
+Courant     = 0.45
+dt          = 1.0e+11
 RK          = 4
 
 /**** LINEAR SOLVER ****/
@@ -106,11 +106,11 @@ linv         = 0             / diff. creep
 gbsv         = 0             / grain boundary sliding
 expv         = 0             / peierls creep
 gsel         = 0             / grain size evo.
-eta0         = 1e2
+eta0         = 1e0
 npwl         = 0
 Qpwl         = 0
-ani_fstrain  = 0    / activates finite strain anisotropy
-ani_fac_max  = 1000.0
+ani_fstrain  = 1    / activates finite strain anisotropy
+ani_fac_max  = 10000.0
 aniso_factor = 1.0
 aniso_angle  = 135.0
 
@@ -133,7 +133,7 @@ linv         = 0             / diff. creep
 gbsv         = 0             / grain boundary sliding
 expv         = 0             / peierls creep
 gsel         = 0             / grain size evo.
-eta0         = 1e2
+eta0         = 1e3
 npwl         = 0
 Qpwl         = 0
 ani_fstrain  = 0    / activates finite strain anisotropy

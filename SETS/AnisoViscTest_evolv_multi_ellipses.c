@@ -31,10 +31,8 @@ int SetPhase(MdoodzInput *input, Coordinates coordinates) {
   bool isInsideSomeEllipse = 0;
   bool isInsideThisEllipse = 0;
   for (i = 0; i < nellipses; ++i) {
-    //isInsideThisCircle = (coordinates.x - Xshift[i]) * (coordinates.x - Xshift[i]) + (coordinates.z - Zshift[i]) * (coordinates.z - Zshift[i]) < Radius[i] * Radius[i];
-    
     isInsideThisEllipse = ((coordinates.x - Xshift[i])*cos(Angle[i]) + (coordinates.z - Zshift[i])*sin(Angle[i]))*((coordinates.x - Xshift[i])*cos(Angle[i]) + (coordinates.z - Zshift[i])*sin(Angle[i]))/(Majaxis[i] * Majaxis[i]) + (-(coordinates.z - Zshift[i])*cos(Angle[i]) + (coordinates.x - Xshift[i])*sin(Angle[i]))*(-(coordinates.z - Zshift[i])*cos(Angle[i]) + (coordinates.x - Xshift[i])*sin(Angle[i]))/ (Minaxis[i] * Minaxis[i]) < 1; // rotated ellipse
-
+    // reminder ellipse function: inside = [(x-x0)*cos(phi)+(z-z0)*sin(phi)]^2/majaxis^2 + [(x-x0)*sin(phi)-(z-z0)*cos(phi)]^2/minaxis^2 < 1
     if (isInsideThisEllipse > isInsideSomeEllipse) {
       isInsideSomeEllipse = isInsideThisEllipse;
     }
