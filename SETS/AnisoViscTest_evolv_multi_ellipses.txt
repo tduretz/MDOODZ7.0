@@ -17,6 +17,7 @@ free_surface_stab  = 0
 finite_strain      = 1
 advection          = 1
 anisotropy         = 1
+marker_aniso_angle = 1 / to set individual initial aniso_angles within the same phase
 
 /**** SCALES ****/
 eta = 1
@@ -27,7 +28,7 @@ T   = 1
 /**** SPACE ****/
 Nx      = 501
 Nz      = 501
-Nt      = 1000
+Nt      = 10000
 xmin    = -5.000000e-1
 zmin    = -5.000000e-1
 xmax    =  5.000000e-1
@@ -110,13 +111,12 @@ eta0         = 1e0
 npwl         = 0
 Qpwl         = 0
 ani_fstrain  = 1    / activates finite strain anisotropy
-ani_fac_max  = 10000.0
+ani_fac_max  = 1000.0
 aniso_factor = 1.0
-aniso_angle  = 135.0
 
 /**** PHASE 2 ****/
 ID           = 1
-rho          = 2700.00 / inclusion
+rho          = 2700.00 / elliptical inclusions
 G            = 1e30
 Cv           = 1050
 k            = 2.5
@@ -139,4 +139,5 @@ Qpwl         = 0
 ani_fstrain  = 0    / activates finite strain anisotropy
 ani_fac_max  = 1000.0
 aniso_factor = 1.0
-aniso_angle  = 135.0
+
+//END INPUT FILE//
