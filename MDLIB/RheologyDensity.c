@@ -369,7 +369,7 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
 
   // Parameters for deformation map calculations
   int    plastic = 0, constant = 0, dislocation = 0, peierls = 0, diffusion = 0, gbs = 0, elastic = model->elastic, kinetics = 0;
-  double tol = 1.0e-11, res_pl = 0.0, Tii = 0.0, Tii0 = sqrt(Txx0 * Txx0 + Txz0 * Txz0);
+  double tol = model->eta_tol, res_pl = 0.0, Tii = 0.0, Tii0 = sqrt(Txx0 * Txx0 + Txz0 * Txz0);
   double eta_lo = 0.0, eta_up = 0.0, eta_ve = 0.0;
   double eta_pwl = 0.0, eta_exp = 0.0, eta_vep = 0.0, eta_lin = 0.0, eta_el = 0.0, eta_gbs = 0.0, eta_cst = 0.0, eta_pl = 0.0;
   double Eii = 0.0;

@@ -1107,6 +1107,7 @@ Input ReadInputFile( char *fileName ) {
     Nmodel.nonlin_rel_div    = ReadDou2( fin, "nonlin_rel_div",   1.0e-6 ); // Tolerance for non-linear mechanical solver
     model.min_eta            = ReadDou2( fin, "min_eta", 1e18)/scaling.eta; // Minimum viscosity
     model.max_eta            = ReadDou2( fin, "max_eta", 1e24)/scaling.eta; // Maximum viscosity
+    model.eta_tol            = ReadDou2( fin, "eta_tol", 1e11);             // Tolerance for Viscosity calculation
     model.safe_mode          = ReadInt2( fin, "safe_mode",             0 ); // Activates safe mode: reduces time step if convergence fails
     model.safe_dt_div        = ReadDou2( fin, "safe_dt_div",         5.0 ); // Reduction factor for time step reduction
     model.max_num_stag       = ReadInt2( fin, "max_num_stag",          3 ); // maximum number of stagnation (safe mode)
