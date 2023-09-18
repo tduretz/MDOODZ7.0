@@ -65,7 +65,7 @@ typedef struct {
   char  *import_files_dir;
   int    Nb_phases;
   int    ncont;
-  double Courant, min_eta, max_eta;
+  double Courant, min_eta, max_eta, eta_tol;
   // Particles
   int    initial_noise;
   // Linear solver
