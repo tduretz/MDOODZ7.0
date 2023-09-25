@@ -538,7 +538,11 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         if (input.model.free_surface == 1 ) SurfaceDensityCorrection( &mesh, input.model, topo, input.scaling  );
 
         // // Update anisotropy factor (function of accumulated strain and phase)
-        if ( input.model.anisotropy == 1 ) UpdateAnisoFactor( &mesh, &input.materials, &input.model, &input.scaling);
+        if ( input.model.anisotropy == 1 ) {
+            UpdateAnisoFactor( &mesh, &input.materials, &input.model, &input.scaling);
+            // InterpCentroidsToVerticesDouble( mesh.aniso_factor_n, mesh.aniso_factor_s, &mesh, &input.model );
+            // InterpVerticesToCentroidsDouble( mesh.aniso_factor_n, mesh.aniso_factor_s,  &mesh, &input.model );
+        }
 
         // Min/Max interpolated fields
         if (input.model.noisy == 1 ) {
