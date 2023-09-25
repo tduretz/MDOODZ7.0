@@ -369,7 +369,7 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
 
   // Parameters for deformation map calculations
   int    plastic = 0, constant = 0, dislocation = 0, peierls = 0, diffusion = 0, gbs = 0, elastic = model->elastic, kinetics = 0;
-  double tol = 1.0e-11, res_pl = 0.0, Tii = 0.0, Tii0 = sqrt(Txx0 * Txx0 + Txz0 * Txz0);
+  double tol = model->eta_tol, res_pl = 0.0, Tii = 0.0, Tii0 = sqrt(Txx0 * Txx0 + Txz0 * Txz0);
   double eta_lo = 0.0, eta_up = 0.0, eta_ve = 0.0;
   double eta_pwl = 0.0, eta_exp = 0.0, eta_vep = 0.0, eta_lin = 0.0, eta_el = 0.0, eta_gbs = 0.0, eta_cst = 0.0, eta_pl = 0.0;
   double Eii = 0.0;
@@ -1336,8 +1336,8 @@ void ShearModCompExpGrid( grid* mesh, mat_prop *materials, params *model, scale 
 
         }
         // Post-process for geometric/harmonic averages
-        if ( average==1 ) mesh->mu_n[c0] = 1.0/mesh->mu_n[c0];
-        if ( average==2 ) mesh->mu_n[c0] = exp(mesh->mu_n[c0]);
+        if ( average==1 ) mesh->mu_n[c0]  = 1.0/mesh->mu_n[c0];
+        if ( average==2 ) mesh->mu_n[c0]  = exp(mesh->mu_n[c0]);
         if ( average==1 ) mesh->bet_n[c0] = 1.0/mesh->bet_n[c0];
         if ( average==2 ) mesh->bet_n[c0] = exp(mesh->bet_n[c0]);
         if ( average==1 && model->anisotropy == 1 ) mesh->aniso_factor_n[c0] = 1.0/mesh->aniso_factor_n[c0];

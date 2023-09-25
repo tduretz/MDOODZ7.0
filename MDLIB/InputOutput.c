@@ -1087,7 +1087,7 @@ Input ReadInputFile( char *fileName ) {
     model.penalty            = ReadDou2( fin, "penalty",           1.0e3 ); // Penalty factor
     model.auto_penalty       = ReadDou2( fin, "auto_penalty",        0.0 ); // Activates automatic penalty factor computation
     model.diag_scaling       = ReadInt2( fin, "diag_scaling",          1 ); // Activates diagonal scaling
-    model.preconditioner     = ReadInt2( fin, "preconditioner",        0 ); // Preconditoner type for Newton iterations, 0: Picard preconditionner
+    model.preconditioner     = ReadInt2( fin, "preconditioner",        0 ); // Preconditoner type for Linear solver, 0: Picard preconditionner, -1: symmetrised Picard, 2: symmetrised Newton
     model.lin_abs_div        = ReadDou2( fin, "lin_abs_div",      1.0e-9 ); // Tolerance for linear mechanical solver
     model.lin_rel_div        = ReadDou2( fin, "lin_rel_div",      1.0e-5 ); // Tolerance for linear mechanical solver
     model.lin_abs_mom        = ReadDou2( fin, "lin_abs_mom",      1.0e-9 ); // Tolerance for linear mechanical solver
@@ -1107,6 +1107,7 @@ Input ReadInputFile( char *fileName ) {
     Nmodel.nonlin_rel_div    = ReadDou2( fin, "nonlin_rel_div",   1.0e-6 ); // Tolerance for non-linear mechanical solver
     model.min_eta            = ReadDou2( fin, "min_eta", 1e18)/scaling.eta; // Minimum viscosity
     model.max_eta            = ReadDou2( fin, "max_eta", 1e24)/scaling.eta; // Maximum viscosity
+    model.eta_tol            = ReadDou2( fin, "eta_tol", 1e11);             // Tolerance for Viscosity calculation
     model.safe_mode          = ReadInt2( fin, "safe_mode",             0 ); // Activates safe mode: reduces time step if convergence fails
     model.safe_dt_div        = ReadDou2( fin, "safe_dt_div",         5.0 ); // Reduction factor for time step reduction
     model.max_num_stag       = ReadInt2( fin, "max_num_stag",          3 ); // maximum number of stagnation (safe mode)
@@ -1200,9 +1201,10 @@ Input ReadInputFile( char *fileName ) {
     model.gz                 = ReadDou2( fin, "gz",  0.0 ) / scaling.a;
     // Consequential behaviour
     if (model.interp_stencil!=1 && model.interp_stencil!=9) { printf("Wrong value of interp_stencil: should be 1 or 9.\n"); exit(1); }
-    if ( model.shear_style == 1 ) model.periodic_x    = 1; // If simple shear, it must  be periodic in x
-    if ( model.shear_style == 0 ) model.periodic_x    = 0; // If simple shear, it can't be periodic in x
-    if ( model.anisotropy  == 1 ) model.finite_strain = 1; // If anisotropy, then also track finite strain
+    if ( model.shear_style == 1 ) model.periodic_x     = 1; // If simple shear, it must  be periodic in x
+    if ( model.shear_style == 0 ) model.periodic_x     = 0; // If simple shear, it can't be periodic in x
+    if ( model.anisotropy  == 1 ) model.finite_strain  = 1; // If anisotropy, then also track finite strain
+    if ( model.anisotropy  == 1 ) model.preconditioner = -1; // If anisotropy, then use symmetrised preconditionner
     if (model.Newton==0) Nmodel.Picard2Newton = 0; // If Picard is activated, do not switch to Newton
     if ( model.lin_solver == 0 || model.Newton == 1 || model.anisotropy == 1) {
         printf("WARNING!! Changing from solver type 0 to solver type 2!!! That's the new standard in MDOODZ 6.0.\n");

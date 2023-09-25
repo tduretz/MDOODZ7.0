@@ -1139,6 +1139,12 @@ void KillerSolver( SparseMat *matA,  SparseMat *matB,  SparseMat *matC,  SparseM
     //------------------------------------------------------------------------------------------------//
 
     // Construct preconditionner:
+    if ( preconditioner == -1 ) {
+        printf("Construct preconditionner:   PC  = 1/2 * (K'+ K)\n\n");
+        Jt = cs_di_transpose( Ac, 1);
+        PC = cs_di_add( Ac, Jt, 0.5, 0.5);
+    }
+
     if ( preconditioner == 0 ) {
         printf("Construct preconditionner:   PC  = K\n");
         PC = cs_di_add( Ac, Ac, 1.0, 0.0 );
