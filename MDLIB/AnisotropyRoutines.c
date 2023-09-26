@@ -44,9 +44,9 @@
 double AnisoFactorEvolv( double FS_AR, double aniso_fac_max ) {
   // saturation at a maximum anisotropy factor 
   // (for details see Matlab script)
-  const double delta_ratio = aniso_fac_max / 4.0;
-  const double FS_AR_crit  = aniso_fac_max / 2.0;
-  const double x = 0.5*erfc((FS_AR - FS_AR_crit) / delta_ratio);
+  // const double delta_ratio = aniso_fac_max / 4.0;
+  // const double FS_AR_crit  = aniso_fac_max / 2.0;
+  // const double x = 0.5*erfc((FS_AR - FS_AR_crit) / delta_ratio);
   // return x * FS_AR + (1.0-x) * aniso_fac_max;
   return MINV(FS_AR, aniso_fac_max);
 }
@@ -349,83 +349,112 @@ double ViscosityConciseAniso( int phase, double lxlz, double lx2, double angle, 
 void UpdateAnisoFactor( grid *mesh, mat_prop *materials, params *model, scale *scaling) {
 
   printf("Update anisotropy factor\n");
-  int k, l, c0, Nx, Nz, Ncx, Ncz;
-  Nx  = mesh->Nx;  Ncx = Nx - 1;
-  Nz  = mesh->Nz;  Ncz = Nz-1;
+    int p, k, l, Nx, Nz, Ncx, Ncz, c0, c1;
+  int average = 1;//%model.eta_average; // SHOULD NOT BE ALLOWED TO BE ELSE THAN 1
 
-  // **************** Centroids **************** //
-  #pragma omp parallel for shared( mesh ) private( k, l, c0, ) firstprivate( model, Nx, Ncx, Ncz, materials )
-  for (int k1=0; k1<Ncx*Ncz; k1++ ) {
+  Nx = mesh->Nx;
+  Nz = mesh->Nz;
+  Ncx = Nx-1;
+  Ncz = Nz-1;
 
-    k      = mesh->kp[k1];
-    l      = mesh->lp[k1];
-    c0     = k  + l*(Ncx);
+  // Calculate cell centers shear modulus
+  for ( l=0; l<Ncz; l++ ) {
+    for ( k=0; k<Ncx; k++ ) {
 
-    // Set to 0
-    mesh->aniso_factor_n[c0] = 0.0;
-    
-    // Modify only in active cells
-    if ( mesh->BCp.type[c0] != 30 && mesh->BCp.type[c0] != 31 ) {
+      // Cell center index
+      c0 = k  + l*(Ncx);
 
-      // Loop on phases
-      for (int p=0; p<model->Nb_phases; p++) {
+      // First - initialize to 0
+      mesh->aniso_factor_n[c0] = 0.0;
 
-        // Detect if there is a fraction of phase p in the cell c: compute only if there is a non-zero fraction
-        bool is_phase_active = false;
-        const double min_fraction=1e-13;
-        if ( fabs(mesh->phase_perc_n[p][c0])>min_fraction ) is_phase_active = true;
+      // Compute only if below free surface
+      if ( mesh->BCp.type[c0] != 30 && mesh->BCp.type[c0] != 31) {
 
-        if ( is_phase_active ) {
-          double ani_fac;
-          if (materials->ani_fstrain[p]==1) {
-            ani_fac = AnisoFactorEvolv( mesh->FS_AR_n[c0], materials->ani_fac_max[p]);
+        // Loop on phases
+        for ( p=0; p<model->Nb_phases; p++) {
+
+          // Arithmetic
+          if (average == 0) {
+            if (materials->ani_fstrain[p]==0) mesh->aniso_factor_n[c0] += mesh->phase_perc_n[p][c0] * materials->aniso_factor[p];
+            if (materials->ani_fstrain[p]==1) mesh->aniso_factor_n[c0] += mesh->phase_perc_n[p][c0] * AnisoFactorEvolv( mesh->FS_AR_n[c0], materials->ani_fac_max[p] );
           }
-          else {
-            ani_fac =  materials->aniso_factor[p];
+          // Harmonic
+          if (average == 1) {
+            if (materials->ani_fstrain[p]==0) mesh->aniso_factor_n[c0] += mesh->phase_perc_n[p][c0] * 1.0/materials->aniso_factor[p];
+            if (materials->ani_fstrain[p]==1) mesh->aniso_factor_n[c0] += mesh->phase_perc_n[p][c0] * 1.0/AnisoFactorEvolv( mesh->FS_AR_n[c0], materials->ani_fac_max[p] );
           }
-          mesh->aniso_factor_n[c0]  += mesh->phase_perc_n[p][c0] * ani_fac;
+          // Geometric
+          if (average == 2) {
+            if (materials->ani_fstrain[p]==0) mesh->aniso_factor_n[c0] += mesh->phase_perc_n[p][c0] * log(materials->aniso_factor[p]);
+            if (materials->ani_fstrain[p]==1) mesh->aniso_factor_n[c0] += mesh->phase_perc_n[p][c0] * log(AnisoFactorEvolv( mesh->FS_AR_n[c0], materials->ani_fac_max[p] ));
+          }
+
+          // Standard arithmetic interpolation
+          mesh->alp  [c0] += mesh->phase_perc_n[p][c0] * materials->alp[p];
+
         }
+        // Post-process for geometric/harmonic averages
+        if ( average==1 ) mesh->aniso_factor_n[c0] = 1.0/mesh->aniso_factor_n[c0];
+        if ( average==2 ) mesh->aniso_factor_n[c0] = exp(mesh->aniso_factor_n[c0]);
       }
-    } 
-  }
-
-  // **************** Vertices **************** //
-  #pragma omp parallel for shared( mesh ) private( k, l, c0, ) firstprivate( model, Nx, Ncx, Ncz, materials )
-  for (int k1=0; k1<Nx*Nz; k1++ ) {
-
-    k      = mesh->kn[k1];
-    l      = mesh->ln[k1];
-    c0     = k  + l*(Nx);
-
-    // Set to 0
-    mesh->aniso_factor_s[c0]  = 0.0;
-    
-    // Modify only in active cells
-    if ( mesh->BCg.type[c0] != 30 && mesh->BCg.type[c0] != 31 ) {
-
-      // Loop on phases
-      for (int p=0; p<model->Nb_phases; p++) {
-
-        // Detect if there is a fraction of phase p in the cell c: compute only if there is a non-zero fraction
-        bool is_phase_active = false;
-        const double min_fraction=1e-13;
-        if ( fabs(mesh->phase_perc_s[p][c0])>min_fraction ) is_phase_active = true;
-
-        if ( is_phase_active ) {
-          double ani_fac;
-          if (materials->ani_fstrain[p]==1) {
-            ani_fac = AnisoFactorEvolv( mesh->FS_AR_s[c0], materials->ani_fac_max[p]);
-          }
-          else {
-            ani_fac =  materials->aniso_factor[p];
-          }
-          mesh->aniso_factor_s[c0]  += mesh->phase_perc_s[p][c0] * ani_fac;
-        }
-      }
-    } 
+    }
   }
 
 
+  // Calculate vertices shear modulus
+  for ( l=0; l<Nz; l++ ) {
+    for ( k=0; k<Nx; k++ ) {
+
+      // Vertex index
+      c1 = k + l*Nx;
+
+      // First - initialize to 0
+      mesh->aniso_factor_s[c1] = 0.0;
+
+      // Compute only if below free surface
+      if ( mesh->BCg.type[c1] != 30 ) {
+
+        // Loop on phases
+        for ( p=0; p<model->Nb_phases; p++) {
+
+          // Arithmetic
+          if (average == 0) {
+            if (materials->ani_fstrain[p]==0) mesh->aniso_factor_s[c1] += mesh->phase_perc_s[p][c1] * materials->aniso_factor[p];
+            if (materials->ani_fstrain[p]==1) mesh->aniso_factor_s[c1] += mesh->phase_perc_s[p][c1] * AnisoFactorEvolv( mesh->FS_AR_s[c1], materials->ani_fac_max[p] );
+          }
+          // Harmonic
+          if (average == 1) {
+            if (materials->ani_fstrain[p]==0) mesh->aniso_factor_s[c1] += mesh->phase_perc_s[p][c1] *  1.0/materials->aniso_factor[p];
+            if (materials->ani_fstrain[p]==1) mesh->aniso_factor_s[c1] += mesh->phase_perc_s[p][c1] *  1.0/AnisoFactorEvolv( mesh->FS_AR_s[c1], materials->ani_fac_max[p] );
+          }
+          // Geometric
+          if (average == 2) {
+            if (materials->ani_fstrain[p]==0) mesh->aniso_factor_s[c1] += mesh->phase_perc_s[p][c1] *  log(materials->aniso_factor[p]);
+            if (materials->ani_fstrain[p]==1) mesh->aniso_factor_s[c1] += mesh->phase_perc_s[p][c1] *  log(AnisoFactorEvolv( mesh->FS_AR_s[c1], materials->ani_fac_max[p] ));
+          }
+
+        }
+
+        if ( isinf(1.0/mesh->mu_s[c1]) ) {
+          printf("Aaaaargh...!! %2.2e %2.2e ----> ShearModulusCompressibilityExpansivityGrid\n", mesh->phase_perc_s[0][c1], mesh->phase_perc_s[1][c1]);
+        }
+
+        // Post-process for geometric/harmonic averages
+        if ( average==1 ) mesh->aniso_factor_s[c1] = 1.0/mesh->aniso_factor_s[c1];
+        if ( average==2 ) mesh->aniso_factor_s[c1] = exp(mesh->aniso_factor_s[c1]);
+      }
+    }
+  }
+
+  // Periodic
+  double av;
+  if (model->periodic_x==1) {
+    for( l=0; l<Nz; l++) {
+      c1 = l*Nx + Nx-1;
+      av = 0.5*(mesh->aniso_factor_s[c1] + mesh->aniso_factor_s[l*Nx]);
+      mesh->aniso_factor_s[c1] = av; mesh->aniso_factor_s[l*Nx] = av;
+    }
+  }
 
 }
 
@@ -593,7 +622,7 @@ void NonNewtonianViscosityGridAniso( grid *mesh, mat_prop *materials, params *mo
       if ( average == 1 ) {
         mesh->eta_n[c0]            = 1.0/mesh->eta_n[c0];
         mesh->eta_phys_n[c0]       = 1.0/mesh->eta_phys_n[c0];
-        mesh->aniso_factor_n[c0]   = 1.0/mesh->aniso_factor_n[c0];
+        // mesh->aniso_factor_n[c0]   = 1.0/mesh->aniso_factor_n[c0];
 
         if (isinf (mesh->eta_phys_n[c0]) ) {
           printf("Inf: Problem on cell centers:\n");

@@ -1336,8 +1336,8 @@ void ShearModCompExpGrid( grid* mesh, mat_prop *materials, params *model, scale 
 
         }
         // Post-process for geometric/harmonic averages
-        if ( average==1 ) mesh->mu_n[c0] = 1.0/mesh->mu_n[c0];
-        if ( average==2 ) mesh->mu_n[c0] = exp(mesh->mu_n[c0]);
+        if ( average==1 ) mesh->mu_n[c0]  = 1.0/mesh->mu_n[c0];
+        if ( average==2 ) mesh->mu_n[c0]  = exp(mesh->mu_n[c0]);
         if ( average==1 ) mesh->bet_n[c0] = 1.0/mesh->bet_n[c0];
         if ( average==2 ) mesh->bet_n[c0] = exp(mesh->bet_n[c0]);
         if ( average==1 && model->anisotropy == 1 ) mesh->aniso_factor_n[c0] = 1.0/mesh->aniso_factor_n[c0];

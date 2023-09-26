@@ -10,18 +10,18 @@ function main()
     # Set the path to your files
     # path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/NonLinearPureshearAnisotropic/"
     # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/NR00/"
-    path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/"
+    path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/caniso11/"
     # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/qcoe_x100/"
     # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/qcoe_chk/"
     # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/1_NR07/"
 
     # File numbers
-    file_start = 0
+    file_start = 50
     file_step  = 10
-    file_end   = 0
+    file_end   = 50
 
     # Select field to visualise
-    field = :Phases
+    # field = :Phases
     # field = :Density
     # field = :Viscosity 
     # field = :PlasticStrainrate
@@ -35,12 +35,13 @@ function main()
     # field = :GrainSize
     # field = :Topography
     # field = :TimeSeries
+    field = :AnisotropyFactor
 
     # Switches
     printfig    = false  # print figures to disk
     ph_contours = false  # add phase contours
     T_contours  = true  # add temperature contours
-    fabric      = true  # add fabric quiver (normal to director)
+    fabric      = false  # add fabric quiver (normal to director)
     topo        = false
     α_heatmap   = 1.0 #0.85   # transparency of heatmap 
     σ1_axis     = false
@@ -104,6 +105,7 @@ function main()
         ε̇xz   = Float64.(reshape(ExtractData( filename, "/Vertices/exz"), nvx, nvz))
         τII   = sqrt.( 0.5*(2*τxx.^2 .+ 0.5*(τxz[1:end-1,1:end-1].^2 .+ τxz[2:end,1:end-1].^2 .+ τxz[1:end-1,2:end].^2 .+ τxz[2:end,2:end].^2 ) ) ); τII[mask_air] .= NaN
         ε̇II   = sqrt.( 0.5*(2*ε̇xx.^2 .+ 0.5*(ε̇xz[1:end-1,1:end-1].^2 .+ ε̇xz[2:end,1:end-1].^2 .+ ε̇xz[1:end-1,2:end].^2 .+ ε̇xz[2:end,2:end].^2 ) ) ); ε̇II[mask_air] .= NaN
+        δani  = Float64.(reshape(ExtractData( filename, "/Centers/ani_fac"), ncx, ncz))
         if fabric
             Nx    = Float64.(reshape(ExtractData( filename, "/Centers/nx"), ncx, ncz))
             Nz    = Float64.(reshape(ExtractData( filename, "/Centers/nz"), ncx, ncz))
@@ -300,6 +302,33 @@ function main()
             ylims!(ax1, -0.17, 0.17)
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
             GLMakie.Colorbar(f[1, 2], hm, label = "d", width = 20, labelsize = 25, ticklabelsize = 14 )
+            GLMakie.colgap!(f.layout, 20)
+            if printfig Print2Disk( f, path, string(field), istep) end
+        end
+
+        if field==:AnisotropyFactor
+            ax1 = Axis(f[1, 1], title = L"$δ_\textrm{ani}$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
+            hm = heatmap!(ax1, xc./Lc, zc./Lc, δani, colormap = (:turbo, α_heatmap))
+            if T_contours 
+                contour!(ax1, xc./Lc, zc./Lc, T, levels=0:200:1400, linewidth = 4, color=:white )  
+            end
+            if ph_contours 
+                contour!(ax1, xc_hr./Lc, zc_hr./Lc, group_phases, levels=-1:1:maximum(group_phases), linewidth = 4, color=:white )  
+            end
+            if fabric 
+                arrows!(ax1, xc./Lc, zc./Lc, Fab_x, Fab_z, arrowsize = 0, lengthscale=Δ/1.5)
+            end
+            if σ1_axis
+                arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
+            end  
+            xminz, xmaxz = -0.4, 0.4
+            zminz, zmaxz = -0.17, 0.17
+            Lx = xmaxz - xminz
+            Lz = zmaxz - zminz
+            xlims!(ax1, -0.4, 0.4)
+            ylims!(ax1, -0.17, 0.17)
+            colsize!(f.layout, 1, Aspect(1, Lx/Lz))
+            GLMakie.Colorbar(f[1, 2], hm, label = L"$δ_\textrm{ani}$", width = 20, labelsize = 25, ticklabelsize = 14 )
             GLMakie.colgap!(f.layout, 20)
             if printfig Print2Disk( f, path, string(field), istep) end
         end
