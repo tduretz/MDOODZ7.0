@@ -720,10 +720,13 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                     WriteOutputHDF5Particles( &mesh, &particles, &topo, &topo_chain, &topo_ini, &topo_chain_ini, input.model, "Particles_BeforeSolve", input.materials, input.scaling );
                 }
 
-                // Build discrete system of equations - Linearised Picard
-                int kill_aniso = 0;
-                RheologicalOperators( &mesh, &input.model, &input.materials, &input.scaling, 1, kill_aniso );
+                // Build discrete system of equations - Linearised Picard withou Newton linearisatio nor anisotripic contributions
+                int kill_aniso = 0, kill_Newton = 0;
+                RheologicalOperators( &mesh, &input.model, &input.materials, &input.scaling, kill_Newton, kill_aniso );
                 BuildStokesOperatorDecoupled  ( &mesh, input.model, 0, mesh.p_corr, mesh.p_in, mesh.u_in, mesh.v_in, &Stokes, &StokesA, &StokesB, &StokesC, &StokesD, 1 );
+
+                // Rheological operators including physical contrbutions from anisotropy
+                RheologicalOperators( &mesh, &input.model, &input.materials, &input.scaling, 0, input.model.anisotropy );
 
                 // Build discrete system of equations - Jacobian (do it also for densification since drhodp is needed)
                 if ( (IsFullNewton  == 1 && Nmodel.nit > 0) || input.model.density_variations == 1  ) RheologicalOperators( &mesh, &input.model, &input.materials, &input.scaling, 1, input.model.anisotropy );
