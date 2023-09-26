@@ -407,6 +407,9 @@ void UpdateNonLinearity( grid* mesh, markers* particles, markers* topo_chain, su
 
     // Evaluate right hand side
     EvaluateRHS( mesh, *model, scaling, materials.rho[0] );
+
+    // Fill up the rheological matrices arrays
+    // RheologicalOperators( mesh, model, &materials, &scaling, 0, model->anisotropy );
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
