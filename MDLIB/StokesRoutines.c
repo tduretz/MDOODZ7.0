@@ -48,7 +48,7 @@
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-void RheologicalOperators( grid* mesh, params* model, mat_prop* materials, scale* scaling, int Jacobian ) {
+void RheologicalOperators( grid* mesh, params* model, mat_prop* materials, scale* scaling, int Jacobian, int anisotropy ) {
 
   int Nx, Nz, Ncx, Ncz, k;
   Nx = mesh->Nx; Ncx = Nx-1;
@@ -75,7 +75,7 @@ void RheologicalOperators( grid* mesh, params* model, mat_prop* materials, scale
         double ani_vep  = 1.;
         double aniS_vep = 0.;
         //----------------------------------------------------------//
-        if ( model->anisotropy == 0 ) {
+        if ( anisotropy == 0 ) {
           aniS_vep = 0.0; d1   = 0.0; d2   = 0.0;
         }
         else {
@@ -158,7 +158,7 @@ void RheologicalOperators( grid* mesh, params* model, mat_prop* materials, scale
         if ( comp==1 )             K     = 1./mesh->bet_n[k];
         else                       K     = 0.;
         //----------------------------------------------------------//
-        if ( model->anisotropy == 0 ) {
+        if ( anisotropy == 0 ) {
           aniS_e = 0.; aniS_vep = 0.0; d1   = 0.0; d2   = 0.0; angle = 0.; lxlz = 0.; lx2 = 0.;
         }
         else {
@@ -407,9 +407,6 @@ void UpdateNonLinearity( grid* mesh, markers* particles, markers* topo_chain, su
 
     // Evaluate right hand side
     EvaluateRHS( mesh, *model, scaling, materials.rho[0] );
-
-    // Fill up the rheological matrices arrays
-    RheologicalOperators( mesh, model, &materials, &scaling, 0 );
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/

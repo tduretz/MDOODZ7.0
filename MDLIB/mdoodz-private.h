@@ -532,7 +532,7 @@ void            ScaleVelocitiesRHSBack(SparseMat *, SparseMat *, double *);
 void            ExtractDiagonalScale(SparseMat *, SparseMat *, SparseMat *, SparseMat *);
 void            ScaleMatrix(SparseMat *, SparseMat *, SparseMat *, SparseMat *);
 
-void            RheologicalOperators(grid*, params*, mat_prop*, scale*, int);
+void            RheologicalOperators(grid*, params*, mat_prop*, scale*, int, int);
 void            ComputeViscosityDerivatives_FD(grid*, mat_prop*, params*, Nparams, scale*);
 void            SetUpModel_NoMarkers(grid*, params*, scale*);
 void            Diffuse_X(grid*, params*, scale*);

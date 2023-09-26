@@ -1,6 +1,8 @@
-#include "mdoodz.h"
 #include "math.h"
-#include <stdlib.h>
+#include "mdoodz.h"
+#include "stdbool.h"
+#include "stdlib.h"
+#include "stdio.h"
 
 int SetPhase(MdoodzInput *input, Coordinates coordinates) {
 
@@ -85,7 +87,16 @@ double SetAnisoAngle(MdoodzInput *input, Coordinates coordinates, int phase) {
   // }
 }
 
-int main() {
+int main(int nargs, char *args[]) {
+  // Input file name
+  char *input_file;
+  if ( nargs < 2 ) {
+    asprintf(&input_file, "AnisoViscTest_HomoRandomAngle.txt"); // Default
+  }
+  else {
+    asprintf(&input_file, "%s", args[1]);     // Custom
+  }
+  printf("Running MDoodz7.0 using %s\n", input_file);
   MdoodzSetup setup = {
           .SetParticles  = &(SetParticles_ff){
                    .SetPhase              = SetPhase,
@@ -97,5 +108,6 @@ int main() {
                   .SetBCVz = SetPureOrSimpleShearBCVz,
           },
   };
-  RunMDOODZ("AnisoViscTest_evolv_multi_ellipses.txt", &setup);
+  RunMDOODZ(input_file, &setup);
+  free(input_file);
 }

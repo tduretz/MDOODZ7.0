@@ -1087,7 +1087,7 @@ Input ReadInputFile( char *fileName ) {
     model.penalty            = ReadDou2( fin, "penalty",           1.0e3 ); // Penalty factor
     model.auto_penalty       = ReadDou2( fin, "auto_penalty",        0.0 ); // Activates automatic penalty factor computation
     model.diag_scaling       = ReadInt2( fin, "diag_scaling",          1 ); // Activates diagonal scaling
-    model.preconditioner     = ReadInt2( fin, "preconditioner",        0 ); // Preconditoner type for Linear solver, 0: Picard preconditionner, -1: symmetrised Picard, 2: symmetrised Newton
+    model.preconditioner     = ReadInt2( fin, "preconditioner",        0 ); // Preconditoner type for Linear solver, 0: Picard preconditionner, -1: symmetrised Picard, 1: symmetrised Newton
     model.lin_abs_div        = ReadDou2( fin, "lin_abs_div",      1.0e-9 ); // Tolerance for linear mechanical solver
     model.lin_rel_div        = ReadDou2( fin, "lin_rel_div",      1.0e-5 ); // Tolerance for linear mechanical solver
     model.lin_abs_mom        = ReadDou2( fin, "lin_abs_mom",      1.0e-9 ); // Tolerance for linear mechanical solver

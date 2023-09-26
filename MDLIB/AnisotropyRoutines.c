@@ -365,7 +365,7 @@ void UpdateAnisoFactor( grid *mesh, mat_prop *materials, params *model, scale *s
       c0 = k  + l*(Ncx);
 
       // First - initialize to 0
-      if ( model->anisotropy == 1 ) mesh->aniso_factor_n[c0] = 0.0;
+      mesh->aniso_factor_n[c0] = 0.0;
 
       // Compute only if below free surface
       if ( mesh->BCp.type[c0] != 30 && mesh->BCp.type[c0] != 31) {
@@ -375,24 +375,18 @@ void UpdateAnisoFactor( grid *mesh, mat_prop *materials, params *model, scale *s
 
           // Arithmetic
           if (average == 0) {
-            if ( model->anisotropy == 1 ) {
-              if (materials->ani_fstrain[p]==0) mesh->aniso_factor_n[c0] += mesh->phase_perc_n[p][c0] * materials->aniso_factor[p];
-              if (materials->ani_fstrain[p]==1) mesh->aniso_factor_n[c0] += mesh->phase_perc_n[p][c0] * AnisoFactorEvolv( mesh->FS_AR_n[c0], materials->ani_fac_max[p] );
-            }
+            if (materials->ani_fstrain[p]==0) mesh->aniso_factor_n[c0] += mesh->phase_perc_n[p][c0] * materials->aniso_factor[p];
+            if (materials->ani_fstrain[p]==1) mesh->aniso_factor_n[c0] += mesh->phase_perc_n[p][c0] * AnisoFactorEvolv( mesh->FS_AR_n[c0], materials->ani_fac_max[p] );
           }
           // Harmonic
           if (average == 1) {
-            if ( model->anisotropy == 1 ) {
-              if (materials->ani_fstrain[p]==0) mesh->aniso_factor_n[c0] += mesh->phase_perc_n[p][c0] * 1.0/materials->aniso_factor[p];
-              if (materials->ani_fstrain[p]==1) mesh->aniso_factor_n[c0] += mesh->phase_perc_n[p][c0] * 1.0/AnisoFactorEvolv( mesh->FS_AR_n[c0], materials->ani_fac_max[p] );
-            }
+            if (materials->ani_fstrain[p]==0) mesh->aniso_factor_n[c0] += mesh->phase_perc_n[p][c0] * 1.0/materials->aniso_factor[p];
+            if (materials->ani_fstrain[p]==1) mesh->aniso_factor_n[c0] += mesh->phase_perc_n[p][c0] * 1.0/AnisoFactorEvolv( mesh->FS_AR_n[c0], materials->ani_fac_max[p] );
           }
           // Geometric
           if (average == 2) {
-            if ( model->anisotropy == 1 ) {
-              if (materials->ani_fstrain[p]==0) mesh->aniso_factor_n[c0] += mesh->phase_perc_n[p][c0] * log(materials->aniso_factor[p]);
-              if (materials->ani_fstrain[p]==1) mesh->aniso_factor_n[c0] += mesh->phase_perc_n[p][c0] * log(AnisoFactorEvolv( mesh->FS_AR_n[c0], materials->ani_fac_max[p] ));
-            }
+            if (materials->ani_fstrain[p]==0) mesh->aniso_factor_n[c0] += mesh->phase_perc_n[p][c0] * log(materials->aniso_factor[p]);
+            if (materials->ani_fstrain[p]==1) mesh->aniso_factor_n[c0] += mesh->phase_perc_n[p][c0] * log(AnisoFactorEvolv( mesh->FS_AR_n[c0], materials->ani_fac_max[p] ));
           }
 
           // Standard arithmetic interpolation
@@ -400,8 +394,8 @@ void UpdateAnisoFactor( grid *mesh, mat_prop *materials, params *model, scale *s
 
         }
         // Post-process for geometric/harmonic averages
-        if ( average==1 && model->anisotropy == 1 ) mesh->aniso_factor_n[c0] = 1.0/mesh->aniso_factor_n[c0];
-        if ( average==2 && model->anisotropy == 1 ) mesh->aniso_factor_n[c0] = exp(mesh->aniso_factor_n[c0]);
+        if ( average==1 ) mesh->aniso_factor_n[c0] = 1.0/mesh->aniso_factor_n[c0];
+        if ( average==2 ) mesh->aniso_factor_n[c0] = exp(mesh->aniso_factor_n[c0]);
       }
     }
   }
@@ -415,7 +409,7 @@ void UpdateAnisoFactor( grid *mesh, mat_prop *materials, params *model, scale *s
       c1 = k + l*Nx;
 
       // First - initialize to 0
-      if ( model->anisotropy == 1 ) mesh->aniso_factor_s[c1] = 0.0;
+      mesh->aniso_factor_s[c1] = 0.0;
 
       // Compute only if below free surface
       if ( mesh->BCg.type[c1] != 30 ) {
@@ -425,24 +419,18 @@ void UpdateAnisoFactor( grid *mesh, mat_prop *materials, params *model, scale *s
 
           // Arithmetic
           if (average == 0) {
-            if ( model->anisotropy == 1 ) {
-              if (materials->ani_fstrain[p]==0) mesh->aniso_factor_s[c1] += mesh->phase_perc_s[p][c1] * materials->aniso_factor[p];
-              if (materials->ani_fstrain[p]==1) mesh->aniso_factor_s[c1] += mesh->phase_perc_s[p][c1] * AnisoFactorEvolv( mesh->FS_AR_s[c1], materials->ani_fac_max[p] );
-            }
+            if (materials->ani_fstrain[p]==0) mesh->aniso_factor_s[c1] += mesh->phase_perc_s[p][c1] * materials->aniso_factor[p];
+            if (materials->ani_fstrain[p]==1) mesh->aniso_factor_s[c1] += mesh->phase_perc_s[p][c1] * AnisoFactorEvolv( mesh->FS_AR_s[c1], materials->ani_fac_max[p] );
           }
           // Harmonic
           if (average == 1) {
-            if ( model->anisotropy == 1 ) {
-              if (materials->ani_fstrain[p]==0) mesh->aniso_factor_s[c1] += mesh->phase_perc_s[p][c1] *  1.0/materials->aniso_factor[p];
-              if (materials->ani_fstrain[p]==1) mesh->aniso_factor_s[c1] += mesh->phase_perc_s[p][c1] *  1.0/AnisoFactorEvolv( mesh->FS_AR_s[c1], materials->ani_fac_max[p] );
-            }
+            if (materials->ani_fstrain[p]==0) mesh->aniso_factor_s[c1] += mesh->phase_perc_s[p][c1] *  1.0/materials->aniso_factor[p];
+            if (materials->ani_fstrain[p]==1) mesh->aniso_factor_s[c1] += mesh->phase_perc_s[p][c1] *  1.0/AnisoFactorEvolv( mesh->FS_AR_s[c1], materials->ani_fac_max[p] );
           }
           // Geometric
           if (average == 2) {
-            if ( model->anisotropy == 1 ) {
-              if (materials->ani_fstrain[p]==0) mesh->aniso_factor_s[c1] += mesh->phase_perc_s[p][c1] *  log(materials->aniso_factor[p]);
-              if (materials->ani_fstrain[p]==1) mesh->aniso_factor_s[c1] += mesh->phase_perc_s[p][c1] *  log(AnisoFactorEvolv( mesh->FS_AR_s[c1], materials->ani_fac_max[p] ));
-            }
+            if (materials->ani_fstrain[p]==0) mesh->aniso_factor_s[c1] += mesh->phase_perc_s[p][c1] *  log(materials->aniso_factor[p]);
+            if (materials->ani_fstrain[p]==1) mesh->aniso_factor_s[c1] += mesh->phase_perc_s[p][c1] *  log(AnisoFactorEvolv( mesh->FS_AR_s[c1], materials->ani_fac_max[p] ));
           }
 
         }
@@ -452,8 +440,8 @@ void UpdateAnisoFactor( grid *mesh, mat_prop *materials, params *model, scale *s
         }
 
         // Post-process for geometric/harmonic averages
-        if ( average==1 && model->anisotropy == 1 )  mesh->aniso_factor_s[c1] = 1.0/mesh->aniso_factor_s[c1];
-        if ( average==2 && model->anisotropy == 1 )  mesh->aniso_factor_s[c1] = exp(mesh->aniso_factor_s[c1]);
+        if ( average==1 ) mesh->aniso_factor_s[c1] = 1.0/mesh->aniso_factor_s[c1];
+        if ( average==2 ) mesh->aniso_factor_s[c1] = exp(mesh->aniso_factor_s[c1]);
       }
     }
   }
@@ -463,10 +451,8 @@ void UpdateAnisoFactor( grid *mesh, mat_prop *materials, params *model, scale *s
   if (model->periodic_x==1) {
     for( l=0; l<Nz; l++) {
       c1 = l*Nx + Nx-1;
-      if ( model->anisotropy == 1 ) {
-        av = 0.5*(mesh->aniso_factor_s[c1] + mesh->aniso_factor_s[l*Nx]);
-        mesh->aniso_factor_s[c1] = av; mesh->aniso_factor_s[l*Nx] = av;
-      }
+      av = 0.5*(mesh->aniso_factor_s[c1] + mesh->aniso_factor_s[l*Nx]);
+      mesh->aniso_factor_s[c1] = av; mesh->aniso_factor_s[l*Nx] = av;
     }
   }
 

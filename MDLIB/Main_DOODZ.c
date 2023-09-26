@@ -721,10 +721,12 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                 }
 
                 // Build discrete system of equations - Linearised Picard
+                int kill_aniso = 0;
+                RheologicalOperators( &mesh, &input.model, &input.materials, &input.scaling, 1, kill_aniso );
                 BuildStokesOperatorDecoupled  ( &mesh, input.model, 0, mesh.p_corr, mesh.p_in, mesh.u_in, mesh.v_in, &Stokes, &StokesA, &StokesB, &StokesC, &StokesD, 1 );
 
                 // Build discrete system of equations - Jacobian (do it also for densification since drhodp is needed)
-                if ( (IsFullNewton   == 1 && Nmodel.nit > 0) || input.model.density_variations == 1  ) RheologicalOperators( &mesh, &input.model, &input.materials, &input.scaling, 1 );
+                if ( (IsFullNewton  == 1 && Nmodel.nit > 0) || input.model.density_variations == 1  ) RheologicalOperators( &mesh, &input.model, &input.materials, &input.scaling, 1, input.model.anisotropy );
                 if ( IsJacobianUsed == 1 ) BuildJacobianOperatorDecoupled( &mesh, input.model, 0, mesh.p_corr, mesh.p_in, mesh.u_in, mesh.v_in,  &Jacob,  &JacobA,  &JacobB,  &JacobC,   &JacobD, 1 );
                 
                 // Diagonal input.scaling
@@ -738,7 +740,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
                 // Needs to be done after matrix assembly since diagonal input.scaling is used in there
                 printf("---- Non-linear residual ----\n");
-                RheologicalOperators( &mesh, &input.model, &input.materials, &input.scaling, 0 );
+                RheologicalOperators( &mesh, &input.model, &input.materials, &input.scaling, 0, input.model.anisotropy );
                 EvaluateStokesResidualDecoupled( &Stokes, &StokesA, &StokesB, &StokesC, &StokesD, &Nmodel, &mesh, input.model, input.scaling, 0 );
                 printf("---- Non-linear residual ----\n");
 
