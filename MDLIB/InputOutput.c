@@ -1207,7 +1207,7 @@ Input ReadInputFile( char *fileName ) {
     // if ( model.anisotropy  == 1 ) model.preconditioner = -1; // If anisotropy, then use symmetrised preconditioner
     // printf("%d\n", model.preconditioner); exit(1);
     if (model.Newton==0) Nmodel.Picard2Newton = 0; // If Picard is activated, do not switch to Newton
-    if (model.Newton==1) Nmodel.line_search   = 1; // If Newton is activated, switch to line search
+    if (model.Newton==1) model.line_search    = 1; // If Newton is activated, switch to line search
     if ( model.lin_solver == 0 || model.Newton == 1 || model.anisotropy == 1) {
         printf("WARNING!! Changing from solver type 0 to solver type 2!!! That's the new standard in MDOODZ 6.0.\n");
         model.lin_solver = 2;
