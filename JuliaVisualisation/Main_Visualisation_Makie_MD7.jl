@@ -16,10 +16,9 @@ function main()
     # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/1_NR07/"
 
     # File numbers
-    file_start = 550
-    file_step  = 100
-    file_end   = 550
-
+    file_start = 50
+    file_step  = 10
+    file_end   = 50
     # Select field to visualise
     # field = :Phases
     # field = :Density
@@ -105,6 +104,7 @@ function main()
         ε̇xz   = Float64.(reshape(ExtractData( filename, "/Vertices/exz"), nvx, nvz))
         τII   = sqrt.( 0.5*(2*τxx.^2 .+ 0.5*(τxz[1:end-1,1:end-1].^2 .+ τxz[2:end,1:end-1].^2 .+ τxz[1:end-1,2:end].^2 .+ τxz[2:end,2:end].^2 ) ) ); τII[mask_air] .= NaN
         ε̇II   = sqrt.( 0.5*(2*ε̇xx.^2 .+ 0.5*(ε̇xz[1:end-1,1:end-1].^2 .+ ε̇xz[2:end,1:end-1].^2 .+ ε̇xz[1:end-1,2:end].^2 .+ ε̇xz[2:end,2:end].^2 ) ) ); ε̇II[mask_air] .= NaN
+        δani  = Float64.(reshape(ExtractData( filename, "/Centers/ani_fac"), ncx, ncz))
         if fabric
             δani  = Float64.(reshape(ExtractData( filename, "/Centers/ani_fac"), ncx, ncz))
             Nx    = Float64.(reshape(ExtractData( filename, "/Centers/nx"), ncx, ncz))

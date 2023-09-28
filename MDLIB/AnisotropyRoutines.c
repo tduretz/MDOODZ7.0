@@ -438,6 +438,7 @@ void UpdateAnisoFactor( grid *mesh, mat_prop *materials, params *model, scale *s
             if (materials->ani_fstrain[p]==0) mesh->aniso_factor_s[c1] += mesh->phase_perc_s[p][c1] *  log(materials->aniso_factor[p]);
             if (materials->ani_fstrain[p]==1) mesh->aniso_factor_s[c1] += mesh->phase_perc_s[p][c1] *  log(AnisoFactorEvolv( mesh->FS_AR_s[c1], materials->ani_fac_max[p] ));
           }
+
         }
 
         if ( isinf(1.0/mesh->aniso_factor_s[c1]) ) {
