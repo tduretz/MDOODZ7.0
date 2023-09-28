@@ -303,9 +303,9 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         printf("******* Initialize viscosity ********\n");
         printf("*************************************\n");
 
-        // Compute shear modulus, expansivity, compressibility, cohesion and friction angle on the grid
-        // if (input.model.elastic == 1 ) ShearModCompExpGrid( &mesh, &input.materials, &input.model, input.scaling );
+        // Compute anisotropy factor, shear modulus, expansivity, compressibility, cohesion and friction angle on the grid
         CohesionFrictionDilationGrid( &mesh, &particles, input.materials, input.model, input.scaling );
+        if ( input.model.anisotropy == 1 ) UpdateAnisoFactor( &mesh, &input.materials, &input.model, &input.scaling);
         ShearModCompExpGrid( &mesh, &input.materials, &input.model, input.scaling );
         Interp_Grid2P_centroids2( particles, particles.P,    &mesh, mesh.p_in, mesh.xvz_coord,  mesh.zvx_coord,  mesh.Nx-1, mesh.Nz-1, mesh.BCp.type, &input.model );
         Interp_Grid2P_centroids2( particles, particles.T,    &mesh, mesh.T,    mesh.xvz_coord,  mesh.zvx_coord,  mesh.Nx-1, mesh.Nz-1, mesh.BCt.type, &input.model );
@@ -537,12 +537,8 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         // Free surface - subgrid density correction
         if (input.model.free_surface == 1 ) SurfaceDensityCorrection( &mesh, input.model, topo, input.scaling  );
 
-        // // Update anisotropy factor (function of accumulated strain and phase)
-        if ( input.model.anisotropy == 1 ) {
-            UpdateAnisoFactor( &mesh, &input.materials, &input.model, &input.scaling);
-            // InterpCentroidsToVerticesDouble( mesh.aniso_factor_n, mesh.aniso_factor_s, &mesh, &input.model );
-            // InterpVerticesToCentroidsDouble( mesh.aniso_factor_n, mesh.aniso_factor_s,  &mesh, &input.model );
-        }
+        // Update anisotropy factor (function of accumulated strain and phase)
+        if ( input.model.anisotropy == 1 ) UpdateAnisoFactor( &mesh, &input.materials, &input.model, &input.scaling);
 
         // Min/Max interpolated fields
         if (input.model.noisy == 1 ) {
@@ -709,10 +705,10 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                     MinMaxArrayTag( mesh.d_n, input.scaling.L,   (mesh.Nx-1)*(mesh.Nz-1), "d         ", mesh.BCp.type );
                     MinMaxArrayTag( mesh.X_s, 1.0, (mesh.Nx)*(mesh.Nz),     "X_s     ", mesh.BCg.type );
                     MinMaxArrayTag( mesh.X_n, 1.0, (mesh.Nx-1)*(mesh.Nz-1), "X_n     ", mesh.BCp.type );
-                    if (input.model.anisotropy==1) MinMaxArrayTag( mesh.FS_AR_n,  1.0,   (mesh.Nx-1)*(mesh.Nz-1),      "FS_AR_n   ", mesh.BCp.type );
-                    if (input.model.anisotropy==1) MinMaxArrayTag( mesh.FS_AR_s,  1.0,   (mesh.Nx)*(mesh.Nz),          "FS_AR_s   ", mesh.BCg.type );
-                    if (input.model.anisotropy==1) MinMaxArrayTag( mesh.aniso_factor_n,  1.0,   (mesh.Nx-1)*(mesh.Nz-1), "ani_fac_n ",   mesh.BCp.type );
-                    if (input.model.anisotropy==1) MinMaxArrayTag( mesh.aniso_factor_s,  1.0,   (mesh.Nx)*(mesh.Nz),     "ani_fac_s ",   mesh.BCg.type );
+                    // if (input.model.anisotropy==1) MinMaxArrayTag( mesh.FS_AR_n,  1.0,   (mesh.Nx-1)*(mesh.Nz-1),      "FS_AR_n   ", mesh.BCp.type );
+                    // if (input.model.anisotropy==1) MinMaxArrayTag( mesh.FS_AR_s,  1.0,   (mesh.Nx)*(mesh.Nz),          "FS_AR_s   ", mesh.BCg.type );
+                    // if (input.model.anisotropy==1) MinMaxArrayTag( mesh.aniso_factor_n,  1.0,   (mesh.Nx-1)*(mesh.Nz-1), "ani_fac_n ",   mesh.BCp.type );
+                    // if (input.model.anisotropy==1) MinMaxArrayTag( mesh.aniso_factor_s,  1.0,   (mesh.Nx)*(mesh.Nz),     "ani_fac_s ",   mesh.BCg.type );
                 }
 
                 if (input.model.writer_debug == 1 ) {

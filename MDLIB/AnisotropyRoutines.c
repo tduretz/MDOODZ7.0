@@ -388,11 +388,17 @@ void UpdateAnisoFactor( grid *mesh, mat_prop *materials, params *model, scale *s
             if (materials->ani_fstrain[p]==0) mesh->aniso_factor_n[c0] += mesh->phase_perc_n[p][c0] * log(materials->aniso_factor[p]);
             if (materials->ani_fstrain[p]==1) mesh->aniso_factor_n[c0] += mesh->phase_perc_n[p][c0] * log(AnisoFactorEvolv( mesh->FS_AR_n[c0], materials->ani_fac_max[p] ));
           }
-
-          // Standard arithmetic interpolation
-          mesh->alp  [c0] += mesh->phase_perc_n[p][c0] * materials->alp[p];
-
         }
+
+
+        if ( isinf(1.0/mesh->aniso_factor_n[c0]) ) {
+          printf("Cell %d has no neighbouring particles: average=%d, value = %2.2e, 1/value=%2.2e \n", c0, average, mesh->aniso_factor_n[c0], 1.0/mesh->aniso_factor_n[c0]);
+          for ( p=0; p<model->Nb_phases; p++) {
+            printf("Phase %d, proportion %2.2e ----> UpdateAnisoFactor()\n", p, mesh->phase_perc_n[p][c0]);
+          }
+          exit(1);
+        }
+
         // Post-process for geometric/harmonic averages
         if ( average==1 ) mesh->aniso_factor_n[c0] = 1.0/mesh->aniso_factor_n[c0];
         if ( average==2 ) mesh->aniso_factor_n[c0] = exp(mesh->aniso_factor_n[c0]);
@@ -435,8 +441,12 @@ void UpdateAnisoFactor( grid *mesh, mat_prop *materials, params *model, scale *s
 
         }
 
-        if ( isinf(1.0/mesh->mu_s[c1]) ) {
-          printf("Aaaaargh...!! %2.2e %2.2e ----> ShearModulusCompressibilityExpansivityGrid\n", mesh->phase_perc_s[0][c1], mesh->phase_perc_s[1][c1]);
+        if ( isinf(1.0/mesh->aniso_factor_s[c1]) ) {
+          printf("Node %d has no neighbouring particles\n", c1);
+          for ( p=0; p<model->Nb_phases; p++) {
+            printf("Phase %d, proportion %2.2e ----> UpdateAnisoFactor()\n", p, mesh->phase_perc_s[p][c1]);
+          }
+          exit(1);
         }
 
         // Post-process for geometric/harmonic averages

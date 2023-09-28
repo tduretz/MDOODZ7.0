@@ -48,6 +48,26 @@
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
+void UpdateNonLinearity( grid* mesh, markers* particles, markers* topo_chain, surface *topo, mat_prop materials, params *model, Nparams *Nmodel, scale scaling, int mode, int final_update ) {
+    
+    // Strain rate component evaluation
+    StrainRateComponents( mesh, scaling, model );
+
+    // Stress update
+    if (model->anisotropy==0) NonNewtonianViscosityGrid(      mesh, &materials, model, *Nmodel, &scaling, final_update);
+    if (model->anisotropy==1) NonNewtonianViscosityGridAniso( mesh, &materials, model, *Nmodel, &scaling, final_update);
+
+    // Evaluate right hand side
+    EvaluateRHS( mesh, *model, scaling, materials.rho[0] );
+
+    // Fill up the rheological matrices arrays
+    // RheologicalOperators( mesh, model, &materials, &scaling, 0, model->anisotropy );
+}
+
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
+
 void RheologicalOperators( grid* mesh, params* model, mat_prop* materials, scale* scaling, int Jacobian, int anisotropy ) {
 
   int Nx, Nz, Ncx, Ncz, k;
@@ -64,7 +84,7 @@ void RheologicalOperators( grid* mesh, params* model, mat_prop* materials, scale
   //---------------------------------------------------------------------------------------------------------//
   if ( Jacobian==0 ) {
 
-    // printf("Computing isotropic/anisotropic viscosity tensor\n");
+    // printf("Computing isotropic/anisotropic viscosity tensor: Jacobian = %d, anisotropy = %d\n", Jacobian, anisotropy);
 
     // Loop on cell centers
 #pragma omp parallel for shared( mesh ) private ( d1, d2 )  firstprivate ( model )
@@ -114,7 +134,7 @@ void RheologicalOperators( grid* mesh, params* model, mat_prop* materials, scale
         double ani_vep  = 1.;
         double aniS_vep = 0.;
         //----------------------------------------------------------//
-        if ( model->anisotropy == 0 ) {
+        if ( anisotropy == 0 ) {
          aniS_vep = 0.0; d1   = 0.; d2   = 0.;
         }
         else {
@@ -227,7 +247,7 @@ void RheologicalOperators( grid* mesh, params* model, mat_prop* materials, scale
         if ( model->elastic==1 ) eta_e = model->dt*mesh->mu_s[k];
         else                       eta_e = 1.; // set to arbitrary value to avoid division by 0.0
         //----------------------------------------------------------//
-        if ( model->anisotropy == 0 ) {
+        if ( anisotropy == 0 ) {
           aniS_e = 0.; aniS_vep = 0.0; d1   = 0.; d2   = 0.;
         }
         else {
@@ -390,28 +410,6 @@ void ApplyBC( grid* mesh, params* model ) {
     //    Print2DArrayDouble( mesh->p_in, nx-1, nz-1, 1.0 );
 }
 
-
-
-/*--------------------------------------------------------------------------------------------------------------------*/
-/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
-/*--------------------------------------------------------------------------------------------------------------------*/
-
-void UpdateNonLinearity( grid* mesh, markers* particles, markers* topo_chain, surface *topo, mat_prop materials, params *model, Nparams *Nmodel, scale scaling, int mode, int final_update ) {
-    
-    // Strain rate component evaluation
-    StrainRateComponents( mesh, scaling, model );
-
-    // Stress update
-    if (model->anisotropy==0) NonNewtonianViscosityGrid(      mesh, &materials, model, *Nmodel, &scaling, final_update);
-    if (model->anisotropy==1) NonNewtonianViscosityGridAniso( mesh, &materials, model, *Nmodel, &scaling, final_update);
-
-    // Evaluate right hand side
-    EvaluateRHS( mesh, *model, scaling, materials.rho[0] );
-
-    // Fill up the rheological matrices arrays
-    // RheologicalOperators( mesh, model, &materials, &scaling, 0, model->anisotropy );
-}
-
 /*--------------------------------------------------------------------------------------------------------------------*/
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
@@ -438,7 +436,6 @@ void DetectCompressibleCells ( grid* mesh, params *model ) {
 /*--------------------------------------------------------------------------------------------------------------------*/
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
-
 
 void ExtractSolutions2( SparseMat *Stokes, grid* mesh, params* model, double* dx, double alpha ) {
 
