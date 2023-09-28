@@ -42,7 +42,7 @@ function main()
 
     # File
     path     ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/"
-    filename = string(path, "Stokes_01cpu_step350_iter00.gzip.h5") 
+    filename = string(path, "Stokes_01cpu_step1429_iter00.gzip.h5") 
     # path     ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/RiverTom/"
     # filename = string(path, "Stokes_01cpu_step229_iter00.gzip.h5") 
     # Matrix block A
@@ -80,7 +80,7 @@ function main()
     @show norm(MA-MA')
     @show norm(MB+MC')
     @show norm(Msc-Msc')
-    p = spy(MA)
+    p = spy(MA-MA')
     display(p)
 
 

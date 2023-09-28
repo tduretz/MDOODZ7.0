@@ -891,10 +891,14 @@ void Xmomentum_InnerNodesDecoupled( SparseMat *Stokes, SparseMat *StokesA, Spars
         iVzNW = c3+nxvz-2;
     }
     
-    double D11E = mesh->D11_n[iPrE];
-    double D11W = mesh->D11_n[iPrW];
-    double D33N = mesh->D33_s[ixyN];
-    double D33S = mesh->D33_s[ixyS];
+    // double D11E = mesh->D11_n[iPrE];
+    // double D11W = mesh->D11_n[iPrW];
+    // double D33N = mesh->D33_s[ixyN];
+    // double D33S = mesh->D33_s[ixyS];
+    double D11E = 2*mesh->eta_n[iPrE];
+    double D11W = 2*mesh->eta_n[iPrW];
+    double D33N =   mesh->eta_s[ixyN];
+    double D33S =   mesh->eta_s[ixyS];
     comp = 1.0;
     
     double uS=0.0, uN=0.0, uW=0.0, uE=0.0, uC=0.0, vSW=0.0, vSE=0.0, vNW=0.0, vNE=0.0, pE=0.0, pW=0.0;
@@ -1467,6 +1471,10 @@ void Zmomentum_InnerNodesDecoupled( SparseMat *Stokes, SparseMat *StokesA, Spars
     double D22N  = mesh->D22_n[iPrN];
     double D33E  = mesh->D33_s[ixyE];
     double D33W  = mesh->D33_s[ixyW];
+    // double D22S  = 2*mesh->eta_n[iPrS];
+    // double D22N  = 2*mesh->eta_n[iPrN];
+    // double D33E  = mesh->eta_s[ixyE];
+    // double D33W  = mesh->eta_s[ixyW];
     comp = 1.0;
     
     double vS=0.0, vN=0.0, vW=0.0, vE=0.0, vC=0.0, uSW=0.0, uSE=0.0, uNW=0.0, uNE=0.0, pN=0.0, pS=0.0;
