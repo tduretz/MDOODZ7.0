@@ -9,3 +9,5 @@ visualtests-out
 build/
 *.out
 *.o
+RUNS/
+.vscode
