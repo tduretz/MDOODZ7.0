@@ -28,7 +28,7 @@ T   = 1
 /**** SPACE ****/
 Nx      = 51
 Nz      = 51
-Nt      = 10
+Nt      = 0
 xmin    = -5.000000e-1
 zmin    = -5.000000e-1
 xmax    =  5.000000e-1
@@ -140,4 +140,3 @@ eta0        = 1e-1
 npwl        = 0
 Qpwl        = 0
 aniso_angle = 135.0
-ani_fac_v   = 1.0
