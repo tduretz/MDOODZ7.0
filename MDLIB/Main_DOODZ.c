@@ -303,9 +303,9 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         printf("******* Initialize viscosity ********\n");
         printf("*************************************\n");
 
-        // Compute shear modulus, expansivity, compressibility, cohesion and friction angle on the grid
-        if (input.model.elastic == 1 ) ShearModCompExpGrid( &mesh, &input.materials, &input.model, input.scaling );
+        // Compute anisotropy factor, shear modulus, expansivity, compressibility, cohesion and friction angle on the grid
         CohesionFrictionDilationGrid( &mesh, &particles, input.materials, input.model, input.scaling );
+        if ( input.model.anisotropy == 1 ) UpdateAnisoFactor( &mesh, &input.materials, &input.model, &input.scaling);
         ShearModCompExpGrid( &mesh, &input.materials, &input.model, input.scaling );
         Interp_Grid2P_centroids2( particles, particles.P,    &mesh, mesh.p_in, mesh.xvz_coord,  mesh.zvx_coord,  mesh.Nx-1, mesh.Nz-1, mesh.BCp.type, &input.model );
         Interp_Grid2P_centroids2( particles, particles.T,    &mesh, mesh.T,    mesh.xvz_coord,  mesh.zvx_coord,  mesh.Nx-1, mesh.Nz-1, mesh.BCt.type, &input.model );
@@ -442,6 +442,8 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             CellFlagging( &mesh, input.model, topo, input.scaling );
             ArrayEqualArray(     topo.height0,     topo.height, mesh.Nx );
             ArrayEqualArray( topo_ini.height0, topo_ini.height, mesh.Nx );
+            ArrayEqualArray( topo_chain.z0, topo_chain.z, topo_chain.Nb_part ); // save old z
+            ArrayEqualArray( topo_chain_ini.z0, topo_chain_ini.z, topo_chain.Nb_part ); // save old z
         }
 
         // Interpolate material properties from particles to nodes
@@ -533,9 +535,10 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         UpdateDensity( &mesh, &particles, &input.materials, &input.model, &input.scaling );
 
         // Free surface - subgrid density correction
-        if (input.model.free_surface == 1 ) {
-            SurfaceDensityCorrection( &mesh, input.model, topo, input.scaling  );
-        }
+        if (input.model.free_surface == 1 ) SurfaceDensityCorrection( &mesh, input.model, topo, input.scaling  );
+
+        // Update anisotropy factor (function of accumulated strain and phase)
+        if ( input.model.anisotropy == 1 ) UpdateAnisoFactor( &mesh, &input.materials, &input.model, &input.scaling);
 
         // Min/Max interpolated fields
         if (input.model.noisy == 1 ) {
@@ -702,8 +705,10 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                     MinMaxArrayTag( mesh.d_n, input.scaling.L,   (mesh.Nx-1)*(mesh.Nz-1), "d         ", mesh.BCp.type );
                     MinMaxArrayTag( mesh.X_s, 1.0, (mesh.Nx)*(mesh.Nz),     "X_s     ", mesh.BCg.type );
                     MinMaxArrayTag( mesh.X_n, 1.0, (mesh.Nx-1)*(mesh.Nz-1), "X_n     ", mesh.BCp.type );
-                    if (input.model.anisotropy==1) MinMaxArrayTag( mesh.aniso_factor_n,  1.0,   (mesh.Nx-1)*(mesh.Nz-1), "ani_fac_n ",   mesh.BCp.type );
-                    if (input.model.anisotropy==1) MinMaxArrayTag( mesh.aniso_factor_s,  1.0,   (mesh.Nx)*(mesh.Nz),     "ani_fac_s ",   mesh.BCg.type );
+                    // if (input.model.anisotropy==1) MinMaxArrayTag( mesh.FS_AR_n,  1.0,   (mesh.Nx-1)*(mesh.Nz-1),      "FS_AR_n   ", mesh.BCp.type );
+                    // if (input.model.anisotropy==1) MinMaxArrayTag( mesh.FS_AR_s,  1.0,   (mesh.Nx)*(mesh.Nz),          "FS_AR_s   ", mesh.BCg.type );
+                    // if (input.model.anisotropy==1) MinMaxArrayTag( mesh.aniso_factor_n,  1.0,   (mesh.Nx-1)*(mesh.Nz-1), "ani_fac_n ",   mesh.BCp.type );
+                    // if (input.model.anisotropy==1) MinMaxArrayTag( mesh.aniso_factor_s,  1.0,   (mesh.Nx)*(mesh.Nz),     "ani_fac_s ",   mesh.BCg.type );
                 }
 
                 if (input.model.writer_debug == 1 ) {
@@ -711,11 +716,16 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                     WriteOutputHDF5Particles( &mesh, &particles, &topo, &topo_chain, &topo_ini, &topo_chain_ini, input.model, "Particles_BeforeSolve", input.materials, input.scaling );
                 }
 
-                // Build discrete system of equations - Linearised Picard
+                // Build discrete system of equations - Linearised Picard withou Newton linearisatio nor anisotripic contributions
+                int kill_aniso = 0, kill_Newton = 0;
+                RheologicalOperators( &mesh, &input.model, &input.materials, &input.scaling, kill_Newton, kill_aniso );
                 BuildStokesOperatorDecoupled  ( &mesh, input.model, 0, mesh.p_corr, mesh.p_in, mesh.u_in, mesh.v_in, &Stokes, &StokesA, &StokesB, &StokesC, &StokesD, 1 );
 
+                // Rheological operators including physical contrbutions from anisotropy
+                RheologicalOperators( &mesh, &input.model, &input.materials, &input.scaling, 0, input.model.anisotropy );
+
                 // Build discrete system of equations - Jacobian (do it also for densification since drhodp is needed)
-                if ( (IsFullNewton   == 1 && Nmodel.nit > 0) || input.model.density_variations == 1  ) RheologicalOperators( &mesh, &input.model, &input.materials, &input.scaling, 1 );
+                if ( (IsFullNewton  == 1 && Nmodel.nit > 0) || input.model.density_variations == 1  ) RheologicalOperators( &mesh, &input.model, &input.materials, &input.scaling, 1, input.model.anisotropy );
                 if ( IsJacobianUsed == 1 ) BuildJacobianOperatorDecoupled( &mesh, input.model, 0, mesh.p_corr, mesh.p_in, mesh.u_in, mesh.v_in,  &Jacob,  &JacobA,  &JacobB,  &JacobC,   &JacobD, 1 );
                 
                 // Diagonal input.scaling
@@ -729,7 +739,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
                 // Needs to be done after matrix assembly since diagonal input.scaling is used in there
                 printf("---- Non-linear residual ----\n");
-                RheologicalOperators( &mesh, &input.model, &input.materials, &input.scaling, 0 );
+                RheologicalOperators( &mesh, &input.model, &input.materials, &input.scaling, 0, input.model.anisotropy );
                 EvaluateStokesResidualDecoupled( &Stokes, &StokesA, &StokesB, &StokesC, &StokesD, &Nmodel, &mesh, input.model, input.scaling, 0 );
                 printf("---- Non-linear residual ----\n");
 
@@ -965,11 +975,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                 }
 
                 if (input.model.free_surface == 1 ) {
-                    // Save old topo
-                    ArrayEqualArray( topo_chain.z0, topo_chain.z, topo_chain.Nb_part ); // save old z
-                    ArrayEqualArray( topo_chain_ini.z0, topo_chain_ini.z, topo_chain.Nb_part ); // save old z
-
-                    // Advect free surface with RK4
+                    // Advect free surface with RK2
                     RogerGuntherII( &topo_chain, input.model, mesh, 1, input.scaling );
                     RogerGuntherII( &topo_chain_ini, input.model, mesh, 1, input.scaling );
                 }

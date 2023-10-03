@@ -8,7 +8,7 @@ import_file      = SetupCoesite2_nxy1921.bin /indicates the name in the input fi
 
 /**** OUTPUT FILES ****/
 writer             = 1
-writer_step        = 50
+writer_step        = 20
 writer_markers     = 0
 writer_debug       = 0
 writer_energies    = 0
@@ -21,8 +21,8 @@ V   = 1e-18
 T   = 600
 
 /**** SPACE ****/
-Nx      = 151
-Nz      = 151
+Nx      = 301
+Nz      = 301
 xmin    = -2.500000e-3
 zmin    = -2.500000e-3
 xmax    =  2.500000e-3
@@ -67,7 +67,8 @@ user1              = 2       / 2: fancy set up --- 1: simple inclusion --- 0: ho
 user2              = 0.5e-3  / inclusion radius [m]
 fix_temperature    = 1
 user3              = 1.02e-2     / fit coefficient a for T=(P/b)^(1/a)
-user4              = 2.523e-3  / fit coefficient b for T=(P/b)^(1/a)
+user4              = 2.523e-3    / fit coefficient b for T=(P/b)^(1/a)
+user7              = 1921        / size of pixel max
 
 /**** GRAVITY ****/
 gx = 0.0000
@@ -179,10 +180,10 @@ Nz_part  = 4
 min_part_cell = 16
 
 /**** NON-LINEAR ITERATIONS ****/
-Newton            = 0
+Newton            = 1
 Picard2Newton     = 1
 Picard2Newton_tol = 1e-1
-nit_max           = 1
+nit_max           = 15
 rel_tol_KSP       = 1e-4
 nonlin_abs_mom    = 1e-11
 nonlin_abs_div    = 1e-11

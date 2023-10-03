@@ -21,5 +21,8 @@ else()
     add_set(Shrinking)
     add_set(RiverTom)
     add_set(AnisoHomoVEVP)
+    add_set(CollisionIra)
+    add_set(NeckingReview)
+    add_set(CollisionPolarCartesian)
 endif()
 
