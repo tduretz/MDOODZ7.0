@@ -42,6 +42,7 @@ typedef struct {
 
 // params contains the model parameters
 typedef struct {
+  int    balance_boundaries;
   char   description[500];
   double xmin, zmin, xmax, zmax, time, dx, dz, dt, dt0, dt_start, dt_max, L0,
           dt_min;
@@ -52,7 +53,7 @@ typedef struct {
   int     interp_stencil;
   double  nexp_radial_basis;
   int     mechanical, periodic_x, elastic, isnonnewtonian,
-          thermal, pure_shear_ALE, free_surface, writer_markers, writer_debug;
+          thermal, pure_shear_ALE, free_surface, writer_markers, writer_debug, topo_update;
   double free_surface_stab;
   int    constant_dt, RK, line_search, initial_cooling, subgrid_diffusion, adiab_heating,
           shear_heating, advection, finite_strain, conserv_interp;
@@ -64,7 +65,7 @@ typedef struct {
   char  *import_files_dir;
   int    Nb_phases;
   int    ncont;
-  double Courant, min_eta, max_eta;
+  double Courant, min_eta, max_eta, eta_tol;
   // Particles
   int    initial_noise;
   // Linear solver
@@ -155,6 +156,8 @@ typedef struct MdoodzSetup    MdoodzSetup;
 typedef struct MdoodzInput    MdoodzInput;
 
 typedef struct {
+  double l;
+  double k;
   double x;
   double z;
 } Coordinates;

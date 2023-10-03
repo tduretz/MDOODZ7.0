@@ -103,7 +103,7 @@ void SetParticles(SetParticles_ff setParticles, MdoodzInput *instance, markers *
       particles->noise[np] = 0.0;
     }
     Tensor2D F;
-    F.xx=1.; F.xz=0.; F.zx=0.; F.zz=1.; 
+    F.xx=1.; F.xz=0.; F.zx=0.; F.zz=1.;
     if (setParticles.SetDefGrad) {
       F = setParticles.SetDefGrad(instance, coordinates, particles->phase[np]);
     }
@@ -114,7 +114,7 @@ void SetParticles(SetParticles_ff setParticles, MdoodzInput *instance, markers *
       particles->Fzz[np] = F.zz;
     }
     if (instance->model.marker_aniso_angle && setParticles.SetAnisoAngle) {
-      particles->aniso_angle[np] = setParticles.SetAnisoAngle(instance, coordinates, particles->phase[np]) *M_PI / 180;
+      particles->aniso_angle[np] = setParticles.SetAnisoAngle(instance, coordinates, particles->phase[np]) *M_PI / 180.0;
     }
     ValidatePhase(particles->phase[np], instance->model.Nb_phases);
   }
@@ -135,9 +135,9 @@ void SetParticles(SetParticles_ff setParticles, MdoodzInput *instance, markers *
         fwrite( particles->phase, sizeof(int), particles->Nb_part, file);
         fclose(file);
     }
-    
+
     if (instance->model.load_initial_markers == 1) {
-        
+
         printf("Read initial particle distribution\n");
         if (fopen(instance->model.initial_markers_file, "rb")!=NULL){
             file = fopen(instance->model.initial_markers_file, "rb");
@@ -192,6 +192,10 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
   /* Type 30: not calculated (part of the "air") */
   /* --------------------------------------------------------------------------------------------------------*/
 
+  double VxWestSum = 0.0;
+  double VxEastSum = 0.0;
+
+
   for (int l = 0; l < mesh->Nz + 1; l++) {
     for (int k = 0; k < mesh->Nx; k++) {
       const int c = k + l * (mesh->Nx);
@@ -221,15 +225,166 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
           position = INTERNAL;
         }
         Coordinates coordinates = {
+                .k = k,
+                .l = l,
                 .x = mesh->xg_coord[k],
-                .z = mesh->zvx_coord[l]};
+                .z = mesh->zvx_coord[l],
+        };
         SetBC bc          = setBCs.SetBCVx(instance, position, coordinates);
         mesh->BCu.type[c] = bc.type;
         mesh->BCu.val[c]  = bc.value;
-        if (bc.type==11) mesh->BCu.val[c] = 2.0*bc.value;
+        if (bc.type == 11) mesh->BCu.val[c] = 2.0 * bc.value;
         ValidateInternalPoint(position, bc.type, coordinates, "SetBCVxType");
+        if (k == 0) {
+          VxWestSum += bc.value;
+        } else if (k == mesh->Nx - 1) {
+          VxEastSum += bc.value;
+        }
       }
     }
+  }
+
+  printf("VxWestSum: %f, VxEastSum: %f\n", VxWestSum, VxEastSum);
+  const double tolerance = 0.000001;
+
+  if (instance->model.balance_boundaries && (VxWestSum > tolerance || VxWestSum < -tolerance)) {
+    int zeroValuesCount = 0;
+    for (int l = 1; l < mesh->Nz; l++) {
+      const int c = 0 + l * (mesh->Nx);
+      if (mesh->BCu.type[c] == 30) {
+        continue;
+      }
+      if (mesh->BCu.val[c] == 0.0) {
+        zeroValuesCount++;
+      }
+    }
+    if (zeroValuesCount == 0) {
+      printf("Western boundary velocity is imbalanced, but no zero velocity points are left for correction\n");
+      exit(144);
+    }
+    double correctedVxWestSum = 0.0;
+    double gridZmax           = -3e3;
+    int    nz                 = 0;
+    for (int l = 1; l < mesh->Nz + 1; l++) {
+      const int k = 0;
+      const int c = k + l * (mesh->Nx);
+      if (mesh->BCu.type[c] == 30) {
+        continue;
+      }
+      if (gridZmax < mesh->zvx_coord[l]) {
+        gridZmax = mesh->zvx_coord[l];
+      }
+      if (mesh->BCu.val[c] == 0.0) {
+        mesh->BCu.val[c] = -VxWestSum / zeroValuesCount;
+      }
+      const double value = mesh->BCu.val[c];
+      correctedVxWestSum += value;
+      if (value > tolerance || value < -tolerance) {
+        nz++;
+      }
+    }
+    printf("correctedVxWestSum: %f\n", correctedVxWestSum);
+
+    double *boundary = malloc((nz) * sizeof(double));
+    for (int l = 1; l < nz + 1; l++) {
+      const int    c     = 0 + l * (mesh->Nx);
+      const double value = mesh->BCu.val[c];
+      boundary[l - 1]    = value;
+    }
+
+    const double space       = (gridZmax + -instance->model.zmin) * instance->scaling.L;
+    const double dx          = space / (nz - 1);
+    const double dt          = 1.5 * pow(dx, 2);
+
+    double      *newBoundary = malloc((nz) * sizeof(double));
+
+    for (int i = 0; i < 20; i++) {
+      for (int l = 0; l < nz; l++) {
+        newBoundary[l] = boundary[l];
+      }
+      for (int l = 1; l < nz - 1; l++) {
+        boundary[l] = newBoundary[l] + 0.3 * dt / pow(dx, 2) * (newBoundary[l + 1] - 2 * newBoundary[l] + newBoundary[l - 1]);
+      }
+      *boundary = *newBoundary;
+    }
+
+    for (int l = 1; l < nz + 1; l++) {
+      const int c      = 0 + l * (mesh->Nx);
+      mesh->BCu.val[c] = boundary[l - 1];
+    }
+
+    free(boundary);
+    free(newBoundary);
+  }
+
+  if (instance->model.balance_boundaries && (VxEastSum > tolerance || VxEastSum < -tolerance)) {
+    int zeroValuesCount = 0;
+    for (int l = 1; l < mesh->Nz; l++) {
+      const int c = (mesh->Nx - 1) + l * (mesh->Nx);
+      if (mesh->BCu.type[c] == 30) {
+        continue;
+      }
+      if (mesh->BCu.val[c] == 0.0) {
+        zeroValuesCount++;
+      }
+    }
+    if (zeroValuesCount == 0) {
+      printf("Eastern boundary velocity is imbalanced, but no zero velocity points are left for correction\n");
+      exit(144);
+    }
+    double correctedVxWestSum = 0.0;
+    double gridZmax           = -3e3;
+    int    nz                 = 0;
+    for (int l = 1; l < mesh->Nz + 1; l++) {
+      const int k = mesh->Nx - 1;
+      const int c = k + l * (mesh->Nx);
+      if (mesh->BCu.type[c] == 30) {
+        continue;
+      }
+      if (gridZmax < mesh->zvx_coord[l]) {
+        gridZmax = mesh->zvx_coord[l];
+      }
+      if (mesh->BCu.val[c] == 0.0) {
+        mesh->BCu.val[c] = -VxEastSum / zeroValuesCount;
+      }
+      double value = mesh->BCu.val[c];
+      correctedVxWestSum += mesh->BCu.val[c];
+      if (value > tolerance || value < -tolerance) {
+        nz++;
+      }
+    }
+    printf("correctedVxEastSum: %f\n", correctedVxWestSum);
+
+    double *boundary = malloc((nz) * sizeof(double));
+    for (int l = 1; l < nz + 1; l++) {
+      const int    c     = (mesh->Nx - 1) + l * (mesh->Nx);
+      const double value = mesh->BCu.val[c];
+      boundary[l - 1]    = value;
+    }
+
+    const double space       = (gridZmax + -instance->model.zmin) * instance->scaling.L;
+    const double dx          = space / (nz - 1);
+    const double dt          = 1.5 * pow(dx, 2);
+
+    double      *newBoundary = malloc((nz) * sizeof(double));
+
+    for (int i = 0; i < 20; i++) {
+      for (int l = 0; l < nz; l++) {
+        newBoundary[l] = boundary[l];
+      }
+      for (int l = 1; l < nz - 1; l++) {
+        boundary[l] = newBoundary[l] + 0.3 * dt / pow(dx, 2) * (newBoundary[l + 1] - 2 * newBoundary[l] + newBoundary[l - 1]);
+      }
+      *boundary = *newBoundary;
+    }
+
+    for (int l = 1; l < nz + 1; l++) {
+      const int c      = (mesh->Nx - 1) + l * (mesh->Nx);
+      mesh->BCu.val[c] = boundary[l - 1];
+    }
+
+    free(boundary);
+    free(newBoundary);
   }
 
   /* --------------------------------------------------------------------------------------------------------*/
@@ -248,6 +403,10 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
   /* Type -1: not a BC point (tag for inner points) */
   /* Type 30: not calculated (part of the "air") */
   /* --------------------------------------------------------------------------------------------------------*/
+
+  double VzWestSum  = 0.0;
+  double VzEastSum  = 0.0;
+  double VzSouthSum = 0.0;
 
   for (int l = 0; l < mesh->Nz; l++) {
     for (int k = 0; k < mesh->Nx + 1; k++) {
@@ -278,19 +437,90 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
           position = INTERNAL;
         }
         Coordinates coordinates = {
+                .k = k,
+                .l = l,
                 .x = mesh->xvz_coord[k],
-                .z = mesh->zg_coord[l]};
+                .z = mesh->zg_coord[l],
+        };
         SetBC bc          = setBCs.SetBCVz(instance, position, coordinates);
         mesh->BCv.type[c] = bc.type;
         mesh->BCv.val[c]  = bc.value;
-        if (bc.type==11) mesh->BCu.val[c] = 2.0*bc.value;
+        if (bc.type==11) mesh->BCv.val[c] = 2.0*bc.value;
         ValidateInternalPoint(position, mesh->BCv.type[c], coordinates, "SetBCVzType");
+        if (k == 0) {
+          VzWestSum += bc.value;
+        } else if (k == mesh->Nx) {
+          VzEastSum += bc.value;
+        } else if (l == 0) {
+          VzSouthSum += bc.value;
+        }
       }
     }
   }
 
-  const int NCX = mesh->Nx - 1;
-  const int NCZ = mesh->Nz - 1;
+  printf("VzWestSum: %f, VzEastSum: %f: \n", VzWestSum, VzEastSum);
+  printf("total West+East+South sum: %f\n", VxWestSum + VxEastSum - VzSouthSum);
+
+  if (instance->model.balance_boundaries && (VzSouthSum > tolerance || VzSouthSum < -tolerance)) {
+    int zeroValuesCount = 0;
+    for (int k = 0; k < mesh->Nx + 1; k++) {
+      const int c = k;
+      if (mesh->BCv.type[c] == 30) {
+        continue;
+      }
+      if (mesh->BCv.val[c] == 0.0) {
+        zeroValuesCount++;
+      }
+    }
+    if (zeroValuesCount == 0) {
+      printf("Southern boundary velocity is imbalanced, but no zero velocity points are left for correction\n");
+      exit(144);
+    }
+    double correctedVzSouthSum = 0.0;
+    for (int k = 0; k < mesh->Nx + 1; k++) {
+      const int c = k;
+      if (mesh->BCv.type[c] == 30) {
+        continue;
+      }
+      if (mesh->BCv.val[c] == 0.0) {
+        mesh->BCv.val[c] = -VzSouthSum / zeroValuesCount;
+      }
+      correctedVzSouthSum += mesh->BCv.val[c];
+    }
+    printf("correctedVzSouthSum: %f\n", correctedVzSouthSum);
+
+    double *boundary = malloc((mesh->Nx) * sizeof(double));
+    for (int k = 1; k < mesh->Nx + 1; k++) {
+      const int    c     = k;
+      const double value = mesh->BCv.val[c];
+      boundary[k - 1]    = value;
+    }
+
+    const double space       = (instance->model.xmax + -instance->model.zmin) * instance->scaling.L;
+    const double dx          = space / (mesh->Nx - 1);
+    const double dt          = 1.5 * pow(dx, 2);
+
+    double      *newBoundary = malloc((mesh->Nx) * sizeof(double));
+
+    for (int i = 0; i < 20; i++) {
+      for (int k = 0; k < mesh->Nx; k++) {
+        newBoundary[k] = boundary[k];
+      }
+      for (int k = 1; k < mesh->Nx - 1; k++) {
+        boundary[k] = newBoundary[k] + 0.3 * dt / pow(dx, 2) * (newBoundary[k + 1] - 2 * newBoundary[k] + newBoundary[k - 1]);
+      }
+      *boundary = *newBoundary;
+    }
+
+    for (int k = 1; k < mesh->Nx + 1; k++) {
+      const int c      = k;
+      mesh->BCv.val[c] = boundary[k - 1];
+    }
+
+    free(boundary);
+    free(newBoundary);
+  }
+
 
   /* --------------------------------------------------------------------------------------------------------*/
   /* Set the BCs for P on all grid levels */
@@ -299,6 +529,9 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
   /* Type 30: not calculated (part of the "air") */
   /* Type 31: surface pressure (Dirichlet) */
   /* --------------------------------------------------------------------------------------------------------*/
+
+  const int NCX = mesh->Nx - 1;
+  const int NCZ = mesh->Nz - 1;
 
   for (int l = 0; l < NCZ; l++) {
     for (int k = 0; k < NCX; k++) {
@@ -372,7 +605,7 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
       if (mesh->BCt.type[c] != 30) {
 
         // WEST
-        if (k == 0) {      
+        if (k == 0) {
           position = W;
           if (setBCs.SetBCT) {
             SetBC bc          = setBCs.SetBCT(instance, position, mesh->T[c]);
@@ -382,7 +615,7 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
         }
 
         // EAST
-        if (k == NCX-1) {      
+        if (k == NCX-1) {
           position = E;
           if (setBCs.SetBCT) {
             SetBC bc          = setBCs.SetBCT(instance, position, mesh->T[c]);
@@ -392,7 +625,7 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
         }
 
         // SOUTH
-        if (l == 0) {      
+        if (l == 0) {
           position = S;
           if (setBCs.SetBCT) {
             SetBC bc          = setBCs.SetBCT(instance, position, mesh->T[c]);
@@ -402,7 +635,7 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
         }
 
         // NORTH
-        if (l == NCZ-1) {      
+        if (l == NCZ-1) {
           position = N;
           if (setBCs.SetBCT) {
             SetBC bc          = setBCs.SetBCT(instance, position, mesh->T[c]);
@@ -420,8 +653,8 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
               mesh->BCT_exp.type[c1] = bc.type;
               mesh->BCT_exp.val[c1]  = bc.value;
             }
-          }  
-        }    
+          }
+        }
        }
     }
   }
@@ -439,7 +672,7 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
       if (mesh->BCc.type[c] != 30) {
 
         // WEST
-        if (k == 0) {      
+        if (k == 0) {
           position = W;
           if (setBCs.SetBCC) {
             SetBC bc          = setBCs.SetBCC(instance, position, mesh->T[c]);
@@ -449,7 +682,7 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
         }
 
         // EAST
-        if (k == NCX-1) {      
+        if (k == NCX-1) {
           position = E;
           if (setBCs.SetBCC) {
             SetBC bc          = setBCs.SetBCC(instance, position, mesh->T[c]);
@@ -459,7 +692,7 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
         }
 
         // SOUTH
-        if (l == 0) {      
+        if (l == 0) {
           position = S;
           if (setBCs.SetBCC) {
             SetBC bc          = setBCs.SetBCC(instance, position, mesh->T[c]);
@@ -469,7 +702,7 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
         }
 
         // NORTH
-        if (l == NCZ-1) {      
+        if (l == NCZ-1) {
           position = N;
           if (setBCs.SetBCC) {
             SetBC bc          = setBCs.SetBCC(instance, position, mesh->T[c]);
@@ -487,8 +720,8 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
               mesh->BCC_exp.type[c1] = bc.type;
               mesh->BCC_exp.val[c1]  = bc.value;
             }
-          } 
-        }     
+          }
+        }
        }
     }
   }

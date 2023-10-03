@@ -44,14 +44,16 @@
 double AnisoFactorEvolv( double FS_AR, double aniso_fac_max ) {
   // saturation at a maximum anisotropy factor 
   // (for details see Matlab script)
-  const double delta_ratio = aniso_fac_max / 4.0;
-  const double FS_AR_crit  = aniso_fac_max / 2.0;
-  const double x = 0.5*erfc((FS_AR - FS_AR_crit) / delta_ratio);
-  return x * FS_AR + (1.0-x) * aniso_fac_max;
+  // const double delta_ratio = aniso_fac_max / 4.0;
+  // const double FS_AR_crit  = aniso_fac_max / 2.0;
+  // const double x = 0.5*erfc((FS_AR - FS_AR_crit) / delta_ratio);
+  // return x * FS_AR + (1.0-x) * aniso_fac_max;
+  return MINV(FS_AR, aniso_fac_max);
 }
 
 // Squared second invariant of deviatoric stress
 double Y2( Tensor2D *T, double ani_fac ) {
+  // printf("Y2 %2.2e\n", ani_fac);
     return 0.5*( pow(T->xx,2) + pow(T->zz,2) + pow(T->yy,2)) + ani_fac*pow(T->xz,2);
 }
 
@@ -80,7 +82,7 @@ double ViscosityConciseAniso( int phase, double lxlz, double lx2, double angle, 
     // ACTUNG FOR GSE:: d is now d0 and d1 is now d
     // !!!!!!!!!!!!!!!!!!!!!!!!
     // General paramaters
-    const double tol    = 1.0e-11, R = materials->R, dt = model->dt, min_eta = model->min_eta, max_eta = model->max_eta;
+    const double tol    = model->eta_tol, R = materials->R, dt = model->dt, min_eta = model->min_eta, max_eta = model->max_eta;
     const int    nitmax = 20, noisy = 0;
     double eta = 0.0, eta_el = 1e20, eta_cst = 0.0;
     double TmaxPeierls = (1200.0 + zeroC) / scaling->T;// max. T for Peierls
@@ -89,6 +91,9 @@ double ViscosityConciseAniso( int phase, double lxlz, double lx2, double angle, 
     const double E_lin = materials->Qlin[phase], V_lin = materials->Vlin[phase], n_lin = materials->nlin[phase], m_lin = materials->mlin[phase], r_lin = materials->rlin[phase], A_lin = materials->Alin[phase], f_lin = materials->flin[phase], a_lin = materials->alin[phase], F_lin = materials->Flin[phase];
     double eta_ve, Tii;
     Tensor2D E_rot, T_rot, T0_rot;
+
+  // printf("%2.2e\n", ani_fac);
+
     // Clean up
     *eta_vep   = 0.0;
     // Initialise strain rate invariants to 0
@@ -341,6 +346,132 @@ double ViscosityConciseAniso( int phase, double lxlz, double lx2, double angle, 
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
+void UpdateAnisoFactor( grid *mesh, mat_prop *materials, params *model, scale *scaling) {
+
+  printf("Update anisotropy factor\n");
+    int p, k, l, Nx, Nz, Ncx, Ncz, c0, c1;
+  int average = 1;//%model.eta_average; // SHOULD NOT BE ALLOWED TO BE ELSE THAN 1
+
+  Nx = mesh->Nx;
+  Nz = mesh->Nz;
+  Ncx = Nx-1;
+  Ncz = Nz-1;
+
+  // Calculate cell centers shear modulus
+  for ( l=0; l<Ncz; l++ ) {
+    for ( k=0; k<Ncx; k++ ) {
+
+      // Cell center index
+      c0 = k  + l*(Ncx);
+
+      // First - initialize to 0
+      mesh->aniso_factor_n[c0] = 0.0;
+
+      // Compute only if below free surface
+      if ( mesh->BCp.type[c0] != 30 && mesh->BCp.type[c0] != 31) {
+
+        // Loop on phases
+        for ( p=0; p<model->Nb_phases; p++) {
+
+          // Arithmetic
+          if (average == 0) {
+            if (materials->ani_fstrain[p]==0) mesh->aniso_factor_n[c0] += mesh->phase_perc_n[p][c0] * materials->aniso_factor[p];
+            if (materials->ani_fstrain[p]==1) mesh->aniso_factor_n[c0] += mesh->phase_perc_n[p][c0] * AnisoFactorEvolv( mesh->FS_AR_n[c0], materials->ani_fac_max[p] );
+          }
+          // Harmonic
+          if (average == 1) {
+            if (materials->ani_fstrain[p]==0) mesh->aniso_factor_n[c0] += mesh->phase_perc_n[p][c0] * 1.0/materials->aniso_factor[p];
+            if (materials->ani_fstrain[p]==1) mesh->aniso_factor_n[c0] += mesh->phase_perc_n[p][c0] * 1.0/AnisoFactorEvolv( mesh->FS_AR_n[c0], materials->ani_fac_max[p] );
+          }
+          // Geometric
+          if (average == 2) {
+            if (materials->ani_fstrain[p]==0) mesh->aniso_factor_n[c0] += mesh->phase_perc_n[p][c0] * log(materials->aniso_factor[p]);
+            if (materials->ani_fstrain[p]==1) mesh->aniso_factor_n[c0] += mesh->phase_perc_n[p][c0] * log(AnisoFactorEvolv( mesh->FS_AR_n[c0], materials->ani_fac_max[p] ));
+          }
+        }
+
+
+        if ( isinf(1.0/mesh->aniso_factor_n[c0]) ) {
+          printf("Cell %d has no neighbouring particles: average=%d, value = %2.2e, 1/value=%2.2e \n", c0, average, mesh->aniso_factor_n[c0], 1.0/mesh->aniso_factor_n[c0]);
+          for ( p=0; p<model->Nb_phases; p++) {
+            printf("Phase %d, proportion %2.2e ----> UpdateAnisoFactor()\n", p, mesh->phase_perc_n[p][c0]);
+          }
+          exit(1);
+        }
+
+        // Post-process for geometric/harmonic averages
+        if ( average==1 ) mesh->aniso_factor_n[c0] = 1.0/mesh->aniso_factor_n[c0];
+        if ( average==2 ) mesh->aniso_factor_n[c0] = exp(mesh->aniso_factor_n[c0]);
+      }
+    }
+  }
+
+
+  // Calculate vertices shear modulus
+  for ( l=0; l<Nz; l++ ) {
+    for ( k=0; k<Nx; k++ ) {
+
+      // Vertex index
+      c1 = k + l*Nx;
+
+      // First - initialize to 0
+      mesh->aniso_factor_s[c1] = 0.0;
+
+      // Compute only if below free surface
+      if ( mesh->BCg.type[c1] != 30 ) {
+
+        // Loop on phases
+        for ( p=0; p<model->Nb_phases; p++) {
+
+          // Arithmetic
+          if (average == 0) {
+            if (materials->ani_fstrain[p]==0) mesh->aniso_factor_s[c1] += mesh->phase_perc_s[p][c1] * materials->aniso_factor[p];
+            if (materials->ani_fstrain[p]==1) mesh->aniso_factor_s[c1] += mesh->phase_perc_s[p][c1] * AnisoFactorEvolv( mesh->FS_AR_s[c1], materials->ani_fac_max[p] );
+          }
+          // Harmonic
+          if (average == 1) {
+            if (materials->ani_fstrain[p]==0) mesh->aniso_factor_s[c1] += mesh->phase_perc_s[p][c1] *  1.0/materials->aniso_factor[p];
+            if (materials->ani_fstrain[p]==1) mesh->aniso_factor_s[c1] += mesh->phase_perc_s[p][c1] *  1.0/AnisoFactorEvolv( mesh->FS_AR_s[c1], materials->ani_fac_max[p] );
+          }
+          // Geometric
+          if (average == 2) {
+            if (materials->ani_fstrain[p]==0) mesh->aniso_factor_s[c1] += mesh->phase_perc_s[p][c1] *  log(materials->aniso_factor[p]);
+            if (materials->ani_fstrain[p]==1) mesh->aniso_factor_s[c1] += mesh->phase_perc_s[p][c1] *  log(AnisoFactorEvolv( mesh->FS_AR_s[c1], materials->ani_fac_max[p] ));
+          }
+
+        }
+
+        if ( isinf(1.0/mesh->aniso_factor_s[c1]) ) {
+          printf("Node %d has no neighbouring particles\n", c1);
+          for ( p=0; p<model->Nb_phases; p++) {
+            printf("Phase %d, proportion %2.2e ----> UpdateAnisoFactor()\n", p, mesh->phase_perc_s[p][c1]);
+          }
+          exit(1);
+        }
+
+        // Post-process for geometric/harmonic averages
+        if ( average==1 ) mesh->aniso_factor_s[c1] = 1.0/mesh->aniso_factor_s[c1];
+        if ( average==2 ) mesh->aniso_factor_s[c1] = exp(mesh->aniso_factor_s[c1]);
+      }
+    }
+  }
+
+  // Periodic
+  double av;
+  if (model->periodic_x==1) {
+    for( l=0; l<Nz; l++) {
+      c1 = l*Nx + Nx-1;
+      av = 0.5*(mesh->aniso_factor_s[c1] + mesh->aniso_factor_s[l*Nx]);
+      mesh->aniso_factor_s[c1] = av; mesh->aniso_factor_s[l*Nx] = av;
+    }
+  }
+
+}
+
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
+
 void NonNewtonianViscosityGridAniso( grid *mesh, mat_prop *materials, params *model, Nparams Nmodel, scale *scaling, int final_update ) {
 
   int    p, k, l, Nx, Nz, Ncx, Ncz, c0, c1, k1;
@@ -356,8 +487,7 @@ void NonNewtonianViscosityGridAniso( grid *mesh, mat_prop *materials, params *mo
 
   double etaVE, VEcoeff, d0; // to delete
 
-  Nx  = mesh->Nx;
-  Ncx = Nx - 1;
+  Nx  = mesh->Nx;  Ncx = Nx - 1;
   Nz  = mesh->Nz;  Ncz = Nz-1;
 
   // Stuff to be interpolated to vertices
@@ -444,7 +574,6 @@ void NonNewtonianViscosityGridAniso( grid *mesh, mat_prop *materials, params *mo
         if ( fabs(mesh->phase_perc_n[p][c0])>min_fraction ) is_phase_active = true;
 
         if ( is_phase_active ) {
-          // const double aniso_factor_strain = AnisoFactorEvolv( mesh->FS_AR_n[c0], materials->ani_fac_max[p]);
           eta =  ViscosityConciseAniso( p, lxlz, lx2, angle, mesh->aniso_factor_n[c0], mesh->mu_n[c0], mesh->T[c0], mesh->p_in[c0], mesh->d0_n[c0], mesh->phi0_n[c0], mesh->X0_n[c0], Exx, Ezz, Exz, mesh->sxxd0[c0], mesh->szzd0[c0], mesh->sxz0_n[c0], materials    , model, scaling, &txx1, &tzz1, &txz1, &eta_vep, &eII_el, &eII_pl, &eII_pwl, &eII_exp, &eII_lin, &eII_gbs, &eII_cst, &dnew, mesh->strain_n[c0], mesh->dil_n[c0], mesh->fric_n[c0], mesh->C_n[c0], mesh->p0_n[c0], mesh->T0_n[c0], &Xreac, &OverS, &Pcorr, &rho, mesh->bet_n[c0], mesh->div_u[c0], &div_el, &div_pl, &div_r, &Wtot, &Wel, &Wdiss, 1, 1, final_update );
           mesh->phase_eta_n[p][c0] = eta_vep;
 
@@ -503,7 +632,7 @@ void NonNewtonianViscosityGridAniso( grid *mesh, mat_prop *materials, params *mo
       if ( average == 1 ) {
         mesh->eta_n[c0]            = 1.0/mesh->eta_n[c0];
         mesh->eta_phys_n[c0]       = 1.0/mesh->eta_phys_n[c0];
-        mesh->aniso_factor_n[c0]   = 1.0/mesh->aniso_factor_n[c0];
+        // mesh->aniso_factor_n[c0]   = 1.0/mesh->aniso_factor_n[c0];
 
         if (isinf (mesh->eta_phys_n[c0]) ) {
           printf("Inf: Problem on cell centers:\n");
@@ -579,8 +708,6 @@ void NonNewtonianViscosityGridAniso( grid *mesh, mat_prop *materials, params *mo
       // Effective strain rate
       double aniS_e, aniS_vep;
       aniS_e = 1.0 - 1.0 / mesh->aniso_factor_s[c1];
-      // if ( model->aniso_fstrain  == 0 ) aniS_e = 1.0 - 1.0 / mesh->aniso_factor_s[c1];
-      // if ( model->aniso_fstrain  == 1 ) aniS_e = 1.0 - 1.0 / mesh->FS_AR_s[c1];
       EffectiveStrainRate( &Exx, &Ezz, &Exz, mesh->exxd_s[c1], mesh->ezzd_s[c1], mesh->exz[c1], mesh->sxxd0_s[c1], mesh->szzd0_s[c1], mesh->sxz0[c1], d1, d2, aniS_e, eta_e, model->elastic ); 
 
       // if ( model->elastic==1   ) {
@@ -603,8 +730,7 @@ void NonNewtonianViscosityGridAniso( grid *mesh, mat_prop *materials, params *mo
         if ( fabs(mesh->phase_perc_s[p][c1])>min_fraction ) is_phase_active = true;
 
         if ( is_phase_active ) {
-          // const double aniso_factor_strain = AnisoFactorEvolv( mesh->FS_AR_s[c1], materials->ani_fac_max[p]);
-          eta =  ViscosityConciseAniso( p, lxlz, lx2, angle, mesh->aniso_factor_s[c1], mesh->mu_s[c1], mesh->T_s[c1], mesh->P_s[c1], mesh->d0_s[c1], mesh->phi0_s[c1], mesh->X0_s[c1], Exx, Ezz, Exz, mesh->sxxd0_s[c1], mesh->szzd0_s[c1], mesh->sxz0[c1], materials, model, scaling, &txx1, &tzz1, &txz1, &eta_vep, &eII_el, &eII_pl, &eII_pwl, &eII_exp, &eII_lin, &eII_gbs, &eII_cst, &dnew, mesh->strain_s[c1], mesh->dil_s[c1], mesh->fric_s[c1], mesh->C_s[c1], mesh->p0_s[c1], 0.0, &Xreac, &OverS, &Pcorr, &rho, mesh->bet_s[c1], mesh->div_u_s[c1], &div_el, &div_pl, &div_r, &Wtot, &Wel, &Wdiss, 1, 0, final_update );
+          eta =  ViscosityConciseAniso( p, lxlz, lx2, angle,  mesh->aniso_factor_s[c1], mesh->mu_s[c1], mesh->T_s[c1], mesh->P_s[c1], mesh->d0_s[c1], mesh->phi0_s[c1], mesh->X0_s[c1], Exx, Ezz, Exz, mesh->sxxd0_s[c1], mesh->szzd0_s[c1], mesh->sxz0[c1], materials, model, scaling, &txx1, &tzz1, &txz1, &eta_vep, &eII_el, &eII_pl, &eII_pwl, &eII_exp, &eII_lin, &eII_gbs, &eII_cst, &dnew, mesh->strain_s[c1], mesh->dil_s[c1], mesh->fric_s[c1], mesh->C_s[c1], mesh->p0_s[c1], 0.0, &Xreac, &OverS, &Pcorr, &rho, mesh->bet_s[c1], mesh->div_u_s[c1], &div_el, &div_pl, &div_r, &Wtot, &Wel, &Wdiss, 1, 0, final_update );
           mesh->phase_eta_s[p][c1] = eta_vep;
 
           switch ( average ) {
@@ -649,12 +775,6 @@ void NonNewtonianViscosityGridAniso( grid *mesh, mat_prop *materials, params *mo
         mesh->eta_s[c1]            = exp(mesh->eta_s[c1]);
         mesh->eta_phys_s[c1]       = exp(mesh->eta_phys_s[c1]);
       }
-
-      // // Effective strain rate
-      // double aniS_e, aniS_vep;
-      // if ( model->aniso_fstrain  == 0 ) aniS_e = 1.0 - 1.0 / mesh->aniso_factor_s[c1];
-      // if ( model->aniso_fstrain  == 1 ) aniS_e = 1.0 - 1.0 / mesh->FS_AR_s[c1];
-      // EffectiveStrainRate( &Exx, &Ezz, &Exz, mesh->exxd_s[c1], mesh->ezzd_s[c1], mesh->exz[c1], mesh->sxxd0_s[c1], mesh->szzd0_s[c1], mesh->sxz0[c1], d1, d2, aniS_e, eta_e, model->elastic ); 
 
       // Final stress update
       aniS_vep = 1.0 - 1.0 / mesh->aniso_factor_s[c1];

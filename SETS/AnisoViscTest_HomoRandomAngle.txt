@@ -1,10 +1,10 @@
 /**** RESTART ****/
-istep = 000010
+istep = 000000
 irestart = 0
 
 /**** OUTPUT FILES ****/
 writer          = 1
-writer_step     = 10
+writer_step     = 100
 writer_markers  = 0
 writer_debug    = 0
 writer_energies = 0
@@ -17,7 +17,7 @@ free_surface_stab  = 0
 finite_strain      = 1
 advection          = 1
 anisotropy         = 1
-marker_aniso_angle = 1
+marker_aniso_angle = 1 / to set individual initial aniso_angles within the same phase
 
 /**** SCALES ****/
 eta = 1
@@ -26,9 +26,9 @@ V   = 1
 T   = 1
 
 /**** SPACE ****/
-Nx      = 151
-Nz      = 151
-Nt      = 1
+Nx      = 126
+Nz      = 126
+Nt      = 2000
 xmin    = -5.000000e-1
 zmin    = -5.000000e-1
 xmax    =  5.000000e-1
@@ -40,19 +40,18 @@ Nz_part = 4
 
 /**** TIME ****/
 constant_dt = 0
-Courant     = 0.5
-dt          = 0.1
+Courant     = 0.45
+dt          = 1.0e+11
 RK          = 4
 
 /**** LINEAR SOLVER ****/
 noisy        = 1
 penalty      = 1e5
-lin_solver   = -1
 diag_scaling = 0
 lin_abs_div  = 1e-9
 lin_rel_div  = 1e-9
-lin_abs_mom  = 1e-9
-lin_rel_mom  = 1e-9
+lin_abs_mom  = 1e-11
+lin_rel_mom  = 1e-11
 
 /**** NON-LINEAR SOLVER ****/
 Newton          = 1
@@ -71,12 +70,15 @@ max_eta      = 1e6
 /**** SETUP-DEPENDANT ****/
 shear_style     = 1
 periodic_x      = 1
-pure_shear_ALE  = 1
+pure_shear_ALE  = 0
 bkg_strain_rate = 1
-user0           = 1     / temperature [°C]
-user1           = 0.12  / inclusion radius [m]
-user2           = 0
-user3           = 0
+user0           = 0.0   / nothing
+user1           = 0.0   / nothing
+user2           = 0.0   / nothing
+user3           = 0.0   / nothing
+user4           = 0.0   / nothing
+user5           = 0.0   / nothing
+user6           = 0.0   / nothing
 
 /**** GRAVITY ****/
 gx = 0.0000
@@ -105,15 +107,15 @@ gbsv         = 0             / grain boundary sliding
 expv         = 0             / peierls creep
 gsel         = 0             / grain size evo.
 eta0         = 1e0
-npwl         = 0.0
+npwl         = 0
 Qpwl         = 0
 ani_fstrain  = 1    / activates finite strain anisotropy
-ani_fac_max  = 10
+ani_fac_max  = 1000.0
 aniso_factor = 1.0
 
 /**** PHASE 2 ****/
 ID           = 1
-rho          = 2700.00 / inclusion
+rho          = 2700.00 / elliptical inclusions
 G            = 1e30
 Cv           = 1050
 k            = 2.5
@@ -130,7 +132,11 @@ linv         = 0             / diff. creep
 gbsv         = 0             / grain boundary sliding
 expv         = 0             / peierls creep
 gsel         = 0             / grain size evo.
-eta0         = 1e-1
+eta0         = 1e3
 npwl         = 0
 Qpwl         = 0
+ani_fstrain  = 0    / activates finite strain anisotropy
+ani_fac_max  = 1000.0
 aniso_factor = 1.0
+
+//END INPUT FILE//
