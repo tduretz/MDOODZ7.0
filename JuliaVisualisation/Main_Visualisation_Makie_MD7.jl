@@ -9,17 +9,17 @@ My = 1e6*365*24*3600
 function main()
 
     # Set the path to your files
-    path ="/Users/lcandiot/Developer/MDOODZ7.0/MDLIB/"
+    path ="/Users/lcandiot/Developer/MDOODZ7.0/cmake-exec/AnneloreSubduction/"
 
     # File numbers
-    file_start = 675
+    file_start = 0
     file_step  = 25
-    file_end   = 675
+    file_end   = 0
 
     # Select field to visualise
-    # field = :Phases
+    field = :Phases
     # field = :Density
-    field = :Viscosity 
+    # field = :Viscosity 
     # field = :PlasticStrainrate
     # field = :Stress
     # field = :StrainRate
