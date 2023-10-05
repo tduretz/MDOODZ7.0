@@ -87,7 +87,6 @@ void CorrectTopoIni( markers *particles, mat_prop materials, markers *topo_chain
             topo_chain->z[k]   = grid_topo;
         }
     }
-    
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
@@ -598,7 +597,6 @@ void CellFlagging( grid *mesh, params model, surface topo, scale scaling ) {
             
             if ( PVtag[c2] == 30 ) {
                 mesh->BCt.type[c1]     = 30;
-                //                mesh->BCt.val[c1]  = zeroC/scaling.T;
                 mesh->T[c1]            = zeroC/scaling.T ;
                 mesh->BCp_exp.type[c2] = 30;
             }
@@ -606,11 +604,10 @@ void CellFlagging( grid *mesh, params model, surface topo, scale scaling ) {
             // Above surface pressure nodes
             if ( PVtag[c2] == 60 ) {
                 mesh->BCp.type[c1] = 31;
-                mesh->BCp.val[c1]  = 0.0*7.0e6/scaling.S;//0*mesh->p_lith[c1-ncx];
+                mesh->BCp.val[c1]  = 0.0*7.0e6/scaling.S;
                 
                 // TEMPERATURE above THE SURFACE
                 mesh->BCt.type[c1] = 30;
-                //                mesh->BCt.val[c1]  = zeroC/scaling.T;
                 mesh->T[c1]        = zeroC/scaling.T ;
                 // activate first layer above surface for interpolation
                 mesh->BCp_exp.type[c2] = -1;

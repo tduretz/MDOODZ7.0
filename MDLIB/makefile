@@ -1,4 +1,4 @@
-# MDOODZ 6.0 makefile
+# MDOODZ 7.0 makefile
 SHELL := /bin/bash
 
 # Compiler
