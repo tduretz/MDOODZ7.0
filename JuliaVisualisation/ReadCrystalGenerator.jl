@@ -33,7 +33,7 @@ function main()
      resolution = 1000
      f = Figure(resolution = (Lx/Lz*resolution, resolution), fontsize=25)
      ax1 = Axis(f[1, 1], title = L"Phases", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
-     scatter!(ax1, x[p.==1], z x[p.==1])
+     scatter!(ax1, x[p.==1], z[p.==1])
      display(f)     
 
     # # @show nmark
