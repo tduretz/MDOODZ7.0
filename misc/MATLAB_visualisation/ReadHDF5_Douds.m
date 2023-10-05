@@ -5,15 +5,15 @@ clear
 clear all
 % close all
 clc
-path = '~/REPO_GIT/MDOODZ7.0/MDLIB/';
+path = 'C:\Users\Thanushika\AppData\Local\Packages\CanonicalGroupLimited.Ubuntu_79rhkp1fndgsc\LocalState\rootfs\home\thanushika\MDOODZ7.0\cmake-exec\RiftingChenin\';
 cd(path)
 DEBUG       = 0;
 mdoodz6     = 1;
 
 % Files
-istart = 10;
-ijump  = 1;
-iend   = 10;
+istart = 50;
+ijump  = 10;
+iend   = 50;
 
 %--------------------------------------------------
 % what do you want to plot:
@@ -33,7 +33,7 @@ stress_evol     = 0;
 stress_plot     = 0;
 srate_plot      = 0;
 acc_strain      = 0;
-temperature     = 0;
+temperature     = 1;
 temp_evol       = 0;
 Stefan          = 0;
 paper           = 0;
@@ -47,7 +47,7 @@ topo_SR_plot    = 0;
 topo_maps       = 0;
 phases_uplift   = 0;
 dt_time         = 0;
-srate_add       = 1;
+srate_add       = 0;
 acc_strain_add  = 0;
 phase_temp      = 0;
 srate_add_perc  = 0;
@@ -62,14 +62,14 @@ emergency_benoit = 0;
 fstrain          = 0;
 shear_heatinging    = 0;
 princi_stress    = 0;
-director_vector  = 1;
+director_vector  = 0;
 Pl_soft          = 0;
 Sole             = 0;
 overstress       = 0;
 
 % Visualisation options
 printfig      = 0;
-print2screen  = 1;
+print2screen  = 0;
 res           = '-r300';
 format        = '-dpng';
 color_map     = 'Benoit_MLPS';
@@ -619,7 +619,7 @@ for istep=istart:ijump:iend
                 figCount = figCount +1;
                 figure(figCount); clf;
             else
-                figure('Visible', 'Off');
+                figure('Visible', 'On');
             end
             
             subplot(221)
@@ -690,7 +690,7 @@ for istep=istart:ijump:iend
                 figCount = figCount +1;
                 figure(figCount); clf;
             else
-                figure('Visible', 'Off');
+                figure('Visible', 'On');
             end
             
             subplot(211)
@@ -749,7 +749,7 @@ for istep=istart:ijump:iend
                 figCount = figCount +1;
                 figure(figCount); clf;
             else
-                figure('Visible', 'Off');
+                figure('Visible', 'On');
             end
             
             subplot(211)
@@ -799,7 +799,7 @@ for istep=istart:ijump:iend
                 figCount = figCount +1;
                 figure(figCount), clf
             else
-                figure('Visible', 'Off')
+                figure('Visible', 'On')
             end
             
             clf
@@ -845,7 +845,7 @@ for istep=istart:ijump:iend
             %             figCount = figCount +1;
             %             figure(figCount), clf
             %         else
-            %             figure('Visible', 'Off')
+            %             figure('Visible', 'On')
             %         end
             %
             %         clf
@@ -1061,7 +1061,7 @@ for istep=istart:ijump:iend
                 figCount = figCount +1;
                 figure(figCount), clf
             else
-                figure('Visible', 'Off')
+                figure('Visible', 'On')
             end
             
             %         if ( H>L ) subplot(121); else subplot(211); end
@@ -1074,9 +1074,9 @@ for istep=istart:ijump:iend
             alpha(p,0.7);
             hold on
             if Ccontours == 1; AddCompoContours( filename, VizGrid, crop, lim  ); end
-            imagesc( xc_plot, zc_plot, Vmag*(365.25*3600*24*100), 'Visible', 'off' );
-%             imagesc( xc_plot, zc_plot, log10(eII), 'Visible', 'off' );
-%             imagesc( xc_plot, zc_plot, Vxc, 'Visible', 'off' );
+            imagesc( xc_plot, zc_plot, Vmag*(365.25*3600*24*100), 'Visible', 'On' );
+%             imagesc( xc_plot, zc_plot, log10(eII), 'Visible', 'On' );
+%             imagesc( xc_plot, zc_plot, Vxc, 'Visible', 'On' );
 
             shading flat,axis xy image, colorbar('SouthOutside');
             
@@ -1193,7 +1193,7 @@ for istep=istart:ijump:iend
                 figCount = figCount +1;
                 figure(figCount), clf
             else
-                figure('Visible', 'Off')
+                figure('Visible', 'On')
             end
             
             
@@ -1269,7 +1269,7 @@ for istep=istart:ijump:iend
                 figCount = figCount +1;
                 figure(figCount), clf
             else
-                figure('Visible', 'Off')
+                figure('Visible', 'On')
             end
             %         P = P-mean(P(:));
             hold on
@@ -1279,7 +1279,7 @@ for istep=istart:ijump:iend
             shading flat,axis xy image, colorbar;
             
             %         AddCompoContours( filename, VizGrid, crop, lim  )
-            %         imagesc( xc_plot, zc_plot, P, 'visible', 'off')
+            %         imagesc( xc_plot, zc_plot, P, 'Visible', 'On')
             %         set(hb, 'Color', 'w', 'LineWidth', 2);
             
             hold off
@@ -1296,7 +1296,7 @@ for istep=istart:ijump:iend
             %              figCount = figCount +1;
             %             figure(figCount), clf
             %         else
-            %             figure('Visible', 'Off')
+            %             figure('Visible', 'On')
             %         end
             % %         P = P-mean(P(:));
             %         hold on
@@ -1384,7 +1384,7 @@ for istep=istart:ijump:iend
                 figCount = figCount +1;
                 figure(figCount), clf
             else
-                figure('Visible', 'Off')
+                figure('Visible', 'On')
             end
                         
             % eII
@@ -1397,7 +1397,7 @@ for istep=istart:ijump:iend
             imagesc( xc_plot, zc_plot, log10(eII) )
             hold on
             if Ccontours == 1; AddCompoContours( filename, VizGrid, crop, lim  ); end
-            imagesc( xc_plot, zc_plot, log10(eII), 'visible', 'off' )
+            imagesc( xc_plot, zc_plot, log10(eII), 'Visible', 'On' )
             hold off
             shading flat,axis xy image, colorbar;
             xlabel(xLabel), ylabel(zLabel);
@@ -1417,7 +1417,7 @@ for istep=istart:ijump:iend
             shading flat,axis xy image, colorbar;
             hold on
             if Ccontours == 1; AddCompoContours( filename, VizGrid, crop, lim  ); end
-            imagesc( xc_plot, zc_plot, (sII), 'visible', 'off' )
+            imagesc( xc_plot, zc_plot, (sII), 'Visible', 'On' )
             hold off
             xlabel(xLabel), ylabel(zLabel);
             title(['sII at' TimeLabel, ' min = ', num2str((min(sII(:))), '%2.2e' ), ' Pa', ' max = ', num2str((max(sII(:))), '%2.2e' ), ' Pa' ])
@@ -1537,7 +1537,7 @@ for istep=istart:ijump:iend
             imagesc( xc_plot, zc_plot,Tpre-273.15 )
             hold on
             if Ccontours == 1; AddCompoContours( filename, VizGrid, crop, lim  ); end
-            imagesc( xc_plot, zc_plot, T_prerift-273.15, 'visible', 'off' )
+            imagesc( xc_plot, zc_plot, T_prerift-273.15, 'Visible', 'On' )
             hold off
             shading flat,axis xy image, colorbar;
             caxis([0 900])
@@ -1616,7 +1616,7 @@ for istep=istart:ijump:iend
                 figCount = figCount +1;
                 figure(figCount), clf
             else
-                figure('Visible', 'Off')
+                figure('Visible', 'On')
             end
             
             % exxd
@@ -1738,7 +1738,7 @@ for istep=istart:ijump:iend
                 figCount = figCount +1;
                 figure(figCount), clf
             else
-                figure('Visible', 'Off')
+                figure('Visible', 'On')
             end
             
             % exxd
@@ -1814,7 +1814,7 @@ for istep=istart:ijump:iend
                 figCount = figCount +1;
                 figure(figCount), clf
             else
-                figure('Visible', 'Off')
+                figure('Visible', 'On')
             end
             
             if strcmp(color_map,'Benoit_MLPS')
@@ -1883,14 +1883,14 @@ for istep=istart:ijump:iend
                 figCount = figCount +1;
                 figure(figCount), clf
             else
-                figure('Visible', 'Off')
+                figure('Visible', 'On')
             end
             
             imagesc( xc_plot, zc_plot, Pdyn )
             shading flat,axis xy image, colorbar;
             hold on
             if Ccontours == 1; AddCompoContours( filename, VizGrid, crop, lim  ); end
-            imagesc( xc_plot, zc_plot, Pdyn, 'Visible', 'off' )
+            imagesc( xc_plot, zc_plot, Pdyn, 'Visible', 'On' )
             hold off
             xlabel(xLabel), ylabel(zLabel)
             title(['Dynamic pressure at' TimeLabel])
@@ -1907,14 +1907,14 @@ for istep=istart:ijump:iend
 %                 figCount = figCount +1;
 %                 figure(figCount), clf
 %             else
-%                 figure('Visible', 'Off')
+%                 figure('Visible', 'On')
 %             end
 %             
 %             imagesc( xc_plot, zc_plot, Plith )
 %             shading flat,axis xy image, colorbar;
 %             hold on
 %             if Ccontours == 1; AddCompoContours( filename, VizGrid, crop, lim  ); end
-%             imagesc( xc_plot, zc_plot, Pdyn, 'Visible', 'off' )
+%             imagesc( xc_plot, zc_plot, Pdyn, 'Visible', 'On' )
 %             hold off
 %             xlabel(xLabel), ylabel(zLabel)
 %             title(['Lithostatic pressure at' TimeLabel])
@@ -1925,14 +1925,14 @@ for istep=istart:ijump:iend
 %                 figCount = figCount +1;
 %                 figure(figCount), clf
 %             else
-%                 figure('Visible', 'Off')
+%                 figure('Visible', 'On')
 %             end
 % 
 %             imagesc( xc_plot, 0.5*(zc_plot(2:end)+zc_plot(1:end-1)), diff(Plith,1,1)/dz*1e-5/1000*1000 )
 % 
 %             hold on
 %             %         if Ccontours == 1; AddCompoContours( filename, VizGrid, crop, lim  ); end
-%             imagesc( xc_plot, 0.5*(zc_plot(2:end)+zc_plot(1:end-1)), diff(Plith,1,1)/dz*1e-5/1000*1000, 'Visible', 'off' )
+%             imagesc( xc_plot, 0.5*(zc_plot(2:end)+zc_plot(1:end-1)), diff(Plith,1,1)/dz*1e-5/1000*1000, 'Visible', 'On' )
 %             hold off
 %             xlabel(xLabel), ylabel(zLabel)
 %             title(['dPlith/dz [Pa/m] at' TimeLabel])
@@ -1990,14 +1990,14 @@ for istep=istart:ijump:iend
                 figCount = figCount +1;
                 figure(figCount), clf
             else
-                figure('Visible', 'Off')
+                figure('Visible', 'On')
             end            
             
 %             subplot(311)
 %             imagesc( xc_plot, zc_plot, log10(eII_el) )
 %             hold on
 %             if Ccontours == 1; AddCompoContours( filename, VizGrid, crop, lim  ); end
-%             imagesc( xc_plot, zc_plot, log10(eII_el), 'Visible', 'off' )
+%             imagesc( xc_plot, zc_plot, log10(eII_el), 'Visible', 'On' )
 %             shading flat,axis xy image, colorbar;
 %             if exist('minEii', 'var') caxis([minEii maxEii]); end
 %             shading flat,axis xy image, colorbar;
@@ -2012,7 +2012,7 @@ for istep=istart:ijump:iend
 %             imagesc( xc_plot, zc_plot, log10(eII_pwl) )
 %             hold on
 %             if Ccontours == 1; AddCompoContours( filename, VizGrid, crop, lim  ); end
-%             imagesc( xc_plot, zc_plot, log10(eII_pwl), 'Visible', 'off' )
+%             imagesc( xc_plot, zc_plot, log10(eII_pwl), 'Visible', 'On' )
 %             shading flat,axis xy image, colorbar;
 %             if ColorFabio==1,             load('roma.mat')
 %             colormap(flipud(roma));
@@ -2029,7 +2029,7 @@ for istep=istart:ijump:iend
 %             imagesc( xc_plot, zc_plot, log10(eII_pl) )
 %             hold on
 %             if Ccontours == 1; AddCompoContours( filename, VizGrid, crop, lim  ); end
-%             imagesc( xc_plot, zc_plot, log10(eII_pl), 'Visible', 'off' )
+%             imagesc( xc_plot, zc_plot, log10(eII_pl), 'Visible', 'On' )
 %             shading flat,axis xy image, colorbar;
 %             if exist('minEii', 'var') caxis([minEii maxEii]); end
 %             hold off
@@ -2045,7 +2045,7 @@ for istep=istart:ijump:iend
             imagesc( xc_plot, zc_plot, log10(eII_el) )
             hold on
             if Ccontours == 1; AddCompoContours( filename, VizGrid, crop, lim  ); end
-            imagesc( xc_plot, zc_plot, log10(eII_el), 'Visible', 'off' )
+            imagesc( xc_plot, zc_plot, log10(eII_el), 'Visible', 'On' )
             shading flat,axis xy image, colorbar;
             if exist('minEii', 'var') caxis([minEii maxEii]); end
             shading flat,axis xy image, colorbar;
@@ -2057,7 +2057,7 @@ for istep=istart:ijump:iend
             imagesc( xc_plot, zc_plot, log10(eII_pl) )
             hold on
             if Ccontours == 1; AddCompoContours( filename, VizGrid, crop, lim  ); end
-            imagesc( xc_plot, zc_plot, log10(eII_pl), 'Visible', 'off' )
+            imagesc( xc_plot, zc_plot, log10(eII_pl), 'Visible', 'On' )
             shading flat,axis xy image, colorbar;
             if exist('minEii', 'var') caxis([minEii maxEii]); end
             hold off
@@ -2069,7 +2069,7 @@ for istep=istart:ijump:iend
             imagesc( xc_plot, zc_plot, log10(eII_pwl) )
             hold on
             if Ccontours == 1; AddCompoContours( filename, VizGrid, crop, lim  ); end
-            imagesc( xc_plot, zc_plot, log10(eII_pwl), 'Visible', 'off' )
+            imagesc( xc_plot, zc_plot, log10(eII_pwl), 'Visible', 'On' )
             shading flat,axis xy image, colorbar;
             if exist('minEii', 'var') caxis([minEii maxEii]); end
             hold off
@@ -2085,7 +2085,7 @@ for istep=istart:ijump:iend
             imagesc( xc_plot, zc_plot, (log10(eII_exp)) )
             hold on
             if Ccontours == 1; AddCompoContours( filename, VizGrid, crop, lim  ); end
-            imagesc( xc_plot, zc_plot, (log10(eII_exp)), 'Visible', 'off' )
+            imagesc( xc_plot, zc_plot, (log10(eII_exp)), 'Visible', 'On' )
             shading flat,axis xy image, colorbar;
             if exist('minEii', 'var') caxis([minEii maxEii]); end
             hold off
@@ -2098,7 +2098,7 @@ for istep=istart:ijump:iend
             %         imagesc( xc_plot, zc_plot, eII_lin./eII )
             hold on
             if Ccontours == 1; AddCompoContours( filename, VizGrid, crop, lim  ); end
-            imagesc( xc_plot, zc_plot, (log10(eII_lin)), 'Visible', 'off' )
+            imagesc( xc_plot, zc_plot, (log10(eII_lin)), 'Visible', 'On' )
             shading flat,axis xy image, colorbar;
             if exist('minEii', 'var') caxis([minEii maxEii]); end
             hold off
@@ -2113,7 +2113,7 @@ for istep=istart:ijump:iend
             imagesc( xc_plot, zc_plot, (log10(eII_gbs)) )
             hold on
             if Ccontours == 1; AddCompoContours( filename, VizGrid, crop, lim  ); end
-            imagesc( xc_plot, zc_plot, (log10(eII_gbs)), 'Visible', 'off' )
+            imagesc( xc_plot, zc_plot, (log10(eII_gbs)), 'Visible', 'On' )
             shading flat,axis xy image, colorbar;
             if exist('minEii', 'var') caxis([minEii maxEii]); end
             hold off
@@ -2165,14 +2165,14 @@ for istep=istart:ijump:iend
                 figCount = figCount +1;
                 figure(figCount), clf
             else
-                figure('Visible', 'Off')
+                figure('Visible', 'On')
             end
             
             subplot(321)
             imagesc( xc_plot, zc_plot, log10(eII_el) )
             hold on
             if Ccontours == 1; AddCompoContours( filename, VizGrid, crop, lim  ); end
-            imagesc( xc_plot, zc_plot, (eII_el), 'Visible', 'off' )
+            imagesc( xc_plot, zc_plot, (eII_el), 'Visible', 'On' )
             shading flat,axis xy image, colorbar;
             if exist('minEii', 'var') caxis([strmin strmax]); end
             shading flat,axis xy image, colorbar;
@@ -2184,7 +2184,7 @@ for istep=istart:ijump:iend
             imagesc( xc_plot, zc_plot, (eII_pl) )
             hold on
             if Ccontours == 1; AddCompoContours( filename, VizGrid, crop, lim  ); end
-            imagesc( xc_plot, zc_plot, (eII_pl), 'Visible', 'off' )
+            imagesc( xc_plot, zc_plot, (eII_pl), 'Visible', 'On' )
             shading flat,axis xy image, colorbar;
             if exist('minEii', 'var') caxis([strmin strmax]); end
             hold off
@@ -2196,7 +2196,7 @@ for istep=istart:ijump:iend
             imagesc( xc_plot, zc_plot, (eII_pwl) )
             hold on
             if Ccontours == 1; AddCompoContours( filename, VizGrid, crop, lim  ); end
-            imagesc( xc_plot, zc_plot, (eII_pwl), 'Visible', 'off' )
+            imagesc( xc_plot, zc_plot, (eII_pwl), 'Visible', 'On' )
             shading flat,axis xy image, colorbar;
             if exist('minEii', 'var') caxis([strmin strmax]); end
             hold off
@@ -2208,7 +2208,7 @@ for istep=istart:ijump:iend
             imagesc( xc_plot, zc_plot, ((eII_exp)) )
             hold on
             if Ccontours == 1; AddCompoContours( filename, VizGrid, crop, lim  ); end
-            imagesc( xc_plot, zc_plot, ((eII_exp)), 'Visible', 'off' )
+            imagesc( xc_plot, zc_plot, ((eII_exp)), 'Visible', 'On' )
             shading flat,axis xy image, colorbar;
             if exist('minEii', 'var') caxis([strmin strmin]); end
             hold off
@@ -2220,7 +2220,7 @@ for istep=istart:ijump:iend
             imagesc( xc_plot, zc_plot, ((eII_lin)) )
             hold on
             if Ccontours == 1; AddCompoContours( filename, VizGrid, crop, lim  ); end
-            imagesc( xc_plot, zc_plot, ((eII_lin)), 'Visible', 'off' )
+            imagesc( xc_plot, zc_plot, ((eII_lin)), 'Visible', 'On' )
             shading flat,axis xy image, colorbar;
             if exist('minEii', 'var') caxis([strmin strmax]); end
             hold off
@@ -2232,7 +2232,7 @@ for istep=istart:ijump:iend
             imagesc( xc_plot, zc_plot, ((eII)) )
             hold on
             if Ccontours == 1; AddCompoContours( filename, VizGrid, crop, lim  ); end
-            imagesc( xc_plot, zc_plot, ((eII)), 'Visible', 'off' )
+            imagesc( xc_plot, zc_plot, ((eII)), 'Visible', 'On' )
             shading flat,axis xy image, colorbar;
             if exist('minEii', 'var') caxis([strmin strmax]); end
             hold off
@@ -2245,7 +2245,7 @@ for istep=istart:ijump:iend
             %         shading flat,axis xy image, colorbar;
             %         hold on
             %         if Ccontours == 1; AddCompoContours( filename, VizGrid, crop, lim  ); end
-            %         imagesc( xc_plot, zc_plot, (eII_el), 'Visible', 'off' )
+            %         imagesc( xc_plot, zc_plot, (eII_el), 'Visible', 'On' )
             %         hold off
             %         xlabel(xLabel), ylabel(zLabel)
             %         title(['Acc. Elastic strain at' TimeLabel])
@@ -2257,7 +2257,7 @@ for istep=istart:ijump:iend
             %         shading flat,axis xy image, colorbar;
             %         hold on
             %         if Ccontours == 1; AddCompoContours( filename, VizGrid, crop, lim  ); end
-            %         imagesc( xc_plot, zc_plot, (abs(eII_pl)), 'Visible', 'off' )
+            %         imagesc( xc_plot, zc_plot, (abs(eII_pl)), 'Visible', 'On' )
             %         hold off
             %         xlabel(xLabel), ylabel(zLabel)
             %         title(['Acc. Plastic strain at' TimeLabel])
@@ -2269,7 +2269,7 @@ for istep=istart:ijump:iend
             %         shading flat,axis xy image, colorbar;
             %         hold on
             %         if Ccontours == 1; AddCompoContours( filename, VizGrid, crop, lim  ); end
-            %         imagesc( xc_plot, zc_plot, (abs(eII_pwl)), 'Visible', 'off' )
+            %         imagesc( xc_plot, zc_plot, (abs(eII_pwl)), 'Visible', 'On' )
             %         hold off
             %         xlabel(xLabel), ylabel(zLabel)
             %         title(['Acc. Power law strain at' TimeLabel])
@@ -2281,7 +2281,7 @@ for istep=istart:ijump:iend
             %         shading flat,axis xy image, colorbar;
             %         hold on
             %         if Ccontours == 1; AddCompoContours( filename, VizGrid, crop, lim  ); end
-            %         imagesc( xc_plot, zc_plot, ((eII_exp)), 'Visible', 'off' )
+            %         imagesc( xc_plot, zc_plot, ((eII_exp)), 'Visible', 'On' )
             %         hold off
             %         xlabel(xLabel), ylabel(zLabel)
             %         title(['Acc. Exp. strain at' TimeLabel])
@@ -2307,7 +2307,7 @@ for istep=istart:ijump:iend
                 figCount = figCount +1;
                 figure(figCount), clf
             else
-                figure('Visible', 'Off')
+                figure('Visible', 'On')
             end
             
             
@@ -2324,7 +2324,7 @@ for istep=istart:ijump:iend
             p=imagesc( xc_plot, zc_plot, logstrain );
             hold on
             if Ccontours == 1; AddCompoContours( filename, VizGrid, crop, lim  ); end
-            imagesc( xc_plot, zc_plot, (log10(strain)), 'Visible', 'off' );
+            imagesc( xc_plot, zc_plot, (log10(strain)), 'Visible', 'On' );
             shading flat,axis xy image, colorbar;
             hold off
             if exist('minStr', 'var') caxis([minStr maxStr]); end
@@ -2354,7 +2354,7 @@ for istep=istart:ijump:iend
                 figCount = figCount +1;
                 figure(figCount), clf
             else
-                figure('Visible', 'Off')
+                figure('Visible', 'On')
             end
             
             imagesc( xc_plot, zc_plot, T )
@@ -2362,9 +2362,9 @@ for istep=istart:ijump:iend
             colormap('jet')
             hold on
             if Ccontours == 1; AddCompoContours( filename, VizGrid, crop, lim  ); end
-            %         imagesc( xc_plot, zc_plot, T, 'Visible', 'off' )
+            %         imagesc( xc_plot, zc_plot, T, 'Visible', 'On' )
             
-            imagesc( xc_plot, zc_plot, T, 'Visible', 'off' )
+            imagesc( xc_plot, zc_plot, T, 'Visible', 'On' )
             hold off
             
             xlabel(xLabel), ylabel(zLabel)
@@ -2377,8 +2377,9 @@ for istep=istart:ijump:iend
                 print([path, './Fig_Temperature/Fig_Temperature', num2str(istep,'%05d'),file_suffix], format, res)
                 close all
             end
-            
+            drawnow 
         end
+       
         
         %--------------------------------------------------
         % plot for Stefan
@@ -2567,14 +2568,14 @@ for istep=istart:ijump:iend
                     figCount = figCount +1;
                     figure(figCount), clf
                 else
-                    figure('Visible', 'Off')
+                    figure('Visible', 'On')
                 end
                 
                 % eta
                 subplot(3,1,1),
                 imagesc(xc_plot,zc_plot, (sII));
                 if Ccontours == 1; AddCompoContours( filename, VizGrid, crop, lim  ); end
-                %         imagesc(xc_plot,zc_plot, (sII), 'Visible', 'off');
+                %         imagesc(xc_plot,zc_plot, (sII), 'Visible', 'On');
                 %         drawnow
                 if exist('minSii', 'var') caxis([minSii maxSii]); end
                 shading flat;
@@ -2701,7 +2702,7 @@ for istep=istart:ijump:iend
                 figCount = figCount +1;
                 figure(figCount), clf
             else
-                figure('Visible', 'Off'), clf
+                figure('Visible', 'On'), clf
             end
             
             if show == 1
@@ -3015,7 +3016,7 @@ for istep=istart:ijump:iend
                 figCount = figCount +1;
                 figure(figCount),clf
             else
-                figure('Visible', 'Off')
+                figure('Visible', 'On')
             end
             
             colormap('Bone')        % eII
@@ -3118,7 +3119,7 @@ for istep=istart:ijump:iend
                 figCount = figCount +1;
                 figure(figCount), clf
             else
-                figure('Visible', 'Off')
+                figure('Visible', 'On')
             end
             
             imagesc( xc_plot(2:end-1), zc_plot(2:end-1), (divEii) )
@@ -3185,7 +3186,7 @@ for istep=istart:ijump:iend
                 figCount = figCount +1;
                 figure(figCount), clf
             else
-                figure('Visible', 'Off')
+                figure('Visible', 'On')
             end
             
             % sII
@@ -3266,7 +3267,7 @@ for istep=istart:ijump:iend
                 figCount = figCount +1;
                 figure(figCount), clf
             else
-                figure('Visible', 'Off')
+                figure('Visible', 'On')
             end
             subplot(311)
             title(TimeLabel)
@@ -3326,7 +3327,7 @@ for istep=istart:ijump:iend
                 figCount = figCount +1;
                 f=figure(figCount), clf
             else
-                figure('Visible', 'Off')
+                figure('Visible', 'On')
             end
             
             subplot(211)
@@ -3343,7 +3344,7 @@ for istep=istart:ijump:iend
             shading flat, axis xy image, colorbar;
             title(['Viscosity (log10) at' TimeLabel])
             if Ccontours == 1; AddCompoContours( filename, VizGrid, crop, lim  ); end
-            if Ccontours == 1; imagesc(xg_plot, zg_plot, log10(eta), 'Visible', 'Off'); end
+            if Ccontours == 1; imagesc(xg_plot, zg_plot, log10(eta), 'Visible', 'On'); end
             
             xlabel(xLabel), ylabel(zLabel);
             if crop == 1 xlim([lim.xmin lim.xmax]); ylim([lim.zmin lim.zmax]); end
@@ -3380,7 +3381,7 @@ for istep=istart:ijump:iend
                 figCount = figCount +1;
                 f=figure(figCount), clf
             else
-                figure('Visible', 'Off')
+                figure('Visible', 'On')
             end
             
             subplot(211)
@@ -3397,7 +3398,7 @@ for istep=istart:ijump:iend
             shading flat, axis xy image, colorbar('SouthOutside');
             title(['Strain rate invariant II (log10) at' TimeLabel])
             if Ccontours == 1; AddCompoContours( filename, VizGrid, crop, lim  ); end
-            if Ccontours == 1; imagesc(xg_plot, zg_plot, log10(eII), 'Visible', 'Off'); end
+            if Ccontours == 1; imagesc(xg_plot, zg_plot, log10(eII), 'Visible', 'On'); end
             
             xlabel(xLabel), ylabel(zLabel);
             if crop == 1 xlim([lim.xmin lim.xmax]); ylim([lim.zmin lim.zmax]); end
@@ -3453,7 +3454,7 @@ for istep=istart:ijump:iend
                     figCount = figCount +1;
                     figure(figCount), clf
                 else
-                    figure('Visible', 'Off')
+                    figure('Visible', 'On')
                 end
                 
                 subplot(221)
@@ -3549,7 +3550,7 @@ for istep=istart:ijump:iend
                 figCount = figCount +1;
                 figure(figCount), clf
             else
-                figure('Visible', 'Off')
+                figure('Visible', 'On')
             end
             clf
             
@@ -3657,7 +3658,7 @@ for istep=istart:ijump:iend
                 figCount = figCount +1;
                 figure(figCount), clf
             else
-                figure('Visible', 'Off')
+                figure('Visible', 'On')
             end
             
             colormap('jet');
@@ -3666,7 +3667,7 @@ for istep=istart:ijump:iend
             imagesc( xc_plot, zc_plot, eII_el./eII )
             hold on
             if Ccontours == 1; AddCompoContours( filename, VizGrid, crop, lim  ); end
-            imagesc( xc_plot, zc_plot, (eII_el./eII), 'Visible', 'off' )
+            imagesc( xc_plot, zc_plot, (eII_el./eII), 'Visible', 'On' )
             shading flat,axis xy image, colorbar;
             caxis([0 1]);
             shading flat,axis xy image, colorbar;
@@ -3678,7 +3679,7 @@ for istep=istart:ijump:iend
             imagesc( xc_plot, zc_plot, eII_pl./eII )
             hold on
             if Ccontours == 1; AddCompoContours( filename, VizGrid, crop, lim  ); end
-            imagesc( xc_plot, zc_plot, (eII_pl./eII), 'Visible', 'off' )
+            imagesc( xc_plot, zc_plot, (eII_pl./eII), 'Visible', 'On' )
             shading flat,axis xy image, colorbar;
             caxis([0 1]);
             hold off
@@ -3690,7 +3691,7 @@ for istep=istart:ijump:iend
             imagesc( xc_plot, zc_plot, eII_pwl./eII )
             hold on
             if Ccontours == 1; AddCompoContours( filename, VizGrid, crop, lim  ); end
-            imagesc( xc_plot, zc_plot, log10(eII_pwl./eII), 'Visible', 'off' )
+            imagesc( xc_plot, zc_plot, log10(eII_pwl./eII), 'Visible', 'On' )
             shading flat,axis xy image, colorbar;
             caxis([0 1]);
             hold off
@@ -3702,7 +3703,7 @@ for istep=istart:ijump:iend
             imagesc( xc_plot, zc_plot, eII_exp./eII )
             hold on
             if Ccontours == 1; AddCompoContours( filename, VizGrid, crop, lim  ); end
-            imagesc( xc_plot, zc_plot, ((eII_exp./eII)), 'Visible', 'off' )
+            imagesc( xc_plot, zc_plot, ((eII_exp./eII)), 'Visible', 'On' )
             shading flat,axis xy image, colorbar;
             caxis([0 1]);
             hold off
@@ -3714,7 +3715,7 @@ for istep=istart:ijump:iend
             imagesc( xc_plot, zc_plot, eII_lin./eII )
             hold on
             if Ccontours == 1; AddCompoContours( filename, VizGrid, crop, lim  ); end
-            imagesc( xc_plot, zc_plot, ((eII_lin./eII)), 'Visible', 'off' )
+            imagesc( xc_plot, zc_plot, ((eII_lin./eII)), 'Visible', 'On' )
             shading flat,axis xy image, colorbar;
             caxis([0 1]);
             hold off
@@ -3726,7 +3727,7 @@ for istep=istart:ijump:iend
             imagesc( xc_plot, zc_plot, eII./eII )
             hold on
             if Ccontours == 1; AddCompoContours( filename, VizGrid, crop, lim  ); end
-            imagesc( xc_plot, zc_plot, ((eII./eII)), 'Visible', 'off' )
+            imagesc( xc_plot, zc_plot, ((eII./eII)), 'Visible', 'On' )
             shading flat,axis xy image, colorbar;
             caxis([0 1]);
             hold off
@@ -3754,14 +3755,14 @@ for istep=istart:ijump:iend
 %                 figCount = figCount +1;
 %                 fh=figure(figCount); clf;
 %             else
-%                 fh=figure('Visible', 'Off');
+%                 fh=figure('Visible', 'On');
 %                 set(fh,'units','normalized','position',[0.0 0.0 1.0 1.0]);
 %             end
             if print2screen == 1
                 figCount = figCount +1;
                 figure(figCount), clf
             else
-                figure('Visible', 'Off')
+                figure('Visible', 'On')
             end
 
             hold on
@@ -3835,7 +3836,7 @@ for istep=istart:ijump:iend
                 figCount = figCount +1;
                 figure(figCount), clf
             else
-                figure('Visible', 'Off')
+                figure('Visible', 'On')
             end
 
             hold on
@@ -3968,7 +3969,7 @@ for istep=istart:ijump:iend
                 figCount = figCount +1;
                 figure(figCount), clf
             else
-                figure('Visible', 'Off')
+                figure('Visible', 'On')
             end
             
             colormap('jet')
@@ -3985,7 +3986,7 @@ for istep=istart:ijump:iend
             %             figCount = figCount +1;
             %             figure(figCount), clf
             %         else
-            %             figure('Visible', 'Off')
+            %             figure('Visible', 'On')
             %         end
             %
             %         subplot(2,2,[1 3])
@@ -4160,7 +4161,7 @@ for istep=istart:ijump:iend
             %             figCount = figCount +1;
             %             figure(figCount), %clf
             %         else
-            %             figure('Visible', 'Off')
+            %             figure('Visible', 'On')
             %          end
             %
             %           subplot(1,3,1)
@@ -4312,7 +4313,7 @@ for istep=istart:ijump:iend
             %             figCount = figCount +1;
             %             figure(figCount), clf
             %         else
-            %             figure('Visible', 'Off')
+            %             figure('Visible', 'On')
             %         end
             %          imagesc(xc_plot, zc_plot, HSc);
             %         shading flat, axis xy image, colorbar;
@@ -4362,7 +4363,7 @@ for istep=istart:ijump:iend
                 figCount = figCount +1;
                 figure(figCount), clf
             else
-                figure('Visible', 'Off')
+                figure('Visible', 'On')
             end
             
             imagesc(xc_plot, zc_plot, (reshape(x,nx-1,nz-1)'));
@@ -4411,7 +4412,7 @@ for istep=istart:ijump:iend
                 figCount = figCount +1;
                 figure(figCount), clf
             else
-                figure('Visible', 'Off')
+                figure('Visible', 'On')
             end
             
             % Create 13-level blue/red diverging color map:
@@ -4470,7 +4471,7 @@ for istep=istart:ijump:iend
             %             figCount = figCount +1;
             %             figure(figCount), clf
             %         else
-            %             figure('Visible', 'Off')
+            %             figure('Visible', 'On')
             %         end
             %
             %         subplot (211)
@@ -4497,7 +4498,7 @@ for istep=istart:ijump:iend
             %             figCount = figCount +1;
             %             figure(figCount), clf
             %         else
-            %             figure('Visible', 'Off')
+            %             figure('Visible', 'On')
             %         end
             %
             %         subplot (211)
@@ -4524,7 +4525,7 @@ for istep=istart:ijump:iend
             %             figCount = figCount +1;
             %             figure(figCount), clf
             %         else
-            %             figure('Visible', 'Off')
+            %             figure('Visible', 'On')
             %         end
             %
             %         dPdz = diff(Pmax/1e5/1e3,1,1)/(dz*1e-3);
@@ -4541,7 +4542,7 @@ for istep=istart:ijump:iend
             %             figCount = figCount +1;
             %             figure(figCount), clf
             %         else
-            %             figure('Visible', 'Off')
+            %             figure('Visible', 'On')
             %         end
             %
             %         subplot (211)
@@ -4587,7 +4588,7 @@ for istep=istart:ijump:iend
                 figCount = figCount +1;
                 figure(figCount), clf
             else
-                figure('Visible', 'Off')
+                figure('Visible', 'On')
             end
             
             hold on
@@ -4649,7 +4650,7 @@ for istep=istart:ijump:iend
                     figCount = figCount +1;
                     figure(figCount), clf
                 else
-                    figure('Visible', 'Off')
+                    figure('Visible', 'On')
                 end
                 
                 % Create polynomial fit of temperature profile
@@ -4677,7 +4678,7 @@ for istep=istart:ijump:iend
                 figCount = figCount +1;
                 figure(figCount), clf
             else
-                figure('Visible', 'Off')
+                figure('Visible', 'On')
             end
             
             imagesc(xc_plot, zc_plot, T-T0), shading flat, colorbar, axis image
@@ -4733,7 +4734,7 @@ for istep=istart:ijump:iend
                 figCount = figCount +1;
                 figure(figCount), clf
             else
-                figure('Visible', 'Off')
+                figure('Visible', 'On')
             end
             
             %         if ( H>L ) subplot(121); else subplot(211); end
@@ -4746,7 +4747,7 @@ for istep=istart:ijump:iend
             hold on
             if Ccontours == 1; AddCompoContours( filename, VizGrid, crop, lim  ); end
 
-            imagesc( xc_plot, zc_plot, log10(abs(HSc)) , 'Visible', 'off' );
+            imagesc( xc_plot, zc_plot, log10(abs(HSc)) , 'Visible', 'On' );
 
             shading flat,axis xy image, colorbar% colorbar('SouthOutside');
             
@@ -4805,7 +4806,7 @@ for istep=istart:ijump:iend
                 figCount = figCount +1;
                 figure(figCount), clf
             else
-                figure('Visible', 'Off')
+                figure('Visible', 'On')
             end
 
             p=imagesc( xc_plot, zc_plot, log10(sII) );
@@ -4813,7 +4814,7 @@ for istep=istart:ijump:iend
             hold on
             if Ccontours == 1; AddCompoContours( filename, VizGrid, crop, lim  ); end
 
-            imagesc( xc_plot, zc_plot, log10(sII) , 'Visible', 'off' );
+            imagesc( xc_plot, zc_plot, log10(sII) , 'Visible', 'On' );
 
             shading flat,axis xy image,  colorbar('SouthOutside');
                         caxis([log10(minSii) log10(maxSii)])
@@ -4899,14 +4900,14 @@ for istep=istart:ijump:iend
                 figCount = figCount +1;
                 figure(figCount), clf
             else
-                figure('Visible', 'Off')
+                figure('Visible', 'On')
             end
             
             subplot(311)
             imagesc( xc_plot, zc_plot, (log10(eII)) )
             hold on
             if Ccontours == 1; AddCompoContours( filename, VizGrid, crop, lim  ); end
-            imagesc( xc_plot, zc_plot, (log10(eII)), 'Visible', 'off' )
+            imagesc( xc_plot, zc_plot, (log10(eII)), 'Visible', 'On' )
             shading flat,axis xy image, colorbar;
             if exist('minEii', 'var'); caxis([minEii maxEii]); end
             if MaskAir==1, patch(x_tab(:,id)', z_tab(:,id)', repmat(f,1,4)', 'EdgeColor', 'none','FaceColor','w' ); end
@@ -4920,7 +4921,7 @@ for istep=istart:ijump:iend
             imagesc( xc_plot, zc_plot, log10(eII_pl) )
             hold on
             if Ccontours == 1; AddCompoContours( filename, VizGrid, crop, lim  ); end
-            imagesc( xc_plot, zc_plot, log10(eII_pl), 'Visible', 'off' )
+            imagesc( xc_plot, zc_plot, log10(eII_pl), 'Visible', 'On' )
             shading flat,axis xy image, colorbar;
             if exist('minEii', 'var'); caxis([minEii maxEii]); end
             if MaskAir==1, patch(x_tab(:,id)', z_tab(:,id)', repmat(f,1,4)', 'EdgeColor', 'none','FaceColor','w' ); end
@@ -4935,7 +4936,7 @@ for istep=istart:ijump:iend
             
             hold on
             if Ccontours == 1; AddCompoContours( filename, VizGrid, crop, lim  ); end
-            imagesc( xc_plot, zc_plot, log10(eII_pwl), 'Visible', 'off' )
+            imagesc( xc_plot, zc_plot, log10(eII_pwl), 'Visible', 'On' )
             shading flat,axis xy image, colorbar;
             if exist('minEii', 'var'); caxis([minEii maxEii]); end
             if MaskAir==1, patch(x_tab(:,id)', z_tab(:,id)', repmat(f,1,4)', 'EdgeColor', 'none','FaceColor','w' ); end
@@ -5010,7 +5011,7 @@ for istep=istart:ijump:iend
                 figCount = figCount +1;
                 figure(figCount), clf
             else
-                figure('Visible', 'Off')
+                figure('Visible', 'On')
             end
 
             hold on
@@ -5102,7 +5103,7 @@ for istep=istart:ijump:iend
                 figCount = figCount +1;
                 figure(figCount), clf
             else
-                figure('Visible', 'Off')
+                figure('Visible', 'On')
             end
             
             subplot(211)
@@ -5112,7 +5113,7 @@ for istep=istart:ijump:iend
             colormap('jet')
             hold on
             if Ccontours == 1; AddCompoContours( filename, VizGrid, crop, lim  ); end
-            imagesc( xc_plot, zc_plot, Phi, 'Visible', 'off' )
+            imagesc( xc_plot, zc_plot, Phi, 'Visible', 'On' )
             hold off
             xlabel(xLabel), ylabel(zLabel)
             title(['Phi at' TimeLabel ' min = ' num2str(min(Phi(:))) ' deg max = ' num2str(max(Phi(:))) ' deg'])
@@ -5125,7 +5126,7 @@ for istep=istart:ijump:iend
             colormap('jet')
             hold on
             if Ccontours == 1; AddCompoContours( filename, VizGrid, crop, lim  ); end
-            imagesc( xc_plot, zc_plot, Coh, 'Visible', 'off' )
+            imagesc( xc_plot, zc_plot, Coh, 'Visible', 'On' )
             hold off
             xlabel(xLabel), ylabel(zLabel)
             title(['Coh at' TimeLabel ' min = ' num2str(min(Coh(:))) ' MPa max = ' num2str(max(Coh(:))) ' MPa'])
@@ -5174,14 +5175,14 @@ for istep=istart:ijump:iend
 %                 figCount = figCount +1;
 %                 figure(figCount), clf
 %             else
-%                 figure('Visible', 'Off')
+%                 figure('Visible', 'On')
 %             end
 %             
 %             imagesc( xc_plot, zc_plot, Pdyn )
 %             shading flat,axis xy image, colorbar;
 %             hold on
 %             if Ccontours == 1; AddCompoContours( filename, VizGrid, crop, lim  ); end
-%             imagesc( xc_plot, zc_plot, Pdyn, 'Visible', 'off' )
+%             imagesc( xc_plot, zc_plot, Pdyn, 'Visible', 'On' )
 %             hold off
 %             xlabel(xLabel), ylabel(zLabel)
 %             title(['Dynamic pressure at' TimeLabel])
@@ -5195,7 +5196,7 @@ for istep=istart:ijump:iend
                 figCount = figCount +1;
                 figure(figCount), clf
             else
-                figure('Visible', 'Off')
+                figure('Visible', 'On')
             end
 
         
@@ -5215,7 +5216,7 @@ for istep=istart:ijump:iend
 %                 figCount = figCount +1;
 %                 figure(figCount), clf
 %             else
-%                 figure('Visible', 'Off')
+%                 figure('Visible', 'On')
 %             end
 %             
 %             imagesc( xc_plot, zc_plot, SoleCheck )
@@ -5223,9 +5224,9 @@ for istep=istart:ijump:iend
 %             colormap('jet')
 %             hold on
 %             if Ccontours == 1; AddCompoContours( filename, VizGrid, crop, lim  ); end
-%             %         imagesc( xc_plot, zc_plot, T, 'Visible', 'off' )
+%             %         imagesc( xc_plot, zc_plot, T, 'Visible', 'On' )
 %             
-%             imagesc( xc_plot, zc_plot, T, 'Visible', 'off' )
+%             imagesc( xc_plot, zc_plot, T, 'Visible', 'On' )
 %             hold off
 %             
 %             xlabel(xLabel), ylabel(zLabel)
@@ -5261,7 +5262,7 @@ for istep=istart:ijump:iend
             figCount = figCount +1;
             figure(figCount), clf
         else
-            figure('Visible', 'Off')
+            figure('Visible', 'On')
         end
         
         % overstress
@@ -5269,7 +5270,7 @@ for istep=istart:ijump:iend
         imagesc( xc_plot, zc_plot, log10(OverS) )
         hold on
         if Ccontours == 1; AddCompoContours( filename, VizGrid, crop, lim  ); end
-        imagesc( xc_plot, zc_plot, log10(OverS), 'visible', 'off' )
+        imagesc( xc_plot, zc_plot, log10(OverS), 'Visible', 'On' )
         hold off
         shading flat,axis xy image, colorbar;
         xlabel(xLabel), ylabel(zLabel);
