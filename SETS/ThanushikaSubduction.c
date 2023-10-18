@@ -220,7 +220,7 @@ int main(int nargs, char *args[]) {
   // Input file name
   char *input_file;
   if ( nargs < 2 ) {
-    asprintf(&input_file, "AnneloreSubduction.txt"); // Default
+    asprintf(&input_file, "ThanushikaSubduction.txt"); // Default
   }
   else {
     printf("dodo %s\n", args[1]);
