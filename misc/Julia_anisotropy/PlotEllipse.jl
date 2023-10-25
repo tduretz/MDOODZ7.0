@@ -1,6 +1,6 @@
 using Plots
 
-δ = 0.5  # Replacing delta with Δ
+δ = 0.5
 
 pyplot()
 
