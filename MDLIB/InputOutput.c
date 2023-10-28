@@ -1341,6 +1341,7 @@ Input ReadInputFile( char *fileName ) {
         printf("prefactor for power-law: %2.2e\n", materials.pref_pwl[k]);
                  printf("C_end    = %2.2e Pa        Phi_end = %2.2e deg         pls_start = %2.2e        pls_end = %2.2e \n", materials.C_end[k]*scaling.S, materials.phi_end[k]*180/M_PI, materials.pls_start[k],  materials.pls_end[k] );
         printf("eta0_vp   = %2.2e  Pa.s^(1/n)         n_vp   = %2.2e\n", materials.eta_vp[k]* (scaling.S*pow(scaling.t,1.0/materials.n_vp[k])) , materials.n_vp[k]);
+        printf("aniso_factor = %2.2e []        aniso_angle = %2.2e deg         ani_fac_max = %2.2e []        ani_fstrain = %d\n", materials.aniso_factor[k], materials.aniso_angle[k]/(M_PI/180.0), materials.ani_fac_max[k], materials.ani_fstrain[k]);
 
         printf("Flow law settings:\n");
         if ( abs(materials.cstv[k])>0 ) printf("--->    Constant viscosity activated \n");
@@ -1951,7 +1952,7 @@ double ReadDou2( FILE *fin, char FieldName[], double Default )
     asprintf(&param1, "%s", FieldName);
 
     // Loop over all lines in input file
-    while(value == 0)
+    while(value == 0.0)
     {
         // Read new line
         fgets ( line, sizeof(line), fin );
@@ -2075,7 +2076,6 @@ double ReadMatProps( FILE *fin, char FieldName[], int PhaseID, double Default )
                 {
                     // Read new line
                     fgets ( phase_line, sizeof(phase_line), fin );
-
                     // Determine the length of the parameter string in the current line.
                     InPar_length = 0;
                     while(phase_line[InPar_length] != ' ')
@@ -2094,8 +2094,8 @@ double ReadMatProps( FILE *fin, char FieldName[], int PhaseID, double Default )
                     }
                     param3[InPar_length] = '\0';
 
-                    // Break in case the parameter has not been defined for the current phase.
-                    if ( strcmp(param3,"ID") == 0 || feof(fin) ) {
+                    // Break in case the parameter has not been defined before the next phase starts.
+                    if ( strcmp(param3,"ID") == 0) {
                         if ( fabs(Default) <  100.0 ) printf("Warning : Parameter '%s' not found in the setup file, running with default value %.2lf\n", FieldName, Default);
                         if ( fabs(Default) >= 100.0 ) printf("Warning : Parameter '%s' not found in the setup file, running with default value %2.2e\n", FieldName, Default);
                         rewind (fin);
@@ -2104,7 +2104,7 @@ double ReadMatProps( FILE *fin, char FieldName[], int PhaseID, double Default )
                         free(param3);
                         return Default;
                     }
-
+                    
                     // Find match.
                     if( (strcmp(param1, param3)) == 0 )
                     {
@@ -2123,6 +2123,19 @@ double ReadMatProps( FILE *fin, char FieldName[], int PhaseID, double Default )
                         }
                         subfind = 1;
                     }
+
+                    // Break in case the parameter has not been defined until the end of the file.
+                    if (feof(fin))
+                    {
+                        if ( fabs(Default) <  100.0 ) printf("Warning : Parameter '%s' not found in the setup file, running with default value %.2lf\n", FieldName, Default);
+                        if ( fabs(Default) >= 100.0 ) printf("Warning : Parameter '%s' not found in the setup file, running with default value %2.2e\n", FieldName, Default);
+                        rewind (fin);
+                        free(param1);
+                        free(param2);
+                        free(param3);
+                        return Default;
+                    }
+                    
                     free(param3);
                 }
                 free(param1);

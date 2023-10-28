@@ -406,9 +406,8 @@ void EnergyDirectSolve( grid *mesh, params model, double *rhs_t, markers *partic
         // Extract temperature T from solution vector x, compute temperature increments dT and integrate heat increments dUt
         MinMaxArrayTag( mesh->T, scaling.T, (mesh->Nx-1)*(mesh->Nz-1), "T", mesh->BCt.type );
         dUt          = 0.0;
-        zero_celsius = zeroC;
         double dT    = 0.0;
-#pragma omp parallel for shared( mesh ) private( c2, c0, k, l, eqn, dT ) firstprivate( ncx, ncz, zero_celsius, model, scaling, x, eqn_t ) reduction (+:dUt)
+#pragma omp parallel for shared( mesh ) private( c2, c0, k, l, eqn, dT ) firstprivate( ncx, ncz, model, scaling, x, eqn_t ) reduction (+:dUt)
         // LOOP ON THE GRID TO CALCULATE FD COEFFICIENTS
         for( l=0; l<ncz; l++) {
             for( k=0; k<ncx; k++) {
@@ -426,7 +425,7 @@ void EnergyDirectSolve( grid *mesh, params model, double *rhs_t, markers *partic
                 }
                 else {
                     // Outside the free surface
-                    mesh->T[c2]  = zero_celsius/scaling.T;
+                    mesh->T[c2]  = zeroC/scaling.T;
                 }
             }
         }
