@@ -698,6 +698,27 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
   }
 
   // ----------------- Reaction volume changes, computation of updated density only on centroid nodes
+  // if ( centroid > 0 ) {
+  //   if (final_update==1) P = Pc;
+  //   if (ProgressiveReaction == 1) {
+  //     // rho_ref      = (1.0-X)*rho1 + X*rho2;
+  //     // *rho         = rho_ref * exp(P/K - alpha*T);
+  //     *rho = EvaluateDensity( phase, T, P, X, model, materials );
+  //   }
+  //   else {
+  //     rho_eq = EvaluateDensity( phase, T, P, X, model, materials );
+  //     if ( kinetics == 1 ) dG            = Interpolate2Ddata( T0, P0, model->kin_Tmin, model->kin_Tmax, model->kin_Pmin, model->kin_Pmax, model->kin_nT, model->kin_nP, model->kin_dG );
+  //     if ( kinetics == 1 && dG>0.0 ) {
+  //       Vkin          = kkin*T*( exp(-Qkin/R/T) * (1.0 - exp(-dG/R/T)) ); // growth rate [m/s]
+  //       tau_kin       = log(1-0.6666666) * pow(-2*Skin*Vkin, -1);
+  //       rho0          = EvaluateDensity( phase, T0, P0, X, model, materials );
+  //       *rho          = 1.0/(tau_kin + dt) * (tau_kin*rho0 + dt*rho_eq);
+  //     }
+  //     else {
+  //       *rho          = rho_eq;
+  //     }
+  //   }
+  // }
   if ( centroid > 0 ) {
     if (final_update==1) P = Pc;
     if (ProgressiveReaction == 1) {
@@ -707,15 +728,20 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
     }
     else {
       rho_eq = EvaluateDensity( phase, T, P, X, model, materials );
-      if ( kinetics == 1 ) dG            = Interpolate2Ddata( T0, P0, model->kin_Tmin, model->kin_Tmax, model->kin_Pmin, model->kin_Pmax, model->kin_nT, model->kin_nP, model->kin_dG );
-      if ( kinetics == 1 && dG>0.0 ) {
-        Vkin          = kkin*T*( exp(-Qkin/R/T) * (1.0 - exp(-dG/R/T)) ); // growth rate [m/s]
-        tau_kin       = log(1-0.6666666) * pow(-2*Skin*Vkin, -1);
+      *rho   = rho_eq;
+      if ( kinetics == 1 ) {
         rho0          = EvaluateDensity( phase, T0, P0, X, model, materials );
-        *rho          = 1.0/(tau_kin + dt) * (tau_kin*rho0 + dt*rho_eq);
-      }
-      else {
-        *rho          = rho_eq;
+        if ( materials->kin[phase]==9 ) {
+          tau_kin = 0.0;
+          dG      = Interpolate2Ddata( T0, P0, model->kin_Tmin, model->kin_Tmax, model->kin_Pmin, model->kin_Pmax, model->kin_nT, model->kin_nP, model->kin_dG );
+          if ( dG>0.0 ) {
+            Vkin          = kkin*T*( exp(-Qkin/R/T) * (1.0 - exp(-dG/R/T)) ); // growth rate [m/s]
+            tau_kin       = log(1-0.6666666) * pow(-2*Skin*Vkin, -1);
+          }
+        }
+        if ( materials->kin[phase]==9 || materials->kin[phase]==1 ) {
+          *rho          = 1.0/(tau_kin + dt) * (tau_kin*rho0 + dt*rho_eq);
+        }
       }
     }
   }
@@ -1144,7 +1170,7 @@ void Softening(int c0, double** phase_perc, double* dil_arr, double* fric_arr, d
     }
 
     else {
-      // Pieciewise linear function softening
+      // Piecewise linear function softening
 
       // If we are below the lower strain limit
       if (strain_acc < materials.pls_start[p]) {
@@ -1184,7 +1210,6 @@ void Softening(int c0, double** phase_perc, double* dil_arr, double* fric_arr, d
       fric_arr[c0] += phase_perc[p][c0] *  log(fric);
       dil_arr[c0]  += phase_perc[p][c0] *  log(dil);
       C_arr[c0]    += phase_perc[p][c0] *  log(C);
-
     }
   }
   // Post-process for geometric/harmonic averages

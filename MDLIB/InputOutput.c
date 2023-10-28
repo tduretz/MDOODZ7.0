@@ -1117,6 +1117,7 @@ Input ReadInputFile( char *fileName ) {
     Nmodel.stagnated         = 0;
     // Numerics: marker-in-cell
     ParticlesInput particles;
+    model.ani_average        = ReadInt2( fin, "ani_average",           1 ); // 0: arithmetic mean - 1: harmonic mean - 2: geometric mean
     model.eta_average        = ReadInt2( fin, "eta_average",           0 ); // 0: arithmetic mean - 1: harmonic mean - 2: geometric mean
     model.interp_stencil     = ReadInt2( fin, "interp_stencil",        1 ); // 1: 1-Cell          - 9: 9-Cell
     model.subgrid_diffusion  = ReadInt2( fin, "subgrid_diffusion",     0 ); // 0: No subgrid diffusion, 1: temperature, 2: temperature + stress
@@ -1270,12 +1271,13 @@ Input ReadInputFile( char *fileName ) {
         materials.phi_soft[k]   = (int)ReadMatProps( fin, "phi_soft",   k,    0.0   );
         materials.psi_soft[k]   = (int)ReadMatProps( fin, "psi_soft",   k,    0.0   );
         if (materials.psi_soft[k]>0 && model.compressible==0) { printf("Set compressible=1 to activate dilation softening\n"); exit(1); }
-        materials.C_end[k]     = ReadMatProps( fin, "Ce",     k,    materials.C[k]*scaling.S    ) / scaling.S;
-        materials.phi_end[k]   = ReadMatProps( fin, "phie",   k,    materials.phi[k]*180.0/M_PI  ) * M_PI / 180.0;
-        materials.psi_end[k]   = ReadMatProps( fin, "psie",   k,    materials.psi[k]*180.0/M_PI  ) * M_PI / 180.0;
+        materials.C_end[k]     = ReadMatProps( fin, "Ce",     k,    materials.C[k]*scaling.S    ) / scaling.S;      // TODO: rename Ce --> C_end
+        materials.phi_end[k]   = ReadMatProps( fin, "phie",   k,    materials.phi[k]*180.0/M_PI  ) * M_PI / 180.0;  // TODO: rename phie --> phi_end
+        materials.psi_end[k]   = ReadMatProps( fin, "psie",   k,    materials.psi[k]*180.0/M_PI  ) * M_PI / 180.0;  // TODO: rename psie --> psi_end
         double eps_coh = 1.0 / scaling.S;
         double eps_phi = 0.1  * M_PI / 180.0;
         double eps_psi = 0.1  * M_PI / 180.0;
+        printf("%d materials.coh_soft[k]=%d  materials.C[k] = %2.2e  materials.C_end[k] = %2.2e\n", k, materials.coh_soft[k],  materials.C[k]*scaling.S,  materials.C_end[k]*scaling.S);
         if ( materials.coh_soft[k] == 1 && fabs( materials.C_end[k]   - materials.C[k]  ) < eps_coh ) { printf("Please set a difference in cohesion, if not set coh_soft of phase %d to 0.0\n", k); exit(122); };
         if ( materials.phi_soft[k] == 1 && fabs( materials.phi_end[k] - materials.phi[k]) < eps_phi ) { printf("Please set a difference in friction angle, if not set phi_soft of phase %d to 0.0\n", k); exit(122); };
         if ( materials.psi_soft[k] == 1 && fabs( materials.psi_end[k] - materials.psi[k]) < eps_psi ) { printf("Please set a difference in dilation angle, if not set psi_soft of phase %d to 0.0\n", k); exit(122); };
@@ -1605,7 +1607,7 @@ Input ReadInputFile( char *fileName ) {
         model.PDMTmax[pid]       = (800+273)/scaling.T;          // Maximum temperature        (MANTLE) [K]
         model.PDMPmin[pid]       = (0.0090/10*1e9)/scaling.S;    // Minimum pressure           (MANTLE) [Pa]
         model.PDMPmax[pid]       = (49.9890/10*1e9)/scaling.S;   // Maximum pressure           (MANTLE) [Pa]
-        model.PDMrho[pid]        = ReadBin(model.import_files_dir, "SiO2_nsm010.dat", model.PDMnT[pid], model.PDMnP[pid], scaling.rho);
+        model.PDMrho[pid]        = ReadBin(model.import_files_dir, "SiO2_nsm000.dat", model.PDMnT[pid], model.PDMnP[pid], scaling.rho);
     }
 
     //------------------------------------------------------------------------------------------------------------------------------//
