@@ -1117,6 +1117,7 @@ Input ReadInputFile( char *fileName ) {
     Nmodel.stagnated         = 0;
     // Numerics: marker-in-cell
     ParticlesInput particles;
+    model.ani_average        = ReadInt2( fin, "ani_average",           1 ); // 0: arithmetic mean - 1: harmonic mean - 2: geometric mean
     model.eta_average        = ReadInt2( fin, "eta_average",           0 ); // 0: arithmetic mean - 1: harmonic mean - 2: geometric mean
     model.interp_stencil     = ReadInt2( fin, "interp_stencil",        1 ); // 1: 1-Cell          - 9: 9-Cell
     model.subgrid_diffusion  = ReadInt2( fin, "subgrid_diffusion",     0 ); // 0: No subgrid diffusion, 1: temperature, 2: temperature + stress
@@ -1270,12 +1271,13 @@ Input ReadInputFile( char *fileName ) {
         materials.phi_soft[k]   = (int)ReadMatProps( fin, "phi_soft",   k,    0.0   );
         materials.psi_soft[k]   = (int)ReadMatProps( fin, "psi_soft",   k,    0.0   );
         if (materials.psi_soft[k]>0 && model.compressible==0) { printf("Set compressible=1 to activate dilation softening\n"); exit(1); }
-        materials.C_end[k]     = ReadMatProps( fin, "Ce",     k,    materials.C[k]*scaling.S    ) / scaling.S;
-        materials.phi_end[k]   = ReadMatProps( fin, "phie",   k,    materials.phi[k]*180.0/M_PI  ) * M_PI / 180.0;
-        materials.psi_end[k]   = ReadMatProps( fin, "psie",   k,    materials.psi[k]*180.0/M_PI  ) * M_PI / 180.0;
+        materials.C_end[k]     = ReadMatProps( fin, "Ce",     k,    materials.C[k]*scaling.S    ) / scaling.S;      // TODO: rename Ce --> C_end
+        materials.phi_end[k]   = ReadMatProps( fin, "phie",   k,    materials.phi[k]*180.0/M_PI  ) * M_PI / 180.0;  // TODO: rename phie --> phi_end
+        materials.psi_end[k]   = ReadMatProps( fin, "psie",   k,    materials.psi[k]*180.0/M_PI  ) * M_PI / 180.0;  // TODO: rename psie --> psi_end
         double eps_coh = 1.0 / scaling.S;
         double eps_phi = 0.1  * M_PI / 180.0;
         double eps_psi = 0.1  * M_PI / 180.0;
+        printf("%d materials.coh_soft[k]=%d  materials.C[k] = %2.2e  materials.C_end[k] = %2.2e\n", k, materials.coh_soft[k],  materials.C[k]*scaling.S,  materials.C_end[k]*scaling.S);
         if ( materials.coh_soft[k] == 1 && fabs( materials.C_end[k]   - materials.C[k]  ) < eps_coh ) { printf("Please set a difference in cohesion, if not set coh_soft of phase %d to 0.0\n", k); exit(122); };
         if ( materials.phi_soft[k] == 1 && fabs( materials.phi_end[k] - materials.phi[k]) < eps_phi ) { printf("Please set a difference in friction angle, if not set phi_soft of phase %d to 0.0\n", k); exit(122); };
         if ( materials.psi_soft[k] == 1 && fabs( materials.psi_end[k] - materials.psi[k]) < eps_psi ) { printf("Please set a difference in dilation angle, if not set psi_soft of phase %d to 0.0\n", k); exit(122); };
@@ -1339,6 +1341,7 @@ Input ReadInputFile( char *fileName ) {
         printf("prefactor for power-law: %2.2e\n", materials.pref_pwl[k]);
                  printf("C_end    = %2.2e Pa        Phi_end = %2.2e deg         pls_start = %2.2e        pls_end = %2.2e \n", materials.C_end[k]*scaling.S, materials.phi_end[k]*180/M_PI, materials.pls_start[k],  materials.pls_end[k] );
         printf("eta0_vp   = %2.2e  Pa.s^(1/n)         n_vp   = %2.2e\n", materials.eta_vp[k]* (scaling.S*pow(scaling.t,1.0/materials.n_vp[k])) , materials.n_vp[k]);
+        printf("aniso_factor = %2.2e []        aniso_angle = %2.2e deg         ani_fac_max = %2.2e []        ani_fstrain = %d\n", materials.aniso_factor[k], materials.aniso_angle[k]/(M_PI/180.0), materials.ani_fac_max[k], materials.ani_fstrain[k]);
 
         printf("Flow law settings:\n");
         if ( abs(materials.cstv[k])>0 ) printf("--->    Constant viscosity activated \n");
@@ -1605,7 +1608,7 @@ Input ReadInputFile( char *fileName ) {
         model.PDMTmax[pid]       = (800+273)/scaling.T;          // Maximum temperature        (MANTLE) [K]
         model.PDMPmin[pid]       = (0.0090/10*1e9)/scaling.S;    // Minimum pressure           (MANTLE) [Pa]
         model.PDMPmax[pid]       = (49.9890/10*1e9)/scaling.S;   // Maximum pressure           (MANTLE) [Pa]
-        model.PDMrho[pid]        = ReadBin(model.import_files_dir, "SiO2_nsm010.dat", model.PDMnT[pid], model.PDMnP[pid], scaling.rho);
+        model.PDMrho[pid]        = ReadBin(model.import_files_dir, "SiO2_nsm000.dat", model.PDMnT[pid], model.PDMnP[pid], scaling.rho);
     }
 
     //------------------------------------------------------------------------------------------------------------------------------//
@@ -1949,7 +1952,7 @@ double ReadDou2( FILE *fin, char FieldName[], double Default )
     asprintf(&param1, "%s", FieldName);
 
     // Loop over all lines in input file
-    while(value == 0)
+    while(value == 0.0)
     {
         // Read new line
         fgets ( line, sizeof(line), fin );
@@ -2073,7 +2076,6 @@ double ReadMatProps( FILE *fin, char FieldName[], int PhaseID, double Default )
                 {
                     // Read new line
                     fgets ( phase_line, sizeof(phase_line), fin );
-
                     // Determine the length of the parameter string in the current line.
                     InPar_length = 0;
                     while(phase_line[InPar_length] != ' ')
@@ -2092,8 +2094,8 @@ double ReadMatProps( FILE *fin, char FieldName[], int PhaseID, double Default )
                     }
                     param3[InPar_length] = '\0';
 
-                    // Break in case the parameter has not been defined for the current phase.
-                    if ( strcmp(param3,"ID") == 0 || feof(fin) ) {
+                    // Break in case the parameter has not been defined before the next phase starts.
+                    if ( strcmp(param3,"ID") == 0) {
                         if ( fabs(Default) <  100.0 ) printf("Warning : Parameter '%s' not found in the setup file, running with default value %.2lf\n", FieldName, Default);
                         if ( fabs(Default) >= 100.0 ) printf("Warning : Parameter '%s' not found in the setup file, running with default value %2.2e\n", FieldName, Default);
                         rewind (fin);
@@ -2102,7 +2104,7 @@ double ReadMatProps( FILE *fin, char FieldName[], int PhaseID, double Default )
                         free(param3);
                         return Default;
                     }
-
+                    
                     // Find match.
                     if( (strcmp(param1, param3)) == 0 )
                     {
@@ -2121,6 +2123,19 @@ double ReadMatProps( FILE *fin, char FieldName[], int PhaseID, double Default )
                         }
                         subfind = 1;
                     }
+
+                    // Break in case the parameter has not been defined until the end of the file.
+                    if (feof(fin))
+                    {
+                        if ( fabs(Default) <  100.0 ) printf("Warning : Parameter '%s' not found in the setup file, running with default value %.2lf\n", FieldName, Default);
+                        if ( fabs(Default) >= 100.0 ) printf("Warning : Parameter '%s' not found in the setup file, running with default value %2.2e\n", FieldName, Default);
+                        rewind (fin);
+                        free(param1);
+                        free(param2);
+                        free(param3);
+                        return Default;
+                    }
+                    
                     free(param3);
                 }
                 free(param1);

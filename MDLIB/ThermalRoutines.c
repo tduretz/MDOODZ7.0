@@ -134,40 +134,38 @@ void EnergyDirectSolve( grid *mesh, params model, double *rhs_t, markers *partic
         Hs = DoodzCalloc(ncx*ncz, sizeof(double));
         Ha = DoodzCalloc(ncx*ncz, sizeof(double));
 
-
         //----------------------------------------------------//
 
         // Build right-hand side
 //#pragma omp parallel for shared ( b, Hs, Ha, eqn_t, mesh ) private ( l, k, c0, c1, c2, c3, eqn, rhoCp, dexx_el, dexx_th, dexx_tot, dezz_el, dezz_th, dezz_tot, deyy_el, deyy_th, deyy_tot, dexz_el, dexz_th, dexz_tot, Wth, Wel, Wtot, syyd, eyyd, eyyd_el, eyyd_diss  ) firstprivate ( nx, ncx, nxvz, shear_heating, adiab_heating, model, transient, dt, Hr, diss_limit, scaling ) reduction( +:dUe, dW )
         for( c2=0; c2<ncz*ncx; c2++) {
-                k   = mesh->kp[c2];
-                l   = mesh->lp[c2];
-                c0  = (k+1) + (l+1)*(ncx+2); // refers to extended arrays
-                c1  = k + l*nx;
-                c3  = k + l*nxvz;
-                eqn = eqn_t[c2];
+            k   = mesh->kp[c2];
+            l   = mesh->lp[c2];
+            c0  = (k+1) + (l+1)*(ncx+2); // refers to extended arrays
+            c1  = k + l*nx;
+            c3  = k + l*nxvz;
+            eqn = eqn_t[c2];
 
-                if ( mesh->BCT_exp.type[c0] != 30 ) {
+            if ( mesh->BCT_exp.type[c0] != 30 ) {
 
-                    // Contribution from transient
-                    rhoCp   = mesh->rho_n[c2]*mesh->Cv[c2];
-                    b[eqn]  = transient * rhoCp * mesh->T[c2]/ dt;
+                // Contribution from transient
+                rhoCp   = mesh->rho_n[c2]*mesh->Cv[c2];
+                b[eqn]  = transient * rhoCp * mesh->T[c2]/ dt;
 
-                    // Contribution from radiogenic sources
-                    b[eqn] += Hr*mesh->Qr[c2];
+                // Contribution from radiogenic sources
+                b[eqn] += Hr*mesh->Qr[c2];
 
-                    // Contribution from dissipation
-                    if ( shear_heating == 1 ) {
-                        b[eqn] += mesh->Wdiss[c2];
-                        Hs[c2]  = mesh->Wdiss[c2];
-                    }
-
-                    // Contribution from adiabatic heat
-                    if ( adiab_heating == 1 ) Ha[c2]  = mesh->T[c2]*mesh->alp[c2]*0.5*(mesh->v_in[c3+1]+mesh->v_in[c3+1+nxvz])*model.gz*mesh->rho_n[c2];
-                    if ( adiab_heating == 2 ) Ha[c2]  = mesh->T[c2]*mesh->alp[c2]*(mesh->p_in[c2] - mesh->p0_n[c2])/model.dt; //mesh->T[c2]*mesh->alp[c2]*(mesh->dp[c2])/model.dt;
-                    if ( adiab_heating  > 0 ) b[eqn] += Ha[c2];
+                // Contribution from dissipation
+                if ( shear_heating == 1 ) {
+                    b[eqn] += mesh->Wdiss[c2];
+                    Hs[c2]  = mesh->Wdiss[c2];
                 }
 
+                // Contribution from adiabatic heat
+                if ( adiab_heating == 1 ) Ha[c2]  = mesh->T[c2]*mesh->alp[c2]*0.5*(mesh->v_in[c3+1] + mesh->v_in[c3+1+nxvz])*model.gz*mesh->rho_n[c2];
+                if ( adiab_heating == 2 ) Ha[c2]  = mesh->T[c2]*mesh->alp[c2]*(mesh->p_in[c2] - mesh->p0_n[c2])/model.dt; //mesh->T[c2]*mesh->alp[c2]*(mesh->dp[c2])/model.dt;
+                if ( adiab_heating  > 0 ) b[eqn] += Ha[c2];
+            }
         }
 
         MinMaxArrayTag( mesh->T, scaling.T, ncx*ncz, "T0", mesh->BCt.type );
@@ -408,9 +406,8 @@ void EnergyDirectSolve( grid *mesh, params model, double *rhs_t, markers *partic
         // Extract temperature T from solution vector x, compute temperature increments dT and integrate heat increments dUt
         MinMaxArrayTag( mesh->T, scaling.T, (mesh->Nx-1)*(mesh->Nz-1), "T", mesh->BCt.type );
         dUt          = 0.0;
-        zero_celsius = zeroC;
         double dT    = 0.0;
-#pragma omp parallel for shared( mesh ) private( c2, c0, k, l, eqn, dT ) firstprivate( ncx, ncz, zero_celsius, model, scaling, x, eqn_t ) reduction (+:dUt)
+#pragma omp parallel for shared( mesh ) private( c2, c0, k, l, eqn, dT ) firstprivate( ncx, ncz, model, scaling, x, eqn_t ) reduction (+:dUt)
         // LOOP ON THE GRID TO CALCULATE FD COEFFICIENTS
         for( l=0; l<ncz; l++) {
             for( k=0; k<ncx; k++) {
@@ -428,7 +425,7 @@ void EnergyDirectSolve( grid *mesh, params model, double *rhs_t, markers *partic
                 }
                 else {
                     // Outside the free surface
-                    mesh->T[c2]  = zero_celsius/scaling.T;
+                    mesh->T[c2]  = zeroC/scaling.T;
                 }
             }
         }
@@ -479,7 +476,6 @@ void EnergyDirectSolve( grid *mesh, params model, double *rhs_t, markers *partic
             free(filename);
         }
 #endif
-
         // Free arrays
         DoodzFree(x);
         DoodzFree(b);

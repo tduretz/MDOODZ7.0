@@ -802,7 +802,7 @@ void PartInit( markers *particles, params* model ) {
     // Initialise particle fields to zero.
     int k;
 
-    //#pragma omp parallel for shared ( particles ) private ( k ) schedule ( static )
+    #pragma omp parallel for shared ( particles ) private ( k ) schedule ( static )
     for(k=0; k<particles->Nb_part_max; k++) {
 
         particles->x[k]     = 0.0;
@@ -1909,128 +1909,6 @@ void Interp_Phase2VizGrid ( markers particles, int* PartField, grid *mesh, char*
 /*--------------------------------------------------------------------------------------------------------------------*/
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
-//
-//void FreeP2Mesh( grid* mesh ) {
-//
-//    int k;
-//
-//    // Loop on cells and allocate the required number of particles
-//    for (k=0; k<(mesh->Nx-1) * (mesh->Nz-1); k++) {
-//        DoodzFree(mesh->P2C[k]);
-//    }
-//    DoodzFree(mesh->P2C);
-//
-//    // Loop on cells and allocate the required number of particles
-//    for (k=0; k<(mesh->Nx) * (mesh->Nz); k++) {
-//        DoodzFree(mesh->P2N[k]);
-//    }
-//    DoodzFree(mesh->P2N);
-//
-//}
-//
-///*--------------------------------------------------------------------------------------------------------------------*/
-///*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
-///*--------------------------------------------------------------------------------------------------------------------*/
-//
-//void ParticleInflowCheck ( markers* particles, grid *mesh, params model, surface topo, int flag ) {
-//
-//    int k, Nb_part=particles->Nb_part, npW=0, npE=0;
-//    double xW, xE, dx2=model.dx/2.0;
-//    int finite_strain = model.finite_strain;
-//
-//    clock_t t_omp = (double)omp_get_wtime();
-//
-//    // Check if particles are in the first west/east half-cell column
-//    if (flag == 0) {
-//        xW=mesh->xg_coord[0];
-//        xE=mesh->xg_coord[model.Nx-1];
-//
-//#pragma omp parallel for shared (particles ) \
-//private( k ) \
-//firstprivate( Nb_part, xW, xE, dx2 ) \
-//reduction(+:npW,npE )
-//        for (k=0; k<Nb_part; k++) {
-//
-//            particles->intag[k] = 0;
-//
-//            if ( particles->phase[k] != -1 ) {
-//
-//                // WEST COAST
-//                if (particles->x[k]>=xW && particles->x[k]<=xW+dx2) {
-//                    particles->intag[k] = 1;
-//                    npW += 1;
-//                }
-//
-//                // EAST COAST
-//                if (particles->x[k]>=xE-dx2 && particles->x[k]<=xE) {
-//                    particles->intag[k] = 1;
-//                    npE += 1;
-//                }
-//            }
-//        }
-//        printf("Number of particles west boundary: %d\n", npW);
-//        printf("Number of particles east boundary: %d\n", npE);
-//    }
-//
-//    if (flag == 1) {
-//
-//        xW=mesh->xg_coord[0]          + dx2;
-//        xE=mesh->xg_coord[model.Nx-1] - dx2;
-//
-//        for (k=0; k<Nb_part; k++) {
-//
-//            if ( particles->phase[k] != -1 && particles->intag[k] == 1 ) {
-//
-//                // WEST COAST
-//                if (particles->x[k]>=xW && particles->x[k]<=xW+dx2) {
-//                    particles->intag[k] = 2;
-//                    npW += 1;
-//
-//                    // Add particles
-//                    if (Nb_part < particles->Nb_part_max) {
-//                        particles->x[Nb_part] = particles->x[k]-dx2;
-//                        particles->z[Nb_part] = particles->z[k];
-//                        // Assign new marker point properties
-//                        AssignMarkerProperties ( particles, Nb_part, k, finite_strain, model.track_T_P_x_z );
-//                        Nb_part++;
-//                    }
-//                    else {
-//                        printf("Too many particles in my mind %d, maximum %d\n", Nb_part, particles->Nb_part_max);
-//                    }
-//                }
-//
-//                // EAST COAST
-//                if (particles->x[k]>=xE-dx2 && particles->x[k]<=xE) {
-//                    particles->intag[k] = 2;
-//                    npE += 1;
-//
-//                    // Add particles
-//                    if (Nb_part < particles->Nb_part_max) {
-//                        particles->x[Nb_part] = particles->x[k]+dx2;
-//                        particles->z[Nb_part] = particles->z[k];
-//                        //                        printf("Adding on E\n");
-//                        // Assign new marker point properties
-//                        AssignMarkerProperties ( particles, Nb_part, k, finite_strain, model.track_T_P_x_z );
-//                        Nb_part++;
-//                    }
-//                    else {
-//                        printf("Too many particles in my mind %d, maximum %d\n", Nb_part, particles->Nb_part_max);
-//                    }
-//                }
-//            }
-//        }
-//        printf("Number of particles west boundary: %d\n", npW);
-//        printf("Number of particles east boundary: %d\n", npE);
-//        particles->Nb_part = Nb_part;
-//    }
-//
-//    printf("** Time for particles inflow check = %lf sec\n",  (double)((double)omp_get_wtime() - t_omp) );
-//
-//}
-
-/*--------------------------------------------------------------------------------------------------------------------*/
-/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
-/*--------------------------------------------------------------------------------------------------------------------*/
 
 // Particles to reference nodes
 void P2Mastah ( params *model, markers particles, DoodzFP* mat_prop, grid *mesh, double* NodeField, char* NodeType, int flag, int avg, int prop, int centroid, int interp_stencil) {
@@ -2123,7 +2001,7 @@ void P2Mastah ( params *model, markers particles, DoodzFP* mat_prop, grid *mesh,
     
     #pragma omp parallel for shared ( particles, BmWm, Wm, Wm_ph, X_vect, Z_vect )       \
     private ( k, kp, dxm, dzm, ip, jp, distance, mark_val, thread_num, p, peri   )       \
-    firstprivate ( mat_prop, dx, dz, Np, Nx, Nz, mesh, flag, avg, dx_itp, dz_itp, prop)  //schedule( dynamic )
+    firstprivate ( mat_prop, dx, dz, Np, Nx, Nz, mesh, flag, avg, dx_itp, dz_itp, prop)  schedule( static )
         
         for (k=0; k<Np; k++) {
             
@@ -2331,33 +2209,41 @@ void P2Mastah ( params *model, markers particles, DoodzFP* mat_prop, grid *mesh,
     
     
 #pragma omp parallel for shared ( NodeField, BMWM, WM, Nx, Nz, mesh, NodeType ) private( i, p ) firstprivate ( avg ) schedule( static )
-        for (i=0;i<Nx*Nz;i++) {
+    for (i=0;i<Nx*Nz;i++) {
+        
+        if ( fabs(WM[i])<1e-30  || (NodeType[i]==30 || NodeType[i]==31) ) {
+        }
+        else {
             
-            if ( fabs(WM[i])<1e-30  || (NodeType[i]==30 || NodeType[i]==31) ) {
+            if ( prop == 0 ) {
+                
+                NodeField[i] = BMWM[i]/WM[i];
+                if (avg==1) {
+                    NodeField[i] =  1.0 / NodeField[i];
+                }
+                if (avg==2) {
+                    NodeField[i] =  exp(NodeField[i]);
+                }
             }
-            else {
-                
-                if ( prop == 0 ) {
-                    
-                    NodeField[i] = BMWM[i]/WM[i];
-                    if (avg==1) {
-                        NodeField[i] =  1.0 / NodeField[i];
-                    }
-                    if (avg==2) {
-                        NodeField[i] =  exp(NodeField[i]);
-                    }
+            if ( prop == 1 ) {
+                for (p=0; p<model->Nb_phases; p++) {
+                    if (centroid==0) mesh->phase_perc_s[p][i] /= WM[i];
+                    if (centroid==1) mesh->phase_perc_n[p][i] /= WM[i];
                 }
-                if ( prop == 1 ) {
-                    for (p=0; p<model->Nb_phases; p++) {
-                        if (centroid==0) mesh->phase_perc_s[p][i] /= WM[i];
-                        if (centroid==1) mesh->phase_perc_n[p][i] /= WM[i];
-                    }
-                }
-                
             }
         }
-    
+    }
 
+    // Make periodic
+    if (centroid==0 && prop==0 && model->periodic_x==1) {
+        double av;
+        for( int l=0; l<Nz; l++) {
+            int c1 = l*Nx + Nx-1;
+            av = 0.5*(NodeField[c1] + NodeField[l*Nx]);
+            NodeField[c1] = av; NodeField[l*Nx] = av;
+        }
+    }
+    
     // Clean up
     DoodzFree(WM);
     DoodzFree(BMWM);
