@@ -9,3 +9,4 @@ visualtests-out
 build/
 *.out
 *.o
+JuliaVisualisation/clusterPNG/

@@ -1,24 +1,24 @@
 import Pkg
 Pkg.activate(normpath(joinpath(@__DIR__, ".")))
-using HDF5, GLMakie, Printf, Colors, ColorSchemes, MathTeXEngine, LinearAlgebra
-Makie.update_theme!(fonts = (regular = texfont(), bold = texfont(:bold), italic = texfont(:italic)))
+using HDF5, Printf, Colors, ColorSchemes, MathTeXEngine, LinearAlgebra
+choice = 2 # 1 => GLMakie; 2 => CairoMakie
+MakieOptions = ["import GLMakie as MoC",        # necessary for    interactive 'DataInspector', not supported on any 'headless server'
+                "import CairoMakie as MoC"]     # does not support interactive 'DataInspector', runs also on any     'headless server'
+eval(Meta.parse(MakieOptions[choice]))
+MoC.update_theme!(fonts = (regular = texfont(), bold = texfont(:bold), italic = texfont(:italic)))
+MoC.Makie.inline!(false)
 
 My = 1e6*365*24*3600
 
 function main()
 
     # Set the path to your files
-    # path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/NonLinearPureshearAnisotropic/"
-    # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/NR00/"
-    path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/"
-    # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/qcoe_x100/"
-    # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/qcoe_chk/"
-    # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/1_NR07/"
+    path ="/users/lcandiot/nas/D2c/PhD_LCandioti_2016_2021/project3_UHProckExhumation/dataAndSourceCode/MODEL1_1x1k_Serp_25Phi_1Prefpwl_NewCode_6kmSerp_WesterlyGranite_ReducedConvRate10mmyr_ParticlesCorr/"
 
     # File numbers
     file_start = 0
     file_step  = 10
-    file_end   = 0
+    file_end   = 130
 
     # Select field to visualise
     field = :Phases
@@ -37,16 +37,21 @@ function main()
     # field = :TimeSeries
 
     # Switches
-    printfig    = false  # print figures to disk
-    ph_contours = false  # add phase contours
-    T_contours  = true  # add temperature contours
-    fabric      = true  # add fabric quiver (normal to director)
-    topo        = false
-    α_heatmap   = 1.0 #0.85   # transparency of heatmap 
+    displayfig  = false     # display figures on screen (not possible on any "headless server")
+    printfig    = true      # print figures to disk
+    printvid    = false      # print a video (printfig must be on)
+    ph_contours = false     # add phase contours
+    T_contours  = false     # add temperature contours
+    fabric      = false     # add fabric quiver (normal to director)
+    topo        = false     
+    velocity    = false     # add velocity quiver
+    α_heatmap   = 0.85      # transparency of heatmap 
     σ1_axis     = false
-    nap         = 0.3    # pause for animation 
-    resol       = 1000
-
+    nap         = 0.3       # pause for animation 
+    resol       = 800
+    inspector   = false     # (not possible on any "headless server")
+    framerate   = 2         # Frame rate for the movie
+    movieName   = "$(path)/_$(field)/$(field)"  # Name of the movie
     # Scaling
     # Lc = 1000.
     # tc = My
@@ -139,7 +144,7 @@ function main()
         cmap[5] = RGBA{Float64}(217/255, 099/255, 097/255, 1.) 
         cmap[6] = RGBA{Float64}(244/255, 218/255, 205/255, 1.) 
         cmap[7] = RGBA{Float64}(223/255, 233/255, 219/255, 1.) 
-        phase_colors = cgrad(cmap, length(cmap), categorical=true, rev=false)
+        phase_colors = MoC.cgrad(cmap, length(cmap), categorical=true, rev=false)
 
         # Group phases for contouring
         group_phases[ ph_hr.==4 .|| ph_hr.==0 .|| ph_hr.==5  .|| ph_hr.==1  ] .= 0
@@ -148,23 +153,23 @@ function main()
 
         #####################################
 
-        f = Figure(resolution = (Lx/Lz*resol, resol), fontsize=25)
+        f = MoC.Figure(resolution = (Lx/Lz*resol, resol), fontsize=25)
 
         if field==:Phases
-            ax1 = Axis(f[1, 1], title = L"Phases at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
-            hm = heatmap!(ax1, xc_hr./Lc, zc_hr./Lc, ph_hr, colormap = phase_colors)
+            ax1 = MoC.Axis(f[1, 1], title = L"Phases at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
+            hm = MoC.heatmap!(ax1, xc_hr./Lc, zc_hr./Lc, ph_hr, colormap = phase_colors)
             if T_contours 
-                contour!(ax1, xc./Lc, zc./Lc, T, levels=0:200:1400, linewidth = 4, color=:white )  
+                MoC.contour!(ax1, xc./Lc, zc./Lc, T, levels=0:200:1400, linewidth = 4, color=:white )  
             end
             if fabric 
-                arrows!(ax1, xc./Lc, zc./Lc, Fab_x, Fab_z, arrowsize = 0, lengthscale=Δ/1.5)
+                MoC.arrows!(ax1, xc./Lc, zc./Lc, Fab_x, Fab_z, arrowsize = 0, lengthscale=Δ/1.5)
             end
             if σ1_axis
-                arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
+                MoC.arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
             end            
-            colsize!(f.layout, 1, Aspect(1, Lx/Lz))
-            GLMakie.Colorbar(f[1, 2], hm, label = "Phases", width = 20, labelsize = 25, ticklabelsize = 14 )
-            GLMakie.colgap!(f.layout, 20)
+            MoC.colsize!(f.layout, 1, MoC.Aspect(1, Lx/Lz))
+            MoC.Colorbar(f[1, 2], hm, label = "Phases", width = 20, labelsize = 25, ticklabelsize = 14 )
+            MoC.colgap!(f.layout, 20)
             if printfig Print2Disk( f, path, string(field), istep) end
         end
 
@@ -323,12 +328,21 @@ function main()
             lines!(ax1, t_t, τxz_t)
         end
 
-        DataInspector(f)
-        display(f)
+        if printfig Print2Disk( f, path, string(field), istep) end
+
+        if inspector
+            DataInspector(f)
+        end
+        if displayfig
+            display(f)
+        end
         sleep(nap)
         
     end
-
+    # Create movie
+    if printfig && printvid
+        FFMPEG.ffmpeg_exe(`-framerate $(framerate) -f image2 -pattern_type glob -i $(path)_$(field)/'*'.png -vf "scale=1920:1080" -c:v libx264 -pix_fmt yuv420p -y "$(movieName).mov"`)
+    end
 end
 
 function PrincipalStress(τxx, τzz, τxz, P)
@@ -355,7 +369,7 @@ end
 function Print2Disk( f, path, field, istep; res=4)
     path1 = path*"/_$field/"
     mkpath(path1)
-    save(path1*"$field"*@sprintf("%05d", istep)*".png", f, px_per_unit = res) 
+    MoC.save(path1*"$field"*@sprintf("%05d", istep)*".png", f, px_per_unit = res) 
 end
 
 main()
