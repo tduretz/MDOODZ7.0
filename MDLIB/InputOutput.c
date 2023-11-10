@@ -1163,6 +1163,11 @@ Input ReadInputFile( char *fileName ) {
     model.surf_baselev       = ReadDou2( fin, "surf_baselev",    0.0 ) / scaling.L;
     model.surf_Winc          = ReadDou2( fin, "surf_Winc",       0.0 ) / scaling.L;
     model.surf_Vinc          = ReadDou2( fin, "surf_Vinc",       0.0 ) / scaling.V;
+    // Initial stress field
+    model.preload           = ReadInt2( fin, "preload",    0 ); // put 1 if you want initial stresses
+    model.preload_sxxd      = ReadDou2( fin, "preload_sxxd",    0.0 ) / scaling.S;
+    model.preload_szzd      = ReadDou2( fin, "preload_szzd",    0.0 ) / scaling.S;
+    model.preload_sxz       = ReadDou2( fin, "preload_sxz",     0.0 ) / scaling.S;
     // Initial thermal perturbation
     model.therm_perturb      = ReadInt2( fin, "therm_perturb",                 0 ); // Includes initial thermal perbation
     model.therm_perturb_x0   = ReadDou2( fin, "therm_perturb_x0",  0.0 )/scaling.L; // x position
