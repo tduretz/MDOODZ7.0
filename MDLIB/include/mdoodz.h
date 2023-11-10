@@ -103,6 +103,9 @@ typedef struct {
   double   diffusion_length;
   // For Pips
   int      chemical_diffusion, no_return, density_variations, unsplit_diff_reac, kinetics;
+  // initial stresses
+  int preload;
+  double preload_sxxd,preload_szzd,preload_sxz;
   // Anisotropy
   int      anisotropy, out_of_plane, marker_noise; //aniso_fstrain
   int      residual_form;
