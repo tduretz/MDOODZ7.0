@@ -2,6 +2,7 @@ import Pkg
 Pkg.activate(normpath(joinpath(@__DIR__, ".")))
 using HDF5, GLMakie, Printf, Colors, ColorSchemes, MathTeXEngine, LinearAlgebra, FFMPEG
 Makie.update_theme!(fonts = (regular = texfont(), bold = texfont(:bold), italic = texfont(:italic)))
+Makie.inline!(false)
 
 y    = 365*24*3600
 My   = 1e6*y
@@ -22,7 +23,6 @@ function main()
     file_start = 700
     file_step  = 10
     file_end   = 700
-
     # Select field to visualise
     field = :Phases
     # field = :Cohesion
@@ -31,7 +31,7 @@ function main()
     # field = :PlasticStrainrate
     # field = :Stress
     # field = :StrainRate
-    # field = :Pressure
+    field = :Pressure
     # field = :Temperature
     # field = :Velocity_x
     # field = :Velocity_z
@@ -46,7 +46,7 @@ function main()
     printvid    = false
     framerate   = 10
     ph_contours = false  # add phase contours
-    T_contours  = true  # add temperature contours
+    T_contours  = false  # add temperature contours
     fabric      = false  # add fabric quiver (normal to director)
     topo        = true
     α_heatmap   = 1.0 #0.85   # transparency of heatmap 
@@ -240,6 +240,27 @@ function main()
             end         
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
             GLMakie.Colorbar(f[1, 2], hm, label = L"$\tau_\textrm{II}$ [MPa]", width = 20, labelsize = 25, ticklabelsize = 14 )
+            GLMakie.colgap!(f.layout, 20)
+            if printfig Print2Disk( f, path, string(field), istep) end
+        end
+
+        if field==:Pressure
+            ax1 = Axis(f[1, 1], title = L"$P$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
+            hm = heatmap!(ax1, xc./Lc, zc./Lc, P, colormap = (:turbo, α_heatmap))
+            if T_contours 
+                contour!(ax1, xc./Lc, zc./Lc, T, levels=0:200:1400, linewidth = 4, color=:white )  
+            end
+            if ph_contours 
+                contour!(ax1, xc_hr./Lc, zc_hr./Lc, group_phases, levels=-1:1:maximum(group_phases), linewidth = 4, color=:white )  
+            end
+            if fabric 
+                arrows!(ax1, xc./Lc, zc./Lc, Fab_x, Fab_z, arrowsize = 0, lengthscale=Δ/1.5)
+            end
+            if σ1_axis
+                arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
+            end  
+            colsize!(f.layout, 1, Aspect(1, Lx/Lz))
+            GLMakie.Colorbar(f[1, 2], hm, label =  L"$P$ [s$^{-1}$]", width = 20, labelsize = 25, ticklabelsize = 14 )
             GLMakie.colgap!(f.layout, 20)
             if printfig Print2Disk( f, path, string(field), istep) end
         end
