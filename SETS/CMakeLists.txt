@@ -25,5 +25,6 @@ else()
     add_set(NeckingReview)
     add_set(CollisionPolarCartesian)
     add_set(AnneloreSubduction)
+    add_set(ThanushikaSubduction)
 endif()
 
