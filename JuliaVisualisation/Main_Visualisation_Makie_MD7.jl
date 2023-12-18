@@ -8,26 +8,24 @@ My = 1e6*365*24*3600
 
 function main()
 
-    # Set the path to your files
-    # path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/NonLinearPureshearAnisotropic/"
-    # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/NR00/"
-    path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/qcoe_ref/"
-    # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/qcoe_x100/"
-    # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/qcoe_chk/"
-    # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/1_NR07/"
+    path ="/Volumes/T7/n/iso90/"
+    path ="/Volumes/T7/n1/aniso43/"
+    path ="/Volumes/T7/n2/aniso43/"
+    path ="/Users/romankulakov/CLionProjects/MDOODZ70/cmake-exec/NeckingReview/aniso3333/"
+    path ="/Volumes/T7/d/aniso9/"
 
     # File numbers
-    file_start = 50
+    file_start = 3450
     file_step  = 10
-    file_end   = 50
+    file_end   = file_start
     # Select field to visualise
-    # field = :Phases
+     field = :Phases
     # field = :Density
     # field = :Viscosity 
     # field = :PlasticStrainrate
     # field = :Stress
     # field = :StrainRate
-    field = :Pressure
+    # field = :Pressure
     # field = :Temperature
     # field = :Velocity_x
     # field = :Velocity_z
@@ -38,9 +36,9 @@ function main()
     # field = :AnisotropyFactor
 
     # Switches
-    printfig    = false  # print figures to disk
+    printfig    = true  # print figures to disk
     ph_contours = false  # add phase contours
-    T_contours  = false  # add temperature contours
+    T_contours  = true  # add temperature contours
     fabric      = false  # add fabric quiver (normal to director)
     topo        = false
     α_heatmap   = 1.0 #0.85   # transparency of heatmap 
@@ -53,7 +51,7 @@ function main()
     # tc = My
     # Vc = 1e-9
 
-    Lc = 1.0
+    Lc = 1000.0
     tc = My
     Vc = 1.0
 
@@ -103,9 +101,10 @@ function main()
         τxz   = Float64.(reshape(ExtractData( filename, "/Vertices/sxz"), nvx, nvz))
         ε̇xx   = Float64.(reshape(ExtractData( filename, "/Centers/exxd"), ncx, ncz))
         ε̇xz   = Float64.(reshape(ExtractData( filename, "/Vertices/exz"), nvx, nvz))
-        τII   = sqrt.( 0.5*(2*τxx.^2 .+ 0.5*(τxz[1:end-1,1:end-1].^2 .+ τxz[2:end,1:end-1].^2 .+ τxz[1:end-1,2:end].^2 .+ τxz[2:end,2:end].^2 ) ) ); τII[mask_air] .= NaN
         ε̇II   = sqrt.( 0.5*(2*ε̇xx.^2 .+ 0.5*(ε̇xz[1:end-1,1:end-1].^2 .+ ε̇xz[2:end,1:end-1].^2 .+ ε̇xz[1:end-1,2:end].^2 .+ ε̇xz[2:end,2:end].^2 ) ) ); ε̇II[mask_air] .= NaN
-        δani  = Float64.(reshape(ExtractData( filename, "/Centers/ani_fac"), ncx, ncz))
+        τII   = sqrt.( 0.5*(2*τxx.^2 .+ 0.5*(τxz[1:end-1,1:end-1].^2 .+ τxz[2:end,1:end-1].^2 .+ τxz[1:end-1,2:end].^2 .+ τxz[2:end,2:end].^2 ) ) ); τII[mask_air] .= NaN
+        
+        #δani  = Float64.(reshape(ExtractData( filename, "/Centers/ani_fac"), ncx, ncz))
         if fabric
             δani  = Float64.(reshape(ExtractData( filename, "/Centers/ani_fac"), ncx, ncz))
             Nx    = Float64.(reshape(ExtractData( filename, "/Centers/nx"), ncx, ncz))
@@ -135,33 +134,52 @@ function main()
 
         # Color palette for phase map
         cmap    = zeros(RGB{Float64}, 7)
-        cmap[1] = RGBA{Float64}(210/255, 218/255, 205/255, 1.)  
+        cmap[1] = RGBA{Float64}(255/255, 255/255, 255/255, 1.)  
         cmap[2] = RGBA{Float64}(217/255, 099/255, 097/255, 1.)  
-        cmap[3] = RGBA{Float64}(117/255, 164/255, 148/255, 1.) 
-        cmap[4] = RGBA{Float64}(223/255, 233/255, 219/255, 1.) 
-        cmap[5] = RGBA{Float64}(217/255, 099/255, 097/255, 1.) 
+        cmap[3] = RGBA{Float64}(217/255, 099/255, 097/255, 1.)  
+        cmap[4] = RGBA{Float64}(244/255, 218/255, 205/255, 1.) 
+        cmap[5] = RGBA{Float64}(244/255, 218/255, 205/255, 1.) 
         cmap[6] = RGBA{Float64}(244/255, 218/255, 205/255, 1.) 
         cmap[7] = RGBA{Float64}(223/255, 233/255, 219/255, 1.) 
         phase_colors = cgrad(cmap, length(cmap), categorical=true, rev=false)
 
         # Group phases for contouring
-        group_phases[ ph_hr.==4 .|| ph_hr.==0 .|| ph_hr.==5  .|| ph_hr.==1  ] .= 0
+        group_phases[ ph_hr.==4 .|| ph_hr.==0 .|| ph_hr.==5  ] .= 0
         group_phases[ ph_hr.==2 .|| ph_hr.==6   ]                             .= 1
-        group_phases[ ph_hr.==3 ]                                             .= 3
+        group_phases[ ph_hr.==3 ]                                             .= 2
+        group_phases[  ph_hr.==1  ]                                           .= 3
 
         #####################################
 
-        f = Figure(resolution = (Lx/Lz*resol, resol), fontsize=25)
+        f = Figure(figure_padding = 100, resolution = (Lx/Lz*resol, resol), fontsize=25)
 
         if field==:Phases
             ax1 = Axis(f[1, 1], title = L"Phases at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
-            hm = heatmap!(ax1, xc_hr./Lc, zc_hr./Lc, ph_hr, colormap = phase_colors)
+            hm = heatmap!(ax1, xc_hr./Lc, zc_hr./Lc, group_phases, colormap = phase_colors)
             if T_contours 
-                contour!(ax1, xc./Lc, zc./Lc, T, levels=0:200:1400, linewidth = 4, color=:white )  
+                Makie.update_theme!(reset=true)
+                contour!(ax1, xc./Lc, zc./Lc, T, levels=0:200:1400, linewidth = 4 ) 
             end
-            if fabric 
-                arrows!(ax1, xc./Lc, zc./Lc, Fab_x, Fab_z, arrowsize = 0, lengthscale=Δ/1.5)
+
+            if fabric
+                subsample_step = 15
+                some_threshold = 0.01
+                for i in 1:subsample_step:size(Fab_x, 1), j in 1:subsample_step:size(Fab_x, 2)
+                    if abs(Fab_z[i, j]) > some_threshold
+                        arrows!(
+                            ax1,
+                            [xc[i]/Lc],
+                            [zc[j]/Lc],
+                            [Fab_x[i, j]],
+                            [Fab_z[i, j]],
+                            arrowsize = 0,
+                            lengthscale = Δ*subsample_step/4,
+                            linewidth = 2
+                        )
+                    end
+                end
             end
+            
             if σ1_axis
                 arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
             end            
