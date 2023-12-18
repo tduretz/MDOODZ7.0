@@ -4,7 +4,7 @@ import matplotlib.pyplot as mpl
 
 My     = 1e6*3600*24*365.25
 
-file   = h5py.File('/Users/imac/REPO_GIT/MD7_reformat/MDLIB/Output00000.gzip.h5', 'r')
+file   = h5py.File('/Volumes/T7/d/aniso9/Output03240.gzip.h5', 'r')
 # file   = h5py.File('/Users/tduretz/REPO/MDOODZ7.0/MDLIB/Output00000.gzip.h5', 'r')
 phases = file['/VizGrid/compo_hr']
 xv_ph  = file['/VizGrid/xviz_hr']
