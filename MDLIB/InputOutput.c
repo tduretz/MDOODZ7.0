@@ -1321,6 +1321,10 @@ Input ReadInputFile( char *fileName ) {
         materials.axx[k]            =  ReadMatProps( fin, "axx",    k,    1.0  );              // plastic directional factor xx
         materials.azz[k]            =  ReadMatProps( fin, "azz",    k,    1.0  );              // plastic directional factor zz
         materials.ayy[k]            =  ReadMatProps( fin, "ayy",    k,    1.0  );              // plastic directional factor yy
+        // temperature driven transition between phases
+        materials.transmutation[k]             = (int)ReadMatProps( fin, "transmutation",    k,    0  ); // switcher: 0 - no transition; -1 transition happens when below transition_temperature; 1 transition happens when above transition_temperature;
+        materials.transmutation_phase[k]       = (int)ReadMatProps( fin, "transmutation_phase",    k,    1  ); // phase to set
+        materials.transmutation_temperature[k] = ReadMatProps( fin, "transmutation_temperature",    k,    1400.0  ); // temperature boundary
         // Check if any flow law is active
         int sum = abs(materials.cstv[k]) + abs(materials.pwlv[k]) + abs(materials.linv[k]) + abs(materials.gbsv[k]) + abs(materials.expv[k]);
         if ( sum == 0 ) {

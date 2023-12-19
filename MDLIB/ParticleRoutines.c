@@ -3318,3 +3318,21 @@ void CountPartCell ( markers* particles, grid *mesh, params model, surface topo,
 /*--------------------------------------------------------------------------------------------------------------------*/
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
+
+void TransmutateMarkers(markers *particles, mat_prop *materials, double scaling_T) {
+#pragma omp parallel for shared ( particles )
+    for (int k=0; k<particles->Nb_part-1; k++) {
+        const int phase = particles->phase[k];
+        const double temperature = (particles->T[k] * scaling_T) - zeroC;
+        const double transmutation = materials->transmutation[phase];
+
+        if ((transmutation == -1 && materials->transmutation_temperature[phase] >= temperature)
+            || (transmutation == 1 && materials->transmutation_temperature[phase] <= temperature)) {
+            particles->phase[k] = materials->transmutation_phase[phase];
+        }
+    }
+}
+
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
