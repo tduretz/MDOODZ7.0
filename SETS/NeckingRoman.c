@@ -21,11 +21,11 @@ double SetNoise(MdoodzInput *instance, Coordinates coordinates, int phase) {
 
 static Ellipse GetMicaEllipse(double centreX, double centreZ) {
   return (Ellipse) {
-          .radiusZ = 20e3,
-          .radiusX = 10e3,
+          .radiusZ = 10e3,
+          .radiusX = 50e3,
           .centreX = centreX,
           .centreZ = centreZ,
-          .angle   = 0,
+          .angle   = 30,
   };
 }
 
@@ -38,9 +38,23 @@ int SetPhase(MdoodzInput *instance, Coordinates coordinates) {
   const double mohoLevel            = -crustThickness;
   const bool   isBelowLithosphere   = coordinates.z < -lithosphereThickness;
   const bool   isAboveMoho          = coordinates.z > mohoLevel;
-  const bool   isMicaEllipse         = IsEllipseCoordinates(coordinates, GetMicaEllipse(0e3, -45e3), instance->scaling.L);
+  // const bool   isMicaEllipse         = IsEllipseCoordinates(coordinates, GetMicaEllipse(0e3, -120e3), instance->scaling.L);
 
-  if (isMicaEllipse) {
+  bool   isSerpentineEllipse = false;
+
+// radius
+//     if (coordinates.x * coordinates.x + coordinates.z * coordinates.z < radius * radius) isSerpentineEllipse = true;
+
+  const double a_ell = 10e3/ instance->scaling.L;
+  const double b_ell = 20e3/ instance->scaling.L;
+  const double x0 = 0.0, z0 = -120e3/instance->scaling.L;
+  const double angle = 30*M_PI/180.0;
+  const double x_ell = (coordinates.x - x0)*cos(angle) + (coordinates.z - z0)*sin(angle);
+  const double z_ell =-(coordinates.x - x0)*sin(angle) + (coordinates.z - z0)*cos(angle);
+  if (pow(x_ell/a_ell,2.0) + pow(z_ell/b_ell,2.0) < 1.0) isSerpentineEllipse = true;
+
+
+  if (isSerpentineEllipse) {
     return 1;
   } else if (isAboveMoho) {
     return 0;
@@ -116,7 +130,7 @@ int main(int nargs, char *args[]) {
   // Input file name
   char *input_file;
   if (nargs < 2) {
-    asprintf(&input_file, "NeckingReview.txt");// Default
+    asprintf(&input_file, "NeckingRoman.txt");// Default
   } else {
     printf("dodo %s\n", args[1]);
     asprintf(&input_file, "%s", args[1]);// Custom

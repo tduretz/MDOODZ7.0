@@ -2,27 +2,28 @@ import Pkg
 Pkg.activate(normpath(joinpath(@__DIR__, ".")))
 using HDF5, GLMakie, Printf, Colors, ColorSchemes, MathTeXEngine, LinearAlgebra, FFMPEG
 Makie.update_theme!(fonts = (regular = texfont(), bold = texfont(:bold), italic = texfont(:italic)))
-Makie.inline!(false)
 
-y    = 365*24*3600
-My   = 1e6*y
-cm_y = y*100.
+const y    = 365*24*3600
+const My   = 1e6*y
+const cm_y = y*100.
 
 function main()
 
     # Set the path to your files
-    path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/DoubleSubduction_OMP16/"
+    path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB//"
+    # path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/DoubleSubduction_OMP16/"
     # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/NR00/"
     # path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/qcoe_ref/"
     # path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/qcoe_LR/"
     # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/qcoe_x100/"
-    # path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/qcoe_simp1/"
+    # path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/qcoe_simp2/"
     # path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/qcoe_simp_tau1e10/"
 
     # File numbers
-    file_start = 700
-    file_step  = 10
-    file_end   = 700
+    file_start = 1
+    file_step  = 1
+    file_end   = 1
+
     # Select field to visualise
     field = :Phases
     # field = :Cohesion
@@ -30,8 +31,8 @@ function main()
     # field = :Viscosity 
     # field = :PlasticStrainrate
     # field = :Stress
-    # field = :StrainRate
-    field = :Pressure
+    field = :StrainRate
+    # field = :Pressure
     # field = :Temperature
     # field = :Velocity_x
     # field = :Velocity_z
@@ -46,16 +47,15 @@ function main()
     printvid    = false
     framerate   = 10
     ph_contours = false  # add phase contours
-    T_contours  = false  # add temperature contours
+    T_contours  = true  # add temperature contours
     fabric      = false  # add fabric quiver (normal to director)
-    topo        = true
+    topo        = false
     α_heatmap   = 1.0 #0.85   # transparency of heatmap 
     σ1_axis     = false
     nap         = 0.3    # pause for animation 
     resol       = 1000
     mov_name    = "$(path)/_$(field)/$(field)"  # Name of the movie
     Lx, Lz      = 1.0, 1.0
-
 
     # Scaling
     # Lc = 1000.
@@ -84,6 +84,9 @@ function main()
         zc_hr  = 0.5.*(zv_hr[1:end-1] .+ zv_hr[2:end])
         ncx_hr, ncz_hr = length(xc_hr), length(zc_hr)
 
+        @show minimum(xc)
+        @show maximum(xc)
+
         t      = model[1]
         tMy    = round(t/tc, digits=6)
         nvx    = Int(model[4])
@@ -93,8 +96,11 @@ function main()
         zmin, zmax = zv[1], zv[end]
         Lx, Lz    = (xmax-xmin)/Lc, (zv[end]-zv[1])/Lc
         Δx, Δz, Δ = Lx/ncx, Lz/ncz, sqrt( (Lx/ncx)^2 + (Lz/ncz)^2)
+        Lx>1e3 ? length_unit="km" :  length_unit="m"
+        @info "Model info"
         @show "Model apect ratio" Lx/Lz
         @show "Model time" t/My
+        @show length_unit
 
         ph    = Float64.(reshape(ExtractData( filename, "/VizGrid/compo"), ncx, ncz));          mask_air = ph .== -1.00 
         ph_hr = Float64.(reshape(ExtractData( filename, "/VizGrid/compo_hr"), ncx_hr, ncz_hr)); 
@@ -109,11 +115,14 @@ function main()
         Vz    = Float64.(reshape(ExtractData( filename, "/VzNodes/Vz"), (ncx+2), (ncz+1)))
         τxx   = Float64.(reshape(ExtractData( filename, "/Centers/sxxd"), ncx, ncz))
         τzz   = Float64.(reshape(ExtractData( filename, "/Centers/szzd"), ncx, ncz))
+        τyy   = -(τzz .+ τxx)
         τxz   = Float64.(reshape(ExtractData( filename, "/Vertices/sxz"), nvx, nvz))
         ε̇xx   = Float64.(reshape(ExtractData( filename, "/Centers/exxd"), ncx, ncz))
+        ε̇zz   = Float64.(reshape(ExtractData( filename, "/Centers/ezzd"), ncx, ncz))
+        ε̇yy   = -(ε̇xx .+ ε̇zz)
         ε̇xz   = Float64.(reshape(ExtractData( filename, "/Vertices/exz"), nvx, nvz))
-        τII   = sqrt.( 0.5*(2*τxx.^2 .+ 0.5*(τxz[1:end-1,1:end-1].^2 .+ τxz[2:end,1:end-1].^2 .+ τxz[1:end-1,2:end].^2 .+ τxz[2:end,2:end].^2 ) ) ); τII[mask_air] .= NaN
-        ε̇II   = sqrt.( 0.5*(2*ε̇xx.^2 .+ 0.5*(ε̇xz[1:end-1,1:end-1].^2 .+ ε̇xz[2:end,1:end-1].^2 .+ ε̇xz[1:end-1,2:end].^2 .+ ε̇xz[2:end,2:end].^2 ) ) ); ε̇II[mask_air] .= NaN
+        τII   = sqrt.( 0.5*(τxx.^2 .+ τyy.^2 .+ τzz.^2 .+ 0.5*(τxz[1:end-1,1:end-1].^2 .+ τxz[2:end,1:end-1].^2 .+ τxz[1:end-1,2:end].^2 .+ τxz[2:end,2:end].^2 ) ) ); τII[mask_air] .= NaN
+        ε̇II   = sqrt.( 0.5*(ε̇xx.^2 .+ ε̇yy.^2 .+ ε̇zz.^2 .+ 0.5*(ε̇xz[1:end-1,1:end-1].^2 .+ ε̇xz[2:end,1:end-1].^2 .+ ε̇xz[1:end-1,2:end].^2 .+ ε̇xz[2:end,2:end].^2 ) ) ); ε̇II[mask_air] .= NaN
         C     = Float64.(reshape(ExtractData( filename, "/Centers/cohesion"), ncx, ncz))
         if fabric
             δani  = Float64.(reshape(ExtractData( filename, "/Centers/ani_fac"), ncx, ncz))
@@ -163,7 +172,7 @@ function main()
         f = Figure(resolution = (Lx/Lz*resol, resol), fontsize=25)
 
         if field==:Phases
-            ax1 = Axis(f[1, 1], title = L"Phases at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
+            ax1 = Axis(f[1, 1], title = L"Phases at $t$ = %$(tMy) Ma", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
             # hm = heatmap!(ax1, xc_hr./Lc, zc_hr./Lc, ph_hr, colormap = phase_colors)
             hm = heatmap!(ax1, xc_hr./Lc, zc_hr./Lc, ph_hr, colormap = :turbo)
             if T_contours 
@@ -182,7 +191,7 @@ function main()
         end
 
         if field==:Viscosity
-            ax1 = Axis(f[1, 1], title = L"$\eta$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
+            ax1 = Axis(f[1, 1], title = L"$\eta$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
             hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(ηc), colormap = (:turbo, α_heatmap))
             if T_contours 
                 contour!(ax1, xc./Lc, zc./Lc, T, levels=0:200:1400, linewidth = 3, color=:white )  
@@ -265,29 +274,8 @@ function main()
             if printfig Print2Disk( f, path, string(field), istep) end
         end
 
-        if field==:Pressure
-            ax1 = Axis(f[1, 1], title = L"$P$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
-            hm = heatmap!(ax1, xc./Lc, zc./Lc, P, colormap = (:turbo, α_heatmap))
-            if T_contours 
-                contour!(ax1, xc./Lc, zc./Lc, T, levels=0:200:1400, linewidth = 4, color=:white )  
-            end
-            if ph_contours 
-                contour!(ax1, xc_hr./Lc, zc_hr./Lc, group_phases, levels=-1:1:maximum(group_phases), linewidth = 4, color=:white )  
-            end
-            if fabric 
-                arrows!(ax1, xc./Lc, zc./Lc, Fab_x, Fab_z, arrowsize = 0, lengthscale=Δ/1.5)
-            end
-            if σ1_axis
-                arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
-            end  
-            colsize!(f.layout, 1, Aspect(1, Lx/Lz))
-            GLMakie.Colorbar(f[1, 2], hm, label =  L"$P$ [s$^{-1}$]", width = 20, labelsize = 25, ticklabelsize = 14 )
-            GLMakie.colgap!(f.layout, 20)
-            if printfig Print2Disk( f, path, string(field), istep) end
-        end
-
         if field==:StrainRate
-            ax1 = Axis(f[1, 1], title = L"$\dot{\varepsilon}_\textrm{II}$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
+            ax1 = Axis(f[1, 1], title = L"$\dot{\varepsilon}_\textrm{II}$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [%$(length_unit)]", ylabel = L"$y$ [%$(length_unit)]")
             hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(ε̇II), colormap = (:turbo, α_heatmap))
             if T_contours 
                 contour!(ax1, xc./Lc, zc./Lc, T, levels=0:200:1400, linewidth = 4, color=:white )  
@@ -332,7 +320,7 @@ function main()
         if field==:Velocity
             ax1 = Axis(f[1, 1], title = L"$V$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
             Vx_BG = 0*xc .- 2*zc'  
-            V     = sqrt.( (Vxc .- Vx_BG).^2 + (Vzc).^2)
+            V     = sqrt.( (Vxc .- 0.0*Vx_BG).^2 + (Vzc).^2)
             hm = heatmap!(ax1, xc./Lc, zc./Lc, V, colormap = (:jet, α_heatmap))#, colorrange=(0., 0.6)
             if T_contours 
                 contour!(ax1, xc./Lc, zc./Lc, T, levels=0:200:1400, linewidth = 4, color=:white )  
@@ -346,8 +334,8 @@ function main()
             if σ1_axis
                 arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
             end  
-            xlims!(ax1, 0., 3.e-3)
-            ylims!(ax1, 0., 3.e-3)
+            # xlims!(ax1, 0., 3.e-3)
+            # ylims!(ax1, 0., 3.e-3)
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
             GLMakie.Colorbar(f[1, 2], hm, label = L"$V$ [m.s$^{-1}$]", width = 20, labelsize = 25, ticklabelsize = 14 )
             GLMakie.colgap!(f.layout, 20)

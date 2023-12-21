@@ -6,7 +6,6 @@ writer         = 1
 writer_step    = 10
 writer_markers = 0
 writer_debug   = 0
-writer_subfolder = iso
 
 /**** SCALES ****/ Scaling parameters for
 eta = 1.e+22      /viscosity
@@ -16,14 +15,14 @@ T   = 1.e+02      /temperature
 
 /**** SPACE ****/
 Nx      = 400
-Nx      = 210
+Nz      = 210
 xmin    = -200.000000e3
 xmax    =  200.000000e3
 zmin    = -200.000000e3
 zmax    = 10.000000e3
 
 /**** TIME ****/
-Nt          = 7000
+Nt          = 500
 dt          = 1.2623e+11
 Courant     = 0.45
 penalty     = 1e2
@@ -97,7 +96,7 @@ Cv           = 1050.0
 k            = 2.5
 Qr           = 0.55e-6
 C            = 5.0e7
-phi          = 30.0
+phi          = 15.0
 Slim         = 500.0e9
 alp          = 32.0e-6
 bet          = 1.5e-11
@@ -115,7 +114,7 @@ aniso_angle  = 80
 eta_vp     = 5e21
 
 ID       = 1
-rho      = 2800.00 / Lower crust
+rho      = 2600.00 / Lower crust
 G        = 1.0e10
 Cv       = 1050.0
 k        = 2.5
@@ -126,7 +125,7 @@ Slim     = 500.0e9
 alp      = 32.0e-6
 bet      = 1.5e-11
 cstv     = 0
-pwlv     = 24
+pwlv     = 46
 linv     = 0
 gbsv     = 0
 expv     = 0
@@ -147,14 +146,14 @@ Cv           = 1050.0
 k            = 3.0
 Qr           = 0.0
 C            = 5.0e7
-phi          = 30.0
+phi          = 15.0
 Slim         = 500.0e9
 cstv         = 0
 pwlv         = 40
 linv         = 40
 gbsv         = 0
 expv         = 40
-aniso_factor = 3
+aniso_factor = 1
 aniso_angle  = 80
 eta_vp     = 5e21
 
@@ -167,7 +166,7 @@ Cv         = 1050.0
 k          = 3.0
 Qr         = 0.0
 C          = 5.0e7
-phi        = 30.0
+phi        = 15.0
 Slim       = 500.0e9
 cstv       = 0
 pwlv       = 41
