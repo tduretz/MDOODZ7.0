@@ -1302,6 +1302,7 @@ Input ReadInputFile( char *fileName ) {
         // Reaction stuff
         materials.reac_soft[k]  = (int)ReadMatProps( fin, "reac_soft",   k,    0.0  );
         materials.reac_phase[k] = (int)ReadMatProps( fin, "reac_phase",   k,    0.0  );
+        if (materials.reac_phase[k]>=model.Nb_phases) {printf("The target phase for reaction softening of phase %d is not set up. Edit the .txt file!\n", k  ); exit(13);}
         materials.Pr[k]         = ReadMatProps( fin, "Pr",      k,    0.0  ) / scaling.S;
         materials.dPr[k]        = ReadMatProps( fin, "dPr",     k,    0.0  ) / scaling.S;
         materials.tau_kin[k]    = ReadMatProps( fin, "tau_kin", k,    0.0  ) / scaling.t;
@@ -1608,7 +1609,8 @@ Input ReadInputFile( char *fileName ) {
         model.PDMTmax[pid]       = (800+273)/scaling.T;          // Maximum temperature        (MANTLE) [K]
         model.PDMPmin[pid]       = (0.0090/10*1e9)/scaling.S;    // Minimum pressure           (MANTLE) [Pa]
         model.PDMPmax[pid]       = (49.9890/10*1e9)/scaling.S;   // Maximum pressure           (MANTLE) [Pa]
-        model.PDMrho[pid]        = ReadBin(model.import_files_dir, "SiO2_nsm000.dat", model.PDMnT[pid], model.PDMnP[pid], scaling.rho);
+        model.PDMrho[pid]        = ReadBin(model.import_files_dir, "SiO2_nsm010.dat", model.PDMnT[pid], model.PDMnP[pid], scaling.rho);
+        // model.PDMrho[pid]        = ReadBin(model.import_files_dir, "SiO2_nsm000.dat", model.PDMnT[pid], model.PDMnP[pid], scaling.rho);
     }
 
     //------------------------------------------------------------------------------------------------------------------------------//
