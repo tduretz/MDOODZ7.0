@@ -399,6 +399,8 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
         //------------------------------------------------------------------------------------------------------------------------------//
 
+        TransmutateMarkers(&particles, &input.materials, input.scaling.T);
+
         clock_t t_omp_step = (double)omp_get_wtime();
 
         printf(GREEN "Number of particles     = %d\n" RESET, particles.Nb_part    );
