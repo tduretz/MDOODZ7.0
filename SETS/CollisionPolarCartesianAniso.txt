@@ -1,11 +1,11 @@
 /**** Original name: StefanBending.txt ****/
 /**** RESTART ****/
-istep = 00000010
+istep = 00000000
 irestart = 0
 
 /**** OUTPUT FILES ****/
 writer = 1
-writer_step = 1
+writer_step = 10
 writer_markers = 0
 writer_debug   = 0 
 
@@ -24,47 +24,50 @@ zmin    =  5969400     / model bottom
 zmax    =  6.400000e6  / Earth surface
 
 /**** TIME ****/
-Nt      = 10
+Nt      = 1000
 dt      = 1.2623e+11
 Courant = 0.45
 
 /**** SWITCHES ****/
-penalty         = 1e3
-eta_avg         = 1
-itp_stencil     = 9
-ismechanical    = 1
-dt_constant     = 0
-RK              = 4
-isperiodic_x    = 0
-ispureshear_ALE = 0  /1: box stretched at constant strain rate; -1 box of constant size
-isinertial      = 0
-iselastic       = 1
-isthermal       = 1
-isPl_soft       = 0
-free_surf       = 1
-free_surf_stab  = 1
-eqn_state       = 0
-thermal_eq      = 1
-subgrid_diff    = 2
-shear_heat      = 1
-adiab_heat      = 0
-polar           = 1
-aniso           = 1
-StressRotation  = 2
+penalty           = 1e3
+eta_average       = 0  /0: arithmetic; 1: harmonic (leads to problems with aniso!)
+interp_stencil    = 9
+mechanical        = 1
+constant_dt       = 0
+RK                = 4
+periodic_x        = 0
+pure_shear_ALE    = 0  /1: box stretched at constant strain rate; -1 box of constant size
+elastic           = 1
+thermal           = 1
+isPl_soft         = 0
+free_surface      = 1
+free_surface_stab = 1
+topo_update       = 0 / 0: total update of topotgraphy (likely diffusive)
+initial_cooling   = 1
+subgrid_diffusion = 2
+shear_heating     = 1
+adiab_heating     = 0
+polar             = 1
+anisotropy        = 1
+finite_strain     = 1
+stress_rotation   = 2
+/surface_processes = 1
+/surf_diff = 1e-6 / surface diffusivity
+marker_aniso_angle = 1 / to set individual initial aniso_angles within the same phase
 
 /**** NON-LINEAR ITERATIONS ****/
 Newton      = 0 
 nit_max     = 1
 rel_tol_KSP = 1e-4
-abs_tol_u   = 1e-10
-abs_tol_p   = 1e-10
-rel_tol_u   = 1e-10
-rel_tol_p   = 1e-10
-mineta      = 1e17
-maxeta      = 1e25
+nonlin_abs_mom   = 1e-10
+nonlin_abs_div   = 1e-10
+nonlin_rel_mom   = 1e-10
+nonlin_rel_div   = 1e-10
+min_eta      = 1e17
+max_eta      = 1e25
 
 /**** SETUP DEPENDANT ****/
-EpsBG       =  1e-15
+bkg_strain_rate       =  1e-15
 user0       = -35e3   / Moho depth [m]
 user1       = -150e3  / LAB depth [m]
 user2       = -200e3  / depth of compression [m] 
@@ -82,14 +85,13 @@ Nb_phases = 3
 /**** PHASE 0 ****/
 ID   = 0
 rho  = 2800.00 / Crust
-mu   = 3e10
+G   = 3e10
 Cv   = 1050
 k    = 2.5
 Qr   = 1e-6
 C    = 5e7
 phi  = 30
 eta_vp = 1e21
-Slim = 500e9
 alp  = 10.0e-6
 bet  = 1e-11
 drho = 0
@@ -102,18 +104,21 @@ gsel = 0             / grain size evo.
 eta0 = 1e23
 npwl = 1
 Qpwl = 0
+/Slim = 300e6        / 300 MPa
+ani_fstrain  = 1     / activates finite strain anisotropy
+aniso_factor = 1.0
+/ani_fac_max = 1.5
 
 /**** PHASE 1 ****/
 ID   = 1
 rho  = 3300.00 / Mantle lithosphere
-mu   = 3e10
+G   = 3e10
 Cv   = 1050
 k    = 2.5
 Qr   = 0
 C    = 5e7
 phi  = 30
 eta_vp = 1e21
-Slim = 500e9
 alp  = 10.0e-6
 bet  = 1e-11
 drho = 0
@@ -126,20 +131,21 @@ gsel = 0             / grain size evo.
 eta0 = 1e22
 npwl = 1
 Qpwl = 0
-ani_fac_v = 2.0
-aniso_angle = 45.0
+/Slim = 300e6        / 300 MPa
+ani_fstrain  = 1     / activates finite strain anisotropy
+aniso_factor = 1.0
+/ani_fac_max = 1.5
 
 /**** PHASE 2 ****/
 ID   = 2
 rho  = 3300.00 / Astehenosphere
-mu   = 3e10
+G   = 3e10
 Cv   = 1050
 k    = 2.5
 Qr   = 0
 C    = 5e7
 phi  = 30
 eta_vp = 1e21
-Slim = 500e9
 alp  = 10.0e-6
 bet  = 1e-11
 drho = 0
@@ -152,5 +158,9 @@ gsel = 0             / grain size evo.
 eta0 = 5e21
 npwl = 1
 Qpwl = 0
-ani_fac_v = 1.0
-aniso_angle = 45.0
+/Slim = 300e6        / 300 MPa
+ani_fstrain  = 1     / activates finite strain anisotropy
+aniso_factor = 1.0
+/ani_fac_max = 1.5
+
+/ ENDFILE /
