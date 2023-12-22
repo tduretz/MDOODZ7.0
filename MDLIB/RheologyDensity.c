@@ -361,11 +361,13 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
 
   // General paramaters
   int    it, nitmax = 20, noisy = 0;
-  double eta = 0.0, R = materials->R, dt = model->dt;
+  double eta = 0.0, R = materials->R;
   double min_eta = model->min_eta, max_eta = model->max_eta;
   double TmaxPeierls = (1200.0 + zeroC) / scaling->T;// max. T for Peierls
 
-  // if (phase==1) noisy=1;
+  double dt;
+  if (model->step==0) dt = 1e100;
+  else dt = model->dt;
 
   // Parameters for deformation map calculations
   int    plastic = 0, constant = 0, dislocation = 0, peierls = 0, diffusion = 0, gbs = 0, elastic = model->elastic, kinetics = 0;
@@ -450,7 +452,7 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
   *d1 = materials->gs_ref[phase];
 
   // Tensional cut-off
-  //    if ( model->gz<0.0 && P<0.0     ) { P = 0.0; printf("Aie aie aie P < 0 !!!\n"); exit(122);}
+  if ( model->gz<0.0 && P<0.0     ) { P = 0.0; } // printf("Aie aie aie P < 0 !!!\n"); exit(122);
 
   // Visco-plastic limit
   if ( elastic==0                 ) { G = 1e1; dil = 0.0; K = 1e10;}; //K = 1e1;
@@ -532,6 +534,10 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
   if ( constant_mix== 1 && mix_avg==1) eta_cst  = pow(X0/materials->eta0[phase] + (1-X0)/materials->eta0[phase_two], -1.0);
   if ( constant_mix== 1 && mix_avg==2) eta_cst  = exp(X0*log(materials->eta0[phase]) + (1-X0)*log(materials->eta0[phase_two]));
   if ( dislocation == 1 )              eta_pwl  = B_pwl * pow( Eii, 1.0/n_pwl - 1.0 ); 
+
+  // if (phase==1) {  
+  //   printf("%2.2e %2.2e %2.2e %lf\n", eta_pwl*scaling->eta, B_pwl, Eii*scaling->E, n_pwl);
+  // }
 
   // if (phase==2 && constant    == 1) {
   //   double rho_test = EvaluateDensity( phase, T, P, X, model, materials );
@@ -683,7 +689,7 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
 
       // In case return mapping has failed (because of tension), return to a von Mises minimum stress 
       if (Tiic<0.0) {
-        if (noisy>0) printf("Aie, tension!\n");
+        printf("Aie, tension!\n"); exit(1);
         F_trial = Tii - Tiimin;
         gdot    = F_trial /  (eta_ve);
         Tiic    = Tii - eta_ve*gdot;
@@ -698,6 +704,27 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
   }
 
   // ----------------- Reaction volume changes, computation of updated density only on centroid nodes
+  // if ( centroid > 0 ) {
+  //   if (final_update==1) P = Pc;
+  //   if (ProgressiveReaction == 1) {
+  //     // rho_ref      = (1.0-X)*rho1 + X*rho2;
+  //     // *rho         = rho_ref * exp(P/K - alpha*T);
+  //     *rho = EvaluateDensity( phase, T, P, X, model, materials );
+  //   }
+  //   else {
+  //     rho_eq = EvaluateDensity( phase, T, P, X, model, materials );
+  //     if ( kinetics == 1 ) dG            = Interpolate2Ddata( T0, P0, model->kin_Tmin, model->kin_Tmax, model->kin_Pmin, model->kin_Pmax, model->kin_nT, model->kin_nP, model->kin_dG );
+  //     if ( kinetics == 1 && dG>0.0 ) {
+  //       Vkin          = kkin*T*( exp(-Qkin/R/T) * (1.0 - exp(-dG/R/T)) ); // growth rate [m/s]
+  //       tau_kin       = log(1-0.6666666) * pow(-2*Skin*Vkin, -1);
+  //       rho0          = EvaluateDensity( phase, T0, P0, X, model, materials );
+  //       *rho          = 1.0/(tau_kin + dt) * (tau_kin*rho0 + dt*rho_eq);
+  //     }
+  //     else {
+  //       *rho          = rho_eq;
+  //     }
+  //   }
+  // }
   if ( centroid > 0 ) {
     if (final_update==1) P = Pc;
     if (ProgressiveReaction == 1) {
@@ -707,15 +734,20 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
     }
     else {
       rho_eq = EvaluateDensity( phase, T, P, X, model, materials );
-      if ( kinetics == 1 ) dG            = Interpolate2Ddata( T0, P0, model->kin_Tmin, model->kin_Tmax, model->kin_Pmin, model->kin_Pmax, model->kin_nT, model->kin_nP, model->kin_dG );
-      if ( kinetics == 1 && dG>0.0 ) {
-        Vkin          = kkin*T*( exp(-Qkin/R/T) * (1.0 - exp(-dG/R/T)) ); // growth rate [m/s]
-        tau_kin       = log(1-0.6666666) * pow(-2*Skin*Vkin, -1);
+      *rho   = rho_eq;
+      if ( kinetics == 1 ) {
         rho0          = EvaluateDensity( phase, T0, P0, X, model, materials );
-        *rho          = 1.0/(tau_kin + dt) * (tau_kin*rho0 + dt*rho_eq);
-      }
-      else {
-        *rho          = rho_eq;
+        if ( materials->kin[phase]==9 ) {
+          tau_kin = 0.0;
+          dG      = Interpolate2Ddata( T0, P0, model->kin_Tmin, model->kin_Tmax, model->kin_Pmin, model->kin_Pmax, model->kin_nT, model->kin_nP, model->kin_dG );
+          if ( dG>0.0 ) {
+            Vkin          = kkin*T*( exp(-Qkin/R/T) * (1.0 - exp(-dG/R/T)) ); // growth rate [m/s]
+            tau_kin       = log(1-0.6666666) * pow(-2*Skin*Vkin, -1);
+          }
+        }
+        if ( materials->kin[phase]==9 || materials->kin[phase]==1 ) {
+          *rho          = 1.0/(tau_kin + dt) * (tau_kin*rho0 + dt*rho_eq);
+        }
       }
     }
   }
@@ -795,6 +827,15 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
 
   if( *etaVE < min_eta ) {
     *etaVE = min_eta;
+  }
+
+  // Viscosity limiter
+  if( eta > max_eta ) {
+    eta = max_eta;
+  }
+
+  if( eta < min_eta ) {
+    eta = min_eta;
   }
 
   //    printf("e --> %2.2e %2.2e %2.2e\n", Exx, Ezz, Eyy); // if (fabs(Eyy)>1e-6)
@@ -1144,7 +1185,7 @@ void Softening(int c0, double** phase_perc, double* dil_arr, double* fric_arr, d
     }
 
     else {
-      // Pieciewise linear function softening
+      // Piecewise linear function softening
 
       // If we are below the lower strain limit
       if (strain_acc < materials.pls_start[p]) {
@@ -1184,7 +1225,6 @@ void Softening(int c0, double** phase_perc, double* dil_arr, double* fric_arr, d
       fric_arr[c0] += phase_perc[p][c0] *  log(fric);
       dil_arr[c0]  += phase_perc[p][c0] *  log(dil);
       C_arr[c0]    += phase_perc[p][c0] *  log(C);
-
     }
   }
   // Post-process for geometric/harmonic averages
