@@ -1302,7 +1302,7 @@ Input ReadInputFile( char *fileName ) {
         // Reaction stuff
         materials.reac_soft[k]  = (int)ReadMatProps( fin, "reac_soft",   k,    0.0  );
         materials.reac_phase[k] = (int)ReadMatProps( fin, "reac_phase",   k,    0.0  );
-        if (materials.reac_phase[k]>=model.Nb_phases) {printf("The target phase for reaction softening of phase %d is not set up. Edit the .txt file!\n", k  ); exit(13);}
+        if (materials.reac_phase[k]>=model.Nb_phases && materials.reac_soft[k]==1) {printf("The target phase for reaction softening of phase %d is not set up. Edit the .txt file!\n", k  ); exit(13);}
         materials.Pr[k]         = ReadMatProps( fin, "Pr",      k,    0.0  ) / scaling.S;
         materials.dPr[k]        = ReadMatProps( fin, "dPr",     k,    0.0  ) / scaling.S;
         materials.tau_kin[k]    = ReadMatProps( fin, "tau_kin", k,    0.0  ) / scaling.t;
