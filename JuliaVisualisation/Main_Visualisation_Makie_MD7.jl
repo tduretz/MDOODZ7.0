@@ -7,10 +7,20 @@ const y    = 365*24*3600
 const My   = 1e6*y
 const cm_y = y*100.
 
+function ExtractField(filename, field, size, mask_air, mask)
+    field = try (Float64.(reshape(ExtractData( filename, field), size...)))
+    catch 
+        @warn "$field not found"
+    end
+    mask_air ? field[mask] .= NaN : nothing
+    return field
+end 
+
 function main()
 
     # Set the path to your files
     path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB//"
+    # path ="/Users/tduretz/Downloads/TEST_ShearBandsHomo_SRC/"
     # path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/DoubleSubduction_OMP16/"
     # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/NR00/"
     # path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/qcoe_ref/"
@@ -20,12 +30,12 @@ function main()
     # path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/qcoe_simp_tau1e10/"
 
     # File numbers
-    file_start = 1
-    file_step  = 1
-    file_end   = 1
+    file_start = 0
+    file_step  = 10
+    file_end   = 00
 
     # Select field to visualise
-    field = :Phases
+    # field = :Phases
     # field = :Cohesion
     # field = :Density
     # field = :Viscosity 
@@ -45,8 +55,8 @@ function main()
     # Switches
     printfig    = false  # print figures to disk
     printvid    = false
-    framerate   = 10
-    ph_contours = false  # add phase contours
+    framerate   = 3
+    ph_contours = true  # add phase contours
     T_contours  = true  # add temperature contours
     fabric      = false  # add fabric quiver (normal to director)
     topo        = false
@@ -77,8 +87,8 @@ function main()
         zv     = ExtractData( filename, "/Model/zg_coord")
         xv_hr  = ExtractData( filename, "/VizGrid/xviz_hr")
         zv_hr  = ExtractData( filename, "/VizGrid/zviz_hr")
-        τxz_t  = ExtractData( filename, "TimeSeries/sxz_mean_time")
-        t_t    = ExtractData( filename, "TimeSeries/Time_time")
+        # τxz_t  = ExtractData( filename, "TimeSeries/sxz_mean_time")
+        # t_t    = ExtractData( filename, "TimeSeries/Time_time")
 
         xc_hr  = 0.5.*(xv_hr[1:end-1] .+ xv_hr[2:end])
         zc_hr  = 0.5.*(zv_hr[1:end-1] .+ zv_hr[2:end])
@@ -101,11 +111,14 @@ function main()
         @show "Model apect ratio" Lx/Lz
         @show "Model time" t/My
         @show length_unit
+        centroids, vertices = (ncx, ncz), (nvx, nvz)
 
-        ph    = Float64.(reshape(ExtractData( filename, "/VizGrid/compo"), ncx, ncz));          mask_air = ph .== -1.00 
-        ph_hr = Float64.(reshape(ExtractData( filename, "/VizGrid/compo_hr"), ncx_hr, ncz_hr)); 
-        group_phases = copy( ph_hr); ph_hr[ph_hr.==-1.00] .= NaN
-        ηc    = Float64.(reshape(ExtractData( filename, "/Centers/eta_n"), ncx, ncz));          ηc[mask_air]  .= NaN
+        ph           = ExtractField(filename,  "/VizGrid/compo", centroids, false, 0)
+        mask_air     = ph .== -1.00 
+        ph_hr        = ExtractField(filename,  "/VizGrid/compo_hr", (ncx_hr, ncz_hr), false, 0)
+        ph_dual_hr   = ExtractField(filename,  "/VizGrid/compo_dual_hr", (ncx_hr, ncz_hr), false, 0)
+        group_phases = copy(ph_hr); ph_hr[ph_hr.==-1.00] .= NaN
+        ηc           = ExtractField(filename,  "/Centers/eta_n", centroids, true, mask_air)
         ρc    = Float64.(reshape(ExtractData( filename, "/Centers/rho_n"), ncx, ncz));          ρc[mask_air]  .= NaN
         P     = Float64.(reshape(ExtractData( filename, "/Centers/P"), ncx, ncz));              P[mask_air]   .= NaN
         T     = Float64.(reshape(ExtractData( filename, "/Centers/T"), ncx, ncz)) .- 273.15;    T[mask_air]   .= NaN
@@ -124,8 +137,9 @@ function main()
         τII   = sqrt.( 0.5*(τxx.^2 .+ τyy.^2 .+ τzz.^2 .+ 0.5*(τxz[1:end-1,1:end-1].^2 .+ τxz[2:end,1:end-1].^2 .+ τxz[1:end-1,2:end].^2 .+ τxz[2:end,2:end].^2 ) ) ); τII[mask_air] .= NaN
         ε̇II   = sqrt.( 0.5*(ε̇xx.^2 .+ ε̇yy.^2 .+ ε̇zz.^2 .+ 0.5*(ε̇xz[1:end-1,1:end-1].^2 .+ ε̇xz[2:end,1:end-1].^2 .+ ε̇xz[1:end-1,2:end].^2 .+ ε̇xz[2:end,2:end].^2 ) ) ); ε̇II[mask_air] .= NaN
         C     = Float64.(reshape(ExtractData( filename, "/Centers/cohesion"), ncx, ncz))
+        
         if fabric
-            δani  = Float64.(reshape(ExtractData( filename, "/Centers/ani_fac"), ncx, ncz))
+            δani  = ExtractField(filename, "/Centers/ani_fac", centroids)
             Nx    = Float64.(reshape(ExtractData( filename, "/Centers/nx"), ncx, ncz))
             Nz    = Float64.(reshape(ExtractData( filename, "/Centers/nz"), ncx, ncz))
             Fab_x = -Nz./Nx
@@ -175,6 +189,7 @@ function main()
             ax1 = Axis(f[1, 1], title = L"Phases at $t$ = %$(tMy) Ma", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
             # hm = heatmap!(ax1, xc_hr./Lc, zc_hr./Lc, ph_hr, colormap = phase_colors)
             hm = heatmap!(ax1, xc_hr./Lc, zc_hr./Lc, ph_hr, colormap = :turbo)
+            hm = heatmap!(ax1, xc_hr./Lc, zc_hr./Lc, ph_dual_hr, colormap = :turbo)
             if T_contours 
                 contour!(ax1, xc./Lc, zc./Lc, T, levels=0:200:1400, linewidth = 4, color=:white )  
             end
