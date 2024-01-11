@@ -15,15 +15,15 @@ function main()
     # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/qcoe_x100/"
     # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/qcoe_chk/"
     # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/1_NR07/"
-    path = "/Users/lcandiot/Developer/MDOODZ7.0/cmake-exec/ThanushikaSubduction/"
+    path = "/Users/lcandiot/Developer/MDOODZ7.0/RUNS/ThanushikaSubduction/test_steepSubd/"
     
     # File numbers
-    file_start = 0
+    file_start = 800
     file_step  = 25
-    file_end   = 900
+    file_end   = 800
     
     # Select field to visualise
-    # field = :Phases
+    field = :Phases
     # field = :Density
     # field = :Viscosity 
     # field = :PlasticStrainrate
@@ -32,7 +32,7 @@ function main()
     # field = :Pressure
     # field = :Temperature
     # field = :Velocity_x
-    field = :Velocity_z
+    # field = :Velocity_z
     # field = :Velocity
     # field = :GrainSize
     # field = :Topography
