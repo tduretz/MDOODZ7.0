@@ -58,11 +58,10 @@ int SetPhase(MdoodzInput *instance, Coordinates coordinates) {
   // Define parameters and initialise phases according to coordinates
   const double lithosphereThickness = instance->model.user1 / instance->scaling.L;
   const double weakZoneWidth        =  10.0e3/instance->scaling.L;
-  const double weakZoneDepth        = -160e3 / instance->scaling.L;
-        double mohoLevel            = -30.0e3 / instance->scaling.L;
+  // const double weakZoneDepth        = -120e3 / instance->scaling.L;
+        double mohoLevel            = -instance->model.user0 / instance->scaling.L;
   const double seaLevel             = 0.0e3 / instance->scaling.L;
   const double ht_iso               = 4.8e3 / instance->scaling.L;
-  const double maxMohoDepth         = -30.0e3 / instance->scaling.L;
   const bool   isBelowLithosphere   = coordinates.z < -lithosphereThickness;
   const bool   isAboveMoho          = coordinates.z > mohoLevel;
   const bool   isContinentalPlate   = coordinates.x > 0.0e3 / instance->scaling.L;
@@ -73,7 +72,7 @@ int SetPhase(MdoodzInput *instance, Coordinates coordinates) {
   const double ocCrustThickness     = instance->model.user7 / instance->scaling.L;
   const double ocLithThickness      = instance->model.user5 / instance->scaling.L;
   const double sedimentThickness    = instance->model.user8 / instance->scaling.L;
-
+  const double weakZoneDepth        = -fmax(lithosphereThickness, ocLithThickness);
   int phase = 0; // Upper mantle
   
   // Set all lithosphere
@@ -110,12 +109,12 @@ int SetPhase(MdoodzInput *instance, Coordinates coordinates) {
   // Set continental crust
   if (coordinates.x >= weakZoneWidth - coordinates.z*subductionAngle && coordinates.x >= x_ext_start && coordinates.x <= x_ext_end)
   {
-    // mohoLevel = maxMohoDepth * ( 1.0 + tanh( ((coordinates.x - marginWidth / 2.0)) / (2.0 * marginWidth) ) );
-    mohoLevel = seaLevel + (maxMohoDepth + ht_iso - seaLevel) / marginWidth * coordinates.x;
+    // mohoLevel = mohoLevel * ( 1.0 + tanh( ((coordinates.x - marginWidth / 2.0)) / (2.0 * marginWidth) ) );
+    mohoLevel = seaLevel + (mohoLevel + ht_iso - seaLevel) / marginWidth * coordinates.x;
   }
   else
   {
-    mohoLevel = maxMohoDepth + ht_iso;
+    mohoLevel = mohoLevel + ht_iso;
   }
   if (coordinates.z >= mohoLevel && coordinates.x >= weakZoneWidth - coordinates.z*subductionAngle)
   {
@@ -130,7 +129,7 @@ int SetPhase(MdoodzInput *instance, Coordinates coordinates) {
 double SetTemperature(MdoodzInput *instance, Coordinates coordinates) {
   const double lithosphereThickness = instance->model.user1 / instance->scaling.L;
   const double surfaceTemperature   = 273.15 / instance->scaling.T;
-  const double mantleTemperature    = (instance->model.user0 + 273.15) / instance->scaling.T;
+  const double mantleTemperature    = (1350.0 + 273.15) / instance->scaling.T;
   const double weakZoneWidth        =  10.0e3/instance->scaling.L;
   const double subductionAngle      = tan(instance->model.user4/180*PI);
   const double ocLithThickness      = instance->model.user5 / instance->scaling.L;
@@ -170,11 +169,10 @@ int AdjustPhaseToTemperature(MdoodzInput *instance, Coordinates coordinates, dou
   // Define parameters and initialise phases according to coordinates
   const double lithosphereThickness = instance->model.user1 / instance->scaling.L;
   const double weakZoneWidth        =  10.0e3 / instance->scaling.L;
-        double mohoLevel            = -0.0e3 / instance->scaling.L;
   const double seaLevel             =  0.0e3 / instance->scaling.L;
-  const double maxMohoDepth         = -30.0e3 / instance->scaling.L;
+  const double mohoLevel            = -instance->model.user0 / instance->scaling.L;
   const double subductionAngle      = tan(instance->model.user4/180*PI);
-  const double mantleTemperature    = (instance->model.user0 + 273.15) / instance->scaling.T;
+  const double mantleTemperature    = (1350.0 + 273.15) / instance->scaling.T;
   
   // Correct oceanic lithosphere for temperature
   if (particleTemperature < mantleTemperature - 0.01*mantleTemperature && phase == 0 && coordinates.x <= -weakZoneWidth - coordinates.z * subductionAngle)
@@ -204,7 +202,7 @@ char SetBCPType(MdoodzInput *instance, POSITION position) {
 SetBC SetBCT(MdoodzInput *instance, POSITION position, double particleTemperature) {
   SetBC     bc;
   double surface_temperature = (0.0 + 273.15) / instance->scaling.T ;
-  double mantle_temperature  = (instance->model.user0 + 273.15) / instance->scaling.T;
+  double mantle_temperature  = (1350.0 + 273.15) / instance->scaling.T;
   const double lithosphereThickness = instance->model.user1 / instance->scaling.L;
   const double ocLithThickness      = instance->model.user5 / instance->scaling.L;
   const double minLithThickness     = fmin(ocLithThickness, lithosphereThickness);
@@ -230,10 +228,12 @@ SetBC SetBCT(MdoodzInput *instance, POSITION position, double particleTemperatur
 void AddCrazyConductivity(MdoodzInput *input) {
   int               *asthenospherePhases = (int *) malloc(sizeof(int));
   CrazyConductivity *crazyConductivity   = (CrazyConductivity *) malloc(sizeof(CrazyConductivity));
+  const double ocLithThickness           = input->model.user5 / input->scaling.L;
+  const double ocRefLithThick            = 120.0e3 / input->scaling.L;
   asthenospherePhases[0]                 = 0;
   crazyConductivity->phases              = asthenospherePhases;
   crazyConductivity->nPhases             = 1;
-  crazyConductivity->multiplier          = 13.6;
+  crazyConductivity->multiplier          = ocRefLithThick * 25.0 / ocLithThickness;
   input->crazyConductivity               = crazyConductivity;
 }
 

@@ -3,8 +3,8 @@
 / 2. Any comment to this input file has to be preceded by /
 
 /**** RESTART ****/
-istep           = 275 / Restart file number
-irestart        = 0   / Restart switch
+istep           = 250 / Restart file number
+irestart        = 1   / Restart switch
 
 /**** OUTPUT FILES ****/
 writer          = 1  / Write grid data switch
@@ -13,15 +13,15 @@ writer_markers  = 0  / Write marker data switch
 writer_debug    = 0  / Write debug data switch 
 
 /**** SCALES ****/ (Setup dependent) Scaling parameters for
-eta             = 1.0e+23 /viscosity
+eta             = 1.0e+20 /viscosity
 L               = 5.0e3   /length
 V               = 1.0e-9  /velocity
 T               = 4.0e+02 /temperature
  
 /**** SPACE-TIME ****/
 Nx             = 1001               / No. grid points x
-Nz             = 681                / No. grid points z
-Nt             = 500                  / No. time steps
+Nz             = 381                / No. grid points z
+Nt             = 1000                  / No. time steps
 xmin           = -1000.000000e3     / Minimum x-coordinate
 xmax           =  1000.000000e3     / Maximum x-coordinate
 zmin           = -660.000000e3      / Minimum z-coordinate
@@ -46,12 +46,16 @@ free_surface_stab  	= 1       / Free surface stabilization switch
 initial_cooling    	= 1       / Initial thermal equilibration switch
 subgrid_diffusion  	= 2       / Subgrid diffusion algorithm switch
 shear_heating      	= 1       / Shear heating switch
-adiab_heating      	= 0       / Adiabatic heating switch
+adiab_heating      	= 1       / Adiabatic heating switch
 
-surface_processes  = 0        / 0 = none; 1 = diffusion only; 2 = fills instantaneously the basin up to the
-track_T_P_x_z      = 1        / initial P and T field record
-polar              = 0        / Switch to polar coordinate representation
-anisotropy         = 0        / Viscous anisotropy switch
+surface_processes  = 2         / 0 = none; 1 = diffusion only; 2 = fills instantaneously the basin up to the
+track_T_P_x_z      = 1         / initial P and T field record
+polar              = 0         / Switch to polar coordinate representation
+anisotropy         = 0         / Viscous anisotropy switch
+surf_ised1         = 6         / Sediment phase 1 ID
+surf_ised2         = 6         / Sediment phase 2 ID
+surf_sedirate      = 3.171e-11 / Sedimentation rate: 1 mm/yr -> 3.171e-11 m/s
+surf_baselev       = -2.5e3    / Level of topography below which sediments will start to accumulate [m]
 
 /**** SETUP DEPENDANT ****/
 marker_noise       = 1              / Marker noise switch
@@ -95,6 +99,8 @@ eta0   = 1e22                       / Constant viscosity value
 npwl   = 1                          / Custom power-law exponent
 Qpwl   = 0                          / Custom power-law activation energy
 gs_ref = 5e-3                       / Reference grain size
+density_model = 2                   / Material dependent buoyancy calculation: 2 - Phase diagram
+phase_diagram = 1                   / Peridotite Stixrude
 
 ID     = 1
 rho    = 3250.00        / Continental lithosphere
@@ -118,6 +124,8 @@ eta0   = 1e22
 npwl   = 2
 Qpwl   = 0
 gs_ref = 5e-3
+density_model = 2           / Material dependent buoyancy calculation: 2 - Phase diagram
+phase_diagram = 1           / Peridotite Stixrude
 
 ID     = 2
 rho    = 3250.00            / Oceanic lithosphere
@@ -141,8 +149,10 @@ eta0   = 5e20
 npwl   = 0
 Qpwl   = 0
 gs_ref = 5e-3
+density_model = 2                   / Material dependent buoyancy calculation: 2 - Phase diagram
+phase_diagram = 1                   / Peridotite Stixrude
 
-ID     = 3                                        / Weak plate interface
+ID     = 3                          / Weak plate interface
 rho    = 3250.00
 G      = 1e10
 Cv     = 1050
@@ -164,8 +174,10 @@ eta0   = 5e20
 npwl   = 1
 Qpwl   = 0
 gs_ref = 5e-3
+density_model = 2                   / Material dependent buoyancy calculation: 2 - Phase diagram
+phase_diagram = 4                   / Hydrated peridotite
 
-ID     = 4                               / Continental crust
+ID     = 4                          / Continental crust
 rho    = 2850.00
 G      = 1e10
 Cv     = 1050
@@ -187,8 +199,10 @@ eta0   = 5e20
 npwl   = 1
 Qpwl   = 0
 gs_ref = 5e-3
+density_model = 2                   / Material dependent buoyancy calculation: 2 - Phase diagram
+phase_diagram = 7                   / Rhyolite
 
-ID     = 5                               / Oceanic crust
+ID     = 5                          / Oceanic crust
 rho    = 3000.00 
 G      = 1e10
 Cv     = 1050
@@ -210,6 +224,8 @@ eta0   = 5e20
 npwl   = 1
 Qpwl   = 0
 gs_ref = 5e-3
+density_model = 2                   / Material dependent buoyancy calculation: 2 - Phase diagram
+phase_diagram = 5                   / MORB
 
 ID     = 6                               / Sediments
 rho    = 2850.00 
@@ -233,6 +249,8 @@ eta0   = 5e20
 npwl   = 1
 Qpwl   = 0
 gs_ref = 5e-3
+density_model = 2                   / Material dependent buoyancy calculation: 2 - Phase diagram
+phase_diagram = 6                   / Pelite
 
 /**** DEFMAPS ****/
 nT    =    200            / Temperature resolution []

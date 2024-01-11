@@ -1525,7 +1525,7 @@ Input ReadInputFile( char *fileName ) {
         model.PDMrho[pid]        = ReadBin(model.import_files_dir, "Andesite.dat", model.PDMnT[pid], model.PDMnP[pid], scaling.rho);
 
         /**** PHASE DIAGRAMS #04 - Hydrated Peridotite (Hydrated_Pdt.dat)  ****/
-        pid                       = 4;  // Hydrated peridotite
+        pid                      = 4;  // Hydrated peridotite
         if (pid > (model.num_PD-1) ) {
             printf ("One should increment 'model.num_PD' to allocate enough memory and store the database\n");
             exit(5);
@@ -1553,7 +1553,7 @@ Input ReadInputFile( char *fileName ) {
         model.PDMrho[pid]        = ReadBin(model.import_files_dir, "MORB.dat", model.PDMnT[pid], model.PDMnP[pid], scaling.rho);
 
         /**** PHASE DIAGRAMS #06 - Pelite (Pelite.dat)  ****/
-        pid                       = 6;  // Pelite
+        pid                      = 6;  // Pelite
         if (pid > (model.num_PD-1) ) {
             printf ("One should increment 'model.num_PD' to allocate enough memory and store the database\n");
             exit(5);
