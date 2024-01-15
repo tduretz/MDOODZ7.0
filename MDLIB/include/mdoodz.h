@@ -28,7 +28,7 @@
 // address Williams comments
 typedef enum { ARITHMETIC = 0,
                HARMONIC   = 1,
-               GEOMETRIC  = 2 } eta_average;
+               GEOMETRIC  = 2 } average;
 
 // Tensor 2D
 typedef struct {
@@ -49,7 +49,7 @@ typedef struct {
   double  xmin0, zmin0, xmax0, zmax0;
   double  gx, gz;
   int     Nx, Nz, Nt, step, nit, Newton, noisy;
-  eta_average eta_average;
+  average eta_average, ani_average;
   int     interp_stencil;
   double  nexp_radial_basis;
   int     mechanical, periodic_x, elastic, isnonnewtonian,
@@ -148,6 +148,8 @@ typedef struct {
   double aniso_angle[20], ani_fac_max[20], aniso_factor[20];   //ani_fac_v[20], ani_fac_e[20], ani_fac_p[20]
   double axx[20], azz[20], ayy[20];
   int    ani_fstrain[20];
+  int    transmutation[20], transmutation_phase[20];
+  double transmutation_temperature[20];
 } mat_prop;
 
 char                         *GetSetupFileName(int nargs, char *args[]);

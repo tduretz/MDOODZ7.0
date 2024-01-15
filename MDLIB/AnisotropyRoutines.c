@@ -350,7 +350,7 @@ void UpdateAnisoFactor( grid *mesh, mat_prop *materials, params *model, scale *s
 
   printf("Update anisotropy factor\n");
     int p, k, l, Nx, Nz, Ncx, Ncz, c0, c1;
-  int average = 1;//%model.eta_average; // SHOULD NOT BE ALLOWED TO BE ELSE THAN 1
+  int average = model->ani_average; // SHOULD NOT BE ALLOWED TO BE ELSE THAN 1 - but why??
 
   Nx = mesh->Nx;
   Nz = mesh->Nz;
@@ -456,9 +456,15 @@ void UpdateAnisoFactor( grid *mesh, mat_prop *materials, params *model, scale *s
     }
   }
 
+  // // Smooth
+  // InterpVerticesToCentroidsDouble( mesh->aniso_factor_n,  mesh->aniso_factor_s,  mesh, model );
+  // InterpCentroidsToVerticesDouble( mesh->aniso_factor_n,  mesh->aniso_factor_s,  mesh, model );
+
   // Periodic
   double av;
   if (model->periodic_x==1) {
+    // printf("average=%d  %d", average, model->eta_average);
+    // exit(1);
     for( l=0; l<Nz; l++) {
       c1 = l*Nx + Nx-1;
       av = 0.5*(mesh->aniso_factor_s[c1] + mesh->aniso_factor_s[l*Nx]);
