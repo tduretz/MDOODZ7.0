@@ -12,10 +12,10 @@ function main()
     path ="/Volumes/T7/n1/aniso43/"
     path ="/Volumes/T7/n2/aniso43/"
     path ="/Users/romankulakov/CLionProjects/MDOODZ70/cmake-exec/NeckingReview/aniso3333/"
-    path ="/Volumes/T7/d/aniso9/"
+    path ="/Users/romankulakov/CLionProjects/MDOODZ70/cmake-exec/NeckingReview/transition3/"
 
     # File numbers
-    file_start = 3450
+    file_start = 1
     file_step  = 10
     file_end   = file_start
     # Select field to visualise
@@ -158,7 +158,7 @@ function main()
             hm = heatmap!(ax1, xc_hr./Lc, zc_hr./Lc, group_phases, colormap = phase_colors)
             if T_contours 
                 Makie.update_theme!(reset=true)
-                contour!(ax1, xc./Lc, zc./Lc, T, levels=0:200:1400, linewidth = 4 ) 
+                contour!(ax1, xc./Lc, zc./Lc, T, levels=0:600:1400, linewidth = 4 ) 
             end
 
             if fabric
