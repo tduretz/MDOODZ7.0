@@ -291,6 +291,22 @@ void RheologicalOperators( grid* mesh, params* model, mat_prop* materials, scale
     }
   }
 
+//   // Periodic
+//   double av;
+//   if (model->periodic_x==1) {
+//     for( int l=0; l<Nz; l++) {
+//       int c1 = l*Nx + Nx-1;
+//       av = 0.5*(mesh->D31_s[c1] + mesh->D31_s[l*Nx]);
+//       mesh->D31_s[c1] = av; mesh->D31_s[l*Nx] = av;
+//       av = 0.5*(mesh->D32_s[c1] + mesh->D32_s[l*Nx]);
+//       mesh->D32_s[c1] = av; mesh->D32_s[l*Nx] = av;
+//       av = 0.5*(mesh->D33_s[c1] + mesh->D33_s[l*Nx]);
+//       mesh->D33_s[c1] = av; mesh->D33_s[l*Nx] = av;
+//       av = 0.5*(mesh->D34_s[c1] + mesh->D34_s[l*Nx]);
+//       mesh->D34_s[c1] = av; mesh->D34_s[l*Nx] = av;
+//     }
+//   }
+
     // MinMaxArrayTag( mesh->D11_n,      scaling->eta, (mesh->Nx-1)*(mesh->Nz-1),     "D11_n     ", mesh->BCp.type );
     // MinMaxArrayTag( mesh->D12_n,      scaling->eta, (mesh->Nx-1)*(mesh->Nz-1),     "D12_n     ", mesh->BCp.type );
     // MinMaxArrayTag( mesh->D13_n,      scaling->eta, (mesh->Nx-1)*(mesh->Nz-1),     "D13_n     ", mesh->BCp.type );
@@ -399,9 +415,6 @@ void ApplyBC( grid* mesh, params* model ) {
         }
     }
 
-
-
-
     //    printf("Vx\n");
     //    Print2DArrayDouble( mesh->u_in, nx, nzvx, 1.0 );
     //    printf("Vz\n");
@@ -420,14 +433,11 @@ void DetectCompressibleCells ( grid* mesh, params *model ) {
 
      printf("---> Detecting compressible cells\n");
      for( cc=0; cc<ncx*ncz; cc++) {
-
          if ( mesh->BCp.type[cc] != 30 ) {
-
              if ( mesh->bet_n[cc] > 1e-13 ) {
                  mesh->comp_cells[cc] = 1;
                  kk++;
              }
-
          }
      }
     printf("---> %04d compressibles cells detected\n", kk);
@@ -605,7 +615,7 @@ double LineSearchDecoupled( SparseMat *Stokes, SparseMat *StokesA, SparseMat *St
         fxzp  = sqrt( pow( rx[ixzp],2 ) + pow( rz[ixzp],2 ) + pow( rp[ixzp],2 ) );
         fxzp0 = sqrt( pow(Nmodel->resx_f, 2) + pow( Nmodel->resz_f, 2) +  pow(Nmodel->resp_f, 2) );
         
-        if ( fxzp < frac*fxzp0   ) { //|| rp[ix]<frac*Nmodel->resp
+        if ( fxzp < frac*fxzp0 ) { //|| rp[ix]<frac*Nmodel->resp
             alpha = alphav[ixzp];
             success = 1;
             printf("\e[1;34mPredicted Residuals\e[m : alpha  = %lf --> rx = %2.4e rz = %2.4e rp = %2.4e\n", alphav[ixzp], rx[ixzp], rz[ixzp], rp[ixzp]);
