@@ -8,47 +8,201 @@ My = 1e6*365*24*3600
 
 function main()
     # Switches
-     T_contours  = false  # add temperature contours
+     T_contours  = true  # add temperature contours
     tc = My
     field = :Phases
-    field = :StrainRate
+    #field = :StrainRate
     # field = :Stress
     α_heatmap   = 1.0 #0.85   # transparency of heatmap 
 
 
     Lc = 1000.0
 
-
-    # 10Ma strong crust
-    fileNames = [
-        "/Volumes/T7/d/iso/Output00640.gzip.h5", # aniso 1
-        "/Volumes/T7/d/aniso1_5/Output01140.gzip.h5", # aniso 1.5
-        "/Volumes/T7/d/aniso2/Output01170.gzip.h5", # aniso 2
-        "/Volumes/T7/d/aniso3/Output01170.gzip.h5", # aniso 3
-        "/Volumes/T7/d/aniso6/Output01180.gzip.h5", # aniso 6
-        "/Volumes/T7/d/aniso9/Output01450.gzip.h5", # aniso 9
+     # 15Ma 
+     fileNames = [
+        "/Volumes/T7/dgh/transition1/Output01710.gzip.h5", # aniso 1
+        # "/Volumes/T7/dgh/transition1_5/Output02660.gzip.h5", # aniso 1.5
+        "/Volumes/T7/dgh/transition2/Output01710.gzip.h5", # aniso 2
+        "/Volumes/T7/dgh/transition3/Output01880.gzip.h5", # aniso 3
+        "/Volumes/T7/dgh/transition6/Output02080.gzip.h5", # aniso 6
+        "/Volumes/T7/dgh/transition9/Output02430.gzip.h5", # aniso 9
+        "/Volumes/T7/dgh/transition12/Output02450.gzip.h5", # aniso 12
+        "/Volumes/T7/dgh/transition15/Output02680.gzip.h5", # aniso 15
     ]
 
-    # 20Ma strong crust
+    # 10Ma 
     fileNames = [
-        "/Volumes/T7/d/iso/Output01790.gzip.h5", # aniso 1
-        "/Volumes/T7/d/aniso1_5/Output02660.gzip.h5", # aniso 1.5
-        "/Volumes/T7/d/aniso2/Output02960.gzip.h5", # aniso 2
-        "/Volumes/T7/d/aniso3/Output02960.gzip.h5", # aniso 3
-        "/Volumes/T7/d/aniso6/Output03240.gzip.h5", # aniso 6
-        "/Volumes/T7/d/aniso9/Output03240.gzip.h5", # aniso 9
+        "/Volumes/T7/dgh/transition1/Output01060.gzip.h5", # aniso 1
+        # "/Volumes/T7/dgh/transition1_5/Output02660.gzip.h5", # aniso 1.5
+        "/Volumes/T7/dgh/transition2/Output01110.gzip.h5", # aniso 2
+        "/Volumes/T7/dgh/transition3/Output01190.gzip.h5", # aniso 3
+        "/Volumes/T7/dgh/transition6/Output01350.gzip.h5", # aniso 6
+        "/Volumes/T7/dgh/transition9/Output01370.gzip.h5", # aniso 9
+        "/Volumes/T7/dgh/transition12/Output01370.gzip.h5", # aniso 12
+        "/Volumes/T7/dgh/transition15/Output01440.gzip.h5", # aniso 15
+    ]
+
+    # 20Ma 
+    fileNames = [
+        "/Volumes/T7/dgh/transition1/Output02730.gzip.h5", # aniso 1
+        # "/Volumes/T7/dgh/transition1_5/Output02660.gzip.h5", # aniso 1.5
+        "/Volumes/T7/dgh/transition2/Output02550.gzip.h5", # aniso 2
+        "/Volumes/T7/dgh/transition3/Output02920.gzip.h5", # aniso 3
+        "/Volumes/T7/dgh/transition6/Output03170.gzip.h5", # aniso 6
+        "/Volumes/T7/dgh/transition9/Output03610.gzip.h5", # aniso 9
+        "/Volumes/T7/dgh/transition12/Output03600.gzip.h5", # aniso 12
+        "/Volumes/T7/dgh/transition15/Output03900.gzip.h5", # aniso 15
+    ]
+
+    #
+    #
+    # aniso angle 85
+    #
+    # 10Ma 
+    fileNames = [
+        "/Volumes/T7/dghh/transition1/Output01060.gzip.h5", # aniso 1
+        # "/Volumes/T7/dgh/transition1_5/Output02660.gzip.h5", # aniso 1.5
+        "/Volumes/T7/dghh/transition2/Output01090.gzip.h5", # aniso 2
+        "/Volumes/T7/dghh/transition3/Output01200.gzip.h5", # aniso 3
+        "/Volumes/T7/dghh/transition6/Output01290.gzip.h5", # aniso 6
+        #"/Volumes/T7/dghh/transition9/Output01370.gzip.h5", # aniso 9
+        "/Volumes/T7/dghh/transition12/Output01220.gzip.h5", # aniso 12
+        "/Volumes/T7/dghh/transition15/Output01240.gzip.h5", # aniso 15
+    ]
+
+    # 15Ma 
+    fileNames = [
+        "/Volumes/T7/dghh/transition1/Output01710.gzip.h5", # aniso 1
+        # "/Volumes/T7/dgh/transition1_5/Output02660.gzip.h5", # aniso 1.5
+        "/Volumes/T7/dghh/transition2/Output01670.gzip.h5", # aniso 2
+        "/Volumes/T7/dghh/transition3/Output01940.gzip.h5", # aniso 3
+        "/Volumes/T7/dghh/transition6/Output02230.gzip.h5", # aniso 6
+        #"/Volumes/T7/dgh/transition9/Output02430.gzip.h5", # aniso 9
+        "/Volumes/T7/dghh/transition12/Output02250.gzip.h5", # aniso 12
+        #"/Volumes/T7/dghh/transition15/Output02680.gzip.h5", # aniso 15
+    ]
+
+     # 20Ma 
+     fileNames = [
+        "/Volumes/T7/dghh/transition1/Output02710.gzip.h5", # aniso 1
+        # "/Volumes/T7/dgh/transition1_5/Output02660.gzip.h5", # aniso 1.5
+        "/Volumes/T7/dghh/transition2/Output02560.gzip.h5", # aniso 2
+        "/Volumes/T7/dghh/transition3/Output02900.gzip.h5", # aniso 3
+        "/Volumes/T7/dghh/transition6/Output03220.gzip.h5", # aniso 6
+        #"/Volumes/T7/dghh/transition9/Output03610.gzip.h5", # aniso 9
+        "/Volumes/T7/dghh/transition12/Output03300.gzip.h5", # aniso 12
+        #"/Volumes/T7/dghh/transition15/Output03900.gzip.h5", # aniso 15
     ]
 
     filelabels = [
-        "isotropic (δ = 1)",
-        "anisotropic (δ = 1.5)",
-        "anisotropic (δ = 2)",
-        "anisotropic (δ = 3)",
-        "anisotropic (δ = 6)",
-        "anisotropic (δ = 9)",
+        "isotropic (δ = 1, θ = 80)",
+        # "anisotropic (δ = 1.5, θ = 80)",
+        "anisotropic (δ = 2, θ = 80)",
+        "anisotropic (δ = 3, θ = 80)",
+        "anisotropic (δ = 6, θ = 80)",
+        #"anisotropic (δ = 9, θ = 80)",
+        "anisotropic (δ = 12, θ = 80)",
+        #"anisotropic (δ = 15, θ = 80)",
     ]
 
-    f = Figure(resolution = (1200, 1800), fontsize = 16)
+
+    #
+    #
+    # compare angles
+    #
+    #
+
+    # 10Ma 
+    fileNames = [
+        "/Volumes/T7/dgh/transition1/Output01060.gzip.h5", # aniso 1
+        "/Volumes/T7/dgh/transition2/Output01110.gzip.h5", # aniso 2
+        "/Volumes/T7/dgh/transition3/Output01190.gzip.h5", # aniso 3
+        "/Volumes/T7/dgh/transition6/Output01350.gzip.h5", # aniso 6
+        "/Volumes/T7/dgh/transition12/Output01370.gzip.h5", # aniso 12
+
+        "/Volumes/T7/dghh/transition1/Output01060.gzip.h5", # aniso 1
+        "/Volumes/T7/dghh/transition2/Output01090.gzip.h5", # aniso 2
+        "/Volumes/T7/dghh/transition3/Output01200.gzip.h5", # aniso 3
+        "/Volumes/T7/dghh/transition6/Output01290.gzip.h5", # aniso 6
+        "/Volumes/T7/dghh/transition12/Output01220.gzip.h5", # aniso 12
+    ]    
+
+     # 15Ma 
+     fileNames = [
+        "/Volumes/T7/dgh/transition1/Output01710.gzip.h5", # aniso 1
+        "/Volumes/T7/dgh/transition2/Output01710.gzip.h5", # aniso 2
+        "/Volumes/T7/dgh/transition3/Output01880.gzip.h5", # aniso 3
+        "/Volumes/T7/dgh/transition6/Output02080.gzip.h5", # aniso 6
+        "/Volumes/T7/dgh/transition12/Output02450.gzip.h5", # aniso 12
+
+        "/Volumes/T7/dghh/transition1/Output01710.gzip.h5", # aniso 1
+        "/Volumes/T7/dghh/transition2/Output01670.gzip.h5", # aniso 2
+        "/Volumes/T7/dghh/transition3/Output01940.gzip.h5", # aniso 3
+        "/Volumes/T7/dghh/transition6/Output02230.gzip.h5", # aniso 6
+        "/Volumes/T7/dghh/transition12/Output02250.gzip.h5", # aniso 12
+    ]
+
+    # 20Ma 
+    fileNames = [
+        "/Volumes/T7/dgh/transition1/Output02730.gzip.h5", # aniso 1
+        "/Volumes/T7/dgh/transition2/Output02550.gzip.h5", # aniso 2
+        "/Volumes/T7/dgh/transition3/Output02920.gzip.h5", # aniso 3
+        "/Volumes/T7/dgh/transition6/Output03170.gzip.h5", # aniso 6
+        "/Volumes/T7/dgh/transition12/Output03600.gzip.h5", # aniso 12
+
+        "/Volumes/T7/dghh/transition1/Output02710.gzip.h5", # aniso 1
+        "/Volumes/T7/dghh/transition2/Output02560.gzip.h5", # aniso 2
+        "/Volumes/T7/dghh/transition3/Output02900.gzip.h5", # aniso 3
+        "/Volumes/T7/dghh/transition6/Output03220.gzip.h5", # aniso 6
+        "/Volumes/T7/dghh/transition12/Output03300.gzip.h5", # aniso 12
+    ]
+
+    filelabels = [
+        "isotropic (δ = 1, θ = 80)",
+        "anisotropic (δ = 2, θ = 80)",
+        "anisotropic (δ = 3, θ = 80)",
+        "anisotropic (δ = 6, θ = 80)",
+        "anisotropic (δ = 12, θ = 80)",
+        "isotropic (δ = 1, θ = 85)",
+        "anisotropic (δ = 2, θ = 85)",
+        "anisotropic (δ = 3, θ = 85)",
+        "anisotropic (δ = 6, θ = 85)",
+        "anisotropic (δ = 12, θ = 85)",
+    ]
+
+    #
+    #
+    # compare moho temperature
+    #
+    #
+
+
+    fileNames = [
+        "/Volumes/T7/dghh/transition3/Output01200.gzip.h5", # 10Ma
+        "/Volumes/T7/dghh/transition3/Output01940.gzip.h5", # 15Ma
+        "/Volumes/T7/dghh/transition3/Output02900.gzip.h5", # 20Ma
+
+        "/Volumes/T7/dghhh/WeakIncl/Output00040.gzip.h5", # 10Ma
+        "/Volumes/T7/dghh/moho430/Output02050.gzip.h5", # 15Ma
+        "/Volumes/T7/dghh/moho430/Output02960.gzip.h5", # 20Ma
+    ]
+
+    filelabels = [
+        "anisotropic (δ = 3, θ = 85, T moho = 500)",
+        "anisotropic (δ = 3, θ = 85, T moho = 500)",
+        "anisotropic (δ = 3, θ = 85, T moho = 500)",
+        "anisotropic (δ = 3, θ = 85, T moho = 430)",
+        "anisotropic (δ = 3, θ = 85, T moho = 430)",
+        "anisotropic (δ = 3, θ = 85, T moho = 430)",
+    ]
+
+
+    f = Figure(resolution = (1800, 1800), fontsize = 16)
+
+    if field==:Phases
+        f = Figure(resolution = (1800, 800), fontsize = 20)
+    end
+
 
     for (i, filename) in enumerate(fileNames)
         model  = ExtractData( filename, "/Model/Params")
@@ -90,6 +244,15 @@ function main()
 
         filelabel = filelabels[i]
 
+        column = 1
+        row = i
+
+        if (i > 3)
+            column = 2
+            row = i - 3
+        end
+
+
         if field==:Phases
             # Color palette for phase map
             cmap    = zeros(RGB{Float64}, 7)
@@ -114,7 +277,7 @@ function main()
             group_phases_upper = group_phases[:, zc_hr .>= upper_layer_depth]
 
             # Create a subplot at the determined position
-            ax = Axis(f[i, 1], title = "Phases at t = $(@sprintf("%.2f", tMy)) Ma, $filelabel",
+            ax = Axis(f[row, column], title = "Phases at t = $(@sprintf("%.2f", tMy)) Ma, $filelabel",
                     xlabel = "x [km]", ylabel = "y [km]", aspect = DataAspect())
                 
             # Use the filtered data for the heatmap and contours
@@ -130,8 +293,8 @@ function main()
             ε̇xz   = Float64.(reshape(ExtractData( filename, "/Vertices/exz"), nvx, nvz))
             ε̇II   = sqrt.( 0.5*(2*ε̇xx.^2 .+ 0.5*(ε̇xz[1:end-1,1:end-1].^2 .+ ε̇xz[2:end,1:end-1].^2 .+ ε̇xz[1:end-1,2:end].^2 .+ ε̇xz[2:end,2:end].^2 ) ) ); ε̇II[mask_air] .= NaN
 
-            ax1 = Axis(f[i, 1], title = L"$\dot{\varepsilon}_\textrm{II}$ at $t$ = %$(tMy) Ma, %$(filelabel)", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
-            heatmap!(ax1, xc./Lc, zc./Lc, log10.(ε̇II), colormap = (:turbo, α_heatmap))
+            ax1 = Axis(f[row, column], title = L"$\dot{\varepsilon}_\textrm{II}$ at $t$ = %$(tMy) Ma, %$(filelabel)", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
+            hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(ε̇II), colormap = (:turbo, α_heatmap))
             contour!(ax1, xc_hr./Lc, zc_hr./Lc, group_phases, levels=-1:1:maximum(group_phases), linewidth = 4, color=:white )   
         end
 
@@ -142,14 +305,16 @@ function main()
             τII[mask_air] .= NaN
             
 
-            ax1 = Axis(f[i, 1], title = L"$\tau_\textrm{II}$ at $t$ = %$(tMy) Ma, %$(filelabel)", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
+            ax1 = Axis(f[row, column], title = L"$\tau_\textrm{II}$ at $t$ = %$(tMy) Ma, %$(filelabel)", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
             heatmap!(ax1, xc./Lc, zc./Lc, τII, colormap = (:turbo, α_heatmap)) 
             contour!(ax1, xc_hr./Lc, zc_hr./Lc, group_phases, levels=-1:1:maximum(group_phases), linewidth = 4, color=:white )   
         end
     end
 
     DataInspector(f)
+    Print2Disk( f, string(field))
     display(f)
+    
 end
 
 function ExtractData( file_path, data_path)
@@ -157,6 +322,10 @@ function ExtractData( file_path, data_path)
         read(file, data_path)
     end
     return data
+end
+
+function Print2Disk( f, field; res=4)
+    save("/Volumes/T7/strain.png", f, px_per_unit = res) 
 end
 
 main()

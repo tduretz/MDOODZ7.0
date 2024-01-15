@@ -21,7 +21,7 @@ double SetNoise(MdoodzInput *instance, Coordinates coordinates, int phase) {
 
 static Ellipse GetMicaEllipse(double centreX, double centreZ) {
   return (Ellipse) {
-          .radiusZ = 20e3,
+          .radiusZ = 40e3,
           .radiusX = 10e3,
           .centreX = centreX,
           .centreZ = centreZ,
