@@ -929,6 +929,11 @@ void ReadDataKinetics( mat_prop* mat, params* model, int k, int number, scale* s
     int success = 0;
     
     switch ( abs(number) ) {
+
+        case 1 :
+            printf("Directly use tau_kin %d %d\n", model->kinetics, mat->kin[k]);
+            success      = 1;
+            break;
             
         case 9 :
             printf("Quartz-Coesite - Mosenfelder & Bohlen (1997);");
@@ -939,7 +944,7 @@ void ReadDataKinetics( mat_prop* mat, params* model, int k, int number, scale* s
             break;
     }
     
-    if ( success==0 ) { printf("Error: Non existing kinetic number\n"); exit(12);}
+    if ( success==0 ) { printf("Error: Non existing kinetic number %d\n", number); exit(12);}
     
 }
 

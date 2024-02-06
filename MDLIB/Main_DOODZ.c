@@ -47,8 +47,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
     printf("************ Starting MDOODZ 7.0 simulation ************\n");
     printf("********************************************************\n");
 
-    Input       inputFile   = ReadInputFile(inputFileName);
-
+    Input inputFile   = ReadInputFile(inputFileName);
     char *BaseOutputFileName, *BaseParticleFileName;
     asprintf(&BaseOutputFileName, "Output");
     asprintf(&BaseParticleFileName, "Particles");
@@ -94,7 +93,6 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
     {
         num_threads = omp_get_num_threads();
     }
-
     printf("Num threads = %03d\n", omp_get_num_threads());
 
     printf("*************************************\n");
@@ -211,21 +209,6 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         printf("****** Initialize temperature *******\n");
         printf("*************************************\n");
 
-        // Print2DArrayChar( mesh.BCt.type, mesh.Nx-1, mesh.Nz-1, 1.0 );
-        // printf("West");
-        // Print2DArrayChar( mesh.BCt.typE, mesh.Nz-1, 1, 1.0 );
-        // printf("East");
-        // Print2DArrayChar( mesh.BCt.typW, mesh.Nz-1, 1, 1.0 );
-        // printf("South");
-        // Print2DArrayChar( mesh.BCt.typS, mesh.Nx-1, 1, 1.0 );
-        // printf("North");
-        // Print2DArrayChar( mesh.BCt.typN, mesh.Nx-1, 1, 1.0 );
-        // printf("BCT_exp");
-        // Print2DArrayChar( mesh.BCC_exp.type, mesh.Nx+1, mesh.Nz+1, 1.0 );
-        // Print2DArrayDouble( mesh.BCT_exp.val, mesh.Nx+1, mesh.Nz+1, input.scaling.T );
-
-        // exit(33);
-
         // Get energy and related material parameters from particles
         P2Mastah( &input.model, particles, input.materials.k_eff, &mesh, mesh.kx, mesh.BCu.type,  0, 0, interp, vxnodes, 1);
         P2Mastah( &input.model, particles, input.materials.k_eff, &mesh, mesh.kz, mesh.BCv.type,  0, 0, interp, vznodes, 1);
@@ -336,23 +319,23 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         // Print informations!
         printf("Number of phases : %d\n", input.model.Nb_phases);
         if (input.model.noisy == 1 ) {
-            MinMaxArrayTag( mesh.d0_n, input.scaling.L,   (mesh.Nx-1)*(mesh.Nz-1), "d0        ", mesh.BCp.type );
-            MinMaxArrayTag( mesh.d_n, input.scaling.L,   (mesh.Nx-1)*(mesh.Nz-1), "d         ", mesh.BCp.type );
-            MinMaxArrayTag( mesh.p_lith, input.scaling.S,   (mesh.Nx-1)*(mesh.Nz-1), "P litho   ", mesh.BCp.type );
-            MinMaxArrayTag( mesh.p0_n, input.scaling.S,   (mesh.Nx-1)*(mesh.Nz-1), "P old     ", mesh.BCp.type );
-            MinMaxArrayTag( mesh.p_in, input.scaling.S,   (mesh.Nx-1)*(mesh.Nz-1), "P         ", mesh.BCp.type );
-            MinMaxArrayTag( mesh.T, input.scaling.T,   (mesh.Nx-1)*(mesh.Nz-1), "T         ", mesh.BCp.type );
-            MinMaxArrayTag( mesh.mu_s, input.scaling.S,   (mesh.Nx-0)*(mesh.Nz-0), "mu_s      ", mesh.BCg.type );
-            MinMaxArrayTag( mesh.mu_n, input.scaling.S,   (mesh.Nx-1)*(mesh.Nz-1), "mu_n      ", mesh.BCp.type );
-            MinMaxArrayTag( mesh.eta_s, input.scaling.eta, (mesh.Nx-0)*(mesh.Nz-0), "eta_s     ", mesh.BCg.type );
-            MinMaxArrayTag( mesh.eta_n, input.scaling.eta, (mesh.Nx-1)*(mesh.Nz-1), "eta_n     ", mesh.BCp.type );
+            MinMaxArrayTag( mesh.d0_n,       input.scaling.L,   (mesh.Nx-1)*(mesh.Nz-1), "d0        ", mesh.BCp.type );
+            MinMaxArrayTag( mesh.d_n,        input.scaling.L,   (mesh.Nx-1)*(mesh.Nz-1), "d         ", mesh.BCp.type );
+            MinMaxArrayTag( mesh.p_lith,     input.scaling.S,   (mesh.Nx-1)*(mesh.Nz-1), "P litho   ", mesh.BCp.type );
+            MinMaxArrayTag( mesh.p0_n,       input.scaling.S,   (mesh.Nx-1)*(mesh.Nz-1), "P old     ", mesh.BCp.type );
+            MinMaxArrayTag( mesh.p_in,       input.scaling.S,   (mesh.Nx-1)*(mesh.Nz-1), "P         ", mesh.BCp.type );
+            MinMaxArrayTag( mesh.T,          input.scaling.T,   (mesh.Nx-1)*(mesh.Nz-1), "T         ", mesh.BCp.type );
+            MinMaxArrayTag( mesh.mu_s,       input.scaling.S,   (mesh.Nx-0)*(mesh.Nz-0), "mu_s      ", mesh.BCg.type );
+            MinMaxArrayTag( mesh.mu_n,       input.scaling.S,   (mesh.Nx-1)*(mesh.Nz-1), "mu_n      ", mesh.BCp.type );
+            MinMaxArrayTag( mesh.eta_s,      input.scaling.eta, (mesh.Nx-0)*(mesh.Nz-0), "eta_s     ", mesh.BCg.type );
+            MinMaxArrayTag( mesh.eta_n,      input.scaling.eta, (mesh.Nx-1)*(mesh.Nz-1), "eta_n     ", mesh.BCp.type );
             MinMaxArrayTag( mesh.eta_phys_s, input.scaling.eta, (mesh.Nx-0)*(mesh.Nz-0), "eta_phys_s", mesh.BCg.type );
             MinMaxArrayTag( mesh.eta_phys_n, input.scaling.eta, (mesh.Nx-1)*(mesh.Nz-1), "eta_phys_n", mesh.BCp.type );
-            MinMaxArrayTag( mesh.rho_s, input.scaling.rho, (mesh.Nx-0)*(mesh.Nz-0), "rho_s     ", mesh.BCg.type );
-            MinMaxArrayTag( mesh.rho_n, input.scaling.rho, (mesh.Nx-1)*(mesh.Nz-1), "rho_n     ", mesh.BCp.type );
-            MinMaxArrayTag( mesh.X_n,  1.0,   (mesh.Nx-1)*(mesh.Nz-1),              "X_n       ", mesh.BCp.type );
-            MinMaxArrayTag( mesh.X0_n, 1.0,   (mesh.Nx-1)*(mesh.Nz-1),              "X0_n      ", mesh.BCp.type );
-            MinMaxArrayTag( mesh.X0_s, 1.0,   (mesh.Nx-0)*(mesh.Nz-0),              "X0_s      ", mesh.BCg.type );
+            MinMaxArrayTag( mesh.rho_s,      input.scaling.rho, (mesh.Nx-0)*(mesh.Nz-0), "rho_s     ", mesh.BCg.type );
+            MinMaxArrayTag( mesh.rho_n,      input.scaling.rho, (mesh.Nx-1)*(mesh.Nz-1), "rho_n     ", mesh.BCp.type );
+            MinMaxArrayTag( mesh.X_n,        1.0,               (mesh.Nx-1)*(mesh.Nz-1), "X_n       ", mesh.BCp.type );
+            MinMaxArrayTag( mesh.X0_n,       1.0,               (mesh.Nx-1)*(mesh.Nz-1), "X0_n      ", mesh.BCp.type );
+            MinMaxArrayTag( mesh.X0_s,       1.0,               (mesh.Nx-0)*(mesh.Nz-0), "X0_s      ", mesh.BCg.type );
             MinMaxArray(particles.X, 1.0, particles.Nb_part, "X part" );
             if ( input.model.anisotropy == 1 ) {
                 MinMaxArrayTag( mesh.FS_AR_n,  1.0,   (mesh.Nx-1)*(mesh.Nz-1),      "FS_AR_n   ", mesh.BCp.type );
@@ -433,6 +416,8 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
         //------------------------------------------------------------------------------------------------------------------------------//
 
+        TransmutateMarkers(&particles, &input.materials, input.scaling.T);
+
         clock_t t_omp_step = (double)omp_get_wtime();
 
         printf(GREEN "Number of particles     = %d\n" RESET, particles.Nb_part    );
@@ -464,7 +449,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         }
 
         // Interpolate material properties from particles to nodes
-        clock_t t_omp = (double)omp_get_wtime();
+        double t_omp = omp_get_wtime();
 
         // Energy - interpolate thermal parameters and advected energy
 
@@ -487,7 +472,6 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         P2Mastah( &input.model, particles, particles.P,     &mesh, mesh.p0_n,   mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil);
 
         // Allocate and initialise solution and RHS vectors
-        // SetBCs(*setup->SetBCs, &input, &mesh);
         UpdateDensity( &mesh, &particles, &input.materials, &input.model, &input.scaling );
 
         // Free surface - subgrid density correction
@@ -605,7 +589,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             }
         }
 
-        printf("** Time for particles interpolations I = %lf sec\n",  (double)((double)omp_get_wtime() - t_omp) );
+        printf("** Time for particles interpolations I = %lf sec\n",  (omp_get_wtime() - t_omp) );
 
         if (input.model.mechanical == 1 ) {
 
@@ -722,10 +706,12 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                     MinMaxArrayTag( mesh.d_n, input.scaling.L,   (mesh.Nx-1)*(mesh.Nz-1), "d         ", mesh.BCp.type );
                     MinMaxArrayTag( mesh.X_s, 1.0, (mesh.Nx)*(mesh.Nz),     "X_s     ", mesh.BCg.type );
                     MinMaxArrayTag( mesh.X_n, 1.0, (mesh.Nx-1)*(mesh.Nz-1), "X_n     ", mesh.BCp.type );
-                    // if (input.model.anisotropy==1) MinMaxArrayTag( mesh.FS_AR_n,  1.0,   (mesh.Nx-1)*(mesh.Nz-1),      "FS_AR_n   ", mesh.BCp.type );
-                    // if (input.model.anisotropy==1) MinMaxArrayTag( mesh.FS_AR_s,  1.0,   (mesh.Nx)*(mesh.Nz),          "FS_AR_s   ", mesh.BCg.type );
-                    // if (input.model.anisotropy==1) MinMaxArrayTag( mesh.aniso_factor_n,  1.0,   (mesh.Nx-1)*(mesh.Nz-1), "ani_fac_n ",   mesh.BCp.type );
-                    // if (input.model.anisotropy==1) MinMaxArrayTag( mesh.aniso_factor_s,  1.0,   (mesh.Nx)*(mesh.Nz),     "ani_fac_s ",   mesh.BCg.type );
+                    if (input.model.anisotropy==1) {
+                        MinMaxArrayTag( mesh.FS_AR_n,  1.0,   (mesh.Nx-1)*(mesh.Nz-1),      "FS_AR_n   ", mesh.BCp.type );
+                        MinMaxArrayTag( mesh.FS_AR_s,  1.0,   (mesh.Nx)*(mesh.Nz),          "FS_AR_s   ", mesh.BCg.type );
+                        MinMaxArrayTag( mesh.aniso_factor_n,  1.0,   (mesh.Nx-1)*(mesh.Nz-1), "ani_fac_n ",   mesh.BCp.type );
+                        MinMaxArrayTag( mesh.aniso_factor_s,  1.0,   (mesh.Nx)*(mesh.Nz),     "ani_fac_s ",   mesh.BCg.type );
+                    }
                 }
 
                 if (input.model.writer_debug == 1 ) {
@@ -920,7 +906,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             // Matrix assembly and direct solve
             EnergyDirectSolve( &mesh, input.model,  mesh.rhs_t, &particles, input.model.dt, input.model.shear_heating, input.model.adiab_heating, input.scaling, 1 );
             MinMaxArray(particles.T, input.scaling.T, particles.Nb_part, "T part. before UpdateParticleEnergy");
-            printf("** Time for Thermal solver = %lf sec\n", (double)((double)omp_get_wtime() - t_omp));
+            printf("** Time for Thermal solver = %lf sec\n", (omp_get_wtime() - t_omp));
         }
 
         // Update energy on particles
@@ -956,6 +942,8 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
         //------------------------------------------------------------------------------------------------------------------------------//
 
+        int error=0;
+
         if (input.model.advection == 1 ) {
 
             printf("*************************************\n");
@@ -980,6 +968,8 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                 nsub     = 1; // if dt advection is larger than dt used for thermo-mechanical solve then, forget it, and set dt to dt_solve
                 input.model.dt = dt_solve;
             }
+
+            if (nsub>5) error = 1;
 
             // Loop on substeps
             for (isub=0; isub<nsub; isub++) {
@@ -1070,7 +1060,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                     CellFlagging( &mesh, input.model, topo, input.scaling );
                 }
 
-                printf("** Time for advection solver = %lf sec\n", (double)((double)omp_get_wtime() - t_omp) );
+                printf("** Time for advection solver = %lf sec\n", (omp_get_wtime() - t_omp) );
 
 #ifdef _HDF5_
                 if ( input.model.writer_debug == 1 ) {
@@ -1094,7 +1084,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                 printf(GREEN "Old number of particles     = %d\n" RESET, NumPartOld           );
                 printf(GREEN "New number of particles     = %d\n" RESET, particles.Nb_part    );
 
-                printf("** Time for CountPartCell = %lf sec\n", (double)((double)omp_get_wtime() - t_omp) );
+                printf("** Time for CountPartCell = %lf sec\n", (omp_get_wtime() - t_omp) );
 
                 // Remove particles that would be above the surface
                 if (input.model.free_surface == 1 ) {
@@ -1144,14 +1134,14 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             if (input.model.delete_breakpoints == 1 ) DeletePreviousBreakpoint(input.model.step, input.model.writer_step  );
             MakeBreakpointParticles( &particles, &mesh, &topo_chain, &topo_chain_ini, input.model, &topo, &topo_ini, input.scaling );
             // UpdateInputFile( inputFileName, input.model.step);
-            printf("** Time for Breakpoint file write = %lf sec\n", (double)((double)omp_get_wtime() - t_omp));
+            printf("** Time for Breakpoint file write = %lf sec\n", (omp_get_wtime() - t_omp));
 
             // Visualisation file
 #ifndef _VG_
             t_omp = (double)omp_get_wtime();
             WriteOutputHDF5( &mesh, &particles, &topo, &topo_chain, input.model, Nmodel, BaseOutputFileName, input.materials, input.scaling );
             if (input.model.writer_markers == 1 ) WriteOutputHDF5Particles( &mesh, &particles, &topo, &topo_chain, &topo_ini, &topo_chain_ini, input.model, BaseParticleFileName, input.materials, input.scaling );
-            printf("** Time for Output file write = %lf sec\n", (double)((double)omp_get_wtime() - t_omp));
+            printf("** Time for Output file write = %lf sec\n", (omp_get_wtime() - t_omp));
 #endif
         }
 
@@ -1159,6 +1149,8 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         printf("** Model time = %2.2e sec\n", input.model.time* input.scaling.t );
         printf("** Current dt = %2.2e sec, Old dt = %2.2e sec\n", input.model.dt* input.scaling.t, input.model.dt0* input.scaling.t );
 
+        if (error==1) exit(1);
+    
     }
 
     //------------------------------------------------------------------------------------------------------------------------------//

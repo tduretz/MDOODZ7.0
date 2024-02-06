@@ -577,4 +577,6 @@ void            SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh);
 
 void            ValidateSetup(MdoodzSetup *setup, MdoodzInput *instance);
 
-void SetBCs_MD6( grid*, params*, scale, markers*, mat_prop*, surface* );
+void            SetBCs_MD6( grid*, params*, scale, markers*, mat_prop*, surface* );
+
+void            TransmutateMarkers(markers *particles, mat_prop *materials, double scaling_T);

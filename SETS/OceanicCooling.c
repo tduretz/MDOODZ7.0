@@ -4,6 +4,13 @@
 #include "stdlib.h"
 #include "stdio.h"
 
+double Line(const double x, Vector2D p1, Vector2D p2) {
+  const double a   = (p2.z - p1.z) / (p2.x - p1.x);
+  const double b   = p2.z - a*p2.x;
+  const double z  = a*x +b;
+  return z;
+}
+
 double SetSurfaceZCoord(MdoodzInput *instance, double x) {
   double h = 0.0;
   const double Earth_radius = 6370e3/instance->scaling.L;
@@ -18,37 +25,8 @@ double SetSurfaceZCoord(MdoodzInput *instance, double x) {
   return h;
 }
 
-int SetPhase(MdoodzInput *instance, Coordinates coordinates) {
+int SetPhase(MdoodzInput *m, Coordinates coordinates) {
   int phase = 0; // Default: crust
-  const double x = coordinates.x, z = coordinates.z;
-  const double Earth_radius = 6370e3/instance->scaling.L;
-  const double zMoho = Earth_radius + instance->model.user0/instance->scaling.L;
-  const double zLAB  = Earth_radius + instance->model.user1/instance->scaling.L;
-  const double angle = 35.*M_PI/180;
-  const double a_ell = 2.0*instance->model.user5/instance->scaling.L, b_ell = 0.5*instance->model.user5/instance->scaling.L;
-  double x_ell, z_ell, X, Z;
-  if ( instance->model.polar==0 ) {
-      if (z < zMoho) {
-          phase = 1;                     // Lithospheric mantle
-      }
-      if (z < zLAB) {
-          phase = 2;                     // Astenospheric mantle
-      }
-  }
-  if ( instance->model.polar==1 ) {
-      Z = sqrt((zMoho - x)*(zMoho + x)); // Lithospheric mantle
-      if ( z <  Z  ) phase = 1;
-      Z = sqrt((zLAB  - x)*(zLAB  + x)); // Astenospheric mantle
-      if ( z <  Z  ) phase = 2;
-  }
-
-  // Draw ellipse
-  Z = Earth_radius - 55e3/instance->scaling.L;
-  X = 20e3/instance->scaling.L;
-  x_ell = (x-X)*cos(angle) + (z-Z)*sin(angle);
-  z_ell =-(x-X)*sin(angle) + (z-Z)*cos(angle);
-  if (pow(x_ell/a_ell,2.0) + pow(z_ell/b_ell,2.0) < 1.0) phase = 0;
-  
   return phase;
 }
 
@@ -59,7 +37,7 @@ double SetTemperature(MdoodzInput *instance, Coordinates coordinates) {
   const double Ttop  = 293.0/(instance->scaling.T);
   const double Tbot  = (instance->model.user3 + zeroC)/instance->scaling.T;
   double Tgrad = (Ttop-Tbot)/ (Lz - (instance->model.zmax-Earth_radius));
-  return Ttop + Tgrad*(z - Earth_radius);
+  return Tbot;
 }
 
 // double SetGrainSize(MdoodzInput *instance, Coordinates coordinates, int phase) {
@@ -235,11 +213,11 @@ SetBC SetBCVz(MdoodzInput *instance, POSITION position, Coordinates coordinates)
   // printf("Vz %2.2e %2.2e %2.2e\n", VzS*instance->scaling.V, VzW*instance->scaling.V, VzE*instance->scaling.V);
 
   if (position == W || position == SW || position == NW ) {
-    bc.value = VzW;
-    bc.type  = 11;
+    bc.value = 0*VzW;
+    bc.type  = 13;
   } else if ( position == E || position == SE || position == NE) {
-    bc.value = VzE;
-    bc.type  = 11;
+    bc.value = 0*VzE;
+    bc.type  = 13;
   } else if (position == S || position == N) {
     bc.value = VzS;
     bc.type  = 0;
@@ -250,16 +228,12 @@ SetBC SetBCVz(MdoodzInput *instance, POSITION position, Coordinates coordinates)
   return bc;
 }
 
-double SetAnisoAngle(MdoodzInput *input, Coordinates coordinates, int phase) {
-  //return 135;       // fixed value everywhere
-  return rand()*360;  // random value everywhere
-}
 
 int main(int nargs, char *args[]) {
   // Input file name
   char *input_file;
   if ( nargs < 2 ) {
-    asprintf(&input_file, "CollisionPolarCartesianAniso.txt"); // Default
+    asprintf(&input_file, "OceanicCooling.txt"); // Default
   }
   else {
     asprintf(&input_file, "%s", args[1]);     // Custom
@@ -272,7 +246,6 @@ int main(int nargs, char *args[]) {
           .SetParticles = &(SetParticles_ff){
                   .SetPhase              = SetPhase,
                   .SetTemperature        = SetTemperature,
-                  .SetAnisoAngle         = SetAnisoAngle,
           },
           .SetBCs = &(SetBCs_ff){
                   .SetBCVx    = SetBCVx,
