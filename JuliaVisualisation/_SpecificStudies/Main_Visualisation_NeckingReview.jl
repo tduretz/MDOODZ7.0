@@ -1,50 +1,62 @@
 import Pkg
 Pkg.activate(normpath(joinpath(@__DIR__, "..")))
-using HDF5, GLMakie, Printf, Colors, ColorSchemes, MathTeXEngine
-Makie.update_theme!(fonts = (regular = texfont(), bold = texfont(:bold), italic = texfont(:italic)))
+# using GLMakie
+using CairoMakie
+using HDF5, Printf, Colors, ColorSchemes, MathTeXEngine
+Makie.update_theme!( fonts = ( regular = texfont(), bold = texfont(:bold), italic = texfont(:italic)))
 Makie.inline!(false)
 My = 1e6*365*24*3600
 
 function main()
 
     # Set the path to your files"
-    path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/1_NR07/"
-    path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/"
-    path ="/Users/tduretz/REPO/DEBUG/MDLIB/"
-
+    path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/1_NR09/"
+    # path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/"
+    # path ="/Users/tduretz/REPO/DEBUG/MDLIB/"
 
     # File numbers
-    file_start = 5
-    file_step  = 10
-    file_end   = 5
+    file_start = 0
+    file_step  = 50
+    file_end   = 5000
 
     # Select field to visualise
-    field = :Phases
+    # field = :Phases
+    field = :ThinningFactor
+    # field = :PhasesRheology
     # field = :Density
     # field = :Viscosity 
     # field = :PlasticStrainrate
     # field = :Stress
-    field = :StrainRate
+    # field = :StrainRate
+    # field = :Strain
     # field = :Pressure
     # field = :Temperature
     # field = :Velocity_x
     # field = :Velocity_z
     # field = :GrainSize
-    field = :Topography
+    # field = :Topography
 
     # Switches
-    printfig    = false  # print figures to disk
-    ph_contours = false  # add phase contours
+    printfig    = true  # print figures to disk
+    ph_contours = true  # add phase contours
     T_contours  = true  # add temperature contours
     fabric      = false  # add fabric quiver (normal to director)
-    α_heatmap   = 0.85   # transparency of heatmap 
+    α_heatmap   = 0.95   # transparency of heatmap 
     nap         = 0.3    # pause for animation 
-    resolution  = 500
+    resol       = 1000
+    ftsz        = 40
 
     # Scaling
     Lc = 1000.
     tc = My
     Vc = 1e-9
+
+    Hcrust  = 0
+    Hmant   = 0
+    Hlit    = 0
+    Hcrust0 = 0
+    Hmant0  = 0
+    Hlit0   = 0 
 
     # Time loop
     for istep=file_start:file_step:file_end
@@ -75,6 +87,7 @@ function main()
 
         ph    = Float64.(reshape(ExtractData( filename, "/VizGrid/compo"), ncx, ncz));          mask_air = ph .== -1.00 
         ph_hr = Float64.(reshape(ExtractData( filename, "/VizGrid/compo_hr"), ncx_hr, ncz_hr)); 
+        ph_hr2 = copy(ph_hr)
         group_phases = copy( ph_hr); ph_hr[ph_hr.==-1.00] .= NaN
         ηc    = Float64.(reshape(ExtractData( filename, "/Centers/eta_n"), ncx, ncz));          ηc[mask_air]  .= NaN
         ρc    = Float64.(reshape(ExtractData( filename, "/Centers/rho_n"), ncx, ncz));          ρc[mask_air]  .= NaN
@@ -82,12 +95,18 @@ function main()
         T     = Float64.(reshape(ExtractData( filename, "/Centers/T"), ncx, ncz)) .- 273.15;    T[mask_air]   .= NaN
         d     = Float64.(reshape(ExtractData( filename, "/Centers/d"), ncx, ncz));              d[mask_air]   .= NaN
         ε̇pl   = Float64.(reshape(ExtractData( filename, "/Centers/eII_pl"), ncx, ncz));         ε̇pl[mask_air] .= NaN
+        ε̇el   = Float64.(reshape(ExtractData( filename, "/Centers/eII_el"), ncx, ncz));         ε̇el[mask_air] .= NaN
+        ε̇pwl   = Float64.(reshape(ExtractData( filename, "/Centers/eII_pwl"), ncx, ncz));         ε̇pwl[mask_air] .= NaN
+        ε̇lin   = Float64.(reshape(ExtractData( filename, "/Centers/eII_lin"), ncx, ncz));         ε̇lin[mask_air] .= NaN
+        ε̇exp   = Float64.(reshape(ExtractData( filename, "/Centers/eII_exp"), ncx, ncz));         ε̇exp[mask_air] .= NaN
+
         Vx    = Float64.(reshape(ExtractData( filename, "/VxNodes/Vx"), (ncx+1), (ncz+2)))
         Vz    = Float64.(reshape(ExtractData( filename, "/VzNodes/Vz"), (ncx+2), (ncz+1)))
         τxx   = Float64.(reshape(ExtractData( filename, "/Centers/sxxd"), ncx, ncz))
         τxz   = Float64.(reshape(ExtractData( filename, "/Vertices/sxz"), nvx, nvz))
         ε̇xx   = Float64.(reshape(ExtractData( filename, "/Centers/exxd"), ncx, ncz))
         ε̇xz   = Float64.(reshape(ExtractData( filename, "/Vertices/exz"), nvx, nvz))
+        εII   = Float64.(reshape(ExtractData( filename, "/Centers/strain"), ncx, ncz));          εII[mask_air] .= NaN
         τII   = sqrt.( 0.5*(2*τxx.^2 .+ 0.5*(τxz[1:end-1,1:end-1].^2 .+ τxz[2:end,1:end-1].^2 .+ τxz[1:end-1,2:end].^2 .+ τxz[2:end,2:end].^2 ) ) ); τII[mask_air] .= NaN
         ε̇II   = sqrt.( 0.5*(2*ε̇xx.^2 .+ 0.5*(ε̇xz[1:end-1,1:end-1].^2 .+ ε̇xz[2:end,1:end-1].^2 .+ ε̇xz[1:end-1,2:end].^2 .+ ε̇xz[2:end,2:end].^2 ) ) ); ε̇II[mask_air] .= NaN
         if fabric
@@ -108,15 +127,14 @@ function main()
         #####################################
 
         # Color palette for phase map
-        cmap    = zeros(RGB{Float64}, 7)
-        cmap[1] = RGBA{Float64}(244/255, 218/255, 205/255, 1.)  
-        cmap[2] = RGBA{Float64}(217/255, 099/255, 097/255, 1.)  
-        cmap[3] = RGBA{Float64}(117/255, 164/255, 148/255, 1.) 
-        cmap[4] = RGBA{Float64}(223/255, 233/255, 219/255, 1.) 
-        cmap[5] = RGBA{Float64}(217/255, 099/255, 097/255, 1.) 
-        cmap[6] = RGBA{Float64}(244/255, 218/255, 205/255, 1.) 
-        cmap[7] = RGBA{Float64}(223/255, 233/255, 219/255, 1.) 
-        phase_colors = cgrad(cmap, length(cmap), categorical=true, rev=false)
+        cmap    = zeros(RGB{Float64}, 6)
+        cmap[1] = RGBA{Float64}(244/255, 218/255, 205/255, 1.) # 0  
+        cmap[2] = RGBA{Float64}(223/255, 233/255, 219/255, 1.) # 1
+        cmap[3] = RGBA{Float64}(211/255, 65/255, 59/255, 1.) # 2
+        cmap[4] = RGBA{Float64}(112/255, 200/255, 94/255, 1.) # 3
+        cmap[5] = RGBA{Float64}(191/255, 145/255, 127/255, 1.) # 4
+        cmap[6] = RGBA{Float64}(86/255, 142/255, 121/255, 1.) # 5
+        phase_colors = cgrad(cmap, 6, categorical=true, rev=false)
 
         # Group phases for contouring
         group_phases[ ph_hr.==4 .|| ph_hr.==0 .|| ph_hr.==5  .|| ph_hr.==1  ] .= 0
@@ -126,26 +144,150 @@ function main()
         # Transparent turbo
         cbarPal= :turbo
         cmap = get(colorschemes[cbarPal], LinRange(0,1,100))
-        turboα = [(cmap[i],i/100) for i in 1:100]
+        turboα = [(cmap[i],i/100) for i in 1:75]
 
         #####################################
 
-        f = Figure(resolution = (Lx/Lz*resolution, resolution), fontsize=25)
+        ### 1. GROUP PHASES
+        ph_hr_rheo = copy(ph_hr)
+
+        for i in eachindex(xc_hr), j in eachindex(zc_hr)
+            if ph_hr[i,j]==5 
+                ph_hr_rheo[i,j] = 0 
+            end
+            if ph_hr[i,j]==4 
+                ph_hr_rheo[i,j] = 0 
+            end
+            if ph_hr[i,j]==1 
+                ph_hr_rheo[i,j] = 0 
+            end
+
+            if ph_hr[i,j]==2
+                ph_hr_rheo[i,j] = 1
+            end
+            if ph_hr[i,j]==6
+                ph_hr_rheo[i,j] = 4
+            end
+
+            if ph_hr[i,j]==3
+                ph_hr_rheo[i,j] = 2
+            end
+
+            if ph_hr_rheo[i,j]==4
+                ph_hr_rheo[i,j] = 1
+            end
+            if ph_hr_rheo[i,j]==2
+                ph_hr_rheo[i,j] = 1
+            end
+
+        end
+        
+        ### 2. COLOR PHASES BASED ON RHEOLOGICAL MODES
+        ic = 0
+        for i in eachindex(xc_hr)
+            if mod(i-1,2)==0 
+                ic += 1
+            end
+            jc = 0
+            for j in eachindex(zc_hr)
+                if mod(j-1,2)==0 
+                    jc += 1
+                end
+
+                # Rheological mode
+                mode = :vis
+                ε̇vis = ε̇exp[ic,jc] + ε̇pwl[ic,jc] + ε̇lin[ic,jc]
+                if  ε̇pl[ic,jc] > ε̇vis && ε̇pl[ic,jc] > ε̇el[ic,jc]
+                    mode = :pl
+                end
+                if  ε̇el[ic,jc] > ε̇vis && ε̇el[ic,jc] > ε̇pl[ic,jc]
+                    mode = :el
+                end
+
+                if isnan(ph_hr[i,j]) == false
+                    if ph_hr_rheo[i,j] == 0 && mode==:pl
+                        ph_hr_rheo[i,j] = 2
+                    end
+                    if ph_hr_rheo[i,j] == 0 && mode==:el
+                        ph_hr_rheo[i,j] = 4
+                    end
+                    if ph_hr_rheo[i,j] == 1 && mode==:pl
+                        ph_hr_rheo[i,j] = 3
+                    end
+                    if ph_hr_rheo[i,j] == 1 && mode==:el
+                        ph_hr_rheo[i,j] = 5
+                    end
+                end
+            end
+        end
+
+        ### 3. COMPUTE THICKNESSES
+        Hcrust = sum(group_phases.==0, dims=2)*Δz/2
+        Hmant  = sum(group_phases.==1, dims=2)*Δz/2
+        Hlit   = sum(group_phases.==0 .|| group_phases.==1, dims=2)*Δz/2
+        if istep==0
+            Hcrust0 = Hcrust
+            Hmant0  = Hmant
+            Hlit0   = Hlit
+        end
+
+        ##########################################################################
+
+        f = Figure(resolution = (Lx/Lz*resol, resol), fontsize=ftsz)
+
+        ##########################################################################
+
+        if field==:ThinningFactor
+            ax1 = Axis(f[1, 1], title = L"Thinning at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$\beta$ [-]")
+            lines!(ax1, xc_hr./Lc, 1.0 .- Hcrust[:]./Hcrust0[:], label=L"$$Crust")
+            lines!(ax1, xc_hr./Lc, 1.0 .- Hmant[:]./Hmant0[:], label=L"$$Mantle lithosphere")
+            lines!(ax1, xc_hr./Lc, 1.0 .- Hlit[:]./Hlit0[:], label=L"$$Lithosphere")
+            xlims!(ax1, xmin/Lc, xmax/Lc)
+            ylims!(ax1, -0.05, 1.05)
+            axislegend(position = :rt, framevisible = false)
+            if printfig Print2Disk( f, path, string(field), istep) end
+        end
 
         if field==:Phases
             ax1 = Axis(f[1, 1], title = L"Phases at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
-            hm = heatmap!(ax1, xc_hr./Lc, zc_hr./Lc, ph_hr, colormap = phase_colors)
-            hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(ε̇pl), colormap = turboα)
-
-            if T_contours 
-                contour!(ax1, xc./Lc, zc./Lc, T, levels=0:200:1400, linewidth = 4, color=:white )  
-            end
+            group_phases[group_phases.==-1] .= NaN
+            hm1 = heatmap!(ax1, xc_hr./Lc, zc_hr./Lc, group_phases, colormap = phase_colors, colorrange=(-0.5,5.5))
+            # hm2 = heatmap!(ax1, xc./Lc, zc./Lc, log10.(ε̇pl), colormap = turboα)
+            # if ph_contours 
+            #     contour!(ax1, xc_hr./Lc, zc_hr./Lc, ph_hr2, levels=-1:1:maximum(ph_hr2), linewidth = 1, color=(:white, 0.25)  )  
+            # end
+            # if T_contours 
+            #     contour!(ax1, xc./Lc, zc./Lc, T, levels=0:200:1400, linewidth = 4, color=:white )  
+            # end
             if fabric 
                 arrows!(ax1, xc./Lc, zc./Lc, Nz, Nx, arrowsize = 0, lengthscale=Δ/1.5)
             end            
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
-            GLMakie.Colorbar(f[1, 2], hm, label = "Phases", width = 20, labelsize = 25, ticklabelsize = 14 )
-            GLMakie.colgap!(f.layout, 20)
+            cbar = GLMakie.Colorbar(f[1, 2], hm1, width = 20, labelsize=ftsz, ticklabelsize = 20 ) #, label = L"$$Phases"
+            # GLMakie.Colorbar(f[1, 3], hm2, label = L"$\dot{\varepsilon}^\textrm{p}$", width = 20, labelsize = 25, ticklabelsize = 14 )
+            cbar.ticks = ([0, 1, 2, 3, 4, 5], ["Crust viscous", "Mantle viscous", "Crust plastic", "Mantle plastic", "Crust elastic", "Mantle elastic"])
+            # GLMakie.colgap!(f.layout, 40)
+            if printfig Print2Disk( f, path, string(field), istep) end
+        end
+
+        if field==:PhasesRheology
+            ax1 = Axis(f[1, 1], title = L"Phases at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
+            hm1 = heatmap!(ax1, xc_hr./Lc, zc_hr./Lc, ph_hr_rheo, colormap = phase_colors, colorrange=(-0.5,5.5))
+            # hm2 = heatmap!(ax1, xc./Lc, zc./Lc, log10.(ε̇pl), colormap = turboα)
+            if ph_contours 
+                contour!(ax1, xc_hr./Lc, zc_hr./Lc, ph_hr2, levels=-1:1:maximum(ph_hr2), linewidth = 1, color=(:white, 0.25)  )  
+            end
+            # if T_contours 
+            #     contour!(ax1, xc./Lc, zc./Lc, T, levels=0:200:1400, linewidth = 4, color=:white )  
+            # end
+            if fabric 
+                arrows!(ax1, xc./Lc, zc./Lc, Nz, Nx, arrowsize = 0, lengthscale=Δ/1.5)
+            end            
+            colsize!(f.layout, 1, Aspect(1, Lx/Lz))
+            cbar = GLMakie.Colorbar(f[1, 2], hm1, width = 20, labelsize=ftsz, ticklabelsize = 20 ) #, label = L"$$Phases"
+            # GLMakie.Colorbar(f[1, 3], hm2, label = L"$\dot{\varepsilon}^\textrm{p}$", width = 20, labelsize = 25, ticklabelsize = 14 )
+            cbar.ticks = ([0, 1, 2, 3, 4, 5], ["Crust viscous", "Mantle viscous", "Crust plastic", "Mantle plastic", "Crust elastic", "Mantle elastic"])
+            # GLMakie.colgap!(f.layout, 40)
             if printfig Print2Disk( f, path, string(field), istep) end
         end
 
@@ -162,7 +304,7 @@ function main()
                 arrows!(ax1, xc./Lc, zc./Lc, Nz, Nx, arrowsize = 0, lengthscale=Δ/1.5)
             end           
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
-            GLMakie.Colorbar(f[1, 2], hm, label = L"$\eta$ [Pa.s]", width = 20, labelsize = 25, ticklabelsize = 14 )
+            GLMakie.Colorbar(f[1, 2], hm, label = L"$\eta$ [Pa.s]", width = 20, labelsize = ftsz, ticklabelsize = 14 )
             GLMakie.colgap!(f.layout, 20)
             if printfig Print2Disk( f, path, string(field), istep) end
         end
@@ -199,6 +341,24 @@ function main()
             end
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
             GLMakie.Colorbar(f[1, 2], hm, label =  L"$\dot{\varepsilon}_\textrm{II}$ [s$^{-1}$]", width = 20, labelsize = 25, ticklabelsize = 14 )
+            GLMakie.colgap!(f.layout, 20)
+            if printfig Print2Disk( f, path, string(field), istep) end
+        end
+
+        if field==:Strain
+            ax1 = Axis(f[1, 1], title = L"${\varepsilon}_\textrm{II}$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
+            hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(εII), colormap = (:turbo, α_heatmap), colorrange=(-4.,1.))
+            if ph_contours 
+                contour!(ax1, xc_hr./Lc, zc_hr./Lc, group_phases, levels=-1:1:maximum(group_phases), linewidth = 4, color=:black )  
+            end
+            if fabric 
+                arrows!(ax1, xc./Lc, zc./Lc, Nz, Nx, arrowsize = 0, lengthscale=Δ/1.5)
+            end
+            if T_contours 
+                contour!(ax1, xc./Lc, zc./Lc, T, levels=0:200:1400, linewidth = 4, color=:white)  
+            end
+            colsize!(f.layout, 1, Aspect(1, Lx/Lz))
+            GLMakie.Colorbar(f[1, 2], hm, label =  L"${\varepsilon}_\textrm{II}$ [-]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
             GLMakie.colgap!(f.layout, 20)
             if printfig Print2Disk( f, path, string(field), istep) end
         end
@@ -264,9 +424,11 @@ function main()
             @show maximum(Vx_mark)
         end
 
-        DataInspector(f)
-        display(f)
-        sleep(nap)
+        if printfig==false
+            DataInspector(f)
+            display(f) 
+            sleep(nap)
+        end
         
     end
 

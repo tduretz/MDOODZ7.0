@@ -4,6 +4,13 @@
 #include "stdlib.h"
 #include "stdio.h"
 
+double Line(const double x, Vector2D p1, Vector2D p2) {
+  const double a   = (p2.z - p1.z) / (p2.x - p1.x);
+  const double b   = p2.z - a*p2.x;
+  const double z  = a*x +b;
+  return z;
+}
+
 double SetSurfaceZCoord(MdoodzInput *instance, double x) {
   double h = 0.0;
   const double Earth_radius = 6370e3/instance->scaling.L;
@@ -18,36 +25,107 @@ double SetSurfaceZCoord(MdoodzInput *instance, double x) {
   return h;
 }
 
-int SetPhase(MdoodzInput *instance, Coordinates coordinates) {
+int SetPhase(MdoodzInput *m, Coordinates coordinates) {
   int phase = 0; // Default: crust
   const double x = coordinates.x, z = coordinates.z;
-  const double Earth_radius = 6370e3/instance->scaling.L;
-  const double zMoho = Earth_radius + instance->model.user0/instance->scaling.L;
-  const double zLAB  = Earth_radius + instance->model.user1/instance->scaling.L;
-  const double angle = 35.*M_PI/180;
-  const double a_ell = 2.0*instance->model.user5/instance->scaling.L, b_ell = 0.5*instance->model.user5/instance->scaling.L;
-  double x_ell, z_ell, X, Z;
-  if ( instance->model.polar==0 ) {
-      if (z < zMoho) {
-          phase = 1;                     // Lithospheric mantle
-      }
-      if (z < zLAB) {
-          phase = 2;                     // Astenospheric mantle
-      }
-  }
-  if ( instance->model.polar==1 ) {
-      Z = sqrt((zMoho - x)*(zMoho + x)); // Lithospheric mantle
-      if ( z <  Z  ) phase = 1;
-      Z = sqrt((zLAB  - x)*(zLAB  + x)); // Astenospheric mantle
-      if ( z <  Z  ) phase = 2;
-  }
+  const double Earth_radius = 6370e3/m->scaling.L;
+  const double zMoho = Earth_radius + m->model.user0/m->scaling.L;
+  const double basin_width1 = 200e3/m->scaling.L;
+  const double basin_width2 = 500e3/m->scaling.L;
+  const double cont_width   = 250e3/m->scaling.L;
+  const double x1 = -200e3/m->scaling.L; // OCT #1 
+  const double x2 =  x1 + basin_width1;         // OCT #2 
+  const double x3 =  x2 + cont_width;           // OCT #3 
+  const double x4 =  x3 + basin_width2;         // OCT #4 
+  // const double z_ocean_moho = Earth_radius - 7.5e3/m->scaling.L;
+  const double Lm = 50.e3/m->scaling.L;                     //  margin length
+  const double z_lab_eur  = Earth_radius - 180e3/m->scaling.L;
+  const double z_lab_bas  = Earth_radius - 180e3/m->scaling.L;
+  const double z_lab_adr  = Earth_radius - 180e3/m->scaling.L;//Earth_radius + m->model.user1/m->scaling.L;
+  const double z_moho_eur = zMoho;
+  const double z_moho_bas = Earth_radius - 7.5e3/m->scaling.L;
+  const double z_moho_adr = zMoho;
+  // ASTHENOSPHERE
+  if  (z < z_lab_bas) phase = 2;
+  // Add lithospheric mantle
+  Vector2D p1, p2, p3, p4; // points to draw segments
+  double z_lab, z_moho; // vertical position of interface (function of x)
+  // EUROPE
+  if ( z>z_lab_eur && z<z_moho_eur && x<x1 - Lm/2.0) phase = 1; // europe
+  // MARGIN 1
+  // OCT 1 --- LAB
+  p1.x = x1 - Lm/2.0; p1.z = z_lab_eur;
+  p2.x = x1 + Lm/2.0; p2.z = z_lab_bas;
+  z_lab = Line(x, p1, p2);
+  // OCT 1 --- Moho
+  p3.x = x1 - Lm/2.0; p3.z = z_moho_eur;
+  p4.x = x1 + Lm/2.0; p4.z = z_moho_bas;
+  z_moho = Line(x, p3, p4);
+  // Draw polygon
+  if ( fabs(x-x1)<Lm/2.0 && z>z_lab && z<z_moho) phase = 1; // margin
+  // BASIN
+  if ( z>z_lab_bas && z<z_moho_bas && x<x2 - Lm/2.0 && x>x1 + Lm/2.0) phase = 1; // mantle
+  if ( z>z_moho_bas && x<x2 - Lm/2.0 && x>x1 + Lm/2.0) phase = 3; // crust
+  // MARGIN 2
+  // OCT 1 --- LAB
+  p1.x = x2 - Lm/2.0; p1.z = z_lab_bas;
+  p2.x = x2 + Lm/2.0; p2.z = z_lab_eur;
+  z_lab = Line(x, p1, p2);
+  // OCT 1 --- Moho
+  p3.x = x2 - Lm/2.0; p3.z = z_moho_bas;
+  p4.x = x2 + Lm/2.0; p4.z = z_moho_eur;
+  z_moho = Line(x, p3, p4);
+  // Draw polygon
+  if ( fabs(x-x2)<Lm/2.0 && z>z_lab && z<z_moho) phase = 1; // margin
+  // MICROCONTINENT
+  if ( z>z_lab_eur && z<z_moho_eur && x<x3 - Lm/2.0 && x>x2 + Lm/2.0) phase = 1; // mantle
+  if ( x<x3 + Lm/2.0 && x>x2 - Lm/2.0 && phase == 0) phase = 6;
+  // MARGIN 3
+  // OCT 1 --- LAB
+  p1.x = x3 - Lm/2.0; p1.z = z_lab_eur;
+  p2.x = x3 + Lm/2.0; p2.z = z_lab_bas;
+  z_lab = Line(x, p1, p2);
+  // OCT 1 --- Moho
+  p3.x = x3 - Lm/2.0; p3.z = z_moho_eur;
+  p4.x = x3 + Lm/2.0; p4.z = z_moho_bas;
+  z_moho = Line(x, p3, p4);
+  // Draw polygon
+  if ( fabs(x-x3)<Lm/2.0 && z>z_lab && z<z_moho) phase = 1; // margin
+  // BASIN
+  if ( z>z_lab_bas && z<z_moho_bas && x<x4 - Lm/2.0 && x>x3 + Lm/2.0) phase = 1; // mantle
+  if ( z>z_moho_bas && x<x4 - Lm/2.0 && x>x3 + Lm/2.0) phase = 3; // crust
+  // MARGIN 4
+  // OCT 1 --- LAB
+  p1.x = x4 - Lm/2.0; p1.z = z_lab_bas;
+  p2.x = x4 + Lm/2.0; p2.z = z_lab_adr;
+  z_lab = Line(x, p1, p2);
+  // OCT 1 --- Moho
+  p3.x = x4 - Lm/2.0; p3.z = z_moho_bas;
+  p4.x = x4 + Lm/2.0; p4.z = z_moho_adr;
+  z_moho = Line(x, p3, p4);
+  // Draw polygon
+  if ( fabs(x-x4)<Lm/2.0 && z>z_lab && z<z_moho) phase = 1; // margin
+  // Adria
+  if ( z>z_lab_adr && z<z_moho_adr && x>x4 + Lm/2.0) phase = 1; // mantle
 
+  // ----------------- WEAK ZONES
+  const double angle = -35.*M_PI/180;
+  const double a_ell = 10.0*m->model.user5/m->scaling.L, b_ell = 0.6*m->model.user5/m->scaling.L;
+  double x_ell, z_ell, X, Z;
   // Draw ellipse
-  Z = Earth_radius - 55e3/instance->scaling.L;
-  X = 20e3/instance->scaling.L;
+  double smaller_fact = 1.0;
+  Z = Earth_radius - 55e3/m->scaling.L;
+  X = x2 - 0.05*smaller_fact*sqrt(a_ell*a_ell + b_ell*b_ell);
   x_ell = (x-X)*cos(angle) + (z-Z)*sin(angle);
   z_ell =-(x-X)*sin(angle) + (z-Z)*cos(angle);
-  if (pow(x_ell/a_ell,2.0) + pow(z_ell/b_ell,2.0) < 1.0) phase = 0;
+  if (pow(x_ell/(smaller_fact*a_ell),2.0) + pow(z_ell/(smaller_fact*b_ell),2.0) < 1.0) phase = 5;
+
+  // Draw ellipse
+  Z = Earth_radius - 55e3/m->scaling.L;
+  X = x4 + 0.05*sqrt(a_ell*a_ell + b_ell*b_ell);
+  x_ell = (x-X)*cos(angle) + (z-Z)*sin(angle);
+  z_ell =-(x-X)*sin(angle) + (z-Z)*cos(angle);
+  if (pow(x_ell/a_ell,2.0) + pow(z_ell/b_ell,2.0) < 1.0) phase = 4;
   
   return phase;
 }
@@ -235,11 +313,11 @@ SetBC SetBCVz(MdoodzInput *instance, POSITION position, Coordinates coordinates)
   // printf("Vz %2.2e %2.2e %2.2e\n", VzS*instance->scaling.V, VzW*instance->scaling.V, VzE*instance->scaling.V);
 
   if (position == W || position == SW || position == NW ) {
-    bc.value = VzW;
-    bc.type  = 11;
+    bc.value = 0*VzW;
+    bc.type  = 13;
   } else if ( position == E || position == SE || position == NE) {
-    bc.value = VzE;
-    bc.type  = 11;
+    bc.value = 0*VzE;
+    bc.type  = 13;
   } else if (position == S || position == N) {
     bc.value = VzS;
     bc.type  = 0;
@@ -250,16 +328,12 @@ SetBC SetBCVz(MdoodzInput *instance, POSITION position, Coordinates coordinates)
   return bc;
 }
 
-double SetAnisoAngle(MdoodzInput *input, Coordinates coordinates, int phase) {
-  //return 135;       // fixed value everywhere
-  return rand()*360;  // random value everywhere
-}
 
 int main(int nargs, char *args[]) {
   // Input file name
   char *input_file;
   if ( nargs < 2 ) {
-    asprintf(&input_file, "CollisionPolarCartesianAniso.txt"); // Default
+    asprintf(&input_file, "DoubleSubduction.txt"); // Default
   }
   else {
     asprintf(&input_file, "%s", args[1]);     // Custom
@@ -272,7 +346,6 @@ int main(int nargs, char *args[]) {
           .SetParticles = &(SetParticles_ff){
                   .SetPhase              = SetPhase,
                   .SetTemperature        = SetTemperature,
-                  .SetAnisoAngle         = SetAnisoAngle,
           },
           .SetBCs = &(SetBCs_ff){
                   .SetBCVx    = SetBCVx,
