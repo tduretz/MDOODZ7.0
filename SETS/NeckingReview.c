@@ -3,6 +3,7 @@
 #include "stdbool.h"
 #include "stdio.h"
 #include "stdlib.h"
+#include "time.h"
 
 double SetSurfaceZCoord(MdoodzInput *instance, double x_coord) {
   const double TopoLevel = -0.0e3 / instance->scaling.L;
@@ -21,7 +22,7 @@ double SetNoise(MdoodzInput *instance, Coordinates coordinates, int phase) {
 
 static Ellipse GetMicaEllipse(double centreX, double centreZ) {
   return (Ellipse) {
-          .radiusZ = 40e3,
+          .radiusZ = 20e3,
           .radiusX = 10e3,
           .centreX = centreX,
           .centreZ = centreZ,
@@ -38,7 +39,7 @@ int SetPhase(MdoodzInput *instance, Coordinates coordinates) {
   const double mohoLevel            = -crustThickness;
   const bool   isBelowLithosphere   = coordinates.z < -lithosphereThickness;
   const bool   isAboveMoho          = coordinates.z > mohoLevel;
-  const bool   isMicaEllipse         = IsEllipseCoordinates(coordinates, GetMicaEllipse(0e3, -45e3), instance->scaling.L);
+  const bool   isMicaEllipse         = IsEllipseCoordinates(coordinates, GetMicaEllipse(0e3, -55e3), instance->scaling.L);
 
   if (isMicaEllipse) {
     return 1;
@@ -102,6 +103,28 @@ SetBC SetBCT(MdoodzInput *instance, POSITION position, double particleTemperatur
   return bc;
 }
 
+double SetAnisoAngle(MdoodzInput *input, Coordinates coordinates, int phase) {
+  static unsigned int seedIncrement = 0;
+  srand(time(NULL) + seedIncrement++);
+
+  // Use coordinates to determine the base angle, ensuring smooth variation
+  double baseAngle = fmod((coordinates.x + coordinates.z), 180.0);
+
+  // Generate a small random offset, for example within [-10, 10] degrees
+  double offsetRange = 10.0; // Adjust this value to control the degree of randomness
+  double randomOffset = ((rand() / (double)RAND_MAX) * 2 * offsetRange) - offsetRange;
+
+  // Combine base angle with random offset
+  double angle = baseAngle + randomOffset;
+
+  // Ensure angle is within desired range, e.g., [0, 180]
+  if (angle < 0.0) angle += 180.0;
+  else if (angle > 180.0) angle -= 180.0;
+
+  return angle;
+}
+
+
 void AddCrazyConductivity(MdoodzInput *input) {
   int               *asthenospherePhases = (int *) malloc(sizeof(int));
   CrazyConductivity *crazyConductivity   = (CrazyConductivity *) malloc(sizeof(CrazyConductivity));
@@ -113,7 +136,7 @@ void AddCrazyConductivity(MdoodzInput *input) {
 }
 
 int main(int nargs, char *args[]) {
-  // Input file name
+  srand(time(NULL));
   char *input_file;
   if (nargs < 2) {
     asprintf(&input_file, "NeckingReview.txt");// Default
@@ -122,7 +145,6 @@ int main(int nargs, char *args[]) {
     asprintf(&input_file, "%s", args[1]);// Custom
   }
   printf("Running MDoodz7.0 using %s\n", input_file);
-  srand(69);// Force random generator seed for reproducibility
   MdoodzSetup setup = {
           .BuildInitialTopography = &(BuildInitialTopography_ff){
                   .SetSurfaceZCoord = SetSurfaceZCoord,
@@ -132,6 +154,7 @@ int main(int nargs, char *args[]) {
                   .SetTemperature = SetTemperature,
                   .SetGrainSize   = SetGrainSize,
                   .SetNoise       = SetNoise,
+                  .SetAnisoAngle  = SetAnisoAngle,
 
           },
           .SetBCs = &(SetBCs_ff){

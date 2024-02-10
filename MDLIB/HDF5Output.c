@@ -964,7 +964,7 @@ void WriteOutputHDF5Particles( grid *mesh, markers *particles, surface *topo, ma
     char *FileName;
     double A[8];
     char  *part_ph, *part_gen;
-    float *part_x, *part_z, *part_Vx, *part_Vz, *part_T, *part_P, *part_sxxd, *part_sxz;
+    float *part_x, *part_z, *part_Vx, *part_Vz, *part_T, *part_P, *part_sxxd, *part_sxz, *part_nx, *part_nz;
     int d_part=1, ind=0, Nb_part_viz=particles->Nb_part, *part_index;
     float *Cxtopo, *Cztopo, *Cvxtopo, *Cvztopo, *Cheight, *Cvxsurf, *Cvzsurf;
     float *Cxtopo_ini, *Cztopo_ini, *Cvxtopo_ini, *Cvztopo_ini, *Cheight_ini, *Cvxsurf_ini, *Cvzsurf_ini;
@@ -998,6 +998,8 @@ void WriteOutputHDF5Particles( grid *mesh, markers *particles, surface *topo, ma
     part_sxxd   = DoodzMalloc( sizeof(float) *Nb_part_viz );
     part_sxz    = DoodzMalloc( sizeof(float) *Nb_part_viz );
     part_index  = DoodzMalloc( sizeof(int) *Nb_part_viz );  // Tracer: allocate
+    part_nx    = DoodzMalloc( sizeof(float) *Nb_part_viz );
+    part_nz    = DoodzMalloc( sizeof(float) *Nb_part_viz );
     
 //    // Tracer: store selected particle
 //    for (k=0; k<particles->Nb_part; k++) {
@@ -1028,6 +1030,8 @@ void WriteOutputHDF5Particles( grid *mesh, markers *particles, surface *topo, ma
         part_sxz[k]   = (float)particles->sxz[ind];
         part_ph[k]    = (char)particles->phase[ind];
         part_gen[k]   = (char)particles->generation[ind];
+        part_nx[k]    = (char)particles->nx[ind];
+        part_nz[k]   = (char)particles->nz[ind];
         part_index[k] = k;
         ind += d_part;
     }
@@ -1106,6 +1110,17 @@ void WriteOutputHDF5Particles( grid *mesh, markers *particles, surface *topo, ma
 
     // Generate file name
     asprintf( &FileName, "%s%05d%s",txtout, model.step, ".gzip.h5");
+
+    if (model.writer_subfolder && strcmp(model.writer_subfolder, "")) {
+      CreateDir(model.writer_subfolder);
+      char *temp_fname;
+      asprintf( &temp_fname, "%s%05d%s", txtout, model.step, ".gzip.h5");
+      asprintf( &FileName, "%s/%s", model.writer_subfolder, temp_fname);
+      free(temp_fname);
+    }
+    else {
+      asprintf( &FileName, "%s%05d%s", txtout, model.step, ".gzip.h5");
+    }
     CreateOutputHDF5( FileName );
 
     // Add groups
@@ -1153,6 +1168,9 @@ void WriteOutputHDF5Particles( grid *mesh, markers *particles, surface *topo, ma
     AddFieldToGroup( FileName, "Particles", "sxxd", 'f', Nb_part_viz, part_sxxd,    1 );
     AddFieldToGroup( FileName, "Particles", "sxz",  'f', Nb_part_viz, part_sxz,    1 );
 
+    AddFieldToGroup( FileName, "Particles", "nx", 'f', Nb_part_viz, part_nx,    1 );
+    AddFieldToGroup( FileName, "Particles", "nz",  'f', Nb_part_viz, part_nz,    1 );
+
     if ( model.free_surface == 1 ) {
         AddFieldToGroup( FileName, "Topo", "height" , 'f', (model.Nx), Cheight, 1 );
         AddFieldToGroup( FileName, "Topo", "vxsurf" , 'f', (model.Nx), Cvxsurf, 1 );
@@ -1180,6 +1198,8 @@ void WriteOutputHDF5Particles( grid *mesh, markers *particles, surface *topo, ma
     DoodzFree( part_Vx );
     DoodzFree( part_Vz );
     DoodzFree( part_ph );
+    DoodzFree( part_nx );
+    DoodzFree( part_nz );
     DoodzFree( part_gen );
     DoodzFree( part_T );
     DoodzFree( part_P );
