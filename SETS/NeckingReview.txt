@@ -3,7 +3,7 @@ irestart = 0
 
 /**** OUTPUT FILES ****/
 writer         = 1
-writer_step    = 10
+writer_step    = 1
 writer_markers = 0
 writer_debug   = 0
 writer_subfolder = WeakIncl
@@ -23,13 +23,14 @@ zmin    = -200.000000e3
 zmax    = 10.000000e3
 
 /**** TIME ****/
-Nt          = 100
+Nt          = 1
 dt          = 1.2623e+11
 Courant     = 0.45
 penalty     = 1e2
 constant_dt = 0
 
 /**** SWITCHES ****/
+marker_aniso_angle = 1
 eta_average       = 0
 interp_stencil    = 9
 mechanical        = 1

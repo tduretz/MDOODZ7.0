@@ -178,19 +178,24 @@ function main()
 
 
     fileNames = [
-        "/Volumes/T7/dghh/transition3/Output01200.gzip.h5", # 10Ma
-        "/Volumes/T7/dghh/transition3/Output01940.gzip.h5", # 15Ma
-        "/Volumes/T7/dghh/transition3/Output02900.gzip.h5", # 20Ma
-
-        "/Volumes/T7/dghhh/WeakIncl/Output00040.gzip.h5", # 10Ma
-        "/Volumes/T7/dghh/moho430/Output02050.gzip.h5", # 15Ma
-        "/Volumes/T7/dghh/moho430/Output02960.gzip.h5", # 20Ma
+        "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview\\aniso3\\Output01160.gzip.h5", # aniso 1
+    "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview\\aniso3\\Output01870.gzip.h5", # aniso 1
+    "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview\\aniso3\\Output02710.gzip.h5", # aniso 1
+    "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview\\aniso3_50\\Output00970.gzip.h5", # aniso 1
+    "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview\\aniso3_50\\Output01690.gzip.h5", # aniso 1
+    "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview\\aniso3_50\\Output02670.gzip.h5", # aniso 1
+    "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview\\aniso3_20\\Output01170.gzip.h5", # aniso 1
+    "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview\\aniso3_20\\Output01830.gzip.h5", # aniso 1
+    "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview\\aniso3_20\\Output02730.gzip.h5", # aniso 1
     ]
 
     filelabels = [
         "anisotropic (δ = 3, θ = 85, T moho = 500)",
         "anisotropic (δ = 3, θ = 85, T moho = 500)",
         "anisotropic (δ = 3, θ = 85, T moho = 500)",
+        "anisotropic (δ = 3, θ = 85, T moho = 430)",
+        "anisotropic (δ = 3, θ = 85, T moho = 430)",
+        "anisotropic (δ = 3, θ = 85, T moho = 430)",
         "anisotropic (δ = 3, θ = 85, T moho = 430)",
         "anisotropic (δ = 3, θ = 85, T moho = 430)",
         "anisotropic (δ = 3, θ = 85, T moho = 430)",
