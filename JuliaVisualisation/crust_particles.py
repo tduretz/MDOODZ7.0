@@ -2,6 +2,8 @@ import h5py
 import numpy as np
 import matplotlib.pyplot as plt
 
+My     = 1e6*3600*24*365.25
+
 
 def read_particle_data(filename, indices=None):
     with h5py.File(filename, 'r') as file:
@@ -16,7 +18,8 @@ def read_particle_data(filename, indices=None):
             z = np.array(file['Particles/z'][:])
             nx = np.array(file['Particles/nx'][:])
             nz = np.array(file['Particles/nz'][:])
-    return x, z, nx, nz
+        t = file['Model/Params'][0].astype(int)
+    return x, z, nx, nz, t
 
 
 def calculate_angles(nx, nz):
@@ -44,7 +47,8 @@ def main():
 
     for step in steps:
         filename = base_path + file_pattern.format(step)
-        x, z, nx, nz = read_particle_data(filename, initial_indices)
+        x, z, nx, nz, t = read_particle_data(filename, initial_indices)
+        time = str(t/My)
 
         if initial_indices is None:
             initial_indices = (x > 5000) & (x < 6000) & (z < -3000) & (z > -4000)
@@ -69,8 +73,8 @@ def main():
     axs[0].set_ylabel('Mean z')
     axs[0].legend()
 
-    # Plot angle changes
-    # Assuming angles is a list of numpy arrays, where each array contains angles for all tracked particles at a given step
+    # Plot angle changes Assuming angles is a list of numpy arrays, where each array contains angles for all tracked
+    # particles at a given step
     mean_angles_per_step = [np.mean(angle_array) for angle_array in angles]
 
     # Correcting the plotting call
