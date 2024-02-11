@@ -1030,8 +1030,8 @@ void WriteOutputHDF5Particles( grid *mesh, markers *particles, surface *topo, ma
         part_sxz[k]   = (float)particles->sxz[ind];
         part_ph[k]    = (char)particles->phase[ind];
         part_gen[k]   = (char)particles->generation[ind];
-        part_nx[k]    = (char)particles->nx[ind];
-        part_nz[k]   = (char)particles->nz[ind];
+        part_nx[k]    = (float)particles->nx[ind];
+        part_nz[k]   = (float)particles->nz[ind];
         part_index[k] = k;
         ind += d_part;
     }
