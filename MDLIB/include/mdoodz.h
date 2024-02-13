@@ -297,11 +297,17 @@ struct MdoodzSetup {
   MutateInputParams         *mutateInputParams;
 };
 
+typedef struct {
+  double east;
+  double west;
+} TopoHeight;
+
 struct MdoodzInput {
   char              *inputFileName;
   params             model;
   mat_prop           materials;
   scale              scaling;
+  TopoHeight         topoHeight;
   CrazyConductivity *crazyConductivity;
   Geometry          *geometry;
 };
