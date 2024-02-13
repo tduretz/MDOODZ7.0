@@ -3207,22 +3207,23 @@ void CountPartCell ( markers* particles, grid *mesh, params model, surface topo,
 
 void TransmutateMarkers(markers *particles, mat_prop *materials, double scaling_T) {
   int transmutated_particles = 0;
+#pragma omp parallel for reduction(+:transmutated_particles) shared(particles)
+  for (int k=0; k<particles->Nb_part-1; k++) {
+    const int phase = particles->phase[k];
+    const double temperature = (particles->T[k] * scaling_T) - zeroC;
+    const double transmutation = materials->transmutation[phase];
 
-#pragma omp parallel for shared ( particles )
-    for (int k=0; k<particles->Nb_part-1; k++) {
-        const int phase = particles->phase[k];
-        const double temperature = (particles->T[k] * scaling_T) - zeroC;
-        const double transmutation = materials->transmutation[phase];
-
-        if ((transmutation == -1 && materials->transmutation_temperature[phase] >= temperature)
-            || (transmutation == 1 && materials->transmutation_temperature[phase] <= temperature)) {
-            particles->phase[k] = materials->transmutation_phase[phase];
-            particles->dual[k] = materials->transmutation_phase[phase];
-            transmutated_particles++;
-        }
+    if ((transmutation == -1 && materials->transmutation_temperature[phase] >= temperature)
+        || (transmutation == 1 && materials->transmutation_temperature[phase] <= temperature)) {
+      particles->phase[k] = materials->transmutation_phase[phase];
+      particles->dual[k] = materials->transmutation_phase[phase];
+      transmutated_particles++;
     }
-    printf("Transmutated particles = %03d\n", transmutated_particles);
+  }
+
+  printf("Transmutated particles = %03d\n", transmutated_particles);
 }
+
 
 /*--------------------------------------------------------------------------------------------------------------------*/
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
