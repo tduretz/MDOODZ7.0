@@ -195,8 +195,10 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh, markers *topo_c
   double VxWestSum = 0.0;
   double VxEastSum = 0.0;
 
-  instance->topoHeight.west = topo_chain->z[0];
-  instance->topoHeight.east = topo_chain->z[topo_chain->Nb_part-1];
+  if (topo_chain->Nb_part) {
+    instance->topoHeight.west = topo_chain->z[0];
+    instance->topoHeight.east = topo_chain->z[topo_chain->Nb_part-1];
+  }
 
   for (int l = 0; l < mesh->Nz + 1; l++) {
     for (int k = 0; k < mesh->Nx; k++) {
