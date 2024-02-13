@@ -61,10 +61,10 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
     };
 
     if (input.model.free_surface) {
-      input.topo_height = &(TopoHeight){
-        .east = -0.0e3,
-        .west = -0.0e3,
-      };
+      input.topo_height = malloc(sizeof(TopoHeight));
+      if (input.topo_height != NULL) {
+        *input.topo_height = (TopoHeight){.east = -0.0e3, .west = -0.0e3};
+      }
     }
 
     if (setup->MutateInput) {
@@ -112,6 +112,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
     // Allocate marker chain
     markers       topo_chain, topo_chain_ini;
+    topo_chain.Nb_part = 0;
     surface      topo, topo_ini;
     if (input.model.free_surface == 1 ) AllocateMarkerChain( &topo,     &topo_chain, input.model );
     if (input.model.free_surface == 1 ) AllocateMarkerChain( &topo_ini, &topo_chain_ini, input.model );
