@@ -10,18 +10,6 @@ from scipy.interpolate import interp2d
 My = 1e6 * 365 * 24 * 3600
 Lc = 1000.0
 
-# File paths (these need to be adjusted to your actual file locations)
-file_names = [
-    "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview\\aniso3_chaos1\\Output00010.gzip.h5", # 10Ma
-    "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview\\aniso3_chaos1\\Output01870.gzip.h5", # 15Ma
-    "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview\\aniso3_chaos1\\Output02700.gzip.h5", # 20Ma
-    "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview\\aniso3_chaos2\\Output00010.gzip.h5", # 10Ma
-    "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview\\aniso3_chaos2\\Output01870.gzip.h5", # 15Ma
-    "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview\\aniso3_chaos2\\Output02710.gzip.h5", # 20Ma
-    "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview\\aniso3_chaos3\\Output00010.gzip.h5", # 10Ma
-    "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview\\aniso3_chaos3\\Output01880.gzip.h5", # 15Ma
-    "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview\\aniso3_chaos3\\Output02710.gzip.h5", # 20Ma
-]
 
 def extract_data(file_path, data_path):
     with h5py.File(file_path, 'r') as file:
@@ -31,7 +19,7 @@ def main():
     fig, ax = plt.subplots(figsize=(12, 8))
     plt.subplots_adjust(bottom=0.80, left=0.50, top=0.99)
 
-    filename = file_names[1]
+    filename = "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview\\aniso3_chaos1\\Output00010.gzip.h5"
 
     file   = h5py.File(filename, 'r')
     phases = file['/VizGrid/compo_hr']
@@ -148,6 +136,12 @@ def main():
               headlength=1.,
               scale=100,
               width=0.0005)
+
+    # Calculate the angles in radians
+    angles_rad = np.arctan2(nzc_masked / n, nxc_masked / n)
+
+    # Convert to degrees
+    angles_deg = np.degrees(angles_rad)
 
     ax.set_ylim(-100, 3)
 
