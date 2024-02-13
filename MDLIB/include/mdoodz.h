@@ -307,7 +307,7 @@ struct MdoodzInput {
   params             model;
   mat_prop           materials;
   scale              scaling;
-  TopoHeight         topoHeight;
+  TopoHeight        *topo_height;
   CrazyConductivity *crazyConductivity;
   Geometry          *geometry;
 };

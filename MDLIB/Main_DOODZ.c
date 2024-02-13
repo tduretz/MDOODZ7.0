@@ -57,11 +57,15 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             .scaling           = inputFile.scaling,
             .materials         = inputFile.materials,
             .crazyConductivity = NULL,
-            .topoHeight        = (TopoHeight){
-                           .east = -0.0e3,
-                           .west = -0.0e3,
-            },
+            .topo_height       = NULL,
     };
+
+    if (input.model.free_surface) {
+      input.topo_height = &(TopoHeight){
+        .east = -0.0e3,
+        .west = -0.0e3,
+      };
+    }
 
     if (setup->MutateInput) {
       setup->MutateInput(&input, setup->mutateInputParams);
@@ -1160,6 +1164,10 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
     // Free arrays
     GridFree( &mesh, &input.model );
+
+    if (input.topo_height) {
+      free(input.topo_height);
+    }
 
     if (input.crazyConductivity) {
         free(input.crazyConductivity->phases);
