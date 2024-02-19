@@ -3,22 +3,33 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 My = 1e6 * 3600 * 24 * 365.25
+last_step = 2958
+base_path = "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview_part\\"
+particle_file_pattern = "Particles{:05d}.gzip.h5"
+x_min, x_max, z_min, z_max = -101000, -100000, -18000, -17000
+
 
 def read_particle_data(filename, indices=None):
     with h5py.File(filename, 'r') as file:
-        # Extract only the data for particles of interest if indices are provided
+        dataset_length = file['Particles/x'].shape[0]
+
+        # Filter indices to ensure they are within bounds, if indices are provided
         if indices is not None:
-            x = np.array(file['Particles/x'][indices])
-            z = np.array(file['Particles/z'][indices])
-            nx = np.array(file['Particles/nx'][indices])
-            nz = np.array(file['Particles/nz'][indices])
+            valid_indices = indices[indices < dataset_length]
+            x = np.array(file['Particles/x'][valid_indices])
+            z = np.array(file['Particles/z'][valid_indices])
+            nx = np.array(file['Particles/nx'][valid_indices])
+            nz = np.array(file['Particles/nz'][valid_indices])
         else:
             x = np.array(file['Particles/x'][:])
             z = np.array(file['Particles/z'][:])
             nx = np.array(file['Particles/nx'][:])
             nz = np.array(file['Particles/nz'][:])
-        t = file['Model/Params'][0].astype(int)
-    return x, z, nx, nz, t
+
+        t = file['Model/Params'][0].astype(float)
+        t_ma = str(round(t/My, 2))
+        
+    return x, z, nx, nz, t_ma
 
 
 def calculate_angles(nx, nz):
@@ -33,27 +44,27 @@ def calculate_angles(nx, nz):
     return angles_deg
 
 
-def main():
-    plt.subplots_adjust(bottom=0.80, left=0.50, top=0.99)
-    base_path = "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview\\particles\\"
-    file_pattern = "Particles{:05d}.gzip.h5"
-    steps = range(0, 12, 2)
+def get_tracked_particles_indices():
+    filename = base_path + particle_file_pattern.format(last_step)
+    x, z, nx, nz, t_ma = read_particle_data(filename, None)
+    initial_indices = (x > x_min) & (x < x_max) & (z > z_min) & (z < z_max)
+    indices = np.where(initial_indices)[0]
+    return indices
 
-    initial_indices = None
+
+def main():
+    indices = get_tracked_particles_indices()
+    steps = range(0, last_step, 2)
+
     positions = []
     mean_positions = []
     angles = []
     all_angles = []
 
     for step in steps:
-        filename = base_path + file_pattern.format(step)
-        x, z, nx, nz, t = read_particle_data(filename, initial_indices)
-        time = str(t/My)
-
-        if initial_indices is None:
-            initial_indices = (x > 5000) & (x < 6000) & (z < -3000) & (z > -4000)
-            initial_indices = (x > 15000) & (x < 16000) & (z < -13000) & (z > -14000)
-            x, z, nx, nz = x[initial_indices], z[initial_indices], nx[initial_indices], nz[initial_indices]
+        print("reading step: " + str(step))
+        filename = base_path + particle_file_pattern.format(step)
+        x, z, nx, nz, t_ma = read_particle_data(filename, indices)
 
         angles_deg = calculate_angles(nx, nz)
 
@@ -64,6 +75,7 @@ def main():
 
     # Assuming all_angles is now a list where each item is an array of angles for each step
     # Plotting
+    plt.subplots_adjust(bottom=0.80, left=0.50, top=0.99)
     fig, axs = plt.subplots(2, 1, figsize=(10, 8))
 
     # Plot x vs z for selected particles
