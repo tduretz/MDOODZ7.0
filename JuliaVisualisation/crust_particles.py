@@ -3,6 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 My = 1e6 * 3600 * 24 * 365.25
+first_step = 0
+step_range = 2
 last_step = 2958
 base_path = "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview_part\\"
 particle_file_pattern = "Particles{:05d}.gzip.h5"
@@ -25,11 +27,15 @@ def read_particle_data(filename, indices=None):
             z = np.array(file['Particles/z'][:])
             nx = np.array(file['Particles/nx'][:])
             nz = np.array(file['Particles/nz'][:])
-
-        t = file['Model/Params'][0].astype(float)
-        t_ma = str(round(t/My, 2))
         
-    return x, z, nx, nz, t_ma
+    return x, z, nx, nz
+
+
+def read_time(filename):
+    with h5py.File(filename, 'r') as file:
+        t = file['Model/Params'][0].astype(float)
+        t_ma = round(t/My, 2)
+    return t_ma
 
 
 def calculate_angles(nx, nz):
@@ -46,25 +52,57 @@ def calculate_angles(nx, nz):
 
 def get_tracked_particles_indices():
     filename = base_path + particle_file_pattern.format(last_step)
-    x, z, nx, nz, t_ma = read_particle_data(filename, None)
+    x, z, nx, nz = read_particle_data(filename, None)
     initial_indices = (x > x_min) & (x < x_max) & (z > z_min) & (z < z_max)
     indices = np.where(initial_indices)[0]
     return indices
 
 
+def select_closest_to_whole_numbers(data):
+    new_dict = {}
+    new_dict[0] = 0.0
+
+    current_value = 0.0
+
+    for key, value in data.items():
+        if value < current_value:
+            continue
+        else:
+            new_dict[key] = value
+            current_value += 1.0
+
+    key, value = data.popitem()
+    new_dict[key] = value
+
+    return new_dict
+
+
 def main():
     indices = get_tracked_particles_indices()
-    steps = range(0, last_step, 2)
+    min_value = np.min(indices)
+    indices = np.array([min_value])
+
+    steps = range(first_step, last_step, step_range)
+
+    my_to_steps = {}
+
+    for step in steps:
+        filename = base_path + particle_file_pattern.format(step)
+        t_ma = read_time(filename)
+        my_to_steps[step] = t_ma
+
+    my_to_steps = select_closest_to_whole_numbers(my_to_steps)
 
     positions = []
     mean_positions = []
     angles = []
     all_angles = []
 
-    for step in steps:
+    for key, value in my_to_steps.items():
+        step = key
         print("reading step: " + str(step))
         filename = base_path + particle_file_pattern.format(step)
-        x, z, nx, nz, t_ma = read_particle_data(filename, indices)
+        x, z, nx, nz = read_particle_data(filename, indices)
 
         angles_deg = calculate_angles(nx, nz)
 
