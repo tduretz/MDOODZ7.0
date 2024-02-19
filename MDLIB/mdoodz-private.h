@@ -573,7 +573,7 @@ void            MinMaxArray(double *array, double scale, int size, char *text);
 
 void            BuildInitialTopography(BuildInitialTopography_ff buildInitialTopography, MdoodzInput *instance, markers *topo_chain);
 void            SetParticles(SetParticles_ff setParticles, MdoodzInput *instance, markers *particles);
-void            SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh, markers *topo_chain);
+void            SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh, surface *topo);
 
 void            ValidateSetup(MdoodzSetup *setup, MdoodzInput *instance);
 

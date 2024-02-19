@@ -176,7 +176,7 @@ void ValidateInternalPoint(POSITION position, char bcType, Coordinates coordinat
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh, markers *topo_chain) {
+void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh, surface *topo) {
   /* --------------------------------------------------------------------------------------------------------*/
   /* Set the BCs for Vx on all grid levels */
   /* Type  0: Dirichlet point that matches the physical boundary (Vx:
@@ -195,10 +195,9 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh, markers *topo_c
   double VxWestSum = 0.0;
   double VxEastSum = 0.0;
 
-  if (instance->topo_height != NULL
-      && topo_chain->Nb_part > 0) {
-    instance->topo_height->west = topo_chain->z[0];
-    instance->topo_height->east = topo_chain->z[topo_chain->Nb_part - 1];
+  if (instance->topo_height != NULL) {
+    instance->topo_height->west = topo->height[0];
+    instance->topo_height->east = topo->height[mesh->Nx - 1];
   }
 
   for (int l = 0; l < mesh->Nz + 1; l++) {
