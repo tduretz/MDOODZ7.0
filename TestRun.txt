@@ -1,0 +1,704 @@
+cd cmake-exec/ShrinkingMarcel_test && ./ShrinkingMarcel_test 
+
+********************************************************
+************ Starting MDOODZ 7.0 simulation ************
+********************************************************
+Warning : Parameter 'writer_subfolder' not found in the setup file, running with default value ./
+Warning : Parameter 'noisy' not found in the setup file, running with default value 1
+Warning : Parameter 'track_T_P_x_z' not found in the setup file, running with default value 0
+Warning : Parameter 'delete_breakpoints' not found in the setup file, running with default value 1
+Warning : Parameter 'import_files_dir' not found in the setup file, running with default value ../../IMPORT
+Warning : Parameter 'import_file' not found in the setup file, running with default value blah.bin
+Warning : Parameter 'save_initial_markers' not found in the setup file, running with default value 0
+Warning : Parameter 'load_initial_markers' not found in the setup file, running with default value 0
+Warning : Parameter 'initial_markers_file' not found in the setup file, running with default value markers.bin
+Warning : Parameter 'balance_boundaries' not found in the setup file, running with default value 0
+Warning : Parameter 'anisotropy' not found in the setup file, running with default value 0
+Warning : Parameter 'polar' not found in the setup file, running with default value 0
+Warning : Parameter 'kinetics' not found in the setup file, running with default value 0
+Warning : Parameter 'out_of_plane' not found in the setup file, running with default value 0
+Warning : Parameter 'max_Pic_its' not found in the setup file, running with default value 10
+Warning : Parameter 'residual_form' not found in the setup file, running with default value 1
+Warning : Parameter 'ani_average' not found in the setup file, running with default value 1
+Warning : Parameter 'interp_stencil' not found in the setup file, running with default value 1
+Warning : Parameter 'conserv_interp' not found in the setup file, running with default value 0
+Warning : Parameter 'direct_neighbour' not found in the setup file, running with default value 0
+Warning : Parameter 'initial_noise' not found in the setup file, running with default value 0
+Warning : Parameter 'marker_noise' not found in the setup file, running with default value 0
+Warning : Parameter 'reseed_markers' not found in the setup file, running with default value 1
+Warning : Parameter 'topo_update' not found in the setup file, running with default value 1
+Warning : Parameter 'surface_processes' not found in the setup file, running with default value 0
+Warning : Parameter 'marker_aniso_angle' not found in the setup file, running with default value 0
+Warning : Parameter 'smooth_softening' not found in the setup file, running with default value 1
+Warning : Parameter 'fix_temperature' not found in the setup file, running with default value 0
+Warning : Parameter 'surf_ised1' not found in the setup file, running with default value 0
+Warning : Parameter 'surf_ised2' not found in the setup file, running with default value 0
+Warning : Parameter 'therm_perturb' not found in the setup file, running with default value 0
+Warning : Parameter 'force_act_vol_ast' not found in the setup file, running with default value 0
+Warning : Parameter 'diffuse_X' not found in the setup file, running with default value 0
+Warning : Parameter 'diffuse_avg' not found in the setup file, running with default value 0
+WARNING!! Changing from solver type 0 to solver type 2!!! That's the new standard in MDOODZ 6.0.
+Warning : Parameter 'deformation_maps' not found in the setup file, running with default value 0
+Warning : Parameter 'plast' not found in the setup file, running with default value 1.00
+Warning : Parameter 'yield' not found in the setup file, running with default value 1.00
+Warning : Parameter 'sig_tens' not found in the setup file, running with default value 1.00e+07
+Warning : Parameter 'sig1' not found in the setup file, running with default value 1.00e+07
+Warning : Parameter 'dsig1' not found in the setup file, running with default value 1.00e+07
+Warning : Parameter 'psi' not found in the setup file, running with default value 0.00
+Warning : Parameter 'coh_soft' not found in the setup file, running with default value 0.00
+Warning : Parameter 'phi_soft' not found in the setup file, running with default value 0.00
+Warning : Parameter 'psi_soft' not found in the setup file, running with default value 0.00
+Warning : Parameter 'Ce' not found in the setup file, running with default value 1.00e+70
+Warning : Parameter 'phie' not found in the setup file, running with default value 10.00
+Warning : Parameter 'psie' not found in the setup file, running with default value 0.00
+0 materials.coh_soft[k]=0  materials.C[k] = 1.00e+70  materials.C_end[k] = 1.00e+70
+Warning : Parameter 'plss' not found in the setup file, running with default value 1.00
+Warning : Parameter 'plse' not found in the setup file, running with default value 2.00
+Warning : Parameter 'eps0' not found in the setup file, running with default value 0.00
+Warning : Parameter 'tau0' not found in the setup file, running with default value 2.00e+06
+Warning : Parameter 'pref_pwl' not found in the setup file, running with default value 1.00
+Warning : Parameter 'gs' not found in the setup file, running with default value 0.00
+Warning : Parameter 'gs_ref' not found in the setup file, running with default value 0.00
+Warning : Parameter 'kin' not found in the setup file, running with default value 0.00
+Warning : Parameter 'phase_diagram' not found in the setup file, running with default value -1.00
+Warning : Parameter 'phase_mix' not found in the setup file, running with default value 0.00
+Warning : Parameter 'phase_mix' not found in the setup file, running with default value 0.00
+Warning : Parameter 'aniso_angle' not found in the setup file, running with default value 90.00
+Warning : Parameter 'aniso_factor' not found in the setup file, running with default value 1.00
+Warning : Parameter 'ani_fac_max' not found in the setup file, running with default value 1.00e+03
+Warning : Parameter 'ani_fstrain' not found in the setup file, running with default value 0.00
+Warning : Parameter 'axx' not found in the setup file, running with default value 1.00
+Warning : Parameter 'azz' not found in the setup file, running with default value 1.00
+Warning : Parameter 'ayy' not found in the setup file, running with default value 1.00
+Warning : Parameter 'transmutation' not found in the setup file, running with default value 0.00
+Warning : Parameter 'transmutation_phase' not found in the setup file, running with default value 1.00
+Warning : Parameter 'transmutation_temperature' not found in the setup file, running with default value 1.40e+03
+----------------------------------------- MODEL DOMAIN ------------------------------------------
+Xmin   = -0.0  km         Xmax   = 0.0  km     Nx   = 201    dx   = 0.01 m
+Zmin   = -0.0  km         Zmax   = 0.0  km      Nz   = 201    dz   = 0.01 m
+-------------------------------------------- PHASE: 0 -------------------------------------------
+rho    = 2.85e+03 kg/m^3     G = 4.00e+10 Pa
+Cv     = 1.05e+03 J/kg/K      k = 2.30e+00 W/m/K      Qr = 0.00e+00 W/m3
+C      = 1.00e+70 Pa        phi = 1.00e+01 deg      Slim = 5.00e+11 Pa
+alp    = 0.00e+00 1/T        T0 = 2.73e+02 K         bet = 1.25e-11 1/Pa       P0 = 1.00e+05 Pa       drho = 0.00e+00 kg/m^3 
+prefactor for power-law: 1.00e+00
+C_end    = 1.00e+70 Pa        Phi_end = 1.00e+01 deg         pls_start = 1.00e+00        pls_end = 2.00e+00 
+eta0_vp   = 5.00e+19  Pa.s^(1/n)         n_vp   = 1.00e+00
+aniso_factor = 1.00e+00 []        aniso_angle = 9.00e+01 deg         ani_fac_max = 1.00e+03 []        ani_fstrain = 0
+Flow law settings:
+--->   Power law viscosity activated 
+'Homemade' power law flow of the form: eta = eta0 * exp(-Q/n/R/T) * Eii^(1/n - 1):
+t = 0  n = 1.0  m = 0.0  r = 0.0  Q = 0.00e+00 J  V = 0.00e+00 m^3  A = 1.00e-07 Pa^-n/s  f = 0.00e+00 Pa  a = 0.0  F = 1.00
+Warning : Parameter 'plast' not found in the setup file, running with default value 1.00
+Warning : Parameter 'yield' not found in the setup file, running with default value 1.00
+Warning : Parameter 'sig_tens' not found in the setup file, running with default value 1.00e+07
+Warning : Parameter 'sig1' not found in the setup file, running with default value 1.00e+07
+Warning : Parameter 'dsig1' not found in the setup file, running with default value 1.00e+07
+Warning : Parameter 'psi' not found in the setup file, running with default value 0.00
+Warning : Parameter 'coh_soft' not found in the setup file, running with default value 0.00
+Warning : Parameter 'phi_soft' not found in the setup file, running with default value 0.00
+Warning : Parameter 'psi_soft' not found in the setup file, running with default value 0.00
+Warning : Parameter 'Ce' not found in the setup file, running with default value 1.00e+70
+Warning : Parameter 'phie' not found in the setup file, running with default value 10.00
+Warning : Parameter 'psie' not found in the setup file, running with default value 0.00
+1 materials.coh_soft[k]=0  materials.C[k] = 1.00e+70  materials.C_end[k] = 1.00e+70
+Warning : Parameter 'plss' not found in the setup file, running with default value 1.00
+Warning : Parameter 'plse' not found in the setup file, running with default value 2.00
+Warning : Parameter 'eps0' not found in the setup file, running with default value 0.00
+Warning : Parameter 'tau0' not found in the setup file, running with default value 2.00e+06
+Warning : Parameter 'pref_pwl' not found in the setup file, running with default value 1.00
+Warning : Parameter 'gs' not found in the setup file, running with default value 0.00
+Warning : Parameter 'gs_ref' not found in the setup file, running with default value 0.00
+Warning : Parameter 'kin' not found in the setup file, running with default value 0.00
+Warning : Parameter 'phase_diagram' not found in the setup file, running with default value -1.00
+Warning : Parameter 'phase_mix' not found in the setup file, running with default value 0.00
+Warning : Parameter 'phase_mix' not found in the setup file, running with default value 1.00
+Warning : Parameter 'aniso_angle' not found in the setup file, running with default value 90.00
+Warning : Parameter 'aniso_factor' not found in the setup file, running with default value 1.00
+Warning : Parameter 'ani_fac_max' not found in the setup file, running with default value 1.00e+03
+Warning : Parameter 'ani_fstrain' not found in the setup file, running with default value 0.00
+Warning : Parameter 'axx' not found in the setup file, running with default value 1.00
+Warning : Parameter 'azz' not found in the setup file, running with default value 1.00
+Warning : Parameter 'ayy' not found in the setup file, running with default value 1.00
+Warning : Parameter 'transmutation' not found in the setup file, running with default value 0.00
+Warning : Parameter 'transmutation_phase' not found in the setup file, running with default value 1.00
+Warning : Parameter 'transmutation_temperature' not found in the setup file, running with default value 1.40e+03
+----------------------------------------- MODEL DOMAIN ------------------------------------------
+Xmin   = -0.0  km         Xmax   = 0.0  km     Nx   = 201    dx   = 0.01 m
+Zmin   = -0.0  km         Zmax   = 0.0  km      Nz   = 201    dz   = 0.01 m
+-------------------------------------------- PHASE: 1 -------------------------------------------
+rho    = 2.85e+03 kg/m^3     G = 4.00e+10 Pa
+Cv     = 1.05e+03 J/kg/K      k = 2.30e+00 W/m/K      Qr = 0.00e+00 W/m3
+C      = 1.00e+70 Pa        phi = 1.00e+01 deg      Slim = 5.00e+11 Pa
+alp    = 0.00e+00 1/T        T0 = 2.73e+02 K         bet = 1.25e-11 1/Pa       P0 = 1.00e+05 Pa       drho = 0.00e+00 kg/m^3 
+prefactor for power-law: 1.00e+00
+C_end    = 1.00e+70 Pa        Phi_end = 1.00e+01 deg         pls_start = 1.00e+00        pls_end = 2.00e+00 
+eta0_vp   = 5.00e+19  Pa.s^(1/n)         n_vp   = 1.00e+00
+aniso_factor = 1.00e+00 []        aniso_angle = 9.00e+01 deg         ani_fac_max = 1.00e+03 []        ani_fstrain = 0
+Flow law settings:
+--->   Power law viscosity activated 
+'Homemade' power law flow of the form: eta = eta0 * exp(-Q/n/R/T) * Eii^(1/n - 1):
+t = 0  n = 1.0  m = 0.0  r = 0.0  Q = 0.00e+00 J  V = 0.00e+00 m^3  A = 1.00e-07 Pa^-n/s  f = 0.00e+00 Pa  a = 0.0  F = 1.00
+Warning : Parameter 'plast' not found in the setup file, running with default value 1.00
+Warning : Parameter 'yield' not found in the setup file, running with default value 1.00
+Warning : Parameter 'sig_tens' not found in the setup file, running with default value 1.00e+07
+Warning : Parameter 'sig1' not found in the setup file, running with default value 1.00e+07
+Warning : Parameter 'dsig1' not found in the setup file, running with default value 1.00e+07
+Warning : Parameter 'psi' not found in the setup file, running with default value 0.00
+Warning : Parameter 'coh_soft' not found in the setup file, running with default value 0.00
+Warning : Parameter 'phi_soft' not found in the setup file, running with default value 0.00
+Warning : Parameter 'psi_soft' not found in the setup file, running with default value 0.00
+Warning : Parameter 'Ce' not found in the setup file, running with default value 1.00e+70
+Warning : Parameter 'phie' not found in the setup file, running with default value 10.00
+Warning : Parameter 'psie' not found in the setup file, running with default value 0.00
+2 materials.coh_soft[k]=0  materials.C[k] = 1.00e+70  materials.C_end[k] = 1.00e+70
+Warning : Parameter 'plss' not found in the setup file, running with default value 1.00
+Warning : Parameter 'plse' not found in the setup file, running with default value 2.00
+Warning : Parameter 'eps0' not found in the setup file, running with default value 0.00
+Warning : Parameter 'tau0' not found in the setup file, running with default value 2.00e+06
+Warning : Parameter 'pref_pwl' not found in the setup file, running with default value 1.00
+Warning : Parameter 'gs' not found in the setup file, running with default value 0.00
+Warning : Parameter 'gs_ref' not found in the setup file, running with default value 0.00
+Warning : Parameter 'kin' not found in the setup file, running with default value 0.00
+Warning : Parameter 'phase_diagram' not found in the setup file, running with default value -1.00
+Warning : Parameter 'phase_mix' not found in the setup file, running with default value 0.00
+Warning : Parameter 'phase_mix' not found in the setup file, running with default value 2.00
+Warning : Parameter 'aniso_angle' not found in the setup file, running with default value 90.00
+Warning : Parameter 'aniso_factor' not found in the setup file, running with default value 1.00
+Warning : Parameter 'ani_fac_max' not found in the setup file, running with default value 1.00e+03
+Warning : Parameter 'ani_fstrain' not found in the setup file, running with default value 0.00
+Warning : Parameter 'axx' not found in the setup file, running with default value 1.00
+Warning : Parameter 'azz' not found in the setup file, running with default value 1.00
+Warning : Parameter 'ayy' not found in the setup file, running with default value 1.00
+Warning : Parameter 'transmutation' not found in the setup file, running with default value 0.00
+Warning : Parameter 'transmutation_phase' not found in the setup file, running with default value 1.00
+Warning : Parameter 'transmutation_temperature' not found in the setup file, running with default value 1.40e+03
+----------------------------------------- MODEL DOMAIN ------------------------------------------
+Xmin   = -0.0  km         Xmax   = 0.0  km     Nx   = 201    dx   = 0.01 m
+Zmin   = -0.0  km         Zmax   = 0.0  km      Nz   = 201    dz   = 0.01 m
+-------------------------------------------- PHASE: 2 -------------------------------------------
+rho    = 2.85e+03 kg/m^3     G = 4.00e+10 Pa
+Cv     = 1.05e+03 J/kg/K      k = 2.30e+00 W/m/K      Qr = 0.00e+00 W/m3
+C      = 1.00e+70 Pa        phi = 1.00e+01 deg      Slim = 5.00e+11 Pa
+alp    = 0.00e+00 1/T        T0 = 2.73e+02 K         bet = 1.25e-11 1/Pa       P0 = 1.00e+05 Pa       drho = 0.00e+00 kg/m^3 
+prefactor for power-law: 1.00e+00
+C_end    = 1.00e+70 Pa        Phi_end = 1.00e+01 deg         pls_start = 1.00e+00        pls_end = 2.00e+00 
+eta0_vp   = 5.00e+19  Pa.s^(1/n)         n_vp   = 1.00e+00
+aniso_factor = 1.00e+00 []        aniso_angle = 9.00e+01 deg         ani_fac_max = 1.00e+03 []        ani_fstrain = 0
+Flow law settings:
+--->   Power law viscosity activated 
+'Homemade' power law flow of the form: eta = eta0 * exp(-Q/n/R/T) * Eii^(1/n - 1):
+t = 0  n = 1.0  m = 0.0  r = 0.0  Q = 0.00e+00 J  V = 0.00e+00 m^3  A = 1.00e-07 Pa^-n/s  f = 0.00e+00 Pa  a = 0.0  F = 1.00
+Warning : Parameter 'plast' not found in the setup file, running with default value 1.00
+Warning : Parameter 'yield' not found in the setup file, running with default value 1.00
+Warning : Parameter 'sig_tens' not found in the setup file, running with default value 1.00e+07
+Warning : Parameter 'sig1' not found in the setup file, running with default value 1.00e+07
+Warning : Parameter 'dsig1' not found in the setup file, running with default value 1.00e+07
+Warning : Parameter 'psi' not found in the setup file, running with default value 0.00
+Warning : Parameter 'coh_soft' not found in the setup file, running with default value 0.00
+Warning : Parameter 'phi_soft' not found in the setup file, running with default value 0.00
+Warning : Parameter 'psi_soft' not found in the setup file, running with default value 0.00
+Warning : Parameter 'Ce' not found in the setup file, running with default value 1.00e+70
+Warning : Parameter 'phie' not found in the setup file, running with default value 10.00
+Warning : Parameter 'psie' not found in the setup file, running with default value 0.00
+3 materials.coh_soft[k]=0  materials.C[k] = 1.00e+70  materials.C_end[k] = 1.00e+70
+Warning : Parameter 'plss' not found in the setup file, running with default value 1.00
+Warning : Parameter 'plse' not found in the setup file, running with default value 2.00
+Warning : Parameter 'eps0' not found in the setup file, running with default value 0.00
+Warning : Parameter 'tau0' not found in the setup file, running with default value 2.00e+06
+Warning : Parameter 'pref_pwl' not found in the setup file, running with default value 1.00
+Warning : Parameter 'gs' not found in the setup file, running with default value 0.00
+Warning : Parameter 'gs_ref' not found in the setup file, running with default value 0.00
+Warning : Parameter 'kin' not found in the setup file, running with default value 0.00
+Warning : Parameter 'phase_diagram' not found in the setup file, running with default value -1.00
+Warning : Parameter 'phase_mix' not found in the setup file, running with default value 0.00
+Warning : Parameter 'phase_mix' not found in the setup file, running with default value 3.00
+Warning : Parameter 'aniso_angle' not found in the setup file, running with default value 90.00
+Warning : Parameter 'aniso_factor' not found in the setup file, running with default value 1.00
+Warning : Parameter 'ani_fac_max' not found in the setup file, running with default value 1.00e+03
+Warning : Parameter 'ani_fstrain' not found in the setup file, running with default value 0.00
+Warning : Parameter 'axx' not found in the setup file, running with default value 1.00
+Warning : Parameter 'azz' not found in the setup file, running with default value 1.00
+Warning : Parameter 'ayy' not found in the setup file, running with default value 1.00
+Warning : Parameter 'transmutation' not found in the setup file, running with default value 0.00
+Warning : Parameter 'transmutation_phase' not found in the setup file, running with default value 1.00
+Warning : Parameter 'transmutation_temperature' not found in the setup file, running with default value 1.40e+03
+----------------------------------------- MODEL DOMAIN ------------------------------------------
+Xmin   = -0.0  km         Xmax   = 0.0  km     Nx   = 201    dx   = 0.01 m
+Zmin   = -0.0  km         Zmax   = 0.0  km      Nz   = 201    dz   = 0.01 m
+-------------------------------------------- PHASE: 3 -------------------------------------------
+rho    = 3.25e+03 kg/m^3     G = 4.00e+10 Pa
+Cv     = 1.05e+03 J/kg/K      k = 2.30e+00 W/m/K      Qr = 0.00e+00 W/m3
+C      = 1.00e+70 Pa        phi = 1.00e+01 deg      Slim = 5.00e+11 Pa
+alp    = 0.00e+00 1/T        T0 = 2.73e+02 K         bet = 1.25e-11 1/Pa       P0 = 1.00e+05 Pa       drho = 0.00e+00 kg/m^3 
+prefactor for power-law: 1.00e+00
+C_end    = 1.00e+70 Pa        Phi_end = 1.00e+01 deg         pls_start = 1.00e+00        pls_end = 2.00e+00 
+eta0_vp   = 5.00e+19  Pa.s^(1/n)         n_vp   = 1.00e+00
+aniso_factor = 1.00e+00 []        aniso_angle = 9.00e+01 deg         ani_fac_max = 1.00e+03 []        ani_fstrain = 0
+Flow law settings:
+--->   Power law viscosity activated 
+'Homemade' power law flow of the form: eta = eta0 * exp(-Q/n/R/T) * Eii^(1/n - 1):
+t = 0  n = 1.0  m = 0.0  r = 0.0  Q = 0.00e+00 J  V = 0.00e+00 m^3  A = 1.00e-07 Pa^-n/s  f = 0.00e+00 Pa  a = 0.0  F = 1.00
+Phase 0 ---  density model 3 
+Phase 1 ---  density model 3 
+Phase 2 ---  density model 3 
+Phase 3 ---  density model 3 
+*************************************
+****** Allocate and initialise ******
+*************************************
+Allocation of grid arrays !
+Memory succesfully allocated : 
+Diantre, que c'est bon!
+Num threads = 001
+*************************************
+******* Initialize particles ********
+*************************************
+VxWestSum: 0.002000, VxEastSum: -0.002000
+VzWestSum: 0.000000, VzEastSum: 0.000000: 
+total West+East+South sum: 0.002000
+SetBCs: Boundary conditions were set up
+Initial particle spacing : dxm = 0.002500 dzm = 0.002500 m
+Initial number of particles = 640000
+min(Vxp init) = -9.9875000000e-16 max(Vxp init) = 9.9875000000e-16
+min(Vzp init) = -9.9875000000e-16 max(Vzp init) = 9.9875000000e-16
+min(Tp init) = 2.7315000000e+02 max(Tp init) = 2.7315000000e+02
+USING NEW PART IN CELL
+min(Vx. grid) = 0.0000000000e+00 max(Vx. grid) = 0.0000000000e+00
+min(Vz. grid) = 0.0000000000e+00 max(Vz. grid) = 0.0000000000e+00
+min(       P) = 0.0000000000e+00 max(       P) = 0.0000000000e+00
+VxWestSum: 0.002000, VxEastSum: -0.002000
+VzWestSum: 0.000000, VzEastSum: 0.000000: 
+total West+East+South sum: 0.002000
+SetBCs: Boundary conditions were set up
+Velocity field was set to background pure shear
+min(Vx. grid) = -1.0000000000e-15 max(Vx. grid) = 1.0000000000e-15
+min(Vz. grid) = -1.0000000000e-15 max(Vz. grid) = 1.0000000000e-15
+min(       P) = 2.0000000000e+09 max(       P) = 2.0000000000e+09
+*************************************
+****** Initialize temperature *******
+*************************************
+VxWestSum: 0.002000, VxEastSum: -0.002000
+VzWestSum: 0.000000, VzEastSum: 0.000000: 
+total West+East+South sum: 0.002000
+SetBCs: Boundary conditions were set up
+*************************************
+******** Initialize stresses ********
+*************************************
+         ****** set preloaded values ******
+*************************************
+******** Initialize pressure ********
+*************************************
+min(P initial ) = 2.0000000000e+09 max(P initial ) = 2.0000000000e+09
+min(P initial ) = 2.0000000000e+09 max(P initial ) = 2.0000000000e+09
+min(P initial ) = 2.0000000000e+09 max(P initial ) = 2.0000000000e+09
+min(P initial ) = 2.0000000000e+09 max(P initial ) = 2.0000000000e+09
+min(P initial ) = 2.0000000000e+09 max(P initial ) = 2.0000000000e+09
+min(P initial ) = 2.0000000000e+09 max(P initial ) = 2.0000000000e+09
+min(P initial ) = 2.0000000000e+09 max(P initial ) = 2.0000000000e+09
+min(P initial ) = 2.0000000000e+09 max(P initial ) = 2.0000000000e+09
+min(P initial ) = 2.0000000000e+09 max(P initial ) = 2.0000000000e+09
+min(P initial ) = 2.0000000000e+09 max(P initial ) = 2.0000000000e+09
+*************************************
+******* Initialize grain size *******
+*************************************
+*************************************
+******** Initialize density *********
+*************************************
+*************************************
+****** Initialize composition *******
+*************************************
+*************************************
+******* Initialize viscosity ********
+*************************************
+Number of phases : 4
+min(d0        ) = 2.0000000000e-03 max(d0        ) = 2.0000000000e-03
+min(d         ) = 2.0000000000e-03 max(d         ) = 2.0000000000e-03
+min(P litho   ) = 2.0000000000e+09 max(P litho   ) = 2.0000000000e+09
+min(P old     ) = 2.0000000000e+09 max(P old     ) = 2.0000000000e+09
+min(P         ) = 2.0000000000e+09 max(P         ) = 2.0000000000e+09
+min(T         ) = 2.7315000000e+02 max(T         ) = 2.7315000000e+02
+min(mu_s      ) = 4.0000000000e+10 max(mu_s      ) = 4.0000000000e+10
+min(mu_n      ) = 4.0000000000e+10 max(mu_n      ) = 4.0000000000e+10
+min(eta_s     ) = 1.0000000000e+10 max(eta_s     ) = 1.0000000000e+10
+min(eta_n     ) = 1.0000000000e+10 max(eta_n     ) = 1.0000000000e+10
+min(eta_phys_s) = 1.0000000000e+10 max(eta_phys_s) = 1.0000000000e+10
+min(eta_phys_n) = 1.0000000000e+10 max(eta_phys_n) = 1.0000000000e+10
+min(rho_s     ) = 2.9221480935e+03 max(rho_s     ) = 2.9221480935e+03
+min(rho_n     ) = 2.9221480935e+03 max(rho_n     ) = 3.2682078983e+03
+min(X_n       ) = 0.0000000000e+00 max(X_n       ) = 8.4378889438e-01
+min(X0_n      ) = 0.0000000000e+00 max(X0_n      ) = 0.0000000000e+00
+min(X0_s      ) = 0.0000000000e+00 max(X0_s      ) = 0.0000000000e+00
+min(X part) = 0.0000000000e+00 max(X part) = 0.0000000000e+00
+Phase number 0:
+min(ph_n      ) = 0.0000000000e+00 max(ph_n      ) = 1.0000000000e+00
+min(ph_s      ) = 0.0000000000e+00 max(ph_s      ) = 1.0000000000e+00
+Phase number 1:
+min(ph_n      ) = 0.0000000000e+00 max(ph_n      ) = 1.0000000000e+00
+min(ph_s      ) = 0.0000000000e+00 max(ph_s      ) = 1.0000000000e+00
+Phase number 2:
+min(ph_n      ) = 0.0000000000e+00 max(ph_n      ) = 0.0000000000e+00
+min(ph_s      ) = 0.0000000000e+00 max(ph_s      ) = 0.0000000000e+00
+Phase number 3:
+min(ph_n      ) = 0.0000000000e+00 max(ph_n      ) = 0.0000000000e+00
+min(ph_s      ) = 0.0000000000e+00 max(ph_s      ) = 0.0000000000e+00
+*************************************
+******** Initialize timestep ********
+*************************************
+Setting initial dt to minimum Maxwell time: 2.50e-01
+min. Maxwell = 2.50e-01 s, max. Maxwell = 2.50e-01 s
+Suggested dt = 2.50e-01 s, VE dt = 2.50e-01 s
+Initial timestep = 2.50e-01 s
+*************************************
+*** Write initial file or restart ***
+*************************************
+*****************************************************
+****************** Time step 00001 ******************
+*****************************************************
+Transmutated particles = 000
+[32mNumber of particles     = 640000
+[0mMin Vxm = -1.00e-15 m/s / Max Vxm = 1.00e-15 m/s
+Min Vzm = -1.00e-15 m/s / Max Vzm = 1.00e-15 m/s
+Courant number = 2.00e-01 --- dtc     = 2.00e+12
+Do not allow for large time step increase: dt0 = 2.50e-01 
+Timestep limited by advection
+Current dt = 3.12e-01 s / Courant dt = 3.12e-01 s
+Selected dt = 3.12e-01
+---> Detecting compressible cells
+---> 40000 compressibles cells detected
+min(d0        ) = 2.0000000000e-03 max(d0        ) = 2.0000000000e-03
+min(d         ) = 2.0000000000e-03 max(d         ) = 2.0000000000e-03
+min(sxxd part  ) = 5.0000000000e+08 max(sxxd part  ) = 5.0000000000e+08
+min(T part    ) = 2.7315000000e+02 max(T part    ) = 2.7315000000e+02
+min(p0_n) = 2.0000000000e+09 max(p0_n) = 2.0000000000e+09
+min(sxz0    ) = 0.0000000000e+00 max(sxz0    ) = 0.0000000000e+00
+min(sxx0    ) = 5.0000000000e+08 max(sxx0    ) = 5.0000000000e+08
+min(szz0    ) = 5.0000000000e+08 max(szz0    ) = 5.0000000000e+08
+min(mu_s    ) = 4.0000000000e+10 max(mu_s    ) = 4.0000000000e+10
+min(mu_n    ) = 4.0000000000e+10 max(mu_n    ) = 4.0000000000e+10
+min(C_s     ) = 1.0000000000e+70 max(C_s     ) = 1.0000000000e+70
+min(C_n     ) = 1.0000000000e+70 max(C_n     ) = 1.0000000000e+70
+min(fric_s  ) = 1.0000000000e+01 max(fric_s  ) = 1.0000000000e+01
+min(fric_n  ) = 1.0000000000e+01 max(fric_n  ) = 1.0000000000e+01
+min(dil_s   ) = 0.0000000000e+00 max(dil_s   ) = 0.0000000000e+00
+min(dil_n   ) = 0.0000000000e+00 max(dil_n   ) = 0.0000000000e+00
+min(strain_s) = 0.0000000000e+00 max(strain_s) = 0.0000000000e+00
+min(strain_n) = 0.0000000000e+00 max(strain_n) = 0.0000000000e+00
+min(beta_s  ) = 1.2500000000e-11 max(beta_s  ) = 1.2500000000e-11
+min(beta_n  ) = 1.2500000000e-11 max(beta_n  ) = 1.2500000000e-11
+min(T0      ) = 2.7315000000e+02 max(T0      ) = 2.7315000000e+02
+min(T       ) = 2.7315000000e+02 max(T       ) = 2.7315000000e+02
+min(P       ) = 2.0000000000e+09 max(P       ) = 2.0000000000e+09
+min(comp_cells) = 1 max(comp_cells) = 1
+min(rho_s     ) = 2.9221480935e+03 max(rho_s     ) = 3.2682078983e+03
+min(rho_n     ) = 2.9221480935e+03 max(rho_n     ) = 3.2682078983e+03
+min(rho0_n    ) = 2.9221480935e+03 max(rho0_n    ) = 2.9221480935e+03
+min(X0_s      ) = 0.0000000000e+00 max(X0_s      ) = 0.0000000000e+00
+min(X0_n      ) = 0.0000000000e+00 max(X0_n      ) = 0.0000000000e+00
+Phase number 0:
+min(ph_n      ) = 0.0000000000e+00 max(ph_n      ) = 1.0000000000e+00
+min(ph_s      ) = 0.0000000000e+00 max(ph_s      ) = 1.0000000000e+00
+Phase number 1:
+min(ph_n      ) = 0.0000000000e+00 max(ph_n      ) = 1.0000000000e+00
+min(ph_s      ) = 0.0000000000e+00 max(ph_s      ) = 1.0000000000e+00
+Phase number 2:
+min(ph_n      ) = 0.0000000000e+00 max(ph_n      ) = 0.0000000000e+00
+min(ph_s      ) = 0.0000000000e+00 max(ph_s      ) = 0.0000000000e+00
+Phase number 3:
+min(ph_n      ) = 0.0000000000e+00 max(ph_n      ) = 0.0000000000e+00
+min(ph_s      ) = 0.0000000000e+00 max(ph_s      ) = 0.0000000000e+00
+** Time for particles interpolations I = 0.197227 sec
+VxWestSum: 0.002000, VxEastSum: -0.002000
+VzWestSum: 0.000000, VzEastSum: 0.000000: 
+total West+East+South sum: 0.002000
+SetBCs: Boundary conditions were set up
+Velocity field was set to background pure shear
+Linear systems allocated
+neq_tot = 119600, neq_mom = 79600, neq_cont = 40000
+Run CHOLMOD analysis yes/no: 1 
+**********************************************
+*** Picard it. 00 of 30 (step = 00001) on 016 threads ***
+**********************************************
+min(T         ) = 2.7315000000e+02 max(T         ) = 2.7315000000e+02
+min(P old     ) = 2.0000000000e+09 max(P old     ) = 2.0000000000e+09
+min(P         ) = 2.0000000000e+09 max(P         ) = 2.0000000000e+09
+min(div       ) = -1.6940658945e-29 max(div       ) = 1.6940658945e-29
+min(exxd      ) = -1.0000000000e-15 max(exxd      ) = -1.0000000000e-15
+min(ezzd      ) = 1.0000000000e-15 max(ezzd      ) = 1.0000000000e-15
+min(exz       ) = 0.0000000000e+00 max(exz       ) = 0.0000000000e+00
+min(sxxd      ) = 4.0000000000e+08 max(sxxd      ) = 4.0000000000e+08
+min(szzd      ) = 4.0000000000e+08 max(szzd      ) = 4.0000000000e+08
+min(sxz       ) = 0.0000000000e+00 max(sxz       ) = 0.0000000000e+00
+min(eta_s     ) = 1.0000000000e+10 max(eta_s     ) = 1.0000000000e+10
+min(eta_n     ) = 1.0000000000e+10 max(eta_n     ) = 1.0000000000e+10
+min(eta_phys_s) = 1.0000000000e+10 max(eta_phys_s) = 1.0000000000e+10
+min(eta_phys_n) = 1.0000000000e+10 max(eta_phys_n) = 1.0000000000e+10
+min(rho_s     ) = 2.9221480935e+03 max(rho_s     ) = 3.2682078983e+03
+min(rho_n     ) = 2.9221480935e+03 max(rho_n     ) = 2.9221480935e+03
+min(rho0_n    ) = 2.9221480935e+03 max(rho0_n    ) = 2.9221480935e+03
+min(d         ) = 2.0000000000e-03 max(d         ) = 2.0000000000e-03
+min(X_s     ) = 0.0000000000e+00 max(X_s     ) = 8.3555367725e-11
+min(X_n     ) = 0.0000000000e+00 max(X_n     ) = 8.3555367725e-11
+Number of momentum equations: 79600
+---- Non-linear residual ----
+Fu abs. = 4.412238e-15 --- Fu rel. = 1.000000e+00
+Fv abs. = 4.755138e-15 --- Fv rel. = 1.000000e+00
+Fp abs. = 3.298896e-06 --- Fp rel. = 1.000000e+00
+---- Non-linear residual ----
+---- Solve Stokes in a decoupled/segregated fashion and defect correction mode, lin_solver = 2 ----
+Killer solver...
+Preparing Matrices...
+Penalty factor = 4.00e+06
+Construct preconditioner:   PC  = 1/2 * (J'+ J)
+Compute Schur complement 1:  Jt  = J  - grad*(PPI*div)
+Compute Schur complement 2:  Jts = PC - grad*(PPI*div)
+Cholesky factors of Jts...
+** Time for Cholesky analysis = 0.433468 sec
+Powell-Hestenes iterations, noisy = 1...
+Initial residual:
+Fu = 4.586893e-15
+Fp = 3.298896e-06
+PH comp it. 0. its_KSP = 01: max. cont. = 5.29e-23 - rel. max. div. = 1.00e+00 / max. mom. = 1.24e-21 - rel. max. mom. = 1.00e+00
+PH comp it. 1. its_KSP = 01: max. cont. = 0.00e+00 - rel. max. div. = 0.00e+00 / max. mom. = 6.53e-22 - rel. max. mom. = 5.28e-01
+PH comp it. 2. its_KSP = 01: max. cont. = 0.00e+00 - rel. max. div. = 0.00e+00 / max. mom. = 7.21e-22 - rel. max. mom. = 5.83e-01
+** PH - iterations = 0.857229 sec - its_KSP_tot = 03
+Fu = 5.904833e-23
+Fv = 5.956773e-23
+Fp = 0.000000e+00
+** Time for direct Stokes solver = 0.874838 sec
+---- Line search for decoupled Stokes equations ----
+[1;34mAlpha[m = -0.000000 --> rx = 4.4122e-15 rz = 4.7551e-15 rp = 3.2989e-06
+[1;34mAlpha[m = -0.500000 --> rx = 7.5586e-15 rz = 7.6601e-15 rp = 1.6494e-06
+[1;34mAlpha[m = -1.000000 --> rx = 4.9634e-15 rz = 4.8336e-15 rp = 7.7629e-09
+[1;34mAlpha[m = -1.500000 --> rx = 9.1114e-15 rz = 9.0753e-15 rp = 1.6496e-06
+[1;34mAlpha[m = -2.000000 --> rx = 5.8116e-15 rz = 7.8548e-15 rp = 3.2991e-06
+[1;34mAlpha[m = -2.500000 --> rx = 1.0388e-14 rz = 1.0428e-14 rp = 4.9486e-06
+[1;34mPredicted Residuals[m : alpha  = -1.000000 --> rx = 4.9634e-15 rz = 4.8336e-15 rp = 7.7629e-09
+** Line search took = 0.955470 sec
+input.model.Newton = 0 --- 0
+**********************************************
+*** Picard it. 01 of 30 (step = 00001) on 016 threads ***
+**********************************************
+min(T         ) = 2.7315000000e+02 max(T         ) = 2.7315000000e+02
+min(P old     ) = 2.0000000000e+09 max(P old     ) = 2.0000000000e+09
+min(P         ) = 1.9999999997e+09 max(P         ) = 2.0000000000e+09
+min(div       ) = -2.3716103447e-11 max(div       ) = 7.6611923318e-13
+min(exxd      ) = -1.0868142076e-11 max(exxd      ) = 1.1121512825e-11
+min(ezzd      ) = -1.0866140644e-11 max(ezzd      ) = 1.1123513917e-11
+min(exz       ) = -8.0480814522e-12 max(exz       ) = 1.3949259419e-11
+min(sxxd      ) = 3.9999999978e+08 max(sxxd      ) = 4.0000000022e+08
+min(szzd      ) = 3.9999999978e+08 max(szzd      ) = 4.0000000022e+08
+min(sxz       ) = -1.6096162904e-01 max(sxz       ) = 2.7898518837e-01
+min(eta_s     ) = 1.0000000000e+10 max(eta_s     ) = 1.0000000000e+10
+min(eta_n     ) = 1.0000000000e+10 max(eta_n     ) = 1.0000000000e+10
+min(eta_phys_s) = 1.0000000000e+10 max(eta_phys_s) = 1.0000000000e+10
+min(eta_phys_n) = 1.0000000000e+10 max(eta_phys_n) = 1.0000000000e+10
+min(rho_s     ) = 2.9221480935e+03 max(rho_s     ) = 3.2682078983e+03
+min(rho_n     ) = 2.9221480935e+03 max(rho_n     ) = 2.9221480935e+03
+min(rho0_n    ) = 2.9221480935e+03 max(rho0_n    ) = 2.9221480935e+03
+min(d         ) = 2.0000000000e-03 max(d         ) = 2.0000000000e-03
+min(X_s     ) = 0.0000000000e+00 max(X_s     ) = 8.3555367713e-11
+min(X_n     ) = 0.0000000000e+00 max(X_n     ) = 8.3555367709e-11
+Number of momentum equations: 79600
+---- Non-linear residual ----
+Fu abs. = 4.963389e-15 --- Fu rel. = 1.124914e+00
+Fv abs. = 4.833638e-15 --- Fv rel. = 1.016509e+00
+Fp abs. = 7.762895e-09 --- Fp rel. = 2.353180e-03
+---- Non-linear residual ----
+---- Solve Stokes in a decoupled/segregated fashion and defect correction mode, lin_solver = 2 ----
+Killer solver...
+Preparing Matrices...
+Penalty factor = 4.00e+06
+Construct preconditioner:   PC  = 1/2 * (J'+ J)
+Compute Schur complement 1:  Jt  = J  - grad*(PPI*div)
+Compute Schur complement 2:  Jts = PC - grad*(PPI*div)
+Cholesky factors of Jts...
+Powell-Hestenes iterations, noisy = 1...
+Initial residual:
+Fu = 4.898943e-15
+Fp = 7.762895e-09
+PH comp it. 0. its_KSP = 01: max. cont. = 1.65e-24 - rel. max. div. = 1.00e+00 / max. mom. = 5.36e-25 - rel. max. mom. = 1.00e+00
+PH comp it. 1. its_KSP = 01: max. cont. = 0.00e+00 - rel. max. div. = 0.00e+00 / max. mom. = 2.78e-25 - rel. max. mom. = 5.18e-01
+PH comp it. 2. its_KSP = 01: max. cont. = 0.00e+00 - rel. max. div. = 0.00e+00 / max. mom. = 3.30e-25 - rel. max. mom. = 6.14e-01
+** PH - iterations = 0.495379 sec - its_KSP_tot = 03
+Fu = 2.902468e-26
+Fv = 3.006329e-26
+Fp = 0.000000e+00
+** Time for direct Stokes solver = 0.513833 sec
+---- Line search for decoupled Stokes equations ----
+[1;34mAlpha[m = -0.000000 --> rx = 4.9634e-15 rz = 4.8336e-15 rp = 7.7629e-09
+[1;34mAlpha[m = -0.500000 --> rx = 1.2496e-14 rz = 1.2544e-14 rp = 3.5393e-09
+[1;34mAlpha[m = -1.000000 --> rx = 7.0466e-15 rz = 7.4386e-15 rp = 3.7853e-09
+[1;34mAlpha[m = -1.500000 --> rx = 1.3311e-14 rz = 1.3390e-14 rp = 3.7664e-09
+[1;34mAlpha[m = -2.000000 --> rx = 9.5495e-15 rz = 9.5963e-15 rp = 1.4968e-08
+[1;34mAlpha[m = -2.500000 --> rx = 1.6496e-14 rz = 1.6228e-14 rp = 1.5064e-08
+[1;34mPredicted Residuals[m : alpha  = -0.500000 --> rx = 1.2496e-14 rz = 1.2544e-14 rp = 3.5393e-09
+** Line search took = 0.588482 sec
+input.model.Newton = 0 --- 1
+**********************************************
+*** Newton it. 02 of 30 (step = 00001) on 016 threads ***
+**********************************************
+min(T         ) = 2.7315000000e+02 max(T         ) = 2.7315000000e+02
+min(P old     ) = 2.0000000000e+09 max(P old     ) = 2.0000000000e+09
+min(P         ) = 1.9999999997e+09 max(P         ) = 2.0000000000e+09
+min(div       ) = -2.3710804509e-11 max(div       ) = 7.6593599452e-13
+min(exxd      ) = -1.0867554888e-11 max(exxd      ) = 1.1120861002e-11
+min(ezzd      ) = -1.0865549785e-11 max(ezzd      ) = 1.1122865509e-11
+min(exz       ) = -8.0458996198e-12 max(exz       ) = 1.3945369588e-11
+min(sxxd      ) = 3.9999999978e+08 max(sxxd      ) = 4.0000000022e+08
+min(szzd      ) = 3.9999999978e+08 max(szzd      ) = 4.0000000022e+08
+min(sxz       ) = -1.6091799240e-01 max(sxz       ) = 2.7890739176e-01
+min(eta_s     ) = 1.0000000000e+10 max(eta_s     ) = 1.0000000000e+10
+min(eta_n     ) = 1.0000000000e+10 max(eta_n     ) = 1.0000000000e+10
+min(eta_phys_s) = 1.0000000000e+10 max(eta_phys_s) = 1.0000000000e+10
+min(eta_phys_n) = 1.0000000000e+10 max(eta_phys_n) = 1.0000000000e+10
+min(rho_s     ) = 2.9221480935e+03 max(rho_s     ) = 3.2682078983e+03
+min(rho_n     ) = 2.9221480935e+03 max(rho_n     ) = 2.9221480935e+03
+min(rho0_n    ) = 2.9221480935e+03 max(rho0_n    ) = 2.9221480935e+03
+min(d         ) = 2.0000000000e-03 max(d         ) = 2.0000000000e-03
+min(X_s     ) = 0.0000000000e+00 max(X_s     ) = 8.3555367713e-11
+min(X_n     ) = 0.0000000000e+00 max(X_n     ) = 8.3555367709e-11
+Number of momentum equations: 79600
+---- Non-linear residual ----
+Fu abs. = 1.249632e-14 --- Fu rel. = 2.832195e+00
+Fv abs. = 1.254389e-14 --- Fv rel. = 2.637965e+00
+Fp abs. = 3.539259e-09 --- Fp rel. = 1.072862e-03
+---- Non-linear residual ----
+---- Solve Stokes in a decoupled/segregated fashion and defect correction mode, lin_solver = 2 ----
+Killer solver...
+Preparing Matrices...
+Penalty factor = 4.00e+06
+Construct preconditioner:   PC  = 1/2 * (J'+ J)
+Compute Schur complement 1:  Jt  = J  - grad*(PPI*div)
+Compute Schur complement 2:  Jts = PC - grad*(PPI*div)
+Cholesky factors of Jts...
+** Time for Cholesky analysis = 0.909565 sec
+Powell-Hestenes iterations, noisy = 1...
+Initial residual:
+Fu = 1.252013e-14
+Fp = 3.539259e-09
+PH comp it. 0. its_KSP = 02: max. cont. = 8.27e-25 - rel. max. div. = 1.00e+00 / max. mom. = 8.04e-15 - rel. max. mom. = 1.00e+00
+PH comp it. 1. its_KSP = 02: max. cont. = 8.27e-25 - rel. max. div. = 1.00e+00 / max. mom. = 2.28e-19 - rel. max. mom. = 2.84e-05
+PH comp it. 2. its_KSP = 02: max. cont. = 4.14e-25 - rel. max. div. = 5.00e-01 / max. mom. = 2.14e-23 - rel. max. mom. = 2.66e-09
+** PH - iterations = 0.799232 sec - its_KSP_tot = 06
+Fu = 2.434197e-25
+Fv = 2.495852e-25
+Fp = 6.858619e-27
+** Time for direct Stokes solver = 1.829930 sec
+---- Line search for decoupled Stokes equations ----
+[1;34mAlpha[m = -0.000000 --> rx = 1.2496e-14 rz = 1.2544e-14 rp = 3.5393e-09
+[1;34mAlpha[m = -0.200000 --> rx = 1.1710e-14 rz = 1.1743e-14 rp = 3.5012e-09
+[1;34mAlpha[m = -0.400000 --> rx = 1.1016e-14 rz = 1.1031e-14 rp = 3.4719e-09
+[1;34mAlpha[m = -0.600000 --> rx = 1.0451e-14 rz = 1.0474e-14 rp = 7.7397e-09
+[1;34mAlpha[m = -0.800000 --> rx = 7.8611e-15 rz = 7.9228e-15 rp = 7.7644e-09
+[1;34mAlpha[m = -1.000000 --> rx = 8.5879e-15 rz = 8.9604e-15 rp = 7.7908e-09
+[1;34mPredicted Residuals[m : alpha  = -0.400000 --> rx = 1.1016e-14 rz = 1.1031e-14 rp = 3.4719e-09
+** Line search took = 0.934472 sec
+input.model.Newton = 1 --- 1
+**********************************************
+*** Newton it. 03 of 30 (step = 00001) on 016 threads ***
+**********************************************
+min(T         ) = 2.7315000000e+02 max(T         ) = 2.7315000000e+02
+min(P old     ) = 2.0000000000e+09 max(P old     ) = 2.0000000000e+09
+min(P         ) = 1.9999999997e+09 max(P         ) = 2.0000000000e+09
+min(div       ) = -2.3713688324e-11 max(div       ) = 7.6602832090e-13
+min(exxd      ) = -1.0867716270e-11 max(exxd      ) = 1.1121056094e-11
+min(ezzd      ) = -1.0865714466e-11 max(ezzd      ) = 1.1123057758e-11
+min(exz       ) = -8.0467676444e-12 max(exz       ) = 1.3947197242e-11
+min(sxxd      ) = 3.9999999978e+08 max(sxxd      ) = 4.0000000022e+08
+min(szzd      ) = 3.9999999978e+08 max(szzd      ) = 4.0000000022e+08
+min(sxz       ) = -1.6093535289e-01 max(sxz       ) = 2.7894394484e-01
+min(eta_s     ) = 1.0000000000e+10 max(eta_s     ) = 1.0000000000e+10
+min(eta_n     ) = 1.0000000000e+10 max(eta_n     ) = 1.0000000000e+10
+min(eta_phys_s) = 1.0000000000e+10 max(eta_phys_s) = 1.0000000000e+10
+min(eta_phys_n) = 1.0000000000e+10 max(eta_phys_n) = 1.0000000000e+10
+min(rho_s     ) = 2.9221480935e+03 max(rho_s     ) = 3.2682078983e+03
+min(rho_n     ) = 2.9221480935e+03 max(rho_n     ) = 2.9221480935e+03
+min(rho0_n    ) = 2.9221480935e+03 max(rho0_n    ) = 2.9221480935e+03
+min(d         ) = 2.0000000000e-03 max(d         ) = 2.0000000000e-03
+min(X_s     ) = 0.0000000000e+00 max(X_s     ) = 8.3555367713e-11
+min(X_n     ) = 0.0000000000e+00 max(X_n     ) = 8.3555367709e-11
+Number of momentum equations: 79600
+---- Non-linear residual ----
+Fu abs. = 1.101573e-14 --- Fu rel. = 2.496632e+00
+Fv abs. = 1.103127e-14 --- Fv rel. = 2.319863e+00
+Fp abs. = 3.471947e-09 --- Fp rel. = 1.052457e-03
+---- Non-linear residual ----
+---- Solve Stokes in a decoupled/segregated fashion and defect correction mode, lin_solver = 2 ----
+Killer solver...
+Preparing Matrices...
+Penalty factor = 4.00e+06
+Construct preconditioner:   PC  = 1/2 * (J'+ J)
+Compute Schur complement 1:  Jt  = J  - grad*(PPI*div)
+Compute Schur complement 2:  Jts = PC - grad*(PPI*div)
+Cholesky factors of Jts...
+Powell-Hestenes iterations, noisy = 1...
+Initial residual:
+Fu = 1.102350e-14
+Fp = 3.471947e-09
+PH comp it. 0. its_KSP = 02: max. cont. = 4.14e-25 - rel. max. div. = 1.00e+00 / max. mom. = 1.97e-14 - rel. max. mom. = 1.00e+00
+PH comp it. 1. its_KSP = 02: max. cont. = 8.27e-25 - rel. max. div. = 2.00e+00 / max. mom. = 3.67e-18 - rel. max. mom. = 1.87e-04
+PH comp it. 2. its_KSP = 02: max. cont. = 4.14e-25 - rel. max. div. = 1.00e+00 / max. mom. = 1.21e-21 - rel. max. mom. = 6.12e-08
+** PH - iterations = 0.502711 sec - its_KSP_tot = 06
+Fu = 1.278049e-23
+Fv = 1.256878e-23
+Fp = 1.194119e-26
+** Time for direct Stokes solver = 1.532827 sec
+---- Line search for decoupled Stokes equations ----
+[1;34mAlpha[m = -0.000000 --> rx = 1.1016e-14 rz = 1.1031e-14 rp = 3.4719e-09
+[1;34mAlpha[m = -0.200000 --> rx = 1.0593e-14 rz = 1.0602e-14 rp = 7.7340e-09
+[1;34mAlpha[m = -0.400000 --> rx = 1.0399e-14 rz = 1.0401e-14 rp = 7.7522e-09
+[1;34mAlpha[m = -0.600000 --> rx = 1.0141e-14 rz = 1.0255e-14 rp = 7.7711e-09
+[1;34mAlpha[m = -0.800000 --> rx = 9.0580e-15 rz = 9.3831e-15 rp = 7.7924e-09
+[1;34mAlpha[m = -1.000000 --> rx = 1.0528e-14 rz = 1.0585e-14 rp = 7.8141e-09
+[1;34mPredicted Residuals[m : alpha  = -0.000000 --> rx = 1.1016e-14 rz = 1.1031e-14 rp = 3.4719e-09
+Found minimum of the function -- cannot iterate further down
+Stagnating...
+!** Line search took = 0.639096 sec
+[1;31mWARNING : Non-linear solver stagnated (nonlin_abs_mom = 1.00e-09 nonlin_abs_div = 1.00e-09)[m
+[1;31mWARNING : Non-linear solver stagnated (nonlin_rel_mom = 1.00e-09 nonlin_rel_div = 1.00e-09)[m
+[1;31mReducing the timestep, and restart the iterations cycle...[m
+Before reduction: input.model.dt =, 3.12e-01
+Timestep divided by 2.00 => NEW CURRENT input.model.dt =, 1.56e-01
+Restart solutions
+nstag value = 01 - max_num_stag = 10
+**********************************************
+*** Newton it. 00 of 30 (step = 00001) on 016 threads ***
+**********************************************
+min(T         ) = 2.7315000000e+02 max(T         ) = 2.7315000000e+02
+min(P old     ) = 2.0000000000e+09 max(P old     ) = 2.0000000000e+09
+min(P         ) = 2.0000000000e+09 max(P         ) = 2.0000000000e+09
+min(div       ) = -1.6940658945e-29 max(div       ) = 1.6940658945e-29
+min(exxd      ) = -1.0000000000e-15 max(exxd      ) = -1.0000000000e-15
+min(ezzd      ) = 1.0000000000e-15 max(ezzd      ) = 1.0000000000e-15
+min(exz       ) = 0.0000000000e+00 max(exz       ) = 0.0000000000e+00
+min(sxxd      ) = 8.0000000000e+08 max(sxxd      ) = 8.0000000000e+08
+min(szzd      ) = 8.0000000000e+08 max(szzd      ) = 8.0000000000e+08
+min(sxz       ) = 0.0000000000e+00 max(sxz       ) = 0.0000000000e+00
+min(eta_s     ) = 1.0000000000e+10 max(eta_s     ) = 1.0000000000e+10
+min(eta_n     ) = 1.0000000000e+10 max(eta_n     ) = 1.0000000000e+10
+min(eta_phys_s) = 1.0000000000e+10 max(eta_phys_s) = 1.0000000000e+10
+min(eta_phys_n) = 1.0000000000e+10 max(eta_phys_n) = 1.0000000000e+10
+min(rho_s     ) = 2.9221480935e+03 max(rho_s     ) = 3.2682078983e+03
+min(rho_n     ) = 2.9221480935e+03 max(rho_n     ) = 2.9221480935e+03
+min(rho0_n    ) = 2.9221480935e+03 max(rho0_n    ) = 2.9221480935e+03
+min(d         ) = 2.0000000000e-03 max(d         ) = 2.0000000000e-03
+min(X_s     ) = 0.0000000000e+00 max(X_s     ) = 4.1777683865e-11
+min(X_n     ) = 0.0000000000e+00 max(X_n     ) = 4.1777683865e-11
+Number of momentum equations: 79600
+---- Non-linear residual ----
+Fu abs. = 8.508155e-15 --- Fu rel. = 1.000000e+00
+Fv abs. = 7.623295e-15 --- Fv rel. = 1.000000e+00
+Fp abs. = 3.300879e-06 --- Fp rel. = 1.000000e+00
+---- Non-linear residual ----
+---- Solve Stokes in a decoupled/segregated fashion and defect correction mode, lin_solver = 2 ----
+Killer solver...
+Preparing Matrices...
+Penalty factor = 4.00e+06
+Construct preconditioner:   PC  = 1/2 * (J'+ J)
+Compute Schur complement 1:  Jt  = J  - grad*(PPI*div)
+Compute Schur complement 2:  Jts = PC - grad*(PPI*div)
+Cholesky factors of Jts...
+CHOLMOD warning: matrix not positive definite. file: /tmp/suite-sparse-20240125-4352-4573qi/SuiteSparse-7.6.0/CHOLMOD/Supernodal/t_cholmod_super_numeric_worker.c line: 1090
+CHOLDMOD failed because the matrix is not positive definite...
+MDoodz7.0 has to stop...
+Viscosity or diagonal elements of the tangent matrix are probably negative!

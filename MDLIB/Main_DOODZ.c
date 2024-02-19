@@ -227,22 +227,14 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         printf("******** Initialize stresses ********\n");
         printf("*************************************\n");
         
-        if ( input.model.preload == 0 ){
-	        printf("         ****** no preloaded values ******\n");
-            // Set initial stresses to zero
-            Initialise1DArrayDouble( mesh.sxxd,  (mesh.Nx-1)*(mesh.Nz-1), 0.0 );
-            Initialise1DArrayDouble( mesh.szzd,  (mesh.Nx-1)*(mesh.Nz-1), 0.0 );
-            Initialise1DArrayDouble( mesh.sxz,   (mesh.Nx)  *(mesh.Nz)  , 0.0 );
-        }
-        else {
-	        printf("         ****** set preloaded values ******\n");
-            Initialise1DArrayDouble( mesh.sxxd,  (mesh.Nx-1)*(mesh.Nz-1), input.model.preload_sxxd );
-            Initialise1DArrayDouble( mesh.szzd,  (mesh.Nx-1)*(mesh.Nz-1), input.model.preload_szzd );
-            Initialise1DArrayDouble( mesh.sxz,   (mesh.Nx)  *(mesh.Nz)  , input.model.preload_sxz);
-            Initialise1DArrayDouble( particles.sxxd,      particles.Nb_part, input.model.preload_sxxd );
-            Initialise1DArrayDouble( particles.szzd,      particles.Nb_part, input.model.preload_szzd );
-            Initialise1DArrayDouble( particles.sxz,       particles.Nb_part, input.model.preload_sxz );
-        }
+        // stresses on particles should have been set in SetParticles, so here we only have to interpolate to the mesh
+        P2Mastah( &input.model, particles, particles.sxxd0,   &mesh, mesh.sxxd, mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil);
+        P2Mastah( &input.model, particles, particles.szzd0,   &mesh, mesh.szzd, mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil);
+        P2Mastah( &input.model, particles, particles.sxz0,    &mesh, mesh.sxz,  mesh.BCg.type,  1, 0, interp, vert, input.model.interp_stencil);
+
+        // P2Mastah( &input.model, particles, particles.sxxd,    &mesh, mesh.sxxd, mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil);
+        // P2Mastah( &input.model, particles, particles.szzd,    &mesh, mesh.szzd, mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil);
+        //P2Mastah( &input.model, particles, particles.sxz,     &mesh, mesh.sxz,  mesh.BCg.type,  1, 0, interp, vert, input.model.interp_stencil);
 
 
         printf("*************************************\n");
