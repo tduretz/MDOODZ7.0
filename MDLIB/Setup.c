@@ -97,6 +97,16 @@ void SetParticles(SetParticles_ff setParticles, MdoodzInput *instance, markers *
     } else {
       particles->P[np] = 0.0;
     }
+    if (setParticles.SetTxx) {
+      particles->sxxd[np] = setParticles.SetTxx(instance, coordinates, particles->phase[np]);
+    } else {
+      particles->sxxd[np] = 0.0;
+    }
+    if (setParticles.SetTzz) {
+      particles->szzd[np] = setParticles.SetTzz(instance, coordinates, particles->phase[np]);
+    } else {
+      particles->szzd[np] = 0.0;
+    }    
     if (setParticles.SetNoise) {
       particles->noise[np] = setParticles.SetNoise(instance, coordinates, particles->phase[np]);
     } else {
