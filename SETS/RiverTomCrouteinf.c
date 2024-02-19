@@ -131,6 +131,8 @@ SetBC SetBCVz(MdoodzInput *instance, POSITION position, Coordinates coordinates)
   const double Vz_corr   = surf_Winc*surf_Vinc / Lx;
   const double VzS = (-0.5 * V_tot * (instance->topo_height->west - instance->model.zmin) / Lx) -(0.5 * V_tot * (instance->topo_height->east - instance->model.zmin) / Lx) + Vz_corr;
 
+// printf("topo_height->west = %2.2e --- topo_height->east = %2.2e ", instance->topo_height->west, instance->topo_height->east);
+
   // Set boundary nodes types and values
   if (position == W || position == SW || position == NW ) {
     bc.type  = constant_shear_stress;

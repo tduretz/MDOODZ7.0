@@ -111,8 +111,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
     markers particles = PartAlloc(inputFile.particles, &input.model );
 
     // Allocate marker chain
-    markers       topo_chain, topo_chain_ini;
-    topo_chain.Nb_part = 0;
+    markers      topo_chain, topo_chain_ini;
     surface      topo, topo_ini;
     if (input.model.free_surface == 1 ) AllocateMarkerChain( &topo,     &topo_chain, input.model );
     if (input.model.free_surface == 1 ) AllocateMarkerChain( &topo_ini, &topo_chain_ini, input.model );
@@ -137,7 +136,8 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         }
 
         // Initial grid tags
-        SetBCs(*setup->SetBCs, &input, &mesh, &topo_chain);
+        SetBCs(*setup->SetBCs, &input, &mesh, &topo);
+
         if (input.model.free_surface == 1 ) {
 
             // Define the horizontal position of the surface marker chain
@@ -199,7 +199,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
           printf("Running with crazy conductivity for the asthenosphere!!\n");
         }
         // Initial solution fields
-        SetBCs(*setup->SetBCs, &input, &mesh, &topo_chain);
+        SetBCs(*setup->SetBCs, &input, &mesh, &topo);
 
         if (input.model.mechanical == 1) {
             InitialiseSolutionFields( &mesh, &input.model );
@@ -225,7 +225,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         P2Mastah( &input.model, particles, input.materials.Cv,    &mesh, mesh.Cv, mesh.BCp.type,  0, 0, interp, cent, 1);
         P2Mastah( &input.model, particles, input.materials.Qr,    &mesh, mesh.Qr, mesh.BCp.type,  0, 0, interp, cent, 1);
 
-        SetBCs(*setup->SetBCs, &input, &mesh, &topo_chain);
+        SetBCs(*setup->SetBCs, &input, &mesh, &topo);
         if (input.model.initial_cooling == 1 ) ThermalSteps( &mesh, input.model,  mesh.rhs_t, &particles, input.model.cooling_duration, input.scaling );
         if (input.model.therm_perturb == 1 ) SetThermalPert( &mesh, input.model, input.scaling );
         Interp_Grid2P_centroids2( particles, particles.T,    &mesh, mesh.T, mesh.xvz_coord,  mesh.zvx_coord,  mesh.Nx-1, mesh.Nz-1, mesh.BCt.type, &input.model );
@@ -593,7 +593,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                 printf("Running with normal conductivity for the asthenosphere...\n");
             }
             // Allocate and initialise solution and RHS vectors
-            SetBCs(*setup->SetBCs, &input, &mesh, &topo_chain);
+            SetBCs(*setup->SetBCs, &input, &mesh, &topo);
 
             // Reset fields and BC values if needed
             //        if ( input.model.pure_shear_ALE == 1 ) InitialiseSolutionFields( &mesh, &input.model );
