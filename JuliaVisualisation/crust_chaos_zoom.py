@@ -19,7 +19,7 @@ def main():
     fig, ax = plt.subplots(figsize=(12, 8))
     plt.subplots_adjust(bottom=0.80, left=0.50, top=0.99)
 
-    filename = "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview\\aniso3_chaos1\\Output00010.gzip.h5"
+    filename = "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview_part\\aniso3_chaos1\\Output02960.gzip.h5"
 
     file   = h5py.File(filename, 'r')
     phases = file['/VizGrid/compo_hr']
