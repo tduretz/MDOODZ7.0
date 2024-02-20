@@ -129,7 +129,14 @@ SetBC SetBCVz(MdoodzInput *instance, POSITION position, Coordinates coordinates)
   const double surf_Winc = instance->model.surf_Winc;
   const double surf_Vinc = instance->model.surf_Vinc;
   const double Vz_corr   = surf_Winc*surf_Vinc / Lx;
-  const double VzS = (-0.5 * V_tot * (instance->topo_height->west - instance->model.zmin) / Lx) -(0.5 * V_tot * (instance->topo_height->east - instance->model.zmin) / Lx) + Vz_corr;
+  const double hW        = instance->topo_height->west - instance->model.zmin;
+  const double hE        = instance->topo_height->east - instance->model.zmin;
+  const double VzS       = -0.5 * V_tot * (hW + hE) / Lx + Vz_corr;
+
+  // Here we need the total inflow flux: ncell_W * dz * VxW + ncell_E * dz * VxE
+  // ncell_W is the number of Vx points for which we apply a BC value on the west 
+  // ncell_E is the number of Vx points for which we apply a BC value on the east
+  // Then:  VzS = -(ncell_W * dz * VxW + ncell_E * dz * VxE)/Lx + Vz_corr
 
 // printf("topo_height->west = %2.2e --- topo_height->east = %2.2e ", instance->topo_height->west, instance->topo_height->east);
 
