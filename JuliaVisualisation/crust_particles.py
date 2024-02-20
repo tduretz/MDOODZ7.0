@@ -116,12 +116,24 @@ def main():
     plt.subplots_adjust(bottom=0.80, left=0.50, top=0.99)
     fig, axs = plt.subplots(2, 1, figsize=(10, 8))
 
-    # Plot x vs z for selected particles
-    mean_x, mean_z = zip(*mean_positions)
-    axs[0].plot(mean_x, mean_z, '-o', markersize=4, label='Mean Trajectory')
+    steps_for_positions = list(my_to_steps.keys())
+
+    # Plotting mean x vs z for selected particles with annotations
+    for i, (x, z) in enumerate(mean_positions):
+        # Plot each point
+        axs[0].plot(x, z, 'o', markersize=4)
+
+        # Annotate each point with its corresponding time value from my_to_steps
+        step = steps_for_positions[i]  # Get the step corresponding to this position
+        time_ma = my_to_steps[step]  # Get the time in Ma for this step
+        axs[0].annotate(f'{time_ma} Ma', (x, z), textcoords="offset points", xytext=(0,10), ha='center')
+
+    # Set titles and labels
     axs[0].set_title('Mean Particle Trajectory (x vs z)')
     axs[0].set_xlabel('Mean x')
     axs[0].set_ylabel('Mean z')
+
+    # Add a legend
     axs[0].legend()
 
     # Plot angle changes Assuming angles is a list of numpy arrays, where each array contains angles for all tracked
@@ -129,7 +141,7 @@ def main():
     mean_angles_per_step = [np.mean(angle_array) for angle_array in angles]
 
     # Correcting the plotting call
-    axs[1].plot(steps, mean_angles_per_step, '-o', markersize=4)
+    axs[1].plot(my_to_steps.keys(), mean_angles_per_step, '-o', markersize=4)
     axs[1].set_title('Particle Angle Changes')
     axs[1].set_xlabel('Step')
     axs[1].set_ylabel('Angle (degrees)')
@@ -138,7 +150,7 @@ def main():
     # For each particle, plot its angle change across steps
     for particle_index in range(len(all_angles[0])):
         particle_angles = [step_angles[particle_index] for step_angles in all_angles]
-        axs[1].plot(steps, particle_angles, '-o', markersize=4)
+        axs[1].plot(my_to_steps.keys(), particle_angles, '-o', markersize=4)
 
     plt.tight_layout()
     plt.show()
