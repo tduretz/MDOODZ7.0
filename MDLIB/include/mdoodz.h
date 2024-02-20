@@ -185,6 +185,9 @@ typedef double (*SetPorosity_f)(MdoodzInput *input, Coordinates coordinates, int
 typedef double (*SetDensity_f)(MdoodzInput *input, Coordinates coordinates, int phase);
 typedef double (*SetXComponent_f)(MdoodzInput *input, Coordinates coordinates, int phase);
 typedef double (*SetPressure_f)(MdoodzInput *input, Coordinates coordinates, int phase);
+typedef double (*SetTxx_f)(MdoodzInput *input, Coordinates coordinates, int phase);
+typedef double (*SetTzz_f)(MdoodzInput *input, Coordinates coordinates, int phase);
+typedef double (*SetTxz_f)(MdoodzInput *input, Coordinates coordinates, int phase);
 typedef double (*SetNoise_f)(MdoodzInput *input, Coordinates coordinates, int phase);
 typedef double (*SetAnisoAngle_f)(MdoodzInput *input, Coordinates coordinates, int phase);
 typedef Tensor2D (*SetDefGrad_f)(MdoodzInput *input, Coordinates coordinates, int phase);
@@ -195,6 +198,9 @@ typedef struct {
   SetPhase_f              SetPhase;
   SetDualPhase_f          SetDualPhase;
   SetPressure_f           SetPressure;
+  SetTxx_f                SetTxx;
+  SetTzz_f                SetTzz;
+  SetTxz_f                SetTxz;
   SetNoise_f              SetNoise;
   SetTemperature_f        SetTemperature;
   SetGrainSize_f          SetGrainSize;
