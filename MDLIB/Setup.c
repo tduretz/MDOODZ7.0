@@ -391,6 +391,10 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh, surface *topo) 
     free(newBoundary);
   }
 
+  // override by integrated velocity values
+  instance->topo_height->west = VxWestSum*mesh->dz;
+  instance->topo_height->east = VxEastSum*mesh->dz;
+
   /* --------------------------------------------------------------------------------------------------------*/
   /* Set the BCs for Vz on all grid levels */
   /* Type  0: Dirichlet point that matches the physical boundary (Vx:
