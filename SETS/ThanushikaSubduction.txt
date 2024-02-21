@@ -178,7 +178,7 @@ density_model = 2                   / Material dependent buoyancy calculation: 2
 phase_diagram = 4                   / Hydrated peridotite
 
 ID     = 4                          / Continental crust
-rho    = 2850.00
+rho    = 2600.00
 G      = 1e10
 Cv     = 1050
 k      = 2.3 
@@ -195,7 +195,7 @@ linv   = 0
 gbsv   = 0
 expv   = 0
 gsel   = 0
-eta0   = 5e20
+eta0   = 1e18
 npwl   = 1
 Qpwl   = 0
 gs_ref = 5e-3
