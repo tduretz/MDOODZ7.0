@@ -1,6 +1,6 @@
 import Pkg
 Pkg.activate(normpath(joinpath(@__DIR__, ".")))
-using HDF5, GLMakie, Printf, Colors, ColorSchemes, MathTeXEngine, LinearAlgebra
+using HDF5, CairoMakie, Printf, Colors, ColorSchemes, MathTeXEngine, LinearAlgebra
 Makie.update_theme!(fonts = (regular = texfont(), bold = texfont(:bold), italic = texfont(:italic)))
 Makie.inline!(false)
 
@@ -15,21 +15,23 @@ function main()
     # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/qcoe_x100/"
     # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/qcoe_chk/"
     # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/1_NR07/"
-    path = "/Users/lcandiot/Developer/MDOODZ7.0/RUNS/ThanushikaSubduction/test_steepSubd/"
+    # path = "/Users/lcandiot/Developer/MDOODZ7.0/RUNS/ThanushikaSubduction/test_steepSubd/"
+    path ="/home/thanushika/software/MDOODZ7.0/cmake-exec/ThanushikaSubduction/"
+    # path ="/home/thanushika/software/Results/Trial2/Results_Density_OC2.97/"
     
     # File numbers
-    file_start = 800
-    file_step  = 25
-    file_end   = 800
+    file_start = 0
+    file_step  = 50
+    file_end   = 1000
     
     # Select field to visualise
-    field = :Phases
+    #field = :Phases
     # field = :Density
     # field = :Viscosity 
     # field = :PlasticStrainrate
     # field = :Stress
     # field = :StrainRate
-    # field = :Pressure
+    field = :Pressure
     # field = :Temperature
     # field = :Velocity_x
     # field = :Velocity_z
@@ -40,7 +42,7 @@ function main()
     # field = :AnisotropyFactor
 
     # Switches
-    printfig    = false  # print figures to disk
+    printfig    = true  # print figures to disk
     ph_contours = false  # add phase contours
     T_contours  = true  # add temperature contours
     fabric      = false  # add fabric quiver (normal to director)
@@ -172,8 +174,8 @@ function main()
                 arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
             end            
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
-            GLMakie.Colorbar(f[1, 2], hm, label = "Phases", width = 20, labelsize = 25, ticklabelsize = 14 )
-            GLMakie.colgap!(f.layout, 20)
+            CairoMakie.Colorbar(f[1, 2], hm, label = "Phases", width = 20, labelsize = 25, ticklabelsize = 14 )
+            CairoMakie.colgap!(f.layout, 20)
             if printfig Print2Disk( f, path, string(field), istep) end
         end
 
@@ -193,8 +195,8 @@ function main()
                 arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
             end            
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
-            GLMakie.Colorbar(f[1, 2], hm, label = L"$\eta$ [Pa.s]", width = 20, labelsize = 25, ticklabelsize = 14 )
-            GLMakie.colgap!(f.layout, 20)
+            CairoMakie.Colorbar(f[1, 2], hm, label = L"$\eta$ [Pa.s]", width = 20, labelsize = 25, ticklabelsize = 14 )
+            CairoMakie.colgap!(f.layout, 20)
             if printfig Print2Disk( f, path, string(field), istep) end
         end
 
@@ -214,8 +216,8 @@ function main()
                 arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
             end            
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
-            GLMakie.Colorbar(f[1, 2], hm, label = L"$\rho$ [kg.m$^{-3}$]", width = 20, labelsize = 25, ticklabelsize = 14 )
-            GLMakie.colgap!(f.layout, 20)
+            CairoMakie.Colorbar(f[1, 2], hm, label = L"$\rho$ [kg.m$^{-3}$]", width = 20, labelsize = 25, ticklabelsize = 14 )
+            CairoMakie.colgap!(f.layout, 20)
             if printfig Print2Disk( f, path, string(field), istep) end
         end
 
@@ -235,8 +237,8 @@ function main()
                 arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
             end         
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
-            GLMakie.Colorbar(f[1, 2], hm, label = L"$\tau_\textrm{II}$ [Pa]", width = 20, labelsize = 25, ticklabelsize = 14 )
-            GLMakie.colgap!(f.layout, 20)
+            CairoMakie.Colorbar(f[1, 2], hm, label = L"$\tau_\textrm{II}$ [Pa]", width = 20, labelsize = 25, ticklabelsize = 14 )
+            CairoMakie.colgap!(f.layout, 20)
             if printfig Print2Disk( f, path, string(field), istep) end
         end
 
@@ -256,8 +258,8 @@ function main()
                 arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
             end  
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
-            GLMakie.Colorbar(f[1, 2], hm, label =  L"$P$ [s$^{-1}$]", width = 20, labelsize = 25, ticklabelsize = 14 )
-            GLMakie.colgap!(f.layout, 20)
+            CairoMakie.Colorbar(f[1, 2], hm, label =  L"$P$ [s$^{-1}$]", width = 20, labelsize = 25, ticklabelsize = 14 )
+            CairoMakie.colgap!(f.layout, 20)
             if printfig Print2Disk( f, path, string(field), istep) end
         end
 
@@ -277,8 +279,8 @@ function main()
                 arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
             end  
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
-            GLMakie.Colorbar(f[1, 2], hm, label =  L"$T$ [C]", width = 20, labelsize = 25, ticklabelsize = 14 )
-            GLMakie.colgap!(f.layout, 20)
+            CairoMakie.Colorbar(f[1, 2], hm, label =  L"$T$ [C]", width = 20, labelsize = 25, ticklabelsize = 14 )
+            CairoMakie.colgap!(f.layout, 20)
             if printfig Print2Disk( f, path, string(field), istep) end
         end
 
@@ -298,8 +300,8 @@ function main()
                 arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
             end  
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
-            GLMakie.Colorbar(f[1, 2], hm, label =  L"$\dot{\varepsilon}_\textrm{II}$ [s$^{-1}$]", width = 20, labelsize = 25, ticklabelsize = 14 )
-            GLMakie.colgap!(f.layout, 20)
+            CairoMakie.Colorbar(f[1, 2], hm, label =  L"$\dot{\varepsilon}_\textrm{II}$ [s$^{-1}$]", width = 20, labelsize = 25, ticklabelsize = 14 )
+            CairoMakie.colgap!(f.layout, 20)
             if printfig Print2Disk( f, path, string(field), istep) end
         end
 
@@ -319,8 +321,8 @@ function main()
                 arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
             end  
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
-            GLMakie.Colorbar(f[1, 2], hm, label = L"$\dot{\varepsilon}_\textrm{II}^\textrm{pl}$ [s$^{-1}$]", width = 20, labelsize = 25, ticklabelsize = 14 )
-            GLMakie.colgap!(f.layout, 20)
+            CairoMakie.Colorbar(f[1, 2], hm, label = L"$\dot{\varepsilon}_\textrm{II}^\textrm{pl}$ [s$^{-1}$]", width = 20, labelsize = 25, ticklabelsize = 14 )
+            CairoMakie.colgap!(f.layout, 20)
             if printfig Print2Disk( f, path, string(field), istep) end
         end
 
@@ -344,8 +346,8 @@ function main()
             xlims!(ax1, 0., 3.e-3)
             ylims!(ax1, 0., 3.e-3)
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
-            GLMakie.Colorbar(f[1, 2], hm, label = L"$V$ [m.s$^{-1}$]", width = 20, labelsize = 25, ticklabelsize = 14 )
-            GLMakie.colgap!(f.layout, 20)
+            CairoMakie.Colorbar(f[1, 2], hm, label = L"$V$ [m.s$^{-1}$]", width = 20, labelsize = 25, ticklabelsize = 14 )
+            CairoMakie.colgap!(f.layout, 20)
             if printfig Print2Disk( f, path, string(field), istep) end
         end
 
@@ -365,8 +367,8 @@ function main()
                 arrows!(ax1, xc, zc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
             end  
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
-            GLMakie.Colorbar(f[1, 2], hm, label = L"$Vx$ [cm.yr$^{-1}$]", width = 20, labelsize = 25, ticklabelsize = 14 )
-            GLMakie.colgap!(f.layout, 20)
+            CairoMakie.Colorbar(f[1, 2], hm, label = L"$Vx$ [cm.yr$^{-1}$]", width = 20, labelsize = 25, ticklabelsize = 14 )
+            CairoMakie.colgap!(f.layout, 20)
             if printfig Print2Disk( f, path, string(field), istep) end
         end
 
@@ -386,8 +388,8 @@ function main()
                 arrows!(ax1, xc, zc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
             end  
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
-            GLMakie.Colorbar(f[1, 2], hm, label = L"$Vz$ [cm.yr$^{-1}$]", width = 20, labelsize = 25, ticklabelsize = 14 )
-            GLMakie.colgap!(f.layout, 20)
+            CairoMakie.Colorbar(f[1, 2], hm, label = L"$Vz$ [cm.yr$^{-1}$]", width = 20, labelsize = 25, ticklabelsize = 14 )
+            CairoMakie.colgap!(f.layout, 20)
             if printfig Print2Disk( f, path, string(field), istep) end
         end
 
@@ -413,8 +415,8 @@ function main()
             xlims!(ax1, -0.4, 0.4)
             ylims!(ax1, -0.17, 0.17)
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
-            GLMakie.Colorbar(f[1, 2], hm, label = "d", width = 20, labelsize = 25, ticklabelsize = 14 )
-            GLMakie.colgap!(f.layout, 20)
+            CairoMakie.Colorbar(f[1, 2], hm, label = "d", width = 20, labelsize = 25, ticklabelsize = 14 )
+            CairoMakie.colgap!(f.layout, 20)
             if printfig Print2Disk( f, path, string(field), istep) end
         end
 
@@ -440,8 +442,8 @@ function main()
             # xlims!(ax1, -0.4, 0.4)
             # ylims!(ax1, -0.17, 0.17)
             # colsize!(f.layout, 1, Aspect(1, Lx/Lz))
-            GLMakie.Colorbar(f[1, 2], hm, label = L"$δ_\textrm{ani}$", width = 20, labelsize = 25, ticklabelsize = 14 )
-            GLMakie.colgap!(f.layout, 20)
+            CairoMakie.Colorbar(f[1, 2], hm, label = L"$δ_\textrm{ani}$", width = 20, labelsize = 25, ticklabelsize = 14 )
+            CairoMakie.colgap!(f.layout, 20)
             if printfig Print2Disk( f, path, string(field), istep) end
         end
 
