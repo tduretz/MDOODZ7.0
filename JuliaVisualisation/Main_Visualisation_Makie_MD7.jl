@@ -18,9 +18,9 @@ function main()
     path = "/Users/lcandiot/Developer/MDOODZ7.0/RUNS/ThanushikaSubduction/test_steepSubd/"
     
     # File numbers
-    file_start = 800
+    file_start = 00
     file_step  = 25
-    file_end   = 800
+    file_end   = 00
     
     # Select field to visualise
     field = :Phases
