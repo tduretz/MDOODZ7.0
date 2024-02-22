@@ -134,7 +134,7 @@ SetBC SetBCVz(MdoodzInput *instance, POSITION position, Coordinates coordinates)
   // const double VzS       = -0.5 * V_tot * (hW + hE) / Lx + Vz_corr;
   const double VxW_H     = instance->topo_height->west;
   const double VxE_H     = instance->topo_height->east;
-  const double VzS       = -(fabs(VxW_H) + fabs(VxE_H))/Lx + 2*Vz_corr;
+  const double VzS       = -(fabs(VxW_H) + fabs(VxE_H))/Lx + Vz_corr;
 
   // Here we need the total inflow flux: ncell_W * dz * VxW + ncell_E * dz * VxE
   // ncell_W is the number of Vx points for which we apply a BC value on the west 
