@@ -396,7 +396,7 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh, surface *topo) 
     instance->topo_height->west = VxWestSum*mesh->dz;
     instance->topo_height->east = VxEastSum*mesh->dz;
   }
-
+  
   /* --------------------------------------------------------------------------------------------------------*/
   /* Set the BCs for Vz on all grid levels */
   /* Type  0: Dirichlet point that matches the physical boundary (Vx:
@@ -468,8 +468,8 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh, surface *topo) 
     }
   }
 
-  printf("VzWestSum: %f, VzEastSum: %f: \n", VzWestSum, VzEastSum);
-  printf("total West+East+South sum: %f\n", VxWestSum + VxEastSum - VzSouthSum);
+  printf("VxWestSum*dx: %f, VxEastSum*dx: %f, VzEastSum*dz: %f: \n", VxWestSum*mesh->dz, VxEastSum*mesh->dz, VzSouthSum*mesh->dx);
+  printf("Total West+East+South sum: %f\n", fabs(VxWestSum*mesh->dz) + fabs(VxEastSum*mesh->dz)  - fabs(VzSouthSum*mesh->dx) );
 
   if (instance->model.balance_boundaries && (VzSouthSum > tolerance || VzSouthSum < -tolerance)) {
     int zeroValuesCount = 0;

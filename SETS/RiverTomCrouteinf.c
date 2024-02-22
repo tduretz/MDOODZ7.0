@@ -102,7 +102,7 @@ SetBC SetBCVx(MdoodzInput *instance, POSITION position, Coordinates coordinates)
   // Assign BC values
   if (position == N || position == S || position == NW || position == SW || position == NE || position == SE) {
     bc.type  = constant_shear_stress;
-    bc.value = 0;
+    bc.value = 0.0;
   } else if (position == W) {
     bc.type  = constant_velocity;
     bc.value = VxW;
@@ -134,15 +134,12 @@ SetBC SetBCVz(MdoodzInput *instance, POSITION position, Coordinates coordinates)
   // const double VzS       = -0.5 * V_tot * (hW + hE) / Lx + Vz_corr;
   const double VxW_H     = instance->topo_height->west;
   const double VxE_H     = instance->topo_height->east;
-  const double VzS       = -(fabs(VxW_H) + fabs(VxE_H))/Lx + Vz_corr;
-
+  const double VzS       = -(fabs(VxW_H) + fabs(VxE_H))/Lx + 2*Vz_corr;
 
   // Here we need the total inflow flux: ncell_W * dz * VxW + ncell_E * dz * VxE
   // ncell_W is the number of Vx points for which we apply a BC value on the west 
   // ncell_E is the number of Vx points for which we apply a BC value on the east
   // Then:  VzS = -(ncell_W * dz * VxW + ncell_E * dz * VxE)/Lx + Vz_corr
-
-// printf("topo_height->west = %2.2e --- topo_height->east = %2.2e ", instance->topo_height->west, instance->topo_height->east);
 
   // Set boundary nodes types and values
   if (position == W || position == SW || position == NW ) {
