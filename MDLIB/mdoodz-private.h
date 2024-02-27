@@ -420,6 +420,7 @@ void            UpdateDensity(grid *, markers *, mat_prop *, params *, scale *);
 void            DiffuseAlongTopography(grid *, params, scale, double *, double *, int, double, double);
 void            AddPartSed(markers *, mat_prop, markers *, surface *, params, scale, grid *);
 void            CorrectTopoIni(markers *, mat_prop, markers *, surface *, params, scale, grid *);
+void            KeepZeroMeanTopo(params*, surface*, markers* );
 
 // Decoupled solver
 void            KillerSolver(SparseMat *, SparseMat *, SparseMat *, SparseMat *, DirectSolver *, double *, double *, double *, params, grid *, scale, SparseMat *, SparseMat *, SparseMat *, SparseMat *, SparseMat *);
