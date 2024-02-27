@@ -219,7 +219,7 @@ int main() {
           .MutateInput = AddCrazyConductivity,
 
   };
-  RunMDOODZ("RiverTomCrouteinf.txt", &setup);
+  RunMDOODZ("RiverTomLowerCrust.txt", &setup);
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
