@@ -57,13 +57,13 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             .scaling           = inputFile.scaling,
             .materials         = inputFile.materials,
             .crazyConductivity = NULL,
-            .topo_height       = NULL,
+            .flux       = NULL,
     };
 
     if (input.model.free_surface) {
-      input.topo_height = malloc(sizeof(TopoHeight));
-      if (input.topo_height != NULL) {
-        *input.topo_height = (TopoHeight){.east = -0.0e3, .west = -0.0e3};
+      input.flux = malloc(sizeof(LateralFlux));
+      if (input.flux != NULL) {
+        *input.flux = (LateralFlux){.east = -0.0e3, .west = -0.0e3};
       }
     }
 
@@ -1028,6 +1028,8 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                     CorrectTopoIni( &particles, input.materials, &topo_chain_ini, &topo, input.model, input.scaling, &mesh);
                     MarkerChainPolyFit( &topo_ini, &topo_chain_ini, input.model, mesh );
 
+                    if ( input.model.zero_mean_topo == 1 ) KeepZeroMeanTopo( &input.model, &topo, &topo_chain );
+
                     // Sedimentation
                     if ( input.model.surface_processes == 2 ) {
                         AddPartSed( &particles, input.materials, &topo_chain, &topo, input.model, input.scaling, &mesh);
@@ -1166,8 +1168,8 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
     // Free arrays
     GridFree( &mesh, &input.model );
 
-    if (input.topo_height) {
-      free(input.topo_height);
+    if (input.flux) {
+      free(input.flux);
     }
 
     if (input.crazyConductivity) {

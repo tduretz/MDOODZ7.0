@@ -42,7 +42,7 @@ typedef struct {
 
 // params contains the model parameters
 typedef struct {
-  int    balance_boundaries;
+  int    balance_boundaries, zero_mean_topo;
   char   description[500];
   double xmin, zmin, xmax, zmax, time, dx, dz, dt, dt0, dt_start, dt_max, L0,
           dt_min;
@@ -300,14 +300,14 @@ struct MdoodzSetup {
 typedef struct {
   double east;
   double west;
-} TopoHeight;
+} LateralFlux;
 
 struct MdoodzInput {
   char              *inputFileName;
   params             model;
   mat_prop           materials;
   scale              scaling;
-  TopoHeight        *topo_height;
+  LateralFlux        *flux;
   CrazyConductivity *crazyConductivity;
   Geometry          *geometry;
 };

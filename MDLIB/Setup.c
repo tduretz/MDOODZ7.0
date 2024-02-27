@@ -195,11 +195,6 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh, surface *topo) 
   double VxWestSum = 0.0;
   double VxEastSum = 0.0;
 
-  if (instance->topo_height != NULL) {
-    instance->topo_height->west = topo->height[0];
-    instance->topo_height->east = topo->height[mesh->Nx - 1];
-  }
-
   for (int l = 0; l < mesh->Nz + 1; l++) {
     for (int k = 0; k < mesh->Nx; k++) {
       const int c = k + l * (mesh->Nx);
@@ -392,9 +387,9 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh, surface *topo) 
   }
 
   // override by integrated velocity values
-  if (instance->topo_height != NULL) {
-    instance->topo_height->west = VxWestSum*mesh->dz;
-    instance->topo_height->east = VxEastSum*mesh->dz;
+  if (instance->flux != NULL) {
+    instance->flux->west = VxWestSum*mesh->dz;
+    instance->flux->east = VxEastSum*mesh->dz;
   }
   
   /* --------------------------------------------------------------------------------------------------------*/
