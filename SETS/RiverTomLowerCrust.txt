@@ -47,6 +47,7 @@ surface_processes  = 5 /0 = none; 1 = diffusion only; 2 = fills instantaneously 
 surf_diff          = 6e-6 /topography diffusion coefficient
 surf_Winc          = 1e3
 surf_Vinc          = 5e-9
+zero_mean_topo     = 1
 
 /**** SETUP DEPENDANT ****/
 bkg_strain_rate = 7.5e-16 / Background strain rate [s-1] 
