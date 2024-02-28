@@ -216,13 +216,19 @@ void LoadBreakpointParticles( markers *particles, grid* mesh, markers *topo_chai
         fread( mesh->VE_s, s3, (Nx)*(Nz), file );
     }
 
-    fread( particles->strain,     s3, particles->Nb_part, file);
-    fread( particles->strain_el,  s3, particles->Nb_part, file);
-    fread( particles->strain_pl,  s3, particles->Nb_part, file);
+    fread( particles->strain    , s3, particles->Nb_part, file);
+    fread( particles->strain_el , s3, particles->Nb_part, file);
+    fread( particles->strain_pl , s3, particles->Nb_part, file);
     fread( particles->strain_pwl, s3, particles->Nb_part, file);
     fread( particles->strain_exp, s3, particles->Nb_part, file);
     fread( particles->strain_lin, s3, particles->Nb_part, file);
     fread( particles->strain_gbs, s3, particles->Nb_part, file);
+    fread( particles->strain_xx , s3, particles->Nb_part, file);
+    fread( particles->strain_zz , s3, particles->Nb_part, file);
+    fread( particles->strain_xz , s3, particles->Nb_part, file);
+    fread( particles->strain_xxp, s3, particles->Nb_part, file);
+    fread( particles->strain_zzp, s3, particles->Nb_part, file);
+    fread( particles->strain_xzp, s3, particles->Nb_part, file);
     fread( particles->d         , s3, particles->Nb_part, file);
 
     if (model->finite_strain == 1) {
@@ -723,13 +729,19 @@ void MakeBreakpointParticles( markers *particles,  grid* mesh, markers *topo_cha
         fwrite( mesh->VE_s, s3, (Nx)*(Nz), file );
     }
 
-    fwrite( particles->strain,     s3, particles->Nb_part, file);
-    fwrite( particles->strain_el,  s3, particles->Nb_part, file);
-    fwrite( particles->strain_pl,  s3, particles->Nb_part, file);
+    fwrite( particles->strain    , s3, particles->Nb_part, file);
+    fwrite( particles->strain_el , s3, particles->Nb_part, file);
+    fwrite( particles->strain_pl , s3, particles->Nb_part, file);
     fwrite( particles->strain_pwl, s3, particles->Nb_part, file);
     fwrite( particles->strain_exp, s3, particles->Nb_part, file);
     fwrite( particles->strain_lin, s3, particles->Nb_part, file);
     fwrite( particles->strain_gbs, s3, particles->Nb_part, file);
+    fwrite( particles->strain_xx , s3, particles->Nb_part, file);
+    fwrite( particles->strain_zz , s3, particles->Nb_part, file);
+    fwrite( particles->strain_xz , s3, particles->Nb_part, file);
+    fwrite( particles->strain_xxp, s3, particles->Nb_part, file);
+    fwrite( particles->strain_zzp, s3, particles->Nb_part, file);
+    fwrite( particles->strain_xzp, s3, particles->Nb_part, file);
     fwrite( particles->d         , s3, particles->Nb_part, file);
 
     if (model.finite_strain == 1) {

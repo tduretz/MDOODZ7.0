@@ -26,8 +26,8 @@ typedef struct {
   int     Nx_part, Nz_part, Nb_part, Nb_part_max, min_part_cell, Nb_part_ini;
   double *x, *z, *Vx, *Vz, *P, *sxxd, *szzd, *sxz, *progress, *T, *d, *phi, *X,
           *syy, *dsyy;
-  double *strain, *strain_el, *strain_pl, *strain_pwl, *strain_exp, *strain_lin,
-          *strain_gbs;
+  double *strain, *strain_el, *strain_pl, *strain_pwl, *strain_exp, *strain_lin, *strain_gbs, 
+         *strain_xx, *strain_zz, *strain_xz, *strain_xxp, *strain_zzp, *strain_xzp;
   int    *phase, *generation, *dual;
   int    *intag;
   double *Fxx, *Fxz, *Fzx, *Fzz, *nx, *nz;
@@ -387,7 +387,6 @@ void            CountPartCell(markers *, grid *, params, surface, surface, int, 
 void            CountPartCell_Old(markers *, grid *, params, surface, int, scale);
 void            CountPartCell2(markers *, grid *, params, surface, surface, int, scale);
 
-void            AccumulatedStrain(grid *, scale, params, markers *);
 void            PureShearALE(params *, grid *, markers *, scale);
 void            VelocitiesOnCenters(double *, double *, double *, double *, int, int, scale);
 void            VelocitiesToParticles(grid *, markers *, DoodzFP *, DoodzFP *, params, scale);
@@ -519,7 +518,7 @@ void            V2P(double *, double *, markers *, double *, double *, double *,
 double          Vertices2Particle(markers *, double *, double *, double *, int, int, char *, double, double, int);
 double          Centers2Particle(markers *, double *, double *, double *, int, int, char *, double, double, int, int);
 void            RogerGuntherII(markers *, params, grid, int, scale);
-void            AccumulatedStrainII(grid *, scale, params, markers *, double *, double *, int, int, char *);
+void            AccumulatedStrain(grid *, scale, params, markers *, double *, double *, int, int, char *);
 void            AdvectFreeSurf(markers *, params, scale);
 
 void            UpdateAnisoFactor( grid*, mat_prop*, params*, scale*); 

@@ -185,11 +185,11 @@ void TotalStresses( grid* mesh, markers* particles, scale scaling, params* model
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-void AccumulatedStrainII( grid* mesh, scale scaling, params model, markers* particles, double* X_vect, double* Z_vect, int Nx, int Nz, char *tag ) {
+void AccumulatedStrain( grid* mesh, scale scaling, params model, markers* particles, double* X_vect, double* Z_vect, int Nx, int Nz, char *tag ) {
     
     double *strain_inc;
     int k, l, c1;
-    DoodzFP *strain_inc_el, *strain_inc_pl, *strain_inc_pwl, *strain_inc_exp, *strain_inc_lin, *strain_inc_gbs;
+    DoodzFP *strain_inc_el, *strain_inc_pl, *strain_inc_pwl, *strain_inc_exp, *strain_inc_lin, *strain_inc_gbs, *strain_inc_xx, *strain_inc_zz, *strain_inc_xz;
     
     //    printf("Accumulating strain\n");
     
@@ -201,9 +201,13 @@ void AccumulatedStrainII( grid* mesh, scale scaling, params model, markers* part
     strain_inc_exp  = DoodzMalloc(sizeof(double)*(mesh->Nx-1)*(mesh->Nz-1));
     strain_inc_lin  = DoodzMalloc(sizeof(double)*(mesh->Nx-1)*(mesh->Nz-1));
     strain_inc_gbs  = DoodzMalloc(sizeof(double)*(mesh->Nx-1)*(mesh->Nz-1));
+
+    strain_inc_xx   = DoodzMalloc(sizeof(double)*(mesh->Nx-1)*(mesh->Nz-1)); // in material fabric coord system: normal component along fabric
+    strain_inc_zz   = DoodzMalloc(sizeof(double)*(mesh->Nx-1)*(mesh->Nz-1)); // normal component perpendicular to fabric (i.e. along director)
+    strain_inc_xz   = DoodzMalloc(sizeof(double)*(mesh->Nx-1)*(mesh->Nz-1)); // shear component (symmetric...)
     
     // Interpolate exz to cell centers
-#pragma omp parallel for shared( mesh, model, strain_inc, strain_inc_el, strain_inc_pl, strain_inc_pwl, strain_inc_exp, strain_inc_lin, strain_inc_gbs  ) private( c1 )
+#pragma omp parallel for shared( mesh, model, strain_inc, strain_inc_el, strain_inc_pl, strain_inc_pwl, strain_inc_exp, strain_inc_lin, strain_inc_gbs, strain_inc_xx, strain_inc_zz, strain_inc_xz ) private( c1 )
     for (c1=0; c1<(mesh->Nx-1)*(mesh->Nz-1); c1++) {
         
         strain_inc[c1]     = model.dt*(mesh->eII_pl[c1]+mesh->eII_pwl[c1]+mesh->eII_exp[c1]+mesh->eII_lin[c1]+mesh->eII_gbs[c1]+mesh->eII_el[c1]+mesh->eII_cst[c1]);
@@ -220,17 +224,22 @@ void AccumulatedStrainII( grid* mesh, scale scaling, params model, markers* part
         strain_inc_exp[c1] = model.dt*mesh->eII_exp[c1];
         strain_inc_lin[c1] = model.dt*mesh->eII_lin[c1];
         strain_inc_gbs[c1] = model.dt*mesh->eII_gbs[c1];
+        
+        strain_inc_xx[c1] = model.dt*(mesh->exxd[c1]);
+        strain_inc_zz[c1] = model.dt*(mesh->ezzd[c1]);
+        strain_inc_xz[c1] = model.dt*(mesh->exz_n[c1]);
+
     }
     
     //---------------------------------------------------------------//
     
-    double dE_tot, dE_el, dE_pl, dE_pwl, dE_exp, dE_lin, dE_gbs;
+    double dE_tot, dE_el, dE_pl, dE_pwl, dE_exp, dE_lin, dE_gbs, dE_xx, dE_zz, dE_xz;
     double dx, dz, dxm, dzm, dst, sumW;
+    double theta;
     int    i_part, j_part, iSW, iNW, iSE, iNE;
     dx=mesh->dx;
     dz=mesh->dz;
     
-    //#pragma omp parallel for shared( particles , strain_inc, strain_inc_el, strain_inc_pl, strain_inc_pwl, strain_inc_exp, strain_inc_lin, strain_inc_gbs, tag  ) private( dE_tot, dE_el, dE_pl, dE_pwl, dE_exp, dE_lin, dE_gbs, sumW, dst, dxm, dzm, iSW, iSE, iNW, iNE, i_part, j_part  ) firstprivate (dx, dz, Nx, Nz)
     for (k=0;k<particles->Nb_part;k++) {
         
         dE_tot = 0.0;
@@ -240,7 +249,9 @@ void AccumulatedStrainII( grid* mesh, scale scaling, params model, markers* part
         dE_exp = 0.0;
         dE_lin = 0.0;
         dE_gbs = 0.0;
-        
+        dE_xx  = 0.0;
+        dE_zz  = 0.0;
+        dE_xz  = 0.0;        
         
         if (particles->phase[k] != -1) {
             
@@ -278,8 +289,11 @@ void AccumulatedStrainII( grid* mesh, scale scaling, params model, markers* part
             dE_exp = 0.0;
             dE_lin = 0.0;
             dE_gbs = 0.0;
-            
-            sumW         = 0.0;
+            dE_xx  = 0.0;
+            dE_zz  = 0.0;
+            dE_xz  = 0.0;
+
+            sumW   = 0.0;
             
             //            if (j_part>0 && j_part<Nx-2 && i_part>0 && i_part<Nz-2) {
             
@@ -291,6 +305,9 @@ void AccumulatedStrainII( grid* mesh, scale scaling, params model, markers* part
                 dE_exp +=  (1.0-dxm/dx) * (1.0-dzm/dz) * strain_inc_exp[iSW];
                 dE_lin +=  (1.0-dxm/dx) * (1.0-dzm/dz) * strain_inc_lin[iSW];
                 dE_gbs +=  (1.0-dxm/dx) * (1.0-dzm/dz) * strain_inc_gbs[iSW];
+                dE_xx  +=  (1.0-dxm/dx) * (1.0-dzm/dz) * strain_inc_xx[iSW];
+                dE_zz  +=  (1.0-dxm/dx) * (1.0-dzm/dz) * strain_inc_zz[iSW];
+                dE_xz  +=  (1.0-dxm/dx) * (1.0-dzm/dz) * strain_inc_xz[iSW];
                 sumW   +=  (1.0-dxm/dx) * (1.0-dzm/dz);
             }
             if (tag[iSE]!=30 && tag[iSE]!=31) {
@@ -301,6 +318,9 @@ void AccumulatedStrainII( grid* mesh, scale scaling, params model, markers* part
                 dE_exp +=  (dxm/dx) * (1.0-dzm/dz) * strain_inc_exp[iSE];
                 dE_lin +=  (dxm/dx) * (1.0-dzm/dz) * strain_inc_lin[iSE];
                 dE_gbs +=  (dxm/dx) * (1.0-dzm/dz) * strain_inc_gbs[iSE];
+                dE_xx  +=  (dxm/dx) * (1.0-dzm/dz) * strain_inc_xx[iSE];
+                dE_zz  +=  (dxm/dx) * (1.0-dzm/dz) * strain_inc_zz[iSE];
+                dE_xz  +=  (dxm/dx) * (1.0-dzm/dz) * strain_inc_xz[iSE];
                 sumW   +=  (dxm/dx) * (1.0-dzm/dz);
             }
             if (tag[iNW]!=30 && tag[iNW]!=31) {
@@ -311,6 +331,9 @@ void AccumulatedStrainII( grid* mesh, scale scaling, params model, markers* part
                 dE_exp +=  (1.0-dxm/dx) * (dzm/dz) * strain_inc_exp[iNW];
                 dE_lin +=  (1.0-dxm/dx) * (dzm/dz) * strain_inc_lin[iNW];
                 dE_gbs +=  (1.0-dxm/dx) * (dzm/dz) * strain_inc_gbs[iNW];
+                dE_xx  +=  (1.0-dxm/dx) * (dzm/dz) * strain_inc_xx[iNW];
+                dE_zz  +=  (1.0-dxm/dx) * (dzm/dz) * strain_inc_zz[iNW];
+                dE_xz  +=  (1.0-dxm/dx) * (dzm/dz) * strain_inc_xz[iNW];
                 sumW   +=  (1.0-dxm/dx) * (dzm/dz);
             }
             if (tag[iNE]!=30 && tag[iNE]!=31) {
@@ -321,179 +344,11 @@ void AccumulatedStrainII( grid* mesh, scale scaling, params model, markers* part
                 dE_exp +=  (dxm/dx) * (dzm/dz) * strain_inc_exp[iNE];
                 dE_lin +=  (dxm/dx) * (dzm/dz) * strain_inc_lin[iNE];
                 dE_gbs +=  (dxm/dx) * (dzm/dz) * strain_inc_gbs[iNE];
+                dE_xx  +=  (dxm/dx) * (dzm/dz) * strain_inc_xx[iNE];
+                dE_zz  +=  (dxm/dx) * (dzm/dz) * strain_inc_zz[iNE];
+                dE_xz  +=  (dxm/dx) * (dzm/dz) * strain_inc_xz[iNE];
                 sumW += (dxm/dx)* (dzm/dz);
             }
-            
-            //            printf("%2.2e %2.2e %2.2e %2.2e %2.2e %2.2e\n", sumW, dE_tot, strain_inc[iSW], strain_inc[iSE], strain_inc[iNW], strain_inc[iNE]);
-            //
-            //             if (dE_tot<0.0)exit(1);
-            //            }
-            
-            //            if (j_part==0    && i_part==0   ) {
-            //                dE_tot = strain_inc[iNE];
-            //                dE_el  = strain_inc[iNE];
-            //                dE_pl  = strain_inc[iNE];
-            //                dE_pwl = strain_inc[iNE];
-            //                dE_exp = strain_inc[iNE];
-            //                dE_lin = strain_inc[iNE];
-            //                dE_gbs = strain_inc[iNE];
-            //            }
-            //            if (j_part==Nx-2 && i_part==0   ) {
-            //                dE_tot = strain_inc[iNW];
-            //                dE_el  = strain_inc[iNW];
-            //                dE_pl  = strain_inc[iNW];
-            //                dE_pwl = strain_inc[iNW];
-            //                dE_exp = strain_inc[iNW];
-            //                dE_lin = strain_inc[iNW];
-            //                dE_gbs = strain_inc[iNW];
-            //            }
-            //            if (j_part==0    && i_part==Nz-2) {
-            //                dE_tot = strain_inc[iSE];
-            //                dE_el  = strain_inc[iSE];
-            //                dE_pl  = strain_inc[iSE];
-            //                dE_pwl = strain_inc[iSE];
-            //                dE_exp = strain_inc[iSE];
-            //                dE_lin = strain_inc[iSE];
-            //                dE_gbs = strain_inc[iSE];
-            //            }
-            //            if (j_part==Nx-2 && i_part==Nz-2) {
-            //                dE_tot = strain_inc[iSW];
-            //                dE_el  = strain_inc[iSW];
-            //                dE_pl  = strain_inc[iSW];
-            //                dE_pwl = strain_inc[iSW];
-            //                dE_exp = strain_inc[iSW];
-            //                dE_lin = strain_inc[iSW];
-            //                dE_gbs = strain_inc[iSW];
-            //            }
-            
-            //            if (j_part==0 && i_part>0 && i_part<Nz-2) {
-            //
-            //                if (tag[iSE]!=30 && tag[iSE]!=31) {
-            //                    dE_tot += (1.0-dzm/dz)   * strain_inc[iSE];
-            //                    dE_el  += (1.0-dzm/dz)   * strain_inc_el[iSE];
-            //                    dE_pl  += (1.0-dzm/dz)   * strain_inc_pl[iSE];
-            //                    dE_pwl += (1.0-dzm/dz)   * strain_inc_pwl[iSE];
-            //                    dE_exp += (1.0-dzm/dz)   * strain_inc_exp[iSE];
-            //                    dE_lin += (1.0-dzm/dz)   * strain_inc_lin[iSE];
-            //                    dE_gbs += (1.0-dzm/dz)   * strain_inc_gbs[iSE];
-            //                    sumW +=  (1.0-dzm/dz);
-            //                }
-            //                if (tag[iNE]!=30 && tag[iNE]!=31) {
-            //                    dE_tot += (0.0-dzm/dz)   * strain_inc[iNE];
-            //                    dE_el  += (0.0-dzm/dz)   * strain_inc_el[iNE];
-            //                    dE_pl  += (0.0-dzm/dz)   * strain_inc_pl[iNE];
-            //                    dE_pwl += (0.0-dzm/dz)   * strain_inc_pwl[iNE];
-            //                    dE_exp += (0.0-dzm/dz)   * strain_inc_exp[iNE];
-            //                    dE_lin += (0.0-dzm/dz)   * strain_inc_lin[iNE];
-            //                    dE_gbs += (0.0-dzm/dz)   * strain_inc_gbs[iNE];
-            //                    sumW +=  (dzm/dz);
-            //                }
-            //                if(sumW>1e-13) {
-            //                    dE_tot /= sumW;
-            //                    dE_el  /= sumW;
-            //                    dE_pl  /= sumW;
-            //                    dE_pwl /= sumW;
-            //                    dE_exp /= sumW;
-            //                    dE_lin /= sumW;
-            //                    dE_gbs /= sumW;
-            //                }
-            //            }
-            //
-            //            if (j_part==Nx-2 && i_part>0 && i_part<Nz-2) {
-            //
-            //                if (tag[iSW]!=30 && tag[iSW]!=31) {
-            //                    dE_tot += (1.0-dzm/dz)   * strain_inc[iSW];
-            //                    dE_el  += (1.0-dzm/dz)   * strain_inc_el[iSW];
-            //                    dE_pl  += (1.0-dzm/dz)   * strain_inc_pl[iSW];
-            //                    dE_pwl += (1.0-dzm/dz)   * strain_inc_pwl[iSW];
-            //                    dE_exp += (1.0-dzm/dz)   * strain_inc_exp[iSW];
-            //                    dE_lin += (1.0-dzm/dz)   * strain_inc_lin[iSW];
-            //                    dE_gbs += (1.0-dzm/dz)   * strain_inc_gbs[iSW];
-            //                    sumW +=  (1.0-dzm/dz);
-            //                }
-            //                if (tag[iNW]!=30 && tag[iNW]!=31) {
-            //                    dE_tot += (0.0-dzm/dz)   * strain_inc[iNW];
-            //                    dE_el  += (0.0-dzm/dz)   * strain_inc_el[iNW];
-            //                    dE_pl  += (0.0-dzm/dz)   * strain_inc_pl[iNW];
-            //                    dE_pwl += (0.0-dzm/dz)   * strain_inc_pwl[iNW];
-            //                    dE_exp += (0.0-dzm/dz)   * strain_inc_exp[iNW];
-            //                    dE_lin += (0.0-dzm/dz)   * strain_inc_lin[iNW];
-            //                    dE_gbs += (0.0-dzm/dz)   * strain_inc_gbs[iNW];
-            //                    sumW +=  (dzm/dz);
-            //                }
-            //                if(sumW>1e-13) {
-            //                    dE_tot /= sumW;
-            //                    dE_el  /= sumW;
-            //                    dE_pl  /= sumW;
-            //                    dE_pwl /= sumW;
-            //                    dE_exp /= sumW;
-            //                    dE_lin /= sumW;
-            //                    dE_gbs /= sumW;
-            //                }
-            //            }
-            
-            //            if (i_part==0 && j_part>0 && j_part<Nx-2) {
-            //                if (tag[iNW]!=30 && tag[iNW]!=31) {
-            //                    dE_tot += (1.0-dxm/dx)   * strain_inc[iNW];
-            //                    dE_el  += (1.0-dxm/dx)   * strain_inc_el[iNW];
-            //                    dE_pl  += (1.0-dxm/dx)   * strain_inc_pl[iNW];
-            //                    dE_pwl += (1.0-dxm/dx)   * strain_inc_pwl[iNW];
-            //                    dE_exp += (1.0-dxm/dx)   * strain_inc_exp[iNW];
-            //                    dE_lin += (1.0-dxm/dx)   * strain_inc_lin[iNW];
-            //                    dE_gbs += (1.0-dxm/dx)   * strain_inc_gbs[iNW];
-            //                    sumW += (1.0-dxm/dx);
-            //                }
-            //                if (tag[iNE]!=30 && tag[iNE]!=31) {
-            //                    dE_tot += (dxm/dx)   * strain_inc[iNE];
-            //                    dE_el  += (dxm/dx)   * strain_inc_el[iNE];
-            //                    dE_pl  += (dxm/dx)   * strain_inc_pl[iNE];
-            //                    dE_pwl += (dxm/dx)   * strain_inc_pwl[iNE];
-            //                    dE_exp += (dxm/dx)   * strain_inc_exp[iNE];
-            //                    dE_lin += (dxm/dx)   * strain_inc_lin[iNE];
-            //                    dE_gbs += (dxm/dx)   * strain_inc_gbs[iNE];
-            //                    sumW += (dxm/dx);
-            //                }
-            //                if(sumW>1e-13) {
-            //                    dE_tot /= sumW;
-            //                    dE_el  /= sumW;
-            //                    dE_pl  /= sumW;
-            //                    dE_pwl /= sumW;
-            //                    dE_exp /= sumW;
-            //                    dE_lin /= sumW;
-            //                    dE_gbs /= sumW;
-            //                }
-            //            }
-            //            if (i_part==Nz-2 && j_part>0 && j_part<Nx-2) {
-            //                if (tag[iSW]!=30 && tag[iSW]!=31) {
-            //                    dE_tot += (1.0-dxm/dx)   * strain_inc[iSW];
-            //                    dE_el  += (1.0-dxm/dx)   * strain_inc_el[iSW];
-            //                    dE_pl  += (1.0-dxm/dx)   * strain_inc_pl[iSW];
-            //                    dE_pwl += (1.0-dxm/dx)   * strain_inc_pwl[iSW];
-            //                    dE_exp += (1.0-dxm/dx)   * strain_inc_exp[iSW];
-            //                    dE_lin += (1.0-dxm/dx)   * strain_inc_lin[iSW];
-            //                    dE_gbs += (1.0-dxm/dx)   * strain_inc_gbs[iSW];
-            //                    sumW += (1.0-dxm/dx);
-            //                }
-            //                if ( tag[iSE] != 30 && tag[iSE] != 31 ) {
-            //                    dE_tot += (dxm/dx)   * strain_inc[iSE];
-            //                    dE_el  += (dxm/dx)   * strain_inc_el[iSE];
-            //                    dE_pl  += (dxm/dx)   * strain_inc_pl[iSE];
-            //                    dE_pwl += (dxm/dx)   * strain_inc_pwl[iSE];
-            //                    dE_exp += (dxm/dx)   * strain_inc_exp[iSE];
-            //                    dE_lin += (dxm/dx)   * strain_inc_lin[iSE];
-            //                    dE_gbs += (dxm/dx)   * strain_inc_gbs[iSE];
-            //                    sumW += (dxm/dx);
-            //                }
-            //                if(sumW>1e-13) {
-            //                    dE_tot /= sumW;
-            //                    dE_el  /= sumW;
-            //                    dE_pl  /= sumW;
-            //                    dE_pwl /= sumW;
-            //                    dE_exp /= sumW;
-            //                    dE_lin /= sumW;
-            //                    dE_gbs /= sumW;
-            //                }
-            //            }
             
             if(sumW>1e-13) {
                 dE_tot /= sumW;
@@ -503,6 +358,9 @@ void AccumulatedStrainII( grid* mesh, scale scaling, params model, markers* part
                 dE_exp /= sumW;
                 dE_lin /= sumW;
                 dE_gbs /= sumW;
+                dE_xx  /= sumW;
+                dE_zz  /= sumW;
+                dE_xz  /= sumW;
             }
             
             
@@ -515,6 +373,19 @@ void AccumulatedStrainII( grid* mesh, scale scaling, params model, markers* part
         particles->strain_exp[k]  += dE_exp;
         particles->strain_lin[k]  += dE_lin;
         particles->strain_gbs[k]  += dE_gbs;
+
+
+        // strain components (on cartesian grid)
+        particles->strain_xx[k]  += dE_xx;
+        particles->strain_zz[k]  += dE_zz;
+        particles->strain_xz[k]  += dE_xz;
+
+        // strain components (change of coordinate system to material fabric coordinate system)
+        theta = -particles->nx[k] / sqrt( particles->nx[k] * particles->nx[k] + particles->nz[k] * particles->nz[k] );// angle for change of coordinate
+        particles->strain_xxp[k]  +=  ( dE_xx * cos(theta) + dE_xz * sin(theta)) * cos(theta) + ( dE_xz * cos(theta) + dE_zz * sin(theta)) * sin(theta);
+        particles->strain_zzp[k]  += -(-dE_xx * sin(theta) + dE_xz * cos(theta)) * sin(theta) + (-dE_xz * sin(theta) + dE_zz * cos(theta)) * cos(theta);
+        particles->strain_xzp[k]  += -( dE_xx * cos(theta) + dE_xz * sin(theta)) * sin(theta) + ( dE_xz * cos(theta) + dE_zz * sin(theta)) * cos(theta);
+
     }
     
     //---------------------------------------------------------------//
@@ -527,6 +398,10 @@ void AccumulatedStrainII( grid* mesh, scale scaling, params model, markers* part
     DoodzFree(strain_inc_exp);
     DoodzFree(strain_inc_lin);
     DoodzFree(strain_inc_gbs);
+
+    DoodzFree(strain_inc_xx);
+    DoodzFree(strain_inc_zz);
+    DoodzFree(strain_inc_xz);
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
@@ -567,7 +442,7 @@ void DeformationGradient ( grid mesh, scale scaling, params model, markers *part
         }
     }
     
-    // Compute dudx and dvdz (cell vertices)
+    // Compute dudz and dvdx (cell vertices)
     for (k=0; k<Nx; k++) {
         for (l=0; l<Nz; l++) {
             cp = k  + l*(Nx-1);
@@ -662,87 +537,6 @@ void FiniteStrainAspectRatio ( grid *mesh, scale scaling, params model, markers 
     DoodzFree(FS_AR);
     
     printf("-----> Finite strain aspect ratio updated\n");
-}
-
-/*--------------------------------------------------------------------------------------------------------------------*/
-/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
-/*--------------------------------------------------------------------------------------------------------------------*/
-
-void AccumulatedStrain( grid* mesh, scale scaling, params model, markers* particles ) {
-    
-    double *strain_inc;
-    int Nx, Nz, k, l, c1;
-    DoodzFP *strain_inc_mark, *strain_inc_el, *strain_inc_pl, *strain_inc_pwl, *strain_inc_exp, *strain_inc_lin, *strain_inc_gbs;
-    
-    Nx = mesh->Nx;
-    Nz = mesh->Nz;
-    
-    // Allocate
-    //    exz_n           = DoodzMalloc(sizeof(double)*(Nx-1)*(Nz-1));
-    strain_inc      = DoodzMalloc(sizeof(double)*(Nx-1)*(Nz-1));
-    strain_inc_el   = DoodzMalloc(sizeof(double)*(Nx-1)*(Nz-1));
-    strain_inc_pl   = DoodzMalloc(sizeof(double)*(Nx-1)*(Nz-1));
-    strain_inc_pwl  = DoodzMalloc(sizeof(double)*(Nx-1)*(Nz-1));
-    strain_inc_exp  = DoodzMalloc(sizeof(double)*(Nx-1)*(Nz-1));
-    strain_inc_lin  = DoodzMalloc(sizeof(double)*(Nx-1)*(Nz-1));
-    strain_inc_gbs  = DoodzMalloc(sizeof(double)*(Nx-1)*(Nz-1));
-    strain_inc_mark = DoodzCalloc(particles->Nb_part, sizeof(DoodzFP));
-    
-    // Interpolate exz to cell centers
-    for (k=0; k<Nx-1; k++) {
-        for (l=0; l<Nz-1; l++) {
-            c1 = k  + l*(Nx-1);
-            
-            strain_inc[c1]     = model.dt*(mesh->eII_pl[c1]+mesh->eII_pwl[c1]+mesh->eII_exp[c1]+mesh->eII_lin[c1]+mesh->eII_gbs[c1]+mesh->eII_el[c1]+mesh->eII_cst[c1]);
-            if (strain_inc[c1]<0) {
-                printf("negative strain increment\n");
-                printf("%2.2e %2.2e %2.2e %2.2e %2.2e %2.2e\n" ,mesh->eII_pl[c1],mesh->eII_pwl[c1],mesh->eII_exp[c1],mesh->eII_lin[c1],mesh->eII_gbs[c1],mesh->eII_el[c1]);
-                exit(0);
-            }
-            
-            strain_inc_el[c1]  = model.dt*mesh->eII_el[c1];
-            strain_inc_pl[c1]  = model.dt*mesh->eII_pl[c1];
-            strain_inc_pwl[c1] = model.dt*mesh->eII_pwl[c1];
-            strain_inc_exp[c1] = model.dt*mesh->eII_exp[c1];
-            strain_inc_lin[c1] = model.dt*mesh->eII_lin[c1];
-            strain_inc_gbs[c1] = model.dt*mesh->eII_gbs[c1];
-        }
-    }
-    
-    // Interp increments to particles
-    Interp_Grid2P_strain( *particles, strain_inc_mark, mesh, strain_inc, mesh->xc_coord,  mesh->zc_coord, Nx-1, Nz-1, mesh->BCp.type );
-    ArrayPlusArray( particles->strain, strain_inc_mark, particles->Nb_part );
-    
-    Interp_Grid2P_strain( *particles, strain_inc_mark, mesh, strain_inc_el, mesh->xc_coord,  mesh->zc_coord, Nx-1, Nz-1, mesh->BCp.type );
-    ArrayPlusArray( particles->strain_el, strain_inc_mark, particles->Nb_part );
-    
-    Interp_Grid2P_strain( *particles, strain_inc_mark, mesh, strain_inc_pl, mesh->xc_coord,  mesh->zc_coord, Nx-1, Nz-1, mesh->BCp.type );
-    ArrayPlusArray( particles->strain_pl, strain_inc_mark, particles->Nb_part );
-    
-    Interp_Grid2P_strain( *particles, strain_inc_mark, mesh, strain_inc_pwl, mesh->xc_coord,  mesh->zc_coord, Nx-1, Nz-1, mesh->BCp.type );
-    ArrayPlusArray( particles->strain_pwl, strain_inc_mark, particles->Nb_part );
-    
-    Interp_Grid2P_strain( *particles, strain_inc_mark, mesh, strain_inc_exp, mesh->xc_coord,  mesh->zc_coord, Nx-1, Nz-1, mesh->BCp.type );
-    ArrayPlusArray( particles->strain_exp, strain_inc_mark, particles->Nb_part );
-    
-    Interp_Grid2P_strain( *particles, strain_inc_mark, mesh, strain_inc_lin, mesh->xc_coord,  mesh->zc_coord, Nx-1, Nz-1, mesh->BCp.type );
-    ArrayPlusArray( particles->strain_lin, strain_inc_mark, particles->Nb_part );
-    
-    Interp_Grid2P_strain( *particles, strain_inc_mark, mesh, strain_inc_gbs, mesh->xc_coord,  mesh->zc_coord, Nx-1, Nz-1, mesh->BCp.type );
-    ArrayPlusArray( particles->strain_gbs, strain_inc_mark, particles->Nb_part );
-    
-    // Free
-    //    DoodzFree(exz_n);
-    DoodzFree(strain_inc);
-    DoodzFree(strain_inc_el);
-    DoodzFree(strain_inc_pl);
-    DoodzFree(strain_inc_pwl);
-    DoodzFree(strain_inc_exp);
-    DoodzFree(strain_inc_lin);
-    DoodzFree(strain_inc_gbs);
-    DoodzFree(strain_inc_mark);
-    
-    printf("-----> Accumulated strain updated\n");
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/

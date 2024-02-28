@@ -698,6 +698,12 @@ void AssignMarkerProperties (markers* particles, int new_ind, int min_index, par
     particles->strain_exp[new_ind]    = particles->strain_exp[min_index];
     particles->strain_lin[new_ind]    = particles->strain_lin[min_index];
     particles->strain_gbs[new_ind]    = particles->strain_gbs[min_index];
+    particles->strain_xx[new_ind]     = particles->strain_xx[min_index];
+    particles->strain_zz[new_ind]     = particles->strain_zz[min_index];
+    particles->strain_xz[new_ind]     = particles->strain_xz[min_index];
+    particles->strain_xxp[new_ind]    = particles->strain_xxp[min_index];
+    particles->strain_zzp[new_ind]    = particles->strain_zzp[min_index];
+    particles->strain_xzp[new_ind]    = particles->strain_xzp[min_index];
     particles->divth[new_ind]         = particles->divth[min_index]; // to be changed
     if ( direct_neighbour == 1 ) {
         particles->d[new_ind]             = particles->d[min_index];
@@ -770,10 +776,10 @@ void AssignMarkerProperties (markers* particles, int new_ind, int min_index, par
 //
 //void PrintMarkerProperties (markers* particles, int new_ind, int min_index ) {
 //    printf("xp = %2.6e\n", particles->x[new_ind]*30e4/1000         );
-//    printf("zp = %2.6e\n", particles->z[new_ind]*30e4/1000           );
-//    printf("xn = %2.6e\n", particles->x[min_index]*30e4/1000           );
-//    printf("zn = %2.6e\n", particles->z[min_index]*30e4/1000           );
-//    printf("%d\n", particles->phase[new_ind]        );
+//    printf("zp = %2.6e\n", particles->z[new_ind]*30e4/1000         );
+//    printf("xn = %2.6e\n", particles->x[min_index]*30e4/1000       );
+//    printf("zn = %2.6e\n", particles->z[min_index]*30e4/1000       );
+//    printf("%d\n", particles->phase[new_ind]           );
 //    printf("%2.6e\n", particles->sxxd[new_ind]         );
 //    printf("%2.6e\n", particles->sxz[new_ind]          );
 //    printf("%2.6e\n", particles->Vx[new_ind]           );
@@ -784,13 +790,19 @@ void AssignMarkerProperties (markers* particles, int new_ind, int min_index, par
 //    printf("%2.6e\n", particles->strain_pwl[new_ind]   );
 //    printf("%2.6e\n", particles->strain_exp[new_ind]   );
 //    printf("%2.6e\n", particles->strain_lin[new_ind]   );
-//    printf("%2.6e\n", particles->strain_gbs[new_ind]    );
+//    printf("%2.6e\n", particles->strain_gbs[new_ind]   );
+//    printf("%2.6e\n", particles->strain_xx[new_ind]   );
+//    printf("%2.6e\n", particles->strain_zz[new_ind]   );
+//    printf("%2.6e\n", particles->strain_xz[new_ind]   );
+//    printf("%2.6e\n", particles->strain_xxp[new_ind]   );
+//    printf("%2.6e\n", particles->strain_zzp[new_ind]   );
+//    printf("%2.6e\n", particles->strain_xzp[new_ind]   );
 //    printf("%2.6e\n", particles->d[new_ind]            );
-//    printf("%2.6e\n", particles->T[new_ind]             );
-//    printf("%2.6e\n", particles->P[new_ind]             );
-//    printf("%2.6e\n", particles->phi[new_ind]           );
-//    printf("%2.6e\n", particles->X[new_ind]             );
-//    printf("%d\n", particles->generation[new_ind]    );
+//    printf("%2.6e\n", particles->T[new_ind]            );
+//    printf("%2.6e\n", particles->P[new_ind]            );
+//    printf("%2.6e\n", particles->phi[new_ind]          );
+//    printf("%2.6e\n", particles->X[new_ind]            );
+//    printf("%d\n", particles->generation[new_ind]      );
 //}
 //
 ///*--------------------------------------------------------------------------------------------------------------------*/
@@ -823,6 +835,12 @@ void PartInit( markers *particles, params* model ) {
         particles->strain_exp[k] = 0.0;
         particles->strain_lin[k] = 0.0;
         particles->strain_gbs[k] = 0.0;
+        particles->strain_xx[k]  = 0.0;
+        particles->strain_zz[k]  = 0.0;
+        particles->strain_xz[k]  = 0.0;
+        particles->strain_xxp[k] = 0.0;
+        particles->strain_zzp[k] = 0.0;
+        particles->strain_xzp[k] = 0.0;
         particles->T[k]          = 0.0;
         particles->phi[k]        = 0.0;
         particles->X[k]          = 0.0;

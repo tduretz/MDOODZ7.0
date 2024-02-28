@@ -51,6 +51,33 @@ double AnisoFactorEvolv( double FS_AR, double aniso_fac_max ) {
   return MINV(FS_AR, aniso_fac_max);
 }
 
+//// Compute finite strain anisotropy factor
+//double AnisoFactorEvolv2( double sxz, double aniso_fac_max ) {
+//  // note: sxz as input parameter is WRONG! It should/will be gamma (i.e. the cumulated shear strain!!)
+//  // fitted parameters
+//  double a1 = -1350.1069996048723;
+//  double a2 = 7.160784584851252e-5;
+//  double a3 = 10.245568301042264;
+//  double a4 = 1.3822454893626681;
+//  double b1 = 1.9104930333421457;
+//  double b2 = 0.9336444310751492;
+//  double b3 = 2.4416312042264;
+//  double b4 = 0.10754277501657031062253;
+//  double c1 = 4.8467381368009015;
+//  double c2 = 5.281877704075801;
+//
+//  // fitting functions 1 & 2
+//  double fct1 = -a2 / (a3 * a3) * ( sxz * sxz - 2*a1*sxz + (a1 * a1 - a3 * a3 ) ) + a4;
+//  double fct2 = b1 * exp(-b2 * (sxz - b3)) + b4;
+//
+//  // weighting functions 1 & 2
+//  double wf1  = -(sxz - c1)/(2*c2) + 1/2;
+//  double wf2  =  (sxz - c1)/(2*c2) + 1/2;
+//
+//  // saturation at a maximum anisotropy factor 
+//  return MINV(fct1 * wf1 + fct2 * wf2, aniso_fac_max);
+//}
+
 // Squared second invariant of deviatoric stress
 double Y2( Tensor2D *T, double ani_fac ) {
   // printf("Y2 %2.2e\n", ani_fac);

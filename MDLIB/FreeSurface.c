@@ -148,6 +148,12 @@ void AddPartSed( markers *particles, mat_prop materials, markers *topo_chain, su
                 particles->strain_exp[new_ind]    =  0.0;
                 particles->strain_lin[new_ind]    =  0.0;
                 particles->strain_gbs[new_ind]    =  0.0;
+                particles->strain_xx[new_ind]     =  0.0;
+                particles->strain_zz[new_ind]     =  0.0;
+                particles->strain_xz[new_ind]     =  0.0;
+                particles->strain_xxp[new_ind]    =  0.0;
+                particles->strain_zzp[new_ind]    =  0.0;
+                particles->strain_xzp[new_ind]    =  0.0;
                 particles->d[new_ind]             =  materials.gs_ref[sed_phase];
                 particles->T[new_ind]             =  zeroC/scaling.T;
                 particles->P[new_ind]             =  0.0;

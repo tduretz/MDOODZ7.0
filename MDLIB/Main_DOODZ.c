@@ -980,7 +980,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                 if (input.model.pure_shear_ALE == -1 && input.model.periodic_x == 0) ParticleInflowCheck( &particles, &mesh, input.model, topo, 1 );
 
                 // Update accumulated strain
-                AccumulatedStrainII( &mesh, input.scaling, input.model, &particles,  mesh.xc_coord,  mesh.zc_coord, mesh.Nx-1, mesh.Nz-1, mesh.BCp.type );
+                AccumulatedStrain( &mesh, input.scaling, input.model, &particles,  mesh.xc_coord,  mesh.zc_coord, mesh.Nx-1, mesh.Nz-1, mesh.BCp.type );
 
                 // Update deformation gradient tensor components
                 if (input.model.finite_strain == 1 ) DeformationGradient( mesh, input.scaling, input.model, &particles );
