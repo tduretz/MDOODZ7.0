@@ -1114,6 +1114,16 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             DoodzFree( Jacob.eqn_p );
         }
 
+        // double mean_z = 0.;
+        // int n=0;
+        // for (int i=0; i<topo_chain.Nb_part_max; i++) {
+        //     if (topo_chain.phase[i] != -1) {
+        //         mean_z += topo_chain.z[i];
+        //         n++;
+        //     }
+        // }
+        // printf("mean topo on markers = %2.2e --- %d out of %d and max is %d \n", mean_z/n*input.scaling.L, n, topo_chain.Nb_part, topo_chain.Nb_part_max);
+
         //------------------------------------------------------------------------------------------------------------------------------//
 
         // Write output data
