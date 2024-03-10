@@ -12,12 +12,14 @@ My = 1e6 * 365 * 24 * 3600
 Lc = 1000.0
 
 base_path = "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview_part\\aniso3_chaos1"
-particle_file_pattern = "Output{:05d}.gzip.h5"
+output_file_pattern = "Output{:05d}.gzip.h5"
+particles_file_pattern = "Particles{:05d}.gzip.h5"
 first_step = 0
 step_range = 2
 last_step = 2958
 steps = range(first_step, last_step, step_range)
 
+tracked_particle = 1193596
 
 
 def extract_data(file_path, data_path):
@@ -32,7 +34,13 @@ def create_frames_and_gif():
         os.makedirs(frames_dir)
 
     for step in steps:
-        file_path = os.path.join(base_path, particle_file_pattern.format(step))
+        particles_path = os.path.join(base_path, particles_file_pattern.format(step))
+
+        particles_file   = h5py.File(particles_path, 'r')
+        tracked_particle_x = particles_file['Particles/x'][292039]
+        tracked_particle_z = particles_file['Particles/z'][292039]
+
+        file_path = os.path.join(base_path, output_file_pattern.format(step))
         print("reading step: " + str(step))
         if not os.path.exists(file_path):
             print(f"File {file_path} not found.")
@@ -118,7 +126,7 @@ def create_frames_and_gif():
         # Check for NaNs after interpolation and replace them
         log_eII_interpolated[np.isnan(log_eII_interpolated)] = -10  # Or any neutral value
 
-        fig, ax = plt.subplots(figsize=(5, 3))
+        fig, ax = plt.subplots(figsize=(12, 8))
 
 
         ax.imshow(ph_masked, cmap=cmap, norm=norm, aspect='auto', extent=extent)
@@ -151,11 +159,7 @@ def create_frames_and_gif():
 
         n = np.sqrt(nxc_masked ** 2 + nzc_masked ** 2)
 
-        ax.quiver(xc2[::stp_vertical, ::stp], zc2[::stp_vertical, ::stp], nxc_masked / n, nzc_masked / n, headwidth=1.,
-                  headaxislength=1.,
-                  headlength=1.,
-                  scale=100,
-                  width=0.0005)
+
 
         # Calculate the angles in radians
         angles_rad = np.arctan2(nzc_masked / n, nxc_masked / n)
@@ -164,10 +168,13 @@ def create_frames_and_gif():
         angles_deg = np.degrees(angles_rad)
 
         ax.set_ylim(-100, 3)
+        ax.set_xlim(-200, 200)
 
         ax.set_aspect('equal')
         ax.set_xlabel('x [km]', fontsize=15)
         ax.set_ylabel('y [km]', fontsize=15)
+
+        ax.plot(tracked_particle_x / Lc, tracked_particle_z / Lc, 'ro')
         plt.title(f"Step {step} Time: {t_ma} Ma")
 
         frame_path = os.path.join(frames_dir, f"frame_{step:05d}.png")
@@ -177,7 +184,7 @@ def create_frames_and_gif():
     # Create GIF from frames
     frames = [imageio.imread(os.path.join(frames_dir, f)) for f in sorted(os.listdir(frames_dir)) if f.endswith('.png')]
     gif_path = "/mnt/data/animation.gif"
-    imageio.mimsave(gif_path, frames, fps=10)  # Adjust fps as needed
+    imageio.mimsave(gif_path, frames, fps=10)
 
     return gif_path
 

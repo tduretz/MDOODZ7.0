@@ -6,7 +6,7 @@ My = 1e6 * 3600 * 24 * 365.25
 first_step = 0
 step_range = 2
 last_step = 2958
-base_path = "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview_part\\"
+base_path = "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview_part\\aniso3_chaos1\\"
 particle_file_pattern = "Particles{:05d}.gzip.h5"
 x_min, x_max, z_min, z_max = -101000, -100000, -18000, -17000
 
@@ -79,8 +79,6 @@ def select_closest_to_whole_numbers(data):
 
 def main():
     indices = get_tracked_particles_indices()
-    min_value = np.min(indices)
-    indices = np.array([min_value])
 
     steps = range(first_step, last_step, step_range)
 
@@ -147,10 +145,13 @@ def main():
     axs[1].set_ylabel('Angle (degrees)')
     axs[1].set_ylim([0, 360])
 
-    # For each particle, plot its angle change across steps
+    # For each particle, plot its angle change across steps, and label each line with its index
     for particle_index in range(len(all_angles[0])):
         particle_angles = [step_angles[particle_index] for step_angles in all_angles]
-        axs[1].plot(my_to_steps.keys(), particle_angles, '-o', markersize=4)
+        axs[1].plot(my_to_steps.keys(), particle_angles, '-o', markersize=4, label=f'Particle {particle_index}')
+
+    # Add a legend to the plot. You can adjust the location with the `loc` parameter if needed.
+    axs[1].legend()
 
     plt.tight_layout()
     plt.show()
