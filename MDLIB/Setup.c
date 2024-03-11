@@ -176,7 +176,7 @@ void ValidateInternalPoint(POSITION position, char bcType, Coordinates coordinat
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
+void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh, surface *topo) {
   /* --------------------------------------------------------------------------------------------------------*/
   /* Set the BCs for Vx on all grid levels */
   /* Type  0: Dirichlet point that matches the physical boundary (Vx:
@@ -194,7 +194,6 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
 
   double VxWestSum = 0.0;
   double VxEastSum = 0.0;
-
 
   for (int l = 0; l < mesh->Nz + 1; l++) {
     for (int k = 0; k < mesh->Nx; k++) {
@@ -387,6 +386,12 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
     free(newBoundary);
   }
 
+  // override by integrated velocity values
+  if (instance->flux != NULL) {
+    instance->flux->west = VxWestSum*mesh->dz;
+    instance->flux->east = VxEastSum*mesh->dz;
+  }
+  
   /* --------------------------------------------------------------------------------------------------------*/
   /* Set the BCs for Vz on all grid levels */
   /* Type  0: Dirichlet point that matches the physical boundary (Vx:
@@ -458,8 +463,8 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh) {
     }
   }
 
-  printf("VzWestSum: %f, VzEastSum: %f: \n", VzWestSum, VzEastSum);
-  printf("total West+East+South sum: %f\n", VxWestSum + VxEastSum - VzSouthSum);
+  printf("VxWestSum*dx: %f, VxEastSum*dx: %f, VzEastSum*dz: %f: \n", VxWestSum*mesh->dz, VxEastSum*mesh->dz, VzSouthSum*mesh->dx);
+  printf("Total West+East+South sum: %f\n", fabs(VxWestSum*mesh->dz) + fabs(VxEastSum*mesh->dz)  - fabs(VzSouthSum*mesh->dx) );
 
   if (instance->model.balance_boundaries && (VzSouthSum > tolerance || VzSouthSum < -tolerance)) {
     int zeroValuesCount = 0;
