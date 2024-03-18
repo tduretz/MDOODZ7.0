@@ -8,7 +8,7 @@ irestart        = 0   / Restart switch
 
 /**** OUTPUT FILES ****/
 writer          = 1  / Write grid data switch
-writer_step     = 50 / Write interval 
+writer_step     = 1 / Write interval 
 writer_markers  = 0  / Write marker data switch
 writer_debug    = 0  / Write debug data switch 
 
@@ -21,7 +21,7 @@ T               = 4.0e+02 /temperature
 /**** SPACE-TIME ****/
 Nx             = 1001               / No. grid points x
 Nz             = 681                / No. grid points z
-Nt             = 1000                  / No. time steps
+Nt             = 1                  / No. time steps
 xmin           = -1000.000000e3     / Minimum x-coordinate
 xmax           =  1000.000000e3     / Maximum x-coordinate
 zmin           = -660.000000e3      / Minimum z-coordinate
