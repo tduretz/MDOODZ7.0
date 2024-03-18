@@ -20,19 +20,19 @@ function main()
     # path ="/home/thanushika/software/Results/Trial2/Results_Density_OC2.97/"
     
     # File numbers
-    file_start = 00
-    file_step  = 25
-    file_end   = 00
+    file_start = 200
+    file_step  = 200
+    file_end   = 1800
     
     # Select field to visualise
-    #field = :Phases
+    field = :Phases
     # field = :Density
     # field = :Viscosity 
     # field = :PlasticStrainrate
-    # field = :Stress
+    #field = :Stress
     # field = :StrainRate
-    field = :Pressure
-    # field = :Temperature
+    #field = :Pressure
+    #field = :Temperature
     # field = :Velocity_x
     # field = :Velocity_z
     # field = :Velocity
