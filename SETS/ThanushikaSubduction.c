@@ -68,11 +68,11 @@ int SetPhase(MdoodzInput *instance, Coordinates coordinates) {
   const double x_ext_start          =  0.0e3 / instance->scaling.L;
   const double x_ext_end            =  100.0e3 / instance->scaling.L;
   const double marginWidth          =  x_ext_end - x_ext_start;
-  const double subductionAngle      = tan(instance->model.user4/180*PI);
+  const double subductionAngle      = tan((90.0 - instance->model.user4)/180*PI);
   const double ocCrustThickness     = instance->model.user7 / instance->scaling.L;
   const double ocLithThickness      = instance->model.user5 / instance->scaling.L;
   const double sedimentThickness    = instance->model.user8 / instance->scaling.L;
-  const double weakZoneDepth        = -fmax(lithosphereThickness, ocLithThickness);
+  const double weakZoneDepth        = -fmin(lithosphereThickness, ocLithThickness) - 20.0e3 / instance->scaling.L;
   int phase = 0; // Upper mantle
   
   // Set all lithosphere
@@ -82,7 +82,7 @@ int SetPhase(MdoodzInput *instance, Coordinates coordinates) {
   }
 
   // Set oceanic lithosphere
-  if (coordinates.z > -ocLithThickness && coordinates.x < -weakZoneWidth - coordinates.z*subductionAngle)
+  if (coordinates.z > -ocLithThickness && coordinates.x < -weakZoneWidth - coordinates.z*subductionAngle && phase == 0)
   {
     phase = 2;
   }
@@ -131,13 +131,13 @@ double SetTemperature(MdoodzInput *instance, Coordinates coordinates) {
   const double surfaceTemperature   = 273.15 / instance->scaling.T;
   const double mantleTemperature    = (1350.0 + 273.15) / instance->scaling.T;
   const double weakZoneWidth        =  10.0e3/instance->scaling.L;
-  const double subductionAngle      = tan(instance->model.user4/180*PI);
+  const double subductionAngle      = tan((90.0 - instance->model.user4)/180*PI);
   const double ocLithThickness      = instance->model.user5 / instance->scaling.L;
         double particleTemperature  = mantleTemperature;
         double thermalDiffusivity   = 1.0e-6 / (instance->scaling.L*instance->scaling.L / instance->scaling.t);
   const double adiabaticGradient    = instance->model.user6 / (instance->scaling.T / instance->scaling.L);
-  const double crustThickness       = 30.0e3 / instance->scaling.L;
-  const double mohoTemperature      = (400 + 273.15) / instance->scaling.T;
+  const double crustThickness       = instance->model.user0 / instance->scaling.L;
+  const double mohoTemperature      = (400.0 + 273.15) / instance->scaling.T;
 
   // Set conductive gradient in oceanic lithosphere (lithospheric thickness is precalculated based on thermal age)
   particleTemperature  = ((mantleTemperature - surfaceTemperature) / ocLithThickness) * (-coordinates.z) + surfaceTemperature;
@@ -233,7 +233,7 @@ void AddCrazyConductivity(MdoodzInput *input) {
   asthenospherePhases[0]                 = 0;
   crazyConductivity->phases              = asthenospherePhases;
   crazyConductivity->nPhases             = 1;
-  crazyConductivity->multiplier          = ocRefLithThick * 25.0 / ocLithThickness;
+  crazyConductivity->multiplier          = 1000.0;//ocRefLithThick * 25.0 / ocLithThickness;
   input->crazyConductivity               = crazyConductivity;
 }
 
