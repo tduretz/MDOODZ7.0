@@ -14,7 +14,7 @@ writer_debug    = 0  / Write debug data switch
 
 /**** SCALES ****/ (Setup dependent) Scaling parameters for
 eta             = 1.0e+20 /viscosity
-L               = 100.0e3   /length
+L               = 5.0e3   /length
 V               = 1.0e-9  /velocity
 T               = 4.0e+02 /temperature
  
@@ -22,8 +22,8 @@ T               = 4.0e+02 /temperature
 Nx             = 1001               / No. grid points x
 Nz             = 381                / No. grid points z
 Nt             = 1000                  / No. time steps
-xmin           = -1200.000000e3     / Minimum x-coordinate
-xmax           =  1200.000000e3     / Maximum x-coordinate
+xmin           = -1000.000000e3     / Minimum x-coordinate
+xmax           =  1000.000000e3     / Maximum x-coordinate
 zmin           = -660.000000e3      / Minimum z-coordinate
 zmax           = 20.000000e3        / Maximum z-coordinate
 dt             = 1.2623e+11         / Initial time step
@@ -66,7 +66,7 @@ user2              = -3.17e-9       / Plate velocity [m/s] (compression -> negat
 user3              = 0.5            / Boundary velocity partitioning: 1 = full push WEST, 0 = full push EAST
 user4              = 15             / Angle of Subduction [°]                                            ***** SYSTEMATIC PARAMETER *****
 user5              = 70e3          / Thickness of oceanic lithosphere - Computed from thermal age       ***** SYSTEMATIC PARAMETER *****
-user6              = 0.0e-3         / Mantle adiabat [K/m]                                               ***** SYSTEMATIC PARAMETER *****
+user6              = 0.4e-3         / Mantle adiabat [K/m]                                               ***** SYSTEMATIC PARAMETER *****
 user7              = 10.0e3         / Oceanic crustal thickness [m]
 user8              = 5.0e3          / Sediment thickness [m]
 
@@ -99,7 +99,7 @@ eta0   = 1e22                       / Constant viscosity value
 npwl   = 1                          / Custom power-law exponent
 Qpwl   = 0                          / Custom power-law activation energy
 gs_ref = 5e-3                       / Reference grain size
-density_model = 3                   / Material dependent buoyancy calculation: 2 - Phase diagram
+density_model = 2                   / Material dependent buoyancy calculation: 2 - Phase diagram
 phase_diagram = 1                   / Peridotite Stixrude
 
 ID     = 1
@@ -124,7 +124,7 @@ eta0   = 1e22
 npwl   = 2
 Qpwl   = 0
 gs_ref = 5e-3
-density_model = 3           / Material dependent buoyancy calculation: 2 - Phase diagram
+density_model = 2           / Material dependent buoyancy calculation: 2 - Phase diagram
 phase_diagram = 1           / Peridotite Stixrude
 
 ID     = 2
@@ -149,11 +149,11 @@ eta0   = 5e20
 npwl   = 0
 Qpwl   = 0
 gs_ref = 5e-3
-density_model = 3                   / Material dependent buoyancy calculation: 2 - Phase diagram
+density_model = 2                   / Material dependent buoyancy calculation: 2 - Phase diagram
 phase_diagram = 1                   / Peridotite Stixrude
 
 ID     = 3                          / Weak plate interface
-rho    = 3250.00
+rho    = 2800.00
 G      = 1e10
 Cv     = 1050
 k      = 3.0 
@@ -174,7 +174,7 @@ eta0   = 5e20
 npwl   = 1
 Qpwl   = 0
 gs_ref = 5e-3
-density_model = 2                   / Material dependent buoyancy calculation: 2 - Phase diagram
+density_model = 3                   / Material dependent buoyancy calculation: 2 - Phase diagram
 phase_diagram = 4                   / Hydrated peridotite
 
 ID     = 4                          / Continental crust
