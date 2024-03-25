@@ -15,14 +15,14 @@ function main()
     # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/qcoe_x100/"
     # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/qcoe_chk/"
     # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/1_NR07/"
-    path = "/Users/lcandiot/Developer/MDOODZ7.0/RUNS/ThanushikaSubduction/test_steepSubd/"
-    # path ="/home/thanushika/software/MDOODZ7.0/cmake-exec/ThanushikaSubduction/"
+    #path = "/Users/lcandiot/Developer/MDOODZ7.0/RUNS/ThanushikaSubduction/test_steepSubd/"
+     path ="/home/thanushika/software/MDOODZ7.0/cmake-exec/ThanushikaSubduction/"
     # path ="/home/thanushika/software/Results/Trial2/Results_Density_OC2.97/"
     
     # File numbers
     file_start = 200
     file_step  = 200
-    file_end   = 1800
+    file_end   = 1400
     
     # Select field to visualise
     field = :Phases
