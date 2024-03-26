@@ -8,7 +8,6 @@ import os
 My = 1e6 * 365 * 24 * 3600
 Lc = 1000.0
 
-base_path = "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview\\aniso3_20"
 output_file_pattern = "Output{:05d}.gzip.h5"
 first_step = 0
 step_range = 10
@@ -20,7 +19,8 @@ def extract_data(file_path, data_path):
     with h5py.File(file_path, 'r') as file:
         return file[data_path][()]
 
-def main():
+
+def plot_data_for_path(base_path):
     time_ma = []
     closest_x_coords = []
 
@@ -72,15 +72,31 @@ def main():
             closest_x_coords.append(max_z_x_coord)
             time_ma.append(t_ma)
 
+    return closest_x_coords, time_ma
 
-    # Plotting
+
+def main():
     fig, ax = plt.subplots(figsize=(12, 8))
-    ax.scatter(closest_x_coords, time_ma)
+
+    # Define base paths and colors
+    base_paths_colors = [
+        ("C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview\\aniso3_20", 'red', 'Aniso3_20'),
+        ("C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview\\aniso3_50", 'blue', 'Aniso3_50'),
+        ("C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview\\aniso3", 'green', 'Aniso3')
+    ]
+
+    # Loop to process each dataset
+    for base_path, color, label in base_paths_colors:
+        closest_x_coords, time_ma = plot_data_for_path(base_path)
+        ax.scatter(closest_x_coords, time_ma, color=color, label=label)
+
+    # Final plot adjustments
     ax.set_xlabel('X-coordinate of max Z at T=1300 [km]', fontsize=15)
     ax.set_ylabel('Time [Ma]', fontsize=15)
+    plt.legend()
     plt.tight_layout()
     plt.show()
-    fig.savefig("time_vs_x_at_max_z_T_1300.png", dpi=300)
+    fig.savefig("time_vs_x_at_max_z_T_1300_comparison.png", dpi=300)
 
 
 if __name__ == "__main__":
