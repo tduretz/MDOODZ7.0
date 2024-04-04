@@ -26,13 +26,13 @@ V   = 1
 T   = 1
 
 /**** SPACE ****/
-Nx      = 251
-Nz      = 251
+Nx      = 301
+Nz      = 186
 Nt      = 1
-xmin    = -5.000000e-1
-zmin    = -5.000000e-1
-xmax    =  5.000000e-1
-zmax    =  5.000000e-1
+xmin    = -0.5
+zmin    = -0.3089700996677741
+xmax    =  0.5
+zmax    =  0.3089700996677741
 
 /**** PARTICLES ****/
 Nx_part = 4
@@ -69,10 +69,10 @@ min_eta      = 1e-3
 max_eta      = 1e6
 
 /**** SETUP-DEPENDANT ****/
-shear_style     = 1
-periodic_x      = 1
+shear_style     = 0
+periodic_x      = 0
 pure_shear_ALE  = 0
-bkg_strain_rate = 1
+bkg_strain_rate = -1
 user0           = 0.0   / nothing
 user1           = 0.0   / nothing
 user2           = 0.0   / nothing
@@ -110,7 +110,7 @@ gsel         = 0             / grain size evo.
 eta0         = 1e0
 npwl         = 0
 Qpwl         = 0
-ani_fstrain  = 1    / activates finite strain anisotropy
+ani_fstrain  = 0    / activates finite strain anisotropy
 ani_fac_max  = 1000.0
 aniso_factor = 1.0
 

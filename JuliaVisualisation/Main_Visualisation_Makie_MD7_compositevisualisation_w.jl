@@ -10,33 +10,56 @@ eval(Meta.parse(MakieOptions[choice]))
 MoC.update_theme!(fonts = (regular = texfont(), bold = texfont(:bold), italic = texfont(:italic)))
 MoC.Makie.inline!(false)
 
-My = 1e6*365*24*3600
+s  = 1
+d  = 24*3600*s
+y  = 365*d
+My = 1e6*y
 
 function main()
 
     # Set the path to your files
-    path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/NonLinearPureshearAnisotropic/"
-    # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/NR00/"
-    path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/"
-    # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/1_NR07/"
-    path ="/users/whalter1/MDOODZ_output_folders_ready_for_download/CollisionPolarCartesian_v22_polar/"
-    path ="/users/whalter1/work/william/MDOODZ_output_folders_ready_for_download/CollisionPolarCartesian_v27_polar/"
-    #path ="/users/whalter1/MDOODZ7.0/cmake-exec/ShearTemplate"
-    path = "/Users/lcandiot/Developer/MDOODZ7.0/RUNS/RiftingChenin/"
-    path = "/home/whalter1/lib/MDOODZ7.0/cmake-exec/AnisoViscTest_evolv_multi_circles/"
-    path = "/home/whalter1/lib/MDOODZ7.0/cmake-exec/AnisoViscTest_evolv_multi_ellipses/"
-    #path = "/home/whalter1/lib/MDOODZ7.0/cmake-exec/AnisoHomoVEVP/"
-    path = "/users/whalter1/MDOODZ7.0/cmake-exec/AnisoViscTest_evolv_multi_ellipses/"
+    path = "/users/whalter1/work/aniso_small_scale/A1_250/"; file_start = 5000
+    path = "/users/whalter1/work/aniso_small_scale/A1_500/"; file_start = 5000
+    path = "/users/whalter1/work/aniso_small_scale/A1_1000/"; file_start = 1280
+    #
+    path = "/users/whalter1/work/aniso_small_scale/A2_250/"; file_start = 2490
+    path = "/users/whalter1/work/aniso_small_scale/A2_500/"; file_start = 2300
+    path = "/users/whalter1/work/aniso_small_scale/A2_1000/"; file_start = 930
+    #
+    path = "/users/whalter1/work/aniso_small_scale/A3_250/"; file_start = 880
+    path = "/users/whalter1/work/aniso_small_scale/A3_500/"; file_start = 2420
+    path = "/users/whalter1/work/aniso_small_scale/A3_1000/"; file_start = 1360
+    #
+    path = "/users/whalter1/work/aniso_small_scale/A4_250/"; file_start = 2750
+    path = "/users/whalter1/work/aniso_small_scale/A4_500/"; file_start = 2650
+    path = "/users/whalter1/work/aniso_small_scale/A4_1000/"; file_start = 910
+    #
+    path = "/users/whalter1/work/aniso_small_scale/A5_250/"; file_start = 2960
+    path = "/users/whalter1/work/aniso_small_scale/A5_500/"; file_start = 2570
+    path = "/users/whalter1/work/aniso_small_scale/A5_1000/"; file_start = 1060
+    #
+    path = "/users/whalter1/work/aniso_small_scale/B1_250/"; file_start = 5000
+    path = "/users/whalter1/work/aniso_small_scale/B1_500/"; file_start = 5000
+    path = "/users/whalter1/work/aniso_small_scale/B1_1000/"; file_start = 1660
+    #
+    path = "/users/whalter1/work/aniso_small_scale/B2_250/"; file_start = 5000
+    path = "/users/whalter1/work/aniso_small_scale/B2_500/"; file_start = 5000
+    path = "/users/whalter1/work/aniso_small_scale/B2_1000/"; file_start = 1520
+    #
+    path = "/users/whalter1/work/aniso_small_scale/B3_250/"; file_start = 5000
+    path = "/users/whalter1/work/aniso_small_scale/B3_500/"; file_start = 5000
+    path = "/users/whalter1/work/aniso_small_scale/B3_1000/"; file_start = 1600
+
 
     # File numbers
-    file_start = 0
+    #file_start = 0
     file_step  = 10
-    file_end   = 0
+    file_end   = file_start
 
     # Select one field to visualise
     #field = :Phases
     #field = :Density
-    #field = :Viscosity 
+    field = :Viscosity 
     #field = :Stress
     #field = :Stress_xx
     #field = :Stress_zz
@@ -49,33 +72,36 @@ function main()
     #field = :Velocity_x
     #field = :Velocity_z
     #field = :Strain # cumulated strain
-    field = :AnisoFactor # anisotropy factor
+    #field = :AnisoFactor # anisotropy factor
     #field = :GrainSize # doesn't function properly yet
     #field = :Topography # doesn't function properly yet
 
     # Switches
     displayfig  = false     # display figures on screen (not possible on any "headless server")
     printfig    = true      # print figures to disk
-    printvid    = true      # print a video (printfig must be on)
+    printvid    = false      # print a video (printfig must be on)
     ph_contours = false     # add phase contours
     T_contours  = false     # add temperature contours
-    fabric      = true     # add fabric quiver (normal to director)
+    fabric      = false     # add fabric quiver (normal to director)
     velocity    = false      # add velocity quiver
     deviatoricV = false      # considers deviatoric velocity for plot and quiver (deviatoric velocity = velocity minus far-field velocity)
     α_heatmap   = 0.85      # transparency of heatmap 
     σ1_axis     = false
+    polar       = false     # for curved setups using Earth's curvature (transforms tensors from x-z to r-phi coord system)
     nap         = 0.3       # pause for animation 
-    resol       = 800
+    resol       = 1600
     inspector   = false     # (not possible on any "headless server")
-    framerate   = 2         # Frame rate for the movie
+    framerate   = 30         # Frame rate for the movie
     movieName   = "$(path)/_$(field)/$(field)"  # Name of the movie
+    xshift      = 0.5       # periodically shifts all values to the right, fraction 0.0-1.0
 
     # Scaling
     Lc = 1.
-    tc = My
+    tc = s; tMytext= "s"
     Vc = 1e-9
 
     # Time loop
+    if displayfig==1 || printfig==1
     for istep=file_start:file_step:file_end
     
         filename = string(path, @sprintf("Output%05d.gzip.h5", istep))
@@ -99,7 +125,8 @@ function main()
         zmin, zmax = zv[1], zv[end]
         Lx, Lz    = (xmax-xmin)/Lc, (zv[end]-zv[1])/Lc
         Δx, Δz, Δ = Lx/ncx, Lz/ncz, sqrt( (Lx/ncx)^2 + (Lz/ncz)^2)
-        @show "Model apect ratio" Lx/Lz
+        @show "Time step" istep
+        #@show "Model apect ratio" Lx/Lz
         @show "Model time" t/My
 
         ph    = Float64.(reshape(ExtractData( filename, "/VizGrid/compo"), ncx, ncz));                  mask_air = ph .== -1.00 
@@ -120,9 +147,20 @@ function main()
         ε̇xx   = Float64.(reshape(ExtractData( filename, "/Centers/exxd"), ncx, ncz))
         ε̇xz   = Float64.(reshape(ExtractData( filename, "/Vertices/exz"), nvx, nvz))
         εII   = Float64.(reshape(ExtractData( filename, "/Centers/strain"), ncx, ncz));                 εII[mask_air] .= NaN
-        AniFac= Float64.(reshape(ExtractData( filename, "/Centers/ani_fac"), ncx, ncz));                AniFac[mask_air] .= NaN
         τII   = sqrt.( 0.5*(2*τxx.^2 .+ 0.5*(τxz[1:end-1,1:end-1].^2 .+ τxz[2:end,1:end-1].^2 .+ τxz[1:end-1,2:end].^2 .+ τxz[2:end,2:end].^2 ) ) ); τII[mask_air] .= NaN
         ε̇II   = sqrt.( 0.5*(2*ε̇xx.^2 .+ 0.5*(ε̇xz[1:end-1,1:end-1].^2 .+ ε̇xz[2:end,1:end-1].^2 .+ ε̇xz[1:end-1,2:end].^2 .+ ε̇xz[2:end,2:end].^2 ) ) ); ε̇II[mask_air] .= NaN
+        if field==:AnisoFactor
+            AniFac= Float64.(reshape(ExtractData( filename, "/Centers/ani_fac"), ncx, ncz))            
+            #@show AniFac[50,50]
+            @show minimum(AniFac)
+            @show maximum(AniFac)
+            # weird issue that sometimes aniso factor is negative infinity (e.g. -9e12 or so) where it should actually be at maximum (e.g. 1000, saturated)!
+            maxifac = maximum(AniFac)
+            AniFac[AniFac .< 0] .= maxifac
+            @show minimum(AniFac)
+            
+            AniFac[mask_air] .= NaN
+        end
         if fabric
             Nx    = Float64.(reshape(ExtractData( filename, "/Centers/nx"), ncx, ncz))
             Nz    = Float64.(reshape(ExtractData( filename, "/Centers/nz"), ncx, ncz))
@@ -143,6 +181,22 @@ function main()
         end
         if σ1_axis 
             σ1 = PrincipalStress(τxx, τzz, τxz, P) 
+        end
+
+        #####################################
+        # x-shift
+        if xshift > 0.0
+            xidx    = Int(floor(ncx*xshift))+1 # x index where to cut
+            ηc      = ηc[[xidx:end;1:xidx-1],:]
+            ε̇II     = ε̇II[[xidx:end;1:xidx-1],:]
+            εII     = εII[[xidx:end;1:xidx-1],:]
+            if field==:AnisoFactor
+                AniFac  = AniFac[[xidx:end;1:xidx-1],:]
+            end
+            if fabric
+                Fab_x   = Fab_x[[xidx:end;1:xidx-1],:]
+                Fab_z   = Fab_z[[xidx:end;1:xidx-1],:]
+            end
         end
 
         #####################################
@@ -168,6 +222,12 @@ function main()
         Vxc     = 0.5 .* (Vx[1:end-1,2:end-1] .+ Vx[2:end-0,2:end-1]); Vxc[mask_air] .= NaN
         Vzc     = 0.5 .* (Vz[2:end-1,1:end-1] .+ Vz[2:end-1,2:end-0]); Vzc[mask_air] .= NaN
         Vc      = (Vxc.^2 .+ Vzc.^2).^0.5
+
+        #####################################
+        # Postprocessing polar setups
+        if polar
+            τxx, τzz, τxz, τxz = tensorCartesianToPolar( τxx, τzz, τxz, τxz, xc, zc, ncx, ncz )
+        end
         
         #####################################
 
@@ -192,7 +252,7 @@ function main()
         f = MoC.Figure(resolution = (Lx/Lz*resol, resol), fontsize=25)
 
         if field==:Phases
-            ax1 = MoC.Axis(f[1, 1], title = L"Phases at $t$ = %$(tMy) Ma", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
+            ax1 = MoC.Axis(f[1, 1], title = L"Phases at $t$ = %$(tMy) %$(tMytext)", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
             hm = MoC.heatmap!(ax1, xc_hr./Lc, zc_hr./Lc, ph_hr, colormap = phase_colors)
             if T_contours 
                 contour!(ax1, xc./Lc, zc./Lc, T, levels=0:200:1400, linewidth = 4, color=:white )  
@@ -206,7 +266,7 @@ function main()
         end
 
         if field==:Density
-            ax1 = MoC.Axis(f[1, 1], title = L"Density $ρ$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
+            ax1 = MoC.Axis(f[1, 1], title = L"Density $ρ$ at $t$ = %$(tMy) %$(tMytext)", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
             hm = MoC.heatmap!(ax1, xc./Lc, zc./Lc, ρc, colormap = (:turbo, α_heatmap))
             if T_contours 
                 contour!(ax1, xc./Lc, zc./Lc, T, levels=0:200:1400, linewidth = 4, color=:white )  
@@ -223,7 +283,7 @@ function main()
         end
 
         if field==:Viscosity
-            ax1 = MoC.Axis(f[1, 1], title = L"$\eta$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
+            ax1 = MoC.Axis(f[1, 1], title = L"$\eta$ at $t$ = %$(tMy) %$(tMytext)", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
             hm = MoC.heatmap!(ax1, xc./Lc, zc./Lc, log10.(ηc), colormap = (:turbo, α_heatmap))
             if T_contours 
                 contour!(ax1, xc./Lc, zc./Lc, T, levels=0:200:1400, linewidth = 4, color=:white )  
@@ -240,7 +300,7 @@ function main()
         end
 
         if field==:Stress
-            ax1 = MoC.Axis(f[1, 1], title = L"$\tau_\textrm{II}$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
+            ax1 = MoC.Axis(f[1, 1], title = L"$\tau_\textrm{II}$ at $t$ = %$(tMy) %$(tMytext)", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
             hm = MoC.heatmap!(ax1, xc./Lc, zc./Lc, τII, colormap = (:turbo, α_heatmap)) 
             if T_contours 
                 contour!(ax1, xc./Lc, zc./Lc, T, levels=0:200:1400, linewidth = 4, color=:white )  
@@ -257,7 +317,7 @@ function main()
         end
 
         if field==:Stress_xx
-            ax1 = MoC.Axis(f[1, 1], title = L"$\tau_\textrm{xx}$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
+            ax1 = MoC.Axis(f[1, 1], title = L"$\tau_\textrm{xx}$ at $t$ = %$(tMy) %$(tMytext)", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
             hm = MoC.heatmap!(ax1, xc./Lc, zc./Lc, τxx, colormap = (:turbo, α_heatmap)) 
             if T_contours 
                 contour!(ax1, xc./Lc, zc./Lc, T, levels=0:200:1400, linewidth = 4, color=:white )  
@@ -274,7 +334,7 @@ function main()
         end
 
         if field==:Stress_zz
-            ax1 = MoC.Axis(f[1, 1], title = L"$\tau_\textrm{zz}$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
+            ax1 = MoC.Axis(f[1, 1], title = L"$\tau_\textrm{zz}$ at $t$ = %$(tMy) %$(tMytext)", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
             hm = MoC.heatmap!(ax1, xc./Lc, zc./Lc, τzz, colormap = (:turbo, α_heatmap)) 
             if T_contours 
                 contour!(ax1, xc./Lc, zc./Lc, T, levels=0:200:1400, linewidth = 4, color=:white )  
@@ -291,8 +351,12 @@ function main()
         end
 
         if field==:Stress_xz
-            ax1 = MoC.Axis(f[1, 1], title = L"$\tau_\textrm{xz}$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
-            hm = MoC.heatmap!(ax1, xv./Lc, zv./Lc, τxz, colormap = (:turbo, α_heatmap)) 
+            ax1 = MoC.Axis(f[1, 1], title = L"$\tau_\textrm{xz}$ at $t$ = %$(tMy) %$(tMytext)", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
+            if polar
+                hm = MoC.heatmap!(ax1, xc./Lc, zc./Lc, τxz, colormap = (:turbo, α_heatmap)) 
+            else
+                hm = MoC.heatmap!(ax1, xv./Lc, zv./Lc, τxz, colormap = (:turbo, α_heatmap)) 
+            end
             if T_contours 
                 contour!(ax1, xc./Lc, zc./Lc, T, levels=0:200:1400, linewidth = 4, color=:white )  
             end  
@@ -308,7 +372,7 @@ function main()
         end
 
         if field==:StrainRate
-            ax1 = MoC.Axis(f[1, 1], title = L"$\dot{\varepsilon}_\textrm{II}$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
+            ax1 = MoC.Axis(f[1, 1], title = L"$\dot{\varepsilon}_\textrm{II}$ at $t$ = %$(tMy) %$(tMytext)", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
             hm = MoC.heatmap!(ax1, xc./Lc, zc./Lc, log10.(ε̇II), colormap = (:turbo, α_heatmap))
             if T_contours 
                 contour!(ax1, xc./Lc, zc./Lc, T, levels=0:200:1400, linewidth = 4, color=:white )  
@@ -325,7 +389,7 @@ function main()
         end
 
         if field==:PlasticStrainrate
-            ax1 = MoC.Axis(f[1, 1], title = L"$\dot{\varepsilon}_\textrm{II}^\textrm{pl}$ at $t$ = %$(tMy) Ma, sum = %$(round(sum(ε̇pl),sigdigits=4)), max = %$(round(maximum(ε̇pl),sigdigits=4)), min = %$(round(minimum(ε̇pl),sigdigits=4))", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
+            ax1 = MoC.Axis(f[1, 1], title = L"$\dot{\varepsilon}_\textrm{II}^\textrm{pl}$ at $t$ = %$(tMy) %$(tMytext), sum = %$(round(sum(ε̇pl),sigdigits=4)), max = %$(round(maximum(ε̇pl),sigdigits=4)), min = %$(round(minimum(ε̇pl),sigdigits=4))", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
             ε̇pl[mask_air] .= NaN
             hm = MoC.heatmap!(ax1, xc./Lc, zc./Lc, log10.(ε̇pl), colormap = (:turbo, α_heatmap))
             if T_contours 
@@ -343,7 +407,7 @@ function main()
         end
 
         if field==:Pressure
-            ax1 = MoC.Axis(f[1, 1], title = L"$P$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
+            ax1 = MoC.Axis(f[1, 1], title = L"$P$ at $t$ = %$(tMy) %$(tMytext)", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
             hm = MoC.heatmap!(ax1, xc./Lc, zc./Lc, P, colormap = (:turbo, α_heatmap))
             if T_contours 
                 contour!(ax1, xc./Lc, zc./Lc, T, levels=0:200:1400, linewidth = 4, color=:white )  
@@ -360,7 +424,7 @@ function main()
         end
 
         if field==:Temperature
-            ax1 = MoC.Axis(f[1, 1], title = L"$T$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
+            ax1 = MoC.Axis(f[1, 1], title = L"$T$ at $t$ = %$(tMy) %$(tMytext)", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
             hm = MoC.heatmap!(ax1, xc./Lc, zc./Lc, T, colormap = (:turbo, α_heatmap))
             if T_contours 
                 contour!(ax1, xc./Lc, zc./Lc, T, levels=0:200:1400, linewidth = 4, color=:white )  
@@ -377,7 +441,7 @@ function main()
         end
 
         if field==:Velocity
-            ax1 = MoC.Axis(f[1, 1], title = L"$V$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
+            ax1 = MoC.Axis(f[1, 1], title = L"$V$ at $t$ = %$(tMy) %$(tMytext)", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
             hm = MoC.heatmap!(ax1, xc./Lc, zc./Lc, Vc, colormap = (:turbo, α_heatmap))
             if T_contours 
                 contour!(ax1, xc./Lc, zc./Lc, T, levels=0:200:1400, linewidth = 4, color=:white )  
@@ -394,7 +458,7 @@ function main()
         end
 
         if field==:Velocity_x
-            ax1 = MoC.Axis(f[1, 1], title = L"$V_{x}$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
+            ax1 = MoC.Axis(f[1, 1], title = L"$V_{x}$ at $t$ = %$(tMy) %$(tMytext)", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
             hm = MoC.heatmap!(ax1, xv./Lc, zc./Lc, Vx[:,2:end-1], colormap = (:turbo, α_heatmap))
             if T_contours 
                 contour!(ax1, xc./Lc, zc./Lc, T, levels=0:200:1400, linewidth = 4, color=:white )  
@@ -411,7 +475,7 @@ function main()
         end
 
         if field==:Velocity_z
-            ax1 = MoC.Axis(f[1, 1], title = L"$V_{z}$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
+            ax1 = MoC.Axis(f[1, 1], title = L"$V_{z}$ at $t$ = %$(tMy) %$(tMytext)", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
             hm = MoC.heatmap!(ax1, xc./Lc, zv./Lc, Vz[2:end-1,:], colormap = (:turbo, α_heatmap))
             if T_contours 
                 contour!(ax1, xc./Lc, zc./Lc, T, levels=0:200:1400, linewidth = 4, color=:white )  
@@ -428,7 +492,7 @@ function main()
         end
 
         if field==:Strain
-            ax1 = MoC.Axis(f[1, 1], title = L"$\varepsilon_{II}$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
+            ax1 = MoC.Axis(f[1, 1], title = L"$\varepsilon_{II}$ at $t$ = %$(tMy) %$(tMytext)", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
             hm = MoC.heatmap!(ax1, xc./Lc, zc./Lc, εII, colormap = (:turbo, α_heatmap))
             if T_contours 
                 contour!(ax1, xc./Lc, zc./Lc, T, levels=0:200:1400, linewidth = 4, color=:white )  
@@ -445,8 +509,8 @@ function main()
         end
 
         if field==:AnisoFactor
-            ax1 = MoC.Axis(f[1, 1], title = L"Anisotropy factor at $t$ = %$(tMy) Ma", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
-            hm = MoC.heatmap!(ax1, xc./Lc, zc./Lc, AniFac, colormap = (:turbo, α_heatmap))
+            ax1 = MoC.Axis(f[1, 1], title = L"Anisotropy factor at $t$ = %$(tMy) %$(tMytext)", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
+            hm = MoC.heatmap!(ax1, xc./Lc, zc./Lc, log10.(AniFac), colormap = (:turbo, α_heatmap), colorrange=(0, 3))
             if T_contours 
                 contour!(ax1, xc./Lc, zc./Lc, T, levels=0:200:1400, linewidth = 4, color=:white )  
             end
@@ -457,12 +521,12 @@ function main()
                 MoC.arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
             end  
             MoC.colsize!(f.layout, 1, MoC.Aspect(1, Lx/Lz))
-            MoC.Colorbar(f[1, 2], hm, label = L"$Anisotropy factor$ []", width = 20, labelsize = 25, ticklabelsize = 14 )
+            MoC.Colorbar(f[1, 2], hm, label =L"$log_{10}\left(\text{Anisotropy factor}\right)$", width = 20, labelsize = 40, ticklabelsize = 40 )
             MoC.colgap!(f.layout, 20)
         end
 
         if field==:GrainSize
-            ax1 = MoC.Axis(f[1, 1], title = L"$d$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
+            ax1 = MoC.Axis(f[1, 1], title = L"$d$ at $t$ = %$(tMy) %$(tMytext)", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
             hm = MoC.heatmap!(ax1, xc./Lc, zc./Lc, log10.(d.*1e6), colormap = (:turbo, α_heatmap), colorrange=(1, 3))
             if T_contours 
                 contour!(ax1, xc./Lc, zc./Lc, T, levels=0:200:1400, linewidth = 4, color=:white )  
@@ -485,7 +549,7 @@ function main()
         end
 
         if field==:Topography
-            ax1 = MoC.Axis(f[1, 1], title = L"Topography at $t$ = %$(tMy) Ma", xlabel = L"$x$ [m]", ylabel = L"$h$ [km]")
+            ax1 = MoC.Axis(f[1, 1], title = L"Topography at $t$ = %$(tMy) %$(tMytext)", xlabel = L"$x$ [m]", ylabel = L"$h$ [km]")
             lines!(ax1, xv./Lc, height./Lc)
             scatter!(ax1, x_mark./Lc, z_mark./Lc)
 
@@ -504,18 +568,18 @@ function main()
         end
         
         if velocity 
-            qv,qh = 10,10
-            MoC.arrows!(ax1, xc[1:qh:end]./Lc, zc[1:qv:end]./Lc, Vxc[1:qh:end,1:qv:end], Vzc[1:qh:end,1:qv:end], arrowsize = Δ*1000, lengthscale=Δ*20)
-            #qv,qh = 6,3
-            #MoC.arrows!(ax1, xc[1:qh:end]./Lc, zc[1:qv:end]./Lc, Vxc[1:qh:end,1:qv:end], Vzc[1:qh:end,1:qv:end], arrowsize = 1e1, lengthscale=Δ/1.5*1e10)
+            #qv,qh = 10,10
+            #MoC.arrows!(ax1, xc[1:qh:end]./Lc, zc[1:qv:end]./Lc, Vxc[1:qh:end,1:qv:end], Vzc[1:qh:end,1:qv:end], arrowsize = Δ*1000, lengthscale=Δ*20)
+            qv,qh = 6,3
+            MoC.arrows!(ax1, xc[1:qh:end]./Lc, zc[1:qv:end]./Lc, Vxc[1:qh:end,1:qv:end], Vzc[1:qh:end,1:qv:end], arrowsize = 1e1, lengthscale=Δ/1.5*1e10)
         end
         if fabric 
-            fac = 3
+            fac = 1
             qv,qh = fac,fac
-            MoC.arrows!(ax1, xc[1:qh:end]./Lc, zc[1:qv:end]./Lc, Fab_x[1:qh:end,1:qv:end], Fab_z[1:qh:end,1:qv:end], arrowsize = 0, lengthscale=Δ*0.7*fac)
+            MoC.arrows!(ax1, xc[1:qh:end]./Lc, zc[1:qv:end]./Lc, Fab_x[1:qh:end,1:qv:end], Fab_z[1:qh:end,1:qv:end], arrowsize = 0, lengthscale=Δ*0.7*fac, align = :center)
             #MoC.arrows!(ax1, xc./Lc, zc./Lc, Nz, Nx, arrowsize = 0, lengthscale=Δ/1.5)
         end
-        if printfig Print2Disk( f, path, string(field), istep) end
+        if printfig Print2Disk( f, path, string(field), istep, xshift) end
 
         if inspector
             DataInspector(f)
@@ -525,8 +589,16 @@ function main()
         end
         sleep(nap)
     end
-    if printfig && printvid
-            FFMPEG.ffmpeg_exe(`-framerate $(framerate) -f image2 -pattern_type glob -i $(path)_$(field)/'*'.png -vf "scale=1920:1080" -c:v libx264 -pix_fmt yuv420p -y "$(movieName).mov"`)
+    end
+    if printvid
+            #FFMPEG.ffmpeg_exe(`-framerate $(framerate) -f image2 -pattern_type glob -i $(path)_$(field)/'*'.png -vf "scale=1920:1080" -c:v libx264 -pix_fmt yuv420p -y "$(movieName).mov"`) 
+            zres = resol
+            xres = resol
+            if xshift > 0.0
+                FFMPEG.ffmpeg_exe(`-framerate $(framerate) -f image2 -pattern_type glob -i $(path)_$(field)/shift/'*'.png -vf "scale=$(xres):$(zres)" -c:v libx264 -pix_fmt yuv420p -y "$(movieName)_shift.mov"`)
+            else
+                FFMPEG.ffmpeg_exe(`-framerate $(framerate) -f image2 -pattern_type glob -i $(path)_$(field)/'*'.png -vf "scale=$(xres):$(zres)" -c:v libx264 -pix_fmt yuv420p -y "$(movieName).mov"`)
+            end
     end
 end
 
@@ -551,10 +623,49 @@ function ExtractData( file_path, data_path)
     return data
 end
 
-function Print2Disk( f, path, field, istep; res=4)
-    path1 = path*"/_$field/"
+function Print2Disk( f, path, field, istep, xshift; res=4)
+    if xshift > 0.0
+        path1 = path*"/_$field/shift/"
+    else
+        path1 = path*"/_$field/"
+    end
     mkpath(path1)
     MoC.save(path1*"$field"*@sprintf("%05d", istep)*".png", f, px_per_unit = res) 
+end
+
+function tensorCartesianToPolar( AXX, AZZ, AXZ, AZX, xc, zc, ncx, ncz )
+    # tensor coordinate transformation from x-z to r-phi coordinate system
+    # A_XZ = tensor to transform
+    # A_RP = transformed tensor
+    XX = ones(ncx)*zc' # matrix with all x-coords
+    ZZ = xc*one(ncz)' # matrix with all z-coords
+    ALPHA = asin.( XX ./ ( XX.^2 .+ ZZ.^2 ).^0.5 )
+    # Idea for coord transform:
+    # R = [cos.(ALPHA) sin.(ALPHA)
+    #     -sin.(ALPHA) cos.(ALPHA)]
+    # ARP = R' * AXZ * R
+    AXZc = v2c(AXZ)
+    AZXc = v2c(AZX)
+    #ARR = ( AXX.*cos.(ALPHA) .- AZXc.*sin.(ALPHA) ) .* cos.(ALPHA) .- ( AXZc.*cos.(ALPHA) .- AZZ.*sin.(ALPHA) ) .* sin.(ALPHA)
+    #APP = ( AXX.*sin.(ALPHA) .+ AZXc.*cos.(ALPHA) ) .* sin.(ALPHA) .+ ( AZZ.*cos.(ALPHA) .+ AXZc.*sin.(ALPHA) ) .* cos.(ALPHA)
+    #ARP = ( AXX.*cos.(ALPHA) .- AZXc.*sin.(ALPHA) ) .* sin.(ALPHA) .+ ( AXZc.*cos.(ALPHA) .- AZZ.*sin.(ALPHA) ) .* cos.(ALPHA)
+    #APR = ( AXX.*sin.(ALPHA) .+ AZXc.*cos.(ALPHA) ) .* cos.(ALPHA) .- ( AZZ.*cos.(ALPHA) .+ AXZc.*sin.(ALPHA) ) .* sin.(ALPHA)
+    ARR = ( AXX.*cos.(ALPHA) .+ AZXc.*sin.(ALPHA) ) .* cos.(ALPHA) .+ ( AXZc.*cos.(ALPHA) .+ AZZ.*sin.(ALPHA) ) .* sin.(ALPHA)
+    APP = ( AZZ.*cos.(ALPHA) .- AXZc.*sin.(ALPHA) ) .* cos.(ALPHA) .- ( AZXc.*cos.(ALPHA) .- AXX.*sin.(ALPHA) ) .* sin.(ALPHA)
+    ARP = ( AXZc.*cos.(ALPHA) .+ AZZ.*sin.(ALPHA) ) .* cos.(ALPHA) .- ( AXX.*cos.(ALPHA) .+ AZXc.*sin.(ALPHA) ) .* sin.(ALPHA)
+    APR = ( AZXc.*cos.(ALPHA) .- AXX.*sin.(ALPHA) ) .* cos.(ALPHA) .+ ( AZZ.*cos.(ALPHA) .- AXZc.*sin.(ALPHA) ) .* sin.(ALPHA)
+    check = 1
+    if check == 1
+        AIIXZ = (0.5*( AXX.^2 .+ AZZ.^2 .+ AXZc.^2 .+ AZXc.^2 )).^0.5
+        AIIRP = (0.5*( ARR.^2 .+ APP.^2 .+ ARP.^2 .+ APR.^2 )).^0.5
+        AIIdiff = AIIRP .- AIIXZ
+        @show maximum(AIIdiff)
+    end
+    return ARR, APP, ARP, APR
+end
+
+function v2c(Av) # interpolation vertex to center
+    return 0.25 * ( Av[1:end-1,1:end-1] + Av[2:end,1:end-1] + Av[2:end,1:end-1] + Av[2:end,2:end] )
 end
 
 main()

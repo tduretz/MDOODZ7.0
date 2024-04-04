@@ -26,8 +26,8 @@ V   = 1
 T   = 1
 
 /**** SPACE ****/
-Nx      = 251
-Nz      = 251
+Nx      = 201
+Nz      = 201
 Nt      = 1
 xmin    = -5.000000e-1
 zmin    = -5.000000e-1
@@ -72,7 +72,7 @@ max_eta      = 1e6
 shear_style     = 1
 periodic_x      = 1
 pure_shear_ALE  = 0
-bkg_strain_rate = 1
+bkg_strain_rate = 1.0
 user0           = 0.0   / nothing
 user1           = 0.0   / nothing
 user2           = 0.0   / nothing
@@ -110,7 +110,7 @@ gsel         = 0             / grain size evo.
 eta0         = 1e0
 npwl         = 0
 Qpwl         = 0
-ani_fstrain  = 1    / activates finite strain anisotropy
+ani_fstrain  = 0    / activates finite strain anisotropy
 ani_fac_max  = 1000.0
 aniso_factor = 1.0
 
