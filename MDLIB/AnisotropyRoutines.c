@@ -41,14 +41,22 @@
 #endif
 
 // Compute finite strain anisotropy factor
-double AnisoFactorEvolv( double FS_AR, double aniso_fac_max ) {
+double AnisoFactorEvolv1( double FS_AR, double aniso_fac_max ) {
   // saturation at a maximum anisotropy factor 
   // (for details see Matlab script)
   // const double delta_ratio = aniso_fac_max / 4.0;
   // const double FS_AR_crit  = aniso_fac_max / 2.0;
   // const double x = 0.5*erfc((FS_AR - FS_AR_crit) / delta_ratio);
-  // return x * FS_AR + (1.0-x) * aniso_fac_max;
   return MINV(FS_AR, aniso_fac_max);
+}
+
+// Compute fabric strain anisotropy factor
+double AnisoFactorEvolv2( double Fxzp, double aniso_fac_max ) {
+  if (abs(Fxzp) < 1.4) {
+      return 1.0 / ( -0.2860641565627383 * Fxzp * Fxzp + 0.4859591953081988 * fabs(Fxzp) + 1.0 );
+  } else {
+      return 1.0 / ( 2.7425779907977237 * exp( -fabs(Fxzp) / 1.2119976579996568 ) + 0.255688992760316 );
+  }
 }
 
 // Squared second invariant of deviatoric stress
@@ -376,17 +384,20 @@ void UpdateAnisoFactor( grid *mesh, mat_prop *materials, params *model, scale *s
           // Arithmetic
           if (average == 0) {
             if (materials->ani_fstrain[p]==0) mesh->aniso_factor_n[c0] += mesh->phase_perc_n[p][c0] * materials->aniso_factor[p];
-            if (materials->ani_fstrain[p]==1) mesh->aniso_factor_n[c0] += mesh->phase_perc_n[p][c0] * AnisoFactorEvolv( mesh->FS_AR_n[c0], materials->ani_fac_max[p] );
+            if (materials->ani_fstrain[p]==1) mesh->aniso_factor_n[c0] += mesh->phase_perc_n[p][c0] * AnisoFactorEvolv1( mesh->FS_AR_n[c0], materials->ani_fac_max[p] );
+            if (materials->ani_fstrain[p]==2) mesh->aniso_factor_n[c0] += mesh->phase_perc_n[p][c0] * AnisoFactorEvolv2( mesh->Fxzp_n[c0] , materials->ani_fac_max[p] );
           }
           // Harmonic
           if (average == 1) {
             if (materials->ani_fstrain[p]==0) mesh->aniso_factor_n[c0] += mesh->phase_perc_n[p][c0] * 1.0/materials->aniso_factor[p];
-            if (materials->ani_fstrain[p]==1) mesh->aniso_factor_n[c0] += mesh->phase_perc_n[p][c0] * 1.0/AnisoFactorEvolv( mesh->FS_AR_n[c0], materials->ani_fac_max[p] );
+            if (materials->ani_fstrain[p]==1) mesh->aniso_factor_n[c0] += mesh->phase_perc_n[p][c0] * 1.0/AnisoFactorEvolv1( mesh->FS_AR_n[c0], materials->ani_fac_max[p] );
+            if (materials->ani_fstrain[p]==2) mesh->aniso_factor_n[c0] += mesh->phase_perc_n[p][c0] * 1.0/AnisoFactorEvolv2( mesh->Fxzp_n[c0] , materials->ani_fac_max[p] );
           }
           // Geometric
           if (average == 2) {
             if (materials->ani_fstrain[p]==0) mesh->aniso_factor_n[c0] += mesh->phase_perc_n[p][c0] * log(materials->aniso_factor[p]);
-            if (materials->ani_fstrain[p]==1) mesh->aniso_factor_n[c0] += mesh->phase_perc_n[p][c0] * log(AnisoFactorEvolv( mesh->FS_AR_n[c0], materials->ani_fac_max[p] ));
+            if (materials->ani_fstrain[p]==1) mesh->aniso_factor_n[c0] += mesh->phase_perc_n[p][c0] * log(AnisoFactorEvolv1( mesh->FS_AR_n[c0], materials->ani_fac_max[p] ));
+            if (materials->ani_fstrain[p]==2) mesh->aniso_factor_n[c0] += mesh->phase_perc_n[p][c0] * log(AnisoFactorEvolv2( mesh->Fxzp_n[c0] , materials->ani_fac_max[p] ));
           }
         }
 
@@ -426,17 +437,20 @@ void UpdateAnisoFactor( grid *mesh, mat_prop *materials, params *model, scale *s
           // Arithmetic
           if (average == 0) {
             if (materials->ani_fstrain[p]==0) mesh->aniso_factor_s[c1] += mesh->phase_perc_s[p][c1] * materials->aniso_factor[p];
-            if (materials->ani_fstrain[p]==1) mesh->aniso_factor_s[c1] += mesh->phase_perc_s[p][c1] * AnisoFactorEvolv( mesh->FS_AR_s[c1], materials->ani_fac_max[p] );
+            if (materials->ani_fstrain[p]==1) mesh->aniso_factor_s[c1] += mesh->phase_perc_s[p][c1] * AnisoFactorEvolv1( mesh->FS_AR_s[c1], materials->ani_fac_max[p] );
+            if (materials->ani_fstrain[p]==2) mesh->aniso_factor_s[c1] += mesh->phase_perc_s[p][c1] * AnisoFactorEvolv2( mesh->Fxzp_s[c1] , materials->ani_fac_max[p] );
           }
           // Harmonic
           if (average == 1) {
             if (materials->ani_fstrain[p]==0) mesh->aniso_factor_s[c1] += mesh->phase_perc_s[p][c1] *  1.0/materials->aniso_factor[p];
-            if (materials->ani_fstrain[p]==1) mesh->aniso_factor_s[c1] += mesh->phase_perc_s[p][c1] *  1.0/AnisoFactorEvolv( mesh->FS_AR_s[c1], materials->ani_fac_max[p] );
+            if (materials->ani_fstrain[p]==1) mesh->aniso_factor_s[c1] += mesh->phase_perc_s[p][c1] *  1.0/AnisoFactorEvolv1( mesh->FS_AR_s[c1], materials->ani_fac_max[p] );
+            if (materials->ani_fstrain[p]==2) mesh->aniso_factor_s[c1] += mesh->phase_perc_s[p][c1] *  1.0/AnisoFactorEvolv2( mesh->Fxzp_s[c1] , materials->ani_fac_max[p] );
           }
           // Geometric
           if (average == 2) {
             if (materials->ani_fstrain[p]==0) mesh->aniso_factor_s[c1] += mesh->phase_perc_s[p][c1] *  log(materials->aniso_factor[p]);
-            if (materials->ani_fstrain[p]==1) mesh->aniso_factor_s[c1] += mesh->phase_perc_s[p][c1] *  log(AnisoFactorEvolv( mesh->FS_AR_s[c1], materials->ani_fac_max[p] ));
+            if (materials->ani_fstrain[p]==1) mesh->aniso_factor_s[c1] += mesh->phase_perc_s[p][c1] *  log(AnisoFactorEvolv1( mesh->FS_AR_s[c1], materials->ani_fac_max[p] ));
+            if (materials->ani_fstrain[p]==2) mesh->aniso_factor_s[c1] += mesh->phase_perc_s[p][c1] *  log(AnisoFactorEvolv2( mesh->Fxzp_s[c1] , materials->ani_fac_max[p] ));
           }
 
         }

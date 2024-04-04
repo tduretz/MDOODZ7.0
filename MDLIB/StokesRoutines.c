@@ -185,6 +185,8 @@ void RheologicalOperators( grid* mesh, params* model, mat_prop* materials, scale
           // Anisotropy
           ani_vep     = mesh->aniso_factor_n[k];
           ani_fstrain = mesh->FS_AR_n[k];
+          //if (materials->ani_fstrain[p]==1) ani_fstrain = mesh->FS_AR_n[k];
+          //else                              ani_fstrain = mesh->Fxzp_n[k]; // to replace by proper formula !! WH
           aniS_vep = 1.0 - 1.0 / ani_vep;
           d1      = mesh->d1_n[k];
           d2      = mesh->d2_n[k];

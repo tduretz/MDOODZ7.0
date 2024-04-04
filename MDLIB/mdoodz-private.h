@@ -27,11 +27,11 @@ typedef struct {
   int     Nx_part, Nz_part, Nb_part, Nb_part_max, min_part_cell, Nb_part_ini;
   double *x, *z, *Vx, *Vz, *P, *sxxd, *szzd, *sxz, *progress, *T, *d, *phi, *X,
           *syy, *dsyy;
-  double *strain, *strain_el, *strain_pl, *strain_pwl, *strain_exp, *strain_lin,
-          *strain_gbs;
+  double *strain, *strain_el, *strain_pl, *strain_pwl, *strain_exp, *strain_lin, *strain_gbs, 
+         *strain_xx, *strain_zz, *strain_xz, *strain_xxp, *strain_zzp, *strain_xzp;
   int    *phase, *generation, *dual;
   int    *intag;
-  double *Fxx, *Fxz, *Fzx, *Fzz, *nx, *nz;
+  double *Fxx, *Fxz, *Fzx, *Fzz, *Fxxp, *Fxzp, *Fzxp, *Fzzp, *nx, *nz;
   double *T0, *P0, *x0, *z0, *Tmax, *Pmax, *divth;
   double *dsxxd, *dszzd, *dsxz;
   double *noise, *rho;
@@ -120,7 +120,7 @@ typedef struct {
   double *drhodp_n;
   double *phi0_s, *d0_s, *T_s, *P_s;
   // For anisotropy
-  double *FS_AR_n, *FS_AR_s, *aniso_factor_n, *aniso_factor_s;
+  double *FS_AR_n, *FS_AR_s, *Fxzp_n, *Fxzp_s, *aniso_factor_n, *aniso_factor_s;
   double *d1_n, *d2_n, *d1_s, *d2_s, *angle_n, *angle_s;
 
   double *cell_min_z, *cell_max_z, *vert_min_z, *vert_max_z;
@@ -375,7 +375,8 @@ void            UpdateParticleX(grid *, scale, params, markers *, mat_prop *);
 void            UpdateParticlePhi(grid *, scale, params, markers *, mat_prop *);
 // Anisotropy
 void            NonNewtonianViscosityGridAniso(grid *, mat_prop *, params *, Nparams, scale *, int);
-double          AnisoFactorEvolv( double FS_AR, double aniso_fac_max );
+double          AnisoFactorEvolv1( double FS_AR, double aniso_fac_max );
+double          AnisoFactorEvolv2( double Fxzp , double aniso_fac_max );
 
 // Advection
 void            DefineInitialTimestep(params *, grid *, markers, mat_prop, scale);
@@ -388,7 +389,6 @@ void            CountPartCell(markers *, grid *, params, surface, surface, int, 
 void            CountPartCell_Old(markers *, grid *, params, surface, int, scale);
 void            CountPartCell2(markers *, grid *, params, surface, surface, int, scale);
 
-void            AccumulatedStrain(grid *, scale, params, markers *);
 void            PureShearALE(params *, grid *, markers *, scale);
 void            VelocitiesOnCenters(double *, double *, double *, double *, int, int, scale);
 void            VelocitiesToParticles(grid *, markers *, DoodzFP *, DoodzFP *, params, scale);
@@ -521,7 +521,7 @@ void            V2P(double *, double *, markers *, double *, double *, double *,
 double          Vertices2Particle(markers *, double *, double *, double *, int, int, char *, double, double, int);
 double          Centers2Particle(markers *, double *, double *, double *, int, int, char *, double, double, int, int);
 void            RogerGuntherII(markers *, params, grid, int, scale);
-void            AccumulatedStrainII(grid *, scale, params, markers *, double *, double *, int, int, char *);
+void            AccumulatedStrain(grid *, scale, params, markers *, double *, double *, int, int, char *);
 void            AdvectFreeSurf(markers *, params, scale);
 
 void            UpdateAnisoFactor( grid*, mat_prop*, params*, scale*); 
@@ -539,6 +539,7 @@ void            ComputeViscosityDerivatives_FD(grid*, mat_prop*, params*, Nparam
 void            SetUpModel_NoMarkers(grid*, params*, scale*);
 void            Diffuse_X(grid*, params*, scale*);
 void            FiniteStrainAspectRatio(grid*, scale, params, markers*);
+void            FabricDeformationGradient(grid*, scale, params, markers*);
 void            Print2DArrayDouble(DoodzFP*, int, int, double);
 void            Print2DArrayInt(int*, int, int, double);
 
