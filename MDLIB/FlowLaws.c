@@ -61,7 +61,7 @@ void ReadDataPowerLaw( mat_prop* mat, params* model, int k, int number, scale* s
             mat->rpwl[k] = 0.0;
             mat->Qpwl[k] = mat->Qpwl[k];
             mat->Vpwl[k] = 0.0;
-            mat->Apwl[k] = pow(mat->eta0[k], -mat->npwl[k]);
+            mat->Apwl[k] = pow(mat->eta0[k]*scaling->eta, -mat->npwl[k]); // rescale eta0 here, as A will be scaled later on
             mat->fpwl[k] = 0.0;
             mat->apwl[k] = 0.0;
             success      = 1;

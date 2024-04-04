@@ -1062,6 +1062,7 @@ Input ReadInputFile( char *fileName ) {
     model.zmin               = ReadDou2( fin, "zmin",    -1.0 )/scaling.L;  // Spatial domain extent  
     model.zmax               = ReadDou2( fin, "zmax",     1.0 )/scaling.L;  // Spatial domain extent
     model.balance_boundaries = ReadInt2( fin, "balance_boundaries",   0 );  // Switch this to activate boundary velocity balancing
+    model.zero_mean_topo     = ReadInt2( fin, "zero_mean_topo",       0 );  // Switch this to force zero mean topography
     // Time domain
     model.Nt                 = ReadInt2( fin, "Nt",         1 );            // Number of time steps    
     model.dt                 = ReadDou2( fin, "dt",       0.0 ) /scaling.t; // Time step
@@ -1302,6 +1303,7 @@ Input ReadInputFile( char *fileName ) {
         // Reaction stuff
         materials.reac_soft[k]  = (int)ReadMatProps( fin, "reac_soft",   k,    0.0  );
         materials.reac_phase[k] = (int)ReadMatProps( fin, "reac_phase",   k,    0.0  );
+        if (materials.reac_phase[k]>=model.Nb_phases && materials.reac_soft[k]==1) {printf("The target phase for reaction softening of phase %d is not set up. Edit the .txt file!\n", k  ); exit(13);}
         materials.Pr[k]         = ReadMatProps( fin, "Pr",      k,    0.0  ) / scaling.S;
         materials.dPr[k]        = ReadMatProps( fin, "dPr",     k,    0.0  ) / scaling.S;
         materials.tau_kin[k]    = ReadMatProps( fin, "tau_kin", k,    0.0  ) / scaling.t;
@@ -1323,6 +1325,10 @@ Input ReadInputFile( char *fileName ) {
         materials.axx[k]            =  ReadMatProps( fin, "axx",    k,    1.0  );              // plastic directional factor xx
         materials.azz[k]            =  ReadMatProps( fin, "azz",    k,    1.0  );              // plastic directional factor zz
         materials.ayy[k]            =  ReadMatProps( fin, "ayy",    k,    1.0  );              // plastic directional factor yy
+        // temperature driven transition between phases
+        materials.transmutation[k]             = (int)ReadMatProps( fin, "transmutation",    k,    0  ); // switcher: 0 - no transition; -1 transition happens when below transition_temperature; 1 transition happens when above transition_temperature;
+        materials.transmutation_phase[k]       = (int)ReadMatProps( fin, "transmutation_phase",    k,    1  ); // phase to set
+        materials.transmutation_temperature[k] = ReadMatProps( fin, "transmutation_temperature",    k,    1400.0  ); // temperature boundary
         // Check if any flow law is active
         int sum = abs(materials.cstv[k]) + abs(materials.pwlv[k]) + abs(materials.linv[k]) + abs(materials.gbsv[k]) + abs(materials.expv[k]);
         if ( sum == 0 ) {
@@ -1608,7 +1614,8 @@ Input ReadInputFile( char *fileName ) {
         model.PDMTmax[pid]       = (800+273)/scaling.T;          // Maximum temperature        (MANTLE) [K]
         model.PDMPmin[pid]       = (0.0090/10*1e9)/scaling.S;    // Minimum pressure           (MANTLE) [Pa]
         model.PDMPmax[pid]       = (49.9890/10*1e9)/scaling.S;   // Maximum pressure           (MANTLE) [Pa]
-        model.PDMrho[pid]        = ReadBin(model.import_files_dir, "SiO2_nsm000.dat", model.PDMnT[pid], model.PDMnP[pid], scaling.rho);
+        model.PDMrho[pid]        = ReadBin(model.import_files_dir, "SiO2_nsm010.dat", model.PDMnT[pid], model.PDMnP[pid], scaling.rho);
+        // model.PDMrho[pid]        = ReadBin(model.import_files_dir, "SiO2_nsm000.dat", model.PDMnT[pid], model.PDMnP[pid], scaling.rho);
     }
 
     //------------------------------------------------------------------------------------------------------------------------------//

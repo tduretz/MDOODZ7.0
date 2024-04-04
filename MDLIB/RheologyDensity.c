@@ -361,11 +361,13 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
 
   // General paramaters
   int    it, nitmax = 20, noisy = 0;
-  double eta = 0.0, R = materials->R, dt = model->dt;
+  double eta = 0.0, R = materials->R;
   double min_eta = model->min_eta, max_eta = model->max_eta;
   double TmaxPeierls = (1200.0 + zeroC) / scaling->T;// max. T for Peierls
 
-  // if (phase==1) noisy=1;
+  double dt;
+  if (model->step==0) dt = 1e100;
+  else dt = model->dt;
 
   // Parameters for deformation map calculations
   int    plastic = 0, constant = 0, dislocation = 0, peierls = 0, diffusion = 0, gbs = 0, elastic = model->elastic, kinetics = 0;
@@ -450,7 +452,7 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
   *d1 = materials->gs_ref[phase];
 
   // Tensional cut-off
-  //    if ( model->gz<0.0 && P<0.0     ) { P = 0.0; printf("Aie aie aie P < 0 !!!\n"); exit(122);}
+  //if ( model->gz<0.0 && P<0.0     ) { P = 0.0; } // printf("Aie aie aie P < 0 !!!\n"); exit(122);
 
   // Visco-plastic limit
   if ( elastic==0                 ) { G = 1e1; dil = 0.0; K = 1e10;}; //K = 1e1;
@@ -532,6 +534,10 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
   if ( constant_mix== 1 && mix_avg==1) eta_cst  = pow(X0/materials->eta0[phase] + (1-X0)/materials->eta0[phase_two], -1.0);
   if ( constant_mix== 1 && mix_avg==2) eta_cst  = exp(X0*log(materials->eta0[phase]) + (1-X0)*log(materials->eta0[phase_two]));
   if ( dislocation == 1 )              eta_pwl  = B_pwl * pow( Eii, 1.0/n_pwl - 1.0 ); 
+
+  // if (phase==1) {  
+  //   printf("%2.2e %2.2e %2.2e %lf\n", eta_pwl*scaling->eta, B_pwl, Eii*scaling->E, n_pwl);
+  // }
 
   // if (phase==2 && constant    == 1) {
   //   double rho_test = EvaluateDensity( phase, T, P, X, model, materials );
@@ -683,7 +689,7 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
 
       // In case return mapping has failed (because of tension), return to a von Mises minimum stress 
       if (Tiic<0.0) {
-        if (noisy>0) printf("Aie, tension!\n");
+        //printf("Aie, tension!\n"); exit(1);
         F_trial = Tii - Tiimin;
         gdot    = F_trial /  (eta_ve);
         Tiic    = Tii - eta_ve*gdot;
@@ -821,6 +827,15 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
 
   if( *etaVE < min_eta ) {
     *etaVE = min_eta;
+  }
+
+  // Viscosity limiter
+  if( eta > max_eta ) {
+    eta = max_eta;
+  }
+
+  if( eta < min_eta ) {
+    eta = min_eta;
   }
 
   //    printf("e --> %2.2e %2.2e %2.2e\n", Exx, Ezz, Eyy); // if (fabs(Eyy)>1e-6)

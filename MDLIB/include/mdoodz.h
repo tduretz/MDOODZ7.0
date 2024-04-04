@@ -42,7 +42,7 @@ typedef struct {
 
 // params contains the model parameters
 typedef struct {
-  int    balance_boundaries;
+  int    balance_boundaries, zero_mean_topo; 
   char   description[500];
   double xmin, zmin, xmax, zmax, time, dx, dz, dt, dt0, dt_start, dt_max, L0,
           dt_min;
@@ -148,6 +148,8 @@ typedef struct {
   double aniso_angle[20], ani_fac_max[20], aniso_factor[20];   //ani_fac_v[20], ani_fac_e[20], ani_fac_p[20]
   double axx[20], azz[20], ayy[20];
   int    ani_fstrain[20];
+  int    transmutation[20], transmutation_phase[20];
+  double transmutation_temperature[20];
 } mat_prop;
 
 char                         *GetSetupFileName(int nargs, char *args[]);
@@ -295,11 +297,17 @@ struct MdoodzSetup {
   MutateInputParams         *mutateInputParams;
 };
 
+typedef struct {
+  double east;
+  double west;
+} LateralFlux;
+
 struct MdoodzInput {
   char              *inputFileName;
   params             model;
   mat_prop           materials;
   scale              scaling;
+  LateralFlux        *flux;
   CrazyConductivity *crazyConductivity;
   Geometry          *geometry;
 };

@@ -2,11 +2,10 @@ istep    = 00000343
 irestart = 0
 
 /**** OUTPUT FILES ****/
-writer         = 0
+writer         = 1
 writer_step    = 10
 writer_markers = 0
 writer_debug   = 0
-writer_subfolder = transition_debug
 
 /**** SCALES ****/ Scaling parameters for
 eta = 1.e+22      /viscosity
@@ -15,15 +14,15 @@ V   = 1.5e-8      /velocity
 T   = 1.e+02      /temperature
 
 /**** SPACE ****/
-Nx      = 300
-Nz      = 140
+Nx      = 400
+Nz      = 210
 xmin    = -200.000000e3
 xmax    =  200.000000e3
 zmin    = -200.000000e3
 zmax    = 10.000000e3
 
 /**** TIME ****/
-Nt          = 7000
+Nt          = 500
 dt          = 1.2623e+11
 Courant     = 0.45
 penalty     = 1e2
@@ -53,7 +52,7 @@ surf_sedirate     = 0.0 / sedimentation rate [m/s]:3.1688e-12 <-> 0.01 cm/yr
 surf_baselev      = 0.0e3 / base level for sedimentation
 track_T_P_x_z     = 1 / initial P and T field record
 polar             = 0
-anisotropy        = 1
+anisotropy        = 0
 reseed_markers    = 1
 
 /**** SETUP DEPENDANT ****/
@@ -97,7 +96,7 @@ Cv           = 1050.0
 k            = 2.5
 Qr           = 0.55e-6
 C            = 5.0e7
-phi          = 30.0
+phi          = 15.0
 Slim         = 500.0e9
 alp          = 32.0e-6
 bet          = 1.5e-11
@@ -110,12 +109,12 @@ coh_soft     = 1
 Ce           = 1e6
 plss         = 0.5
 plse         = 1.5
-aniso_factor = 9
+aniso_factor = 3
 aniso_angle  = 80
 eta_vp     = 5e21
 
 ID       = 1
-rho      = 2800.00 / Lower crust
+rho      = 2600.00 / Lower crust
 G        = 1.0e10
 Cv       = 1050.0
 k        = 2.5
@@ -126,7 +125,7 @@ Slim     = 500.0e9
 alp      = 32.0e-6
 bet      = 1.5e-11
 cstv     = 0
-pwlv     = 10
+pwlv     = 46
 linv     = 0
 gbsv     = 0
 expv     = 0
@@ -134,7 +133,7 @@ Ce       = 1e6
 cohe     = 1e6
 plss     = 0.5
 plse     = 1.5
-aniso_factor = 9
+aniso_factor = 3
 aniso_angle  = 80
 eta_vp     = 5e21
 
@@ -147,19 +146,16 @@ Cv           = 1050.0
 k            = 3.0
 Qr           = 0.0
 C            = 5.0e7
-phi          = 30.0
+phi          = 15.0
 Slim         = 500.0e9
 cstv         = 0
 pwlv         = 40
 linv         = 40
 gbsv         = 0
 expv         = 40
-aniso_factor = 9
+aniso_factor = 1
 aniso_angle  = 80
 eta_vp     = 5e21
-transmutation = 1
-transmutation_temperature = 1330
-transmutation_phase = 3
 
 ID         = 3
 rho        = 3330.00 / asthenosphere
@@ -170,7 +166,7 @@ Cv         = 1050.0
 k          = 3.0
 Qr         = 0.0
 C          = 5.0e7
-phi        = 30.0
+phi        = 15.0
 Slim       = 500.0e9
 cstv       = 0
 pwlv       = 41
@@ -178,5 +174,5 @@ linv       = 41
 gbsv       = 0
 expv       = 40
 eta_vp     = 5e21
-aniso_factor = 1
+aniso_factor = 3
 aniso_angle  = 80
