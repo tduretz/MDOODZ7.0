@@ -413,7 +413,8 @@ void DeformationGradient ( grid mesh, scale scaling, params model, markers *part
     int k, l, cp, cu, cv, Nx, Nz;
     double dx, dz;
     double fxx, fxz, fzx, fzz, fxx_o, fxz_o, fzx_o, fzz_o;
-    
+    //double theta;
+
     Nx = mesh.Nx;
     Nz = mesh.Nz;
     dx = mesh.dx;
@@ -459,7 +460,7 @@ void DeformationGradient ( grid mesh, scale scaling, params model, markers *part
     Interp_Grid2P( *(particles), pdvdx, &mesh, dvdx, mesh.xg_coord,  mesh.zg_coord,  mesh.Nx,   mesh.Nz, mesh.BCg.type   );
     Interp_Grid2P( *(particles), pdudz, &mesh, dudz, mesh.xg_coord,  mesh.zg_coord,  mesh.Nx,   mesh.Nz, mesh.BCg.type   );
     
-#pragma omp parallel for shared ( particles ) private ( k, fxx, fxz, fzx, fzz, fxx_o, fxz_o, fzx_o, fzz_o ) firstprivate( model ) schedule( static )
+#pragma omp parallel for shared ( particles ) private ( k, fxx, fxz, fzx, fzz, fxx_o, fxz_o, fzx_o, fzz_o) firstprivate( model ) schedule( static )
     for(k=0; k<particles->Nb_part; k++) {
         
         fxx = 1.0 + pdudx[k]*model.dt;
@@ -474,7 +475,18 @@ void DeformationGradient ( grid mesh, scale scaling, params model, markers *part
         particles->Fxz[k] = fxx*fxz_o + fxz*fzz_o;
         particles->Fzx[k] = fzx*fxx_o + fzz*fzx_o;
         particles->Fzz[k] = fzx*fxz_o + fzz*fzz_o;
+
+        //// Deformation Gradient tensor components (change of coordinate system to material fabric coordinate system)
+        //theta = -particles->nx[k] / sqrt( particles->nx[k] * particles->nx[k] + particles->nz[k] * particles->nz[k] );// angle for change of coordinate
+        //particles->Fxxp[k] =  ( particles->Fxx[k] * cos(theta) + particles->Fzx[k] * sin(theta)) * cos(theta) + ( particles->Fxz[k] * cos(theta) + particles->Fzz[k] * sin(theta)) * sin(theta);
+        //particles->Fzzp[k] = -(-particles->Fxx[k] * sin(theta) + particles->Fzx[k] * cos(theta)) * sin(theta) + (-particles->Fxz[k] * sin(theta) + particles->Fzz[k] * cos(theta)) * cos(theta);
+        //particles->Fxzp[k] = -( particles->Fxx[k] * cos(theta) + particles->Fzx[k] * sin(theta)) * sin(theta) + ( particles->Fxz[k] * cos(theta) + particles->Fzz[k] * sin(theta)) * cos(theta);
+        //particles->Fzxp[k] =  (-particles->Fxx[k] * sin(theta) + particles->Fzx[k] * cos(theta)) * cos(theta) + (-particles->Fxz[k] * sin(theta) + particles->Fzz[k] * cos(theta)) * sin(theta);
     }
+
+    //int cent=1, vert=0, interp=0;
+    //P2Mastah( &model, *particles, particles->Fxzp, &mesh, mesh.Fxzp_n, mesh.BCp.type, 1, 0, interp, cent, model.interp_stencil);
+    //P2Mastah( &model, *particles, particles->Fxzp, &mesh, mesh.Fxzp_s, mesh.BCg.type, 1, 0, interp, vert, model.interp_stencil);
     
     // Free
     DoodzFree( dudx );
@@ -539,6 +551,32 @@ void FiniteStrainAspectRatio ( grid *mesh, scale scaling, params model, markers 
     printf("-----> Finite strain aspect ratio updated\n");
 }
 
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
+
+void FabricDeformationGradient ( grid *mesh, scale scaling, params model, markers *particles ) {
+    
+    int k;
+    double theta;
+
+#pragma omp parallel for shared ( particles ) private ( k, theta ) firstprivate( model ) schedule( static )
+    for(k=0; k<particles->Nb_part; k++) {
+        
+        // Deformation Gradient tensor components (change of coordinate system to material fabric coordinate system)
+        theta = -particles->nx[k] / sqrt( particles->nx[k] * particles->nx[k] + particles->nz[k] * particles->nz[k] );// angle for change of coordinate
+        particles->Fxxp[k] =  ( particles->Fxx[k] * cos(theta) + particles->Fzx[k] * sin(theta)) * cos(theta) + ( particles->Fxz[k] * cos(theta) + particles->Fzz[k] * sin(theta)) * sin(theta);
+        particles->Fzzp[k] = -(-particles->Fxx[k] * sin(theta) + particles->Fzx[k] * cos(theta)) * sin(theta) + (-particles->Fxz[k] * sin(theta) + particles->Fzz[k] * cos(theta)) * cos(theta);
+        particles->Fxzp[k] = -( particles->Fxx[k] * cos(theta) + particles->Fzx[k] * sin(theta)) * sin(theta) + ( particles->Fxz[k] * cos(theta) + particles->Fzz[k] * sin(theta)) * cos(theta);
+        particles->Fzxp[k] =  (-particles->Fxx[k] * sin(theta) + particles->Fzx[k] * cos(theta)) * cos(theta) + (-particles->Fxz[k] * sin(theta) + particles->Fzz[k] * cos(theta)) * sin(theta);
+    }
+
+    int cent=1, vert=0, interp=0;
+    P2Mastah( &model, *particles, particles->Fxzp, mesh, mesh->Fxzp_n,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil);
+    P2Mastah( &model, *particles, particles->Fxzp, mesh, mesh->Fxzp_s,   mesh->BCg.type,  1, 0, interp, vert, model.interp_stencil);
+
+    printf("-----> Fabric deformation gradient updated\n");
+}
 /*--------------------------------------------------------------------------------------------------------------------*/
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/

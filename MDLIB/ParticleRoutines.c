@@ -755,6 +755,10 @@ void AssignMarkerProperties (markers* particles, int new_ind, int min_index, par
         particles->Fxz[new_ind]           = particles->Fxz[min_index];
         particles->Fzx[new_ind]           = particles->Fzx[min_index];
         particles->Fzz[new_ind]           = particles->Fzz[min_index];
+        particles->Fxxp[new_ind]          = particles->Fxxp[min_index];
+        particles->Fxzp[new_ind]          = particles->Fxzp[min_index];
+        particles->Fzxp[new_ind]          = particles->Fzxp[min_index];
+        particles->Fzzp[new_ind]          = particles->Fzzp[min_index];
     }
     if (model->track_T_P_x_z == 1) {
         particles->T0[new_ind]           = particles->T0[min_index];
@@ -855,6 +859,10 @@ void PartInit( markers *particles, params* model ) {
             particles->Fxz[k]   = 0.0;
             particles->Fzx[k]   = 0.0;
             particles->Fzz[k]   = 1.0;
+            particles->Fxxp[k]  = 1.0;
+            particles->Fxzp[k]  = 0.0;
+            particles->Fzxp[k]  = 0.0;
+            particles->Fzzp[k]  = 1.0;
         }
     }
 }

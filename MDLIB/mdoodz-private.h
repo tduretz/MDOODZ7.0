@@ -30,7 +30,7 @@ typedef struct {
          *strain_xx, *strain_zz, *strain_xz, *strain_xxp, *strain_zzp, *strain_xzp;
   int    *phase, *generation, *dual;
   int    *intag;
-  double *Fxx, *Fxz, *Fzx, *Fzz, *nx, *nz;
+  double *Fxx, *Fxz, *Fzx, *Fzz, *Fxxp, *Fxzp, *Fzxp, *Fzzp, *nx, *nz;
   double *T0, *P0, *x0, *z0, *Tmax, *Pmax, *divth;
   double *dsxxd, *dszzd, *dsxz;
   double *noise, *rho;
@@ -119,7 +119,7 @@ typedef struct {
   double *drhodp_n;
   double *phi0_s, *d0_s, *T_s, *P_s;
   // For anisotropy
-  double *FS_AR_n, *FS_AR_s, *aniso_factor_n, *aniso_factor_s;
+  double *FS_AR_n, *FS_AR_s, *Fxzp_n, *Fxzp_s, *aniso_factor_n, *aniso_factor_s;
   double *d1_n, *d2_n, *d1_s, *d2_s, *angle_n, *angle_s;
 
   double *cell_min_z, *cell_max_z, *vert_min_z, *vert_max_z;
@@ -374,7 +374,8 @@ void            UpdateParticleX(grid *, scale, params, markers *, mat_prop *);
 void            UpdateParticlePhi(grid *, scale, params, markers *, mat_prop *);
 // Anisotropy
 void            NonNewtonianViscosityGridAniso(grid *, mat_prop *, params *, Nparams, scale *, int);
-double          AnisoFactorEvolv( double FS_AR, double aniso_fac_max );
+double          AnisoFactorEvolv1( double FS_AR, double aniso_fac_max );
+double          AnisoFactorEvolv2( double Fxzp , double aniso_fac_max );
 
 // Advection
 void            DefineInitialTimestep(params *, grid *, markers, mat_prop, scale);
@@ -536,6 +537,7 @@ void            ComputeViscosityDerivatives_FD(grid*, mat_prop*, params*, Nparam
 void            SetUpModel_NoMarkers(grid*, params*, scale*);
 void            Diffuse_X(grid*, params*, scale*);
 void            FiniteStrainAspectRatio(grid*, scale, params, markers*);
+void            FabricDeformationGradient(grid*, scale, params, markers*);
 void            Print2DArrayDouble(DoodzFP*, int, int, double);
 void            Print2DArrayInt(int*, int, int, double);
 

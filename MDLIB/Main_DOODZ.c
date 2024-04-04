@@ -279,7 +279,8 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             P2Mastah( &input.model, particles, NULL, &mesh, mesh.d1_s,    mesh.BCg.type, -1, 0, interp, vert, input.model.interp_stencil);
             P2Mastah( &input.model, particles, NULL, &mesh, mesh.d2_s,    mesh.BCg.type, -2, 0, interp, vert, input.model.interp_stencil);
             P2Mastah( &input.model, particles, NULL, &mesh, mesh.angle_s, mesh.BCg.type, -3, 0, interp, vert, input.model.interp_stencil);
-            FiniteStrainAspectRatio ( &mesh, input.scaling, input.model, &particles );
+            FiniteStrainAspectRatio   ( &mesh, input.scaling, input.model, &particles );
+            FabricDeformationGradient ( &mesh, input.scaling, input.model, &particles );
         }
 
         printf("*************************************\n");
@@ -319,6 +320,8 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             if ( input.model.anisotropy == 1 ) {
                 MinMaxArrayTag( mesh.FS_AR_n,  1.0,   (mesh.Nx-1)*(mesh.Nz-1),      "FS_AR_n   ", mesh.BCp.type );
                 MinMaxArrayTag( mesh.FS_AR_s,  1.0,   (mesh.Nx)*(mesh.Nz),          "FS_AR_s   ", mesh.BCg.type );
+                MinMaxArrayTag( mesh.Fxzp_n,   1.0,   (mesh.Nx-1)*(mesh.Nz-1),      "Fxzp_n    ", mesh.BCp.type );
+                MinMaxArrayTag( mesh.Fxzp_s,   1.0,   (mesh.Nx)*(mesh.Nz),          "Fxzp_s    ", mesh.BCg.type );
                 MinMaxArrayTag( mesh.angle_n,  180/M_PI,   (mesh.Nx-1)*(mesh.Nz-1), "angle_n   ", mesh.BCp.type );
                 MinMaxArrayTag( mesh.angle_s,  180/M_PI,   (mesh.Nx)*(mesh.Nz),     "angle_s   ", mesh.BCg.type );
                 MinMaxArray(particles.nx, 1.0, particles.Nb_part,                   "nx        " );
@@ -491,7 +494,8 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             P2Mastah( &input.model, particles, NULL, &mesh, mesh.d1_s,    mesh.BCg.type, -1, 0, interp, vert, input.model.interp_stencil);
             P2Mastah( &input.model, particles, NULL, &mesh, mesh.d2_s,    mesh.BCg.type, -2, 0, interp, vert, input.model.interp_stencil);
             P2Mastah( &input.model, particles, NULL, &mesh, mesh.angle_s, mesh.BCg.type, -3, 0, interp, vert, input.model.interp_stencil);
-            FiniteStrainAspectRatio ( &mesh, input.scaling, input.model, &particles );
+            FiniteStrainAspectRatio   ( &mesh, input.scaling, input.model, &particles );
+            FabricDeformationGradient ( &mesh, input.scaling, input.model, &particles );
         }
 
         P2Mastah( &input.model, particles, particles.X,     &mesh, mesh.X0_n , mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil);
@@ -526,35 +530,35 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
         // Min/Max interpolated fields
         if (input.model.noisy == 1 ) {
-            MinMaxArrayTag( mesh.d0_n, input.scaling.L,   (mesh.Nx-1)*(mesh.Nz-1), "d0        ", mesh.BCp.type );
-            MinMaxArrayTag( mesh.d_n, input.scaling.L,   (mesh.Nx-1)*(mesh.Nz-1), "d         ", mesh.BCp.type );
-            MinMaxArray(particles.sxxd, input.scaling.S, particles.Nb_part, "sxxd part  ");
-            MinMaxArray(particles.T, input.scaling.T,   particles.Nb_part, "T part    ");
-            MinMaxArrayTag( mesh.p0_n, input.scaling.S,    (mesh.Nx-1)*(mesh.Nz-1),   "p0_n",   mesh.BCp.type );
-            MinMaxArrayTag( mesh.sxz0, input.scaling.S,   (mesh.Nx)*(mesh.Nz),     "sxz0    ", mesh.BCg.type );
-            MinMaxArrayTag( mesh.sxxd0, input.scaling.S,   (mesh.Nx-1)*(mesh.Nz-1), "sxx0    ", mesh.BCp.type );
-            MinMaxArrayTag( mesh.szzd0, input.scaling.S,   (mesh.Nx-1)*(mesh.Nz-1), "szz0    ", mesh.BCp.type );
-            MinMaxArrayTag( mesh.mu_s, input.scaling.S,   (mesh.Nx)*(mesh.Nz),     "mu_s    ", mesh.BCg.type );
-            MinMaxArrayTag( mesh.mu_n, input.scaling.S,   (mesh.Nx-1)*(mesh.Nz-1), "mu_n    ", mesh.BCp.type );
-            MinMaxArrayTag( mesh.C_s, input.scaling.S,   (mesh.Nx)*(mesh.Nz),     "C_s     ", mesh.BCg.type );
-            MinMaxArrayTag( mesh.C_n, input.scaling.S,   (mesh.Nx-1)*(mesh.Nz-1), "C_n     ", mesh.BCp.type );
-            MinMaxArrayTag( mesh.fric_s,   180.0/M_PI,  (mesh.Nx)*(mesh.Nz),     "fric_s  ", mesh.BCg.type );
-            MinMaxArrayTag( mesh.fric_n,   180.0/M_PI,  (mesh.Nx-1)*(mesh.Nz-1), "fric_n  ", mesh.BCp.type );
-            MinMaxArrayTag( mesh.dil_s,    180.0/M_PI,  (mesh.Nx)*(mesh.Nz),     "dil_s   ", mesh.BCg.type );
-            MinMaxArrayTag( mesh.dil_n,    180.0/M_PI,  (mesh.Nx-1)*(mesh.Nz-1), "dil_n   ", mesh.BCp.type );
-            MinMaxArrayTag( mesh.strain_s,   1.0,       (mesh.Nx)*(mesh.Nz),     "strain_s", mesh.BCg.type );
-            MinMaxArrayTag( mesh.strain_n,   1.0,       (mesh.Nx-1)*(mesh.Nz-1), "strain_n", mesh.BCp.type );
-            MinMaxArrayTag( mesh.bet_s,    1.0/ input.scaling.S,   (mesh.Nx)*(mesh.Nz),     "beta_s  ", mesh.BCg.type );
-            MinMaxArrayTag( mesh.bet_n,    1.0/ input.scaling.S,   (mesh.Nx-1)*(mesh.Nz-1), "beta_n  ", mesh.BCp.type );
-            MinMaxArrayTag( mesh.T0_n, input.scaling.T,   (mesh.Nx-1)*(mesh.Nz-1), "T0      ", mesh.BCt.type );
-            MinMaxArrayTag( mesh.T,    input.scaling.T,   (mesh.Nx-1)*(mesh.Nz-1), "T       ", mesh.BCt.type );
-            MinMaxArrayTag( mesh.p_in, input.scaling.S,   (mesh.Nx-1)*(mesh.Nz-1), "P       ", mesh.BCt.type );
-            MinMaxArrayI  ( mesh.comp_cells, 1.0, (mesh.Nx-1)*(mesh.Nz-1), "comp_cells" );
-            MinMaxArrayTag( mesh.rho_s, input.scaling.rho, (mesh.Nx)*(mesh.Nz),     "rho_s     ", mesh.BCg.type );
-            MinMaxArrayTag( mesh.rho_n, input.scaling.rho, (mesh.Nx-1)*(mesh.Nz-1), "rho_n     ", mesh.BCp.type );
-            MinMaxArrayTag( mesh.rho0_n, input.scaling.rho, (mesh.Nx-1)*(mesh.Nz-1), "rho0_n    ", mesh.BCp.type );
-            MinMaxArrayTag( mesh.X0_s, 1.0, (mesh.Nx)*(mesh.Nz),     "X0_s      ", mesh.BCg.type );
-            MinMaxArrayTag( mesh.X0_n, 1.0, (mesh.Nx-1)*(mesh.Nz-1), "X0_n      ", mesh.BCp.type );
+            MinMaxArrayTag( mesh.d0_n      , input.scaling.L     , (mesh.Nx-1)*(mesh.Nz-1), "d0        ", mesh.BCp.type );
+            MinMaxArrayTag( mesh.d_n       , input.scaling.L     , (mesh.Nx-1)*(mesh.Nz-1), "d         ", mesh.BCp.type );
+            MinMaxArray   ( particles.sxxd , input.scaling.S     , particles.Nb_part      , "sxxd part " );
+            MinMaxArray   ( particles.T    , input.scaling.T     , particles.Nb_part      , "T part    " );
+            MinMaxArrayTag( mesh.p0_n      , input.scaling.S     , (mesh.Nx-1)*(mesh.Nz-1), "p0_n      ", mesh.BCp.type );
+            MinMaxArrayTag( mesh.sxz0      , input.scaling.S     , (mesh.Nx)  *(mesh.Nz)  , "sxz0      ", mesh.BCg.type );
+            MinMaxArrayTag( mesh.sxxd0     , input.scaling.S     , (mesh.Nx-1)*(mesh.Nz-1), "sxx0      ", mesh.BCp.type );
+            MinMaxArrayTag( mesh.szzd0     , input.scaling.S     , (mesh.Nx-1)*(mesh.Nz-1), "szz0      ", mesh.BCp.type );
+            MinMaxArrayTag( mesh.mu_s      , input.scaling.S     , (mesh.Nx)  *(mesh.Nz)  , "mu_s      ", mesh.BCg.type );
+            MinMaxArrayTag( mesh.mu_n      , input.scaling.S     , (mesh.Nx-1)*(mesh.Nz-1), "mu_n      ", mesh.BCp.type );
+            MinMaxArrayTag( mesh.C_s       , input.scaling.S     , (mesh.Nx)  *(mesh.Nz)  , "C_s       ", mesh.BCg.type );
+            MinMaxArrayTag( mesh.C_n       , input.scaling.S     , (mesh.Nx-1)*(mesh.Nz-1), "C_n       ", mesh.BCp.type );
+            MinMaxArrayTag( mesh.fric_s    , 180.0/M_PI          , (mesh.Nx)  *(mesh.Nz)  , "fric_s    ", mesh.BCg.type );
+            MinMaxArrayTag( mesh.fric_n    , 180.0/M_PI          , (mesh.Nx-1)*(mesh.Nz-1), "fric_n    ", mesh.BCp.type );
+            MinMaxArrayTag( mesh.dil_s     , 180.0/M_PI          , (mesh.Nx)  *(mesh.Nz)  , "dil_s     ", mesh.BCg.type );
+            MinMaxArrayTag( mesh.dil_n     , 180.0/M_PI          , (mesh.Nx-1)*(mesh.Nz-1), "dil_n     ", mesh.BCp.type );
+            MinMaxArrayTag( mesh.strain_s  , 1.0                 , (mesh.Nx)  *(mesh.Nz)  , "strain_s  ", mesh.BCg.type );
+            MinMaxArrayTag( mesh.strain_n  , 1.0                 , (mesh.Nx-1)*(mesh.Nz-1), "strain_n  ", mesh.BCp.type );
+            MinMaxArrayTag( mesh.bet_s     , 1.0/ input.scaling.S, (mesh.Nx)  *(mesh.Nz)  , "beta_s    ", mesh.BCg.type );
+            MinMaxArrayTag( mesh.bet_n     , 1.0/ input.scaling.S, (mesh.Nx-1)*(mesh.Nz-1), "beta_n    ", mesh.BCp.type );
+            MinMaxArrayTag( mesh.T0_n      , input.scaling.T     , (mesh.Nx-1)*(mesh.Nz-1), "T0        ", mesh.BCt.type );
+            MinMaxArrayTag( mesh.T         , input.scaling.T     , (mesh.Nx-1)*(mesh.Nz-1), "T         ", mesh.BCt.type );
+            MinMaxArrayTag( mesh.p_in      , input.scaling.S     , (mesh.Nx-1)*(mesh.Nz-1), "P         ", mesh.BCt.type );
+            MinMaxArrayI  ( mesh.comp_cells, 1.0                 , (mesh.Nx-1)*(mesh.Nz-1), "comp_cells" );
+            MinMaxArrayTag( mesh.rho_s     , input.scaling.rho   , (mesh.Nx)  *(mesh.Nz)  , "rho_s     ", mesh.BCg.type );
+            MinMaxArrayTag( mesh.rho_n     , input.scaling.rho   , (mesh.Nx-1)*(mesh.Nz-1), "rho_n     ", mesh.BCp.type );
+            MinMaxArrayTag( mesh.rho0_n    , input.scaling.rho   , (mesh.Nx-1)*(mesh.Nz-1), "rho0_n    ", mesh.BCp.type );
+            MinMaxArrayTag( mesh.X0_s      , 1.0                 , (mesh.Nx)  *(mesh.Nz)  , "X0_s      ", mesh.BCg.type );
+            MinMaxArrayTag( mesh.X0_n      , 1.0                 , (mesh.Nx-1)*(mesh.Nz-1), "X0_n      ", mesh.BCp.type );
 
             for (int p=0; p< input.model.Nb_phases; p++) {
                 printf("Phase number %d:\n", p);
@@ -563,12 +567,14 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             }
 
             if ( input.model.anisotropy == 1 ) {
-                MinMaxArrayTag( mesh.FS_AR_n,  1.0,   (mesh.Nx-1)*(mesh.Nz-1),      "FS_AR_n   ", mesh.BCp.type );
-                MinMaxArrayTag( mesh.FS_AR_s,  1.0,   (mesh.Nx)*(mesh.Nz),          "FS_AR_s   ", mesh.BCg.type );
-                MinMaxArrayTag( mesh.angle_n,  180/M_PI,   (mesh.Nx-1)*(mesh.Nz-1), "angle_n   ", mesh.BCp.type );
-                MinMaxArrayTag( mesh.angle_s,  180/M_PI,   (mesh.Nx)*(mesh.Nz),     "angle_s   ", mesh.BCg.type );
-                MinMaxArray(particles.nx, 1.0, particles.Nb_part,                   "nx        " );
-                MinMaxArray(particles.nz, 1.0, particles.Nb_part,                   "nz        " );
+                MinMaxArrayTag( mesh.FS_AR_n, 1.0     , (mesh.Nx-1)*(mesh.Nz-1), "FS_AR_n   ", mesh.BCp.type );
+                MinMaxArrayTag( mesh.FS_AR_s, 1.0     , (mesh.Nx)  *(mesh.Nz)  , "FS_AR_s   ", mesh.BCg.type );
+                MinMaxArrayTag( mesh.Fxzp_n , 1.0     , (mesh.Nx-1)*(mesh.Nz-1), "Fxzp_n    ", mesh.BCp.type );
+                MinMaxArrayTag( mesh.Fxzp_s , 1.0     , (mesh.Nx)  *(mesh.Nz)  , "Fxzp_s    ", mesh.BCg.type );
+                MinMaxArrayTag( mesh.angle_n, 180/M_PI, (mesh.Nx-1)*(mesh.Nz-1), "angle_n   ", mesh.BCp.type );
+                MinMaxArrayTag( mesh.angle_s, 180/M_PI, (mesh.Nx)  *(mesh.Nz)  , "angle_s   ", mesh.BCg.type );
+                MinMaxArray   ( particles.nx, 1.0     , particles.Nb_part      , "nx        " );
+                MinMaxArray   ( particles.nz, 1.0     , particles.Nb_part      , "nz        " );
             }
         }
 
@@ -669,31 +675,33 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                 UpdateNonLinearity( &mesh, &particles, &topo_chain, &topo, input.materials, &input.model, &Nmodel, input.scaling, 0, 0 );
 
                 if (input.model.noisy == 1 ) {
-                    MinMaxArrayTag( mesh.T, input.scaling.T, (mesh.Nx-1)*(mesh.Nz-1), "T         ", mesh.BCt.type );
-                    MinMaxArrayTag( mesh.p0_n, input.scaling.S, (mesh.Nx-1)*(mesh.Nz-1), "P old     ", mesh.BCp.type );
-                    MinMaxArrayTag( mesh.p_in, input.scaling.S, (mesh.Nx-1)*(mesh.Nz-1), "P         ", mesh.BCp.type );
-                    MinMaxArrayTag( mesh.div_u, input.scaling.E, (mesh.Nx-1)*(mesh.Nz-1), "div       ", mesh.BCp.type );
-                    MinMaxArrayTag( mesh.exxd, input.scaling.E, (mesh.Nx-1)*(mesh.Nz-1), "exxd      ", mesh.BCp.type );
-                    MinMaxArrayTag( mesh.ezzd, input.scaling.E, (mesh.Nx-1)*(mesh.Nz-1), "ezzd      ", mesh.BCp.type );
-                    MinMaxArrayTag( mesh.exz, input.scaling.E, (mesh.Nx-0)*(mesh.Nz-0), "exz       ", mesh.BCg.type );
-                    MinMaxArrayTag( mesh.sxxd, input.scaling.S, (mesh.Nx-1)*(mesh.Nz-1), "sxxd      ", mesh.BCp.type );
-                    MinMaxArrayTag( mesh.szzd, input.scaling.S, (mesh.Nx-1)*(mesh.Nz-1), "szzd      ", mesh.BCp.type );
-                    MinMaxArrayTag( mesh.sxz, input.scaling.S, (mesh.Nx-0)*(mesh.Nz-0), "sxz       ", mesh.BCg.type );
-                    MinMaxArrayTag( mesh.eta_s, input.scaling.eta, (mesh.Nx)*(mesh.Nz),     "eta_s     ", mesh.BCg.type );
-                    MinMaxArrayTag( mesh.eta_n, input.scaling.eta, (mesh.Nx-1)*(mesh.Nz-1), "eta_n     ", mesh.BCp.type );
-                    MinMaxArrayTag( mesh.eta_phys_s, input.scaling.eta, (mesh.Nx)*(mesh.Nz),     "eta_phys_s", mesh.BCg.type );
+                    MinMaxArrayTag( mesh.T         , input.scaling.T  , (mesh.Nx-1)*(mesh.Nz-1), "T         ", mesh.BCt.type );
+                    MinMaxArrayTag( mesh.p0_n      , input.scaling.S  , (mesh.Nx-1)*(mesh.Nz-1), "P old     ", mesh.BCp.type );
+                    MinMaxArrayTag( mesh.p_in      , input.scaling.S  , (mesh.Nx-1)*(mesh.Nz-1), "P         ", mesh.BCp.type );
+                    MinMaxArrayTag( mesh.div_u     , input.scaling.E  , (mesh.Nx-1)*(mesh.Nz-1), "div       ", mesh.BCp.type );
+                    MinMaxArrayTag( mesh.exxd      , input.scaling.E  , (mesh.Nx-1)*(mesh.Nz-1), "exxd      ", mesh.BCp.type );
+                    MinMaxArrayTag( mesh.ezzd      , input.scaling.E  , (mesh.Nx-1)*(mesh.Nz-1), "ezzd      ", mesh.BCp.type );
+                    MinMaxArrayTag( mesh.exz       , input.scaling.E  , (mesh.Nx-0)*(mesh.Nz-0), "exz       ", mesh.BCg.type );
+                    MinMaxArrayTag( mesh.sxxd      , input.scaling.S  , (mesh.Nx-1)*(mesh.Nz-1), "sxxd      ", mesh.BCp.type );
+                    MinMaxArrayTag( mesh.szzd      , input.scaling.S  , (mesh.Nx-1)*(mesh.Nz-1), "szzd      ", mesh.BCp.type );
+                    MinMaxArrayTag( mesh.sxz       , input.scaling.S  , (mesh.Nx-0)*(mesh.Nz-0), "sxz       ", mesh.BCg.type );
+                    MinMaxArrayTag( mesh.eta_s     , input.scaling.eta, (mesh.Nx)  *(mesh.Nz)  , "eta_s     ", mesh.BCg.type );
+                    MinMaxArrayTag( mesh.eta_n     , input.scaling.eta, (mesh.Nx-1)*(mesh.Nz-1), "eta_n     ", mesh.BCp.type );
+                    MinMaxArrayTag( mesh.eta_phys_s, input.scaling.eta, (mesh.Nx)  *(mesh.Nz)  , "eta_phys_s", mesh.BCg.type );
                     MinMaxArrayTag( mesh.eta_phys_n, input.scaling.eta, (mesh.Nx-1)*(mesh.Nz-1), "eta_phys_n", mesh.BCp.type );
-                    MinMaxArrayTag( mesh.rho_s, input.scaling.rho, (mesh.Nx)*(mesh.Nz),     "rho_s     ", mesh.BCg.type );
-                    MinMaxArrayTag( mesh.rho_n, input.scaling.rho, (mesh.Nx-1)*(mesh.Nz-1), "rho_n     ", mesh.BCp.type );
-                    MinMaxArrayTag( mesh.rho0_n, input.scaling.rho, (mesh.Nx-1)*(mesh.Nz-1), "rho0_n    ", mesh.BCp.type );
-                    MinMaxArrayTag( mesh.d_n, input.scaling.L,   (mesh.Nx-1)*(mesh.Nz-1), "d         ", mesh.BCp.type );
-                    MinMaxArrayTag( mesh.X_s, 1.0, (mesh.Nx)*(mesh.Nz),     "X_s     ", mesh.BCg.type );
-                    MinMaxArrayTag( mesh.X_n, 1.0, (mesh.Nx-1)*(mesh.Nz-1), "X_n     ", mesh.BCp.type );
+                    MinMaxArrayTag( mesh.rho_s     , input.scaling.rho, (mesh.Nx)  *(mesh.Nz)  , "rho_s     ", mesh.BCg.type );
+                    MinMaxArrayTag( mesh.rho_n     , input.scaling.rho, (mesh.Nx-1)*(mesh.Nz-1), "rho_n     ", mesh.BCp.type );
+                    MinMaxArrayTag( mesh.rho0_n    , input.scaling.rho, (mesh.Nx-1)*(mesh.Nz-1), "rho0_n    ", mesh.BCp.type );
+                    MinMaxArrayTag( mesh.d_n       , input.scaling.L  , (mesh.Nx-1)*(mesh.Nz-1), "d         ", mesh.BCp.type );
+                    MinMaxArrayTag( mesh.X_s       , 1.0              , (mesh.Nx)  *(mesh.Nz)  , "X_s       ", mesh.BCg.type );
+                    MinMaxArrayTag( mesh.X_n       , 1.0              , (mesh.Nx-1)*(mesh.Nz-1), "X_n       ", mesh.BCp.type );
                     if (input.model.anisotropy==1) {
-                        MinMaxArrayTag( mesh.FS_AR_n,  1.0,   (mesh.Nx-1)*(mesh.Nz-1),      "FS_AR_n   ", mesh.BCp.type );
-                        MinMaxArrayTag( mesh.FS_AR_s,  1.0,   (mesh.Nx)*(mesh.Nz),          "FS_AR_s   ", mesh.BCg.type );
-                        MinMaxArrayTag( mesh.aniso_factor_n,  1.0,   (mesh.Nx-1)*(mesh.Nz-1), "ani_fac_n ",   mesh.BCp.type );
-                        MinMaxArrayTag( mesh.aniso_factor_s,  1.0,   (mesh.Nx)*(mesh.Nz),     "ani_fac_s ",   mesh.BCg.type );
+                        MinMaxArrayTag( mesh.FS_AR_n       , 1.0, (mesh.Nx-1)*(mesh.Nz-1), "FS_AR_n   ", mesh.BCp.type );
+                        MinMaxArrayTag( mesh.FS_AR_s       , 1.0, (mesh.Nx)  *(mesh.Nz)  , "FS_AR_s   ", mesh.BCg.type );
+                        MinMaxArrayTag( mesh.Fxzp_n        , 1.0, (mesh.Nx-1)*(mesh.Nz-1), "Fxzp_n    ", mesh.BCp.type );
+                        MinMaxArrayTag( mesh.Fxzp_s        , 1.0, (mesh.Nx)  *(mesh.Nz)  , "Fxzp_s    ", mesh.BCg.type );
+                        MinMaxArrayTag( mesh.aniso_factor_n, 1.0, (mesh.Nx-1)*(mesh.Nz-1), "ani_fac_n ", mesh.BCp.type );
+                        MinMaxArrayTag( mesh.aniso_factor_s, 1.0, (mesh.Nx)  *(mesh.Nz)  , "ani_fac_s ", mesh.BCg.type );
                     }
                 }
 

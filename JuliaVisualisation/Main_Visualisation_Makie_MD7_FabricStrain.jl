@@ -29,12 +29,13 @@ function main()
     # path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/qcoe_simp2/"
     # path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/qcoe_simp_tau1e10/"
     #path = "/home/whalter1/github/MDOODZ7.0/cmake-exec/ShearTemplate/"
-    path = "/home/whalter1/github/MDOODZ7.0/cmake-exec/AnisoViscTest_evolv_multi_ellipses/"
+    #path = "/home/whalter1/github/MDOODZ7.0/cmake-exec/WilliamB6/"
+    path = "/home/whalter1/github/MDOODZ7.0/cmake-exec/William_Dabrowski_1incl/"
 
     # File numbers
-    file_start = 50
+    file_start = 0
     file_step  = 10
-    file_end   = 50
+    file_end   = 20
 
     # Select field to visualise
     # field = :Phases
@@ -43,7 +44,7 @@ function main()
     # field = :Viscosity 
     # field = :PlasticStrainrate
     # field = :Stress
-    # field = :StrainRate
+     field = :StrainRate
     # field = :Strain
     # field = :Strain_xx # normal strain
     # field = :Strain_zz # normal strain
@@ -51,10 +52,14 @@ function main()
     # field = :FabricStrain_xx # normal strain along foliation (i.e. εxxp)
     # field = :FabricStrain_zz # normal strain along director (i.e. εzzp)
     # field = :FabricStrain_xz # shear strain along and across foliation (i.e. εxzp)
-    field = :Fxx
-    #field = :Fzz
-    #field = :Fxz
-    #field = :Fzx
+    # field = :Fxx
+    # field = :Fzz
+    # field = :Fxz
+    # field = :Fzx
+    # field = :Fxxp
+    # field = :Fzzp
+    # field = :Fxzp
+    # field = :Fzxp
     # field = :Pressure
     # field = :Temperature
     # field = :Velocity_x
@@ -158,6 +163,10 @@ function main()
         Fzz   = Float64.(reshape(ExtractData( filename, "/Centers/Fzz"), ncx, ncz));             Fzz[mask_air] .= NaN
         Fxz   = Float64.(reshape(ExtractData( filename, "/Centers/Fxz"), ncx, ncz));             Fxz[mask_air] .= NaN
         Fzx   = Float64.(reshape(ExtractData( filename, "/Centers/Fzx"), ncx, ncz));             Fzx[mask_air] .= NaN
+        Fxxp  = Float64.(reshape(ExtractData( filename, "/Centers/Fxxp"), ncx, ncz));            Fxxp[mask_air].= NaN
+        Fzzp  = Float64.(reshape(ExtractData( filename, "/Centers/Fzzp"), ncx, ncz));            Fzzp[mask_air].= NaN
+        Fxzp  = Float64.(reshape(ExtractData( filename, "/Centers/Fxzp"), ncx, ncz));            Fxzp[mask_air].= NaN
+        Fzxp  = Float64.(reshape(ExtractData( filename, "/Centers/Fzxp"), ncx, ncz));            Fzxp[mask_air].= NaN
         τII   = sqrt.( 0.5*(τxx.^2 .+ τyy.^2 .+ τzz.^2 .+ 0.5*(τxz[1:end-1,1:end-1].^2 .+ τxz[2:end,1:end-1].^2 .+ τxz[1:end-1,2:end].^2 .+ τxz[2:end,2:end].^2 ) ) ); τII[mask_air] .= NaN
         ε̇II   = sqrt.( 0.5*(ε̇xx.^2 .+ ε̇yy.^2 .+ ε̇zz.^2 .+ 0.5*(ε̇xz[1:end-1,1:end-1].^2 .+ ε̇xz[2:end,1:end-1].^2 .+ ε̇xz[1:end-1,2:end].^2 .+ ε̇xz[2:end,2:end].^2 ) ) ); ε̇II[mask_air] .= NaN
         C     = Float64.(reshape(ExtractData( filename, "/Centers/cohesion"), ncx, ncz))
@@ -478,7 +487,7 @@ function main()
             ax1 = Axis(f[1, 1], title = L"$\textrm{F_{xx}}$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
             #hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(Fxx), colormap = (:turbo, α_heatmap), colorrange=(-4.,1.))
             @show minimum(Fxx), maximum(Fxx)
-            hm = heatmap!(ax1, xc./Lc, zc./Lc, Fxx, colormap = (:turbo, α_heatmap))
+            hm = heatmap!(ax1, xc./Lc, zc./Lc, Fxx, colormap = (:turbo, α_heatmap), colorrange=(0.5,1.5))
             if ph_contours 
                 contour!(ax1, xc_hr./Lc, zc_hr./Lc, group_phases, levels=-1:1:maximum(group_phases), linewidth = 4, color=:black )  
             end
@@ -498,7 +507,7 @@ function main()
             ax1 = Axis(f[1, 1], title = L"$\textrm{F_{zz}}$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
             #hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(Fzz), colormap = (:turbo, α_heatmap), colorrange=(-4.,1.))
             @show minimum(Fzz), maximum(Fzz)
-            hm = heatmap!(ax1, xc./Lc, zc./Lc, Fzz, colormap = (:turbo, α_heatmap))
+            hm = heatmap!(ax1, xc./Lc, zc./Lc, Fzz, colormap = (:turbo, α_heatmap), colorrange=(0.5,1.5))
             if ph_contours 
                 contour!(ax1, xc_hr./Lc, zc_hr./Lc, group_phases, levels=-1:1:maximum(group_phases), linewidth = 4, color=:black )  
             end
@@ -518,7 +527,7 @@ function main()
             ax1 = Axis(f[1, 1], title = L"$\textrm{F_{xz}}$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
             #hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(Fxz), colormap = (:turbo, α_heatmap), colorrange=(-4.,1.))
             @show minimum(Fxz), maximum(Fxz)
-            hm = heatmap!(ax1, xc./Lc, zc./Lc, Fxz, colormap = (:turbo, α_heatmap))
+            hm = heatmap!(ax1, xc./Lc, zc./Lc, Fxz, colormap = (:turbo, α_heatmap), colorrange=(-0.5,0.5))
             if ph_contours 
                 contour!(ax1, xc_hr./Lc, zc_hr./Lc, group_phases, levels=-1:1:maximum(group_phases), linewidth = 4, color=:black )  
             end
@@ -538,7 +547,7 @@ function main()
             ax1 = Axis(f[1, 1], title = L"$\textrm{F_{zx}}$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
             #hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(Fzx), colormap = (:turbo, α_heatmap), colorrange=(-4.,1.))
             @show minimum(Fzx), maximum(Fzx)
-            hm = heatmap!(ax1, xc./Lc, zc./Lc, Fzx, colormap = (:turbo, α_heatmap))
+            hm = heatmap!(ax1, xc./Lc, zc./Lc, Fzx, colormap = (:turbo, α_heatmap), colorrange=(-0.5,0.5))
             if ph_contours 
                 contour!(ax1, xc_hr./Lc, zc_hr./Lc, group_phases, levels=-1:1:maximum(group_phases), linewidth = 4, color=:black )  
             end
@@ -550,6 +559,86 @@ function main()
             end
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
             CairoMakie.Colorbar(f[1, 2], hm, label =  L"$\textrm{F_{zx}}$ [-]", width = 20, labelsize = 25, ticklabelsize = 14 )
+            CairoMakie.colgap!(f.layout, 20)
+            if printfig Print2Disk( f, path, string(field), istep) end
+        end
+
+        if field==:Fxxp
+            ax1 = Axis(f[1, 1], title = L"$\textrm{F_{xxp}}$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
+            #hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(Fxxp), colormap = (:turbo, α_heatmap), colorrange=(-4.,1.))
+            @show minimum(Fxxp), maximum(Fxxp)
+            hm = heatmap!(ax1, xc./Lc, zc./Lc, Fxxp, colormap = (:turbo, α_heatmap), colorrange=(0.5,1.5))
+            if ph_contours 
+                contour!(ax1, xc_hr./Lc, zc_hr./Lc, group_phases, levels=-1:1:maximum(group_phases), linewidth = 4, color=:black )  
+            end
+            if fabric 
+                arrows!(ax1, xc./Lc, zc./Lc, Nz, Nx, arrowsize = 0, lengthscale=Δ/1.5)
+            end
+            if T_contours 
+                contour!(ax1, xc./Lc, zc./Lc, T, levels=0:200:1400, linewidth = 4, color=:white)  
+            end
+            colsize!(f.layout, 1, Aspect(1, Lx/Lz))
+            CairoMakie.Colorbar(f[1, 2], hm, label =  L"$\textrm{F_{xxp}}$ [-]", width = 20, labelsize = 25, ticklabelsize = 14 )
+            CairoMakie.colgap!(f.layout, 20)
+            if printfig Print2Disk( f, path, string(field), istep) end
+        end
+
+        if field==:Fzzp
+            ax1 = Axis(f[1, 1], title = L"$\textrm{F_{zzp}}$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
+            #hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(Fzzp), colormap = (:turbo, α_heatmap), colorrange=(-4.,1.))
+            @show minimum(Fzzp), maximum(Fzzp)
+            hm = heatmap!(ax1, xc./Lc, zc./Lc, Fzzp, colormap = (:turbo, α_heatmap), colorrange=(0.5,1.5))
+            if ph_contours 
+                contour!(ax1, xc_hr./Lc, zc_hr./Lc, group_phases, levels=-1:1:maximum(group_phases), linewidth = 4, color=:black )  
+            end
+            if fabric 
+                arrows!(ax1, xc./Lc, zc./Lc, Nz, Nx, arrowsize = 0, lengthscale=Δ/1.5)
+            end
+            if T_contours 
+                contour!(ax1, xc./Lc, zc./Lc, T, levels=0:200:1400, linewidth = 4, color=:white)  
+            end
+            colsize!(f.layout, 1, Aspect(1, Lx/Lz))
+            CairoMakie.Colorbar(f[1, 2], hm, label =  L"$\textrm{F_{zzp}}$ [-]", width = 20, labelsize = 25, ticklabelsize = 14 )
+            CairoMakie.colgap!(f.layout, 20)
+            if printfig Print2Disk( f, path, string(field), istep) end
+        end
+
+        if field==:Fxzp
+            ax1 = Axis(f[1, 1], title = L"$\textrm{F_{xzp}}$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
+            #hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(Fxzp), colormap = (:turbo, α_heatmap), colorrange=(-4.,1.))
+            @show minimum(Fxzp), maximum(Fxzp)
+            hm = heatmap!(ax1, xc./Lc, zc./Lc, Fxzp, colormap = (:turbo, α_heatmap), colorrange=(-0.5,0.5))
+            if ph_contours 
+                contour!(ax1, xc_hr./Lc, zc_hr./Lc, group_phases, levels=-1:1:maximum(group_phases), linewidth = 4, color=:black )  
+            end
+            if fabric 
+                arrows!(ax1, xc./Lc, zc./Lc, Nz, Nx, arrowsize = 0, lengthscale=Δ/1.5)
+            end
+            if T_contours 
+                contour!(ax1, xc./Lc, zc./Lc, T, levels=0:200:1400, linewidth = 4, color=:white)  
+            end
+            colsize!(f.layout, 1, Aspect(1, Lx/Lz))
+            CairoMakie.Colorbar(f[1, 2], hm, label =  L"$\textrm{F_{xzp}}$ [-]", width = 20, labelsize = 25, ticklabelsize = 14 )
+            CairoMakie.colgap!(f.layout, 20)
+            if printfig Print2Disk( f, path, string(field), istep) end
+        end
+
+        if field==:Fzxp
+            ax1 = Axis(f[1, 1], title = L"$\textrm{F_{zxp}}$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
+            #hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(Fzxp), colormap = (:turbo, α_heatmap), colorrange=(-4.,1.))
+            @show minimum(Fzxp), maximum(Fzxp)
+            hm = heatmap!(ax1, xc./Lc, zc./Lc, Fzxp, colormap = (:turbo, α_heatmap), colorrange=(-0.5,0.5))
+            if ph_contours 
+                contour!(ax1, xc_hr./Lc, zc_hr./Lc, group_phases, levels=-1:1:maximum(group_phases), linewidth = 4, color=:black )  
+            end
+            if fabric 
+                arrows!(ax1, xc./Lc, zc./Lc, Nz, Nx, arrowsize = 0, lengthscale=Δ/1.5)
+            end
+            if T_contours 
+                contour!(ax1, xc./Lc, zc./Lc, T, levels=0:200:1400, linewidth = 4, color=:white)  
+            end
+            colsize!(f.layout, 1, Aspect(1, Lx/Lz))
+            CairoMakie.Colorbar(f[1, 2], hm, label =  L"$\textrm{F_{zxp}}$ [-]", width = 20, labelsize = 25, ticklabelsize = 14 )
             CairoMakie.colgap!(f.layout, 20)
             if printfig Print2Disk( f, path, string(field), istep) end
         end

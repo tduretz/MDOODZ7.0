@@ -168,6 +168,10 @@ void AddPartSed( markers *particles, mat_prop materials, markers *topo_chain, su
                     particles->Fxz[new_ind]           = 0.0;
                     particles->Fzx[new_ind]           = 1.0;
                     particles->Fzz[new_ind]           = 0.0;
+                    particles->Fxxp[new_ind]          = 1.0;
+                    particles->Fxzp[new_ind]          = 0.0;
+                    particles->Fzxp[new_ind]          = 0.0;
+                    particles->Fzzp[new_ind]          = 1.0;
                 }
                 
                 if (track_T_P_x_z==1) {

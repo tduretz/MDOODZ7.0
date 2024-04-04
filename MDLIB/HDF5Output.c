@@ -263,8 +263,8 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
           *Cstrain_xx, *Cstrain_zz, *Cstrain_xz, *Cstrain_xxp, *Cstrain_zzp, *Cstrain_xzp, *CT, *Cd;
     float *Cxg_coord, *Czg_coord, *Cxc_coord, *Czc_coord, *Czvx_coord, *Cxvz_coord;
     float *CeII_el, *CeII_pl, *CeII_pwl, *CeII_exp, *CeII_lin, *CeII_gbs, *CX;
-    double *Fxx, *Fxz, *Fzx, *Fzz, *nx, *nz;
-    float *CFxx, *CFxz, *CFzx, *CFzz, *Cnx, *Cnz;
+    double *Fxx, *Fxz, *Fzx, *Fzz, *Fxxp, *Fxzp, *Fzxp, *Fzzp, *nx, *nz;
+    float *CFxx, *CFxz, *CFzx, *CFzz, *CFxxp, *CFxzp, *CFzxp, *CFzzp, *Cnx, *Cnz;
     double *T0, *P0, *x0, *z0, *Tmax, *Pmax;
     float *CT0, *CP0, *Cx0, *Cz0, *CTmax, *CPmax;
     float *CXreac;
@@ -583,6 +583,30 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
         P2Mastah( &model, *particles, particles->Fzz,     mesh, Fzz,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil);
         CFzz = DoodzMalloc( sizeof(float)*(model.Nx-1)*(model.Nz-1));
         DoubleToFloat( Fzz, CFzz, (model.Nx-1)*(model.Nz-1) );
+
+        // Fxxp
+        Fxxp  = DoodzCalloc((model.Nx-1)*(model.Nz-1), sizeof(double));
+        P2Mastah( &model, *particles, particles->Fxxp,     mesh, Fxxp,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil);
+        CFxxp  = DoodzMalloc( sizeof(float)*(model.Nx-1)*(model.Nz-1));
+        DoubleToFloat( Fxxp, CFxxp, (model.Nx-1)*(model.Nz-1) );
+
+        // Fxzp
+        Fxzp  = DoodzCalloc((model.Nx-1)*(model.Nz-1),sizeof(double));
+        P2Mastah( &model, *particles, particles->Fxzp,     mesh, Fxzp,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil);
+        CFxzp  = DoodzMalloc( sizeof(float)*(model.Nx-1)*(model.Nz-1));
+        DoubleToFloat( Fxzp, CFxzp, (model.Nx-1)*(model.Nz-1) );
+
+        // Fzxp
+        Fzxp  = DoodzCalloc((model.Nx-1)*(model.Nz-1), sizeof(double));
+        P2Mastah( &model, *particles, particles->Fzxp,     mesh, Fzxp,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil);
+        CFzxp  = DoodzMalloc( sizeof(float)*(model.Nx-1)*(model.Nz-1));
+        DoubleToFloat( Fzxp, CFzxp, (model.Nx-1)*(model.Nz-1) );
+
+        // Fzzp
+        Fzzp  = DoodzCalloc((model.Nx-1)*(model.Nz-1),sizeof(double));
+        P2Mastah( &model, *particles, particles->Fzzp,     mesh, Fzzp,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil);
+        CFzzp = DoodzMalloc( sizeof(float)*(model.Nx-1)*(model.Nz-1));
+        DoubleToFloat( Fzzp, CFzzp, (model.Nx-1)*(model.Nz-1) );
     }
 
     if ( model.anisotropy == 1 ) {
@@ -851,10 +875,14 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
     AddFieldToGroup( FileName, "Centers" , "cohesion", 'f', (model.Nx-1)*(model.Nz-1), Ccohesion, 1 );
 
     if (model.finite_strain == 1) {
-        AddFieldToGroup( FileName, "Centers" , "Fxx", 'f', (model.Nx-1)*(model.Nz-1), CFxx, 1 );
-        AddFieldToGroup( FileName, "Centers" , "Fxz", 'f', (model.Nx-1)*(model.Nz-1), CFxz, 1 );
-        AddFieldToGroup( FileName, "Centers" , "Fzx", 'f', (model.Nx-1)*(model.Nz-1), CFzx, 1 );
-        AddFieldToGroup( FileName, "Centers" , "Fzz", 'f', (model.Nx-1)*(model.Nz-1), CFzz, 1 );
+        AddFieldToGroup( FileName, "Centers" , "Fxx" , 'f', (model.Nx-1)*(model.Nz-1), CFxx , 1 );
+        AddFieldToGroup( FileName, "Centers" , "Fxz" , 'f', (model.Nx-1)*(model.Nz-1), CFxz , 1 );
+        AddFieldToGroup( FileName, "Centers" , "Fzx" , 'f', (model.Nx-1)*(model.Nz-1), CFzx , 1 );
+        AddFieldToGroup( FileName, "Centers" , "Fzz" , 'f', (model.Nx-1)*(model.Nz-1), CFzz , 1 );
+        AddFieldToGroup( FileName, "Centers" , "Fxxp", 'f', (model.Nx-1)*(model.Nz-1), CFxxp, 1 );
+        AddFieldToGroup( FileName, "Centers" , "Fxzp", 'f', (model.Nx-1)*(model.Nz-1), CFxzp, 1 );
+        AddFieldToGroup( FileName, "Centers" , "Fzxp", 'f', (model.Nx-1)*(model.Nz-1), CFzxp, 1 );
+        AddFieldToGroup( FileName, "Centers" , "Fzzp", 'f', (model.Nx-1)*(model.Nz-1), CFzzp, 1 );
     }
 
     if (model.anisotropy == 1) {
@@ -982,6 +1010,15 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
         DoodzFree( CFxz );
         DoodzFree( CFzx );
         DoodzFree( CFzz );
+        
+        DoodzFree( Fxxp  );
+        DoodzFree( Fxzp  );
+        DoodzFree( Fzxp  );
+        DoodzFree( Fzzp  );
+        DoodzFree( CFxxp );
+        DoodzFree( CFxzp );
+        DoodzFree( CFzxp );
+        DoodzFree( CFzzp );
     }
 
      if ( model.anisotropy == 1 ) {
