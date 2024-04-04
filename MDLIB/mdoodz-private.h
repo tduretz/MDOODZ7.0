@@ -1,6 +1,7 @@
 #include "cholmod.h"
 #include "cs.h"
 #include "mdoodz.h"
+
 //---------------------------------------------------------------------------------------------------------------------------//
 //------------------------------------------------ MACROS DEFINITIONS -------------------------------------------------------//
 //---------------------------------------------------------------------------------------------------------------------------//
@@ -419,6 +420,7 @@ void            UpdateDensity(grid *, markers *, mat_prop *, params *, scale *);
 void            DiffuseAlongTopography(grid *, params, scale, double *, double *, int, double, double);
 void            AddPartSed(markers *, mat_prop, markers *, surface *, params, scale, grid *);
 void            CorrectTopoIni(markers *, mat_prop, markers *, surface *, params, scale, grid *);
+void            KeepZeroMeanTopo(params*, surface*, markers* );
 
 // Decoupled solver
 void            KillerSolver(SparseMat *, SparseMat *, SparseMat *, SparseMat *, DirectSolver *, double *, double *, double *, params, grid *, scale, SparseMat *, SparseMat *, SparseMat *, SparseMat *, SparseMat *);
@@ -574,7 +576,7 @@ void            MinMaxArray(double *array, double scale, int size, char *text);
 
 void            BuildInitialTopography(BuildInitialTopography_ff buildInitialTopography, MdoodzInput *instance, markers *topo_chain);
 void            SetParticles(SetParticles_ff setParticles, MdoodzInput *instance, markers *particles);
-void            SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh);
+void            SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh, surface *topo);
 
 void            ValidateSetup(MdoodzSetup *setup, MdoodzInput *instance);
 

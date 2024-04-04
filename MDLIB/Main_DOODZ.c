@@ -52,12 +52,20 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
     asprintf(&BaseOutputFileName, "Output");
     asprintf(&BaseParticleFileName, "Particles");
 
-    MdoodzInput input = (MdoodzInput) {
-      .model = inputFile.model,
-      .scaling = inputFile.scaling,
-      .materials = inputFile.materials,
-      .crazyConductivity = NULL,
+    MdoodzInput input = (MdoodzInput){
+            .model             = inputFile.model,
+            .scaling           = inputFile.scaling,
+            .materials         = inputFile.materials,
+            .crazyConductivity = NULL,
+            .flux       = NULL,
     };
+
+    if (input.model.free_surface) {
+      input.flux = malloc(sizeof(LateralFlux));
+      if (input.flux != NULL) {
+        *input.flux = (LateralFlux){.east = -0.0e3, .west = -0.0e3};
+      }
+    }
 
     if (setup->MutateInput) {
       setup->MutateInput(&input, setup->mutateInputParams);
@@ -103,7 +111,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
     markers particles = PartAlloc(inputFile.particles, &input.model );
 
     // Allocate marker chain
-    markers       topo_chain, topo_chain_ini;
+    markers      topo_chain, topo_chain_ini;
     surface      topo, topo_ini;
     if (input.model.free_surface == 1 ) AllocateMarkerChain( &topo,     &topo_chain, input.model );
     if (input.model.free_surface == 1 ) AllocateMarkerChain( &topo_ini, &topo_chain_ini, input.model );
@@ -128,7 +136,8 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         }
 
         // Initial grid tags
-        SetBCs(*setup->SetBCs, &input, &mesh);
+        SetBCs(*setup->SetBCs, &input, &mesh, &topo);
+
         if (input.model.free_surface == 1 ) {
 
             // Define the horizontal position of the surface marker chain
@@ -190,7 +199,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
           printf("Running with crazy conductivity for the asthenosphere!!\n");
         }
         // Initial solution fields
-        SetBCs(*setup->SetBCs, &input, &mesh);
+        SetBCs(*setup->SetBCs, &input, &mesh, &topo);
 
         if (input.model.mechanical == 1) {
             InitialiseSolutionFields( &mesh, &input.model );
@@ -216,7 +225,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         P2Mastah( &input.model, particles, input.materials.Cv,    &mesh, mesh.Cv, mesh.BCp.type,  0, 0, interp, cent, 1);
         P2Mastah( &input.model, particles, input.materials.Qr,    &mesh, mesh.Qr, mesh.BCp.type,  0, 0, interp, cent, 1);
 
-        SetBCs(*setup->SetBCs, &input, &mesh);
+        SetBCs(*setup->SetBCs, &input, &mesh, &topo);
         if (input.model.initial_cooling == 1 ) ThermalSteps( &mesh, input.model,  mesh.rhs_t, &particles, input.model.cooling_duration, input.scaling );
         if (input.model.therm_perturb == 1 ) SetThermalPert( &mesh, input.model, input.scaling );
         Interp_Grid2P_centroids2( particles, particles.T,    &mesh, mesh.T, mesh.xvz_coord,  mesh.zvx_coord,  mesh.Nx-1, mesh.Nz-1, mesh.BCt.type, &input.model );
@@ -590,7 +599,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                 printf("Running with normal conductivity for the asthenosphere...\n");
             }
             // Allocate and initialise solution and RHS vectors
-            SetBCs(*setup->SetBCs, &input, &mesh);
+            SetBCs(*setup->SetBCs, &input, &mesh, &topo);
 
             // Reset fields and BC values if needed
             //        if ( input.model.pure_shear_ALE == 1 ) InitialiseSolutionFields( &mesh, &input.model );
@@ -1027,6 +1036,8 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                     CorrectTopoIni( &particles, input.materials, &topo_chain_ini, &topo, input.model, input.scaling, &mesh);
                     MarkerChainPolyFit( &topo_ini, &topo_chain_ini, input.model, mesh );
 
+                    if ( input.model.zero_mean_topo == 1 ) KeepZeroMeanTopo( &input.model, &topo, &topo_chain );
+
                     // Sedimentation
                     if ( input.model.surface_processes == 2 ) {
                         AddPartSed( &particles, input.materials, &topo_chain, &topo, input.model, input.scaling, &mesh);
@@ -1111,6 +1122,16 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             DoodzFree( Jacob.eqn_p );
         }
 
+        // double mean_z = 0.;
+        // int n=0;
+        // for (int i=0; i<topo_chain.Nb_part_max; i++) {
+        //     if (topo_chain.phase[i] != -1) {
+        //         mean_z += topo_chain.z[i];
+        //         n++;
+        //     }
+        // }
+        // printf("mean topo on markers = %2.2e --- %d out of %d and max is %d \n", mean_z/n*input.scaling.L, n, topo_chain.Nb_part, topo_chain.Nb_part_max);
+
         //------------------------------------------------------------------------------------------------------------------------------//
 
         // Write output data
@@ -1164,6 +1185,10 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
     // Free arrays
     GridFree( &mesh, &input.model );
+
+    if (input.flux) {
+      free(input.flux);
+    }
 
     if (input.crazyConductivity) {
         free(input.crazyConductivity->phases);

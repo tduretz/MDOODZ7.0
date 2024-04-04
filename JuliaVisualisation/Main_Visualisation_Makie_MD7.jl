@@ -1,6 +1,6 @@
 import Pkg
 Pkg.activate(normpath(joinpath(@__DIR__, ".")))
-using HDF5, GLMakie, Printf, Colors, ColorSchemes, MathTeXEngine, LinearAlgebra, FFMPEG
+using HDF5, GLMakie, Printf, Colors, ColorSchemes, MathTeXEngine, LinearAlgebra, FFMPEG, Statistics
 Makie.update_theme!(fonts = (regular = texfont(), bold = texfont(:bold), italic = texfont(:italic)))
 
 const y    = 365*24*3600
@@ -19,8 +19,8 @@ end
 function main()
 
     # Set the path to your files
-    path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB//"
-    # path ="/Users/tduretz/Downloads/TEST_ShearBandsHomo_SRC/"
+    # path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB//"
+    path ="/Users/tduretz/Downloads/"
     # path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/DoubleSubduction_OMP16/"
     # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/NR00/"
     # path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/qcoe_ref/"
@@ -30,9 +30,9 @@ function main()
     # path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/qcoe_simp_tau1e10/"
 
     # File numbers
-    file_start = 0
-    file_step  = 10
-    file_end   = 00
+    file_start = 5000
+    file_step  = 100
+    file_end   = 5000
 
     # Select field to visualise
     # field = :Phases
@@ -41,14 +41,14 @@ function main()
     # field = :Viscosity 
     # field = :PlasticStrainrate
     # field = :Stress
-    field = :StrainRate
+    # field = :StrainRate
     # field = :Pressure
     # field = :Temperature
     # field = :Velocity_x
     # field = :Velocity_z
     # field = :Velocity
     # field = :GrainSize
-    # field = :Topography
+    field = :Topography
     # field = :TimeSeries
     # field = :AnisotropyFactor
 
@@ -56,10 +56,10 @@ function main()
     printfig    = false  # print figures to disk
     printvid    = false
     framerate   = 3
-    ph_contours = true  # add phase contours
-    T_contours  = true  # add temperature contours
+    ph_contours = false  # add phase contours
+    T_contours  = false  # add temperature contours
     fabric      = false  # add fabric quiver (normal to director)
-    topo        = false
+    topo        = true
     α_heatmap   = 1.0 #0.85   # transparency of heatmap 
     σ1_axis     = false
     nap         = 0.3    # pause for animation 
@@ -93,9 +93,6 @@ function main()
         xc_hr  = 0.5.*(xv_hr[1:end-1] .+ xv_hr[2:end])
         zc_hr  = 0.5.*(zv_hr[1:end-1] .+ zv_hr[2:end])
         ncx_hr, ncz_hr = length(xc_hr), length(zc_hr)
-
-        @show minimum(xc)
-        @show maximum(xc)
 
         t      = model[1]
         tMy    = round(t/tc, digits=6)
@@ -433,22 +430,27 @@ function main()
 
         if field==:Velocity_x
             ax1 = Axis(f[1, 1], title = L"$V_{x}$ [cm/y] at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
-            hm = heatmap!(ax1, xc./Lc, zc./Lc, Vxc.*cm_y, colormap = (:bilbao, α_heatmap))
-            if T_contours 
-                contour!(ax1, xc./Lc, zc./Lc, T, levels=0:200:1400, linewidth = 4, color=:white )  
-            end
-            if ph_contours 
-                contour!(ax1, xc_hr./Lc, zc_hr./Lc, group_phases, levels=-1:1:maximum(group_phases), linewidth = 4, color=:white )  
-            end
-            if fabric 
-                arrows!(ax1, xc./Lc, zc./Lc, Fab_x, Fab_z, arrowsize = 0, lengthscale=Δ/1.5)
-            end
-            if σ1_axis
-                arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
-            end  
-            GLMakie.Colorbar(f[1, 2], hm, label = L"$V_{x}$ [cm/y]", width = 20, labelsize = 25, ticklabelsize = 14 )
-            GLMakie.colgap!(f.layout, 20)
-            if printfig Print2Disk( f, path, string(field), istep) end
+            hm = heatmap!(ax1, xv./Lc, zc./Lc, Vx[:,2:end-1].*cm_y, colormap = (:turbo, α_heatmap))
+            # if T_contours 
+            #     contour!(ax1, xc./Lc, zc./Lc, T, levels=0:200:1400, linewidth = 4, color=:white )  
+            # end
+            # if ph_contours 
+            #     contour!(ax1, xc_hr./Lc, zc_hr./Lc, group_phases, levels=-1:1:maximum(group_phases), linewidth = 4, color=:white )  
+            # end
+            # if fabric 
+            #     arrows!(ax1, xc./Lc, zc./Lc, Fab_x, Fab_z, arrowsize = 0, lengthscale=Δ/1.5)
+            # end
+            # if σ1_axis
+            #     arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
+            # end  
+            # GLMakie.Colorbar(f[1, 2], hm, label = L"$V_{x}$ [cm/y]", width = 20, labelsize = 25, ticklabelsize = 14 )
+            # GLMakie.colgap!(f.layout, 20)
+            # if printfig Print2Disk( f, path, string(field), istep) end
+        end
+
+        if field==:Velocity_z
+            ax1 = Axis(f[1, 1], title = L"$\eta$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
+            hm = heatmap!(ax1, xc./Lc, zv./Lc, Vz[2:end-1,:]*1e9, colormap = (:turbo, α_heatmap))
         end
 
         if field==:Temperature
@@ -473,6 +475,8 @@ function main()
 
         if field==:Topography
             ax1 = Axis(f[1, 1], title = L"Topography at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$h$ [km]")
+            @show mean(height)
+            @show mean(z_mark)
             lines!(ax1, xv./Lc, height./Lc)
             scatter!(ax1, x_mark./Lc, z_mark./Lc)
 
