@@ -136,7 +136,8 @@ gsel         = 0             / grain size evo.
 eta0         = 1e0
 npwl         = 0
 Qpwl         = 0
-ani_fstrain  = 0    / activates finite strain anisotropy
+ani_fstrain  = 2    / activates finite strain anisotropy
+ani_fstrain_law  = 1    / specifies cumulative strain law (works only if ani_fstrain == 2)
 ani_fac_max  = 1000.0
 aniso_factor = 1.0
 

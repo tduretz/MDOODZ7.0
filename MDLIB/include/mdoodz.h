@@ -147,7 +147,7 @@ typedef struct {
   int    phase_mix[20], phase_two[20];
   double aniso_angle[20], ani_fac_max[20], aniso_factor[20];   //ani_fac_v[20], ani_fac_e[20], ani_fac_p[20]
   double axx[20], azz[20], ayy[20];
-  int    ani_fstrain[20];
+  int    ani_fstrain[20],ani_fstrain_law[20];
   int    transmutation[20], transmutation_phase[20];
   double transmutation_temperature[20];
 } mat_prop;

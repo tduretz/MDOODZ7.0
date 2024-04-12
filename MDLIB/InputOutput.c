@@ -1341,7 +1341,8 @@ Input ReadInputFile( char *fileName ) {
         // materials.ani_fac_e[k]      =  ReadMatProps( fin, "ani_fac_e",    k,    1.0  );        // elastic anisotropy strength
         // materials.ani_fac_p[k]      =  ReadMatProps( fin, "ani_fac_p",    k,    1.0  );        // plastic anisotropy strength
         materials.ani_fac_max[k]    =  ReadMatProps( fin, "ani_fac_max",  k, 1000.0  );        // maximum anisotropy strength
-        materials.ani_fstrain[k]    =  (int)ReadMatProps( fin, "ani_fstrain",    k,    0.0  ); // strain dependent anisotropy per phase
+        materials.ani_fstrain[k]    =  (int)ReadMatProps( fin, "ani_fstrain",    k,    0  ); // strain dependent anisotropy per phase
+        materials.ani_fstrain_law[k]    =  (int)ReadMatProps( fin, "ani_fstrain_law",    k,    0  ); // strain dependent anisotropy law per phase: 0 - an analytical solution from Dabrowski et al. 2012; 1 - an own upscaling parameterization from numerical experiments;
         materials.axx[k]            =  ReadMatProps( fin, "axx",    k,    1.0  );              // plastic directional factor xx
         materials.azz[k]            =  ReadMatProps( fin, "azz",    k,    1.0  );              // plastic directional factor zz
         materials.ayy[k]            =  ReadMatProps( fin, "ayy",    k,    1.0  );              // plastic directional factor yy
@@ -1367,7 +1368,7 @@ Input ReadInputFile( char *fileName ) {
         printf("prefactor for power-law: %2.2e\n", materials.pref_pwl[k]);
                  printf("C_end    = %2.2e Pa        Phi_end = %2.2e deg         pls_start = %2.2e        pls_end = %2.2e \n", materials.C_end[k]*scaling.S, materials.phi_end[k]*180/M_PI, materials.pls_start[k],  materials.pls_end[k] );
         printf("eta0_vp   = %2.2e  Pa.s^(1/n)         n_vp   = %2.2e\n", materials.eta_vp[k]* (scaling.S*pow(scaling.t,1.0/materials.n_vp[k])) , materials.n_vp[k]);
-        printf("aniso_factor = %2.2e []        aniso_angle = %2.2e deg         ani_fac_max = %2.2e []        ani_fstrain = %d\n", materials.aniso_factor[k], materials.aniso_angle[k]/(M_PI/180.0), materials.ani_fac_max[k], materials.ani_fstrain[k]);
+        printf("aniso_factor = %2.2e []        aniso_angle = %2.2e deg         ani_fac_max = %2.2e []        ani_fstrain = %d\n        ani_fstrain_law = %d\n", materials.aniso_factor[k], materials.aniso_angle[k]/(M_PI/180.0), materials.ani_fac_max[k], materials.ani_fstrain[k], materials.ani_fstrain_law[k]);
 
         printf("Flow law settings:\n");
         if ( abs(materials.cstv[k])>0 ) printf("--->    Constant viscosity activated \n");
