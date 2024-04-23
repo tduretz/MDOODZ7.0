@@ -19,7 +19,7 @@ end
 function main()
 
     # Set the path to your files
-    path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB//"
+    # path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB//"
     # path ="/Users/tduretz/Downloads/TEST_ShearBandsHomo_SRC/"
     # path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/DoubleSubduction_OMP16/"
     # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/NR00/"
@@ -28,14 +28,15 @@ function main()
     # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/qcoe_x100/"
     # path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/qcoe_simp2/"
     # path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/qcoe_simp_tau1e10/"
-    #path = "/home/whalter1/github/MDOODZ7.0/cmake-exec/ShearTemplate/"
-    #path = "/home/whalter1/github/MDOODZ7.0/cmake-exec/WilliamB6/"
-    path = "/home/whalter1/github/MDOODZ7.0/cmake-exec/William_Dabrowski_1incl/"
+    # path = "/home/whalter1/github/MDOODZ7.0/cmake-exec/ShearTemplate/"
+    # path = "/home/whalter1/github/MDOODZ7.0/cmake-exec/WilliamB6/"
+    # path = "/home/whalter1/github/MDOODZ7.0/cmake-exec/William_Dabrowski_1incl/"
+    path = "/home/whalter1/github/MDOODZ7.0/cmake-exec/ShearTemplate/"
 
     # File numbers
     file_start = 0
     file_step  = 10
-    file_end   = 20
+    file_end   = 130
 
     # Select field to visualise
     # field = :Phases
@@ -44,7 +45,7 @@ function main()
     # field = :Viscosity 
     # field = :PlasticStrainrate
     # field = :Stress
-     field = :StrainRate
+    field = :StrainRate
     # field = :Strain
     # field = :Strain_xx # normal strain
     # field = :Strain_zz # normal strain
@@ -72,7 +73,7 @@ function main()
 
     # Switches
     printfig    = true  # print figures to disk
-    printvid    = false
+    printvid    = true
     framerate   = 3
     ph_contours = false  # add phase contours
     T_contours  = false  # add temperature contours
