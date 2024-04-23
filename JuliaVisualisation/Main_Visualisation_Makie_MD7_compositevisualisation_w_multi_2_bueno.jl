@@ -34,6 +34,20 @@ function main(path, file_start, file_end_max,fac, xshift, file_step)
     #field = :Velocity_x
     #field = :Velocity_z
     #field = :Strain # cumulated strain
+    #field = :Strain_xx # normal strain
+    #field = :Strain_zz # normal strain
+    #field = :Strain_xz # shear strain
+    #field = :FabricStrain_xx # normal strain along foliation (i.e. εxxp)
+    #field = :FabricStrain_zz # normal strain along director (i.e. εzzp)
+    #field = :FabricStrain_xz # shear strain along and across foliation (i.e. εxzp)
+    #field = :Fxx
+    #field = :Fzz
+    #field = :Fxz
+    #field = :Fzx
+    #field = :Fxxp
+    #field = :Fzzp
+    #field = :Fxzp # (can be used for aniso factor evolv)
+    #field = :Fzxp
     #field = :AnisoFactor # anisotropy factor
     #field = :GrainSize # doesn't function properly yet
     #field = :Topography # doesn't function properly yet
@@ -141,8 +155,24 @@ function main(path, file_start, file_end_max,fac, xshift, file_step)
         τxz   = Float64.(reshape(ExtractData( filename, "/Vertices/sxz"), nvx, nvz))
         τxzc  = 0.25*(τxz[1:end-1,1:end-1].+τxz[2:end,1:end-1].+τxz[1:end-1,2:end].+τxz[2:end,2:end]);  τxzc[mask_air] .= NaN
         ε̇xx   = Float64.(reshape(ExtractData( filename, "/Centers/exxd"), ncx, ncz))
+        ε̇zz   = Float64.(reshape(ExtractData( filename, "/Centers/ezzd"), ncx, ncz))
+        ε̇yy   = -(ε̇xx .+ ε̇zz)
         ε̇xz   = Float64.(reshape(ExtractData( filename, "/Vertices/exz"), nvx, nvz))
         εII   = Float64.(reshape(ExtractData( filename, "/Centers/strain"), ncx, ncz));                 εII[mask_air] .= NaN
+        εxx   = Float64.(reshape(ExtractData( filename, "/Centers/strain_xx"), ncx, ncz));       εxx[mask_air] .= NaN
+        εzz   = Float64.(reshape(ExtractData( filename, "/Centers/strain_zz"), ncx, ncz));       εzz[mask_air] .= NaN
+        εxz   = Float64.(reshape(ExtractData( filename, "/Centers/strain_xz"), ncx, ncz));       εxz[mask_air] .= NaN
+        εxxp  = Float64.(reshape(ExtractData( filename, "/Centers/strain_xxp"), ncx, ncz));      εxxp[mask_air].= NaN
+        εzzp  = Float64.(reshape(ExtractData( filename, "/Centers/strain_zzp"), ncx, ncz));      εzzp[mask_air].= NaN
+        εxzp  = Float64.(reshape(ExtractData( filename, "/Centers/strain_xzp"), ncx, ncz));      εxzp[mask_air].= NaN
+        Fxx   = Float64.(reshape(ExtractData( filename, "/Centers/Fxx"), ncx, ncz));             Fxx[mask_air] .= NaN
+        Fzz   = Float64.(reshape(ExtractData( filename, "/Centers/Fzz"), ncx, ncz));             Fzz[mask_air] .= NaN
+        Fxz   = Float64.(reshape(ExtractData( filename, "/Centers/Fxz"), ncx, ncz));             Fxz[mask_air] .= NaN
+        Fzx   = Float64.(reshape(ExtractData( filename, "/Centers/Fzx"), ncx, ncz));             Fzx[mask_air] .= NaN
+        Fxxp  = Float64.(reshape(ExtractData( filename, "/Centers/Fxxp"), ncx, ncz));            Fxxp[mask_air].= NaN
+        Fzzp  = Float64.(reshape(ExtractData( filename, "/Centers/Fzzp"), ncx, ncz));            Fzzp[mask_air].= NaN
+        Fxzp  = Float64.(reshape(ExtractData( filename, "/Centers/Fxzp"), ncx, ncz));            Fxzp[mask_air].= NaN
+        Fzxp  = Float64.(reshape(ExtractData( filename, "/Centers/Fzxp"), ncx, ncz));            Fzxp[mask_air].= NaN
         τII   = sqrt.( 0.5*(2*τxx.^2 .+ 0.5*(τxz[1:end-1,1:end-1].^2 .+ τxz[2:end,1:end-1].^2 .+ τxz[1:end-1,2:end].^2 .+ τxz[2:end,2:end].^2 ) ) ); τII[mask_air] .= NaN
         ε̇II   = sqrt.( 0.5*(2*ε̇xx.^2 .+ 0.5*(ε̇xz[1:end-1,1:end-1].^2 .+ ε̇xz[2:end,1:end-1].^2 .+ ε̇xz[1:end-1,2:end].^2 .+ ε̇xz[2:end,2:end].^2 ) ) ); ε̇II[mask_air] .= NaN
         if field==:AnisoFactor
@@ -175,6 +205,8 @@ function main(path, file_start, file_end_max,fac, xshift, file_step)
             x_mark  = Float64.(ExtractData( filename, "/Topo/x_mark"));
             z_mark  = Float64.(ExtractData( filename, "/Topo/z_mark"));
         end
+        Vxc   = 0.5 .* (Vx[1:end-1,2:end-1] .+ Vx[2:end-0,2:end-1])
+        Vzc   = 0.5 .* (Vz[2:end-1,1:end-1] .+ Vz[2:end-1,2:end-0])
         if σ1_axis 
             σ1 = PrincipalStress(τxx, τzz, τxz, P) 
         end
@@ -730,7 +762,7 @@ end
 
 # Set the path to your files
 
-aniSetupsOnly = false
+aniSetupsOnly = true
 file_step = 10
 
 if aniSetupsOnly == false
@@ -773,12 +805,37 @@ if aniSetupsOnly == false
 end
 
 # all aniso setups
-main("/users/whalter1/work/aniso_fix/A2_1000/", 2790, 100000, 4, 0.5, file_step)
-main("/users/whalter1/work/aniso_fix/A3_1000/", 3320, 100000, 4, 0.5, file_step)
-main("/users/whalter1/work/aniso_fix/A4_1000/", 2770, 100000, 4, 0.5, file_step)
-main("/users/whalter1/work/aniso_fix/A5_1000/", 3460, 100000, 4, 0.5, file_step)
-main("/users/whalter1/work/aniso_fix/MWE_1000/", 400, 100000, 4, 0.5, file_step)
+main("/users/whalter1/work/aniso_fix/A02_1000/", 2790, 100000, 4, 0.5, file_step)
+main("/users/whalter1/work/aniso_fix/A03_1000/", 2790, 100000, 4, 0.5, file_step)
+main("/users/whalter1/work/aniso_fix/A04_1000/", 2790, 100000, 4, 0.5, file_step)
+main("/users/whalter1/work/aniso_fix/A05_1000/", 2790, 100000, 4, 0.5, file_step)
+
+main("/users/whalter1/work/aniso_fix/A12_1000/", 2790, 100000, 4, 0.5, file_step)
+main("/users/whalter1/work/aniso_fix/A13_1000/", 2790, 100000, 4, 0.5, file_step)
+main("/users/whalter1/work/aniso_fix/A14_1000/", 2790, 100000, 4, 0.5, file_step)
+main("/users/whalter1/work/aniso_fix/A15_1000/", 2790, 100000, 4, 0.5, file_step)
+
+main("/users/whalter1/work/aniso_fix/A02_500/" , 0   , 100000, 2, 0.5, file_step)
+main("/users/whalter1/work/aniso_fix/A03_500/" , 0   , 100000, 2, 0.5, file_step)
+main("/users/whalter1/work/aniso_fix/A04_500/" , 0   , 100000, 2, 0.5, file_step)
+main("/users/whalter1/work/aniso_fix/A05_500/" , 0   , 100000, 2, 0.5, file_step)
+
+main("/users/whalter1/work/aniso_fix/A12_500/" , 0   , 100000, 2, 0.5, file_step)
+main("/users/whalter1/work/aniso_fix/A13_500/" , 0   , 100000, 2, 0.5, file_step)
+main("/users/whalter1/work/aniso_fix/A14_500/" , 0   , 100000, 2, 0.5, file_step)
+main("/users/whalter1/work/aniso_fix/A15_500/" , 0   , 100000, 2, 0.5, file_step)
+
+main("/users/whalter1/work/aniso_fix/A10_500/" , 0   , 100000, 2, 0.5, file_step)
+main("/users/whalter1/work/aniso_fix/A00_500/" , 0   , 100000, 2, 0.5, file_step)
+main("/users/whalter1/work/aniso_fix/A0_500/"  , 0   , 100000, 2, 0.5, file_step)
+
+#main("/users/whalter1/work/aniso_fix/A2_1000/", 2790, 100000, 4, 0.5, file_step)
+#main("/users/whalter1/work/aniso_fix/A3_1000/", 3320, 100000, 4, 0.5, file_step)
+#main("/users/whalter1/work/aniso_fix/A4_1000/", 2770, 100000, 4, 0.5, file_step)
+#main("/users/whalter1/work/aniso_fix/A5_1000/", 3460, 100000, 4, 0.5, file_step)
+#main("/users/whalter1/work/aniso_fix/MWE_1000/", 400, 100000, 4, 0.5, file_step)
 
 # for testing new setup...
 #main("/users/whalter1/MDOODZ7.0/cmake-exec/AnisoViscTest_evolv_multi_ellipses/", 0, 18000, 4, 0.5, file_step)
 #main("/users/whalter1/MDOODZ7.0/cmake-exec/Fig10_bench/", 0, 18000, 4, 0.0, 1)
+#

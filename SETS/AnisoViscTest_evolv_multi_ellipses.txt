@@ -1,10 +1,10 @@
 /**** RESTART ****/
-istep = 000000
-irestart = 0
+istep = 007000
+irestart = 1
 
 /**** OUTPUT FILES ****/
 writer          = 1
-writer_step     = 1
+writer_step     = 10
 writer_markers  = 0
 writer_debug    = 0
 writer_energies = 0
@@ -26,9 +26,9 @@ V   = 1
 T   = 1
 
 /**** SPACE ****/
-Nx      = 251
-Nz      = 251
-Nt      = 1
+Nx      = 1001
+Nz      = 1001
+Nt      = 100000
 xmin    = -5.000000e-1
 zmin    = -5.000000e-1
 xmax    =  5.000000e-1
@@ -110,7 +110,8 @@ gsel         = 0             / grain size evo.
 eta0         = 1e0
 npwl         = 0
 Qpwl         = 0
-ani_fstrain  = 1    / activates finite strain anisotropy
+ani_fstrain  = 2    / activates finite strain anisotropy
+ani_fstrain_law  = 0    / specifies cumulative strain law (works only if ani_fstrain == 2)
 ani_fac_max  = 1000.0
 aniso_factor = 1.0
 

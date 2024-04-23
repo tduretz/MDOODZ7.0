@@ -62,15 +62,15 @@ double AnisoFactorEvolv2( double Fxzp, double aniso_fac_max, int ani_fstrain_law
       const double a2 = 0.0991151133951398;
       const double a3 = 0.675259720975736;
       const double a4 = 1.0233692867974;
-      return -a2 / (a3 * a3) * ( Fxzp * Fxzp - 2*a1*fabs(Fxzp) + (a1 * a1 - a3 * a3 ) ) + a4;
+      return 1.0 / ( -a2 / (a3 * a3) * ( Fxzp * Fxzp - 2*a1*fabs(Fxzp) + (a1 * a1 - a3 * a3 ) ) + a4 );
     } else {
       const double b1 = 0.00818712676503561;
       const double b2 = 6.88699054463651;
       const double b3 = -14.3461271805339;
       if (fabs(Fxzp) > 100) {
-        return b1 + b2 / (100 * 100) + b3 / (100 * 100 * 100 * 100);
+        return 1.0 / ( b1 + b2 / (100 * 100) + b3 / (100 * 100 * 100 * 100) );
       } else {
-        return b1 + b2 / (Fxzp * Fxzp) + b3 / (Fxzp * Fxzp * Fxzp * Fxzp);
+        return 1.0 / ( b1 + b2 / (Fxzp * Fxzp) + b3 / (Fxzp * Fxzp * Fxzp * Fxzp) );
       }
     }
   }
@@ -84,15 +84,15 @@ double AnisoFactorEvolv2( double Fxzp, double aniso_fac_max, int ani_fstrain_law
       const double a2 = 0.22085198963798983;
       const double a3 = 0.6551833288564011;
       const double a4 = 1.0715126882370811;
-      return -a2 / (a3 * a3) * ( Fxzp * Fxzp - 2*a1*fabs(Fxzp) + (a1 * a1 - a3 * a3 ) ) + a4;
+      return 1.0 / ( -a2 / (a3 * a3) * ( Fxzp * Fxzp - 2*a1*fabs(Fxzp) + (a1 * a1 - a3 * a3 ) ) + a4 );
     } else {
       const double b1 = 0.03372882001855776;
       const double b2 = -3.484853238741102;
       const double b3 = 0.7982195013862577;
       if (fabs(Fxzp) > 12.4) {
-        return b1 - b2 * exp(-b3 * 12.4);
+        return 1.0 / ( b1 - b2 * exp(-b3 * 12.4) );
       } else {
-        return b1 - b2 * exp(-b3 * Fxzp);
+        return 1.0 / ( b1 - b2 * exp(-b3 * fabs(Fxzp)) );
       }
     }
   }
