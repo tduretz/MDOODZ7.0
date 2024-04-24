@@ -26,7 +26,7 @@ function main(path, file_start, file_end_max,fac, xshift, file_step)
     #field = :Stress_xx
     #field = :Stress_zz
     #field = :Stress_xz
-    field = :StrainRate
+    #field = :StrainRate
     #field = :PlasticStrainrate
     #field = :Pressure
     #field = :Temperature
@@ -52,6 +52,9 @@ function main(path, file_start, file_end_max,fac, xshift, file_step)
     #field = :GrainSize # doesn't function properly yet
     #field = :Topography # doesn't function properly yet
     #field = :ViscosityReduction
+    #field = :StrainLocalisation
+    field = :XVelocityLocalisation
+    #field = :XYEtaLocalisation
 
     # Switches
     displayfig  = false     # display figures on screen (not possible on any "headless server")
@@ -61,7 +64,7 @@ function main(path, file_start, file_end_max,fac, xshift, file_step)
     T_contours  = false     # add temperature contours
     fabric      = true      # add fabric quiver (normal to director)
     velocity    = false     # add velocity quiver
-    deviatoricV = true      # considers deviatoric velocity for plot and quiver (deviatoric velocity = velocity minus far-field velocity)
+    deviatoricV = false      # considers deviatoric velocity for plot and quiver (deviatoric velocity = velocity minus far-field velocity)
     α_heatmap   = 0.85      # transparency of heatmap 
     σ1_axis     = false
     polar       = false     # for curved setups using Earth's curvature (transforms tensors from x-z to r-phi coord system)
@@ -113,7 +116,9 @@ function main(path, file_start, file_end_max,fac, xshift, file_step)
 
     # Time loop
     if displayfig==1 || printfig==1
-    for istep=[file_end;file_start:file_step:file_end]    
+    #for istep=[file_end;file_start:file_step:file_end]    
+    file_start = 0 # here hardcoded...
+    for istep=file_start:file_step:file_end    
         filename = string(path, @sprintf("Output%05d.gzip.h5", istep))
         model  = ExtractData( filename, "/Model/Params")
         xc     = ExtractData( filename, "/Model/xc_coord")
@@ -128,6 +133,7 @@ function main(path, file_start, file_end_max,fac, xshift, file_step)
 
         t      = model[1]
         tMy    = round(t/tc, digits=6)
+        Δt     = model[8]
         nvx    = Int(model[4])
         nvz    = Int(model[5])
         ncx, ncz = nvx-1, nvz-1
@@ -135,6 +141,7 @@ function main(path, file_start, file_end_max,fac, xshift, file_step)
         zmin, zmax = zv[1], zv[end]
         Lx, Lz    = (xmax-xmin)/Lc, (zv[end]-zv[1])/Lc
         Δx, Δz, Δ = Lx/ncx, Lz/ncz, sqrt( (Lx/ncx)^2 + (Lz/ncz)^2)
+        γ = t * 2 # here...
         @show "Time step" istep
         #@show "Model apect ratio" Lx/Lz
         @show "Model time" t/My
@@ -268,6 +275,7 @@ function main(path, file_start, file_end_max,fac, xshift, file_step)
         #####################################
 
         # Postprocessing deviatoric velocity
+        if field==:XVelocityLocalisation; deviatoricV = true; end
         if deviatoricV
             shear_style     = 1 # 0 = pure shear; 1 = simple shear
             bkg_strain_rate = 1 # background (far-field) strain rate
@@ -316,6 +324,78 @@ function main(path, file_start, file_end_max,fac, xshift, file_step)
         #####################################
 
         f = MoC.Figure(resolution = (Lx/Lz*resol, resol), fontsize=25)
+        
+        if field==:XYEtaLocalisation
+
+            Vx_HorizMean = mean(Vx, dims = 1)
+
+            ax1 = MoC.Axis(f[1, 1], title = L"\eta_{xy} Localisation at $γ$ = %$(round(γ, digits=2))", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
+            hm = MoC.plot!([0.0,0.0], [-0.5,0.5], color=:red , markersize = 2, linewidth=1)
+            hm = MoC.plot!(Vx_HorizMean, zc./Lc , color=:blue, markersize = 2, linewidth=1)
+
+            #MoC.colsize!(f.layout, 1, MoC.Aspect(1, Lx/Lz))
+            #MoC.xlims!(ax1, -0.5, 0.5)
+            MoC.ylims!(ax1, -0.5, 0.5)
+
+            fabric = false
+        end
+        
+        if field==:XVelocityLocalisation
+
+            Vx_HorizMean = mean(Vx, dims = 1)
+
+            ax1 = MoC.Axis(f[1, 1], title = L"X Velocity Localisation at $γ$ = %$(round(γ, digits=2))", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
+            hm = MoC.plot!([0.0,0.0], [-0.5,0.5], color=:red , markersize = 2, linewidth=1)
+            hm = MoC.plot!(Vx_HorizMean, zc./Lc , color=:blue, markersize = 2, linewidth=1)
+
+            #MoC.colsize!(f.layout, 1, MoC.Aspect(1, Lx/Lz))
+            #MoC.xlims!(ax1, -0.5, 0.5)
+            MoC.ylims!(ax1, -0.5, 0.5)
+
+            fabric = false
+        end
+        
+        if field==:StrainLocalisation
+            if istep==file_start
+                global npoints      = (ncz+2)*1000
+                global xPoints      = zeros(npoints)
+                global zPoints      = Float64.(LinRange(zmin, zmax, npoints))
+                global xPoints_PS   = zeros(npoints) # pure shear x coordinates at given zPoints
+                global xPoints_PS0  = zeros(npoints) # xPoints_PS old
+                global Δt = t
+            else
+                global Δt = t - t0
+            end
+            global t0 = t
+
+            # get indices of closest VX and VZ points
+            VX_xi = Int.(round.((xPoints .+ Lx/2        ) ./  Lx       .* (nvx-1))) .+ 1
+            VX_zi = Int.(round.((zPoints .+ Lz/2 .- Δz/2) ./ (Lz + Δz) .* (ncz+1))) .+ 2
+            VZ_xi = Int.(round.((xPoints .+ Lx/2 .- Δx/2) ./ (Lx + Δx) .* (ncx+1))) .+ 2
+            VZ_zi = Int.(round.((zPoints .+ Lz/2        ) ./  Lz       .* (nvz-1))) .+ 1
+
+            VX_update = Float64.(Vx[CartesianIndex.(VX_xi, VX_zi)])
+            VZ_update = Float64.(Vz[CartesianIndex.(VZ_xi, VZ_zi)])
+
+            global xPoints      = xPoints .+ VX_update * Δt
+            global zPoints      = zPoints .+ VZ_update * Δt
+            global xPoints_PS   = zPoints .* γ
+
+            xPoints     = xPoints    .- (xPoints    .> Lx/2) .* Lx .+ (xPoints    .< -Lx/2) .* Lx
+            zPoints     = zPoints    .- (zPoints    .> Lz/2) .* Lz .+ (zPoints    .< -Lz/2) .* Lz
+            while xPoints_PS != xPoints_PS0
+                xPoints_PS0 = xPoints_PS
+                xPoints_PS  = xPoints_PS0 .- (xPoints_PS0 .> Lx/2) .* Lx .+ (xPoints_PS0 .< -Lx/2) .* Lx
+            end
+
+            ax1 = MoC.Axis(f[1, 1], title = L"Strain Localisation at $γ$ = %$(round(γ, digits=2))", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
+            hm = MoC.plot!(xPoints_PS, zPoints, color=:red , markersize = 2, linewidth=1)
+            hm = MoC.plot!(xPoints   , zPoints, color=:blue, markersize = 2, linewidth=1)
+
+            MoC.colsize!(f.layout, 1, MoC.Aspect(1, Lx/Lz))
+            MoC.xlims!(ax1, -0.5, 0.5)
+            MoC.ylims!(ax1, -0.5, 0.5)
+        end
 
         if field==:Phases
             ax1 = MoC.Axis(f[1, 1], title = L"Phases at $t$ = %$(tMy) %$(tMytext)", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
@@ -804,36 +884,41 @@ if aniSetupsOnly == false
     main("/users/whalter1/work/aniso_fix/B5_1000/", 0, 100000, 4, 0.5, file_step)
 end
 
-# all aniso setups
-main("/users/whalter1/work/aniso_fix/A02_1000/", 2790, 100000, 4, 0.5, file_step)
-main("/users/whalter1/work/aniso_fix/A03_1000/", 2790, 100000, 4, 0.5, file_step)
-main("/users/whalter1/work/aniso_fix/A04_1000/", 2790, 100000, 4, 0.5, file_step)
-main("/users/whalter1/work/aniso_fix/A05_1000/", 2790, 100000, 4, 0.5, file_step)
-
-main("/users/whalter1/work/aniso_fix/A12_1000/", 2790, 100000, 4, 0.5, file_step)
-main("/users/whalter1/work/aniso_fix/A13_1000/", 2790, 100000, 4, 0.5, file_step)
-main("/users/whalter1/work/aniso_fix/A14_1000/", 2790, 100000, 4, 0.5, file_step)
-main("/users/whalter1/work/aniso_fix/A15_1000/", 2790, 100000, 4, 0.5, file_step)
-
-main("/users/whalter1/work/aniso_fix/A02_500/" , 0   , 100000, 2, 0.5, file_step)
-main("/users/whalter1/work/aniso_fix/A03_500/" , 0   , 100000, 2, 0.5, file_step)
-main("/users/whalter1/work/aniso_fix/A04_500/" , 0   , 100000, 2, 0.5, file_step)
-main("/users/whalter1/work/aniso_fix/A05_500/" , 0   , 100000, 2, 0.5, file_step)
-
-main("/users/whalter1/work/aniso_fix/A12_500/" , 0   , 100000, 2, 0.5, file_step)
-main("/users/whalter1/work/aniso_fix/A13_500/" , 0   , 100000, 2, 0.5, file_step)
-main("/users/whalter1/work/aniso_fix/A14_500/" , 0   , 100000, 2, 0.5, file_step)
-main("/users/whalter1/work/aniso_fix/A15_500/" , 0   , 100000, 2, 0.5, file_step)
-
-main("/users/whalter1/work/aniso_fix/A10_500/" , 0   , 100000, 2, 0.5, file_step)
-main("/users/whalter1/work/aniso_fix/A00_500/" , 0   , 100000, 2, 0.5, file_step)
-main("/users/whalter1/work/aniso_fix/A0_500/"  , 0   , 100000, 2, 0.5, file_step)
+## all aniso setups
+#main("/users/whalter1/work/aniso_fix/A02_1000/", 2790, 100000, 4, 0.5, file_step)
+#main("/users/whalter1/work/aniso_fix/A03_1000/", 2790, 100000, 4, 0.5, file_step)
+#main("/users/whalter1/work/aniso_fix/A04_1000/", 2790, 100000, 4, 0.5, file_step)
+#main("/users/whalter1/work/aniso_fix/A05_1000/", 2790, 100000, 4, 0.5, file_step)
+#
+#main("/users/whalter1/work/aniso_fix/A12_1000/", 2790, 100000, 4, 0.5, file_step)
+#main("/users/whalter1/work/aniso_fix/A13_1000/", 2790, 100000, 4, 0.5, file_step)
+#main("/users/whalter1/work/aniso_fix/A14_1000/", 2790, 100000, 4, 0.5, file_step)
+#main("/users/whalter1/work/aniso_fix/A15_1000/", 2790, 100000, 4, 0.5, file_step)
+#
+#main("/users/whalter1/work/aniso_fix/A02_500/" , 0   , 100000, 2, 0.5, file_step)
+#main("/users/whalter1/work/aniso_fix/A03_500/" , 0   , 100000, 2, 0.5, file_step)
+#main("/users/whalter1/work/aniso_fix/A04_500/" , 0   , 100000, 2, 0.5, file_step)
+#main("/users/whalter1/work/aniso_fix/A05_500/" , 0   , 100000, 2, 0.5, file_step)
+#
+#main("/users/whalter1/work/aniso_fix/A12_500/" , 0   , 100000, 2, 0.5, file_step)
+#main("/users/whalter1/work/aniso_fix/A13_500/" , 0   , 100000, 2, 0.5, file_step)
+#main("/users/whalter1/work/aniso_fix/A14_500/" , 0   , 100000, 2, 0.5, file_step)
+#main("/users/whalter1/work/aniso_fix/A15_500/" , 0   , 100000, 2, 0.5, file_step)
+#
+#main("/users/whalter1/work/aniso_fix/A10_500/" , 0   , 100000, 2, 0.5, file_step)
+#main("/users/whalter1/work/aniso_fix/A00_500/" , 0   , 100000, 2, 0.5, file_step)
+#main("/users/whalter1/work/aniso_fix/A0_500/"  , 0   , 100000, 2, 0.5, file_step)
 
 #main("/users/whalter1/work/aniso_fix/A2_1000/", 2790, 100000, 4, 0.5, file_step)
 #main("/users/whalter1/work/aniso_fix/A3_1000/", 3320, 100000, 4, 0.5, file_step)
 #main("/users/whalter1/work/aniso_fix/A4_1000/", 2770, 100000, 4, 0.5, file_step)
 #main("/users/whalter1/work/aniso_fix/A5_1000/", 3460, 100000, 4, 0.5, file_step)
 #main("/users/whalter1/work/aniso_fix/MWE_1000/", 400, 100000, 4, 0.5, file_step)
+
+# for Strain Localization
+#main("/users/whalter1/work/aniso_fix/A12_500/" , 0   , 100000, 2, 0.5, file_step)
+#main("/users/whalter1/work/aniso_fix/A14_1000/", 2790, 100000, 4, 0.5, file_step)
+main("/users/whalter1/work/aniso_fix/A12_1000/", 2790, 100000, 4, 0.5, file_step)
 
 # for testing new setup...
 #main("/users/whalter1/MDOODZ7.0/cmake-exec/AnisoViscTest_evolv_multi_ellipses/", 0, 18000, 4, 0.5, file_step)
