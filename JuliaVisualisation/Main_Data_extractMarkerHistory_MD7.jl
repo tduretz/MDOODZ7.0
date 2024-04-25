@@ -8,15 +8,15 @@ My = 1e6*365*24*3600
 function main()
 
     # Set the path to your files
-    path = "/users/lcandiot/nas/D2c/PhD_LCandioti_2016_2021/project3_UHProckExhumation/dataAndSourceCode/MODEL1_1x1k_Serp_25Phi_1Prefpwl_NewCode_6kmSerp_WesterlyGranite_ReducedConvRate10mmyr_ParticlesCorr/"
+    path = "/home/thanushika/software/Results/Phase_Diagram_Model/Results_D15Long_corrected2/"
     
     # File numbers
-    file_start   = 9000
-    file_step    = 200
-    file_end     = 13000
+    file_start   = 0    
+    file_step    = 500
+    file_end     = 1500
 
     # Switches
-    MDOODZv4     = true      # Select MDOODZ version
+    MDOODZv4     = false      # Select MDOODZ version
     if MDOODZv4
         MDOODZv7 = false
     else
@@ -50,8 +50,8 @@ function main()
     #               Marker extraction routine                    #
 
     # Load particle data
-    firstStep   = 8480
-    lastStep    = 13000
+    firstStep   = 0
+    lastStep    = 1500
     fmark_first = string(path, @sprintf("Particles%05d.gzip.h5", firstStep))
     fmark_last  = string(path, @sprintf("Particles%05d.gzip.h5", lastStep ))
     xm_first    = Float64.(ExtractData( fmark_first, "/Particles/x" ))
@@ -60,13 +60,16 @@ function main()
     zm_last     = Float64.(ExtractData( fmark_last,  "/Particles/z" ))
     model_end   = Float64.(ExtractData( fmark_last,  "/Model/Params"))
     # Identify target markers based on coordinates
-    targetCoord  = (50e3, 250e3, -20e3, 10e3)          # Coordinates of exhumed material
+    targetCoord  = (-3e5, 3e5, -3e5, 0)          # xmin,xmax,zmin,zmax Coordinates of exhumed material
     target_ind   = Int64[ ]
     for iMarker in eachindex(xm_last)  # Loop through markers in target region ensuring that they existed at the onset of convergence
         if ( xm_last[iMarker] >= targetCoord[1] && xm_last[iMarker] <= targetCoord[2] && zm_last[iMarker] >= targetCoord[3] && zm_last[iMarker] <= targetCoord[4] && iMarker <= size(xm_first,1))
             push!(target_ind, iMarker)
         end
     end
+
+    #println("$(length(target_ind))")
+    #return
 
     # Initialise storage arrays
     if writeHistory
@@ -89,7 +92,7 @@ function main()
     println(Threads.nthreads())
     tic = Base.time()
     # Time loop
-    Threads.@threads for iMTime in eachindex(tm_time)
+    for iMTime in eachindex(tm_time)
 
         # Define table index at current time (used for marker storage)
         istep = Int64( (iMTime-1) * file_step + file_start )
@@ -199,6 +202,7 @@ function main()
     toc = Base.time() - tic
     println("Time loop took $(toc) s to execute")
     # Write marker data to disk
+    println("$(xm_time[5000,2])")
     if writeHistory
         WriteData(markerTimeFileName, "/History/xm_time",    xm_time   )
         WriteData(markerTimeFileName, "/History/zm_time",    zm_time   )
