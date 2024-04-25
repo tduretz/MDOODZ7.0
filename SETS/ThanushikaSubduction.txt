@@ -8,7 +8,7 @@ irestart        = 0   / Restart switch
 
 /**** OUTPUT FILES ****/
 writer          = 1  / Write grid data switch
-writer_step     = 50 / Write interval 
+writer_step     = 400 / Write interval 
 writer_markers  = 0  / Write marker data switch
 writer_debug    = 0  / Write debug data switch 
 
@@ -21,7 +21,7 @@ T               = 4.0e+02 /temperature
 /**** SPACE-TIME ****/
 Nx             = 1001               / No. grid points x
 Nz             = 381                / No. grid points z
-Nt             = 1000                  / No. time steps
+Nt             = 2000                  / No. time steps
 xmin           = -1200.000000e3     / Minimum x-coordinate
 xmax           =  1200.000000e3     / Maximum x-coordinate
 zmin           = -660.000000e3      / Minimum z-coordinate
@@ -61,10 +61,10 @@ surf_baselev       = -2.5e3    / Level of topography below which sediments will 
 marker_noise       = 1              / Marker noise switch
 bkg_strain_rate    = 1e-15          / Background strain rate [s-1] => extension rate = 1 cm/yr
 user0              = 30.0e3         / Continental crustal thickness [m]                                  ***** SYSTEMATIC PARAMETER *****
-user1              = 120e3          / Lithospheric thickness [m]                                         ***** SYSTEMATIC PARAMETER *****
+user1              = 80e3          / Lithospheric thickness [m]                                         ***** SYSTEMATIC PARAMETER *****
 user2              = -3.17e-9       / Plate velocity [m/s] (compression -> negative)                     ***** SYSTEMATIC PARAMETER *****
 user3              = 0.5            / Boundary velocity partitioning: 1 = full push WEST, 0 = full push EAST
-user4              = 15             / Angle of Subduction [°]                                            ***** SYSTEMATIC PARAMETER *****
+user4              = 40             / Angle of Subduction [°]                                            ***** SYSTEMATIC PARAMETER *****
 user5              = 70e3          / Thickness of oceanic lithosphere - Computed from thermal age       ***** SYSTEMATIC PARAMETER *****
 user6              = 0.0e-3         / Mantle adiabat [K/m]                                               ***** SYSTEMATIC PARAMETER *****
 user7              = 10.0e3         / Oceanic crustal thickness [m]
