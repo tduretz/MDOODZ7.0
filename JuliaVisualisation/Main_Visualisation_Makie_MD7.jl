@@ -1,6 +1,6 @@
 import Pkg
 Pkg.activate(normpath(joinpath(@__DIR__, ".")))
-using HDF5, GLMakie, Printf, Colors, ColorSchemes, MathTeXEngine, LinearAlgebra
+using HDF5, CairoMakie, Printf, Colors, ColorSchemes, MathTeXEngine, LinearAlgebra
 Makie.update_theme!(fonts = (regular = texfont(), bold = texfont(:bold), italic = texfont(:italic)))
 Makie.inline!(false)
 
@@ -16,23 +16,22 @@ function main()
     # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/qcoe_chk/"
     # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/1_NR07/"
     #path = "/Users/lcandiot/Developer/MDOODZ7.0/RUNS/ThanushikaSubduction/test_steepSubd/"
-     path ="/home/thanushika/software/MDOODZ7.0/cmake-exec/ThanushikaSubduction/"
-    path = "/Users/lcandiot/Developer/MDOODZ7.0/cmake-exec/ThanushikaSubduction/"
     # path ="/home/thanushika/software/MDOODZ7.0/cmake-exec/ThanushikaSubduction/"
+    # path = "/Users/lcandiot/Developer/MDOODZ7.0/cmake-exec/ThanushikaSubduction/"
+    #path ="/home/thanushika/software/MDOODZ7.0/cmake-exec/ThanushikaSubduction/O100/"
+    path = "/home/thanushika/software/Results/Phase_Diagram_Model/Results_D15Long_correctedcanbedele/"
     # path ="/home/thanushika/software/Results/Trial2/Results_Density_OC2.97/"
     
     # File numbers
-    file_start = 200
-    file_step  = 200
-    file_end   = 1400
-    file_start = 900
-    file_step  = 50
-    file_end   = 900
+    file_start = 0
+    file_step  = 500
+    file_end   = 3000
+    
     
     # Select field to visualise
-    field = :Phases
-    # field = :Density
-    # field = :Viscosity 
+    #field = :Phases
+    #field = :Density
+     field = :Viscosity 
     # field = :PlasticStrainrate
     #field = :Stress
     # field = :StrainRate
@@ -47,7 +46,7 @@ function main()
     # field = :AnisotropyFactor
 
     # Switches
-    printfig    = false  # print figures to disk
+    printfig    = true  # print figures to disk
     ph_contours = false  # add phase contours
     T_contours  = true  # add temperature contours
     fabric      = false  # add fabric quiver (normal to director)
@@ -500,10 +499,10 @@ function ExtractData( file_path, data_path)
     return data
 end
 
-# function Print2Disk( f, path, field, istep; res=4)
-#     path1 = path*"/_$field/"
-#     mkpath(path1)
-#     save(path1*"$field"*@sprintf("%05d", istep)*".png", f, px_per_unit = res) 
-# end
+function Print2Disk( f, path, field, istep; res=4)
+     path1 = path*"/_$field/"
+     mkpath(path1)
+     save(path1*"$field"*@sprintf("%05d", istep)*".png", f, px_per_unit = res) 
+end
 
 main()
