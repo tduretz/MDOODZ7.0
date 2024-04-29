@@ -61,14 +61,17 @@ surf_baselev       = -2.5e3    / Level of topography below which sediments will 
 marker_noise       = 1              / Marker noise switch
 bkg_strain_rate    = 1e-15          / Background strain rate [s-1] => extension rate = 1 cm/yr
 user0              = 30.0e3         / Continental crustal thickness [m]                                  ***** SYSTEMATIC PARAMETER *****
-user1              = 80e3          / Lithospheric thickness [m]                                         ***** SYSTEMATIC PARAMETER *****
+user1              = 80e3           / Lithospheric thickness [m]                                         ***** SYSTEMATIC PARAMETER *****
 user2              = -3.17e-9       / Plate velocity [m/s] (compression -> negative)                     ***** SYSTEMATIC PARAMETER *****
 user3              = 0.5            / Boundary velocity partitioning: 1 = full push WEST, 0 = full push EAST
 user4              = 40             / Angle of Subduction [°]                                            ***** SYSTEMATIC PARAMETER *****
-user5              = 70e3          / Thickness of oceanic lithosphere - Computed from thermal age       ***** SYSTEMATIC PARAMETER *****
+user5              = 70e3           / Thickness of oceanic lithosphere - Computed from thermal age       ***** SYSTEMATIC PARAMETER *****
 user6              = 0.0e-3         / Mantle adiabat [K/m]                                               ***** SYSTEMATIC PARAMETER *****
 user7              = 10.0e3         / Oceanic crustal thickness [m]
 user8              = 5.0e3          / Sediment thickness [m]
+force_act_vol_ast  = 1              / Overrides database
+act_vol_dif_ast    =  7e-6          / Sets activation volume for diffusion creep of olivine
+act_vol_dis_ast    = 11e-6          / Sets activation volume for dislocation creep of olivine
 
 /**** GRAVITY ****/
 gx = 0.0000                         / Gravitational acceleration in x
