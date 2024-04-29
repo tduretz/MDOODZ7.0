@@ -633,7 +633,7 @@ void ReadDataLinear( mat_prop* mat, params* model, int k, int number, scale* sca
             mat->mlin[k] = 3.0;
             mat->rlin[k] = 0.0;
             mat->Qlin[k] = 375e3;
-            mat->Vlin[k] = 4.0e-6;            // 4e-6 Annelore 7e-6 Lorenzo
+            mat->Vlin[k] = 7.0e-6;            // 4e-6 Annelore 7e-6 Lorenzo
             if ( model->force_act_vol_ast == 1 ) mat->Vlin[k] = model->act_vol_dif_ast;
             mat->Alin[k] = 1.5000e-15;
             mat->flin[k] = 0.0;
