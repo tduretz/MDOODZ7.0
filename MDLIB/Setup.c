@@ -52,6 +52,14 @@ void SetParticles(SetParticles_ff setParticles, MdoodzInput *instance, markers *
       particles->phase[np] = 0;
       particles->dual[np]  = 0;
     }
+    if (setParticles.SetTemperature) {
+      particles->T[np] = setParticles.SetTemperature(instance, coordinates);
+    } else {
+      particles->T[np] = zeroC / instance->scaling.T;
+    }
+    if (setParticles.AdjustPhaseToTemperature) {
+      particles->phase[np] = setParticles.AdjustPhaseToTemperature(instance, coordinates, particles->T[np], particles->phase[np]);
+    }
     if (setParticles.SetDualPhase) {
       particles->dual[np] = setParticles.SetDualPhase(instance, coordinates, particles->phase[np]);
     } else {
@@ -86,11 +94,6 @@ void SetParticles(SetParticles_ff setParticles, MdoodzInput *instance, markers *
       particles->X[np] = setParticles.SetXComponent(instance, coordinates, particles->phase[np]);
     } else {
       particles->X[np] = 0.0;
-    }
-    if (setParticles.SetTemperature) {
-      particles->T[np] = setParticles.SetTemperature(instance, coordinates);
-    } else {
-      particles->T[np] = zeroC / instance->scaling.T;
     }
     if (setParticles.SetPressure) {
       particles->P[np] = setParticles.SetPressure(instance, coordinates, particles->phase[np]);

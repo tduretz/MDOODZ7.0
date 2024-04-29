@@ -176,6 +176,7 @@ typedef double (*SetHorizontalVelocity_f)(MdoodzInput *input, Coordinates coordi
 typedef double (*SetVerticalVelocity_f)(MdoodzInput *input, Coordinates coordinates);
 typedef double (*SetTemperature_f)(MdoodzInput *input, Coordinates coordinates);
 typedef int    (*SetPhase_f)(MdoodzInput *input, Coordinates coordinates);
+typedef int    (*AdjustPhaseToTemperature_f)(MdoodzInput *input, Coordinates coordinates, double particleTemperature, int phase);
 typedef int    (*SetDualPhase_f)(MdoodzInput *input, Coordinates coordinates, int phase);
 typedef double (*SetGrainSize_f)(MdoodzInput *input, Coordinates coordinates, int phase);
 typedef double (*SetPorosity_f)(MdoodzInput *input, Coordinates coordinates, int phase);
@@ -187,19 +188,20 @@ typedef double (*SetAnisoAngle_f)(MdoodzInput *input, Coordinates coordinates, i
 typedef Tensor2D (*SetDefGrad_f)(MdoodzInput *input, Coordinates coordinates, int phase);
 
 typedef struct {
-  SetHorizontalVelocity_f SetHorizontalVelocity;
-  SetVerticalVelocity_f   SetVerticalVelocity;
-  SetPhase_f              SetPhase;
-  SetDualPhase_f          SetDualPhase;
-  SetPressure_f           SetPressure;
-  SetNoise_f              SetNoise;
-  SetTemperature_f        SetTemperature;
-  SetGrainSize_f          SetGrainSize;
-  SetPorosity_f           SetPorosity;
-  SetDensity_f            SetDensity;
-  SetXComponent_f         SetXComponent;
-  SetDefGrad_f            SetDefGrad;
-  SetAnisoAngle_f         SetAnisoAngle;
+  SetHorizontalVelocity_f    SetHorizontalVelocity;
+  SetVerticalVelocity_f      SetVerticalVelocity;
+  SetPhase_f                 SetPhase;
+  AdjustPhaseToTemperature_f AdjustPhaseToTemperature;
+  SetDualPhase_f             SetDualPhase;
+  SetPressure_f              SetPressure;
+  SetNoise_f                 SetNoise;
+  SetTemperature_f           SetTemperature;
+  SetGrainSize_f             SetGrainSize;
+  SetPorosity_f              SetPorosity;
+  SetDensity_f               SetDensity;
+  SetXComponent_f            SetXComponent;
+  SetDefGrad_f               SetDefGrad;
+  SetAnisoAngle_f            SetAnisoAngle;
 } SetParticles_ff;
 
 typedef enum {
