@@ -79,28 +79,31 @@ def main():
     fig, ax = plt.subplots(figsize=(12, 8))
 
     # Define base paths and colors
+
+
     base_paths_colors = [
-        ("C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview\\aniso3_20", 'red', 'Layer angle = 70°: δ = 3'),
-        ("C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview\\aniso3_50", 'blue', 'Layer angle = 40°: δ = 3'),
-        ("C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview\\aniso3", 'green', 'Layer angle = 10°: δ = 3')
+        ("C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview3\\aniso3", 'red', "Layer angle = 10°, Anisotropic mantle and crust: δ = 3"),
+        ("C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview3\\aniso3_crust", 'blue', 'Layer angle = 10°, Anisotropic crust: δ = 3'),
+        ("C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview3\\aniso3_mantle", 'green', 'Layer angle = 10°, Anisotropic mantle: δ = 3')
+    ]
+
+
+    base_paths_colors = [
+        ("C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview3\\aniso1", 'red', 'Layer angle = 10°, Isotropic: δ = 1'),
+        ("C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview3\\aniso2", 'blue', 'Layer angle = 10°, Moderate anisotropy: δ = 2'),
+        ("C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview3\\aniso6", 'green', 'Layer angle = 10°, High anisotropy: δ = 6')
     ]
 
     base_paths_colors = [
-        ("C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview\\aniso3", 'red', "Layer angle = 10°, Anisotropic mantle and crust: δ = 3"),
-        ("C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview\\aniso3_crust", 'blue', 'Layer angle = 10°, Anisotropic crust: δ = 3'),
-        ("C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview\\aniso3_mantle", 'green', 'Layer angle = 10°, Anisotropic mantle: δ = 3')
+        ("C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview3\\aniso3_chaos1", 'red', 'Random layer angle 1: δ = 3'),
+        ("C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview3\\aniso3_chaos2", 'blue', 'Random layer angle 1: δ = 3'),
+        ("C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview3\\aniso3_chaos3", 'green', 'Random layer angle 1: δ = 3')
     ]
 
     base_paths_colors = [
-        ("C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview\\aniso1", 'red', 'Layer angle = 10°, Isotropic: δ = 1'),
-        ("C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview\\aniso2", 'blue', 'Layer angle = 10°, Moderate anisotropy: δ = 2'),
-        ("C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview\\aniso6", 'green', 'Layer angle = 10°, High anisotropy: δ = 6')
-    ]
-
-    base_paths_colors = [
-        ("C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview\\aniso3_chaos1", 'red', 'Random layer angle 1: δ = 3'),
-        ("C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview\\aniso3_chaos2", 'blue', 'Random layer angle 1: δ = 3'),
-        ("C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview\\aniso3_chaos3", 'green', 'Random layer angle 1: δ = 3')
+        ("C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview3\\aniso3_20", 'red', 'Layer angle = 70°: δ = 3'),
+        ("C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview3\\aniso3_50", 'blue', 'Layer angle = 40°: δ = 3'),
+        ("C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview3\\aniso3", 'green', 'Layer angle = 10°: δ = 3')
     ]
 
     # Loop to process each dataset

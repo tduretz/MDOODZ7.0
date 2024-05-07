@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as mpl
 
 # file = h5py.File('/Users/romankulakov/MDOODZ7.0/cmake-exec/ShearTemplate/Output00005.gzip.h5', 'r')
-file = h5py.File('/Users/romankulakov/CLionProjects/MDOODZ70/cmake-exec/NeckingReview/aniisotropic1/Output00010.gzip.h5', 'r')
+file = h5py.File('C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview\\aniso3_3e20\\Output01190.gzip.h5', 'r')
 P    = file['Centers/P']
 Vx   = file['VxNodes/Vx']
 Vz   = file['VzNodes/Vz']

@@ -12,15 +12,15 @@ Lc = 1000.0
 
 # File paths (these need to be adjusted to your actual file locations)
 file_names = [
-    "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview\\aniso3_200x105\\Output00540.gzip.h5", # 10Ma
-    "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview\\aniso3_200x105\\Output00840.gzip.h5", # 15Ma
-    "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview\\aniso3_200x105\\Output01230.gzip.h5", # 20Ma
-    "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview\\aniso3_300x140\\Output00830.gzip.h5", # 10Ma
-    "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview\\aniso3_300x140\\Output01260.gzip.h5", # 15Ma
-    "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview\\aniso3_300x140\\Output01860.gzip.h5", # 20Ma
-    "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview\\aniso3m\\Output01160.gzip.h5", # 10Ma
-    "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview\\aniso3m\\Output01870.gzip.h5", # 15Ma
-    "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview\\aniso3m\\Output02710.gzip.h5", # 20Ma
+    "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview2\\aniso3_200x105\\Output00540.gzip.h5", # 10Ma
+    "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview2\\aniso3_200x105\\Output00840.gzip.h5", # 15Ma
+    "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview2\\aniso3_200x105\\Output01230.gzip.h5", # 20Ma
+    "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview2\\aniso3_300x140\\Output00830.gzip.h5", # 10Ma
+    "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview2\\aniso3_300x140\\Output01260.gzip.h5", # 15Ma
+    "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview2\\aniso3_300x140\\Output01860.gzip.h5", # 20Ma
+    "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview2\\aniso3_800x420\\Output01160.gzip.h5", # 10Ma
+    "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview2\\aniso3_800x420\\Output01870.gzip.h5", # 15Ma
+    "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview2\\aniso3_800x420\\Output02710.gzip.h5", # 20Ma
 ]
 
 def extract_data(file_path, data_path):

@@ -10,7 +10,7 @@ Lc = 1000.0
 output_file_pattern = "Output{:05d}.gzip.h5"
 first_step = 0
 step_range = 10
-last_step = 2740
+last_step = 7000
 steps = range(first_step, last_step, step_range)
 time_limit = 20  # Ma
 
@@ -22,9 +22,18 @@ def extract_data(file_path, data_path):
         return file[data_path][()]
 
 data_paths = [
-    {"base_path": "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview\\aniso6\\", "label": "Anisotropy factor 6"},
-    {"base_path": "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview\\aniso3_3e20\\", "label": "Anisotropy factor 3"},
-    {"base_path": "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview\\aniso1\\", "label": "Anisotropy factor 1"},
+    {"base_path": "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview3\\aniso1\\", "label": "Anisotropy factor 1, fabric angle 80"},
+    {"base_path": "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview3\\aniso3_0\\", "label": "Anisotropy factor 3, fabric angle 90"},
+    {"base_path": "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview3\\aniso3_90\\", "label": "Anisotropy factor, fabric angle 0"},
+    {"base_path": "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview3\\aniso3_800x420\\", "label": "Anisotropy factor 3 on crust and mantle, fabric angle 80"},
+    {"base_path": "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview3\\aniso3_crust\\", "label": "Anisotropy factor 3 on crust, fabric angle 80"},
+    {"base_path": "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview3\\aniso3_mantle\\", "label": "Anisotropy factor 3 on mantle, fabric angle 80"},
+    {"base_path": "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview3\\aniso3_20\\", "label": "Anisotropy factor 3, fabric angle 70"},
+    {"base_path": "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview3\\aniso3_50\\", "label": "Anisotropy factor 3, fabric angle 40"},
+    {"base_path": "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview3\\aniso3_chaos1\\", "label": "Anisotropy factor 3, fabric angle random"},
+    {"base_path": "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview3\\aniso1\\", "label": "Anisotropy factor 1, fabric angle 80"},
+    {"base_path": "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview3\\aniso2\\", "label": "Anisotropy factor 2, fabric angle 80"},
+    {"base_path": "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview3\\aniso6\\", "label": "Anisotropy factor 6, fabric angle 80"},
 ]
 
 def extract_data(file_path, data_path):
@@ -48,6 +57,7 @@ def generate_plot(ax, base_path, label):
             t_ma = round(t / My, 2)
 
             if t_ma > time_limit:
+                print(filename)
                 break
 
             xc_ph = 0.5 * (xv_ph[:-1] + xv_ph[1:])
@@ -87,13 +97,14 @@ def main():
     num_cols = min(3, num_plots)
     num_rows = (num_plots + num_cols - 1) // num_cols  # Calculate the number of rows needed
 
-    fig, axes = plt.subplots(num_rows, num_cols, figsize=(15, 5 * num_rows), squeeze=False)
+    fig, axes = plt.subplots(num_rows, num_cols, figsize=(20, 5 * num_rows), squeeze=False)
 
     for idx, data_path in enumerate(data_paths):
         ax = axes[idx // num_cols, idx % num_cols]
         generate_plot(ax, data_path['base_path'], data_path['label'])
 
     plt.tight_layout()
+    plt.savefig('1.png')
     plt.show()
 
 
