@@ -12,15 +12,15 @@ Lc = 1000.0
 
 # File paths (these need to be adjusted to your actual file locations)
 file_names = [
-    "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview\\aniso3_chaos1\\Output00010.gzip.h5", # 10Ma
-    "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview\\aniso3_chaos1\\Output01870.gzip.h5", # 15Ma
-    "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview\\aniso3_chaos1\\Output02700.gzip.h5", # 20Ma
-    "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview\\aniso3_chaos2\\Output00010.gzip.h5", # 10Ma
-    "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview\\aniso3_chaos2\\Output01870.gzip.h5", # 15Ma
-    "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview\\aniso3_chaos2\\Output02710.gzip.h5", # 20Ma
-    "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview\\aniso3_chaos3\\Output00010.gzip.h5", # 10Ma
-    "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview\\aniso3_chaos3\\Output01880.gzip.h5", # 15Ma
-    "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview\\aniso3_chaos3\\Output02710.gzip.h5", # 20Ma
+    "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview3\\aniso3_chaos1\\Output00010.gzip.h5", # 10Ma
+    "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview3\\aniso3_chaos1\\Output01870.gzip.h5", # 15Ma
+    "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview3\\aniso3_chaos1\\Output02700.gzip.h5", # 20Ma
+    "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview3\\aniso3_chaos2\\Output00010.gzip.h5", # 10Ma
+    "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview3\\aniso3_chaos2\\Output01870.gzip.h5", # 15Ma
+    "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview3\\aniso3_chaos2\\Output02710.gzip.h5", # 20Ma
+    "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview3\\aniso3_chaos3\\Output00010.gzip.h5", # 10Ma
+    "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview3\\aniso3_chaos3\\Output01880.gzip.h5", # 15Ma
+    "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview3\\aniso3_chaos3\\Output02710.gzip.h5", # 20Ma
 ]
 
 def extract_data(file_path, data_path):
@@ -32,7 +32,7 @@ def main():
     plt.subplots_adjust(bottom=0.80, left=0.50, top=0.99)
 
     column_titles = ['θ = random: δ = 3', 'θ = random: δ = 3', 'θ = random: δ = 3']
-    row_titles = ['10 Ma', '15 Ma', '20 Ma']
+    row_titles = ['0 Ma', '15 Ma', '20 Ma']
 
     for i, filename in enumerate(file_names):
 

@@ -57,29 +57,16 @@ def main():
                 phases = file['/VizGrid/compo_hr']
                 xv_ph  = file['/VizGrid/xviz_hr']
                 zv_ph  = file['/VizGrid/zviz_hr']
-                T      = file['Centers/T']
                 data   = file['/Model/Params']
-                xc   = file['/Model/xc_coord']
-                zc   = file['/Model/zc_coord']
-                Nx  = data[3].astype(int)
-                Nz  = data[4].astype(int)
-                Ncx = Nx-1
-                Ncz = Nz-1
+                t      = data[0].astype(float)
+                t_ma = round(t/My, 2)
 
                 xc_ph  = 0.5*(xv_ph[0:-1] + xv_ph[1:])
                 zc_ph  = 0.5*(zv_ph[0:-1] + zv_ph[1:])
                 Ncx_ph = xc_ph.shape[0]
                 Ncz_ph = zc_ph.shape[0]
                 phases = np.reshape(phases,(Ncz_ph, Ncx_ph))
-                zeros_per_column = np.count_nonzero(phases == 0, axis=0)
 
-                # Assuming zc_ph is evenly spaced, calculate the vertical step size
-                step_size_km = np.abs(zc_ph[1] - zc_ph[0]) / 1000.0  # Convert from meters to kilometers if necessary
-
-                # Multiply zeros_per_column by the step size to convert to kilometers
-                zeros_per_column_km = zeros_per_column * step_size_km
-
-                # Assuming the rest of the processing is similar to your main function
                 step_size_km = np.abs(zv_ph[1] - zv_ph[0]) / 1000.0
                 zeros_per_column = np.count_nonzero(phases == 0, axis=0)
                 zeros_per_column_km = zeros_per_column * step_size_km

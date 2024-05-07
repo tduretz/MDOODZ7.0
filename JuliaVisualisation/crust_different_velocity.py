@@ -12,15 +12,15 @@ Lc = 1000.0
 
 # File paths (these need to be adjusted to your actual file locations)
 file_names = [
-    "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview\\aniso3_3e20\\Output01200.gzip.h5", # 10Ma
-    "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview\\aniso3_3e20\\Output01850.gzip.h5", # 15Ma
-    "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview\\aniso3_3e20\\Output02740.gzip.h5", # 20Ma
-    "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview\\aniso3_fast_3e20\\Output01100.gzip.h5",
-    "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview\\aniso3_fast_3e20\\Output01750.gzip.h5",
-    "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview\\aniso3_fast_3e20\\Output02840.gzip.h5",
-    "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview\\aniso3_furious_3e20\\Output00870.gzip.h5",
-    "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview\\aniso3_furious_3e20\\Output01400.gzip.h5",
-    "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview\\aniso3_furious_3e20\\Output02050.gzip.h5",
+    "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview3\\aniso3\\Output01200.gzip.h5", # 10Ma
+    "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview3\\aniso3\\Output01850.gzip.h5", # 15Ma
+    "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview3\\aniso3\\Output02740.gzip.h5", # 20Ma
+    "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview3\\aniso3_fast\\Output01100.gzip.h5",
+    "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview3\\aniso3_fast\\Output01750.gzip.h5",
+    "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview3\\aniso3_fast\\Output02840.gzip.h5",
+    "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview3\\aniso3_furious\\Output00870.gzip.h5",
+    "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview3\\aniso3_furious\\Output01400.gzip.h5",
+    "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview3\\aniso3_furious\\Output02050.gzip.h5",
 ]
 
 def extract_data(file_path, data_path):
@@ -52,6 +52,7 @@ def main():
         xv_ph  = file['/VizGrid/xviz_hr']
         zv_ph  = file['/VizGrid/zviz_hr']
         T      = file['Centers/T']
+        strain      = file['Centers/strain']
         data   = file['/Model/Params']
         t      = data[0].astype(float)
         t_ma = round(t/My, 2)
@@ -81,6 +82,7 @@ def main():
         Ncz_ph = zc_ph.shape[0]
         phases = np.reshape(phases,(Ncz_ph, Ncx_ph))
         T   = np.reshape(T,   (Ncz,Ncx))
+        strain   = np.reshape(strain,   (Ncz,Ncx))
         T -= 273.15  # Subtract 273.15 from all temperature values
         nxc  =  np.reshape(nz, (Ncz, Ncx))
         nzc  = np.reshape(nx, (Ncz, Ncx))
@@ -93,10 +95,12 @@ def main():
         x = np.linspace(0, 1, T.shape[1])  # Assuming linear spacing
         z = np.linspace(0, 1, T.shape[0])
         f = interp2d(x, z, T, kind='linear')
+        f2 = interp2d(x, z, strain, kind='linear')
 
         x_new = np.linspace(0, 1, phases.shape[1])
         z_new = np.linspace(0, 1, phases.shape[0])
         T_interpolated = f(x_new, z_new)
+        strain_interpolated = f2(x_new, z_new)
 
         # Plotting
         ax = axes[i % 3, i // 3]
@@ -133,8 +137,11 @@ def main():
 
 
         ax.imshow(ph_masked, cmap=cmap, norm=norm, aspect='auto', extent=extent)
-        ax.imshow(log_eII_interpolated, cmap=plt.get_cmap('inferno'), aspect='auto',
-                  alpha=0.2, extent=extent)
+        ax.imshow(strain_interpolated, cmap=plt.get_cmap('inferno'), aspect='auto',
+                  alpha=0, extent=extent, vmin=0, vmax=10)
+
+        
+
 
         T_levels = [500, 1200]
 

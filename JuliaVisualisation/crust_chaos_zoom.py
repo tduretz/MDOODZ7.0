@@ -17,9 +17,9 @@ def extract_data(file_path, data_path):
 
 def main():
     fig, ax = plt.subplots(figsize=(12, 8))
-    plt.subplots_adjust(bottom=0.80, left=0.50, top=0.99)
+    plt.subplots_adjust(left=0.05, right=0.95, top=0.95, bottom=0.2)
 
-    filename = "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview_part\\aniso3_chaos1\\Output02960.gzip.h5"
+    filename = "C:\\Users\\rkulakov\\CLionProjects\\MDOODZ7.0\\cmake-exec\\NeckingReview3\\aniso3_800x420\\Output07840.gzip.h5"
 
     file   = h5py.File(filename, 'r')
     phases = file['/VizGrid/compo_hr']
@@ -33,7 +33,10 @@ def main():
     zc   = file['/Model/zc_coord']
     Nx  = data[3].astype(int)
     Nz  = data[4].astype(int)
-    t      = data[0].astype(int)
+    t      = data[0].astype(float)
+    t_ma = round(t/My, 2)
+    print("the time")
+    print(t_ma)
     Ncx = Nx-1
     Ncz = Nz-1
 
@@ -101,17 +104,25 @@ def main():
     log_eII_interpolated[np.isnan(log_eII_interpolated)] = -10  # Or any neutral value
 
 
-    ax.imshow(ph_masked, cmap=cmap, norm=norm, aspect='auto', extent=extent)
-    ax.imshow(log_eII_interpolated, cmap=plt.get_cmap('inferno'), aspect='auto',
-              alpha=0.5, extent=extent)
+    #ax.imshow(ph_masked, cmap=cmap, norm=norm, aspect='auto', extent=extent)
+    # Existing code: ax.imshow for log_eII_interpolated
+    image = ax.imshow(log_eII_interpolated, cmap=plt.get_cmap('inferno'), aspect='auto',
+                      alpha=1, extent=extent)
+
+    # New code: Add a color bar
+    cbar = plt.colorbar(image, ax=ax)
+    cbar.set_label(r'$\log(\dot{\varepsilon}_{\mathrm{II}})$ [s$^{-1}$]', rotation=270, labelpad=15)
+
+
+
 
     T_levels = [500, 1200]
 
     contour = ax.contour(xc_ph/Lc, zc_ph/Lc, T_interpolated, levels=T_levels, cmap='inferno', alpha=0.5)
 
     # Step for visualisation of quiver arrows
-    stp = 1
-    stp_vertical = 1
+    stp = 10
+    stp_vertical = 10
 
     # Interpolate phases to match the dimensions of nxc and nzc
     x_phases = np.linspace(0, 1, phases.shape[1])
@@ -143,7 +154,7 @@ def main():
     # Convert to degrees
     angles_deg = np.degrees(angles_rad)
 
-    ax.set_ylim(-100, 3)
+    ax.set_ylim(-200, 10)
 
     ax.set_aspect('equal')
     ax.set_xlabel('x [km]', fontsize=15)
