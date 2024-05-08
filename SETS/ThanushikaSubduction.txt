@@ -6,6 +6,9 @@
 istep           = 250 / Restart file number
 irestart        = 0   / Restart switch
 
+/**** PATHS ****/
+import_files_dir = ../../IMPORT/
+
 /**** OUTPUT FILES ****/
 writer          = 1  / Write grid data switch
 writer_step     = 400 / Write interval 

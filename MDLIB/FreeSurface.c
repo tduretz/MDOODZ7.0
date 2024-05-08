@@ -59,7 +59,7 @@ void SetTopoChainHorizontalCoords( surface *topo, markers *topo_chain, params mo
 
         topo_chain->x[k]     = model.xmin + dxm/2 + k*dxm;
         topo_chain->z[k]     = 0.0/scaling.L;
-        topo_chain->z0[k]     = 0.0/scaling.L;
+        topo_chain->z0[k]    = 0.0/scaling.L;
         topo_chain->phase[k] = 0;
     }
     printf( "Topographic chain initialised with %d markers\n", topo_chain->Nb_part );

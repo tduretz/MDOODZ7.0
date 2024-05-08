@@ -82,7 +82,7 @@ double SetTemperature(MdoodzInput *instance, Coordinates coordinates) {
   const double surfaceTemperature   = 273.15 / instance->scaling.T;
   const double mantleTemperature    = (1330.0 + 273.15) / instance->scaling.T;
   
-  const double Tamp               = 50.0 / instance->scaling.T;
+  const double Tamp               =  50.0 / instance->scaling.T;
   const double x                  = coordinates.x - instance->model.user4 / instance->scaling.L;
   const double z                  = coordinates.z;
   const double basin_width        = 30.0e3 / instance->scaling.L;
@@ -115,7 +115,7 @@ SetBC SetBCT(MdoodzInput *instance, POSITION position, double particleTemperatur
   double mantle_temperature  = (1330. + zeroC) / instance->scaling.T;
   if (position == S) {
     bc.type  = constant_temperature;
-    bc.value = particleTemperature;
+    bc.value = mantle_temperature;
   }
   if (position == free_surface || position == N) {
     bc.type  = constant_temperature;
@@ -158,7 +158,7 @@ int main(int nargs, char *args[]) {
                   .SetPhase              = SetPhase,
                   .SetTemperature        = SetTemperature,
                   .SetGrainSize          = SetGrainSize,
-                  // .SetNoise              = SetNoise,
+                  .SetNoise              = SetNoise,
                   .SetDualPhase          = SetDualPhase,
 
           },

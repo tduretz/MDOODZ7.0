@@ -1,0 +1,194 @@
+/**** RESTART ****/
+istep = 02500
+irestart = 1
+
+/**** OUTPUT FILES ****/
+writer = 1
+writer_step = 10
+writer_markers = 0
+writer_debug   = 0 
+
+/**** SCALES ****/ Scaling parameters for
+eta = 1.e+22     /viscosity
+L   = 30.e4      /length
+V   = 1.5e-8     /velocity
+T   = 1.e+02     /temperature
+ 
+/**** SPACE-TIME ****/
+Nx             = 911
+Nz             = 501 
+Nt             = 3500
+xmin           = -150.000000e3
+xmax           =  200.000000e3
+zmin           = -160.000000e3
+zmax           = 10.000000e3 
+dt             = 1.2623e+11
+Courant        = 0.3
+penalty        = 1e3
+eta_average    = 1
+interp_stencil = 9
+
+/**** SWITCHES ****/
+mechanical        = 1
+constant_dt       = 0
+RK                = 4
+periodic_x        = 0
+pure_shear_ALE    = 0  /1: box stretched at constant strain rate; -1 box of constant size
+elastic           = 1
+thermal           = 1
+free_surface      = 1
+free_surface_stab = 1
+initial_cooling   = 1
+subgrid_diffusion = 2
+shear_heating     = 1
+adiab_heating     = 0
+surface_processes = 1 /0 = none; 1 = diffusion only; 2 = fills instantaneously the basin up to the base level;  3 = diffusion + source term
+surf_diff         = 5.0e-6 /topography diffusion coefficient
+surf_ised1        = 4 /sediment phase indices 
+surf_ised2        = 5
+surf_sedirate     = 0.0 / sedimentation rate [m/s]:3.1688e-12 <-> 0.01 cm/yr
+surf_baselev      = 0.0e3 / base level for sedimentation
+track_T_P_x_z     = 1 / initial P and T field record
+polar             = 0
+anisotropy        = 0
+
+/**** SETUP DEPENDANT ****/
+marker_noise    = 1
+bkg_strain_rate = -0.333e-15 /Background strain rate [s-1] => extension rate = 1 cm/yr
+user0           = 0.0e3     /Radius of perturbation [m]
+user1           = 155.0e3   /Initial lithosphere thickness [m]
+user2           = 35.0e3    /Initial crust thickness [m]
+user3           = -2.0e3    /Initial basin amplitude [m]
+user4           = 25e3      /lateral shift of pertubation         
+user5           = 0
+user6           = 0
+user7           = 0
+
+/**** GRAVITY ****/
+gx = 0.0000
+gz = -9.81
+
+/**** PHASE PROPERTIES ****/
+Nb_phases = 4 
+
+ID   = 0
+rho  = 2800.00 / Upper Crust - Westerly granite
+G   = 1.0e10
+Cv   = 1050.0
+k    = 2.5
+Qr   = 0.55e-6
+C    = 5.0e7
+phi  = 30.0
+Slim = 500.0e9
+alp  = 32.0e-6
+bet  = 1.5e-11
+cstv = 0
+pwlv = 10
+linv = 0
+gbsv = 0
+expv = 0
+aniso_factor = 1.0
+aniso_angle  = 45
+coh_soft = 1
+Ce       = 1e6
+plss     = 0.5
+plse     = 1.5
+eta_vp   = 22.5e20
+
+ID   = 1
+rho  = 2800.00 / Lower crust
+G   = 1.0e10
+Cv   = 1050.0
+k    = 2.5
+Qr   = 0.55e-6
+C    = 5.0e7
+phi  = 30.0
+Slim = 500.0e9
+alp  = 32.0e-6
+bet  = 1.5e-11
+cstv = 0
+pwlv = 10
+linv = 0
+gbsv = 0
+expv = 0
+Ce       = 1e6
+cohe     = 1e6
+plss     = 0.5
+plse     = 1.5
+eta_vp   = 22.5e20
+
+ID   = 2
+rho  = 3330.00 / lithospheric mantle - Dry Olivine
+alp  = 32.0e-6
+bet  = 1.5e-11
+G   = 1.0e10
+Cv   = 1050.0
+k    = 3.0
+Qr   = 0.0
+C    = 5.0e7
+phi  = 30.0
+Slim = 500.0e9
+cstv = 0
+pwlv = 40
+linv = 40
+gbsv = 0
+expv = 40
+Ce       = 1e6
+cohe     = 1e6
+plss     = 0.5
+plse     = 1.5
+eta_vp   = 22.5e20
+
+ID   = 3
+rho  = 3330.00 / asthenosphere 
+alp  = 32.0e-6
+bet  = 1.5e-11
+G   = 1.0e10
+Cv   = 1050.0
+k    = 3.0
+Qr   = 0.0
+C    = 5.0e7
+phi  = 30.0
+Slim = 500.0e9
+cstv = 0
+pwlv = 40
+linv = 40
+gbsv = 0
+expv = 40
+coh_soft = 1
+Ce       = 1e6
+plss     = 0.5
+plse     = 1.5
+eta_vp   = 22.5e20
+
+/**** DEFMAPS ****/
+nT    =    200      / Temperature resolution []
+nE    =    200      / Strain rate resolution []
+nd    =    6        / Grain size resolution []
+Tmin  =    127.0      / Temperature minimum [°C]
+Tmax  =    1827.0     / Temperature maximum [°C]
+Emin  =    -50      / Strain rate minimum log_10 [1/s]
+Emax  =    5        / Strain rate maximum log_10 [1/s]
+dmin  =    -7       / Grain size minimum log_10 [m]
+dmax  =    -2       / Grain size maximum log_10 [m]
+Pn    =  1.0e9        / Pressure [Pa]
+
+/**** PARTICLES ****/
+Nx_part  = 4
+Nz_part  = 4
+min_part_cell = 16
+
+/**** NON-LINEAR ITERATIONS ****/
+Newton            = 1     / set to 1 only for accurate/production runs
+line_search       = 1     / same
+nit_max           = 15    / more than 1 for accurate/production runs
+rel_tol_KSP       = 1e-4
+let_res_grow      = 0
+line_search_min   = 0.0
+Picard2Newton     = 1
+Picard2Newton_tol = 1e-1
+diag_scaling      = 0
+nonlin_abs_mom    = 1e-9
+nonlin_rel_mom    = 1e-9
+nonlin_abs_div    = 1e-9
+nonlin_rel_div    = 1e-9
