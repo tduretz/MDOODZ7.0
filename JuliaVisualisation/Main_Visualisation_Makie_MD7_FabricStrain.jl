@@ -36,7 +36,7 @@ function main()
     # File numbers
     file_start = 0
     file_step  = 10
-    file_end   = 130
+    file_end   = 400
 
     # Select field to visualise
     # field = :Phases
@@ -45,7 +45,7 @@ function main()
     # field = :Viscosity 
     # field = :PlasticStrainrate
     # field = :Stress
-    field = :StrainRate
+    # field = :StrainRate
     # field = :Strain
     # field = :Strain_xx # normal strain
     # field = :Strain_zz # normal strain
@@ -70,10 +70,12 @@ function main()
     # field = :Topography
     # field = :TimeSeries
     # field = :AnisotropyFactor
+    # field = :StrainLocalisation
+    field = :StrainLocalisation_2
 
     # Switches
     printfig    = true  # print figures to disk
-    printvid    = true
+    printvid    = false
     framerate   = 3
     ph_contours = false  # add phase contours
     T_contours  = false  # add temperature contours
@@ -118,6 +120,7 @@ function main()
 
         t      = model[1]
         tMy    = round(t/tc, digits=6)
+        Δt     = model[8]
         nvx    = Int(model[4])
         nvz    = Int(model[5])
         ncx, ncz = nvx-1, nvz-1
@@ -125,6 +128,7 @@ function main()
         zmin, zmax = zv[1], zv[end]
         Lx, Lz    = (xmax-xmin)/Lc, (zmax-zmin)/Lc
         Δx, Δz, Δ = Lx/ncx, Lz/ncz, sqrt( (Lx/ncx)^2 + (Lz/ncz)^2)
+        γ = t * 2 /10 # here...
         Lx>1e3 ? length_unit="km" :  length_unit="m"
         @info "Model info"
         @show "Model apect ratio" Lx/Lz
@@ -218,6 +222,100 @@ function main()
         #####################################
 
         f = Figure(size = (Lx/Lz*resol, resol), fontsize=25)
+        
+        if field==:StrainLocalisation_2
+            if istep==file_start
+                global npoints      = (ncz+2)*10
+                global xPoints      = zeros(npoints)
+                global zPoints      = Float64.(LinRange(zmin, zmax, npoints))
+                global xPoints_PS   = zeros(npoints) # pure shear x coordinates at given zPoints
+                global xPoints_PS0  = zeros(npoints) # xPoints_PS old
+                Δt = t # somehow Δt is much too high otherwise... i.e. 1e11 seconds... (concerns only first timestep)
+            end
+
+
+            # get indices of closest VX and VZ points
+            VX_xi = Int.(round.((xPoints .+ Lx/2        ) ./  Lx       .* (nvx-1))) .+ 1
+            VX_zi = Int.(round.((zPoints .+ Lz/2 .- Δz/2) ./ (Lz + Δz) .* (ncz+1))) .+ 2
+            VZ_xi = Int.(round.((xPoints .+ Lx/2 .- Δx/2) ./ (Lx + Δx) .* (ncx+1))) .+ 2
+            VZ_zi = Int.(round.((zPoints .+ Lz/2        ) ./  Lz       .* (nvz-1))) .+ 1
+
+            VX_update = Float64.(Vx[CartesianIndex.(VX_xi, VX_zi)])
+            VZ_update = Float64.(Vz[CartesianIndex.(VZ_xi, VZ_zi)])
+
+            global xPoints      = xPoints .+ VX_update * Δt
+            global zPoints      = zPoints .+ VZ_update * Δt
+            global xPoints_PS   = zPoints .* γ
+
+            xPoints     = xPoints    .- (xPoints    .> Lx/2) .* Lx .+ (xPoints    .< -Lx/2) .* Lx
+            zPoints     = zPoints    .- (zPoints    .> Lz/2) .* Lz .+ (zPoints    .< -Lz/2) .* Lz
+            while xPoints_PS != xPoints_PS0
+                xPoints_PS0 = xPoints_PS
+                xPoints_PS  = xPoints_PS0 .- (xPoints_PS0 .> Lx/2) .* Lx .+ (xPoints_PS0 .< -Lx/2) .* Lx
+            end
+
+            #γ = round((xPoints[end] - xPoints[1]) / Lz, digits=2)
+
+            ax1 = Axis(f[1, 1], title = L"Strain Localisation at $γ$ = %$(round(γ, digits=2))", xlabel = L"$x$ [%$(length_unit)]", ylabel = L"$y$ [%$(length_unit)]")
+            #hm = lines!([xPoints[1],xPoints[end]], [zPoints[1],zPoints[end]], color=:red, linewidth=2)
+            #hm = scatterlines!(xPoints, zPoints, color=:black, markersize = 2, linewidth=1)
+            
+            #hm = plot!([xPoints[1],xPoints[end]], [zPoints[1],zPoints[end]], color=:red, markersize = 2, linewidth=2)
+            hm = plot!(xPoints_PS, zPoints, color=:red , markersize = 2, linewidth=1)
+            hm = plot!(xPoints   , zPoints, color=:blue, markersize = 2, linewidth=1)
+
+            colsize!(f.layout, 1, Aspect(1, Lx/Lz))
+            xlims!(ax1, -0.5, 0.5)
+            ylims!(ax1, -0.5, 0.5)
+            if printfig Print2Disk( f, path, string(field), istep) end
+        end
+        
+        if field==:StrainLocalisation
+            if istep==file_start
+                global npoints      = (ncz+2)*10
+                global xPoints      = zeros(npoints)
+                global zPoints      = Float64.(LinRange(zmin, zmax, npoints))
+                global xPoints_PS   = zeros(npoints) # pure shear x coordinates at given zPoints
+                global xPoints_PS0  = zeros(npoints) # xPoints_PS old
+                Δt = t # somehow Δt is much too high otherwise... i.e. 1e11 seconds... (concerns only first timestep)
+            end
+
+
+            # get indices of closest VX and VZ points
+            VX_xi = Int.(round.((xPoints .+ Lx/2        ) ./  Lx       .* (nvx-1))) .+ 1
+            VX_zi = Int.(round.((zPoints .+ Lz/2 .- Δz/2) ./ (Lz + Δz) .* (ncz+1))) .+ 2
+            VZ_xi = Int.(round.((xPoints .+ Lx/2 .- Δx/2) ./ (Lx + Δx) .* (ncx+1))) .+ 2
+            VZ_zi = Int.(round.((zPoints .+ Lz/2        ) ./  Lz       .* (nvz-1))) .+ 1
+
+            VX_update = Float64.(Vx[CartesianIndex.(VX_xi, VX_zi)])
+            VZ_update = Float64.(Vz[CartesianIndex.(VZ_xi, VZ_zi)])
+
+            global xPoints      = xPoints .+ VX_update * Δt
+            global zPoints      = zPoints .+ VZ_update * Δt
+            global xPoints_PS   = zPoints .* γ
+
+            xPoints     = xPoints    .- (xPoints    .> Lx/2) .* Lx .+ (xPoints    .< -Lx/2) .* Lx
+            zPoints     = zPoints    .- (zPoints    .> Lz/2) .* Lz .+ (zPoints    .< -Lz/2) .* Lz
+            while xPoints_PS != xPoints_PS0
+                xPoints_PS0 = xPoints_PS
+                xPoints_PS  = xPoints_PS0 .- (xPoints_PS0 .> Lx/2) .* Lx .+ (xPoints_PS0 .< -Lx/2) .* Lx
+            end
+
+            #γ = round((xPoints[end] - xPoints[1]) / Lz, digits=2)
+
+            ax1 = Axis(f[1, 1], title = L"Strain Localisation at $γ$ = %$(round(γ, digits=2))", xlabel = L"$x$ [%$(length_unit)]", ylabel = L"$y$ [%$(length_unit)]")
+            #hm = lines!([xPoints[1],xPoints[end]], [zPoints[1],zPoints[end]], color=:red, linewidth=2)
+            #hm = scatterlines!(xPoints, zPoints, color=:black, markersize = 2, linewidth=1)
+            
+            #hm = plot!([xPoints[1],xPoints[end]], [zPoints[1],zPoints[end]], color=:red, markersize = 2, linewidth=2)
+            hm = plot!(xPoints_PS, zPoints, color=:red , markersize = 2, linewidth=1)
+            hm = plot!(xPoints   , zPoints, color=:blue, markersize = 2, linewidth=1)
+
+            colsize!(f.layout, 1, Aspect(1, Lx/Lz))
+            xlims!(ax1, -0.5, 0.5)
+            ylims!(ax1, -0.5, 0.5)
+            if printfig Print2Disk( f, path, string(field), istep) end
+        end
 
         if field==:Phases
             ax1 = Axis(f[1, 1], title = L"Phases at $t$ = %$(tMy) Ma", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
