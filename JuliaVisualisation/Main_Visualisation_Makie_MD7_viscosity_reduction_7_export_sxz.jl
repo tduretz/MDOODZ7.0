@@ -80,6 +80,36 @@ function main()
     
     # all aniso setups
 
+    collectData!("/users/whalter1/work/aniso_fix/D12_1000/", "D12 1000", 100000, "auto")
+    collectData!("/users/whalter1/work/aniso_fix/D13_1000/", "D13 1000", 100000, "auto")
+    collectData!("/users/whalter1/work/aniso_fix/D14_1000/", "D14 1000", 100000, "auto")
+    collectData!("/users/whalter1/work/aniso_fix/D15_1000/", "D15 1000", 100000, "auto")
+
+    collectData!("/users/whalter1/work/aniso_fix/D02_1000/", "D02 1000", 100000, "auto")
+    collectData!("/users/whalter1/work/aniso_fix/D03_1000/", "D03 1000", 100000, "auto")
+    collectData!("/users/whalter1/work/aniso_fix/D04_1000/", "D04 1000", 100000, "auto")
+    collectData!("/users/whalter1/work/aniso_fix/D05_1000/", "D05 1000", 100000, "auto")
+
+    collectData!("/users/whalter1/work/aniso_fix/D2_1000/" , "D2 1000" , 100000, "auto")
+    collectData!("/users/whalter1/work/aniso_fix/D3_1000/" , "D3 1000" , 100000, "auto")
+    collectData!("/users/whalter1/work/aniso_fix/D4_1000/" , "D4 1000" , 100000, "auto")
+    collectData!("/users/whalter1/work/aniso_fix/D5_1000/" , "D5 1000" , 100000, "auto")
+
+    collectData!("/users/whalter1/work/aniso_fix/C12_1000/", "C12 1000", 100000, "auto")
+    collectData!("/users/whalter1/work/aniso_fix/C13_1000/", "C13 1000", 100000, "auto")
+    collectData!("/users/whalter1/work/aniso_fix/C14_1000/", "C14 1000", 100000, "auto")
+    collectData!("/users/whalter1/work/aniso_fix/C15_1000/", "C15 1000", 100000, "auto")
+
+    collectData!("/users/whalter1/work/aniso_fix/C02_1000/", "C02 1000", 100000, "auto")
+    collectData!("/users/whalter1/work/aniso_fix/C03_1000/", "C03 1000", 100000, "auto")
+    collectData!("/users/whalter1/work/aniso_fix/C04_1000/", "C04 1000", 100000, "auto")
+    collectData!("/users/whalter1/work/aniso_fix/C05_1000/", "C05 1000", 100000, "auto")
+
+    collectData!("/users/whalter1/work/aniso_fix/C2_1000/" , "C2 1000" , 100000, "auto")
+    collectData!("/users/whalter1/work/aniso_fix/C3_1000/" , "C3 1000" , 100000, "auto")
+    collectData!("/users/whalter1/work/aniso_fix/C4_1000/" , "C4 1000" , 100000, "auto")
+    collectData!("/users/whalter1/work/aniso_fix/C5_1000/" , "C5 1000" , 100000, "auto")
+
     collectData!("/users/whalter1/work/aniso_fix/A10_500/" , "A10 500", 100000, "auto")
     collectData!("/users/whalter1/work/aniso_fix/A00_500/" , "A00 500", 100000, "auto")
     collectData!("/users/whalter1/work/aniso_fix/A0_500/"  , "A0 500" , 100000, "auto")

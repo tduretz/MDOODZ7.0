@@ -1,6 +1,6 @@
 /**** RESTART ****/
-istep = 007000
-irestart = 1
+istep = 000000
+irestart = 0
 
 /**** OUTPUT FILES ****/
 writer          = 1
@@ -28,7 +28,7 @@ T   = 1
 /**** SPACE ****/
 Nx      = 1001
 Nz      = 1001
-Nt      = 100000
+Nt      = 1
 xmin    = -5.000000e-1
 zmin    = -5.000000e-1
 xmax    =  5.000000e-1
