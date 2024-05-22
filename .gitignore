@@ -15,6 +15,7 @@ visualtests-out
 build/
 RUNS/
 MDLIB/*/*.png
+MDLIB/*/*/*.png
 *.out
 *.o
 .vscode
