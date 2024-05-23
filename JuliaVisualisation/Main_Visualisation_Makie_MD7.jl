@@ -20,7 +20,7 @@ end
 
 function AddCountourQuivers!(PlotOnTop, ax1, xc, zc, V, T, σ1, Fab, Lc, cm_y, group_phases, Δ)
     if PlotOnTop.T_contours 
-        contour!(ax1, xc./Lc, zc./Lc, T, levels=0:200:1400, linewidth = 4, color=:white )  
+        contour!(ax1, xc./Lc, zc./Lc, T, levels=0:200:1400, linewidth = 4, color=:black )  
     end 
     if PlotOnTop.ph_contours 
         contour!(ax1, xc_hr./Lc, zc_hr./Lc, group_phases, levels=-1:1:maximum(group_phases), linewidth = 4, color=:white )  
@@ -53,21 +53,21 @@ function main()
     # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/1_NR09/"
 
     # File numbers
-    file_start = 0
+    file_start = 250
     file_step  = 10
-    file_end   = 0
+    file_end   = 250
 
     # Select field to visualise
-    field = :Phases
+    # field = :Phases
     # field = :Cohesion
     # field = :Density
     # field = :Viscosity 
     # field = :PlasticStrainrate
     # field = :Stress
     # field = :StrainRate
-    field = :Pressure
+    # field = :Pressure
     # field = :Divergence
-    # field = :Temperature
+    field = :Temperature
     # field = :Velocity_x
     # field = :Velocity_z
     # field = :Velocity
@@ -86,7 +86,7 @@ function main()
         T_contours  = true,   # add temperature contours
         fabric      = false,  # add fabric quiver (normal to director)
         topo        = false,
-        σ1_axis     = true,
+        σ1_axis     = false,
         vel_vec     = false,
     )
     α_heatmap   = 1.0 #0.85   # transparency of heatmap 
@@ -392,11 +392,11 @@ function main()
         if field==:MeltFraction
             ax1 = Axis(f[1, 1], title = L"ϕ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
             hm = heatmap!(ax1, xc./Lc, zc./Lc, ϕ, colormap = (:bilbao, α_heatmap))
-            AddCountourQuivers!(PlotOnTop, ax1, xc, zc, V, T, σ1, Fab, Lc, cm_y, group_phases, Δ)     
-            Mak.Colorbar(f[1, 2], hm, label = L"$ϕ$", width = 20, labelsize = 25, ticklabelsize = 14 )
-            Mak.colgap!(f.layout, 20)
-            colsize!(f.layout, 1, Aspect(1, Lx/Lz))
-            if printfig Print2Disk( f, path, string(field), istep) end
+            # AddCountourQuivers!(PlotOnTop, ax1, xc, zc, V, T, σ1, Fab, Lc, cm_y, group_phases, Δ)     
+            # Mak.Colorbar(f[1, 2], hm, label = L"$ϕ$", width = 20, labelsize = 25, ticklabelsize = 14 )
+            # Mak.colgap!(f.layout, 20)
+            # colsize!(f.layout, 1, Aspect(1, Lx/Lz))
+            # if printfig Print2Disk( f, path, string(field), istep) end
         end
 
         if field==:Cohesion

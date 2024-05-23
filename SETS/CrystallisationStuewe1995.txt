@@ -102,7 +102,7 @@ Nb_phases = 1
 
 /**** PHASE 0 ****/
 ID            = 0
-melt          = 3
+melt          = 1
 density_model = 0 / constant density
 rho           = 2800.00 
 Cp            = 1050.0

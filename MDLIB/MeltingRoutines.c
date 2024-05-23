@@ -47,10 +47,18 @@ void PartialMelting( double *phi, double* hlat, double P, double T, double phi0,
     double Ts = T_K, Tl = T_K, Ql;
     double alpha = 1e-7/(1/scaling->T); // very small number -> linear melting
 
-    if (melt_model>0) {
+    if (melt_model>0 && T>1e-13 && P>1e-13) {
+
+        // Simple T-dependent melting (Stuewe 1995)
+        if (melt_model==1) {
+            Ts = 600.  + 273.15;
+            Tl = 1200. + 273.15;
+            Ql = 320000.;
+            alpha = -0.1; // Strong effect
+        }
 
         // Crust or sediment melting
-        if (melt_model==1) {
+        if (melt_model==10) {
             if (P_MPa>1600) {
                 Ts = 935. + 0.0035*P_MPa + 0.0000062*pow(P_MPa,2);
             }
@@ -60,9 +68,21 @@ void PartialMelting( double *phi, double* hlat, double P, double T, double phi0,
             Tl = 1423 + 0.105*P_MPa;
             Ql = 380000.;
         }
+
+        // From Schenker et al, 2012
+        if (melt_model==11) {
+            if (P_MPa>1200) {
+                Ts = 831. + 0.06*P_MPa;
+            }
+            else {
+                Ts = 889. - 17900/(P_MPa + 54) + 20,200/pow((P_MPa + 54),2);
+            }
+            Tl = 1262 + 0.09*P_MPa;
+            Ql = 300000.;
+        }
         
         // Mantle melting
-        if (melt_model==2) {
+        if (melt_model==40) {
             if (P_MPa > 10000) {
                 Ts = 2212 + 0.030819*(P_MPa - 10000); //en K
             }
@@ -73,12 +93,16 @@ void PartialMelting( double *phi, double* hlat, double P, double T, double phi0,
             Ql = 400000.;
         }
 
-        // Simple T-dependent melting (Stuewe 1995)
-        if (melt_model==3) {
-            Ts = 600.  + 273.15;
-            Tl = 1200. + 273.15;
-            Ql = 320000.;
-            alpha = -0.1; // Strong effect
+        // From Schenker et al, 2012
+        if (melt_model==41) {
+            if (P_MPa>1e4) {
+                Ts = 2212. + 0.030819*(P_MPa-10000.);
+            }
+            else {
+                Ts = 1394 + 0.132899*P_MPa - 0.000005014/pow(P_MPa,2);
+            }
+            Tl = 2073 + 0.114*P_MPa;
+            Ql = 300000.;
         }
         
         Ql /= (scaling->J/scaling->m);

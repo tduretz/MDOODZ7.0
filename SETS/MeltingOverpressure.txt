@@ -131,7 +131,7 @@ k_chem        = 5.0e-26
 
 /**** PHASE 1 ****/
 ID            = 1
-melt          = 1
+melt          = 10
 density_model = 5
 rho           = 2900.00 / migmatite
 drho          = 300.0
