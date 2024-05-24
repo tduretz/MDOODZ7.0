@@ -59,7 +59,7 @@ void SetTopoChainHorizontalCoords( surface *topo, markers *topo_chain, params mo
 
         topo_chain->x[k]     = model.xmin + dxm/2 + k*dxm;
         topo_chain->z[k]     = 0.0/scaling.L;
-        topo_chain->z0[k]     = 0.0/scaling.L;
+        topo_chain->z0[k]    = 0.0/scaling.L;
         topo_chain->phase[k] = 0;
     }
     printf( "Topographic chain initialised with %d markers\n", topo_chain->Nb_part );
@@ -206,16 +206,16 @@ void RemeshMarkerChain( markers *topo_chain, surface *topo, params model, scale 
         for (k=0;k<topo_chain->Nb_part;k++) {
             
             if (topo_chain->x[k]>model.xmax || topo_chain->x[k]<model.xmin  ) topo_chain->phase[k] = -1;
-            else topo_chain->phase[k]=0;
+            else topo_chain->phase[k] = 0;
             
             // Index of the fine grid column
             distance             = topo_chain->x[k] - (model.xmin + dx/2.0/res);
             in                   = ceil((distance/dx*res)+0.5) - 1;
             if (in<0        ) in = 0;
             if (in>res*Ncx-1) in = res*Ncx-1;
-            if (topo_chain->phase[k]!=-1) NumMarkCell[in]++;
+            if (topo_chain->phase[k] != -1) NumMarkCell[in]++;
             // NEW
-            if (topo_chain->phase[k]== -1) nout++;
+            if (topo_chain->phase[k] == -1) nout++;
         }
         
         // NEW
