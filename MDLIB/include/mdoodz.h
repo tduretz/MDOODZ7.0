@@ -53,7 +53,7 @@ typedef struct {
   int     interp_stencil;
   double  nexp_radial_basis;
   int     mechanical, periodic_x, elastic, isnonnewtonian,
-          thermal, pure_shear_ALE, free_surface, writer_markers, writer_debug, topo_update;
+          thermal, pure_shear_ALE, free_surface, writer_markers, writer_debug, topo_update, melting;
   double free_surface_stab;
   int    constant_dt, RK, line_search, initial_cooling, subgrid_diffusion, adiab_heating,
           shear_heating, advection, finite_strain, conserv_interp;
@@ -116,14 +116,14 @@ typedef struct {
 
 // Stucture scale contains scaling parameters
 typedef struct {
-  double eta, L, V, T, t, a, E, S, m, rho, F, J, W, Cv, rhoE, k;
+  double eta, L, V, T, t, a, E, S, m, rho, F, J, W, Cp, rhoE, k;
 } scale;
 
 // mat_prop contains information related to material phase properties
 typedef struct {
   int    Nb_phases;
   double R;
-  double  eps0[20], tau0[20], eta0[20], rho[20], G[20], Cv[20], k[20], Qr[20], C[20], phi[20],
+  double  eps0[20], tau0[20], eta0[20], rho[20], G[20], Cp[20], k[20], Qr[20], C[20], phi[20],
           psi[20], Slim[20], n[20], A[20], Ea[20], Va[20], alp[20], bet[20], Qm[20],
           T0[20], P0[20], drho[20], k_eff[20];
   double tpwl[20], Qpwl[20], Vpwl[20], npwl[20], mpwl[20], Apwl[20], apwl[20],
@@ -145,6 +145,7 @@ typedef struct {
   double Pr[20], tau_kin[20], dPr[20], k_chem[20];
   int    reac_soft[20], reac_phase[20];
   int    phase_mix[20], phase_two[20];
+  int    melt[20];
   double aniso_angle[20], ani_fac_max[20], aniso_factor[20];   //ani_fac_v[20], ani_fac_e[20], ani_fac_p[20]
   double axx[20], azz[20], ayy[20];
   int    ani_fstrain[20];

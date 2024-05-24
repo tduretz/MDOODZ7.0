@@ -12,9 +12,9 @@ function main()
     path = "/Users/tduretz/REPO/MDOODZ7.0/MDLIB/"
 
     # File numbers
-    file_start = 100
+    file_start = 00
     file_step  = 10
-    file_end   = 100
+    file_end   = 00
 
     # Switches
     resolution  = 500
@@ -28,7 +28,7 @@ function main()
     for istep=file_start:file_step:file_end
 
         # Read grid file
-        filename = string(path, @sprintf("Outputx%05d.gzip.h5", istep))
+        filename = string(path, @sprintf("Output%05d.gzip.h5", istep))
         model    = ExtractData( filename, "/Model/Params")
         xc       = ExtractData( filename, "/Model/xc_coord")
         zc       = ExtractData( filename, "/Model/zc_coord")
@@ -41,9 +41,10 @@ function main()
         ncx_hr, ncz_hr = length(xc_hr), length(zc_hr)
     
         # Read marker file
-        fmark    = string(path, @sprintf("Particles_BeforeSurfRemesh%05d.gzip.h5", istep))
+        fmark    = string(path, @sprintf("Particles%05d.gzip.h5", istep))
         xm       = Float64.(ExtractData( fmark, "/Particles/x"));  
-        zm       = Float64.(ExtractData( fmark, "/Particles/z"));         
+        zm       = Float64.(ExtractData( fmark, "/Particles/z"));  
+        phm      = Float64.(ExtractData( fmark, "/Particles/phase"));        
         model    = ExtractData( fmark, "/Model/Params")
 
         # Model properties
@@ -85,10 +86,10 @@ function main()
         # Figure
         f = Figure(resolution = (Lx/Lz*resolution, resolution), fontsize=25)
         ax1 = Axis(f[1, 1], title = L"Phases at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
-        heatmap!(ax1, xc./Lc, zc./Lc, T, linewidth = 4, color=:white )  
-        scatter!(ax1, xm./Lc, zm./Lc)     
+        # heatmap!(ax1, xc./Lc, zc./Lc, T, linewidth = 4, color=:white )  
+        scatter!(ax1, xm[phm.==0]./Lc, zm[phm.==0]./Lc)     
         lines!(ax1, xv./Lc, height./Lc)
-        scatter!(ax1, x_mark./Lc, z_mark./Lc)
+        # scatter!(ax1, x_mark./Lc, z_mark./Lc)
        
         DataInspector(f)
         display(f)
