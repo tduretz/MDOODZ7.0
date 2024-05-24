@@ -412,6 +412,7 @@ void AllocateMarkerChain( surface *topo, markers* topo_chain, params model ) {
     topo_chain->Vx          = DoodzCalloc( topo_chain->Nb_part_max, sizeof(DoodzFP) );
     topo_chain->Vz          = DoodzCalloc( topo_chain->Nb_part_max, sizeof(DoodzFP) );
     topo_chain->phase       = DoodzCalloc( topo_chain->Nb_part_max, sizeof(int) );
+    // for (int i=1; i<topo_chain->Nb_part_max; i++) topo_chain->phase[i] = -1; 
     topo->height            = DoodzCalloc( (model.Nx),sizeof(DoodzFP) );
     topo->height0           = DoodzCalloc( (model.Nx),sizeof(DoodzFP) );
     topo->vx                = DoodzCalloc( (model.Nx),sizeof(DoodzFP) );
@@ -1051,3 +1052,27 @@ void SurfaceVelocity( grid *mesh, params model, surface *topo, markers* topo_cha
 /*--------------------------------------------------------------------------------------------------------------------*/
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
+
+void KeepZeroMeanTopo(params *model, surface *topo, markers *topo_chain ) {
+    printf("Make zero mean topo\n");
+    double mean_z = 0.0;
+    for (int i=0; i<model->Nx; i++){
+        mean_z += topo->height[i];
+    }
+    mean_z /= model->Nx;
+    for (int i=0; i<model->Nx; i++) {
+        topo->height[i] -= mean_z;
+    }
+    mean_z = 0.0;
+    int nmark = 0;
+    for (int i=0; i<topo_chain->Nb_part_max; i++){
+        if (topo_chain->phase[i] > -1) {
+        mean_z += topo_chain->z[i];
+        nmark  ++;
+        }
+    }
+    mean_z /= nmark;
+    for (int i=0; i<topo_chain->Nb_part_max; i++){
+        topo_chain->z[i] -= mean_z;
+    }
+}
