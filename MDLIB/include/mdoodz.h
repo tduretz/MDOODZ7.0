@@ -42,7 +42,7 @@ typedef struct {
 
 // params contains the model parameters
 typedef struct {
-  int    balance_boundaries;
+  int    balance_boundaries, zero_mean_topo; 
   char   description[500];
   double xmin, zmin, xmax, zmax, time, dx, dz, dt, dt0, dt_start, dt_max, L0,
           dt_min;
@@ -179,6 +179,7 @@ typedef double (*SetHorizontalVelocity_f)(MdoodzInput *input, Coordinates coordi
 typedef double (*SetVerticalVelocity_f)(MdoodzInput *input, Coordinates coordinates);
 typedef double (*SetTemperature_f)(MdoodzInput *input, Coordinates coordinates);
 typedef int    (*SetPhase_f)(MdoodzInput *input, Coordinates coordinates);
+typedef int    (*AdjustPhaseToTemperature_f)(MdoodzInput *input, Coordinates coordinates, double particleTemperature, int phase);
 typedef int    (*SetDualPhase_f)(MdoodzInput *input, Coordinates coordinates, int phase);
 typedef double (*SetGrainSize_f)(MdoodzInput *input, Coordinates coordinates, int phase);
 typedef double (*SetPorosity_f)(MdoodzInput *input, Coordinates coordinates, int phase);
@@ -197,6 +198,7 @@ typedef struct {
   SetVerticalVelocity_f   SetVerticalVelocity;
   SetPhase_f              SetPhase;
   SetDualPhase_f          SetDualPhase;
+  AdjustPhaseToTemperature_f AdjustPhaseToTemperature;
   SetPressure_f           SetPressure;
   SetTxx_f                SetTxx;
   SetTzz_f                SetTzz;
@@ -306,11 +308,17 @@ struct MdoodzSetup {
   MutateInputParams         *mutateInputParams;
 };
 
+typedef struct {
+  double east;
+  double west;
+} LateralFlux;
+
 struct MdoodzInput {
   char              *inputFileName;
   params             model;
   mat_prop           materials;
   scale              scaling;
+  LateralFlux        *flux;
   CrazyConductivity *crazyConductivity;
   Geometry          *geometry;
 };

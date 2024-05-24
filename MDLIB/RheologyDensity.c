@@ -452,7 +452,7 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
   *d1 = materials->gs_ref[phase];
 
   // Tensional cut-off
-  if ( model->gz<0.0 && P<0.0     ) { P = 0.0; } // printf("Aie aie aie P < 0 !!!\n"); exit(122);
+  //if ( model->gz<0.0 && P<0.0     ) { P = 0.0; } // printf("Aie aie aie P < 0 !!!\n"); exit(122);
 
   // Visco-plastic limit
   if ( elastic==0                 ) { G = 1e1; dil = 0.0; K = 1e10;}; //K = 1e1;
@@ -689,7 +689,7 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
 
       // In case return mapping has failed (because of tension), return to a von Mises minimum stress 
       if (Tiic<0.0) {
-        printf("Aie, tension!\n"); exit(1);
+        //printf("Aie, tension!\n"); exit(1);
         F_trial = Tii - Tiimin;
         gdot    = F_trial /  (eta_ve);
         Tiic    = Tii - eta_ve*gdot;
