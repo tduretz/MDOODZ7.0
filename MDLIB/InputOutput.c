@@ -1084,6 +1084,8 @@ Input ReadInputFile( char *fileName ) {
     model.density_variations = ReadInt2( fin, "density_variations",    0 ); // Turns on volume change due to reaction if 1
     model.kinetics           = ReadInt2( fin, "kinetics",              0 ); // Activates reaction kinetics
     model.out_of_plane       = ReadInt2( fin, "out_of_plane",          0 ); // Out-of-plane strain
+    model.melting            = ReadInt2( fin, "melting",               0 ); // Activates melting
+
     // Numerics: linear solver
     model.penalty            = ReadDou2( fin, "penalty",           1.0e3 ); // Penalty factor
     model.auto_penalty       = ReadDou2( fin, "auto_penalty",        0.0 ); // Activates automatic penalty factor computation
@@ -1239,7 +1241,7 @@ Input ReadInputFile( char *fileName ) {
         // Read general parameters
         materials.rho[k]  = ReadMatProps( fin, "rho", k,   2700.0 )  / scaling.rho;
         materials.G[k]    = ReadMatProps( fin, "G",  k,   1.0e10  )  / scaling.S;
-        materials.Cv[k]   = ReadMatProps( fin, "Cv",  k,   1.0e3  )  / scaling.Cv;
+        materials.Cp[k]   = ReadMatProps( fin, "Cp",  k,   1.0e3  )  / scaling.Cp;
         materials.k[k]    = ReadMatProps( fin, "k",   k,   1.0e-6 )  / scaling.k;
         materials.k_eff[k]= materials.k[k];
         materials.Qr[k]   = ReadMatProps( fin, "Qr",  k,   1.0e-30)  / (scaling.W / pow(scaling.L,3.0));
@@ -1248,6 +1250,8 @@ Input ReadInputFile( char *fileName ) {
         materials.drho[k] = ReadMatProps( fin, "drho",k,      0.0 )  / (scaling.rho);
         materials.T0[k]   = (zeroC) / (scaling.T); 
         materials.P0[k]   = 1e5 / (scaling.S);
+        // Read melting model
+        materials.melt[k]     = (int)ReadMatProps( fin, "melt",     k,    0.0   );     // 0: No plasticity --- >1: Yes, the type should be selected accordingly 
         // Read plasticity switches
         materials.plast[k]    = (int)ReadMatProps( fin, "plast",    k,    1.0   );     // 0: No plasticity --- 1: Yes 
         materials.yield[k]    = (int)ReadMatProps( fin, "yield",    k,    1.0   );     // 1: Drucker-Prager
@@ -1341,7 +1345,7 @@ Input ReadInputFile( char *fileName ) {
         printf("Zmin   = %2.1lf  km         Zmax   = %2.1lf  km      Nz   = %3d    dz   = %.2lf m\n", (model.zmin*scaling.L)/1e3, (model.zmax*scaling.L)/1e3, model.Nz, model.dz*scaling.L );
         printf("-------------------------------------------- PHASE: %d -------------------------------------------\n", k);
         printf("rho    = %2.2e kg/m^3     G = %2.2e Pa\n", materials.rho[k]*scaling.rho, materials.G[k]*scaling.S );
-        printf("Cv     = %2.2e J/kg/K      k = %2.2e W/m/K      Qr = %2.2e W/m3\n", materials.Cv[k]*scaling.Cv, materials.k[k]*scaling.k, materials.Qr[k]*(scaling.W / pow(scaling.L,3)) );
+        printf("Cp     = %2.2e J/kg/K      k = %2.2e W/m/K      Qr = %2.2e W/m3\n", materials.Cp[k]*scaling.Cp, materials.k[k]*scaling.k, materials.Qr[k]*(scaling.W / pow(scaling.L,3)) );
         printf("C      = %2.2e Pa        phi = %2.2e deg      Slim = %2.2e Pa\n",  materials.C[k]*scaling.S, materials.phi[k]*180/M_PI, materials.Slim[k]*scaling.S );
         printf("alp    = %2.2e 1/T        T0 = %2.2e K         bet = %2.2e 1/Pa       P0 = %2.2e Pa       drho = %2.2e kg/m^3 \n", materials.alp[k]*(1/scaling.T), materials.T0[k]*(scaling.T), materials.bet[k]*(1/scaling.S), materials.P0[k]*(scaling.S), materials.drho[k]*scaling.rho );
         printf("prefactor for power-law: %2.2e\n", materials.pref_pwl[k]);
@@ -1663,7 +1667,7 @@ void ScaleMe( scale* scale) {
     scale->F    = scale->m * scale->L / pow(scale->t, 2.0);
     scale->J    = scale->m * pow(scale->L,2.0) / pow(scale->t,2.0);
     scale->W    = scale->J / scale->t;
-    scale->Cv   = scale->J / scale->m / scale->T;
+    scale->Cp   = scale->J / scale->m / scale->T;
     scale->k    = scale->W / scale->L / scale->T;
     scale->rhoE = scale->J / scale->m * scale->rho;
 }

@@ -1216,7 +1216,7 @@ void UpdateParticleEnergy( grid* mesh, scale scaling, params model, markers* par
         for ( k=0; k<particles->Nb_part; k++ ) {
             if (particles->phase[k] != -1) {
                 p = particles->phase[k];
-                dtm     = materials->Cv[p] * rho_part[k]/ (materials->k[p] * (1.0/dx/dx + 1.0/dz/dz));
+                dtm     = materials->Cp[p] * rho_part[k]/ (materials->k[p] * (1.0/dx/dx + 1.0/dz/dz));
                 dTms[k] = -( particles->T[k] - Tm0[k] ) * (1.0-exp(-d*model.dt/dtm));
             }
         }
