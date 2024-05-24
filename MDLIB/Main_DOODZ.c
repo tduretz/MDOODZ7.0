@@ -180,7 +180,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         P2Mastah( &input.model, particles, particles.noise, &mesh, mesh.noise_n, mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil);
 
         P2Mastah( &input.model, particles, particles.T,  &mesh, mesh.T , mesh.BCp.type,  1, 0, interp, cent, 1);
-        P2Mastah( &input.model, particles, input.materials.Cv, &mesh, mesh.Cv, mesh.BCp.type,  0, 0, interp, cent, 1);
+        P2Mastah( &input.model, particles, input.materials.Cp, &mesh, mesh.Cp, mesh.BCp.type,  0, 0, interp, cent, 1);
 
         P2Mastah( &input.model, particles, input.materials.k_eff, &mesh, mesh.kx, mesh.BCu.type,  0, 0, interp, vxnodes, 1);
         P2Mastah( &input.model, particles, input.materials.k_eff, &mesh, mesh.kz, mesh.BCv.type,  0, 0, interp, vznodes, 1);
@@ -222,7 +222,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         P2Mastah( &input.model, particles, input.materials.k_eff, &mesh, mesh.kx, mesh.BCu.type,  0, 0, interp, vxnodes, 1);
         P2Mastah( &input.model, particles, input.materials.k_eff, &mesh, mesh.kz, mesh.BCv.type,  0, 0, interp, vznodes, 1);
         P2Mastah( &input.model, particles, particles.T,     &mesh, mesh.T , mesh.BCp.type,  1, 0, interp, cent, 1);
-        P2Mastah( &input.model, particles, input.materials.Cv,    &mesh, mesh.Cv, mesh.BCp.type,  0, 0, interp, cent, 1);
+        P2Mastah( &input.model, particles, input.materials.Cp,    &mesh, mesh.Cp, mesh.BCp.type,  0, 0, interp, cent, 1);
         P2Mastah( &input.model, particles, input.materials.Qr,    &mesh, mesh.Qr, mesh.BCp.type,  0, 0, interp, cent, 1);
 
         SetBCs(*setup->SetBCs, &input, &mesh, &topo);
@@ -259,7 +259,12 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
         // Interpolate pressure from centroids to vertices
         InterpCentroidsToVerticesDouble( mesh.p0_n, mesh.p0_s, &mesh, &input.model );
-  
+
+        printf("****************************************\n");
+        printf("******* Initialize melt fraction *******\n");
+        printf("****************************************\n");
+        if (input.model.melting == 1 ) MeltFractionGrid( &mesh, &particles, &input.materials, &input.model, &input.scaling );
+
         printf("*************************************\n");
         printf("******* Initialize grain size *******\n");
         printf("*************************************\n");
@@ -324,6 +329,8 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             MinMaxArrayTag( mesh.X_n,        1.0,               (mesh.Nx-1)*(mesh.Nz-1), "X_n       ", mesh.BCp.type );
             MinMaxArrayTag( mesh.X0_n,       1.0,               (mesh.Nx-1)*(mesh.Nz-1), "X0_n      ", mesh.BCp.type );
             MinMaxArrayTag( mesh.X0_s,       1.0,               (mesh.Nx-0)*(mesh.Nz-0), "X0_s      ", mesh.BCg.type );
+            MinMaxArrayTag( mesh.phi0_n,     1.0,               (mesh.Nx-1)*(mesh.Nz-1), "phi0_n    ", mesh.BCp.type );
+            MinMaxArrayTag( mesh.phi_n,      1.0,               (mesh.Nx-1)*(mesh.Nz-1), "phi_n     ", mesh.BCp.type );
             MinMaxArray(particles.X, 1.0, particles.Nb_part, "X part" );
             if ( input.model.anisotropy == 1 ) {
                 MinMaxArrayTag( mesh.FS_AR_n,  1.0,   (mesh.Nx-1)*(mesh.Nz-1),      "FS_AR_n   ", mesh.BCp.type );
@@ -446,7 +453,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         // Energy - interpolate thermal parameters and advected energy
 
         // Get energy and related material parameters from particles
-        P2Mastah( &input.model, particles, input.materials.Cv,     &mesh, mesh.Cv,     mesh.BCp.type,  0, 0, interp, cent, 1);
+        P2Mastah( &input.model, particles, input.materials.Cp,     &mesh, mesh.Cp,     mesh.BCp.type,  0, 0, interp, cent, 1);
         P2Mastah( &input.model, particles, input.materials.Qr,     &mesh, mesh.Qr,     mesh.BCp.type,  0, 0, interp, cent, 1);
 
         P2Mastah ( &input.model, particles, input.materials.k_eff, &mesh, mesh.kx, mesh.BCu.type,  0, 0, interp, vxnodes, 1);
@@ -564,6 +571,8 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             MinMaxArrayTag( mesh.rho0_n, input.scaling.rho, (mesh.Nx-1)*(mesh.Nz-1), "rho0_n    ", mesh.BCp.type );
             MinMaxArrayTag( mesh.X0_s, 1.0, (mesh.Nx)*(mesh.Nz),     "X0_s      ", mesh.BCg.type );
             MinMaxArrayTag( mesh.X0_n, 1.0, (mesh.Nx-1)*(mesh.Nz-1), "X0_n      ", mesh.BCp.type );
+            MinMaxArrayTag( mesh.phi0_n,     1.0,               (mesh.Nx-1)*(mesh.Nz-1), "phi0_n    ", mesh.BCp.type );
+            MinMaxArrayTag( mesh.phi_n,      1.0,               (mesh.Nx-1)*(mesh.Nz-1), "phi_n     ", mesh.BCp.type );
 
             for (int p=0; p< input.model.Nb_phases; p++) {
                 printf("Phase number %d:\n", p);
@@ -877,6 +886,13 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             MinMaxArrayTag( mesh.d0_n   , input.scaling.L, (mesh.Nx-1)*(mesh.Nz-1), "d0", mesh.BCp.type );
             MinMaxArrayTag( mesh.d_n    , input.scaling.L, (mesh.Nx-1)*(mesh.Nz-1), "d ", mesh.BCp.type );
             MinMaxArrayPart( particles.d, input.scaling.L, particles.Nb_part, "d on markers", particles.phase ) ;
+        }
+
+        if (input.model.melting == 1 ) {
+            MeltFractionGrid( &mesh, &particles, &input.materials, &input.model, &input.scaling );
+            UpdateAlphaCp( &mesh, &particles, &input.materials, &input.model, &input.scaling );
+            MinMaxArrayTag( mesh.Cp,         input.scaling.Cp,              (mesh.Nx-1)*(mesh.Nz-1), "Cp     ", mesh.BCp.type );
+            MinMaxArrayTag( mesh.alp,      1/input.scaling.T,              (mesh.Nx-1)*(mesh.Nz-1), "alp     ", mesh.BCp.type );
         }
 
         // Update phi on the particles

@@ -2,27 +2,28 @@ import Pkg
 Pkg.activate(normpath(joinpath(@__DIR__, "..")))
 # using GLMakie
 using CairoMakie
-using HDF5, Printf, Colors, ColorSchemes, MathTeXEngine
+using HDF5, Printf, Colors, ColorSchemes, MathTeXEngine, FFMPEG
 Makie.update_theme!( fonts = ( regular = texfont(), bold = texfont(:bold), italic = texfont(:italic)))
-Makie.inline!(false)
+Makie.inline!(true)
 My = 1e6*365*24*3600
 
 function main()
 
     # Set the path to your files"
-    path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/1_NR09/"
+    path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/1_NR01/"
     # path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/"
     # path ="/Users/tduretz/REPO/DEBUG/MDLIB/"
 
     # File numbers
-    file_start = 0
+    file_start = 00
     file_step  = 50
-    file_end   = 5000
+    file_end   = 3500
 
     # Select field to visualise
     # field = :Phases
-    field = :ThinningFactor
-    # field = :PhasesRheology
+    # field = :ThinningFactor
+    field = :PhasesRheology
+    # field = :ChristmasTree
     # field = :Density
     # field = :Viscosity 
     # field = :PlasticStrainrate
@@ -38,6 +39,8 @@ function main()
 
     # Switches
     printfig    = true  # print figures to disk
+    printvid    = true
+    framerate   = 3
     ph_contours = true  # add phase contours
     T_contours  = true  # add temperature contours
     fabric      = false  # add fabric quiver (normal to director)
@@ -45,6 +48,8 @@ function main()
     nap         = 0.3    # pause for animation 
     resol       = 1000
     ftsz        = 40
+    mov_name    = "$(path)/_$(field)/$(field)"  # Name of the movie
+    Lx, Lz      = 1.0, 1.0
 
     # Scaling
     Lc = 1000.
@@ -236,12 +241,35 @@ function main()
         f = Figure(resolution = (Lx/Lz*resol, resol), fontsize=ftsz)
 
         ##########################################################################
+        if field==:ChristmasTree
+            τII[isnan.(τII)] .= 0.
+            strength = @sprintf("%2.2e", sum(τII[1,:])*Lz/1e12) 
+            ax1 = Axis(f[1, 1], title =  "Integrated strength: "*strength*" TN/m",  xlabel=L"$τ_{II}$ [MPa]", ylabel=L"$z$ [km]")
+            lines!(ax1, τII[1,:]./1e6, zc./Lc, linewidth=10)
+            
+            # @show τII[1,:]
+            # @show sum(ones(size(τII))*Δz)
+            xlims!(ax1,-5, 700) 
+            ylims!(ax1, -160, 1)
+            
+            T[isnan.(T)] .= 0.
+            ρc[isnan.(ρc)] .= 0.
+            heat = @sprintf("%2.2e", sum(T[1,:].*ρc[1,:].*1050)*Lz/1e12) 
+            ax2 = Axis(f[1, 2], title = "Integrated heat: "*heat* " TJ/m² ",  xlabel=L"$T$ [$^\mathrm{o}$C]")
+            hideydecorations!(ax2) 
+            lines!(ax2, T[1,:], zc./Lc, linewidth=10)
+            lines!(ax2, T[1,:], -35.0*ones(size(zc)), linewidth=5, linestyle=:dash, color=:grey)
+            lines!(ax2, 650*ones(size(zc)), zc./Lc, linewidth=5, linestyle=:dash, color=:grey)
+            xlims!(ax2,0, 1400)
+            ylims!( ax2, -160, 1)
+            if printfig Print2Disk( f, path, string(field), istep) end
+        end
 
         if field==:ThinningFactor
             ax1 = Axis(f[1, 1], title = L"Thinning at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$\beta$ [-]")
-            lines!(ax1, xc_hr./Lc, 1.0 .- Hcrust[:]./Hcrust0[:], label=L"$$Crust")
-            lines!(ax1, xc_hr./Lc, 1.0 .- Hmant[:]./Hmant0[:], label=L"$$Mantle lithosphere")
-            lines!(ax1, xc_hr./Lc, 1.0 .- Hlit[:]./Hlit0[:], label=L"$$Lithosphere")
+            lines!(ax1, xc_hr./Lc, 1.0 .- Hcrust[:]./Hcrust0[:], label=L"$$Crust", linewidth=10)
+            lines!(ax1, xc_hr./Lc, 1.0 .- Hmant[:]./Hmant0[:], label=L"$$Mantle lithosphere", linewidth=10)
+            lines!(ax1, xc_hr./Lc, 1.0 .- Hlit[:]./Hlit0[:], label=L"$$Lithosphere", linewidth=10)
             xlims!(ax1, xmin/Lc, xmax/Lc)
             ylims!(ax1, -0.05, 1.05)
             axislegend(position = :rt, framevisible = false)
@@ -263,10 +291,10 @@ function main()
                 arrows!(ax1, xc./Lc, zc./Lc, Nz, Nx, arrowsize = 0, lengthscale=Δ/1.5)
             end            
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
-            cbar = GLMakie.Colorbar(f[1, 2], hm1, width = 20, labelsize=ftsz, ticklabelsize = 20 ) #, label = L"$$Phases"
-            # GLMakie.Colorbar(f[1, 3], hm2, label = L"$\dot{\varepsilon}^\textrm{p}$", width = 20, labelsize = 25, ticklabelsize = 14 )
+            cbar = Colorbar(f[1, 2], hm1, width = 20, labelsize=ftsz, ticklabelsize = 20 ) #, label = L"$$Phases"
+            # Colorbar(f[1, 3], hm2, label = L"$\dot{\varepsilon}^\textrm{p}$", width = 20, labelsize = 25, ticklabelsize = 14 )
             cbar.ticks = ([0, 1, 2, 3, 4, 5], ["Crust viscous", "Mantle viscous", "Crust plastic", "Mantle plastic", "Crust elastic", "Mantle elastic"])
-            # GLMakie.colgap!(f.layout, 40)
+            # colgap!(f.layout, 40)
             if printfig Print2Disk( f, path, string(field), istep) end
         end
 
@@ -275,7 +303,7 @@ function main()
             hm1 = heatmap!(ax1, xc_hr./Lc, zc_hr./Lc, ph_hr_rheo, colormap = phase_colors, colorrange=(-0.5,5.5))
             # hm2 = heatmap!(ax1, xc./Lc, zc./Lc, log10.(ε̇pl), colormap = turboα)
             if ph_contours 
-                contour!(ax1, xc_hr./Lc, zc_hr./Lc, ph_hr2, levels=-1:1:maximum(ph_hr2), linewidth = 1, color=(:white, 0.25)  )  
+                contour!(ax1, xc_hr./Lc, zc_hr./Lc, ph_hr2, levels=-1:1:maximum(ph_hr2), linewidth = 3, color=(:white, 0.35)  )  
             end
             # if T_contours 
             #     contour!(ax1, xc./Lc, zc./Lc, T, levels=0:200:1400, linewidth = 4, color=:white )  
@@ -284,10 +312,12 @@ function main()
                 arrows!(ax1, xc./Lc, zc./Lc, Nz, Nx, arrowsize = 0, lengthscale=Δ/1.5)
             end            
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
-            cbar = GLMakie.Colorbar(f[1, 2], hm1, width = 20, labelsize=ftsz, ticklabelsize = 20 ) #, label = L"$$Phases"
-            # GLMakie.Colorbar(f[1, 3], hm2, label = L"$\dot{\varepsilon}^\textrm{p}$", width = 20, labelsize = 25, ticklabelsize = 14 )
+            cbar = Colorbar(f[1, 2], hm1, width = 20, labelsize=ftsz, ticklabelsize = 20 ) #, label = L"$$Phases"
+            # Colorbar(f[1, 3], hm2, label = L"$\dot{\varepsilon}^\textrm{p}$", width = 20, labelsize = 25, ticklabelsize = 14 )
             cbar.ticks = ([0, 1, 2, 3, 4, 5], ["Crust viscous", "Mantle viscous", "Crust plastic", "Mantle plastic", "Crust elastic", "Mantle elastic"])
-            # GLMakie.colgap!(f.layout, 40)
+            # colgap!(f.layout, 40)
+            xlims!(ax1, -75, 125)
+            ylims!(ax1, -75, 2)
             if printfig Print2Disk( f, path, string(field), istep) end
         end
 
@@ -429,7 +459,13 @@ function main()
             display(f) 
             sleep(nap)
         end
-        
+            
+    end
+
+    yscale = Lz/Lx
+
+    if printfig && printvid
+        FFMPEG.ffmpeg_exe(`-framerate $(framerate) -f image2 -pattern_type glob -i $(path)_$(field)/'*'.png -vf "scale=1080:1080*$(yscale)" -c:v libx264 -pix_fmt yuv420p -y "$(mov_name).mov"`)
     end
 
 end

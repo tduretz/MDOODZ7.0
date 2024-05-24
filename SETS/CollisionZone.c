@@ -37,7 +37,7 @@ double SetDensity(MdoodzInput *input, Coordinates coordinates, int phase) {
   /* Hi Roman, there is an awkward 1==0 below. In fact the global switch `eqn_state` was never used.
   Density is computed interally and the type of equation of state depends on the phase.
   To update density on particles one may use the function:
-  EvaluateDensity( phase_ID, T, P, X,  model, materials );  where X is likely 0.0 in most cases (it's a depletion amount)
+  EvaluateDensity( phase_ID, T, P, X, phi,  model, materials );  where X is likely 0.0 in most cases (it's a depletion amount)
   --> Consequence: SetDensity() should be aware `of materials`
   */
   if ( 1==0 ) {
