@@ -26,5 +26,6 @@ else()
     add_set(CollisionPolarCartesian)
     add_set(AnneloreSubduction)
     add_set(ThanushikaSubduction)
+    add_set(SubductionMelting)
 endif()
 
