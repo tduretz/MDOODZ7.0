@@ -167,6 +167,11 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         MinMaxArray(particles.Vx, input.scaling.V, particles.Nb_part, "Vxp init" );
         MinMaxArray(particles.Vz, input.scaling.V, particles.Nb_part, "Vzp init" );
         MinMaxArray(particles.T, input.scaling.T, particles.Nb_part,  "Tp init" );
+        MinMaxArray(particles.sxxd, input.scaling.S, particles.Nb_part, "sxxd part  ");
+        MinMaxArray(particles.szzd, input.scaling.S, particles.Nb_part, "szzd part  ");
+        MinMaxArray(particles.sxxd, input.scaling.S, particles.Nb_part, "sxz part  ");
+
+
 
         if (input.model.free_surface == 1 ) CleanUpSurfaceParticles( &particles, &mesh, topo, input.scaling );
 
@@ -232,6 +237,18 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         ArrayEqualArray( mesh.T0_n, mesh.T, (mesh.Nx-1)*(mesh.Nz-1) );
 
         //--------------------------------------------------------------------------------------------------------
+        printf("*************************************\n");
+        printf("******** Initialize stresses ********\n");
+        printf("*************************************\n");
+        
+        // stresses on particles should have been set in SetParticles, so here we only have to interpolate to the mesh
+        P2Mastah( &input.model, particles, particles.sxxd,   &mesh, mesh.sxxd0, mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil);
+        P2Mastah( &input.model, particles, particles.szzd,   &mesh, mesh.szzd0, mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil);
+        P2Mastah( &input.model, particles, particles.sxz,    &mesh, mesh.sxz0,  mesh.BCg.type,  1, 0, interp, vert, input.model.interp_stencil);
+
+        MinMaxArrayTag( mesh.sxxd0, input.scaling.S,   (mesh.Nx-1)*(mesh.Nz-1), "Sxx initial ", mesh.BCp.type );
+        MinMaxArrayTag( mesh.szzd0, input.scaling.S,   (mesh.Nx-1)*(mesh.Nz-1), "Szz initial ", mesh.BCp.type );
+
 
         printf("*************************************\n");
         printf("******** Initialize pressure ********\n");
@@ -376,10 +393,6 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             if (input.model.writer_markers == 1 ) WriteOutputHDF5Particles( &mesh, &particles, &topo, &topo_chain, &topo_ini, &topo_chain_ini, input.model, BaseParticleFileName, input.materials, input.scaling );
         }
 
-        // Set initial stresses and pressure to zero
-        Initialise1DArrayDouble( mesh.sxxd,  (mesh.Nx-1)*(mesh.Nz-1), 0.0 );
-        Initialise1DArrayDouble( mesh.szzd,  (mesh.Nx-1)*(mesh.Nz-1), 0.0 );
-        Initialise1DArrayDouble( mesh.sxz,   (mesh.Nx)  *(mesh.Nz)  , 0.0 );
         // Generate deformation maps
         if (input.model.deformation_maps == 1 ) GenerateDeformationMaps( &mesh, &input.materials, &input.model, Nmodel, &input.scaling );
         particles.Nb_part_ini = particles.Nb_part;

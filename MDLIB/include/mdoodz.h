@@ -103,6 +103,9 @@ typedef struct {
   double   diffusion_length;
   // For Pips
   int      chemical_diffusion, no_return, density_variations, unsplit_diff_reac, kinetics;
+  // initial stresses
+  int preload;
+  double preload_sxxd,preload_szzd,preload_sxz;
   // Anisotropy
   int      anisotropy, out_of_plane, marker_noise; //aniso_fstrain
   int      residual_form;
@@ -184,25 +187,31 @@ typedef double (*SetPorosity_f)(MdoodzInput *input, Coordinates coordinates, int
 typedef double (*SetDensity_f)(MdoodzInput *input, Coordinates coordinates, int phase);
 typedef double (*SetXComponent_f)(MdoodzInput *input, Coordinates coordinates, int phase);
 typedef double (*SetPressure_f)(MdoodzInput *input, Coordinates coordinates, int phase);
+typedef double (*SetTxx_f)(MdoodzInput *input, Coordinates coordinates, int phase);
+typedef double (*SetTzz_f)(MdoodzInput *input, Coordinates coordinates, int phase);
+typedef double (*SetTxz_f)(MdoodzInput *input, Coordinates coordinates, int phase);
 typedef double (*SetNoise_f)(MdoodzInput *input, Coordinates coordinates, int phase);
 typedef double (*SetAnisoAngle_f)(MdoodzInput *input, Coordinates coordinates, int phase);
 typedef Tensor2D (*SetDefGrad_f)(MdoodzInput *input, Coordinates coordinates, int phase);
 
 typedef struct {
-  SetHorizontalVelocity_f    SetHorizontalVelocity;
-  SetVerticalVelocity_f      SetVerticalVelocity;
-  SetPhase_f                 SetPhase;
+  SetHorizontalVelocity_f SetHorizontalVelocity;
+  SetVerticalVelocity_f   SetVerticalVelocity;
+  SetPhase_f              SetPhase;
+  SetDualPhase_f          SetDualPhase;
   AdjustPhaseToTemperature_f AdjustPhaseToTemperature;
-  SetDualPhase_f             SetDualPhase;
-  SetPressure_f              SetPressure;
-  SetNoise_f                 SetNoise;
-  SetTemperature_f           SetTemperature;
-  SetGrainSize_f             SetGrainSize;
-  SetPorosity_f              SetPorosity;
-  SetDensity_f               SetDensity;
-  SetXComponent_f            SetXComponent;
-  SetDefGrad_f               SetDefGrad;
-  SetAnisoAngle_f            SetAnisoAngle;
+  SetPressure_f           SetPressure;
+  SetTxx_f                SetTxx;
+  SetTzz_f                SetTzz;
+  SetTxz_f                SetTxz;
+  SetNoise_f              SetNoise;
+  SetTemperature_f        SetTemperature;
+  SetGrainSize_f          SetGrainSize;
+  SetPorosity_f           SetPorosity;
+  SetDensity_f            SetDensity;
+  SetXComponent_f         SetXComponent;
+  SetDefGrad_f            SetDefGrad;
+  SetAnisoAngle_f         SetAnisoAngle;
 } SetParticles_ff;
 
 typedef enum {
