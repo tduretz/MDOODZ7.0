@@ -553,6 +553,7 @@ grid GridAlloc(params *model) {
 
   mesh.T              = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
   mesh.T0_n           = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  mesh.divth_n        = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
   mesh.divth0_n       = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
   mesh.eII_el         = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
   mesh.comp_cells     = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
@@ -877,6 +878,7 @@ void GridFree(grid *mesh, params *model) {
 
     DoodzFree(mesh->T);
     DoodzFree(mesh->T0_n);
+    DoodzFree(mesh->divth_n);
     DoodzFree(mesh->divth0_n);
     DoodzFree(mesh->eII_el);
     

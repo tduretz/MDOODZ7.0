@@ -37,6 +37,10 @@
 //---- M-Doodz header file
 #include "mdoodz-private.h"
 
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
+
 void PartialMelting( double *phi, double* hlat, double P, double T, double phi0, double tk, double dt, int melt_model, scale *scaling ) {
     
     // ---- ACHTUNG: computations BELOW are made in dimensional form (MPa and K) to avoid conversion errors  
@@ -152,6 +156,9 @@ void MeltFractionGrid( grid* mesh, markers* particles, mat_prop *materials, para
     }
 }
 
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
 
 void UpdateAlphaCp( grid* mesh, markers* particles, mat_prop *materials, params *model, scale *scaling ) {
     
@@ -210,3 +217,41 @@ void UpdateAlphaCp( grid* mesh, markers* particles, mat_prop *materials, params 
         }
     }
 }
+
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
+
+void MassSourceTerm( grid* mesh, markers* particles, mat_prop *materials, params *model, scale *scaling ) {
+    
+    // alpha*rho0/rho*dT/dt
+    int Nx, Nz, Ncx, Ncz;
+    int c0, p;
+
+    Nx = mesh->Nx; Ncx = Nx-1;
+    Nz = mesh->Nz; Ncz = Nz-1;
+    
+    for ( c0=0; c0<Ncx*Ncz; c0++ ) {
+        
+        mesh->divth_n[c0]  = 0.0;
+
+        for ( p=0; p<model->Nb_phases; p++) {
+            
+            if ( fabs(mesh->phase_perc_n[p][c0])>1.0e-13 ) {
+                
+                // Compute only if below free surface
+                if ( mesh->BCp.type[0] != 30 && mesh->BCp.type[0] != 31) {
+
+                    const double divth = materials->alp[p]*materials->rho[p]/mesh->rho_n[c0]*(mesh->T[c0] - mesh->T0_n[c0])/model->dt;
+                    
+                    // Update centroid values
+                    mesh->divth_n[c0]  += mesh->phase_perc_n[p][c0]*divth;
+                 }
+            }
+         }
+    }
+}
+
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/

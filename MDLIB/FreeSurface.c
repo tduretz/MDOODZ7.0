@@ -901,22 +901,21 @@ void DiffuseAlongTopography( grid *mesh, params model, scale scaling, double *ar
     double Wvalley    = model.surf_Winc;
     double Vinc       = -model.surf_Vinc, Vinc_num;
     
-    printf("****** Surface processes ******");
+    printf("****** Surface processes ******\n");
     printf("Going to make %03d substeps for surface processes\n", nstep);
-    printf("W valley   = %2.2e m\n", Wvalley*scaling.L);
-    printf("Vincision  = %2.2e m.s-1\n", Vinc*scaling.V);
     printf("Kero       = %2.2e m2.s-1\n", diff*(pow(scaling.L,2.0)/scaling.t));
-    printf("Sed. rate  = %2.2e m/y with base level: %2.2e m\n", model.surf_sedirate*scaling.V*3600.0*365.0*24.0, base_level*scaling.L);
 
     if ( model.surface_processes == 1 || model.surface_processes == 5 ) {
 
         if ( model.surface_processes == 5 ) {
+            printf("W valley   = %2.2e m\n", Wvalley*scaling.L);
+            printf("Vincision  = %2.2e m.s-1\n", Vinc*scaling.V);
         
             // Compute volume of cells in the valley region
             int ncell = 0;
             for (i=1; i<size-1; i++) {
                 if (fabs(mesh->xg_coord[i]) < 0.5*Wvalley){
-                    ncell = ncell + 1;
+                    ncell += 1;
                 }
             }
 
@@ -962,7 +961,7 @@ void DiffuseAlongTopography( grid *mesh, params model, scale scaling, double *ar
     
     // Instantaneous basin filling
     if (model.surface_processes == 2) {
-        
+         printf("Sed. rate  = %2.2e m/y with base level: %2.2e m\n", model.surf_sedirate*scaling.V*3600.0*365.0*24.0, base_level*scaling.L);
         for (i=0; i<size; i++) {
             if (array[i]<base_level)
                 array[i]  = array_ini[i] + sedi_rate*model.dt;
