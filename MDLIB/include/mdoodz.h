@@ -84,8 +84,8 @@ typedef struct {
   double therm_perturb_x0, therm_perturb_z0, therm_perturb_dT, therm_perturb_rad,
           cooling_duration;
   // For rheological database...
-  int      force_act_vol_ast;
-  double   act_vol_dis_ast, act_vol_dif_ast;
+  int      force_act_vol_ast, force_melt_weak;
+  double   act_vol_dis_ast, act_vol_dif_ast, melt_weak;
   // Phase diagrams
   int      isPD, num_PD, *PDMnT, *PDMnP, *PD1DnP;
   double **PDMrho, *PDMTmin, *PDMTmax, *PDMPmin, *PDMPmax;

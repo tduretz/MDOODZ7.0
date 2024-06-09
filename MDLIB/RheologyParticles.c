@@ -793,6 +793,10 @@ void UpdateParticleDensity( grid* mesh, scale scaling, params model, markers* pa
     
     DoodzFree(rho_inc_grid);
     DoodzFree(rho_inc_mark);
+
+    // for (int k=0; k<particles->Nb_part; k++ ) {
+    //     particles->rho[k] = EvaluateDensity( particles->phase[k], particles->T[k], particles->P[k], particles->X[k],  particles->phi[k], &model, materials );
+    // }
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
@@ -1643,6 +1647,35 @@ firstprivate( model )
     DoodzFree(dvdx_n);
     DoodzFree(dvdz_s);
     DoodzFree(dudx_s);
+}
+
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
+
+void UpdateParticleDivThermal( grid* mesh, scale scaling, params model, markers* particles, mat_prop* materials ) {
+    
+    DoodzFP *inc_mark, *inc_grid;
+    int Nx, Nz, Ncx, Ncz, k;
+    Nx = mesh->Nx; Ncx = Nx-1;
+    Nz = mesh->Nz; Ncz = Nz-1;
+    
+    inc_mark = DoodzCalloc(particles->Nb_part, sizeof(DoodzFP));
+    inc_grid = DoodzCalloc(Ncx*Ncz, sizeof(DoodzFP));    
+    
+    for (k=0;k<Ncx*Ncz;k++) {
+        inc_grid[k] = 0.0;
+        if (mesh->BCp.type[k] != 30 && mesh->BCp.type[k] != 31) inc_grid[k] = mesh->divth_n[k] - mesh->divth0_n[k];
+    }
+    
+    // Interp increments to particles
+    Interp_Grid2P_centroids2( *particles, inc_mark, mesh, inc_grid, mesh->xvz_coord,  mesh->zvx_coord, Nx-1, Nz-1, mesh->BCt.type, &model  );
+    
+    // Increment temperature on particles
+    ArrayPlusArray( particles->divth, inc_mark, particles->Nb_part );
+    
+    DoodzFree(inc_grid);
+    DoodzFree(inc_mark);
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/

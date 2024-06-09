@@ -56,21 +56,21 @@ function main()
     # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/1_NR09/"
 
     # File numbers
-    file_start = 1000
-    file_step  = 100
-    file_end   = 1000
+    file_start = 00
+    file_step  = 50
+    file_end   = 200
 
     # Select field to visualise
     # field = :Phases
     # field = :Cohesion
     # field = :Density
-    # field = :Viscosity 
+    field = :Viscosity 
     # field = :PlasticStrainrate
     # field = :Stress
     # field = :StrainRate
     # field = :Pressure
     # field = :Divergence
-    field = :Temperature
+    # field = :Temperature
     # field = :Velocity_x
     # field = :Velocity_z
     # field = :Velocity
@@ -86,15 +86,15 @@ function main()
     framerate   = 3
     PlotOnTop = (
         ph_contours = false,  # add phase contours
-        T_contours  = true,   # add temperature contours
+        T_contours  = false,   # add temperature contours
         fabric      = false,  # add fabric quiver (normal to director)
-        topo        = true,
+        topo        = false,
         σ1_axis     = false,
         vel_vec     = false,
     )
     α_heatmap   = 1.0 #0.85   # transparency of heatmap 
     vel_arrow   = 5
-    vel_scale   = 3
+    vel_scale   = 300000
     nap         = 0.3    # pause for animation 
     resol       = 1000
     mov_name    = "$(path)/_$(field)/$(field)"  # Name of the movie
@@ -112,20 +112,24 @@ function main()
     cm_yr = 100.0*3600.0*24.0*365.25
 
     # Time loop
+    f = Figure(resolution = (Lx/Lz*resol*1.2, resol), fontsize=25)
+
     for istep=file_start:file_step:file_end
     
-        filename = string(path, @sprintf("Output%05d.gzip.h5", istep))
-        model  = ExtractData( filename, "/Model/Params")
-        xc     = ExtractData( filename, "/Model/xc_coord")
-        zc     = ExtractData( filename, "/Model/zc_coord")
-        xv     = ExtractData( filename, "/Model/xg_coord")
-        zv     = ExtractData( filename, "/Model/zg_coord")
-        xvz    = ExtractData( filename, "/Model/xvz_coord")
-        zvx    = ExtractData( filename, "/Model/zvx_coord")
-        xv_hr  = ExtractData( filename, "/VizGrid/xviz_hr")
-        zv_hr  = ExtractData( filename, "/VizGrid/zviz_hr")
-        # τxz_t  = ExtractData( filename, "TimeSeries/sxz_mean_time")
-        # t_t    = ExtractData( filename, "TimeSeries/Time_time")
+        name     = @sprintf("Output%05d.gzip.h5", istep)
+        @info "Reading $(name)"
+        filename = string(path, name)
+        model    = ExtractData( filename, "/Model/Params")
+        xc       = ExtractData( filename, "/Model/xc_coord")
+        zc       = ExtractData( filename, "/Model/zc_coord")
+        xv       = ExtractData( filename, "/Model/xg_coord")
+        zv       = ExtractData( filename, "/Model/zg_coord")
+        xvz      = ExtractData( filename, "/Model/xvz_coord")
+        zvx      = ExtractData( filename, "/Model/zvx_coord")
+        xv_hr    = ExtractData( filename, "/VizGrid/xviz_hr")
+        zv_hr    = ExtractData( filename, "/VizGrid/zviz_hr")
+        # τxz_t    = ExtractData( filename, "TimeSeries/sxz_mean_time")
+        # t_t      = ExtractData( filename, "TimeSeries/Time_time")
 
         xc_hr  = 0.5.*(xv_hr[1:end-1] .+ xv_hr[2:end])
         zc_hr  = 0.5.*(zv_hr[1:end-1] .+ zv_hr[2:end])
@@ -184,6 +188,7 @@ function main()
             Fabx ./= nrm
             Fabz ./= nrm
         end
+        height = 0.
         if PlotOnTop.topo
             height  = Float64.(ExtractData( filename, "/Topo/z_grid")); 
             Vx_grid = Float64.(ExtractData( filename, "/Topo/Vx_grid"));
@@ -220,9 +225,8 @@ function main()
         # group_phases[ ph_hr.==3 ]                                             .= 3
 
         #####################################
-        f = Figure(resolution = (Lx/Lz*resol, resol), fontsize=25)
         empty!(f)
-        f = Figure(resolution = (Lx/Lz*resol, resol), fontsize=25)
+        f = Figure(resolution = (Lx/Lz*resol*1.2, resol), fontsize=25)
 
         if field==:Phases
             ax1 = Axis(f[1, 1], title = L"Phases at $t$ = %$(tMy) Ma", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
@@ -256,16 +260,6 @@ function main()
             if printfig Print2Disk( f, path, string(field), istep) end
         end
 
-        if field==:Density
-            ax1 = Axis(f[1, 1], title = L"$ρ$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
-            hm = heatmap!(ax1, xc./Lc, zc./Lc, ρc, colormap = (:turbo, α_heatmap))
-            AddCountourQuivers!(PlotOnTop, ax1, xc, xv, zc, V, T, σ1, Fab, height, Lc, cm_y, group_phases, Δ)                
-            colsize!(f.layout, 1, Aspect(1, Lx/Lz))
-            Mak.Colorbar(f[1, 2], hm, label = L"$ρ$ [kg.m$^3$]", width = 20, labelsize = 25, ticklabelsize = 14 )
-            Mak.colgap!(f.layout, 20)
-            if printfig Print2Disk( f, path, string(field), istep) end
-        end
-
         if field==:Stress
             ax1 = Axis(f[1, 1], title = L"$\tau_\textrm{II}$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
             hm = heatmap!(ax1, xc./Lc, zc./Lc, τII./1e6, colormap = (:turbo, α_heatmap)) 
@@ -281,7 +275,7 @@ function main()
             hm = heatmap!(ax1, xc./Lc, zc./Lc, P./1e9, colormap = (:turbo, α_heatmap)) #, colorrange=(1,1.2)1e4*365*24*3600
             AddCountourQuivers!(PlotOnTop, ax1, xc, xv, zc, V, T, σ1, Fab, height, Lc, cm_y, group_phases, Δ)                
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
-            Mak.Colorbar(f[1, 2], hm, label =  L"$P$ [s$^{-1}$]", width = 20, labelsize = 25, ticklabelsize = 14 )
+            Mak.Colorbar(f[1, 2], hm, label =  L"$P$ [GPa]", width = 20, labelsize = 25, ticklabelsize = 14 )
             Mak.colgap!(f.layout, 20)
             if printfig Print2Disk( f, path, string(field), istep) end
         end
