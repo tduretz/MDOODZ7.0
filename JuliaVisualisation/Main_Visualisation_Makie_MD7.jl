@@ -58,7 +58,7 @@ function main()
     # File numbers
     file_start = 00
     file_step  = 10
-    file_end   = 1500
+    file_end   = 1800
 
     # Select field to visualise
     field = :Phases
@@ -97,7 +97,7 @@ function main()
     α_heatmap   = 1.0 #0.85   # transparency of heatmap 
     vel_arrow   = 5
     vel_scale   = 300000
-    nap         = 0.3    # pause for animation 
+    nap         = 0.03    # pause for animation 
     resol       = 1000
     mov_name    = "$(path)/_$(field)/$(field)"  # Name of the movie
     Lx, Lz      = 1.0, 1.0
@@ -441,9 +441,10 @@ function main()
             if istep==0 ϕ_eff = 0. end
             push!(probe.ϕeff, ϕ_eff) 
             push!(probe.t, t) 
-            @show Float64.(probe.t)
-            ax1 = Axis(f[1, 1], title = L"$ϕ_eff$", xlabel = L"$t$", ylabel = L"$ϕ_eff$")
-            lines!(ax1, Float64.(probe.t), Float64.(probe.ϕeff))
+            if istep==file_end
+                ax1 = Axis(f[1, 1], title = L"$ϕ_\mathrm{eff}$", xlabel = L"$t$", ylabel = L"$ϕ_\mathrm{eff}$")
+                lines!(ax1, Float64.(probe.t), Float64.(probe.ϕeff))
+            end
 
         end
 
