@@ -1182,6 +1182,8 @@ Input ReadInputFile( char *fileName ) {
     model.force_act_vol_ast  = ReadInt2( fin, "force_act_vol_ast",   0 ); // if 1 then:
     model.act_vol_dis_ast    = ReadDou2( fin, "act_vol_dis_ast" ,  0.0 ); // ... set dislocation creep to value
     model.act_vol_dif_ast    = ReadDou2( fin, "act_vol_dif_ast" ,  0.0 ); // ... set diffusion creep to value
+    model.force_melt_weak    = ReadInt2( fin, "force_melt_weak",     0 ); // if 1 then:
+    model.melt_weak          = ReadDou2( fin, "melt_weak",         0.0 ); // ... set melt waekening factor
     // Model user's delights
     model.user0              = ReadDou2( fin, "user0",           0.0 );
     model.user1              = ReadDou2( fin, "user1",           0.0 );

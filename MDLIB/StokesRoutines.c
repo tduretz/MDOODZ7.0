@@ -793,9 +793,9 @@ void EvaluateStokesResidualDecoupled( SparseMat *Stokes, SparseMat *StokesA, Spa
     }
 
     if ( isnan(Nmodel->resx) || isnan(Nmodel->resz) || isnan(Nmodel->resp) ) {
-        printf("Fu = %2.6e\n", Nmodel->resx * scaling.S * scaling.L ); // Units of momentum
-        printf("Fv = %2.6e\n", Nmodel->resz * scaling.S * scaling.L ); // Units of momentum
-        printf("Fp = %2.6e\n", Nmodel->resp * scaling.E * scaling.L * scaling.L ); // Units of velocity gradient
+        printf("Fu = %2.6e\n", Nmodel->resx * scaling.S / scaling.L ); // Units of momentum
+        printf("Fv = %2.6e\n", Nmodel->resz * scaling.S / scaling.L ); // Units of momentum
+        printf("Fp = %2.6e\n", Nmodel->resp * scaling.V / scaling.L ); // Units of velocity gradient
         printf("Solve went wrong - Nan residuals...\nExiting...\n");
         exit(122);
     }
@@ -993,11 +993,9 @@ void EvaluateRHS( grid* mesh, params model, scale scaling, double RHO_REF ) {
 
                 if (model.compressible == 1 ) {
                     if (mesh->comp_cells[c] == 1) {
-                        if ( model.density_variations == 0 ) mesh->rhs_p[c] += mesh->p0_n[c]*mesh->bet_n[c]/model.dt;
-                        if ( model.density_variations == 1 ) mesh->rhs_p[c] += log(mesh->rho0_n[c])/model.dt;
-                        if (model.adiab_heating > 0 ) {
-                            mesh->rhs_p[c] += mesh->divth0_n[c];
-                        }
+                        // if ( model.density_variations == 0 ) mesh->rhs_p[c] += mesh->p0_n[c]*mesh->bet_n[c]/model.dt; # This is already the residual 
+                        // if ( model.density_variations == 1 ) mesh->rhs_p[c] += log(mesh->rho0_n[c])/model.dt; # This is already the residual
+                        mesh->rhs_p[c] = mesh->divth0_n[c];
                     }
                 }
             }

@@ -70,7 +70,7 @@ typedef struct {
           *exxd, *ezzd, *exz, *wxz, *wxz_n,
           *VE_s, *VE_n, *sxxd0, *szzd0, *sxz0, *mu_s, *mu_n, *u_adv, *v_adv,
           *eta_phys_n, *kx, *kz, *Cp, *Qr, *eta_phys_s, *u_start, *v_start,
-          *p_start, *divth0_n;
+          *p_start, *divth_n, *divth0_n;
   int    *iter_smooth;
   int    *nb_part_cell, *nb_part_vert;
   BC      BCu, BCv, BCp, BCp_exp, BCT_exp, BCt, BCg, BCC_exp, BCc;
@@ -585,3 +585,5 @@ void            TransmutateMarkers(markers *particles, mat_prop *materials, doub
 void            PartialMelting( double*, double*, double, double T, double, double, double, int, scale* );
 void            UpdateAlphaCp( grid*, markers*, mat_prop*, params*, scale* ); 
 void            MeltFractionGrid( grid*, markers*, mat_prop*, params*, scale* );
+void            MassSourceTerm( grid*, markers*, mat_prop*, params*, scale* );
+void            UpdateParticleDivThermal( grid*, scale, params, markers*, mat_prop* );

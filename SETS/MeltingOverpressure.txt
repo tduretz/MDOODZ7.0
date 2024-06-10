@@ -134,7 +134,7 @@ ID            = 1
 melt          = 10
 density_model = 5
 rho           = 2900.00 / migmatite
-drho          = 300.0
+drho          = -300.0
 alp           = 3.2e-5
 bet           = 1.25e-11      / (K=80e9)
 G             = 4.0e9
