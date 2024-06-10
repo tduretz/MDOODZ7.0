@@ -525,6 +525,9 @@ void ReadDataPowerLaw( mat_prop* mat, params* model, int k, int number, scale* s
 
     }
     
+    // Force melt weakening factor for all phases
+    if ( model->force_melt_weak == 1 ) mat->apwl[k] = model->melt_weak;
+    
     // Scaling
     mat->tpwl[k]   /= 1.0;
     mat->npwl[k]   /= 1.0;

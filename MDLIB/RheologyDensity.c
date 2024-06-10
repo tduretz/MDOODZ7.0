@@ -891,7 +891,6 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
 
     if ( model->density_variations == 1 ) {
       mesh->rho_n[c0]  = 0.0;
-      //            mesh->drhodp_n[c0] = 0.0;
     }
 
     // Loop on grid nodes
@@ -973,7 +972,7 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
       }
 
       mesh->d_n[c0]          = 1.0/mesh->d_n[c0];
-      // mesh->rho_n[c0]          = 1.0/mesh->rho_n[c0];
+      // if ( model->density_variations == 1 ) mesh->rho_n[c0]        = 1.0/mesh->rho_n[c0];
 
       // HARMONIC AVERAGE
       if ( average == 1 ) {
@@ -1465,14 +1464,17 @@ double EvaluateDensity( int p, double T, double P, double X, double phi, params 
     rho     = rho_ref * exp(beta*P - alpha*T);
   }
 
-   // P-T dependent density: models used for Poh et al. (2021)
+  // P-T dependent density: models used for Poh et al. (2021)
   if ( materials->density_model[p] == 5  ) {
     const double rho_sol = materials->rho[p];
-    const double rho_liq = materials->rho[p] - materials->drho[p];
+    const double rho_liq = materials->rho[p] + materials->drho[p]; // !!!! Achtung: drho should be NEGATIVE to make liquid lighter 
     const double beta    = materials->bet[p];
     const double alpha   = materials->alp[p];
-    rho     = rho_sol * exp(beta*P - alpha*T);
-    rho     = rho * (1 - phi + phi*rho_liq/rho_sol );
+    const double rhos    = rho_sol * exp(beta*P - alpha*T);
+    const double rhol    = rho_liq * exp(beta*P - alpha*T);
+    // rho     = rhos * (1 - phi + phi*rho_liq/rho_sol );
+    rho     = (1-phi)*rhos + phi*rhol;
+    // rho = rhos;
     // printf("rho_sol = %2.6e rho_liq = %2.6e drho = %2.6e\n", rho_sol, rho_liq, materials->drho[p]);
   }
 
@@ -1491,37 +1493,57 @@ double EvaluateDensity( int p, double T, double P, double X, double phi, params 
 void UpdateDensity( grid* mesh, markers* particles, mat_prop *materials, params *model, scale *scaling ) {
 
   int k, p, c0, Ncx=mesh->Nx-1, Ncz=mesh->Nz-1;
-  int    phase_diag;
-  double rho, rho0, epsi = 1e-13;
+  int    old = 1;
+  double rho, rho0, epsi = 1e-13, mean_rho, mean_rho0;
   // printf("Update density fields on mesh\n");
 
-#pragma omp parallel for shared( mesh, materials ) private( rho, rho0, c0, p) firstprivate(Ncx, Ncz, model, epsi)
+  // mean_rho = SumArray( mesh->rho_n, scaling->rho, Ncx*Ncz, "mean rho" ) /(Ncx*Ncz);
+
+#pragma omp parallel for shared( mesh, materials ) private( rho, rho0, c0, p) firstprivate(old, Ncx, Ncz, model, epsi)
   for ( c0=0; c0<Ncx*Ncz; c0++ ) {
 
     // Initialise
     mesh->rho_n[c0]  = 0.0;
-    mesh->rho0_n[c0] = 0.0;
+    if (old==1) mesh->rho0_n[c0] = 0.0;
 
     // Loop on phases
     for ( p=0; p<model->Nb_phases; p++) {
 
       if ( fabs(mesh->phase_perc_n[p][c0])>epsi) {
         // Call density evaluation
-        rho  = EvaluateDensity( p, mesh->T[c0],    mesh->p_in[c0], mesh->X_n[c0],  mesh->phi_n[c0],  model, materials );
-        rho0 = EvaluateDensity( p, mesh->T0_n[c0], mesh->p0_n[c0], mesh->X0_n[c0], mesh->phi0_n[c0], model, materials );
+        rho              = EvaluateDensity( p, mesh->T[c0],    mesh->p_in[c0], mesh->X_n[c0],  mesh->phi_n[c0],  model, materials );
+        if (old==1) rho0 = EvaluateDensity( p, mesh->T0_n[c0], mesh->p0_n[c0], mesh->X0_n[c0], mesh->phi0_n[c0], model, materials );
 
         // Average density base on phase density and phase volume fraction
-        if ( mesh->BCp.type[c0] != 30 ) mesh->rho_n[c0]  += mesh->phase_perc_n[p][c0] * rho;
-        if ( mesh->BCp.type[c0] != 30 ) mesh->rho0_n[c0] += mesh->phase_perc_n[p][c0] * rho0;
+        if ( mesh->BCp.type[c0] != 30 )             mesh->rho_n[c0]  += mesh->phase_perc_n[p][c0] * rho;
+        if (old==1) if ( mesh->BCp.type[c0] != 30 ) mesh->rho0_n[c0] += mesh->phase_perc_n[p][c0] * rho0;
+        // if ( mesh->BCp.type[c0] != 30 )             mesh->rho_n[c0]  += mesh->phase_perc_n[p][c0] * 1./rho;
+        // if (old==1) if ( mesh->BCp.type[c0] != 30 ) mesh->rho0_n[c0] += mesh->phase_perc_n[p][c0] * 1./rho0;
 
         // if (mesh->BCp.type[c0] == -1 && mesh->BCp.type[c0+Ncx] == 31 ) {
         //   printf("At the surface: rho = %2.2lf, phase = %d rho = %2.2lf X = %2.2lf density_model = %d\n", mesh->rho_n[c0]*scaling->rho, p, rho, mesh->phase_perc_n[p][c0], materials->density_model[p]);
         // }
       }
     }
+    // mesh->rho_n[c0]              = 1.0/mesh->rho_n[c0]; 
+    // if (old==1) mesh->rho0_n[c0] = 1.0/mesh->rho0_n[c0];
   }
+
+  // mean_rho0 = SumArray( mesh->rho0_n, scaling->rho, Ncx*Ncz, "mean rho" ) /(Ncx*Ncz);
+
+  // for ( c0=0; c0<Ncx*Ncz; c0++ ) {
+  //   mesh->rho0_n[c0] -= mean_rho0;
+  //   mesh->rho0_n[c0] += mean_rho;
+  // }
+
+
   // Interpolate to vertices
   InterpCentroidsToVerticesDouble( mesh->rho_n, mesh->rho_s, mesh, model );
+
+  // double* rho0_s = DoodzCalloc((model->Nx)*(model->Nz), sizeof(double));
+  // InterpCentroidsToVerticesDouble( mesh->rho0_n, rho0_s, mesh, model );
+  // InterpVerticesToCentroidsDouble( mesh->rho0_n, rho0_s, mesh, model );
+  // DoodzFree(rho0_s);
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
