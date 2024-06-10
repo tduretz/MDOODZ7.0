@@ -1266,6 +1266,10 @@ Input ReadInputFile( char *fileName ) {
         materials.psi[k]      = ReadMatProps( fin, "psi",      k,    0.0 )  * M_PI/ 180.0;
         if (materials.psi[k]>0.0 && model.compressible==0) { printf("Set compressible=1 to activate dilation\n"); exit(1); }
         materials.Slim[k] = ReadMatProps( fin, "Slim" ,k,  1.0e90 )  / scaling.S;
+        if (materials.Slim[k]<materials.C[k]) {
+            printf("Upper stress limiter of phase %d is lower than cohesion: it makes no sense, please correct!\n", k);
+            exit(1);
+        }
         // Viscoplasticity
         materials.n_vp[k]      = ReadMatProps( fin, "n_vp",   k,       1.0 ) ;
         materials.eta_vp[k]    = ReadMatProps( fin, "eta_vp", k,       0.0 ) / scaling.S / pow(scaling.t, 1.0/materials.n_vp[k]);

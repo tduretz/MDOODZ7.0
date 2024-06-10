@@ -437,6 +437,7 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
   *Pcorr = P;
 
   //------------------------------------------------------------------------//
+// printf("%d\n", materials->cstv[phase]);
 
   // Activate deformation mechanisms
   if ( materials->cstv[phase] !=0                  ) constant    = 1;
@@ -628,7 +629,7 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
     // Check yield stress
     F_trial = Tii - Tyield;
 
-    // if (F_trial>0) printf("%2.2e %2.2e %2.2e %2.2e %2.2e\n", F_trial*scaling->S, C*scaling->S, cos_fric, P*scaling->S, sin_fric);
+    // if (F_trial>0) printf("F=%2.2e C=%2.2e cos_fric=%2.2e P=%2.2e sin_fric=%2.2e\n", F_trial*scaling->S, C*scaling->S, cos_fric, P*scaling->S, sin_fric);
 
     double Tiic;
     double Pc_chk;
@@ -775,7 +776,7 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
     if (is_pl      == 1)  inv_eta_diss += (1.0/eta_pl ); 
     eta  = 1.0/(inv_eta_diss);
     // if (T*scaling->T<673.0) {
-    //   printf("constant = %d %2.2e %2.2e %2.2e %2.2e\n", constant, eta*scaling->eta, eta_pwl*scaling->eta, eta_pl*scaling->eta, eta_cst*scaling->eta);
+      //  printf("constant = %d eta = %2.2e eta_pl = %2.2e %2.2e %2.2e %2.2e\n", constant, eta*scaling->eta, eta_pl*scaling->eta, eta_pwl*scaling->eta, eta_pl*scaling->eta, eta_cst*scaling->eta);
     // }
 
     // Viscoplastic overstress

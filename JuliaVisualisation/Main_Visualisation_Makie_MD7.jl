@@ -29,7 +29,7 @@ function AddCountourQuivers!(PlotOnTop, ax1, xc, xv, zc, V, T, σ1, Fab, height,
         arrows!(ax1, xc./Lc, zc./Lc, Fab.x, Fab.z, arrowsize = 0, lengthscale=Δ/1.5)
     end 
     if PlotOnTop.σ1_axis
-        arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
+        arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5, color=:white)
     end   
     if PlotOnTop.vel_vec
         arrows!(ax1, xc./Lc, zc./Lc, V.x*cm_y, V.z*cm_y, arrowsize = V.arrow, lengthscale = V.scale)
@@ -57,14 +57,14 @@ function main()
 
     # File numbers
     file_start = 00
-    file_step  = 50
-    file_end   = 200
+    file_step  = 10
+    file_end   = 1500
 
     # Select field to visualise
-    # field = :Phases
+    field = :Phases
     # field = :Cohesion
     # field = :Density
-    field = :Viscosity 
+    # field = :Viscosity 
     # field = :PlasticStrainrate
     # field = :Stress
     # field = :StrainRate
@@ -79,6 +79,8 @@ function main()
     # field = :TimeSeries
     # field = :AnisotropyFactor
     # field = :MeltFraction
+    # field = :TimeSeries
+    field = :EffectiveFrictionTime
 
     # Switches
     printfig    = false  # print figures to disk
@@ -109,6 +111,7 @@ function main()
     tc = My
     Vc = 1.0
 
+    probe = (ϕeff = Float64.([]), t  = Float64.([]))
     cm_yr = 100.0*3600.0*24.0*365.25
 
     # Time loop
@@ -128,8 +131,10 @@ function main()
         zvx      = ExtractData( filename, "/Model/zvx_coord")
         xv_hr    = ExtractData( filename, "/VizGrid/xviz_hr")
         zv_hr    = ExtractData( filename, "/VizGrid/zviz_hr")
-        # τxz_t    = ExtractData( filename, "TimeSeries/sxz_mean_time")
-        # t_t      = ExtractData( filename, "TimeSeries/Time_time")
+        τzz_t    = ExtractData( filename, "TimeSeries/szzd_mean_time")
+        P_t     = ExtractData( filename, "TimeSeries/P_mean_time")
+        τxz_t    = ExtractData( filename, "TimeSeries/sxz_mean_time")
+        t_t      = ExtractData( filename, "TimeSeries/Time_time")
 
         xc_hr  = 0.5.*(xv_hr[1:end-1] .+ xv_hr[2:end])
         zc_hr  = 0.5.*(zv_hr[1:end-1] .+ zv_hr[2:end])
@@ -174,6 +179,7 @@ function main()
         ε̇xz   = Float64.(reshape(ExtractData( filename, "/Vertices/exz"), nvx, nvz))
         τII   = sqrt.( 0.5*(τxx.^2 .+ τyy.^2 .+ τzz.^2 .+ 0.5*(τxz[1:end-1,1:end-1].^2 .+ τxz[2:end,1:end-1].^2 .+ τxz[1:end-1,2:end].^2 .+ τxz[2:end,2:end].^2 ) ) ); τII[mask_air] .= NaN
         ε̇II   = sqrt.( 0.5*(ε̇xx.^2 .+ ε̇yy.^2 .+ ε̇zz.^2 .+ 0.5*(ε̇xz[1:end-1,1:end-1].^2 .+ ε̇xz[2:end,1:end-1].^2 .+ ε̇xz[1:end-1,2:end].^2 .+ ε̇xz[2:end,2:end].^2 ) ) ); ε̇II[mask_air] .= NaN
+        τxzc  = 0.25*(τxz[1:end-1,1:end-1] .+ τxz[2:end,1:end-1] .+ τxz[1:end-1,2:end] .+ τxz[2:end,2:end]) 
         C     = Float64.(reshape(ExtractData( filename, "/Centers/cohesion"), ncx, ncz))
         ϕ     = ExtractField(filename, "/Centers/phi", centroids, false, 0)
         divu  = ExtractField(filename, "/Centers/divu", centroids, false, 0)
@@ -425,7 +431,20 @@ function main()
 
         if field==:TimeSeries
             ax1 = Axis(f[1, 1], title = L"$τ_{xz}$", xlabel = L"$t$", ylabel = L"$\tau_{xz}$")
-            lines!(ax1, t_t, τxz_t)
+            τxz_t[1] = 0.
+            @show .-τxz_t
+            lines!(ax1, t_t, .-τxz_t./(.-P_t.+τzz_t))
+        end
+
+        if field==:EffectiveFrictionTime
+            ϕ_eff = -mean(τxzc[:,end] ./ (τzz[:,end] .- P[:,end]) )
+            if istep==0 ϕ_eff = 0. end
+            push!(probe.ϕeff, ϕ_eff) 
+            push!(probe.t, t) 
+            @show Float64.(probe.t)
+            ax1 = Axis(f[1, 1], title = L"$ϕ_eff$", xlabel = L"$t$", ylabel = L"$ϕ_eff$")
+            lines!(ax1, Float64.(probe.t), Float64.(probe.ϕeff))
+
         end
 
         DataInspector(f)

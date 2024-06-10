@@ -1,0 +1,170 @@
+/**** RESTART ****/
+istep = 00150
+irestart = 0
+
+/**** INPUT FILE ****/
+import_files_dir = ../IMPORT/
+import_file      = SetupCoesite2_nxy1921.bin /indicates the name in the input file for geometry
+
+/**** OUTPUT FILES ****/
+writer             = 1
+writer_step        = 10
+writer_markers     = 0
+writer_debug       = 0
+writer_energies    = 0
+delete_breakpoints = 1
+
+/**** SCALES ****/
+eta = 1e22
+L   = 1e0
+V   = 1e-18
+T   = 600
+
+/**** SPACE ****/
+Nx      = 201
+Nz      = 201
+xmin    = -0.5
+zmin    = -0.5
+xmax    =  0.5
+zmax    =  0.5
+dt      =  5e9
+
+/**** TIME  ****/
+Nt           = 50
+constant_dt  = 1
+Courant      = 0.3
+penalty      = 1e5
+RK           = 4
+
+/**** SWITCHES ****/
+mechanical         = 1
+pure_shear_ALE     = 0
+thermal            = 0
+line_search        = 1
+subgrid_diffusion  = 2
+shear_heating      = 0
+adiab_heating      = 0
+finite_strain      = 1
+advection          = 1
+gnuplot_log_res    = 0
+kinetics           = 1
+density_variations = 0
+elastic            = 1
+compressible       = 0
+safe_mode          = 0
+eta_average        = 1
+marker_noise       = 1  / noise beau-gosse
+out_of_plane       = 1  / non zeros total Eyy
+
+/**** SETUP DEPENDANT ****/
+shear_style        = 1
+bkg_strain_rate    = 1e-13
+bkg_div_rate       = 0.0
+bkg_pressure       = 1.0e9       / pressure [Pa]
+bkg_temperature    = 0.0         / temperature [K]
+user0              = 0           / 0: simple setup (one seed) 1: read binary file with geometry 
+user1              = 0.025       / inclusion radius [m]
+user7              = 1921        / size of pixel max
+
+/**** GRAVITY ****/
+gx = 0.0000
+gz = 0.000
+
+/**** MAT PROPERTIES ****/
+Nb_phases = 3
+
+/**** PHASE 0 ****/
+ID            = 0
+G             = 4e10
+C             = 4e7
+Slim          = 1e10
+phi           = 35
+psi           = 0
+eta_vp        = 5e18
+Slim          = 500e9
+density_model = 3
+alp           = 10.0e-6
+bet           = 1.890e-11
+cstv          = 1             / constant visc law
+pwlv          = 0             / disloc. creep
+linv          = 0             / diff. creep
+gbsv          = 0             / grain boundary sliding
+expv          = 0             / peierls creep
+gsel          = 0             / grain size evo.
+eta0          = 1e25
+npwl          = 1
+Qpwl          = 0
+
+/**** PHASE 1 ****/
+ID            = 1
+G             = 4e10
+C             = 1e7
+Slim          = 1e10
+phi           = 35
+psi           = 0
+eta_vp        = 5e18
+density_model = 3
+alp           = 10.0e-6
+bet           = 1.890e-11
+cstv          = 1             / constant visc law
+pwlv          = 0             / disloc. creep
+linv          = 0             / diff. creep
+gbsv          = 0             / grain boundary sliding
+expv          = 0             / peierls creep
+gsel          = 0             / grain size evo.
+eta0          = 1e25
+npwl          = 1
+Qpwl          = 0
+
+/**** PHASE 2 ****/
+ID            = 2
+G             = 4e10
+C             = 4e7
+Slim          = 1e10
+phi           = 35
+psi           = 0
+eta_vp        = 5e18
+density_model = 3
+alp           = 10.0e-6
+bet           = 1.890e-11
+cstv          = 1             / constant visc law
+pwlv          = 0             / disloc. creep
+linv          = 0             / diff. creep
+gbsv          = 0             / grain boundary sliding
+expv          = 0             / peierls creep
+gsel          = 0             / grain size evo.
+eta0          = 1e18
+npwl          = 1
+Qpwl          = 0
+
+/**** DEFMAPS ****/
+nT    =    51      / Temperature resolution []
+nE    =    51      / Strain rate resolution []
+nd    =    2        / Grain size resolution []
+Tmin  =    240      / Temperature minimum [°C]
+Tmax  =    2000     / Temperature maximum [°C]
+Emin  =    -50      / Strain rate minimum log_10 [1/s]
+Emax  =    5        / Strain rate maximum log_10 [1/s]
+dmin  =    -7       / Grain size minimum log_10 [m]
+dmax  =    -2       / Grain size maximum log_10 [m]
+Pn    =  1e9        / Pressure [Pa]
+
+/**** PARTICLES ****/
+Nx_part  = 4
+Nz_part  = 4
+min_part_cell = 16
+
+/**** NON-LINEAR ITERATIONS ****/
+Newton            = 0
+Picard2Newton     = 1
+Picard2Newton_tol = 1e-1
+nit_max           = 1
+rel_tol_KSP       = 1e-4
+nonlin_abs_mom    = 1e-11
+nonlin_abs_div    = 1e-11
+lin_abs_div       = 1e-9
+lin_rel_div       = 1e-9
+min_eta           = 1e17
+max_eta           = 1e25
+
+/**** END OF INPUT FILE ****/
