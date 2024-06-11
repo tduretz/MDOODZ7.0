@@ -183,4 +183,5 @@ int main(int nargs, char *args[]) {
           .MutateInput = MutateInput,
   };
   RunMDOODZ(input_file, &setup);
+  free(input_file);
 }

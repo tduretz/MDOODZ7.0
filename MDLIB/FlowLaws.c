@@ -421,6 +421,20 @@ void ReadDataPowerLaw( mat_prop* mat, params* model, int k, int number, scale* s
             mat->apwl[k] = 0.0;
             success      = 1;
             break;
+        
+	    case 34:
+            printf("Westerly Granite + melt weakening (dry) - Hansen & Carter (1983):\n" );
+            mat->tpwl[k] = 1;
+            mat->npwl[k] = 3.3;
+            mat->mpwl[k] = 0.0;
+            mat->rpwl[k] = 0.0;
+            mat->Qpwl[k] = 186.5e3;
+            mat->Vpwl[k] = 0.0e-6;
+            mat->Apwl[k] = 3.1623e-26;
+            mat->fpwl[k] = 0.0;
+            mat->apwl[k] = 50.0;
+            success      = 1;
+            break;
             
         /******************************** Mantle flow laws ********************************/
             
