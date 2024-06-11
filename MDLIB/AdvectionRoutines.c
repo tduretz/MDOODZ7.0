@@ -668,10 +668,10 @@ void EvaluateCourantCriterion( double* Vx, double* Vz, params *model, scale scal
              model->dt = model->dt_min;
          }
 
-        if ( model->dt>dt_therm ) {
-             printf("Setting dt to dt_therm\n");
-             model->dt = dt_therm;
-        }
+        // if ( model->dt>dt_therm ) {
+        //      printf("Setting dt to dt_therm\n");
+        //      model->dt = dt_therm;
+        // }
 
         if (quiet==0) printf("Current dt = %2.2e s / Courant dt = %2.2e s, dt_therm = %2.2e\n", model->dt * scaling.t, dtc * scaling.t, dt_therm * scaling.t );
     }
