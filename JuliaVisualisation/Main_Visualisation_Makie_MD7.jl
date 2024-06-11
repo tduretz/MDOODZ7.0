@@ -43,7 +43,8 @@ function main()
 
     # Set the path to your files
     path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/TEST_ROMAN_ANI3_00_MR/"
-    path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB//"
+    path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/_p10_e18_t3/"
+    path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/_p10_e18_t1_nonconv/"
 
     # path ="/Users/tduretz/Downloads/"
     # path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/DoubleSubduction_OMP16/"
@@ -56,9 +57,9 @@ function main()
     # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/1_NR09/"
 
     # File numbers
-    file_start = 00
-    file_step  = 10
-    file_end   = 1800
+    file_start = 000
+    file_step  = 100
+    file_end   = 2000
 
     # Select field to visualise
     field = :Phases
@@ -80,7 +81,7 @@ function main()
     # field = :AnisotropyFactor
     # field = :MeltFraction
     # field = :TimeSeries
-    field = :EffectiveFrictionTime
+    # field = :EffectiveFrictionTime
 
     # Switches
     printfig    = false  # print figures to disk
@@ -97,7 +98,7 @@ function main()
     α_heatmap   = 1.0 #0.85   # transparency of heatmap 
     vel_arrow   = 5
     vel_scale   = 300000
-    nap         = 0.03    # pause for animation 
+    nap         = 0.1    # pause for animation 
     resol       = 1000
     mov_name    = "$(path)/_$(field)/$(field)"  # Name of the movie
     Lx, Lz      = 1.0, 1.0
@@ -448,9 +449,11 @@ function main()
 
         end
 
-        DataInspector(f)
-        display(f)
-        sleep(nap)
+        if field!=:EffectiveFrictionTime || istep!=file_end
+            DataInspector(f)
+            display(f)
+            sleep(nap)
+        end
 
     end
 

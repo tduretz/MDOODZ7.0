@@ -1,10 +1,10 @@
 /**** RESTART ****/
-istep = 00150
+istep = 001600
 irestart = 0
 
 /**** INPUT FILE ****/
-import_files_dir = ../IMPORT/
-import_file      = SetupCoesite2_nxy1921.bin /indicates the name in the input file for geometry
+import_files_dir = ../IMPORT/FaultSmearing
+import_file      = Nx1501_P10_T1.bin /indicates the name in the input file for geometry
 
 /**** OUTPUT FILES ****/
 writer             = 1
@@ -15,22 +15,22 @@ writer_energies    = 0
 delete_breakpoints = 1
 
 /**** SCALES ****/
-eta = 1e22
+eta = 1e20
 L   = 1e0
-V   = 1e-18
+V   = 1e-10
 T   = 600
 
 /**** SPACE ****/
-Nx      = 201
-Nz      = 201
+Nx      = 151
+Nz      = 151
 xmin    = -0.5
 zmin    = -0.5
 xmax    =  0.5
 zmax    =  0.5
-dt      =  5e9
+dt      =  1e9
 
 /**** TIME  ****/
-Nt           = 50
+Nt           = 2000
 constant_dt  = 1
 Courant      = 0.3
 penalty      = 1e5
@@ -47,14 +47,15 @@ adiab_heating      = 0
 finite_strain      = 1
 advection          = 1
 gnuplot_log_res    = 0
-kinetics           = 1
+kinetics           = 0
 density_variations = 0
 elastic            = 1
 compressible       = 0
 safe_mode          = 0
 eta_average        = 1
-marker_noise       = 1  / noise beau-gosse
+marker_noise       = 0  / noise beau-gosse
 out_of_plane       = 1  / non zeros total Eyy
+preconditioner     = 1
 
 /**** SETUP DEPENDANT ****/
 shear_style        = 1
@@ -62,16 +63,16 @@ bkg_strain_rate    = 1e-13
 bkg_div_rate       = 0.0
 bkg_pressure       = 1.0e9       / pressure [Pa]
 bkg_temperature    = 0.0         / temperature [K]
-user0              = 0           / 0: simple setup (one seed) 1: read binary file with geometry 
+user0              = 1           / 0: simple setup (one seed) 1: read binary file with geometry 
 user1              = 0.025       / inclusion radius [m]
-user7              = 1921        / size of pixel max
+user7              = 1500        / size of pixel max
 
 /**** GRAVITY ****/
 gx = 0.0000
 gz = 0.000
 
 /**** MAT PROPERTIES ****/
-Nb_phases = 3
+Nb_phases = 4
 
 /**** PHASE 0 ****/
 ID            = 0
@@ -80,7 +81,7 @@ C             = 4e7
 Slim          = 1e10
 phi           = 35
 psi           = 0
-eta_vp        = 5e18
+eta_vp        = 1e19
 Slim          = 500e9
 density_model = 3
 alp           = 10.0e-6
@@ -102,7 +103,7 @@ C             = 1e7
 Slim          = 1e10
 phi           = 35
 psi           = 0
-eta_vp        = 5e18
+eta_vp        = 1e19
 density_model = 3
 alp           = 10.0e-6
 bet           = 1.890e-11
@@ -123,7 +124,28 @@ C             = 4e7
 Slim          = 1e10
 phi           = 35
 psi           = 0
-eta_vp        = 5e18
+eta_vp        = 1e19
+density_model = 3
+alp           = 10.0e-6
+bet           = 1.890e-11
+cstv          = 1             / constant visc law
+pwlv          = 0             / disloc. creep
+linv          = 0             / diff. creep
+gbsv          = 0             / grain boundary sliding
+expv          = 0             / peierls creep
+gsel          = 0             / grain size evo.
+eta0          = 1e18
+npwl          = 1
+Qpwl          = 0
+
+/**** PHASE 3 ****/
+ID            = 3
+G             = 4e10
+C             = 4e7
+Slim          = 1e10
+phi           = 35
+psi           = 0
+eta_vp        = 1e19
 density_model = 3
 alp           = 10.0e-6
 bet           = 1.890e-11
@@ -160,10 +182,10 @@ Picard2Newton     = 1
 Picard2Newton_tol = 1e-1
 nit_max           = 1
 rel_tol_KSP       = 1e-4
-nonlin_abs_mom    = 1e-11
-nonlin_abs_div    = 1e-11
-lin_abs_div       = 1e-9
-lin_rel_div       = 1e-9
+nonlin_abs_mom    = 1e-9
+nonlin_abs_div    = 1e-9
+lin_abs_div       = 1e-8
+lin_rel_div       = 1e-8
 min_eta           = 1e17
 max_eta           = 1e25
 
