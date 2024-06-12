@@ -3,9 +3,12 @@
 
 #define zeroC     273.15
 #define Rg        8.314510
-#define PI        3.14159265359
+#define PI        3.14159265358979323846
 #define Rad_Earth 6370000
 #include "stdbool.h"
+#ifndef M_PI
+    #define M_PI 3.14159265358979323846
+#endif
 
 #define RESET   "\033[0m"
 #define BLACK   "\033[30m"      /* Black */
