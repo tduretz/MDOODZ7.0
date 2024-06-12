@@ -51,8 +51,8 @@ FILES = MeltingRoutines.o AnisotropyRoutines.o Main_DOODZ.o FD_Jacobian.o  Rheol
 
 all: Doodzi_$(SET) 
 Doodzi_$(SET): ${FILES}
-$(CC) ${FILES} -o $(SET) ${LIBS}
+    $(CC) ${FILES} -o $(SET) ${LIBS}
 
 clean:
-cp $(SET_PATH)/$(SET).txt . 
-rm -rf *o ./$(SET_PATH)/*.o $(SET) 
+    cp $(SET_PATH)/$(SET).txt . 
+    rm -rf *o ./$(SET_PATH)/*.o $(SET) 
