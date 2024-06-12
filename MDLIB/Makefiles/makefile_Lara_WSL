@@ -12,23 +12,23 @@ SET_PATH = ../SETS
 CFLAGS = -std=c99 -D _UMFPACK_ -I ./include/ -I ./
 
 ifeq ($(OPT),yes)
-CFLAGS += -O3 -ftree-vectorize -funroll-loops -finline -fomit-frame-pointer -march=native
+    CFLAGS += -O3 -ftree-vectorize -funroll-loops -finline -fomit-frame-pointer -march=native
 else
-CFLAGS += -g -Wall  -O0 -fno-inline -fno-omit-frame-pointer
+    CFLAGS += -g -Wall  -O0 -fno-inline -fno-omit-frame-pointer
 endif
 
 ifeq ($(OMP),yes)
-CFLAGS += -fopenmp -D _OMP_
+    CFLAGS += -fopenmp -D _OMP_
 else
-CFLAGS += -Wno-unknown-pragmas 
+    CFLAGS += -Wno-unknown-pragmas 
 endif
 
 ifeq ($(VG),yes)
-CFLAGS += -D _VG_ -Wno-format-zero-length
+    CFLAGS += -D _VG_ -Wno-format-zero-length
 endif
 
 ifeq ($(NEW_INPUT),yes)
-CFLAGS += -D _NEW_INPUT_
+    CFLAGS += -D _NEW_INPUT_
 endif
 
 CFLAGS += -Wno-unused-variable  -Wno-comment
