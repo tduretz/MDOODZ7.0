@@ -45,6 +45,7 @@ function main()
     path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/TEST_ROMAN_ANI3_00_MR/"
     path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/_p10_e18_t3/"
     path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/_p10_e18_t1_nonconv/"
+    path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/"
 
     # path ="/Users/tduretz/Downloads/"
     # path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/DoubleSubduction_OMP16/"
@@ -57,9 +58,9 @@ function main()
     # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/1_NR09/"
 
     # File numbers
-    file_start = 000
+    file_start = 130
     file_step  = 100
-    file_end   = 2000
+    file_end   = 130
 
     # Select field to visualise
     field = :Phases
@@ -89,7 +90,7 @@ function main()
     framerate   = 3
     PlotOnTop = (
         ph_contours = false,  # add phase contours
-        T_contours  = false,   # add temperature contours
+        T_contours  = true,   # add temperature contours
         fabric      = false,  # add fabric quiver (normal to director)
         topo        = false,
         σ1_axis     = false,
@@ -116,7 +117,7 @@ function main()
     cm_yr = 100.0*3600.0*24.0*365.25
 
     # Time loop
-    f = Figure(resolution = (Lx/Lz*resol*1.2, resol), fontsize=25)
+    f = Figure(size = (Lx/Lz*resol*1.2, resol), fontsize=25)
 
     for istep=file_start:file_step:file_end
     
@@ -233,7 +234,7 @@ function main()
 
         #####################################
         empty!(f)
-        f = Figure(resolution = (Lx/Lz*resol*1.2, resol), fontsize=25)
+        f = Figure(size = (Lx/Lz*resol*1.2, resol), fontsize=25)
 
         if field==:Phases
             ax1 = Axis(f[1, 1], title = L"Phases at $t$ = %$(tMy) Ma", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
