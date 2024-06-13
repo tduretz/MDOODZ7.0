@@ -78,11 +78,13 @@ function main()
         "/Users/tduretz/REPO/MDOODZ7.0/MDLIB/_p10_e18_t3/",
         "/Users/tduretz/REPO/MDOODZ7.0/MDLIB/_p10_e18_t3_nonconv/",
         "/Users/tduretz/REPO/MDOODZ7.0/MDLIB/_p10_e18_t2_nonconv/",
+        "/Users/tduretz/REPO/MDOODZ7.0/MDLIB/_p10_e18_t1_nonconv/",
     )
     names = (
         "T3: Fully converged",
         "T3: 1 iteration",
         "T2: 1 iteration",
+        "T1: 1 iteration",
     )
     n_files = length(path)
 
@@ -149,7 +151,7 @@ function main()
     cm_yr = 100.0*3600.0*24.0*365.25
 
     # Time loop
-    f = Figure(resolution = (Lx/Lz*resol*1.2, resol), fontsize=25)
+    f = Figure(size = (Lx/Lz*resol*1.2, resol), fontsize=25)
 
     for istep=file_start:file_step:file_end
     
@@ -161,7 +163,7 @@ function main()
             
         #####################################
         empty!(f)
-        f = Figure(resolution = (Lx/Lz*resol*1.2, resol), fontsize=25)
+        f = Figure(size = (Lx/Lz*resol*1.2, resol), fontsize=25)
 
         if field==:EffectiveFrictionTime
             for i_file=1:n_files
