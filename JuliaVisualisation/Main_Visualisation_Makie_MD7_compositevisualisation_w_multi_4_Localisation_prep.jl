@@ -195,7 +195,7 @@ end
 #ffmpeg -framerate 30 -pattern_type glob -i '*.png' -c:v libx264 -pix_fmt yuv420p out.mp4
 
 # Set the path to your files
-localTestOnly = true
+localTestOnly = false
 aniSetupsOnly = true
 file_step = 10
 
@@ -239,7 +239,49 @@ if aniSetupsOnly == false
     main("/users/whalter1/work/aniso_fix/B5_1000/", 0, 100000, 4, 0.5, file_step)
 end
 
-## all aniso setups
+## benchmark setups Dabrowski 2012
+#main("/users/whalter1/work/aniso_fix/D1_500_XL/" , 0   , 100000, 2, 0.0, file_step)
+#main("/users/whalter1/work/aniso_fix/D1_500_XL_March/" , 0   , 100000, 2, 0.0, file_step)
+#
+#main("/users/whalter1/work/aniso_fix/D1_2000/"   , 2790, 100000, 8, 0.0, file_step)
+#main("/users/whalter1/work/aniso_fix/D1_1000/"   , 2790, 100000, 4, 0.0, file_step)
+#main("/users/whalter1/work/aniso_fix/D1_1000_L/" , 2790, 100000, 4, 0.0, file_step)
+#main("/users/whalter1/work/aniso_fix/D1_1000_XL/", 2790, 100000, 4, 0.0, file_step)
+#main("/users/whalter1/work/aniso_fix/D1_500/"    , 0   , 100000, 2, 0.0, file_step)
+#main("/users/whalter1/work/aniso_fix/D1_500_L/"  , 0   , 100000, 2, 0.0, file_step)
+
+# all aniso setups
+
+main("/users/whalter1/work/aniso_fix/C02_1000/", 2790, 100000, 4, 0.5, file_step)
+main("/users/whalter1/work/aniso_fix/C03_1000/", 2790, 100000, 4, 0.5, file_step)
+main("/users/whalter1/work/aniso_fix/C04_1000/", 2790, 100000, 4, 0.5, file_step)
+main("/users/whalter1/work/aniso_fix/C05_1000/", 2790, 100000, 4, 0.5, file_step)
+
+main("/users/whalter1/work/aniso_fix/C12_1000/", 2790, 100000, 4, 0.5, file_step)
+main("/users/whalter1/work/aniso_fix/C13_1000/", 2790, 100000, 4, 0.5, file_step)
+main("/users/whalter1/work/aniso_fix/C14_1000/", 2790, 100000, 4, 0.5, file_step)
+main("/users/whalter1/work/aniso_fix/C15_1000/", 2790, 100000, 4, 0.5, file_step)
+
+main("/users/whalter1/work/aniso_fix/C2_1000/" , 2790, 100000, 4, 0.5, file_step)
+main("/users/whalter1/work/aniso_fix/C3_1000/" , 2790, 100000, 4, 0.5, file_step)
+main("/users/whalter1/work/aniso_fix/C4_1000/" , 2790, 100000, 4, 0.5, file_step)
+main("/users/whalter1/work/aniso_fix/C5_1000/" , 2790, 100000, 4, 0.5, file_step)
+
+main("/users/whalter1/work/aniso_fix/D2_1000/" , 2790, 100000, 4, 0.5, file_step)
+main("/users/whalter1/work/aniso_fix/D3_1000/" , 2790, 100000, 4, 0.5, file_step)
+main("/users/whalter1/work/aniso_fix/D4_1000/" , 2790, 100000, 4, 0.5, file_step)
+main("/users/whalter1/work/aniso_fix/D5_1000/" , 2790, 100000, 4, 0.5, file_step)
+
+main("/users/whalter1/work/aniso_fix/D02_1000/", 2790, 100000, 4, 0.5, file_step)
+main("/users/whalter1/work/aniso_fix/D03_1000/", 2790, 100000, 4, 0.5, file_step)
+main("/users/whalter1/work/aniso_fix/D04_1000/", 2790, 100000, 4, 0.5, file_step)
+main("/users/whalter1/work/aniso_fix/D05_1000/", 2790, 100000, 4, 0.5, file_step)
+
+main("/users/whalter1/work/aniso_fix/D12_1000/", 2790, 100000, 4, 0.5, file_step)
+main("/users/whalter1/work/aniso_fix/D13_1000/", 2790, 100000, 4, 0.5, file_step)
+main("/users/whalter1/work/aniso_fix/D14_1000/", 2790, 100000, 4, 0.5, file_step)
+main("/users/whalter1/work/aniso_fix/D15_1000/", 2790, 100000, 4, 0.5, file_step)
+
 #main("/users/whalter1/work/aniso_fix/A02_1000/", 2790, 100000, 4, 0.5, file_step)
 #main("/users/whalter1/work/aniso_fix/A03_1000/", 2790, 100000, 4, 0.5, file_step)
 #main("/users/whalter1/work/aniso_fix/A04_1000/", 2790, 100000, 4, 0.5, file_step)
@@ -264,15 +306,15 @@ end
 #main("/users/whalter1/work/aniso_fix/A00_500/" , 0   , 100000, 2, 0.5, file_step)
 #main("/users/whalter1/work/aniso_fix/A0_500/"  , 0   , 100000, 2, 0.5, file_step)
 
-#main("/users/whalter1/work/aniso_fix/A2_1000/", 2790, 100000, 4, 0.5, file_step)
-#main("/users/whalter1/work/aniso_fix/A3_1000/", 3320, 100000, 4, 0.5, file_step)
-#main("/users/whalter1/work/aniso_fix/A4_1000/", 2770, 100000, 4, 0.5, file_step)
-#main("/users/whalter1/work/aniso_fix/A5_1000/", 3460, 100000, 4, 0.5, file_step)
-#main("/users/whalter1/work/aniso_fix/MWE_1000/", 400, 100000, 4, 0.5, file_step)
+main("/users/whalter1/work/aniso_fix/A2_1000/", 2790, 100000, 4, 0.5, file_step)
+main("/users/whalter1/work/aniso_fix/A3_1000/", 3320, 100000, 4, 0.5, file_step)
+main("/users/whalter1/work/aniso_fix/A4_1000/", 2770, 100000, 4, 0.5, file_step)
+main("/users/whalter1/work/aniso_fix/A5_1000/", 3460, 100000, 4, 0.5, file_step)
+main("/users/whalter1/work/aniso_fix/MWE_1000/", 400, 100000, 4, 0.5, file_step)
 
 # for Strain Localization
 #main("/users/whalter1/work/aniso_fix/A12_500/" , 0   , 100000, 2, 0.5, file_step)
-main("/users/whalter1/work/aniso_fix/A14_1000/", 2790, 100000, 4, 0.5, file_step)
+#main("/users/whalter1/work/aniso_fix/A14_1000/", 2790, 100000, 4, 0.5, file_step)
 #main("/users/whalter1/work/aniso_fix/A12_1000/", 2790, 100000, 4, 0.5, file_step)
 
 # for testing new setup...
