@@ -1,7 +1,7 @@
 import Pkg
 Pkg.activate(normpath(joinpath(@__DIR__, ".")))
 # import Pkg; Pkg.add("HDF5"); Pkg.add("Printf"); Pkg.add("Colors"); Pkg.add("ColorSchemes"); Pkg.add("MathTeXEngine"); Pkg.add("LinearAlgebra"); Pkg.add("FFMPEG"), Pkg.add("CairoMakie")
-using HDF5, Printf, Colors, ColorSchemes, MathTeXEngine, LaTeXStrings, LinearAlgebra, FFMPEG
+using HDF5, Printf, Colors, ColorSchemes, MathTeXEngine, LinearAlgebra, FFMPEG
 
 # Select your Makie of Choice: NOTE one has to quit the session when switching from CairoMakie to GLMakie or vice versa.
 choice = 2 # 1 => GLMakie; 2 => CairoMakie
@@ -26,14 +26,15 @@ function main(path, file_start, file_end_max,fac, xshift, file_step)
     #field = :Stress_xx
     #field = :Stress_zz
     #field = :Stress_xz
-    field = :StrainRate
+    #field = :StrainRate
     #field = :PlasticStrainrate
-    #field = :Pressure
+    field = :Pressure
     #field = :Temperature
     #field = :Velocity
     #field = :Velocity_x
     #field = :Velocity_z
     #field = :Strain # cumulated strain
+    #field = :StrainDev # deviatoric cumulated strain
     #field = :Strain_xx # normal strain
     #field = :Strain_zz # normal strain
     #field = :Strain_xz # shear strain
@@ -48,6 +49,7 @@ function main(path, file_start, file_end_max,fac, xshift, file_step)
     #field = :Fzzp
     #field = :Fxzp # (can be used for aniso factor evolv)
     #field = :Fzxp
+    #field = :FxzpDev # (for the others, deviatorics is (assumed/defined as) equal to non-deviatorics)
     #field = :AnisoFactor # anisotropy factor
     #field = :GrainSize # doesn't function properly yet
     #field = :Topography # doesn't function properly yet
@@ -57,7 +59,7 @@ function main(path, file_start, file_end_max,fac, xshift, file_step)
     #field = :XYEtaLocalisation
 
     # Switches
-    Δγ          = 1.0       # if Δγ > 0, then only creates every Δγ-th plot and skips in-between; if Δγ = 0, then creates all plots, no skipping
+    Δγ          = 0.5       # if Δγ > 0, then only creates every Δγ-th plot and skips in-between; if Δγ = 0, then creates all plots, no skipping
     displayfig  = false     # display figures on screen (not possible on any "headless server")
     printfig    = true      # print figures to disk
     printvid    = true      # print a video (printfig must be on)
@@ -76,6 +78,7 @@ function main(path, file_start, file_end_max,fac, xshift, file_step)
     movieName   = "$(path)/_$(field)/$(field)"  # Name of the movie
     #xshift      = 0.5       # periodically shifts all values to the right, fraction 0.0-1.0
     TimeSeries  = true
+    phaseProportions = false
 
     # File numbers
     #file_step  = 10
@@ -105,11 +108,11 @@ function main(path, file_start, file_end_max,fac, xshift, file_step)
     Files  = sort(filter(x->endswith(x,".h5"), readdir(path)))
     file_end  = parse(Int64, replace(Files[end] , r"Output"=>"", r".gzip.h5"=>""))
     if file_end > file_end_max; file_end = file_end_max; end
-    if file_start >= file_end; file_start = file_end; printvid = false; printfig = false; end # don't make video if (probably) already done...
+    if file_start >= file_end && Δγ == 0; file_start = file_end; printvid = false; printfig = false; end # don't make video if (probably) already done...
 
     @show path
-    @show file_start, file_end, file_step
 
+    @show Δγ
     if Δγ != 0
         filename  = string(path, @sprintf("Output%05d.gzip.h5", file_end))
         Time_time = Float64.(ExtractData( filename, "/TimeSeries/Time_time"));
@@ -117,7 +120,6 @@ function main(path, file_start, file_end_max,fac, xshift, file_step)
         γ_time    = Time_time .* 2
         list = Int64.([0;find_indices(γ_time, Δγ)])
         list = Int64.(round.(list./10).*10)
-        @show list
     end
 
     # Scaling
@@ -129,8 +131,10 @@ function main(path, file_start, file_end_max,fac, xshift, file_step)
     if displayfig==1 || printfig==1
     if Δγ != 0
         filelist=list
+        @show list
     else
         filelist=[file_end;file_start:file_step:file_end]  
+        @show file_start, file_end, file_step
     end
     for istep=filelist
     #for istep = 0    
@@ -157,7 +161,9 @@ function main(path, file_start, file_end_max,fac, xshift, file_step)
         Lx, Lz    = (xmax-xmin)/Lc, (zv[end]-zv[1])/Lc
         Δx, Δz, Δ = Lx/ncx, Lz/ncz, sqrt( (Lx/ncx)^2 + (Lz/ncz)^2)
         γ = t * 2 # here...
-        @show "Time step" istep
+        γtxt = @sprintf("%.1f", γ)
+
+        @show "Time step" istep, γtxt
         #@show "Model apect ratio" Lx/Lz
         @show "Model time" t/My
 
@@ -250,6 +256,17 @@ function main(path, file_start, file_end_max,fac, xshift, file_step)
             ε̇II_mean_time   = Float64.(ExtractData( filename, "/TimeSeries/Eii_mean_time")); 
         end
 
+        u=unique(ph)
+        nbph=length(u)
+        if phaseProportions
+            D=Dict([(i,count(x->x==i,ph)) for i in u])
+            dtot = sum(values(D))
+            for i in u
+                println("count for ph = $(i) is $(D[i]) \t $(D[i]/dtot*100) %")
+            end
+            println("count for ph total is $(dtot) \t $(dtot/dtot*100) %")
+        end
+
         #####################################
         # x-shift
         if xshift > 0.0
@@ -323,13 +340,16 @@ function main(path, file_start, file_end_max,fac, xshift, file_step)
 
         # Color palette for phase map
         cmap    = zeros(RGB{Float64}, 7)
-        cmap[1] = RGBA{Float64}(210/255, 218/255, 205/255, 1.)  
-        cmap[2] = RGBA{Float64}(217/255, 099/255, 097/255, 1.)  
+        cmap[1] = RGBA{Float64}(240/255, 240/255, 240/255, 1.)  
+        cmap[2] = RGBA{Float64}(  0/255, 142/255, 198/255, 1.)  
+        #cmap[1] = RGBA{Float64}(210/255, 218/255, 205/255, 1.)  
+        #cmap[2] = RGBA{Float64}(217/255, 099/255, 097/255, 1.)  
         cmap[3] = RGBA{Float64}(117/255, 164/255, 148/255, 1.) 
         cmap[4] = RGBA{Float64}(223/255, 233/255, 219/255, 1.) 
         cmap[5] = RGBA{Float64}(217/255, 099/255, 097/255, 1.) 
         cmap[6] = RGBA{Float64}(244/255, 218/255, 205/255, 1.) 
         cmap[7] = RGBA{Float64}(223/255, 233/255, 219/255, 1.) 
+        cmap    = cmap[1:nbph]
         phase_colors = MoC.cgrad(cmap, length(cmap), categorical=true, rev=false)
 
         # Group phases for contouring
@@ -339,7 +359,7 @@ function main(path, file_start, file_end_max,fac, xshift, file_step)
 
         #####################################
 
-        f = MoC.Figure(size = (Lx/Lz*resol, resol), fontsize=25)
+        f = MoC.Figure(resolution = (Lx/Lz*resol, resol), fontsize=25)
         
         if field==:XYEtaLocalisation
 
@@ -355,7 +375,7 @@ function main(path, file_start, file_end_max,fac, xshift, file_step)
 
             fabric = false
         end
-        
+                
         if field==:XVelocityLocalisation
 
             Vx_HorizMean = mean(Vx, dims = 1)
@@ -414,305 +434,250 @@ function main(path, file_start, file_end_max,fac, xshift, file_step)
         end
 
         if field==:Phases
-            ax1 = MoC.Axis(f[1, 1], title = L"Phases at $t$ = %$(tMy) %$(tMytext)", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
-            hm = MoC.heatmap!(ax1, xc./Lc, zc./Lc, ph, colormap = phase_colors)
-            if T_contours 
-                contour!(ax1, xc./Lc, zc./Lc, T, levels=0:200:1400, linewidth = 4, color=:white )  
+            if phaseProportions
+                ax1 = MoC.Axis(f[1, 1], title = L"Phases at $γ$ = %$(γtxt), inclusion area = %$(D[1]/dtot*100) %", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
+            else
+                ax1 = MoC.Axis(f[1, 1], title = L"Phases at $γ$ = %$(γtxt)", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
             end
-            if σ1_axis
-                MoC.arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
-            end            
-            MoC.colsize!(f.layout, 1, MoC.Aspect(1, Lx/Lz))
-            MoC.Colorbar(f[1, 2], hm, label = "Phases", width = 20, labelsize = 25, ticklabelsize = 14 )
-            MoC.colgap!(f.layout, 20)
+            hm = MoC.heatmap!(ax1, xc./Lc, zc./Lc, ph, colormap = phase_colors)
+            colorbarLabel = "Phases"
         end
 
         if field==:Density
-            ax1 = MoC.Axis(f[1, 1], title = L"Density $ρ$ at $t$ = %$(tMy) %$(tMytext)", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
-            hm = MoC.heatmap!(ax1, xc./Lc, zc./Lc, ρc, colormap = (:turbo, α_heatmap))
-            if T_contours 
-                contour!(ax1, xc./Lc, zc./Lc, T, levels=0:200:1400, linewidth = 4, color=:white )  
-            end 
-            if ph_contours 
-                contour!(ax1, xc_hr./Lc, zc_hr./Lc, group_phases, levels=-1:1:maximum(group_phases), linewidth = 4, color=:white )  
-            end
-            if σ1_axis
-                MoC.arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
-            end            
-            MoC.colsize!(f.layout, 1, MoC.Aspect(1, Lx/Lz))
-            MoC.Colorbar(f[1, 2], hm, label = L"Density $ρ$ [kg/m^3]", width = 20, labelsize = 25, ticklabelsize = 14 )
-            MoC.colgap!(f.layout, 20)
+            ax1 = MoC.Axis(f[1, 1], title = L"Density $ρ$ at $γ$ = %$(γtxt)", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
+            hm = MoC.heatmap!(ax1, xc./Lc, zc./Lc, ρc, colormap = (:amp, α_heatmap))
+            colorbarLabel = L"Density $ρ$ [kg/m^3]"
         end
 
         if field==:Viscosity
-            ax1 = MoC.Axis(f[1, 1], title = L"$\eta$ at $t$ = %$(tMy) %$(tMytext)", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
+            ax1 = MoC.Axis(f[1, 1], title = L"$\eta$ at $γ$ = %$(γtxt)", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
             hm = MoC.heatmap!(ax1, xc./Lc, zc./Lc, log10.(ηc), colormap = (:turbo, α_heatmap))
-            if T_contours 
-                contour!(ax1, xc./Lc, zc./Lc, T, levels=0:200:1400, linewidth = 4, color=:white )  
-            end 
-            if ph_contours 
-                contour!(ax1, xc_hr./Lc, zc_hr./Lc, group_phases, levels=-1:1:maximum(group_phases), linewidth = 4, color=:white )  
-            end
-            if σ1_axis
-                MoC.arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
-            end            
-            MoC.colsize!(f.layout, 1, MoC.Aspect(1, Lx/Lz))
-            MoC.Colorbar(f[1, 2], hm, label = L"$\eta$ [Pa.s]", width = 20, labelsize = 25, ticklabelsize = 14 )
-            MoC.colgap!(f.layout, 20)
+            colorbarLabel = L"$\eta$ [Pa.s]"
         end
 
         if field==:Stress
-            ax1 = MoC.Axis(f[1, 1], title = L"$\tau_\textrm{II}$ at $t$ = %$(tMy) %$(tMytext)", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
-            hm = MoC.heatmap!(ax1, xc./Lc, zc./Lc, τII, colormap = (:turbo, α_heatmap)) 
-            if T_contours 
-                contour!(ax1, xc./Lc, zc./Lc, T, levels=0:200:1400, linewidth = 4, color=:white )  
-            end  
-            if ph_contours 
-                contour!(ax1, xc_hr./Lc, zc_hr./Lc, group_phases, levels=-1:1:maximum(group_phases), linewidth = 4, color=:white )  
-            end
-            if σ1_axis
-                MoC.arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
-            end         
-            MoC.colsize!(f.layout, 1, MoC.Aspect(1, Lx/Lz))
-            MoC.Colorbar(f[1, 2], hm, label = L"$\tau_\textrm{II}$ [Pa]", width = 20, labelsize = 25, ticklabelsize = 14 )
-            MoC.colgap!(f.layout, 20)
+            ax1 = MoC.Axis(f[1, 1], title = L"$\tau_\textrm{II}$ at $γ$ = %$(γtxt)", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
+            hm = MoC.heatmap!(ax1, xc./Lc, zc./Lc, τII, colormap = (:amp, α_heatmap), colorrange=(0.0, 4.0e3))
+            colorbarLabel = L"$\tau_\textrm{II}$ [Pa]"
         end
 
         if field==:Stress_xx
-            ax1 = MoC.Axis(f[1, 1], title = L"$\tau_\textrm{xx}$ at $t$ = %$(tMy) %$(tMytext)", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
-            hm = MoC.heatmap!(ax1, xc./Lc, zc./Lc, τxx, colormap = (:turbo, α_heatmap)) 
-            if T_contours 
-                contour!(ax1, xc./Lc, zc./Lc, T, levels=0:200:1400, linewidth = 4, color=:white )  
-            end  
-            if ph_contours 
-                contour!(ax1, xc_hr./Lc, zc_hr./Lc, group_phases, levels=-1:1:maximum(group_phases), linewidth = 4, color=:white )  
-            end
-            if σ1_axis
-                MoC.arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
-            end         
-            MoC.colsize!(f.layout, 1, MoC.Aspect(1, Lx/Lz))
-            MoC.Colorbar(f[1, 2], hm, label = L"$\tau_\textrm{xx}$ [Pa]", width = 20, labelsize = 25, ticklabelsize = 14 )
-            MoC.colgap!(f.layout, 20)
+            ax1 = MoC.Axis(f[1, 1], title = L"$\tau_\textrm{xx}$ at $γ$ = %$(γtxt)", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
+            hm = MoC.heatmap!(ax1, xc./Lc, zc./Lc, τxx, colormap = (:balance, α_heatmap), colorrange=(-4.0e3, 4.0e3))
+            colorbarLabel = L"$\tau_\textrm{xx}$ [Pa]"
         end
 
         if field==:Stress_zz
-            ax1 = MoC.Axis(f[1, 1], title = L"$\tau_\textrm{zz}$ at $t$ = %$(tMy) %$(tMytext)", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
-            hm = MoC.heatmap!(ax1, xc./Lc, zc./Lc, τzz, colormap = (:turbo, α_heatmap)) 
-            if T_contours 
-                contour!(ax1, xc./Lc, zc./Lc, T, levels=0:200:1400, linewidth = 4, color=:white )  
-            end  
-            if ph_contours 
-                contour!(ax1, xc_hr./Lc, zc_hr./Lc, group_phases, levels=-1:1:maximum(group_phases), linewidth = 4, color=:white )  
-            end
-            if σ1_axis
-                MoC.arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
-            end         
-            MoC.colsize!(f.layout, 1, MoC.Aspect(1, Lx/Lz))
-            MoC.Colorbar(f[1, 2], hm, label = L"$\tau_\textrm{zz}$ [Pa]", width = 20, labelsize = 25, ticklabelsize = 14 )
-            MoC.colgap!(f.layout, 20)
+            ax1 = MoC.Axis(f[1, 1], title = L"$\tau_\textrm{zz}$ at $γ$ = %$(γtxt)", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
+            hm = MoC.heatmap!(ax1, xc./Lc, zc./Lc, τzz, colormap = (:balance, α_heatmap), colorrange=(-4.0e3, 4.0e3))
+            colorbarLabel = L"$\tau_\textrm{zz}$ [Pa]"
         end
 
         if field==:Stress_xz
-            ax1 = MoC.Axis(f[1, 1], title = L"$\tau_\textrm{xz}$ at $t$ = %$(tMy) %$(tMytext)", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
+            ax1 = MoC.Axis(f[1, 1], title = L"$\tau_\textrm{xz}$ at $γ$ = %$(γtxt)", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
             if polar
-                hm = MoC.heatmap!(ax1, xc./Lc, zc./Lc, τxz, colormap = (:turbo, α_heatmap)) 
+                hm = MoC.heatmap!(ax1, xc./Lc, zc./Lc, τxz, colormap = (:amp, α_heatmap), colorrange=(0.0, 4.0e3))
             else
-                hm = MoC.heatmap!(ax1, xv./Lc, zv./Lc, τxz, colormap = (:turbo, α_heatmap), colorrange=(0, 1e1))#, colorrange=(0, 5e3)) 
+                hm = MoC.heatmap!(ax1, xv./Lc, zv./Lc, τxz, colormap = (:amp, α_heatmap), colorrange=(0.0, 4.0e3))
             end
-            if T_contours 
-                contour!(ax1, xc./Lc, zc./Lc, T, levels=0:200:1400, linewidth = 4, color=:white )  
-            end  
-            if ph_contours 
-                contour!(ax1, xc_hr./Lc, zc_hr./Lc, group_phases, levels=-1:1:maximum(group_phases), linewidth = 4, color=:white )  
-            end
-            if σ1_axis
-                MoC.arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
-            end         
-            MoC.colsize!(f.layout, 1, MoC.Aspect(1, Lx/Lz))
-            MoC.Colorbar(f[1, 2], hm, label = L"$\tau_\textrm{xz}$ [Pa]", width = 20, labelsize = 25, ticklabelsize = 14 )
-            MoC.colgap!(f.layout, 20)
+            colorbarLabel = L"$\tau_\textrm{xz}$ [Pa]"
         end
 
         if field==:StrainRate
-            #ax1 = MoC.Axis(f[1, 1], title = L"$\dot{\varepsilon}_\textrm{II}$ at $t$ = %$(tMy) %$(tMytext)", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
-            ax1 = MoC.Axis(f[1, 1], title = LaTeXString(@sprintf("\$\\dot{\\varepsilon}_\\textrm{II}\$ at \$γ\$ = %.1f", γ)), xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
+            γtxt = @sprintf("%.1f", γ)
+            ax1 = MoC.Axis(f[1, 1], title = L"$\dot{\varepsilon}_\textrm{II}$ at $γ$ = %$(γtxt)", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
             hm = MoC.heatmap!(ax1, xc./Lc, zc./Lc, log10.(ε̇II), colormap = (:turbo, α_heatmap), colorrange=(-3, 1.5))
-            if T_contours 
-                contour!(ax1, xc./Lc, zc./Lc, T, levels=0:200:1400, linewidth = 4, color=:white )  
-            end
-            if ph_contours 
-                contour!(ax1, xc_hr./Lc, zc_hr./Lc, group_phases, levels=-1:1:maximum(group_phases), linewidth = 4, color=:white )  
-            end
-            if σ1_axis
-                MoC.arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
-            end  
-            MoC.colsize!(f.layout, 1, MoC.Aspect(1, Lx/Lz))
-            MoC.Colorbar(f[1, 2], hm, label =  L"$\dot{\varepsilon}_\textrm{II}$ [s$^{-1}$]", width = 20, labelsize = 25, ticklabelsize = 14 )
-            MoC.colgap!(f.layout, 20)
+            colorbarLabel = L"$\dot{\varepsilon}_\textrm{II}$ [s$^{-1}$]"
         end
 
         if field==:PlasticStrainrate
             ax1 = MoC.Axis(f[1, 1], title = L"$\dot{\varepsilon}_\textrm{II}^\textrm{pl}$ at $t$ = %$(tMy) %$(tMytext), sum = %$(round(sum(ε̇pl),sigdigits=4)), max = %$(round(maximum(ε̇pl),sigdigits=4)), min = %$(round(minimum(ε̇pl),sigdigits=4))", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
             ε̇pl[mask_air] .= NaN
             hm = MoC.heatmap!(ax1, xc./Lc, zc./Lc, log10.(ε̇pl), colormap = (:turbo, α_heatmap))
-            if T_contours 
-                contour!(ax1, xc./Lc, zc./Lc, T, levels=0:200:1400, linewidth = 4, color=:white )  
-            end
-            if ph_contours 
-                contour!(ax1, xc_hr./Lc, zc_hr./Lc, group_phases, levels=-1:1:maximum(group_phases), linewidth = 4, color=:white )  
-            end
-            if σ1_axis
-                MoC.arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
-            end  
-            MoC.colsize!(f.layout, 1, MoC.Aspect(1, Lx/Lz))
-            MoC.Colorbar(f[1, 2], hm, label = L"$\dot{\varepsilon}_\textrm{II}^\textrm{pl}$ [s$^{-1}$]", width = 20, labelsize = 25, ticklabelsize = 14 )
-            MoC.colgap!(f.layout, 20)
+            colorbarLabel = L"$\dot{\varepsilon}_\textrm{II}^\textrm{pl}$ [s$^{-1}$]"
         end
 
         if field==:Pressure
-            ax1 = MoC.Axis(f[1, 1], title = L"$P$ at $t$ = %$(tMy) %$(tMytext)", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
-            hm = MoC.heatmap!(ax1, xc./Lc, zc./Lc, P, colormap = (:turbo, α_heatmap))
-            if T_contours 
-                contour!(ax1, xc./Lc, zc./Lc, T, levels=0:200:1400, linewidth = 4, color=:white )  
-            end
-            if ph_contours 
-                contour!(ax1, xc_hr./Lc, zc_hr./Lc, group_phases, levels=-1:1:maximum(group_phases), linewidth = 4, color=:white )  
-            end
-            if σ1_axis
-                MoC.arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
-            end  
-            MoC.colsize!(f.layout, 1, MoC.Aspect(1, Lx/Lz))
-            MoC.Colorbar(f[1, 2], hm, label =  L"$P$ [s$^{-1}$]", width = 20, labelsize = 25, ticklabelsize = 14 )
-            MoC.colgap!(f.layout, 20)
+            ax1 = MoC.Axis(f[1, 1], title = L"$P$ at $γ$ = %$(γtxt)", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
+            hm = MoC.heatmap!(ax1, xc./Lc, zc./Lc, P, colormap = (:balance, α_heatmap), colorrange=(-4.0e3, 4.0e3))
+            colorbarLabel = L"$P$"
         end
 
         if field==:Temperature
-            ax1 = MoC.Axis(f[1, 1], title = L"$T$ at $t$ = %$(tMy) %$(tMytext)", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
+            ax1 = MoC.Axis(f[1, 1], title = L"$T$ at $γ$ = %$(γtxt)", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
             hm = MoC.heatmap!(ax1, xc./Lc, zc./Lc, T, colormap = (:turbo, α_heatmap))
-            if T_contours 
-                contour!(ax1, xc./Lc, zc./Lc, T, levels=0:200:1400, linewidth = 4, color=:white )  
-            end
-            if ph_contours 
-                contour!(ax1, xc_hr./Lc, zc_hr./Lc, group_phases, levels=-1:1:maximum(group_phases), linewidth = 4, color=:white )  
-            end
-            if σ1_axis
-                MoC.arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
-            end  
-            MoC.colsize!(f.layout, 1, MoC.Aspect(1, Lx/Lz))
-            MoC.Colorbar(f[1, 2], hm, label =  L"$T$ [s$^{-1}$]", width = 20, labelsize = 25, ticklabelsize = 14 )
-            MoC.colgap!(f.layout, 20)
+            colorbarLabel = L"$T$"
         end
 
         if field==:Velocity
-            ax1 = MoC.Axis(f[1, 1], title = L"$V$ at $t$ = %$(tMy) %$(tMytext)", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
-            hm = MoC.heatmap!(ax1, xc./Lc, zc./Lc, Vc, colormap = (:turbo, α_heatmap), colorrange=(-0.2, 0.2))
-            if T_contours 
-                contour!(ax1, xc./Lc, zc./Lc, T, levels=0:200:1400, linewidth = 4, color=:white )  
-            end
-            if ph_contours 
-                contour!(ax1, xc_hr./Lc, zc_hr./Lc, group_phases, levels=-1:1:maximum(group_phases), linewidth = 4, color=:white )  
-            end
-            if σ1_axis
-                MoC.arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
-            end  
-            MoC.colsize!(f.layout, 1, MoC.Aspect(1, Lx/Lz))
-            MoC.Colorbar(f[1, 2], hm, label = L"$V$ [s$^{-1}$]", width = 20, labelsize = 25, ticklabelsize = 14 )
-            MoC.colgap!(f.layout, 20)
+            ax1 = MoC.Axis(f[1, 1], title = L"$V$ at $γ$ = %$(γtxt)", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
+            hm = MoC.heatmap!(ax1, xc./Lc, zc./Lc, Vc, colormap = (:amp, α_heatmap), colorrange=(0.0, 0.2))
+            colorbarLabel = L"$V$ [s$^{-1}$]"
         end
 
         if field==:Velocity_x
-            ax1 = MoC.Axis(f[1, 1], title = L"$V_{x}$ at $t$ = %$(tMy) %$(tMytext)", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
-            hm = MoC.heatmap!(ax1, xv./Lc, zc./Lc, Vx[:,2:end-1], colormap = (:turbo, α_heatmap), colorrange=(-0.2, 0.2))
-            if T_contours 
-                contour!(ax1, xc./Lc, zc./Lc, T, levels=0:200:1400, linewidth = 4, color=:white )  
-            end
-            if ph_contours 
-                contour!(ax1, xc_hr./Lc, zc_hr./Lc, group_phases, levels=-1:1:maximum(group_phases), linewidth = 4, color=:white )  
-            end
-            if σ1_axis
-                MoC.arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
-            end  
-            MoC.colsize!(f.layout, 1, MoC.Aspect(1, Lx/Lz))
-            MoC.Colorbar(f[1, 2], hm, label = L"$V_{x}$ [s$^{-1}$]", width = 20, labelsize = 25, ticklabelsize = 14 )
-            MoC.colgap!(f.layout, 20)
+            ax1 = MoC.Axis(f[1, 1], title = L"$V_{x}$ at $γ$ = %$(γtxt)", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
+            hm = MoC.heatmap!(ax1, xv./Lc, zc./Lc, Vx[:,2:end-1], colormap = (:balance, α_heatmap), colorrange=(-0.2, 0.2))
+            colorbarLabel = L"$V_{x}$ [s$^{-1}$]"
         end
 
         if field==:Velocity_z
-            ax1 = MoC.Axis(f[1, 1], title = L"$V_{z}$ at $t$ = %$(tMy) %$(tMytext)", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
-            hm = MoC.heatmap!(ax1, xc./Lc, zv./Lc, Vz[2:end-1,:], colormap = (:turbo, α_heatmap), colorrange=(-0.2, 0.2))
-            if T_contours 
-                contour!(ax1, xc./Lc, zc./Lc, T, levels=0:200:1400, linewidth = 4, color=:white )  
-            end
-            if ph_contours 
-                contour!(ax1, xc_hr./Lc, zc_hr./Lc, group_phases, levels=-1:1:maximum(group_phases), linewidth = 4, color=:white )  
-            end
-            if σ1_axis
-                MoC.arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
-            end  
-            MoC.colsize!(f.layout, 1, MoC.Aspect(1, Lx/Lz))
-            MoC.Colorbar(f[1, 2], hm, label = L"$V_{z}$ [s$^{-1}$]", width = 20, labelsize = 25, ticklabelsize = 14 )
-            MoC.colgap!(f.layout, 20)
+            ax1 = MoC.Axis(f[1, 1], title = L"$V_{z}$ at $γ$ = %$(γtxt)", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
+            hm = MoC.heatmap!(ax1, xc./Lc, zv./Lc, Vz[2:end-1,:], colormap = (:balance, α_heatmap), colorrange=(-0.2, 0.2))
+            colorbarLabel = L"$V_{z}$ [s$^{-1}$]"
         end
 
         if field==:Strain
-            ax1 = MoC.Axis(f[1, 1], title = L"$\varepsilon_{II}$ at $t$ = %$(tMy) %$(tMytext)", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
-            hm = MoC.heatmap!(ax1, xc./Lc, zc./Lc, εII, colormap = (:turbo, α_heatmap))
-            if T_contours 
-                contour!(ax1, xc./Lc, zc./Lc, T, levels=0:200:1400, linewidth = 4, color=:white )  
-            end
-            if ph_contours 
-                contour!(ax1, xc_hr./Lc, zc_hr./Lc, group_phases, levels=-1:1:maximum(group_phases), linewidth = 4, color=:white )  
-            end
-            if σ1_axis
-                MoC.arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
-            end  
-            MoC.colsize!(f.layout, 1, MoC.Aspect(1, Lx/Lz))
-            MoC.Colorbar(f[1, 2], hm, label = L"$\varepsilon_{II}$ []", width = 20, labelsize = 25, ticklabelsize = 14 )
-            MoC.colgap!(f.layout, 20)
+            ax1 = MoC.Axis(f[1, 1], title = L"$\varepsilon_{II}$ at $γ$ = %$(γtxt)", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
+            hm = MoC.heatmap!(ax1, xc./Lc, zc./Lc, εII, colormap = (:amp, α_heatmap), colorrange=(0.0,20.0))
+            colorbarLabel = L"$\varepsilon_{II}$ []"
+        end
+
+        if field==:StrainDev
+            ax1 = MoC.Axis(f[1, 1], title = L"Deviatoric $\varepsilon_{II}$ at $γ$ = %$(γtxt)", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
+            hm = MoC.heatmap!(ax1, xc./Lc, zc./Lc, εII.-γ, colormap = (:balance, α_heatmap), colorrange=(-10.0,10.0))
+            colorbarLabel = L"Deviatoric $\varepsilon_{II}$ []"
+        end
+
+        if field==:Strain_xx
+            ax1 = MoC.Axis(f[1, 1], title = L"${\varepsilon}_\textrm{xxd}$ at $γ$ = %$(γtxt)", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
+            #hm = MoC.heatmap!(ax1, xc./Lc, zc./Lc, log10.(εxx), colormap = (:turbo, α_heatmap), colorrange=(-4.,1.))
+            @show minimum(εxx), maximum(εxx)
+            hm = MoC.heatmap!(ax1, xc./Lc, zc./Lc, εxx, colormap = (:balance, α_heatmap), colorrange=(-10.0,10.0))
+            colorbarLabel = L"${\varepsilon}_\textrm{xxd}$ [-]"
+        end
+
+        if field==:Strain_zz
+            ax1 = MoC.Axis(f[1, 1], title = L"${\varepsilon}_\textrm{zzd}$ at $γ$ = %$(γtxt)", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
+            #hm = MoC.heatmap!(ax1, xc./Lc, zc./Lc, log10.(εzz), colormap = (:turbo, α_heatmap), colorrange=(-4.,1.))
+            @show minimum(εzz), maximum(εzz)
+            hm = MoC.heatmap!(ax1, xc./Lc, zc./Lc, εzz, colormap = (:balance, α_heatmap), colorrange=(-10.0,10.0))
+            colorbarLabel = L"${\varepsilon}_\textrm{zzd}$ [-]"
+        end
+
+        if field==:Strain_xz
+            ax1 = MoC.Axis(f[1, 1], title = L"${\varepsilon}_\textrm{xzd}$ at $γ$ = %$(γtxt)", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
+            #hm = MoC.heatmap!(ax1, xc./Lc, zc./Lc, log10.(εxz), colormap = (:turbo, α_heatmap), colorrange=(-4.,1.))
+            @show minimum(εxz), maximum(εxz)
+            hm = MoC.heatmap!(ax1, xc./Lc, zc./Lc, εxz, colormap = (:balance, α_heatmap), colorrange=(-10.0,10.0))
+            colorbarLabel = L"${\varepsilon}_\textrm{xzd}$ [-]"
+        end
+
+        if field==:FabricStrain_xx
+            ax1 = MoC.Axis(f[1, 1], title = L"${\varepsilon}_\textrm{xxd}$ at $γ$ = %$(γtxt)", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
+            #hm = MoC.heatmap!(ax1, xc./Lc, zc./Lc, log10.(εxxp), colormap = (:turbo, α_heatmap), colorrange=(-4.,1.))
+            @show minimum(εxxp), maximum(εxxp)
+            hm = MoC.heatmap!(ax1, xc./Lc, zc./Lc, εxxp, colormap = (:balance, α_heatmap), colorrange=(-10.0,10.0))
+            colorbarLabel = L"${\varepsilon}_\textrm{xxd}$ [-]"
+        end
+
+        if field==:FabricStrain_zz
+            ax1 = MoC.Axis(f[1, 1], title = L"${\varepsilon}_\textrm{zzd}$ at $γ$ = %$(γtxt)", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
+            #hm = MoC.heatmap!(ax1, xc./Lc, zc./Lc, log10.(εzzp), colormap = (:turbo, α_heatmap), colorrange=(-4.,1.))
+            @show minimum(εzzp), maximum(εzzp)
+            hm = MoC.heatmap!(ax1, xc./Lc, zc./Lc, εzzp, colormap = (:balance, α_heatmap), colorrange=(-10.0,10.0))
+            colorbarLabel = L"${\varepsilon}_\textrm{zzd}$ [-]"
+        end
+
+        if field==:FabricStrain_xz
+            ax1 = MoC.Axis(f[1, 1], title = L"${\varepsilon}_\textrm{xzd}$ at $γ$ = %$(γtxt)", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
+            #hm = MoC.heatmap!(ax1, xc./Lc, zc./Lc, log10.(εxzp), colormap = (:turbo, α_heatmap), colorrange=(-4.,1.))
+            @show minimum(εxzp), maximum(εxzp)
+            hm = MoC.heatmap!(ax1, xc./Lc, zc./Lc, εxzp, colormap = (:balance, α_heatmap), colorrange=(-10.0,10.0))
+            colorbarLabel = L"${\varepsilon}_\textrm{xzd}$ [-]"
+        end
+
+        if field==:Fxx
+            ax1 = MoC.Axis(f[1, 1], title = L"$\textrm{F_{xx}}$ at $γ$ = %$(γtxt)", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
+            #hm = MoC.heatmap!(ax1, xc./Lc, zc./Lc, log10.(Fxx), colormap = (:turbo, α_heatmap), colorrange=(-4.,1.))
+            @show minimum(Fxx), maximum(Fxx)
+            hm = MoC.heatmap!(ax1, xc./Lc, zc./Lc, Fxx, colormap = (:balance, α_heatmap), colorrange=(-10.0,10.0))
+            colorbarLabel = L"$\textrm{F_{xx}}$ [-]"
+        end
+
+        if field==:Fzz
+            ax1 = MoC.Axis(f[1, 1], title = L"$\textrm{F_{zz}}$ at $γ$ = %$(γtxt)", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
+            #hm = MoC.heatmap!(ax1, xc./Lc, zc./Lc, log10.(Fzz), colormap = (:turbo, α_heatmap), colorrange=(-4.,1.))
+            @show minimum(Fzz), maximum(Fzz)
+            hm = MoC.heatmap!(ax1, xc./Lc, zc./Lc, Fzz, colormap = (:balance, α_heatmap), colorrange=(-10.0,10.0))
+            colorbarLabel = L"$\textrm{F_{zz}}$ [-]"
+        end
+
+        if field==:Fxz
+            ax1 = MoC.Axis(f[1, 1], title = L"$\textrm{F_{xz}}$ at $γ$ = %$(γtxt)", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
+            #hm = MoC.heatmap!(ax1, xc./Lc, zc./Lc, log10.(Fxz), colormap = (:turbo, α_heatmap), colorrange=(-4.,1.))
+            @show minimum(Fxz), maximum(Fxz)
+            hm = MoC.heatmap!(ax1, xc./Lc, zc./Lc, Fxz, colormap = (:balance, α_heatmap), colorrange=(-10.0,10.0))
+            colorbarLabel = L"$\textrm{F_{xz}}$ [-]"
+        end
+
+        if field==:Fzx
+            ax1 = MoC.Axis(f[1, 1], title = L"$\textrm{F_{zx}}$ at $γ$ = %$(γtxt)", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
+            #hm = MoC.heatmap!(ax1, xc./Lc, zc./Lc, log10.(Fzx), colormap = (:turbo, α_heatmap), colorrange=(-4.,1.))
+            @show minimum(Fzx), maximum(Fzx)
+            hm = MoC.heatmap!(ax1, xc./Lc, zc./Lc, Fzx, colormap = (:balance, α_heatmap), colorrange=(-10.0,10.0))
+            colorbarLabel = L"$\textrm{F_{zx}}$ [-]"
+        end
+
+        if field==:Fxxp
+            ax1 = MoC.Axis(f[1, 1], title = L"$\textrm{F_{xxp}}$ at $γ$ = %$(γtxt)", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
+            #hm = MoC.heatmap!(ax1, xc./Lc, zc./Lc, log10.(Fxxp), colormap = (:turbo, α_heatmap), colorrange=(-4.,1.))
+            @show minimum(Fxxp), maximum(Fxxp)
+            hm = MoC.heatmap!(ax1, xc./Lc, zc./Lc, Fxxp, colormap = (:balance, α_heatmap), colorrange=(-10.0,10.0))
+            colorbarLabel = L"$\textrm{F_{xxp}}$ [-]"
+        end
+
+        if field==:Fzzp
+            ax1 = MoC.Axis(f[1, 1], title = L"$\textrm{F_{zzp}}$ at $γ$ = %$(γtxt)", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
+            #hm = MoC.heatmap!(ax1, xc./Lc, zc./Lc, log10.(Fzzp), colormap = (:turbo, α_heatmap), colorrange=(-4.,1.))
+            @show minimum(Fzzp), maximum(Fzzp)
+            hm = MoC.heatmap!(ax1, xc./Lc, zc./Lc, Fzzp, colormap = (:balance, α_heatmap), colorrange=(-10.0,10.0))
+            colorbarLabel = L"$\textrm{F_{zzp}}$ [-]"
+        end
+
+        if field==:Fxzp
+            ax1 = MoC.Axis(f[1, 1], title = L"$\textrm{F_{xzp}}$ at $γ$ = %$(γtxt)", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
+            #hm = MoC.heatmap!(ax1, xc./Lc, zc./Lc, log10.(Fzxp), colormap = (:turbo, α_heatmap), colorrange=(-4.,1.))
+            @show minimum(Fxzp), maximum(Fxzp)
+            hm = MoC.heatmap!(ax1, xc./Lc, zc./Lc, Fxzp, colormap = (:balance, α_heatmap), colorrange=(-10.0,10.0))
+            colorbarLabel = L"$\textrm{F_{xzp}}$ [-]"
+        end
+
+        if field==:Fzxp
+            ax1 = MoC.Axis(f[1, 1], title = L"$\textrm{F_{zxp}}$ at $γ$ = %$(γtxt)", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
+            #hm = MoC.heatmap!(ax1, xc./Lc, zc./Lc, log10.(Fzxp), colormap = (:turbo, α_heatmap), colorrange=(-4.,1.))
+            @show minimum(Fzxp), maximum(Fzxp)
+            hm = MoC.heatmap!(ax1, xc./Lc, zc./Lc, Fzxp, colormap = (:balance, α_heatmap), colorrange=(-10.0,10.0))
+            colorbarLabel = L"$\textrm{F_{zxp}}$ [-]"
+        end
+
+        if field==:FxzpDev
+            ax1 = MoC.Axis(f[1, 1], title = L"Deviatoric $γ$ along fabric at bkgd $γ$ = %$(γtxt)", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
+            @show minimum(Fxzp), maximum(Fxzp)
+            hm = MoC.heatmap!(ax1, xc./Lc, zc./Lc, Fxzp.-γ, colormap = (:balance, α_heatmap), colorrange=(-10.0,10.0))
+            colorbarLabel = L"Deviatoric $\textrm{F_{xzp}}$ [-]"
         end
 
         if field==:AnisoFactor
-            ax1 = MoC.Axis(f[1, 1], title = L"Anisotropy factor at $t$ = %$(tMy) %$(tMytext)", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
+            ax1 = MoC.Axis(f[1, 1], title = L"Anisotropy factor at $γ$ = %$(γtxt)", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
             hm = MoC.heatmap!(ax1, xc./Lc, zc./Lc, log10.(AniFac), colormap = (:turbo, α_heatmap), colorrange=(0, 3))
-            if T_contours 
-                contour!(ax1, xc./Lc, zc./Lc, T, levels=0:200:1400, linewidth = 4, color=:white )  
-            end
-            if ph_contours 
-                contour!(ax1, xc_hr./Lc, zc_hr./Lc, group_phases, levels=-1:1:maximum(group_phases), linewidth = 4, color=:white )  
-            end
-            if σ1_axis
-                MoC.arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
-            end  
-            MoC.colsize!(f.layout, 1, MoC.Aspect(1, Lx/Lz))
-            MoC.Colorbar(f[1, 2], hm, label =L"$log_{10}\left(\text{Anisotropy factor}\right)$", width = 20, labelsize = 40, ticklabelsize = 40 )
-            MoC.colgap!(f.layout, 20)
+            colorbarLabel = L"$log_{10}\left(\text{Anisotropy factor}\right)$"
         end
 
         if field==:GrainSize
-            ax1 = MoC.Axis(f[1, 1], title = L"$d$ at $t$ = %$(tMy) %$(tMytext)", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
+            ax1 = MoC.Axis(f[1, 1], title = L"$d$ at $γ$ = %$(γtxt)", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
             hm = MoC.heatmap!(ax1, xc./Lc, zc./Lc, log10.(d.*1e6), colormap = (:turbo, α_heatmap), colorrange=(1, 3))
-            if T_contours 
-                contour!(ax1, xc./Lc, zc./Lc, T, levels=0:200:1400, linewidth = 4, color=:white )  
-            end
-            if ph_contours 
-                contour!(ax1, xc_hr./Lc, zc_hr./Lc, group_phases, levels=-1:1:maximum(group_phases), linewidth = 4, color=:white )  
-            end
-            if σ1_axis
-                MoC.arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
-            end  
+            colorbarLabel = "d"
             xminz, xmaxz = -0.4, 0.4
             zminz, zmaxz = -0.17, 0.17
             Lx = xmaxz - xminz
             Lz = zmaxz - zminz
             xlims!(ax1, -0.4, 0.4)
             ylims!(ax1, -0.17, 0.17)
-            MoC.colsize!(f.layout, 1, MoC.Aspect(1, Lx/Lz))
-            MoC.Colorbar(f[1, 2], hm, label = "d", width = 20, labelsize = 25, ticklabelsize = 14 )
-            MoC.colgap!(f.layout, 20)
         end
 
         if field==:Topography
-            ax1 = MoC.Axis(f[1, 1], title = L"Topography at $t$ = %$(tMy) %$(tMytext)", xlabel = L"$x$ [m]", ylabel = L"$h$ [km]")
+            ax1 = MoC.Axis(f[1, 1], title = L"Topography at $γ$ = %$(γtxt)", xlabel = L"$x$ [m]", ylabel = L"$h$ [km]")
             lines!(ax1, xv./Lc, height./Lc)
             scatter!(ax1, x_mark./Lc, z_mark./Lc)
 
@@ -731,7 +696,7 @@ function main(path, file_start, file_end_max,fac, xshift, file_step)
         end
 
         if field==:ViscosityReduction
-            ax1 = MoC.Axis(f[1, 1], title = L"Reduction of effective shear viscosity at $t$ = %$(tMy) %$(tMytext)", xlabel = L"shear deformation γ", ylabel = L"η_{s eff} / η_{s init}")
+            ax1 = MoC.Axis(f[1, 1], title = L"Reduction of effective shear viscosity at $γ$ = %$(γtxt)", xlabel = L"shear deformation γ", ylabel = L"η_{s eff} / η_{s init}")
             lines!(ax1, xv./Lc, height./Lc)
             scatter!(ax1, x_mark./Lc, z_mark./Lc)
 
@@ -749,6 +714,18 @@ function main(path, file_start, file_end_max,fac, xshift, file_step)
             @show maximum(Vx_mark)
         end
         
+        if ph_contours 
+            contour!(ax1, xc_hr./Lc, zc_hr./Lc, group_phases, levels=-1:1:maximum(group_phases), linewidth = 4, color=:black )  
+        end
+        if T_contours 
+            contour!(ax1, xc./Lc, zc./Lc, T, levels=0:200:1400, linewidth = 4, color=:white)  
+        end
+        if σ1_axis
+            MoC.arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5)
+        end  
+        MoC.colsize!(f.layout, 1, MoC.Aspect(1, Lx/Lz))
+        MoC.Colorbar(f[1, 2], hm, label =  colorbarLabel, width = 20, labelsize = 25, ticklabelsize = 14 )
+        MoC.colgap!(f.layout, 20)
         if velocity 
             #qv,qh = 10,10
             #MoC.arrows!(ax1, xc[1:qh:end]./Lc, zc[1:qv:end]./Lc, Vxc[1:qh:end,1:qv:end], Vzc[1:qh:end,1:qv:end], arrowsize = Δ*1000, lengthscale=Δ*20)
@@ -873,7 +850,7 @@ end
 #ffmpeg -framerate 30 -pattern_type glob -i '*.png' -c:v libx264 -pix_fmt yuv420p out.mp4
 
 # Set the path to your files
-localTestOnly = true
+localTestOnly = false
 aniSetupsOnly = true
 file_step = 10
 
@@ -885,6 +862,7 @@ if aniSetupsOnly == false
     main("/users/whalter1/work/aniso_fix/B19_1500/", 0, 100000, 6, 0.5, file_step)
     main("/users/whalter1/work/aniso_fix/B19_1000/", 0, 100000, 4, 0.5, file_step)
     main("/users/whalter1/work/aniso_fix/B6_2000/", 0, 100000, 8, 0.5, file_step)
+    main("/users/whalter1/work/aniso_fix/B5_1000/", 0, 100000, 4, 0.5, file_step)
     main("/users/whalter1/work/aniso_fix/B6_1500/", 0, 100000, 6, 0.5, file_step)
     main("/users/whalter1/work/aniso_fix/B6_1000/", 0, 100000, 4, 0.5, file_step)
     main("/users/whalter1/work/aniso_fix/B7_1000/", 0, 100000, 4, 0.5, file_step)
@@ -914,55 +892,62 @@ if aniSetupsOnly == false
     main("/users/whalter1/work/aniso_fix/B3_750/" , 0, 100000, 3, 0.5, file_step)
     main("/users/whalter1/work/aniso_fix/B3_500/" , 0, 100000, 2, 0.5, file_step)
     main("/users/whalter1/work/aniso_fix/B4_1500/", 0, 100000, 6, 0.5, file_step)
-    main("/users/whalter1/work/aniso_fix/B5_1000/", 0, 100000, 4, 0.5, file_step)
 end
 
-### benchmark setups Dabrowski 2012
-#main("/users/whalter1/work/aniso_fix/D1_2000/", 2790, 100000, 8, 0.0, file_step)
-#main("/users/whalter1/work/aniso_fix/D1_1000/", 2790, 100000, 4, 0.0, file_step)
-#main("/users/whalter1/work/aniso_fix/D1_500/" , 0   , 100000, 2, 0.0, file_step)
+## benchmark setups Dabrowski 2012
+main("/users/whalter1/work/aniso_fix/D1_500_XL/" , 0   , 100000, 2, 0.0, file_step)
+main("/users/whalter1/work/aniso_fix/D1_500_XL_March/" , 0   , 100000, 2, 0.0, file_step)
+
+main("/users/whalter1/work/aniso_fix/D1_2000/"   , 2790, 100000, 8, 0.0, file_step)
+main("/users/whalter1/work/aniso_fix/D1_1000/"   , 2790, 100000, 4, 0.0, file_step)
+main("/users/whalter1/work/aniso_fix/D1_1000_L/" , 2790, 100000, 4, 0.0, file_step)
+main("/users/whalter1/work/aniso_fix/D1_1000_XL/", 2790, 100000, 4, 0.0, file_step)
+main("/users/whalter1/work/aniso_fix/D1_500/"    , 0   , 100000, 2, 0.0, file_step)
+main("/users/whalter1/work/aniso_fix/D1_500_L/"  , 0   , 100000, 2, 0.0, file_step)
 
 ## all aniso setups
 
-main("/users/whalter1/work/aniso_fix/C02_1000/", 2790, 100000, 4, 0.5, file_step)
-main("/users/whalter1/work/aniso_fix/C03_1000/", 2790, 100000, 4, 0.5, file_step)
-main("/users/whalter1/work/aniso_fix/C04_1000/", 2790, 100000, 4, 0.5, file_step)
-main("/users/whalter1/work/aniso_fix/C05_1000/", 2790, 100000, 4, 0.5, file_step)
+#main("/users/whalter1/work/aniso_fix/C02_1000/", 2790, 100000, 4, 0.5, file_step)
+#main("/users/whalter1/work/aniso_fix/C03_1000/", 2790, 100000, 4, 0.5, file_step)
+#main("/users/whalter1/work/aniso_fix/C04_1000/", 2790, 100000, 4, 0.5, file_step)
+#main("/users/whalter1/work/aniso_fix/C05_1000/", 2790, 100000, 4, 0.5, file_step)
+#
+#main("/users/whalter1/work/aniso_fix/C12_1000/", 2790, 100000, 4, 0.5, file_step)
+#main("/users/whalter1/work/aniso_fix/C13_1000/", 2790, 100000, 4, 0.5, file_step)
+#main("/users/whalter1/work/aniso_fix/C14_1000/", 2790, 100000, 4, 0.5, file_step)
+#main("/users/whalter1/work/aniso_fix/C15_1000/", 2790, 100000, 4, 0.5, file_step)
+#
+#main("/users/whalter1/work/aniso_fix/C2_1000/" , 2790, 100000, 4, 0.5, file_step)
+#main("/users/whalter1/work/aniso_fix/C3_1000/" , 2790, 100000, 4, 0.5, file_step)
+#main("/users/whalter1/work/aniso_fix/C4_1000/" , 2790, 100000, 4, 0.5, file_step)
+#main("/users/whalter1/work/aniso_fix/C5_1000/" , 2790, 100000, 4, 0.5, file_step)
+#
+#main("/users/whalter1/work/aniso_fix/D2_1000/" , 2790, 100000, 4, 0.5, file_step)
+#main("/users/whalter1/work/aniso_fix/D3_1000/" , 2790, 100000, 4, 0.5, file_step)
+#main("/users/whalter1/work/aniso_fix/D4_1000/" , 2790, 100000, 4, 0.5, file_step)
+#main("/users/whalter1/work/aniso_fix/D5_1000/" , 2790, 100000, 4, 0.5, file_step)
+#
+#main("/users/whalter1/work/aniso_fix/D02_1000/", 2790, 100000, 4, 0.5, file_step)
+#main("/users/whalter1/work/aniso_fix/D03_1000/", 2790, 100000, 4, 0.5, file_step)
+#main("/users/whalter1/work/aniso_fix/D04_1000/", 2790, 100000, 4, 0.5, file_step)
+#main("/users/whalter1/work/aniso_fix/D05_1000/", 2790, 100000, 4, 0.5, file_step)
+#
+#main("/users/whalter1/work/aniso_fix/D12_1000/", 2790, 100000, 4, 0.5, file_step)
+#main("/users/whalter1/work/aniso_fix/D13_1000/", 2790, 100000, 4, 0.5, file_step)
+#main("/users/whalter1/work/aniso_fix/D14_1000/", 2790, 100000, 4, 0.5, file_step)
+#main("/users/whalter1/work/aniso_fix/D15_1000/", 2790, 100000, 4, 0.5, file_step)
+#
+#main("/users/whalter1/work/aniso_fix/A02_1000/", 2790, 100000, 4, 0.5, file_step)
+#main("/users/whalter1/work/aniso_fix/A03_1000/", 2790, 100000, 4, 0.5, file_step)
+#main("/users/whalter1/work/aniso_fix/A04_1000/", 2790, 100000, 4, 0.5, file_step)
+#main("/users/whalter1/work/aniso_fix/A05_1000/", 2790, 100000, 4, 0.5, file_step)
+#
+#main("/users/whalter1/work/aniso_fix/A12_1000/", 2790, 100000, 4, 0.5, file_step)
+#main("/users/whalter1/work/aniso_fix/A13_1000/", 2790, 100000, 4, 0.5, file_step)
+#main("/users/whalter1/work/aniso_fix/A14_1000/", 2790, 100000, 4, 0.5, file_step)
+#main("/users/whalter1/work/aniso_fix/A15_1000/", 2790, 100000, 4, 0.5, file_step)
 
-main("/users/whalter1/work/aniso_fix/C12_1000/", 2790, 100000, 4, 0.5, file_step)
-main("/users/whalter1/work/aniso_fix/C13_1000/", 2790, 100000, 4, 0.5, file_step)
-main("/users/whalter1/work/aniso_fix/C14_1000/", 2790, 100000, 4, 0.5, file_step)
-main("/users/whalter1/work/aniso_fix/C15_1000/", 2790, 100000, 4, 0.5, file_step)
-
-main("/users/whalter1/work/aniso_fix/C2_1000/" , 2790, 100000, 4, 0.5, file_step)
-main("/users/whalter1/work/aniso_fix/C3_1000/" , 2790, 100000, 4, 0.5, file_step)
-main("/users/whalter1/work/aniso_fix/C4_1000/" , 2790, 100000, 4, 0.5, file_step)
-main("/users/whalter1/work/aniso_fix/C5_1000/" , 2790, 100000, 4, 0.5, file_step)
-
-main("/users/whalter1/work/aniso_fix/D2_1000/" , 2790, 100000, 4, 0.5, file_step)
-main("/users/whalter1/work/aniso_fix/D3_1000/" , 2790, 100000, 4, 0.5, file_step)
-main("/users/whalter1/work/aniso_fix/D4_1000/" , 2790, 100000, 4, 0.5, file_step)
-main("/users/whalter1/work/aniso_fix/D5_1000/" , 2790, 100000, 4, 0.5, file_step)
-
-main("/users/whalter1/work/aniso_fix/D02_1000/", 2790, 100000, 4, 0.5, file_step)
-main("/users/whalter1/work/aniso_fix/D03_1000/", 2790, 100000, 4, 0.5, file_step)
-main("/users/whalter1/work/aniso_fix/D04_1000/", 2790, 100000, 4, 0.5, file_step)
-main("/users/whalter1/work/aniso_fix/D05_1000/", 2790, 100000, 4, 0.5, file_step)
-
-main("/users/whalter1/work/aniso_fix/D12_1000/", 2790, 100000, 4, 0.5, file_step)
-main("/users/whalter1/work/aniso_fix/D13_1000/", 2790, 100000, 4, 0.5, file_step)
-main("/users/whalter1/work/aniso_fix/D14_1000/", 2790, 100000, 4, 0.5, file_step)
-main("/users/whalter1/work/aniso_fix/D15_1000/", 2790, 100000, 4, 0.5, file_step)
-
-main("/users/whalter1/work/aniso_fix/A02_1000/", 2790, 100000, 4, 0.5, file_step)
-main("/users/whalter1/work/aniso_fix/A03_1000/", 2790, 100000, 4, 0.5, file_step)
-main("/users/whalter1/work/aniso_fix/A04_1000/", 2790, 100000, 4, 0.5, file_step)
-main("/users/whalter1/work/aniso_fix/A05_1000/", 2790, 100000, 4, 0.5, file_step)
-
-main("/users/whalter1/work/aniso_fix/A12_1000/", 2790, 100000, 4, 0.5, file_step)
-main("/users/whalter1/work/aniso_fix/A13_1000/", 2790, 100000, 4, 0.5, file_step)
-main("/users/whalter1/work/aniso_fix/A14_1000/", 2790, 100000, 4, 0.5, file_step)
-main("/users/whalter1/work/aniso_fix/A15_1000/", 2790, 100000, 4, 0.5, file_step)
+#########################################################################################
 
 #main("/users/whalter1/work/aniso_fix/A02_500/" , 0   , 100000, 2, 0.5, file_step)
 #main("/users/whalter1/work/aniso_fix/A03_500/" , 0   , 100000, 2, 0.5, file_step)

@@ -26,7 +26,7 @@ function main(path, file_start, file_end_max,fac, xshift, file_step)
     #field = :Stress_xx
     #field = :Stress_zz
     #field = :Stress_xz
-    field = :StrainRate
+    #field = :StrainRate
     #field = :PlasticStrainrate
     #field = :Pressure
     #field = :Temperature
@@ -48,7 +48,7 @@ function main(path, file_start, file_end_max,fac, xshift, file_step)
     #field = :Fzzp
     #field = :Fxzp # (can be used for aniso factor evolv)
     #field = :Fzxp
-    #field = :AnisoFactor # anisotropy factor
+    field = :AnisoFactor # anisotropy factor
     #field = :GrainSize # doesn't function properly yet
     #field = :Topography # doesn't function properly yet
     #field = :ViscosityReduction
@@ -75,6 +75,7 @@ function main(path, file_start, file_end_max,fac, xshift, file_step)
     movieName   = "$(path)/_$(field)/$(field)"  # Name of the movie
     #xshift      = 0.5       # periodically shifts all values to the right, fraction 0.0-1.0
     TimeSeries  = true
+    phaseProportions = true
 
     # File numbers
     #file_step  = 10
@@ -232,6 +233,16 @@ function main(path, file_start, file_end_max,fac, xshift, file_step)
             ε̇zz_mean_time   = Float64.(ExtractData( filename, "/TimeSeries/ezzd_mean_time")); 
             ε̇xz_mean_time   = Float64.(ExtractData( filename, "/TimeSeries/exz_mean_time")); 
             ε̇II_mean_time   = Float64.(ExtractData( filename, "/TimeSeries/Eii_mean_time")); 
+        end
+
+        if phaseProportions
+            u=unique(ph)
+            D=Dict([(i,count(x->x==i,ph)) for i in u])
+            dtot = sum(values(D))
+            for i in u
+                println("count for ph = $(i) is $(D[i]) \t $(D[i]/dtot*100) %")
+            end
+            println("count for ph total is $(dtot) \t $(dtot/dtot*100) %")
         end
 
         #####################################
@@ -884,10 +895,10 @@ if aniSetupsOnly == false
     main("/users/whalter1/work/aniso_fix/B5_1000/", 0, 100000, 4, 0.5, file_step)
 end
 
-### benchmark setups Dabrowski 2012
-#main("/users/whalter1/work/aniso_fix/D1_2000/", 2790, 100000, 8, 0.0, file_step)
-#main("/users/whalter1/work/aniso_fix/D1_1000/", 2790, 100000, 4, 0.0, file_step)
-#main("/users/whalter1/work/aniso_fix/D1_500/" , 0   , 100000, 2, 0.0, file_step)
+## benchmark setups Dabrowski 2012
+main("/users/whalter1/work/aniso_fix/D1_2000/", 2790, 100000, 8, 0.0, file_step)
+main("/users/whalter1/work/aniso_fix/D1_1000/", 2790, 100000, 4, 0.0, file_step)
+main("/users/whalter1/work/aniso_fix/D1_500/" , 0   , 100000, 2, 0.0, file_step)
 
 ## all aniso setups
 
