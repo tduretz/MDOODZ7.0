@@ -19,21 +19,21 @@
 // Structure surface contains free surface data
 typedef struct {
   double *a, *b, *height, *vx, *vz, *a0, *b0, *height0;
+  double *height_finer_c;
   int    *VertInd;
 } surface;
 
 // markers is the particles structure
 typedef struct {
   int     Nx_part, Nz_part, Nb_part, Nb_part_max, min_part_cell, Nb_part_ini;
-  double *x, *z, *Vx, *Vz, *P, *sxxd, *szzd, *sxz, *progress, *T, *d, *phi, *X,
-          *syy, *dsyy;
+  double *x, *z, *Vx, *Vz, *P, *sxxd, *szzd, *sxz, *progress, *T, *d, *phi, *X;
   double *strain, *strain_el, *strain_pl, *strain_pwl, *strain_exp, *strain_lin,
           *strain_gbs;
   int    *phase, *generation, *dual;
   int    *intag;
   double *Fxx, *Fxz, *Fzx, *Fzz, *nx, *nz;
   double *T0, *P0, *x0, *z0, *Tmax, *Pmax, *divth;
-  double *dsxxd, *dszzd, *dsxz;
+  // double *dsxxd, *dszzd, *dsxz, *syy, *dsyy;
   double *noise, *rho;
   double *aniso_angle;
 } markers;
@@ -410,7 +410,7 @@ void            SetTopoChainHorizontalCoords(surface *, markers *, params, grid,
 void            AllocateMarkerChain(surface *, markers *, params);
 void            FreeMarkerChain(surface *, markers *);
 void            CellFlagging(grid *, params, surface, scale);
-void            ProjectTopography(surface *, markers *, params, grid, scale, double *, int);
+void            InterpTopoPart2Grid(surface *, markers *, params, grid, scale, double *, int);
 void            MarkerChainPolyFit(surface *, markers *, params, grid);
 void            CleanUpSurfaceParticles(markers *, grid *, surface, scale);
 void            RemeshMarkerChain(markers *, surface *, params, scale, grid *, int);
