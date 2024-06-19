@@ -35,7 +35,7 @@ double SetSurfaceZCoord(MdoodzInput *instance, double x_coord) {
     double TopoLevel           = -0.0e3 / instance->scaling.L;
     const double seaLevel      = 0.0e3 / instance->scaling.L;
     const double ht_iso        =  4.8e3 / instance->scaling.L;
-    const double weakZoneWidth = 10e3/instance->scaling.L;
+    const double weakZoneWidth = 5.0e3/instance->scaling.L;
     const double x_ext_start   =  0.0e3 / instance->scaling.L;
     const double x_ext_end     =  100.0e3 / instance->scaling.L;
     const double marginWidth   =  x_ext_end - x_ext_start;
@@ -57,7 +57,7 @@ int SetPhase(MdoodzInput *instance, Coordinates coordinates) {
 
     // Define parameters and initialise phases according to coordinates
     const double lithosphereThickness = instance->model.user1 / instance->scaling.L;
-    const double weakZoneWidth        =  10.0e3/instance->scaling.L;
+    const double weakZoneWidth        =  5.0e3/instance->scaling.L;
           double mohoLevel            = -instance->model.user0 / instance->scaling.L;
     const double seaLevel             = 0.0e3 / instance->scaling.L;
     const double ht_iso               = 4.8e3 / instance->scaling.L;
@@ -87,8 +87,14 @@ int SetPhase(MdoodzInput *instance, Coordinates coordinates) {
         phase = 2;
     }
 
-    // Set weak zone - first the horizontal part, then along the plate interface
-    if (coordinates.z >= -5.0e5)
+    // Set oceanic crust
+    if (coordinates.z > -ocCrustThickness && coordinates.x < -weakZoneWidth - coordinates.z*subductionAngle)
+    {
+        phase = 5;
+    }
+
+    // Set weak zone - first in the horizontal part, then along the plate interface
+    if (coordinates.z >= -weakZoneWidth)
     {
         phase = 3;
     }
@@ -96,12 +102,6 @@ int SetPhase(MdoodzInput *instance, Coordinates coordinates) {
     if (coordinates.z > weakZoneDepth && coordinates.x > -weakZoneWidth - coordinates.z*subductionAngle && coordinates.x < weakZoneWidth - coordinates.z*subductionAngle)
     {
         phase = 3;
-    }
-
-    // Set oceanic crust
-    if (coordinates.z > -ocCrustThickness && coordinates.x < -weakZoneWidth - coordinates.z*subductionAngle)
-    {
-        phase = 5;
     }
 
     // Set continental crust
@@ -328,7 +328,7 @@ int main(int nargs, char *args[]) {
   // Input file name
   char *input_file;
   if ( nargs < 2 ) {
-    asprintf(&input_file, "ThanushikaSubduction.txt"); // Default
+    asprintf(&input_file, "SubductionMelting.txt"); // Default
   }
   else {
     printf("dodo %s\n", args[1]);
