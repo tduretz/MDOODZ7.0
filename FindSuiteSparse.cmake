@@ -177,7 +177,7 @@ macro(SuiteSparse_FIND_COMPONENTS )
 						/usr/local/include/suitesparse
 						/usr/include/${suitesparseComp}
 						/usr/local/include/${suitesparseComp}
-						/opt/homebrew/Cellar/suite-sparse/7.6.1/include/suitesparse
+						$ENV{brew_SuiteSparse_path}/include/suitesparse
 						${SuiteSparse_DIR}/include
 						${SuiteSparse_DIR}/include/suitesparse
 						${SuiteSparse_DIR}/suitesparse/include

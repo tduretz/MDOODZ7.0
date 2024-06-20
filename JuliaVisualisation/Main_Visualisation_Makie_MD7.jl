@@ -9,29 +9,18 @@ My = 1e6*365*24*3600
 function main()
 
     # Set the path to your files
-    # path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/NonLinearPureshearAnisotropic/"
-    # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/NR00/"
-    # path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/qcoe_ref/"
-    # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/qcoe_x100/"
-    # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/qcoe_chk/"
-    # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/1_NR07/"
-    #path = "/Users/lcandiot/Developer/MDOODZ7.0/RUNS/ThanushikaSubduction/test_steepSubd/"
-    # path ="/home/thanushika/software/MDOODZ7.0/cmake-exec/ThanushikaSubduction/"
-    # path = "/Users/lcandiot/Developer/MDOODZ7.0/cmake-exec/ThanushikaSubduction/"
-    #path ="/home/thanushika/software/MDOODZ7.0/cmake-exec/ThanushikaSubduction/O100/"
-    path = "/home/thanushika/software/Results/Phase_Diagram_Model/Results_D15Long_correctedcanbedele/"
-    # path ="/home/thanushika/software/Results/Trial2/Results_Density_OC2.97/"
+    path ="/Users/lcandiot/Developer/MDOODZ7.0/cmake-exec/ThanushikaSubduction/"
     
     # File numbers
     file_start = 0
     file_step  = 500
-    file_end   = 3000
+    file_end   = 0
     
     
     # Select field to visualise
-    #field = :Phases
+    field = :Phases
     #field = :Density
-     field = :Viscosity 
+    #  field = :Viscosity 
     # field = :PlasticStrainrate
     #field = :Stress
     # field = :StrainRate
@@ -48,7 +37,7 @@ function main()
     # Switches
     printfig    = true  # print figures to disk
     ph_contours = false  # add phase contours
-    T_contours  = true  # add temperature contours
+    T_contours  = false  # add temperature contours
     fabric      = false  # add fabric quiver (normal to director)
     topo        = false
     α_heatmap   = 1.0 #0.85   # transparency of heatmap 
