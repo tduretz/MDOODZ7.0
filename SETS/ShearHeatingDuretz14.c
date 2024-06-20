@@ -39,7 +39,7 @@ int main(int nargs, char *args[]) {
   // Input file name
   char *input_file;
   if ( nargs < 2 ) {
-    asprintf(&input_file, "AnisoViscTest_HomoRandomAngle.txt"); // Default
+    asprintf(&input_file, "ShearHeatingDuretz14.txt"); // Default
   }
   else {
     asprintf(&input_file, "%s", args[1]);     // Custom

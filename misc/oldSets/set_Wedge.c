@@ -312,7 +312,7 @@ void SetBCs( grid *mesh, params *model, scale scaling, markers* particles, mat_p
                     else {
                         if ((mesh->BCt.type[c] == -1 || mesh->BCt.type[c] == 1 || mesh->BCt.type[c] == 0) && mesh->BCt.type[c+NCX] == 30) {
                             mesh->BCt.type[c] = 1;
-                            mesh->BCt.val[c]  = (Ttop*mesh->rho_n[c] * mesh->Cv[c]) / (mesh->rho_n[c] * mesh->Cv[c]);
+                            mesh->BCt.val[c]  = (Ttop*mesh->rho_n[c] * mesh->Cp[c]) / (mesh->rho_n[c] * mesh->Cp[c]);
                         }
                     }
                     

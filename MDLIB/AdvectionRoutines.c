@@ -568,6 +568,8 @@ void EvaluateCourantCriterion( double* Vx, double* Vz, params *model, scale scal
     double Vinc        = model->surf_Vinc, dt_surf = 0.0;
     double min_tau_kin = model->user1/scaling.t;
     double dt_reac     = min_tau_kin/model->user2;
+    double dTmax       = 0.0, dT, dt_therm = model->dt_max, max_dT_allowed = 5.0/scaling.T;
+    const int Ncx      = model->Nx-1;
 
     for (k=0; k<model->Nx; k++) {
         for (l=0; l<model->Nz+1; l++) {
@@ -584,6 +586,18 @@ void EvaluateCourantCriterion( double* Vx, double* Vz, params *model, scale scal
             minVz = MINV(minVz, (Vz[c]));
         }
     }
+
+    if (model->thermal==1) {
+        for (k=0; k<model->Nx+1; k++) {
+            for (l=0; l<model->Nz; l++) {
+                c  = k   + l*Ncx;
+                dT = mesh->T[c] - mesh->T0_n[c];
+                if (fabs(dT) > dTmax) dTmax = dT;
+            }
+        }
+        dt_therm = max_dT_allowed/dTmax*model->dt;
+    }
+
     if (quiet==0) printf("Min Vxm = %2.2e m/s / Max Vxm = %2.2e m/s\n", minVx * scaling.V, maxVx * scaling.V);
     if (quiet==0) printf("Min Vzm = %2.2e m/s / Max Vzm = %2.2e m/s\n", minVz * scaling.V, maxVz * scaling.V);
 
@@ -610,7 +624,7 @@ void EvaluateCourantCriterion( double* Vx, double* Vz, params *model, scale scal
         
         // Surface dt
         if ( model->surface_processes>0 ) {
-            dt_surf = C * dmin / fabs(Vinc*10) ;
+            dt_surf = C * dmin / fabs(Vinc) ;
             printf("Courant number = %2.2e --- dt_surf = %2.2e\n", C, dt_surf*scaling.t);
         }
 
@@ -654,7 +668,12 @@ void EvaluateCourantCriterion( double* Vx, double* Vz, params *model, scale scal
              model->dt = model->dt_min;
          }
 
-        if (quiet==0) printf("Current dt = %2.2e s / Courant dt = %2.2e s\n", model->dt * scaling.t, dtc * scaling.t );
+        // if ( model->dt>dt_therm ) {
+        //      printf("Setting dt to dt_therm\n");
+        //      model->dt = dt_therm;
+        // }
+
+        if (quiet==0) printf("Current dt = %2.2e s / Courant dt = %2.2e s, dt_therm = %2.2e\n", model->dt * scaling.t, dtc * scaling.t, dt_therm * scaling.t );
     }
     else {
         model->dt = model->dt_start;

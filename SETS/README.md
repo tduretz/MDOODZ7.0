@@ -66,11 +66,15 @@
 - `polar`: Activate polar-Cartesian coordinates. Default: 0
 - `finite_strain`: Integrates finite strain and saves deformation gradient tensor. Default: 0
 - `compressible`: Turns on compressible formulation. Default: 0
+- `density_variations`: Turns on volume change due to reaction if 1. Default: 0
+- `melting`: Activates melting. Default: 0
 - `out_of_plane`: Out-of-plane strain. Default: 0
+- `balance_boundaries`: Automatic balancing of mass flux through boundaries. Default: 0
+- `zero_mean_topo`: ensures 0.0 mean topography. Default: 0
 
 ## Numerics: linear solver
 - `lin_solver`: 1: Powell-Hestenes, 2: Powell-Hestenes augmented (killer solver). Default: 2 
-- `model.penalty`: Penalty factor. Default: 1.0e3
+- `penalty`: Penalty factor. Default: 1.0e3
 - `auto_penalty`: Activates automatic penalty factor computation. Default: 0.0
 - `diag_scaling`: Activates diagonal scaling. Default: 1
 - `preconditioner`: Preconditoner type for Newton.iterations, 0: Picard preconditionner. Default: 0
