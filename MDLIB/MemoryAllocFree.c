@@ -481,7 +481,7 @@ grid GridAlloc(params *model) {
   mesh.strain_s       = DoodzCalloc((Nx) * (Nz), sizeof(double));
 
   // Energy equation
-  mesh.Cv             = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  mesh.Cp             = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
   mesh.kx             = DoodzCalloc(Nx * NzVx, sizeof(double));
   mesh.kz             = DoodzCalloc(NxVz * Nz, sizeof(double));
   mesh.kc_x           = DoodzCalloc(Nx * NzVx, sizeof(double));
@@ -553,6 +553,7 @@ grid GridAlloc(params *model) {
 
   mesh.T              = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
   mesh.T0_n           = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  mesh.divth_n        = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
   mesh.divth0_n       = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
   mesh.eII_el         = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
   mesh.comp_cells     = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
@@ -783,7 +784,7 @@ void GridFree(grid *mesh, params *model) {
     DoodzFree(mesh->strain_n);
 
     // Energy equation
-    DoodzFree(mesh->Cv);
+    DoodzFree(mesh->Cp);
     DoodzFree(mesh->kx);
     DoodzFree(mesh->kz);
     DoodzFree(mesh->kc_x);
@@ -877,6 +878,7 @@ void GridFree(grid *mesh, params *model) {
 
     DoodzFree(mesh->T);
     DoodzFree(mesh->T0_n);
+    DoodzFree(mesh->divth_n);
     DoodzFree(mesh->divth0_n);
     DoodzFree(mesh->eII_el);
     

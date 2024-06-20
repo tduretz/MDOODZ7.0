@@ -160,7 +160,7 @@ bet  = 1e-11   / compressibility
 
 G   = 1e10    / shear modulus
 
-Cv   = 1050    / heat capacity
+Cp   = 1050    / heat capacity
 
 k    = 2       / thermal conductivity
 
@@ -190,7 +190,7 @@ rho  = 2800.00 / Crust - Maryland Diabase
 
 G   = 1.0e10
 
-Cv   = 1050.0
+Cp   = 1050.0
 
 k    = 2.5
 
@@ -230,7 +230,7 @@ bet  = 1.5e-11
 
 G   = 1.0e10
 
-Cv   = 1050.0
+Cp   = 1050.0
 
 k    = 3.0
 
@@ -266,7 +266,7 @@ bet  = 1.5e-11
 
 G   = 1.0e10
 
-Cv   = 1050.0
+Cp   = 1050.0
 
 k    = 3.0
 
@@ -298,7 +298,7 @@ rho  = 2300.00 / sediments
 
 G   = 1e10
 
-Cv   = 1050
+Cp   = 1050
 
 k    = 2
 
@@ -343,7 +343,7 @@ rho  = 2300.00 / sediments
 
 G   = 1e10
 
-Cv   = 1050
+Cp   = 1050
 
 k    = 2   
 
@@ -393,7 +393,7 @@ bet  = 1.5e-11
 
 G   = 1.0e10
 
-Cv   = 1050.0
+Cp   = 1050.0
 
 k    = 30.0
 
@@ -423,7 +423,7 @@ rho  = 2800.00 / Crust - Dry Quartz
 
 G   = 1.0e10
 
-Cv   = 1050.0
+Cp   = 1050.0
 
 k    = 2.5
 
@@ -457,7 +457,7 @@ rho  = 2800.00 / Crust - Dry Quartz
 
 G   = 1.0e10
 
-Cv   = 1050.0
+Cp   = 1050.0
 
 k    = 2.5
 

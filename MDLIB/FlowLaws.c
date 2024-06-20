@@ -61,7 +61,7 @@ void ReadDataPowerLaw( mat_prop* mat, params* model, int k, int number, scale* s
             mat->rpwl[k] = 0.0;
             mat->Qpwl[k] = mat->Qpwl[k];
             mat->Vpwl[k] = 0.0;
-            mat->Apwl[k] = pow(mat->eta0[k], -mat->npwl[k]);
+            mat->Apwl[k] = pow(mat->eta0[k]*scaling->eta, -mat->npwl[k]); // rescale eta0 here, as A will be scaled later on
             mat->fpwl[k] = 0.0;
             mat->apwl[k] = 0.0;
             success      = 1;
@@ -421,6 +421,20 @@ void ReadDataPowerLaw( mat_prop* mat, params* model, int k, int number, scale* s
             mat->apwl[k] = 0.0;
             success      = 1;
             break;
+        
+	    case 34:
+            printf("Westerly Granite + melt weakening (dry) - Hansen & Carter (1983):\n" );
+            mat->tpwl[k] = 1;
+            mat->npwl[k] = 3.3;
+            mat->mpwl[k] = 0.0;
+            mat->rpwl[k] = 0.0;
+            mat->Qpwl[k] = 186.5e3;
+            mat->Vpwl[k] = 0.0e-6;
+            mat->Apwl[k] = 3.1623e-26;
+            mat->fpwl[k] = 0.0;
+            mat->apwl[k] = 50.0;
+            success      = 1;
+            break;
             
         /******************************** Mantle flow laws ********************************/
             
@@ -524,6 +538,9 @@ void ReadDataPowerLaw( mat_prop* mat, params* model, int k, int number, scale* s
             break;
 
     }
+    
+    // Force melt weakening factor for all phases
+    if ( model->force_melt_weak == 1 ) mat->apwl[k] = model->melt_weak;
     
     // Scaling
     mat->tpwl[k]   /= 1.0;
@@ -633,7 +650,7 @@ void ReadDataLinear( mat_prop* mat, params* model, int k, int number, scale* sca
             mat->mlin[k] = 3.0;
             mat->rlin[k] = 0.0;
             mat->Qlin[k] = 375e3;
-            mat->Vlin[k] = 7.0e-6;            // 4e-6 Annelore 7e-6 Lorenzo
+            mat->Vlin[k] = 4.0e-6;            // 4e-6 Annelore 7e-6 Lorenzo
             if ( model->force_act_vol_ast == 1 ) mat->Vlin[k] = model->act_vol_dif_ast;
             mat->Alin[k] = 1.5000e-15;
             mat->flin[k] = 0.0;
@@ -929,6 +946,11 @@ void ReadDataKinetics( mat_prop* mat, params* model, int k, int number, scale* s
     int success = 0;
     
     switch ( abs(number) ) {
+
+        case 1 :
+            printf("Directly use tau_kin %d %d\n", model->kinetics, mat->kin[k]);
+            success      = 1;
+            break;
             
         case 9 :
             printf("Quartz-Coesite - Mosenfelder & Bohlen (1997);");
@@ -939,7 +961,7 @@ void ReadDataKinetics( mat_prop* mat, params* model, int k, int number, scale* s
             break;
     }
     
-    if ( success==0 ) { printf("Error: Non existing kinetic number\n"); exit(12);}
+    if ( success==0 ) { printf("Error: Non existing kinetic number %d\n", number); exit(12);}
     
 }
 

@@ -68,11 +68,11 @@ double SetTemperature(MdoodzInput *instance, Coordinates coordinates) {
 // }
 
 // double SetHorizontalVelocity(MdoodzInput *instance, Coordinates coordinates) {
-//   return -coordinates.x * instance->model.EpsBG;
+//   return -coordinates.x * instance->model.bkg_strain_rate;
 // }
 
 // double SetVerticalVelocity(MdoodzInput *instance, Coordinates coordinates) {
-//   return coordinates.z * instance->model.EpsBG;
+//   return coordinates.z * instance->model.bkg_strain_rate;
 // }
 
 char SetBCPType(MdoodzInput *instance, POSITION position) {
@@ -85,7 +85,7 @@ char SetBCPType(MdoodzInput *instance, POSITION position) {
 
 SetBC SetBCT(MdoodzInput *instance, POSITION position, double particleTemperature) {
   SetBC     bc;
-  double surface_temperature =                    20. + zeroC  / instance->scaling.T;
+  double surface_temperature =                   (20. + zeroC) / instance->scaling.T;
   double mantle_temperature  = (instance->model.user3 + zeroC) / instance->scaling.T;
   if (position == S) {
     bc.type  = constant_temperature;
@@ -124,7 +124,7 @@ SetBC SetBCVx(MdoodzInput *instance, POSITION position, Coordinates coordinates)
   SetBC bc;
   const double Earth_radius = 6370e3/instance->scaling.L, dz_smooth = 10e3/instance->scaling.L;
   const double Lx = instance->model.xmax - instance->model.xmin;
-  double V_tot    =  Lx * instance->model.EpsBG; // |VxW| + |VxE|
+  double V_tot    =  Lx * instance->model.bkg_strain_rate; // |VxW| + |VxE|
   double maxAngle = asin(Lx/2/Earth_radius);     // Aperture angle
   double tet_W, alp_W, tet_E, alp_E;
   double VxW, VxE;
@@ -181,7 +181,7 @@ SetBC SetBCVz(MdoodzInput *instance, POSITION position, Coordinates coordinates)
   SetBC bc;
   const double Earth_radius = 6370e3/instance->scaling.L, dz_smooth = 10e3/instance->scaling.L;
   const double Lx = instance->model.xmax - instance->model.xmin;
-  double V_tot    =  Lx * instance->model.EpsBG; // |VxW| + |VxE|
+  double V_tot    =  Lx * instance->model.bkg_strain_rate; // |VxW| + |VxE|
   double maxAngle = asin(Lx/2/Earth_radius);     // Aperture angle
   double tet_W, alp_W, tet_E, alp_E;
   double VxW, VxE, VzW, VzE, VzS=0.0;
@@ -250,6 +250,10 @@ SetBC SetBCVz(MdoodzInput *instance, POSITION position, Coordinates coordinates)
   return bc;
 }
 
+double SetAnisoAngle(MdoodzInput *input, Coordinates coordinates, int phase) {
+  //return 135;       // fixed value everywhere
+  return rand()*360;  // random value everywhere
+}
 
 int main(int nargs, char *args[]) {
   // Input file name
@@ -268,6 +272,7 @@ int main(int nargs, char *args[]) {
           .SetParticles = &(SetParticles_ff){
                   .SetPhase              = SetPhase,
                   .SetTemperature        = SetTemperature,
+                  .SetAnisoAngle         = SetAnisoAngle,
           },
           .SetBCs = &(SetBCs_ff){
                   .SetBCVx    = SetBCVx,
