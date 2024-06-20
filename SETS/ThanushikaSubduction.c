@@ -87,13 +87,6 @@ int SetPhase(MdoodzInput *instance, Coordinates coordinates) {
     phase = 2;
   }
 
-  // Set weak zone
-  double maxLithThickness = fmax(ocCrustThickness,lithosphereThickness);
-   if (coordinates.z > weakZoneDepth && coordinates.x > -weakZoneWidth - coordinates.z*subductionAngle && coordinates.x < weakZoneWidth - coordinates.z*subductionAngle)
-   {
-     phase = 3;
-   }
-
   // Set oceanic crust
   if (coordinates.z > -ocCrustThickness && coordinates.x < -weakZoneWidth - coordinates.z*subductionAngle)
   {
@@ -121,6 +114,13 @@ int SetPhase(MdoodzInput *instance, Coordinates coordinates) {
     phase = 4;
   }
   
+    // Set weak zone
+  double maxLithThickness = fmax(ocCrustThickness,lithosphereThickness);
+   if (coordinates.z > weakZoneDepth && coordinates.x > -weakZoneWidth - coordinates.z*subductionAngle && coordinates.x < weakZoneWidth - coordinates.z*subductionAngle)
+   {
+     phase = 3;
+   }
+   
   // Return
   return phase;
   
