@@ -44,7 +44,7 @@ function main()
     xlims!(ax1, xminz, xmaxz)
     ylims!(ax1, zminz, zmaxz)
     colsize!(f.layout, 1, Aspect(1, Lx/Lz))
-    GLMakie.Colorbar(f[1, 2], hm, label = L"$\log_{10} d$ [$\mu$m]", width = 20, labelsize = 25, ticklabelsize = 14 )
+    GLMakie.Colorbar(f[1, 2], hm, label = L"$\log_{10} d$ [$\G$m]", width = 20, labelsize = 25, ticklabelsize = 14 )
     GLMakie.colgap!(f.layout, 20)
 
     ax1 = Axis(f[2, 1], title = L"$d$ at $t$ = %$(new.tMy) Ma - $\varepsilon$ = %$(ref.tMy*My*1e-14*100) %", xlabel = "x [km]", ylabel = "y [km]")
@@ -52,7 +52,7 @@ function main()
     xlims!(ax1, xminz, xmaxz)
     ylims!(ax1, zminz, zmaxz)
     colsize!(f.layout, 1, Aspect(1, Lx/Lz))
-    GLMakie.Colorbar(f[2, 2], hm, label = L"$\log_{10} d$ [$\mu$m]", width = 20, labelsize = 25, ticklabelsize = 14 )
+    GLMakie.Colorbar(f[2, 2], hm, label = L"$\log_{10} d$ [$\G$m]", width = 20, labelsize = 25, ticklabelsize = 14 )
     GLMakie.colgap!(f.layout, 20)
     if printfig save("_VisualTests/PinchSwellGSE.png", f, px_per_unit = 4) end
 

@@ -266,7 +266,7 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
     float *CFxx, *CFxz, *CFzx, *CFzz, *Cnx, *Cnz;
     double *T0, *P0, *x0, *z0, *Tmax, *Pmax;
     float *CT0, *CP0, *Cx0, *Cz0, *CTmax, *CPmax;
-    float *CXreac;
+    float *CXreac, *Cphi;
     float *COverS, *Cdivu, *Cdivu_el, *Cdivu_pl, *Cdivu_th, *Cdivu_r;
         
     int    cent=1, vert=0, prop=1, interp=0;
@@ -409,6 +409,9 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
 
     CX        = DoodzMalloc( sizeof(float)*(model.Nx-1)*(model.Nz-1));
     DoubleToFloat( mesh->X_n, CX, (model.Nx-1)*(model.Nz-1) );
+
+    Cphi      = DoodzMalloc( sizeof(float)*(model.Nx-1)*(model.Nz-1));
+    DoubleToFloat( mesh->phi_n, Cphi, (model.Nx-1)*(model.Nz-1) );
 
     COverS    = DoodzMalloc( sizeof(float)*(model.Nx-1)*(model.Nz-1));
     DoubleToFloat( mesh->OverS_n, COverS, (model.Nx-1)*(model.Nz-1) );
@@ -791,6 +794,7 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
     AddFieldToGroup( FileName, "Centers" , "eII_gbs" , 'f', (model.Nx-1)*(model.Nz-1), CeII_gbs, 1 );
     AddFieldToGroup( FileName, "Centers" , "d" , 'f', (model.Nx-1)*(model.Nz-1), Cd, 1 );
     AddFieldToGroup( FileName, "Centers" , "X" , 'f', (model.Nx-1)*(model.Nz-1), CX, 1 );
+    AddFieldToGroup( FileName, "Centers" , "phi" , 'f', (model.Nx-1)*(model.Nz-1), Cphi, 1 );
     AddFieldToGroup( FileName, "Centers" , "OverS",'f', (model.Nx-1)*(model.Nz-1), COverS, 1 );
 
     if ( model.free_surface == 1 ) {
@@ -892,6 +896,7 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
     DoodzFree( Cstrain_lin );
     DoodzFree( Cstrain_gbs );
     DoodzFree( CX );
+    DoodzFree( Cphi );
     DoodzFree( CT );
     DoodzFree( Cd );
     DoodzFree( COverS );

@@ -3,9 +3,12 @@
 
 #define zeroC     273.15
 #define Rg        8.314510
-#define PI        3.14159265359
+#define PI        3.14159265358979323846
 #define Rad_Earth 6370000
 #include "stdbool.h"
+#ifndef M_PI
+    #define M_PI 3.14159265358979323846
+#endif
 
 #define RESET   "\033[0m"
 #define BLACK   "\033[30m"      /* Black */
@@ -42,7 +45,7 @@ typedef struct {
 
 // params contains the model parameters
 typedef struct {
-  int    balance_boundaries;
+  int    balance_boundaries, zero_mean_topo; 
   char   description[500];
   double xmin, zmin, xmax, zmax, time, dx, dz, dt, dt0, dt_start, dt_max, L0,
           dt_min;
@@ -53,7 +56,7 @@ typedef struct {
   int     interp_stencil;
   double  nexp_radial_basis;
   int     mechanical, periodic_x, elastic, isnonnewtonian,
-          thermal, pure_shear_ALE, free_surface, writer_markers, writer_debug, topo_update;
+          thermal, pure_shear_ALE, free_surface, writer_markers, writer_debug, topo_update, melting;
   double free_surface_stab;
   int    constant_dt, RK, line_search, initial_cooling, subgrid_diffusion, adiab_heating,
           shear_heating, advection, finite_strain, conserv_interp;
@@ -84,8 +87,8 @@ typedef struct {
   double therm_perturb_x0, therm_perturb_z0, therm_perturb_dT, therm_perturb_rad,
           cooling_duration;
   // For rheological database...
-  int      force_act_vol_ast;
-  double   act_vol_dis_ast, act_vol_dif_ast;
+  int      force_act_vol_ast, force_melt_weak;
+  double   act_vol_dis_ast, act_vol_dif_ast, melt_weak;
   // Phase diagrams
   int      isPD, num_PD, *PDMnT, *PDMnP, *PD1DnP;
   double **PDMrho, *PDMTmin, *PDMTmax, *PDMPmin, *PDMPmax;
@@ -103,6 +106,9 @@ typedef struct {
   double   diffusion_length;
   // For Pips
   int      chemical_diffusion, no_return, density_variations, unsplit_diff_reac, kinetics;
+  // initial stresses
+  int preload;
+  double preload_sxxd,preload_szzd,preload_sxz;
   // Anisotropy
   int      anisotropy, out_of_plane, marker_noise; //aniso_fstrain
   int      residual_form;
@@ -116,14 +122,14 @@ typedef struct {
 
 // Stucture scale contains scaling parameters
 typedef struct {
-  double eta, L, V, T, t, a, E, S, m, rho, F, J, W, Cv, rhoE, k;
+  double eta, L, V, T, t, a, E, S, m, rho, F, J, W, Cp, rhoE, k;
 } scale;
 
 // mat_prop contains information related to material phase properties
 typedef struct {
   int    Nb_phases;
   double R;
-  double  eps0[20], tau0[20], eta0[20], rho[20], G[20], Cv[20], k[20], Qr[20], C[20], phi[20],
+  double  eps0[20], tau0[20], eta0[20], rho[20], G[20], Cp[20], k[20], Qr[20], C[20], phi[20],
           psi[20], Slim[20], n[20], A[20], Ea[20], Va[20], alp[20], bet[20], Qm[20],
           T0[20], P0[20], drho[20], k_eff[20];
   double tpwl[20], Qpwl[20], Vpwl[20], npwl[20], mpwl[20], Apwl[20], apwl[20],
@@ -145,6 +151,7 @@ typedef struct {
   double Pr[20], tau_kin[20], dPr[20], k_chem[20];
   int    reac_soft[20], reac_phase[20];
   int    phase_mix[20], phase_two[20];
+  int    melt[20];
   double aniso_angle[20], ani_fac_max[20], aniso_factor[20];   //ani_fac_v[20], ani_fac_e[20], ani_fac_p[20]
   double axx[20], azz[20], ayy[20];
   int    ani_fstrain[20];
@@ -176,12 +183,16 @@ typedef double (*SetHorizontalVelocity_f)(MdoodzInput *input, Coordinates coordi
 typedef double (*SetVerticalVelocity_f)(MdoodzInput *input, Coordinates coordinates);
 typedef double (*SetTemperature_f)(MdoodzInput *input, Coordinates coordinates);
 typedef int    (*SetPhase_f)(MdoodzInput *input, Coordinates coordinates);
+typedef int    (*AdjustPhaseToTemperature_f)(MdoodzInput *input, Coordinates coordinates, double particleTemperature, int phase);
 typedef int    (*SetDualPhase_f)(MdoodzInput *input, Coordinates coordinates, int phase);
 typedef double (*SetGrainSize_f)(MdoodzInput *input, Coordinates coordinates, int phase);
 typedef double (*SetPorosity_f)(MdoodzInput *input, Coordinates coordinates, int phase);
 typedef double (*SetDensity_f)(MdoodzInput *input, Coordinates coordinates, int phase);
 typedef double (*SetXComponent_f)(MdoodzInput *input, Coordinates coordinates, int phase);
 typedef double (*SetPressure_f)(MdoodzInput *input, Coordinates coordinates, int phase);
+typedef double (*SetTxx_f)(MdoodzInput *input, Coordinates coordinates, int phase);
+typedef double (*SetTzz_f)(MdoodzInput *input, Coordinates coordinates, int phase);
+typedef double (*SetTxz_f)(MdoodzInput *input, Coordinates coordinates, int phase);
 typedef double (*SetNoise_f)(MdoodzInput *input, Coordinates coordinates, int phase);
 typedef double (*SetAnisoAngle_f)(MdoodzInput *input, Coordinates coordinates, int phase);
 typedef Tensor2D (*SetDefGrad_f)(MdoodzInput *input, Coordinates coordinates, int phase);
@@ -191,7 +202,11 @@ typedef struct {
   SetVerticalVelocity_f   SetVerticalVelocity;
   SetPhase_f              SetPhase;
   SetDualPhase_f          SetDualPhase;
+  AdjustPhaseToTemperature_f AdjustPhaseToTemperature;
   SetPressure_f           SetPressure;
+  SetTxx_f                SetTxx;
+  SetTzz_f                SetTzz;
+  SetTxz_f                SetTxz;
   SetNoise_f              SetNoise;
   SetTemperature_f        SetTemperature;
   SetGrainSize_f          SetGrainSize;
@@ -297,11 +312,17 @@ struct MdoodzSetup {
   MutateInputParams         *mutateInputParams;
 };
 
+typedef struct {
+  double east;
+  double west;
+} LateralFlux;
+
 struct MdoodzInput {
   char              *inputFileName;
   params             model;
   mat_prop           materials;
   scale              scaling;
+  LateralFlux        *flux;
   CrazyConductivity *crazyConductivity;
   Geometry          *geometry;
 };

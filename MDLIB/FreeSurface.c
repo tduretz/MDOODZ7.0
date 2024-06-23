@@ -59,7 +59,7 @@ void SetTopoChainHorizontalCoords( surface *topo, markers *topo_chain, params mo
 
         topo_chain->x[k]     = model.xmin + dxm/2 + k*dxm;
         topo_chain->z[k]     = 0.0/scaling.L;
-        topo_chain->z0[k]     = 0.0/scaling.L;
+        topo_chain->z0[k]    = 0.0/scaling.L;
         topo_chain->phase[k] = 0;
     }
     printf( "Topographic chain initialised with %d markers\n", topo_chain->Nb_part );
@@ -206,16 +206,16 @@ void RemeshMarkerChain( markers *topo_chain, surface *topo, params model, scale 
         for (k=0;k<topo_chain->Nb_part;k++) {
             
             if (topo_chain->x[k]>model.xmax || topo_chain->x[k]<model.xmin  ) topo_chain->phase[k] = -1;
-            else topo_chain->phase[k]=0;
+            else topo_chain->phase[k] = 0;
             
             // Index of the fine grid column
             distance             = topo_chain->x[k] - (model.xmin + dx/2.0/res);
             in                   = ceil((distance/dx*res)+0.5) - 1;
             if (in<0        ) in = 0;
             if (in>res*Ncx-1) in = res*Ncx-1;
-            if (topo_chain->phase[k]!=-1) NumMarkCell[in]++;
+            if (topo_chain->phase[k] != -1) NumMarkCell[in]++;
             // NEW
-            if (topo_chain->phase[k]== -1) nout++;
+            if (topo_chain->phase[k] == -1) nout++;
         }
         
         // NEW
@@ -412,6 +412,7 @@ void AllocateMarkerChain( surface *topo, markers* topo_chain, params model ) {
     topo_chain->Vx          = DoodzCalloc( topo_chain->Nb_part_max, sizeof(DoodzFP) );
     topo_chain->Vz          = DoodzCalloc( topo_chain->Nb_part_max, sizeof(DoodzFP) );
     topo_chain->phase       = DoodzCalloc( topo_chain->Nb_part_max, sizeof(int) );
+    // for (int i=1; i<topo_chain->Nb_part_max; i++) topo_chain->phase[i] = -1; 
     topo->height            = DoodzCalloc( (model.Nx),sizeof(DoodzFP) );
     topo->height0           = DoodzCalloc( (model.Nx),sizeof(DoodzFP) );
     topo->vx                = DoodzCalloc( (model.Nx),sizeof(DoodzFP) );
@@ -900,22 +901,21 @@ void DiffuseAlongTopography( grid *mesh, params model, scale scaling, double *ar
     double Wvalley    = model.surf_Winc;
     double Vinc       = -model.surf_Vinc, Vinc_num;
     
-    printf("****** Surface processes ******");
+    printf("****** Surface processes ******\n");
     printf("Going to make %03d substeps for surface processes\n", nstep);
-    printf("W valley   = %2.2e m\n", Wvalley*scaling.L);
-    printf("Vincision  = %2.2e m.s-1\n", Vinc*scaling.V);
     printf("Kero       = %2.2e m2.s-1\n", diff*(pow(scaling.L,2.0)/scaling.t));
-    printf("Sed. rate  = %2.2e m/y with base level: %2.2e m\n", model.surf_sedirate*scaling.V*3600.0*365.0*24.0, base_level*scaling.L);
 
     if ( model.surface_processes == 1 || model.surface_processes == 5 ) {
 
         if ( model.surface_processes == 5 ) {
+            printf("W valley   = %2.2e m\n", Wvalley*scaling.L);
+            printf("Vincision  = %2.2e m.s-1\n", Vinc*scaling.V);
         
             // Compute volume of cells in the valley region
             int ncell = 0;
             for (i=1; i<size-1; i++) {
                 if (fabs(mesh->xg_coord[i]) < 0.5*Wvalley){
-                    ncell = ncell + 1;
+                    ncell += 1;
                 }
             }
 
@@ -961,7 +961,7 @@ void DiffuseAlongTopography( grid *mesh, params model, scale scaling, double *ar
     
     // Instantaneous basin filling
     if (model.surface_processes == 2) {
-        
+         printf("Sed. rate  = %2.2e m/y with base level: %2.2e m\n", model.surf_sedirate*scaling.V*3600.0*365.0*24.0, base_level*scaling.L);
         for (i=0; i<size; i++) {
             if (array[i]<base_level)
                 array[i]  = array_ini[i] + sedi_rate*model.dt;
@@ -1051,3 +1051,27 @@ void SurfaceVelocity( grid *mesh, params model, surface *topo, markers* topo_cha
 /*--------------------------------------------------------------------------------------------------------------------*/
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
+
+void KeepZeroMeanTopo(params *model, surface *topo, markers *topo_chain ) {
+    printf("Make zero mean topo\n");
+    double mean_z = 0.0;
+    for (int i=0; i<model->Nx; i++){
+        mean_z += topo->height[i];
+    }
+    mean_z /= model->Nx;
+    for (int i=0; i<model->Nx; i++) {
+        topo->height[i] -= mean_z;
+    }
+    mean_z = 0.0;
+    int nmark = 0;
+    for (int i=0; i<topo_chain->Nb_part_max; i++){
+        if (topo_chain->phase[i] > -1) {
+        mean_z += topo_chain->z[i];
+        nmark  ++;
+        }
+    }
+    mean_z /= nmark;
+    for (int i=0; i<topo_chain->Nb_part_max; i++){
+        topo_chain->z[i] -= mean_z;
+    }
+}
