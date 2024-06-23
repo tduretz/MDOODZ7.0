@@ -409,6 +409,10 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
   double divr = 0.0;
   if (model->diffuse_X == 0) constant_mix = 0;
 
+  // Partial melting  
+  int    Melting = model->melting;
+  double phi0 = phi, phi1 = phi, Ql1 = 0.;
+
   //------------------------------------------------------------------------//
 
   // Initialise strain rate invariants to 0
@@ -433,6 +437,7 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
   *Pcorr = P;
 
   //------------------------------------------------------------------------//
+// printf("%d\n", materials->cstv[phase]);
 
   // Activate deformation mechanisms
   if ( materials->cstv[phase] !=0                  ) constant    = 1;
@@ -522,6 +527,8 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
     HuetAveragingModel( &B_pwl, &C_pwl, &n_pwl, phase, R, T, t_pwl, X, pre_factor, materials );
   }
 
+  if ( Melting == 1 ) PartialMelting( &phi1, &Ql1, P, T, phi0, tau_kin, dt, materials->melt[phase], scaling );
+  
   // Set pointer value
   *X1 = X;
 
@@ -534,22 +541,6 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
   if ( constant_mix== 1 && mix_avg==1) eta_cst  = pow(X0/materials->eta0[phase] + (1-X0)/materials->eta0[phase_two], -1.0);
   if ( constant_mix== 1 && mix_avg==2) eta_cst  = exp(X0*log(materials->eta0[phase]) + (1-X0)*log(materials->eta0[phase_two]));
   if ( dislocation == 1 )              eta_pwl  = B_pwl * pow( Eii, 1.0/n_pwl - 1.0 ); 
-
-  // if (phase==1) {  
-  //   printf("%2.2e %2.2e %2.2e %lf\n", eta_pwl*scaling->eta, B_pwl, Eii*scaling->E, n_pwl);
-  // }
-
-  // if (phase==2 && constant    == 1) {
-  //   double rho_test = EvaluateDensity( phase, T, P, X, model, materials );
-  //   // printf("%lf\n", rho_test*scaling->rho);
-  //   if (rho_test<2850./scaling->rho) {
-  //     eta_cst = 1e19/scaling->eta;
-  //     // B_pwl   = eta_pwl;
-  //     // C_pwl   = 1.0/2.0/B_pwl;
-  //     // n_pwl   = 1.0;
-  //     // exit(1);
-  //   }
-  // }
 
   if (gs == 1) {
     double Kg = materials->Kpzm[phase], Qg = materials->Qpzm[phase];
@@ -570,17 +561,6 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
 
   // Viscoelasticity
   *Eii_pl = 0.0;
-
-  // Define viscosity bounds
-  // eta_up = 1.0e100 / scaling->eta;
-  // if (constant == 1)    {eta_up = MINV(eta_up, eta_cst); eta_lo += 1.0/eta_cst;}
-  // if (dislocation == 1) {eta_up = MINV(eta_up, eta_pwl); eta_lo += 1.0/eta_pwl;}
-  // if (elastic == 1)     {eta_up = MINV(eta_up, eta_el);  eta_lo += 1.0/eta_el;}
-  // if (peierls == 1)     {eta_up = MINV(eta_up, eta_exp); eta_lo += 1.0/eta_exp;}
-  // if (diffusion == 1)   {eta_up = MINV(eta_up, eta_lin); eta_lo += 1.0/eta_lin;}
-  // if (gbs == 1)         {eta_up = MINV(eta_up, eta_gbs); eta_lo += 1.0/eta_gbs;}
-  // eta_lo = 1.0/eta_lo;
-
    eta_up =  1.0e100 / scaling->eta;
    eta_lo = -1.0e100 / scaling->eta;
   if (constant == 1)    {eta_up = MINV(eta_up, eta_cst); eta_lo = MAXV(eta_lo, eta_cst);}
@@ -592,7 +572,6 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
   
   //------------------------------------------------------------------------//
   // Initial guess 
-  // eta_ve = 0.5*(eta_up + eta_lo);
   eta_ve = eta_up; // better
   Tii    = 2.0 * eta_ve * Eii;
 
@@ -606,10 +585,8 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
     const double Eii_pwl     = Tii/2.0/eta_pwl;
     const double d_it        = exp(log(Ag * gam / (lam * (1.0 / cg) * Tii * (Eii_pwl) *pg)) / (1.0 + pg));
     *d1 = d;
-    // *d1 = d_it;
     if (noisy) printf("d guess = %2.2e, Tii = %2.2e Eiipwl=%2.2e\n", d_it*scaling->L, Tii*scaling->S, Eii_pwl*scaling->E);
   }
-  // printf("%2.2e %2.2e %2.2e %2.2e %2.2e\n", eta_el*scaling->eta, eta_cst*scaling->eta, eta_pwl*scaling->eta, eta_lin*scaling->eta, eta_up*scaling->eta);
   
   LocalIterationParams params = {
           .noisy       = noisy,
@@ -652,7 +629,7 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
     // Check yield stress
     F_trial = Tii - Tyield;
 
-    // if (F_trial>0) printf("%2.2e %2.2e %2.2e %2.2e %2.2e\n", F_trial*scaling->S, C*scaling->S, cos_fric, P*scaling->S, sin_fric);
+    // if (F_trial>0) printf("F=%2.2e C=%2.2e cos_fric=%2.2e P=%2.2e sin_fric=%2.2e\n", F_trial*scaling->S, C*scaling->S, cos_fric, P*scaling->S, sin_fric);
 
     double Tiic;
     double Pc_chk;
@@ -727,16 +704,18 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
   // }
   if ( centroid > 0 ) {
     if (final_update==1) P = Pc;
-    if (ProgressiveReaction == 1) {
+    if (ProgressiveReaction == 1 || Melting == 1) {
       // rho_ref      = (1.0-X)*rho1 + X*rho2;
       // *rho         = rho_ref * exp(P/K - alpha*T);
-      *rho = EvaluateDensity( phase, T, P, X, model, materials );
+      rho0 = EvaluateDensity( phase, T0, P0, X0, phi0, model, materials );
+      *rho = EvaluateDensity( phase, T,  P,  X,  phi1, model, materials );        
+      // if (materials->melt[phase]==1) printf("phi0 = %1.2e phi1 = %1.2e --- %1.8e %1.8e \n", phi0, phi1, rho0*scaling->rho, *rho*scaling->rho);
     }
     else {
-      rho_eq = EvaluateDensity( phase, T, P, X, model, materials );
+      rho_eq = EvaluateDensity( phase, T, P, X, phi1, model, materials );
       *rho   = rho_eq;
       if ( kinetics == 1 ) {
-        rho0          = EvaluateDensity( phase, T0, P0, X, model, materials );
+        rho0          = EvaluateDensity( phase, T0, P0, X, phi, model, materials );
         if ( materials->kin[phase]==9 ) {
           tau_kin = 0.0;
           dG      = Interpolate2Ddata( T0, P0, model->kin_Tmin, model->kin_Tmax, model->kin_Pmin, model->kin_Pmax, model->kin_nT, model->kin_nP, model->kin_dG );
@@ -797,7 +776,7 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
     if (is_pl      == 1)  inv_eta_diss += (1.0/eta_pl ); 
     eta  = 1.0/(inv_eta_diss);
     // if (T*scaling->T<673.0) {
-    //   printf("constant = %d %2.2e %2.2e %2.2e %2.2e\n", constant, eta*scaling->eta, eta_pwl*scaling->eta, eta_pl*scaling->eta, eta_cst*scaling->eta);
+      //  printf("constant = %d eta = %2.2e eta_pl = %2.2e %2.2e %2.2e %2.2e\n", constant, eta*scaling->eta, eta_pl*scaling->eta, eta_pwl*scaling->eta, eta_pl*scaling->eta, eta_cst*scaling->eta);
     // }
 
     // Viscoplastic overstress
@@ -913,7 +892,6 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
 
     if ( model->density_variations == 1 ) {
       mesh->rho_n[c0]  = 0.0;
-      //            mesh->drhodp_n[c0] = 0.0;
     }
 
     // Loop on grid nodes
@@ -989,11 +967,13 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
           // Volume changes
           if ( model->density_variations == 1 ) {
             mesh->rho_n[c0]       += mesh->phase_perc_n[p][c0] * rho;
+            // mesh->rho_n[c0]       += mesh->phase_perc_n[p][c0] * 1.0/rho;
           }
         }
       }
 
       mesh->d_n[c0]          = 1.0/mesh->d_n[c0];
+      // if ( model->density_variations == 1 ) mesh->rho_n[c0]        = 1.0/mesh->rho_n[c0];
 
       // HARMONIC AVERAGE
       if ( average == 1 ) {
@@ -1438,25 +1418,25 @@ void ShearModCompExpGrid( grid* mesh, mat_prop *materials, params *model, scale 
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-double EvaluateDensity( int p, double T, double P, double X, params *model, mat_prop *materials ) {
+double EvaluateDensity( int p, double T, double P, double X, double phi, params *model, mat_prop *materials ) {
 
-  double rho, rho_ref, rho1, rho2, drho, T0, alpha, P0, beta;
-  int    ProgressiveReaction = materials->reac_soft[p], no_return = model->no_return;
+  double rho;
+  const int    ProgressiveReaction = materials->reac_soft[p], no_return = model->no_return;
   
   // Constant density
   if ( materials->density_model[p] == 0 ) {
-    rho_ref = materials->rho[p];
+    const double rho_ref = materials->rho[p];
     rho     = rho_ref;
   }
 
   // T, P, X dependent density based on EOS
   if ( materials->density_model[p] == 1 ) {
-    rho_ref = materials->rho[p];
-    drho    = materials->drho[p];
-    T0      = materials->T0 [p];
-    alpha   = materials->alp[p];
-    P0      = materials->P0 [p];
-    beta    = materials->bet[p];
+    const double rho_ref = materials->rho[p];
+    const double drho    = materials->drho[p];
+    const double T0      = materials->T0 [p];
+    const double alpha   = materials->alp[p];
+    const double P0      = materials->P0 [p];
+    const double beta    = materials->bet[p];
     rho     = (1.0 -  alpha * (T - T0) ) * (1.0 +  beta * (P - P0) ); // EOS general
     rho     = ((1.0-X)*rho_ref + X*(rho_ref+drho))*rho;                     // Average density based on X
   }
@@ -1469,20 +1449,34 @@ double EvaluateDensity( int p, double T, double P, double X, params *model, mat_
 
   // P-T dependent density
   if ( materials->density_model[p] == 3 && ProgressiveReaction == 0 ) {
-    rho_ref = materials->rho[p];
-    beta    = materials->bet[p];
-    alpha   = materials->alp[p];
+    const double rho_ref = materials->rho[p];
+    const double beta    = materials->bet[p];
+    const double alpha   = materials->alp[p];
     rho     = rho_ref*exp(beta*P  - alpha*T);
   }
 
   // P-T dependent density: models used for Yamato et al. (2022)
   if ( materials->density_model[p] == 3  && ProgressiveReaction == 1) {
-    rho1    = materials->rho[p];
-    rho2    = materials->rho[materials->reac_phase[p]];
-    beta    = materials->bet[p];
-    alpha   = materials->alp[p];
-    rho_ref = (1.0-X)*rho1 + X*rho2;
+    const double rho1    = materials->rho[p];
+    const double rho2    = materials->rho[materials->reac_phase[p]];
+    const double beta    = materials->bet[p];
+    const double alpha   = materials->alp[p];
+    const double rho_ref = (1.0-X)*rho1 + X*rho2;
     rho     = rho_ref * exp(beta*P - alpha*T);
+  }
+
+  // P-T dependent density: models used for Poh et al. (2021)
+  if ( materials->density_model[p] == 5  ) {
+    const double rho_sol = materials->rho[p];
+    const double rho_liq = materials->rho[p] + materials->drho[p]; // !!!! Achtung: drho should be NEGATIVE to make liquid lighter 
+    const double beta    = materials->bet[p];
+    const double alpha   = materials->alp[p];
+    const double rhos    = rho_sol * exp(beta*P - alpha*T);
+    const double rhol    = rho_liq * exp(beta*P - alpha*T);
+    // rho     = rhos * (1 - phi + phi*rho_liq/rho_sol );
+    rho     = (1-phi)*rhos + phi*rhol;
+    // rho = rhos;
+    // printf("rho_sol = %2.6e rho_liq = %2.6e drho = %2.6e\n", rho_sol, rho_liq, materials->drho[p]);
   }
 
   // P dependent density read from the 1D table
@@ -1500,37 +1494,57 @@ double EvaluateDensity( int p, double T, double P, double X, params *model, mat_
 void UpdateDensity( grid* mesh, markers* particles, mat_prop *materials, params *model, scale *scaling ) {
 
   int k, p, c0, Ncx=mesh->Nx-1, Ncz=mesh->Nz-1;
-  int    phase_diag;
-  double rho, rho0, epsi = 1e-13;
+  int    old = 1;
+  double rho, rho0, epsi = 1e-13, mean_rho, mean_rho0;
   // printf("Update density fields on mesh\n");
 
-#pragma omp parallel for shared( mesh, materials ) private( rho, rho0, c0, p) firstprivate(Ncx, Ncz, model, epsi)
+  // mean_rho = SumArray( mesh->rho_n, scaling->rho, Ncx*Ncz, "mean rho" ) /(Ncx*Ncz);
+
+#pragma omp parallel for shared( mesh, materials ) private( rho, rho0, c0, p) firstprivate(old, Ncx, Ncz, model, epsi)
   for ( c0=0; c0<Ncx*Ncz; c0++ ) {
 
     // Initialise
     mesh->rho_n[c0]  = 0.0;
-    mesh->rho0_n[c0] = 0.0;
+    if (old==1) mesh->rho0_n[c0] = 0.0;
 
     // Loop on phases
     for ( p=0; p<model->Nb_phases; p++) {
 
       if ( fabs(mesh->phase_perc_n[p][c0])>epsi) {
         // Call density evaluation
-        rho  = EvaluateDensity( p, mesh->T[c0],    mesh->p_in[c0], mesh->X_n[c0],  model, materials );
-        rho0 = EvaluateDensity( p, mesh->T0_n[c0], mesh->p0_n[c0], mesh->X0_n[c0], model, materials );
+        rho              = EvaluateDensity( p, mesh->T[c0],    mesh->p_in[c0], mesh->X_n[c0],  mesh->phi_n[c0],  model, materials );
+        if (old==1) rho0 = EvaluateDensity( p, mesh->T0_n[c0], mesh->p0_n[c0], mesh->X0_n[c0], mesh->phi0_n[c0], model, materials );
 
         // Average density base on phase density and phase volume fraction
-        if ( mesh->BCp.type[c0] != 30 ) mesh->rho_n[c0]  += mesh->phase_perc_n[p][c0] * rho;
-        if ( mesh->BCp.type[c0] != 30 ) mesh->rho0_n[c0] += mesh->phase_perc_n[p][c0] * rho0;
+        if ( mesh->BCp.type[c0] != 30 )             mesh->rho_n[c0]  += mesh->phase_perc_n[p][c0] * rho;
+        if (old==1) if ( mesh->BCp.type[c0] != 30 ) mesh->rho0_n[c0] += mesh->phase_perc_n[p][c0] * rho0;
+        // if ( mesh->BCp.type[c0] != 30 )             mesh->rho_n[c0]  += mesh->phase_perc_n[p][c0] * 1./rho;
+        // if (old==1) if ( mesh->BCp.type[c0] != 30 ) mesh->rho0_n[c0] += mesh->phase_perc_n[p][c0] * 1./rho0;
 
         // if (mesh->BCp.type[c0] == -1 && mesh->BCp.type[c0+Ncx] == 31 ) {
         //   printf("At the surface: rho = %2.2lf, phase = %d rho = %2.2lf X = %2.2lf density_model = %d\n", mesh->rho_n[c0]*scaling->rho, p, rho, mesh->phase_perc_n[p][c0], materials->density_model[p]);
         // }
       }
     }
+    // mesh->rho_n[c0]              = 1.0/mesh->rho_n[c0]; 
+    // if (old==1) mesh->rho0_n[c0] = 1.0/mesh->rho0_n[c0];
   }
+
+  // mean_rho0 = SumArray( mesh->rho0_n, scaling->rho, Ncx*Ncz, "mean rho" ) /(Ncx*Ncz);
+
+  // for ( c0=0; c0<Ncx*Ncz; c0++ ) {
+  //   mesh->rho0_n[c0] -= mean_rho0;
+  //   mesh->rho0_n[c0] += mean_rho;
+  // }
+
+
   // Interpolate to vertices
   InterpCentroidsToVerticesDouble( mesh->rho_n, mesh->rho_s, mesh, model );
+
+  // double* rho0_s = DoodzCalloc((model->Nx)*(model->Nz), sizeof(double));
+  // InterpCentroidsToVerticesDouble( mesh->rho0_n, rho0_s, mesh, model );
+  // InterpVerticesToCentroidsDouble( mesh->rho0_n, rho0_s, mesh, model );
+  // DoodzFree(rho0_s);
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/

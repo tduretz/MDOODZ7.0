@@ -167,6 +167,11 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         MinMaxArray(particles.Vx, input.scaling.V, particles.Nb_part, "Vxp init" );
         MinMaxArray(particles.Vz, input.scaling.V, particles.Nb_part, "Vzp init" );
         MinMaxArray(particles.T, input.scaling.T, particles.Nb_part,  "Tp init" );
+        MinMaxArray(particles.sxxd, input.scaling.S, particles.Nb_part, "sxxd part  ");
+        MinMaxArray(particles.szzd, input.scaling.S, particles.Nb_part, "szzd part  ");
+        MinMaxArray(particles.sxxd, input.scaling.S, particles.Nb_part, "sxz part  ");
+
+
 
         if (input.model.free_surface == 1 ) CleanUpSurfaceParticles( &particles, &mesh, topo, input.scaling );
 
@@ -180,7 +185,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         P2Mastah( &input.model, particles, particles.noise, &mesh, mesh.noise_n, mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil);
 
         P2Mastah( &input.model, particles, particles.T,  &mesh, mesh.T , mesh.BCp.type,  1, 0, interp, cent, 1);
-        P2Mastah( &input.model, particles, input.materials.Cv, &mesh, mesh.Cv, mesh.BCp.type,  0, 0, interp, cent, 1);
+        P2Mastah( &input.model, particles, input.materials.Cp, &mesh, mesh.Cp, mesh.BCp.type,  0, 0, interp, cent, 1);
 
         P2Mastah( &input.model, particles, input.materials.k_eff, &mesh, mesh.kx, mesh.BCu.type,  0, 0, interp, vxnodes, 1);
         P2Mastah( &input.model, particles, input.materials.k_eff, &mesh, mesh.kz, mesh.BCv.type,  0, 0, interp, vznodes, 1);
@@ -222,7 +227,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         P2Mastah( &input.model, particles, input.materials.k_eff, &mesh, mesh.kx, mesh.BCu.type,  0, 0, interp, vxnodes, 1);
         P2Mastah( &input.model, particles, input.materials.k_eff, &mesh, mesh.kz, mesh.BCv.type,  0, 0, interp, vznodes, 1);
         P2Mastah( &input.model, particles, particles.T,     &mesh, mesh.T , mesh.BCp.type,  1, 0, interp, cent, 1);
-        P2Mastah( &input.model, particles, input.materials.Cv,    &mesh, mesh.Cv, mesh.BCp.type,  0, 0, interp, cent, 1);
+        P2Mastah( &input.model, particles, input.materials.Cp,    &mesh, mesh.Cp, mesh.BCp.type,  0, 0, interp, cent, 1);
         P2Mastah( &input.model, particles, input.materials.Qr,    &mesh, mesh.Qr, mesh.BCp.type,  0, 0, interp, cent, 1);
 
         SetBCs(*setup->SetBCs, &input, &mesh, &topo);
@@ -232,6 +237,18 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         ArrayEqualArray( mesh.T0_n, mesh.T, (mesh.Nx-1)*(mesh.Nz-1) );
 
         //--------------------------------------------------------------------------------------------------------
+        printf("*************************************\n");
+        printf("******** Initialize stresses ********\n");
+        printf("*************************************\n");
+        
+        // stresses on particles should have been set in SetParticles, so here we only have to interpolate to the mesh
+        P2Mastah( &input.model, particles, particles.sxxd,   &mesh, mesh.sxxd0, mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil);
+        P2Mastah( &input.model, particles, particles.szzd,   &mesh, mesh.szzd0, mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil);
+        P2Mastah( &input.model, particles, particles.sxz,    &mesh, mesh.sxz0,  mesh.BCg.type,  1, 0, interp, vert, input.model.interp_stencil);
+
+        MinMaxArrayTag( mesh.sxxd0, input.scaling.S,   (mesh.Nx-1)*(mesh.Nz-1), "Sxx initial ", mesh.BCp.type );
+        MinMaxArrayTag( mesh.szzd0, input.scaling.S,   (mesh.Nx-1)*(mesh.Nz-1), "Szz initial ", mesh.BCp.type );
+
 
         printf("*************************************\n");
         printf("******** Initialize pressure ********\n");
@@ -259,7 +276,15 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
         // Interpolate pressure from centroids to vertices
         InterpCentroidsToVerticesDouble( mesh.p0_n, mesh.p0_s, &mesh, &input.model );
-  
+
+        printf("****************************************\n");
+        printf("******* Initialize melt fraction *******\n");
+        printf("****************************************\n");
+        if (input.model.melting == 1 ) {
+            MeltFractionGrid( &mesh, &particles, &input.materials, &input.model, &input.scaling );
+            Interp_Grid2P_centroids2( particles, particles.phi,    &mesh, mesh.phi_n, mesh.xvz_coord,  mesh.zvx_coord,  mesh.Nx-1, mesh.Nz-1, mesh.BCp.type, &input.model );
+        }
+
         printf("*************************************\n");
         printf("******* Initialize grain size *******\n");
         printf("*************************************\n");
@@ -272,6 +297,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         printf("*************************************\n");
         UpdateDensity( &mesh, &particles, &input.materials, &input.model, &input.scaling );
         if (input.model.free_surface == 1 ) SurfaceDensityCorrection( &mesh, input.model, topo, input.scaling  );
+        Interp_Grid2P_centroids2( particles, particles.rho,    &mesh, mesh.rho_n, mesh.xvz_coord,  mesh.zvx_coord,  mesh.Nx-1, mesh.Nz-1, mesh.BCp.type, &input.model );
 
         printf("*************************************\n");
         printf("****** Initialize composition *******\n");
@@ -324,6 +350,8 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             MinMaxArrayTag( mesh.X_n,        1.0,               (mesh.Nx-1)*(mesh.Nz-1), "X_n       ", mesh.BCp.type );
             MinMaxArrayTag( mesh.X0_n,       1.0,               (mesh.Nx-1)*(mesh.Nz-1), "X0_n      ", mesh.BCp.type );
             MinMaxArrayTag( mesh.X0_s,       1.0,               (mesh.Nx-0)*(mesh.Nz-0), "X0_s      ", mesh.BCg.type );
+            MinMaxArrayTag( mesh.phi0_n,     1.0,               (mesh.Nx-1)*(mesh.Nz-1), "phi0_n    ", mesh.BCp.type );
+            MinMaxArrayTag( mesh.phi_n,      1.0,               (mesh.Nx-1)*(mesh.Nz-1), "phi_n     ", mesh.BCp.type );
             MinMaxArray(particles.X, 1.0, particles.Nb_part, "X part" );
             if ( input.model.anisotropy == 1 ) {
                 MinMaxArrayTag( mesh.FS_AR_n,  1.0,   (mesh.Nx-1)*(mesh.Nz-1),      "FS_AR_n   ", mesh.BCp.type );
@@ -369,10 +397,6 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             if (input.model.writer_markers == 1 ) WriteOutputHDF5Particles( &mesh, &particles, &topo, &topo_chain, &topo_ini, &topo_chain_ini, input.model, BaseParticleFileName, input.materials, input.scaling );
         }
 
-        // Set initial stresses and pressure to zero
-        Initialise1DArrayDouble( mesh.sxxd,  (mesh.Nx-1)*(mesh.Nz-1), 0.0 );
-        Initialise1DArrayDouble( mesh.szzd,  (mesh.Nx-1)*(mesh.Nz-1), 0.0 );
-        Initialise1DArrayDouble( mesh.sxz,   (mesh.Nx)  *(mesh.Nz)  , 0.0 );
         // Generate deformation maps
         if (input.model.deformation_maps == 1 ) GenerateDeformationMaps( &mesh, &input.materials, &input.model, Nmodel, &input.scaling );
         particles.Nb_part_ini = particles.Nb_part;
@@ -446,7 +470,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         // Energy - interpolate thermal parameters and advected energy
 
         // Get energy and related material parameters from particles
-        P2Mastah( &input.model, particles, input.materials.Cv,     &mesh, mesh.Cv,     mesh.BCp.type,  0, 0, interp, cent, 1);
+        P2Mastah( &input.model, particles, input.materials.Cp,     &mesh, mesh.Cp,     mesh.BCp.type,  0, 0, interp, cent, 1);
         P2Mastah( &input.model, particles, input.materials.Qr,     &mesh, mesh.Qr,     mesh.BCp.type,  0, 0, interp, cent, 1);
 
         P2Mastah ( &input.model, particles, input.materials.k_eff, &mesh, mesh.kx, mesh.BCu.type,  0, 0, interp, vxnodes, 1);
@@ -463,8 +487,12 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         // Interp P --> p0_n , p0_s
         P2Mastah( &input.model, particles, particles.P,     &mesh, mesh.p0_n,   mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil);
 
+        // Interpolate Melt fraction
+        P2Mastah( &input.model, particles, particles.phi,   &mesh, mesh.phi0_n , mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil);
+
         // Allocate and initialise solution and RHS vectors
         UpdateDensity( &mesh, &particles, &input.materials, &input.model, &input.scaling );
+        // P2Mastah( &input.model, particles, particles.rho,     &mesh, mesh.rho0_n , mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil);
 
         // Free surface - subgrid density correction
         if (input.model.free_surface == 1 ) { // TODO: include into UpdateDensity
@@ -513,9 +541,6 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         P2Mastah( &input.model, particles, particles.d,     &mesh, mesh.d0_n , mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil);
         ArrayEqualArray(  mesh.d_n,  mesh.d0_n, Ncx*Ncz );
 
-        // Interpolate Melt fraction
-        P2Mastah( &input.model, particles, particles.phi,   &mesh, mesh.phi0_n , mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil);
-
         //-------------------------------------------------------------------------------------------------------------
 
         // Compute cohesion and friction angle on the grid
@@ -525,51 +550,55 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         if (input.model.compressible == 1 ) DetectCompressibleCells ( &mesh, &input.model );
 
         // Get physical properties that are constant throughout each timestep
-        UpdateDensity( &mesh, &particles, &input.materials, &input.model, &input.scaling );
+        // UpdateDensity( &mesh, &particles, &input.materials, &input.model, &input.scaling );
+        // P2Mastah( &input.model, particles, particles.rho,     &mesh, mesh.rho0_n , mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil);
+        // P2Mastah( &input.model, particles, particles.rho, &mesh, mesh.rho_s, mesh.BCg.type,  1, 0, interp, vert, input.model.interp_stencil);
 
-        // Free surface - subgrid density correction
-        if (input.model.free_surface == 1 ) SurfaceDensityCorrection( &mesh, input.model, topo, input.scaling  );
+        // // Free surface - subgrid density correction
+        // if (input.model.free_surface == 1 ) SurfaceDensityCorrection( &mesh, input.model, topo, input.scaling  );
 
         // Update anisotropy factor (function of accumulated strain and phase)
         if ( input.model.anisotropy == 1 ) UpdateAnisoFactor( &mesh, &input.materials, &input.model, &input.scaling);
 
         // Min/Max interpolated fields
         if (input.model.noisy == 1 ) {
-            MinMaxArrayTag( mesh.d0_n, input.scaling.L,   (mesh.Nx-1)*(mesh.Nz-1), "d0        ", mesh.BCp.type );
-            MinMaxArrayTag( mesh.d_n, input.scaling.L,   (mesh.Nx-1)*(mesh.Nz-1), "d         ", mesh.BCp.type );
-            MinMaxArray(particles.sxxd, input.scaling.S, particles.Nb_part, "sxxd part  ");
-            MinMaxArray(particles.T, input.scaling.T,   particles.Nb_part, "T part    ");
-            MinMaxArrayTag( mesh.p0_n, input.scaling.S,    (mesh.Nx-1)*(mesh.Nz-1),   "p0_n",   mesh.BCp.type );
-            MinMaxArrayTag( mesh.sxz0, input.scaling.S,   (mesh.Nx)*(mesh.Nz),     "sxz0    ", mesh.BCg.type );
-            MinMaxArrayTag( mesh.sxxd0, input.scaling.S,   (mesh.Nx-1)*(mesh.Nz-1), "sxx0    ", mesh.BCp.type );
-            MinMaxArrayTag( mesh.szzd0, input.scaling.S,   (mesh.Nx-1)*(mesh.Nz-1), "szz0    ", mesh.BCp.type );
-            MinMaxArrayTag( mesh.mu_s, input.scaling.S,   (mesh.Nx)*(mesh.Nz),     "mu_s    ", mesh.BCg.type );
-            MinMaxArrayTag( mesh.mu_n, input.scaling.S,   (mesh.Nx-1)*(mesh.Nz-1), "mu_n    ", mesh.BCp.type );
-            MinMaxArrayTag( mesh.C_s, input.scaling.S,   (mesh.Nx)*(mesh.Nz),     "C_s     ", mesh.BCg.type );
-            MinMaxArrayTag( mesh.C_n, input.scaling.S,   (mesh.Nx-1)*(mesh.Nz-1), "C_n     ", mesh.BCp.type );
-            MinMaxArrayTag( mesh.fric_s,   180.0/M_PI,  (mesh.Nx)*(mesh.Nz),     "fric_s  ", mesh.BCg.type );
-            MinMaxArrayTag( mesh.fric_n,   180.0/M_PI,  (mesh.Nx-1)*(mesh.Nz-1), "fric_n  ", mesh.BCp.type );
-            MinMaxArrayTag( mesh.dil_s,    180.0/M_PI,  (mesh.Nx)*(mesh.Nz),     "dil_s   ", mesh.BCg.type );
-            MinMaxArrayTag( mesh.dil_n,    180.0/M_PI,  (mesh.Nx-1)*(mesh.Nz-1), "dil_n   ", mesh.BCp.type );
-            MinMaxArrayTag( mesh.strain_s,   1.0,       (mesh.Nx)*(mesh.Nz),     "strain_s", mesh.BCg.type );
-            MinMaxArrayTag( mesh.strain_n,   1.0,       (mesh.Nx-1)*(mesh.Nz-1), "strain_n", mesh.BCp.type );
-            MinMaxArrayTag( mesh.bet_s,    1.0/ input.scaling.S,   (mesh.Nx)*(mesh.Nz),     "beta_s  ", mesh.BCg.type );
-            MinMaxArrayTag( mesh.bet_n,    1.0/ input.scaling.S,   (mesh.Nx-1)*(mesh.Nz-1), "beta_n  ", mesh.BCp.type );
-            MinMaxArrayTag( mesh.T0_n, input.scaling.T,   (mesh.Nx-1)*(mesh.Nz-1), "T0      ", mesh.BCt.type );
-            MinMaxArrayTag( mesh.T,    input.scaling.T,   (mesh.Nx-1)*(mesh.Nz-1), "T       ", mesh.BCt.type );
-            MinMaxArrayTag( mesh.p_in, input.scaling.S,   (mesh.Nx-1)*(mesh.Nz-1), "P       ", mesh.BCt.type );
-            MinMaxArrayI  ( mesh.comp_cells, 1.0, (mesh.Nx-1)*(mesh.Nz-1), "comp_cells" );
-            MinMaxArrayTag( mesh.rho_s, input.scaling.rho, (mesh.Nx)*(mesh.Nz),     "rho_s     ", mesh.BCg.type );
-            MinMaxArrayTag( mesh.rho_n, input.scaling.rho, (mesh.Nx-1)*(mesh.Nz-1), "rho_n     ", mesh.BCp.type );
-            MinMaxArrayTag( mesh.rho0_n, input.scaling.rho, (mesh.Nx-1)*(mesh.Nz-1), "rho0_n    ", mesh.BCp.type );
-            MinMaxArrayTag( mesh.X0_s, 1.0, (mesh.Nx)*(mesh.Nz),     "X0_s      ", mesh.BCg.type );
-            MinMaxArrayTag( mesh.X0_n, 1.0, (mesh.Nx-1)*(mesh.Nz-1), "X0_n      ", mesh.BCp.type );
+            MinMaxArrayTag( mesh.d0_n,  input.scaling.L,         (mesh.Nx-1)*(mesh.Nz-1), "d0      ", mesh.BCp.type );
+            MinMaxArrayTag( mesh.d_n,   input.scaling.L,         (mesh.Nx-1)*(mesh.Nz-1), "d       ", mesh.BCp.type );
+            MinMaxArray(particles.sxxd, input.scaling.S,         particles.Nb_part,       "sxxd p. ");
+            MinMaxArray(particles.T,    input.scaling.T,         particles.Nb_part,       "T p.    ");
+            MinMaxArrayTag( mesh.p0_n,  input.scaling.S,         (mesh.Nx-1)*(mesh.Nz-1), "p0_n    ",   mesh.BCp.type );
+            MinMaxArrayTag( mesh.sxz0,  input.scaling.S,         (mesh.Nx)*(mesh.Nz),     "sxz0    ", mesh.BCg.type );
+            MinMaxArrayTag( mesh.sxxd0, input.scaling.S,         (mesh.Nx-1)*(mesh.Nz-1), "sxx0    ", mesh.BCp.type );
+            MinMaxArrayTag( mesh.szzd0, input.scaling.S,         (mesh.Nx-1)*(mesh.Nz-1), "szz0    ", mesh.BCp.type );
+            MinMaxArrayTag( mesh.mu_s,  input.scaling.S,         (mesh.Nx)*(mesh.Nz),     "mu_s    ", mesh.BCg.type );
+            MinMaxArrayTag( mesh.mu_n,  input.scaling.S,         (mesh.Nx-1)*(mesh.Nz-1), "mu_n    ", mesh.BCp.type );
+            MinMaxArrayTag( mesh.C_s,   input.scaling.S,         (mesh.Nx)*(mesh.Nz),     "C_s     ", mesh.BCg.type );
+            MinMaxArrayTag( mesh.C_n,   input.scaling.S,         (mesh.Nx-1)*(mesh.Nz-1), "C_n     ", mesh.BCp.type );
+            MinMaxArrayTag( mesh.fric_s,   180.0/M_PI,           (mesh.Nx)*(mesh.Nz),     "fric_s  ", mesh.BCg.type );
+            MinMaxArrayTag( mesh.fric_n,   180.0/M_PI,           (mesh.Nx-1)*(mesh.Nz-1), "fric_n  ", mesh.BCp.type );
+            MinMaxArrayTag( mesh.dil_s,    180.0/M_PI,           (mesh.Nx)*(mesh.Nz),     "dil_s   ", mesh.BCg.type );
+            MinMaxArrayTag( mesh.dil_n,    180.0/M_PI,           (mesh.Nx-1)*(mesh.Nz-1), "dil_n   ", mesh.BCp.type );
+            MinMaxArrayTag( mesh.strain_s,   1.0,                (mesh.Nx)*(mesh.Nz),     "strain_s", mesh.BCg.type );
+            MinMaxArrayTag( mesh.strain_n,   1.0,                (mesh.Nx-1)*(mesh.Nz-1), "strain_n", mesh.BCp.type );
+            MinMaxArrayTag( mesh.bet_s,    1.0/ input.scaling.S, (mesh.Nx)*(mesh.Nz),     "beta_s  ", mesh.BCg.type );
+            MinMaxArrayTag( mesh.bet_n,    1.0/ input.scaling.S, (mesh.Nx-1)*(mesh.Nz-1), "beta_n  ", mesh.BCp.type );
+            MinMaxArrayTag( mesh.T0_n, input.scaling.T,          (mesh.Nx-1)*(mesh.Nz-1), "T0      ", mesh.BCt.type );
+            MinMaxArrayTag( mesh.T,    input.scaling.T,          (mesh.Nx-1)*(mesh.Nz-1), "T       ", mesh.BCt.type );
+            MinMaxArrayTag( mesh.p_in, input.scaling.S,          (mesh.Nx-1)*(mesh.Nz-1), "P       ", mesh.BCt.type );
+            MinMaxArrayTag( mesh.rho_s, input.scaling.rho,       (mesh.Nx)*(mesh.Nz),     "rho_s   ", mesh.BCg.type );
+            MinMaxArrayTag( mesh.rho_n, input.scaling.rho,       (mesh.Nx-1)*(mesh.Nz-1), "rho_n   ", mesh.BCp.type );
+            MinMaxArrayTag( mesh.rho0_n, input.scaling.rho,      (mesh.Nx-1)*(mesh.Nz-1), "rho0_n  ", mesh.BCp.type );
+            MinMaxArrayTag( mesh.X0_s, 1.0,                      (mesh.Nx)*(mesh.Nz),     "X0_s    ", mesh.BCg.type );
+            MinMaxArrayTag( mesh.X0_n, 1.0,                      (mesh.Nx-1)*(mesh.Nz-1), "X0_n    ", mesh.BCp.type );
+            MinMaxArrayTag( mesh.phi0_n,     1.0,               (mesh.Nx-1)*(mesh.Nz-1), "phi0_n   ", mesh.BCp.type );
+            MinMaxArrayTag( mesh.phi_n,      1.0,               (mesh.Nx-1)*(mesh.Nz-1), "phi_n    ", mesh.BCp.type );
+            MinMaxArrayTag( mesh.divth0_n,   input.scaling.E,   (mesh.Nx-1)*(mesh.Nz-1), "divth0_n ", mesh.BCp.type );
 
-            for (int p=0; p< input.model.Nb_phases; p++) {
-                printf("Phase number %d:\n", p);
-                MinMaxArrayTag( mesh.phase_perc_n[p],    1.0, (mesh.Nx-1)*(mesh.Nz-1), "ph_n      ", mesh.BCp.type );
-                MinMaxArrayTag( mesh.phase_perc_s[p],    1.0, (mesh.Nx-0)*(mesh.Nz-0), "ph_s      ", mesh.BCg.type );
-            }
+            // for (int p=0; p< input.model.Nb_phases; p++) {
+            //     printf("Phase number %d:\n", p);
+            //     MinMaxArrayTag( mesh.phase_perc_n[p],    1.0, (mesh.Nx-1)*(mesh.Nz-1), "ph_n      ", mesh.BCp.type );
+            //     MinMaxArrayTag( mesh.phase_perc_s[p],    1.0, (mesh.Nx-0)*(mesh.Nz-0), "ph_s      ", mesh.BCg.type );
+            // }
 
             if ( input.model.anisotropy == 1 ) {
                 MinMaxArrayTag( mesh.FS_AR_n,  1.0,   (mesh.Nx-1)*(mesh.Nz-1),      "FS_AR_n   ", mesh.BCp.type );
@@ -870,6 +899,9 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         // Update pressure on markers
         UpdateParticlePressure( &mesh, input.scaling, input.model, &particles, &input.materials );
 
+        // // Update density on markers
+        // UpdateParticleDensity( &mesh, input.scaling, input.model, &particles, &input.materials );
+
         // Grain size evolution
         UpdateParticleGrainSize( &mesh, input.scaling, input.model, &particles, &input.materials );
 
@@ -877,6 +909,13 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             MinMaxArrayTag( mesh.d0_n   , input.scaling.L, (mesh.Nx-1)*(mesh.Nz-1), "d0", mesh.BCp.type );
             MinMaxArrayTag( mesh.d_n    , input.scaling.L, (mesh.Nx-1)*(mesh.Nz-1), "d ", mesh.BCp.type );
             MinMaxArrayPart( particles.d, input.scaling.L, particles.Nb_part, "d on markers", particles.phase ) ;
+        }
+
+        if (input.model.melting == 1 ) {
+            MeltFractionGrid( &mesh, &particles, &input.materials, &input.model, &input.scaling );
+            UpdateAlphaCp( &mesh, &particles, &input.materials, &input.model, &input.scaling );
+            MinMaxArrayTag( mesh.Cp,         input.scaling.Cp,             (mesh.Nx-1)*(mesh.Nz-1), "Cp     ", mesh.BCp.type );
+            MinMaxArrayTag( mesh.alp,    1.0/input.scaling.T,              (mesh.Nx-1)*(mesh.Nz-1), "alp     ", mesh.BCp.type );
         }
 
         // Update phi on the particles
@@ -904,6 +943,22 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         // Update energy on particles
         UpdateParticleEnergy( &mesh, input.scaling, input.model, &particles, &input.materials );
 
+        // Grain size evolution
+        UpdateParticleGrainSize( &mesh, input.scaling, input.model, &particles, &input.materials );
+
+        if (input.model.noisy == 1 ) {
+            MinMaxArrayTag( mesh.d0_n   , input.scaling.L, (mesh.Nx-1)*(mesh.Nz-1), "d0", mesh.BCp.type );
+            MinMaxArrayTag( mesh.d_n    , input.scaling.L, (mesh.Nx-1)*(mesh.Nz-1), "d ", mesh.BCp.type );
+            MinMaxArrayPart( particles.d, input.scaling.L, particles.Nb_part, "d on markers", particles.phase ) ;
+        }
+
+        if (input.model.melting == 1 ) {
+            MeltFractionGrid( &mesh, &particles, &input.materials, &input.model, &input.scaling );
+        }
+        UpdateDensity( &mesh, &particles, &input.materials, &input.model, &input.scaling );
+        // Update density on markers
+        UpdateParticleDensity( &mesh, input.scaling, input.model, &particles, &input.materials );
+
         //--------------------------------------------------------------------------------------------------------------------------------//
 
         if (input.model.chemical_diffusion == 1)  {
@@ -920,9 +975,14 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         }
         UpdateParticleX( &mesh, input.scaling, input.model, &particles, &input.materials );
 
-        // ArrayEqualArray( mesh.X_n, mesh.X0_n,  (mesh.Nx-1)*(mesh.Nz-1) );
-        // UpdateParticleXpips( &mesh, input.scaling, input.model, &particles, &input.materials );
+        //--------------------------------------------------------------------------------------------------------------------------------//
 
+        // Explicit mass source terms
+        if (input.model.compressible==1) {
+            MassSourceTerm( &mesh, &particles, &input.materials, &input.model, &input.scaling );
+            UpdateParticleDivThermal( &mesh, input.scaling, input.model, &particles, &input.materials ); 
+            MinMaxArrayTag( mesh.divth_n,  input.scaling.E, (mesh.Nx-1)*(mesh.Nz-1), "divth_n", mesh.BCp.type );
+        }
 
         //--------------------------------------------------------------------------------------------------------------------------------//
 
@@ -961,7 +1021,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                 input.model.dt = dt_solve;
             }
 
-            if (nsub>5) error = 1;
+            // if (nsub>5) error = 1;
 
             // Loop on substeps
             for (isub=0; isub<nsub; isub++) {

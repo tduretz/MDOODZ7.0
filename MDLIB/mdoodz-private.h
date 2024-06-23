@@ -69,8 +69,8 @@ typedef struct {
           *u_in, *v_in, *p_in, *p_corr, *sxxd, *sxxd_s, *szzd, *szzd_s, *sxz, *sxz_n, 
           *exxd, *ezzd, *exz, *wxz, *wxz_n,
           *VE_s, *VE_n, *sxxd0, *szzd0, *sxz0, *mu_s, *mu_n, *u_adv, *v_adv,
-          *eta_phys_n, *kx, *kz, *Cv, *Qr, *eta_phys_s, *u_start, *v_start,
-          *p_start, *divth0_n;
+          *eta_phys_n, *kx, *kz, *Cp, *Qr, *eta_phys_s, *u_start, *v_start,
+          *p_start, *divth_n, *divth0_n;
   int    *iter_smooth;
   int    *nb_part_cell, *nb_part_vert;
   BC      BCu, BCv, BCp, BCp_exp, BCT_exp, BCt, BCg, BCC_exp, BCc;
@@ -567,7 +567,7 @@ double          ItpRho1D( double, params*, int );
 double          Interpolate2Ddata( double, double, double, double, double, double, int, int, double* );
 
 
-double          EvaluateDensity(int, double, double, double, params *, mat_prop *);
+double          EvaluateDensity(int, double, double, double, double, params *, mat_prop *);
 void            ComputeMeanQuantitesForTimeSeries(grid *mesh);
 void            LogTimeSeries(grid *, params, scale);
 void            MinMaxArray(double *array, double scale, int size, char *text);
@@ -582,3 +582,8 @@ void            ValidateSetup(MdoodzSetup *setup, MdoodzInput *instance);
 void            SetBCs_MD6( grid*, params*, scale, markers*, mat_prop*, surface* );
 
 void            TransmutateMarkers(markers *particles, mat_prop *materials, double scaling_T);
+void            PartialMelting( double*, double*, double, double T, double, double, double, int, scale* );
+void            UpdateAlphaCp( grid*, markers*, mat_prop*, params*, scale* ); 
+void            MeltFractionGrid( grid*, markers*, mat_prop*, params*, scale* );
+void            MassSourceTerm( grid*, markers*, mat_prop*, params*, scale* );
+void            UpdateParticleDivThermal( grid*, scale, params, markers*, mat_prop* );

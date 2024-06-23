@@ -9,6 +9,7 @@ add_library(mdoodz SHARED
         HDF5Output.c
         InputOutput.c
         Main_DOODZ.c
+        MeltingRoutines.c
         MemoryAllocFree.c
         MiscFunctions.c
         ParticleReseeding.c
