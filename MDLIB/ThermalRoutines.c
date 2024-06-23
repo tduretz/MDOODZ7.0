@@ -149,7 +149,8 @@ void EnergyDirectSolve( grid *mesh, params model, double *rhs_t, markers *partic
             if ( mesh->BCT_exp.type[c0] != 30 ) {
 
                 // Contribution from transient
-                rhoCp   = mesh->rho_n[c2]*mesh->Cv[c2];
+                // printf("mesh->Cp = %2.2e\n", mesh->Cp[c2]*scaling.Cp);
+                rhoCp   = mesh->rho_n[c2]*mesh->Cp[c2];
                 b[eqn]  = transient * rhoCp * mesh->T[c2]/ dt;
 
                 // Contribution from radiogenic sources
@@ -194,7 +195,7 @@ void EnergyDirectSolve( grid *mesh, params model, double *rhs_t, markers *partic
                         eqn     = eqn_t[c2];
                         Ic[eqn] = nnzc;
 
-                        rhoCp = mesh->rho_n[c2]*mesh->Cv[c2];
+                        rhoCp = mesh->rho_n[c2]*mesh->Cp[c2];
                         AW    = mesh->kx[c1]       ;
                         AE    = mesh->kx[c1+1]     ;
                         AS    = mesh->kz[c3]       ;
@@ -417,7 +418,7 @@ void EnergyDirectSolve( grid *mesh, params model, double *rhs_t, markers *partic
                 if ( mesh->BCT_exp.type[c0] != 30 ) {
                     dT           = x[eqn] - mesh->T[c2];
                     mesh->T[c2]  = x[eqn];
-                    dUt         += mesh->rho_n[c2]*mesh->Cv[c2]*dT;
+                    dUt         += mesh->rho_n[c2]*mesh->Cp[c2]*dT;
                     if (mesh->T[c2] < 0.0) {
                         printf("Negative temperature --- Are you crazy! (EnergyDirectSolve)\n");
                         exit(1);

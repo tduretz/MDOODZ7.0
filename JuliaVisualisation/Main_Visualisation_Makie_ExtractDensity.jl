@@ -34,8 +34,8 @@ function main()
 
     # File numbers
     file_start = 00
-    file_step  = 20
-    file_end   = 500
+    file_step  = 10
+    file_end   = 50
 
     # Select field to visualise
     # field = :Phases
@@ -55,8 +55,8 @@ function main()
     # field = :AnisotropyFactor
 
     # Switches
-    printfig    = false  # print figures to disk
-    printvid    = false
+    printfig    = true  # print figures to disk
+    printvid    = true
     framerate   = 10
     ph_contours = false  # add phase contours
     T_contours  = false  # add temperature contours
@@ -116,21 +116,24 @@ function main()
        
 
                
-        filenamenk = string(pathnk, @sprintf("Output%05d.gzip.h5", istep))
-        ρcnk    = Float64.(reshape(ExtractData( filenamenk, "/Centers/rho_n"), ncx, ncz));          ρc[mask_air]  .= NaN
+        # filenamenk = string(pathnk, @sprintf("Output%05d.gzip.h5", istep))
+        # ρcnk    = Float64.(reshape(ExtractData( filenamenk, "/Centers/rho_n"), ncx, ncz));          ρc[mask_air]  .= NaN
 
-        filename000 = string(path000, @sprintf("Output%05d.gzip.h5", istep))
-        ρc000    = Float64.(reshape(ExtractData( filename000, "/Centers/rho_n"), ncx, ncz));          ρc[mask_air]  .= NaN
+        # filename000 = string(path000, @sprintf("Output%05d.gzip.h5", istep))
+        # ρc000    = Float64.(reshape(ExtractData( filename000, "/Centers/rho_n"), ncx, ncz));          ρc[mask_air]  .= NaN
 
-        filename020 = string(path020, @sprintf("Output%05d.gzip.h5", istep))
-        ρc020    = Float64.(reshape(ExtractData( filename020, "/Centers/rho_n"), ncx, ncz));          ρc[mask_air]  .= NaN
+        # filename020 = string(path020, @sprintf("Output%05d.gzip.h5", istep))
+        # ρc020    = Float64.(reshape(ExtractData( filename020, "/Centers/rho_n"), ncx, ncz));          ρc[mask_air]  .= NaN
 
-        filename005 = string(path005, @sprintf("Output%05d.gzip.h5", istep))
-        ρc005    = Float64.(reshape(ExtractData( filename005, "/Centers/rho_n"), ncx, ncz));          ρc[mask_air]  .= NaN
+        # filename005 = string(path005, @sprintf("Output%05d.gzip.h5", istep))
+        # ρc005    = Float64.(reshape(ExtractData( filename005, "/Centers/rho_n"), ncx, ncz));          ρc[mask_air]  .= NaN
 
-        filename0e10 = string(path0e10, @sprintf("Output%05d.gzip.h5", istep))
-        ρc0e10    = Float64.(reshape(ExtractData( filename0e10, "/Centers/rho_n"), ncx, ncz));          ρc[mask_air]  .= NaN
+        # filename0e10 = string(path0e10, @sprintf("Output%05d.gzip.h5", istep))
+        # ρc0e10    = Float64.(reshape(ExtractData( filename0e10, "/Centers/rho_n"), ncx, ncz));          ρc[mask_air]  .= NaN
 
+        tau0e10 = Extractρ("/Users/tduretz/REPO/MDOODZ7.0/MDLIB/qcoe_simp_tau0e10/", istep, ncx, ncz)
+        tau1e9  = Extractρ("/Users/tduretz/REPO/MDOODZ7.0/MDLIB/qcoe_simp_tau1e9/" , istep, ncx, ncz)
+        tau5e9  = Extractρ("/Users/tduretz/REPO/MDOODZ7.0/MDLIB/qcoe_simp_tau5e9/" , istep, ncx, ncz)
         tau1e10 = Extractρ("/Users/tduretz/REPO/MDOODZ7.0/MDLIB/qcoe_simp_tau1e10/", istep, ncx, ncz)
 
         P     = Float64.(reshape(ExtractData( filename, "/Centers/P"), ncx, ncz));              P[mask_air]   .= NaN
@@ -233,31 +236,18 @@ function main()
         end
 
         if field==:DensityProfs
-            ρ1D = zeros(size(ρc,1))
-            ρ1D000  = zeros(size(ρc,1))
-            ρ1D005  = zeros(size(ρc,1))
-            ρ1D020  = zeros(size(ρc,1))
-            ρ1D0e10 = zeros(size(ρc,1))
-            ρ1Dnk = zeros(size(ρc,1))
-            for i=1:size(ρc,1)
-                ρ1D[i] = ρc[i,i]
-                ρ1D000[i] = ρc000[i,i]
-                ρ1D005[i] = ρc005[i,i]
-                ρ1D020[i] = ρc020[i,i]
-                ρ1D0e10[i] = ρc0e10[i,i]
-            end
             ax1 = Axis(f[1, 1], title = L"$ρ$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
             # l1=lines!(ax1, xc./Lc, ρ1D000)
             # l2=lines!(ax1, xc./Lc, ρ1Dnk)
+            l1=lines!(ax1, xc./Lc, tau0e10.ρ1D)
             l2=lines!(ax1, xc./Lc, tau1e9.ρ1D)
-            l3=lines!(ax1, xc./Lc, tau1e10.ρ1D)
+            l3=lines!(ax1, xc./Lc, tau5e9.ρ1D)
+            l4=lines!(ax1, xc./Lc, tau1e10.ρ1D)
             # l2=lines!(ax1, xc./Lc, ρ1D005, label="nsm005")
             # l3=lines!(ax1, xc./Lc, ρ1D, label="nsm010")
             # l4=lines!(ax1, xc./Lc, ρ1D020, label="nsm020")
 
-            # Legend(f[1, 2],
-            # [l1, l2, l3],
-            # ["tk0", "tk0e10", "tk1e10"])
+            Legend(f[1, 2], [l1, l2, l3, l4], ["tk0", "tk1e9", "tk5e9", "tk1e10"])
 
             # Legend(f[1, 2],
             # [l1, l2, l3, l4],
