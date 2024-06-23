@@ -145,6 +145,7 @@ int main(int nargs, char *args[]) {
     asprintf(&input_file, "NeckingReview.txt"); // Default
   }
   else {
+
     asprintf(&input_file, "%s", args[1]);     // Custom
   }
   printf("Running MDoodz7.0 using %s\n", input_file);
