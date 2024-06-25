@@ -170,6 +170,13 @@ void SetParticles(SetParticles_ff setParticles, MdoodzInput *instance, markers *
         fread( particles->phase, sizeof(int), particles->Nb_part, file);
         fclose(file);
     }
+
+    // Important fix: one needs to deallocate data structure used to store model geometry (if used) 
+    if (instance->geometry) {
+      DoodzFree(instance->geometry[0].ph_hr);
+      DoodzFree(instance->geometry);
+    }
+
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
