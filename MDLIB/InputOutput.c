@@ -1129,6 +1129,7 @@ Input ReadInputFile( char *fileName ) {
     model.initial_noise      = ReadInt2( fin, "initial_noise",         0 ); // Add noise on initial marker locations
     model.marker_noise       = ReadInt2( fin, "marker_noise",          0 ); // Background noise field generated and tracked on the particles 
     model.reseed_markers     = ReadInt2( fin, "reseed_markers",        1 ); // Activates reseeding / particle injection
+    model.reseed_mode        = ReadInt2( fin, "reseed_mode",           0 ); // Activates reseeding / particle injection 
     particles.Nx_part        = ReadInt2( fin, "Nx_part",               4 ); // number of particle per cell in x
     particles.Nz_part        = ReadInt2( fin, "Nz_part",               4 ); // number of particle per cell in y
     particles.min_part_cell  = ReadInt2( fin, "min_part_cell",        16 ); // minimum number of particle per cell (if below: will trigger reseeding)

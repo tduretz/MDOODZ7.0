@@ -176,7 +176,8 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         if (input.model.free_surface == 1 ) CleanUpSurfaceParticles( &particles, &mesh, topo, input.scaling );
 
         // Create phase percentage arrays
-        CountPartCell( &particles, &mesh, input.model, topo, topo_ini, 0, input.scaling  );
+        if ( input.model.reseed_mode == 0 ) CountPartCell_OLD( &particles, &mesh, input.model, topo, topo_ini, 1, input.scaling );
+        if ( input.model.reseed_mode == 1 ) CountPartCell( &particles, &mesh, input.model, topo, topo_ini, 0, input.scaling );
 
         P2Mastah( &input.model, particles, input.materials.eta0, &mesh, mesh.eta_s, mesh.BCg.type,  0, 0, interp, vert, input.model.interp_stencil);
         P2Mastah( &input.model, particles, input.materials.eta0, &mesh, mesh.eta_n, mesh.BCp.type,  0, 0, interp, cent, input.model.interp_stencil);
@@ -1028,114 +1029,118 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
                 printf("************** Advection step %03d of %03d: dtsub = %2.2e **************\n", isub, nsub, input.model.dt* input.scaling.t );
 
-//                 // Advect domain boundaries
-//                 if (input.model.pure_shear_ALE > 0 ) {
-//                     PureShearALE( &input.model, &mesh, &topo_chain, input.scaling );
-//                 }
+                // Advect domain boundaries
+                if (input.model.pure_shear_ALE > 0 ) {
+                    PureShearALE( &input.model, &mesh, &topo_chain, input.scaling );
+                }
 
-//                 if (input.model.free_surface == 1 ) {
-//                     // Advect free surface with RK2
-//                     RogerGuntherII( &topo_chain, input.model, mesh, 1, input.scaling );
-//                     RogerGuntherII( &topo_chain_ini, input.model, mesh, 1, input.scaling );
-//                 }
+                if (input.model.free_surface == 1 ) {
+                    // Advect free surface with RK2
+                    RogerGuntherII( &topo_chain, input.model, mesh, 1, input.scaling );
+                    RogerGuntherII( &topo_chain_ini, input.model, mesh, 1, input.scaling );
+                }
 
-//                 // Correction for particle inflow 0
-//                 if (input.model.pure_shear_ALE == -1 && input.model.periodic_x == 0) ParticleInflowCheck( &particles, &mesh, input.model, topo, 0 );
+                // Correction for particle inflow 0
+                if (input.model.pure_shear_ALE == -1 && input.model.periodic_x == 0) ParticleInflowCheck( &particles, &mesh, input.model, topo, 0 );
 
                 // Advect fluid particles
-
                 RogerGuntherII( &particles, input.model, mesh, 1, input.scaling );
 
                 // WriteOutputHDF5( &mesh, &particles, &topo, &topo_chain, input.model, Nmodel, BaseOutputFileName, input.materials, input.scaling );
                 // WriteOutputHDF5Particles( &mesh, &particles, &topo, &topo_chain, &topo_ini, &topo_chain_ini, input.model, BaseParticleFileName, input.materials, input.scaling );
 
-//                 // Correction for particle inflow 1
-//                 if (input.model.pure_shear_ALE == -1 && input.model.periodic_x == 0) ParticleInflowCheck( &particles, &mesh, input.model, topo, 1 );
+                // Correction for particle inflow 1
+                if (input.model.pure_shear_ALE == -1 && input.model.periodic_x == 0) ParticleInflowCheck( &particles, &mesh, input.model, topo, 1 );
 
-//                 // Update accumulated strain
-//                 AccumulatedStrainII( &mesh, input.scaling, input.model, &particles,  mesh.xc_coord,  mesh.zc_coord, mesh.Nx-1, mesh.Nz-1, mesh.BCp.type );
+                // Update accumulated strain
+                AccumulatedStrainII( &mesh, input.scaling, input.model, &particles,  mesh.xc_coord,  mesh.zc_coord, mesh.Nx-1, mesh.Nz-1, mesh.BCp.type );
 
-//                 // Update deformation gradient tensor components
-//                 if (input.model.finite_strain == 1 ) DeformationGradient( mesh, input.scaling, input.model, &particles );
+                // Update deformation gradient tensor components
+                if (input.model.finite_strain == 1 ) DeformationGradient( mesh, input.scaling, input.model, &particles );
 
-//                 if (input.model.writer_debug == 1 ) {
-//                     WriteOutputHDF5( &mesh, &particles, &topo, &topo_chain, input.model, Nmodel, "Output_BeforeSurfRemesh", input.materials, input.scaling );
-//                     WriteOutputHDF5Particles( &mesh, &particles, &topo, &topo_chain, &topo_ini, &topo_chain_ini, input.model, "Particles_BeforeSurfRemesh", input.materials, input.scaling );
-//                 }
+                if (input.model.writer_debug == 1 ) {
+                    WriteOutputHDF5( &mesh, &particles, &topo, &topo_chain, input.model, Nmodel, "Output_BeforeSurfRemesh", input.materials, input.scaling );
+                    WriteOutputHDF5Particles( &mesh, &particles, &topo, &topo_chain, &topo_ini, &topo_chain_ini, input.model, "Particles_BeforeSurfRemesh", input.materials, input.scaling );
+                }
 
-//                 if (input.model.free_surface == 1 ) {
+                if (input.model.free_surface == 1 ) {
 
-//                     // Get current topography
-//                     InterpTopoPart2Grid(  &topo,     &topo_chain,     input.model, mesh, input.scaling, mesh.xg_coord, 0 );
-//                     InterpTopoPart2Grid(  &topo_ini, &topo_chain_ini, input.model, mesh, input.scaling, mesh.xg_coord, 0 );
-//                     MarkerChainPolyFit( &topo,     &topo_chain,     input.model, mesh );
-//                     MarkerChainPolyFit( &topo_ini, &topo_chain_ini, input.model, mesh );
+                    // Get current topography
+                    InterpTopoPart2Grid(  &topo,     &topo_chain,     input.model, mesh, input.scaling, mesh.xg_coord, 0 );
+                    InterpTopoPart2Grid(  &topo_ini, &topo_chain_ini, input.model, mesh, input.scaling, mesh.xg_coord, 0 );
+                    MarkerChainPolyFit( &topo,     &topo_chain,     input.model, mesh );
+                    MarkerChainPolyFit( &topo_ini, &topo_chain_ini, input.model, mesh );
 
-//                     // Remesh free surface I
-//                     RemeshMarkerChain( &topo_chain,     &topo, input.model, input.scaling, &mesh, 1 );
-//                     RemeshMarkerChain( &topo_chain_ini, &topo_ini, input.model, input.scaling, &mesh, 1 );
+                    // Remesh free surface I
+                    RemeshMarkerChain( &topo_chain,     &topo, input.model, input.scaling, &mesh, 1 );
+                    RemeshMarkerChain( &topo_chain_ini, &topo_ini, input.model, input.scaling, &mesh, 1 );
 
-//                     // Project topography on vertices
-//                     InterpTopoPart2Grid( &topo,     &topo_chain, input.model, mesh, input.scaling, mesh.xg_coord, 0 );
-//                     InterpTopoPart2Grid( &topo_ini, &topo_chain_ini, input.model, mesh, input.scaling, mesh.xg_coord, 0 );
+                    // Project topography on vertices
+                    InterpTopoPart2Grid( &topo,     &topo_chain, input.model, mesh, input.scaling, mesh.xg_coord, 0 );
+                    InterpTopoPart2Grid( &topo_ini, &topo_chain_ini, input.model, mesh, input.scaling, mesh.xg_coord, 0 );
 
-//                     if ( input.model.writer_debug == 1 ) {
-//                         WriteOutputHDF5( &mesh, &particles, &topo, &topo_chain, input.model, Nmodel, "Output_AfterSurfRemesh", input.materials, input.scaling );
-//                         WriteOutputHDF5Particles( &mesh, &particles, &topo, &topo_chain, &topo_ini, &topo_chain_ini, input.model, "Particles_AfterSurfRemesh", input.materials, input.scaling );
-//                     }
+                    if ( input.model.writer_debug == 1 ) {
+                        WriteOutputHDF5( &mesh, &particles, &topo, &topo_chain, input.model, Nmodel, "Output_AfterSurfRemesh", input.materials, input.scaling );
+                        WriteOutputHDF5Particles( &mesh, &particles, &topo, &topo_chain, &topo_ini, &topo_chain_ini, input.model, "Particles_AfterSurfRemesh", input.materials, input.scaling );
+                    }
 
-//                     // Diffuse topography
-//                     if ( input.model.surface_processes >= 1 )  DiffuseAlongTopography( &mesh, input.model, input.scaling, topo.height, topo.height, mesh.Nx, 0.0, input.model.dt );
+                    // Diffuse topography
+                    if ( input.model.surface_processes >= 1 )  DiffuseAlongTopography( &mesh, input.model, input.scaling, topo.height, topo.height, mesh.Nx, 0.0, input.model.dt );
 
-//                     // Marker chain polynomial fit
-//                     MarkerChainPolyFit( &topo,     &topo_chain, input.model, mesh );
-//                     CorrectTopoIni( &particles, input.materials, &topo_chain_ini, &topo, input.model, input.scaling, &mesh);
-//                     MarkerChainPolyFit( &topo_ini, &topo_chain_ini, input.model, mesh );
+                    // Marker chain polynomial fit
+                    MarkerChainPolyFit( &topo,     &topo_chain, input.model, mesh );
+                    CorrectTopoIni( &particles, input.materials, &topo_chain_ini, &topo, input.model, input.scaling, &mesh);
+                    MarkerChainPolyFit( &topo_ini, &topo_chain_ini, input.model, mesh );
 
-//                     if ( input.model.zero_mean_topo == 1 ) KeepZeroMeanTopo( &input.model, &topo, &topo_chain );
+                    if ( input.model.zero_mean_topo == 1 ) KeepZeroMeanTopo( &input.model, &topo, &topo_chain );
 
-//                     // Sedimentation
-//                     if ( input.model.surface_processes == 2 ) {
-//                         AddPartSed( &particles, input.materials, &topo_chain, &topo, input.model, input.scaling, &mesh);
-//                         CountPartCell( &particles, &mesh, input.model, topo, topo_ini, 0, input.scaling );
-//                     }
+                    // Sedimentation
+                    if ( input.model.surface_processes == 2 ) {
+                        AddPartSed( &particles, input.materials, &topo_chain, &topo, input.model, input.scaling, &mesh);
+                        if ( input.model.reseed_mode == 0 ) CountPartCell_OLD( &particles, &mesh, input.model, topo, topo_ini, 1, input.scaling );
+                        if ( input.model.reseed_mode == 1 ) CountPartCell( &particles, &mesh, input.model, topo, topo_ini, 0, input.scaling );
+                    }
 
-//                     if ( input.model.writer_debug == 1 ) {
-//                         WriteOutputHDF5( &mesh, &particles, &topo, &topo_chain, input.model, Nmodel, "Outputx", input.materials, input.scaling );
-//                         WriteOutputHDF5Particles( &mesh, &particles, &topo, &topo_chain, &topo_ini, &topo_chain_ini, input.model, "Particlesx", input.materials, input.scaling );
-//                     }
+                    if ( input.model.writer_debug == 1 ) {
+                        WriteOutputHDF5( &mesh, &particles, &topo, &topo_chain, input.model, Nmodel, "Outputx", input.materials, input.scaling );
+                        WriteOutputHDF5Particles( &mesh, &particles, &topo, &topo_chain, &topo_ini, &topo_chain_ini, input.model, "Particlesx", input.materials, input.scaling );
+                    }
 
-//                     // Remesh free surface II
-//                     RemeshMarkerChain( &topo_chain,     &topo, input.model, input.scaling, &mesh, 2 );
-//                     RemeshMarkerChain( &topo_chain_ini, &topo_ini, input.model, input.scaling, &mesh, 2 );
-//                     CorrectTopoIni( &particles, input.materials, &topo_chain_ini, &topo, input.model, input.scaling, &mesh);
-//                     MarkerChainPolyFit( &topo_ini, &topo_chain_ini, input.model, mesh );
+                    // Remesh free surface II
+                    RemeshMarkerChain( &topo_chain,     &topo, input.model, input.scaling, &mesh, 2 );
+                    RemeshMarkerChain( &topo_chain_ini, &topo_ini, input.model, input.scaling, &mesh, 2 );
+                    CorrectTopoIni( &particles, input.materials, &topo_chain_ini, &topo, input.model, input.scaling, &mesh);
+                    MarkerChainPolyFit( &topo_ini, &topo_chain_ini, input.model, mesh );
 
-//                     // Remove particles that are above the surface
-//                     CleanUpSurfaceParticles( &particles, &mesh, topo, input.scaling );
+                    // Remove particles that are above the surface
+                    CleanUpSurfaceParticles( &particles, &mesh, topo, input.scaling );
 
-//                     // Call cell flagging routine for free surface calculations
-//                     CellFlagging( &mesh, input.model, topo, input.scaling );
-//                 }
+                    // Call cell flagging routine for free surface calculations
+                    CellFlagging( &mesh, input.model, topo, input.scaling );
+                }
 
-//                 printf("** Time for advection solver = %lf sec\n", (omp_get_wtime() - t_omp) );
+                printf("** Time for advection solver = %lf sec\n", (omp_get_wtime() - t_omp) );
 
-// #ifdef _HDF5_
-//                 if ( input.model.writer_debug == 1 ) {
-//                     WriteOutputHDF5( &mesh, &particles, &topo, &topo_chain, input.model, Nmodel, "Outputxx", input.materials, input.scaling );
-//                     WriteOutputHDF5Particles( &mesh, &particles, &topo, &topo_chain, &topo_ini, &topo_chain_ini, input.model, "Particlesxx", input.materials, input.scaling );
-//                 }
-// #endif
+#ifdef _HDF5_
+                if ( input.model.writer_debug == 1 ) {
+                    WriteOutputHDF5( &mesh, &particles, &topo, &topo_chain, input.model, Nmodel, "Outputxx", input.materials, input.scaling );
+                    WriteOutputHDF5Particles( &mesh, &particles, &topo, &topo_chain, &topo_ini, &topo_chain_ini, input.model, "Particlesxx", input.materials, input.scaling );
+                }
+#endif
 
-                //                printf("*************************************\n");
-                //                printf("************** Reseeding ************\n");
-                //                printf("*************************************\n");
+                printf("*************************************\n");
+                printf("************** Reseeding ************\n");
+                printf("*************************************\n");
 
                 // Count the number of particle per cell
                 t_omp = (double)omp_get_wtime();
                 int NumPartOld  = particles.Nb_part;
-                if ( input.model.reseed_markers == 1 ) CountPartCell( &particles, &mesh, input.model, topo, topo_ini, 1, input.scaling );
-                CountPartCell( &particles, &mesh, input.model, topo, topo_ini, 0, input.scaling );
+                if ( input.model.reseed_markers == 1 ) {
+                        if ( input.model.reseed_mode == 0 ) CountPartCell_OLD( &particles, &mesh, input.model, topo, topo_ini, 1, input.scaling );
+                    if ( input.model.reseed_mode == 1 ) CountPartCell( &particles, &mesh, input.model, topo, topo_ini, 1, input.scaling );
+                }
+                        if ( input.model.reseed_mode == 0 ) CountPartCell_OLD( &particles, &mesh, input.model, topo, topo_ini, 1, input.scaling );
+                if ( input.model.reseed_mode == 1 ) CountPartCell( &particles, &mesh, input.model, topo, topo_ini, 0, input.scaling );
 
                 printf(GREEN "After re-seeding :\n" RESET);
                 printf(GREEN "Initial number of particles = %d --- max allowed: %d\n" RESET, particles.Nb_part_ini, particles.Nb_part_max);
@@ -1152,9 +1157,6 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             }
             input.model.dt = dt_solve;
         }
-
-        // Update time
-        // input.model.time += input.model.dt;
 
         // Free solution arrays
         SFree( &Stokes );
