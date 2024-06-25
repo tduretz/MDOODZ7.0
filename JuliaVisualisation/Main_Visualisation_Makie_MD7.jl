@@ -85,7 +85,7 @@ function main()
     # field = :EffectiveFrictionTime
 
     # Switches
-    printfig    = false  # print figures to disk
+    printfig    = true  # print figures to disk
     printvid    = false
     framerate   = 3
     PlotOnTop = (

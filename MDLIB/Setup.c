@@ -176,7 +176,6 @@ void SetParticles(SetParticles_ff setParticles, MdoodzInput *instance, markers *
       DoodzFree(instance->geometry[0].ph_hr);
       DoodzFree(instance->geometry);
     }
-
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
