@@ -12,9 +12,9 @@ function main()
     path = "/Users/tduretz/REPO/MDOODZ7.0/MDLIB/"
 
     # File numbers
-    file_start = 00
+    file_start = 588
     file_step  = 10
-    file_end   = 00
+    file_end   = 588
 
     # Switches
     resolution  = 500
@@ -75,20 +75,49 @@ function main()
         ε̇xz   = Float64.(reshape(ExtractData( filename, "/Vertices/exz"), nvx, nvz))
         τII   = sqrt.( 0.5*(2*τxx.^2 .+ 0.5*(τxz[1:end-1,1:end-1].^2 .+ τxz[2:end,1:end-1].^2 .+ τxz[1:end-1,2:end].^2 .+ τxz[2:end,2:end].^2 ) ) ); τII[mask_air] .= NaN
         ε̇II   = sqrt.( 0.5*(2*ε̇xx.^2 .+ 0.5*(ε̇xz[1:end-1,1:end-1].^2 .+ ε̇xz[2:end,1:end-1].^2 .+ ε̇xz[1:end-1,2:end].^2 .+ ε̇xz[2:end,2:end].^2 ) ) ); ε̇II[mask_air] .= NaN
-        height  = Float64.(ExtractData( filename, "/Topo/z_grid")); 
-        Vx_grid = Float64.(ExtractData( filename, "/Topo/Vx_grid"));
-        Vz_grid = Float64.(ExtractData( filename, "/Topo/Vz_grid"));  
-        Vx_mark = Float64.(ExtractData( filename, "/Topo/Vx_mark"));
-        Vz_mark = Float64.(ExtractData( filename, "/Topo/Vz_mark"));
-        x_mark  = Float64.(ExtractData( filename, "/Topo/x_mark"));
-        z_mark  = Float64.(ExtractData( filename, "/Topo/z_mark"));
+        # height  = Float64.(ExtractData( filename, "/Topo/z_grid")); 
+        # Vx_grid = Float64.(ExtractData( filename, "/Topo/Vx_grid"));
+        # Vz_grid = Float64.(ExtractData( filename, "/Topo/Vz_grid"));  
+        # Vx_mark = Float64.(ExtractData( filename, "/Topo/Vx_mark"));
+        # Vz_mark = Float64.(ExtractData( filename, "/Topo/Vz_mark"));
+        # x_mark  = Float64.(ExtractData( filename, "/Topo/x_mark"));
+        # z_mark  = Float64.(ExtractData( filename, "/Topo/z_mark"));
 
         # Figure
         f = Figure(resolution = (Lx/Lz*resolution, resolution), fontsize=25)
         ax1 = Axis(f[1, 1], title = L"Phases at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
         # heatmap!(ax1, xc./Lc, zc./Lc, T, linewidth = 4, color=:white )  
-        scatter!(ax1, xm[phm.==0]./Lc, zm[phm.==0]./Lc)     
-        lines!(ax1, xv./Lc, height./Lc)
+        
+        nvx2 = nvx*2
+        nvz2 = nvz*2
+        xv2  = LinRange(xv[1]-Δx/4, xv[end]+Δx/4, nvx2) 
+        zv2  = LinRange(zv[1]-Δz/4, zv[end]+Δz/4, nvz2) 
+
+
+        for i in eachindex(xv2)
+            lines!(ax1, xv2[i]./Lc.*ones(size(zv2)), zv2./Lc, color=:gray)
+        end
+        for i in eachindex(zv2)
+            lines!(ax1, xv2./Lc, zv2[i]./Lc.*ones(size(xv2)), color=:gray)
+        end
+
+        for i in eachindex(xv)
+            lines!(ax1, xv[i]./Lc.*ones(size(zv)), zv./Lc, color=:black)
+        end
+        for i in eachindex(zv)
+            lines!(ax1, xv./Lc, zv[i]./Lc.*ones(size(xv)), color=:black)
+        end
+        
+        
+        scatter!(ax1, xm[phm.==0]./Lc, zm[phm.==0]./Lc, color=:blue)  
+        scatter!(ax1, xm[phm.==1]./Lc, zm[phm.==1]./Lc, color=:red) 
+        scatter!(ax1, xm[phm.==2]./Lc, zm[phm.==2]./Lc, color=:red)  
+        scatter!(ax1, xm[phm.==3]./Lc, zm[phm.==3]./Lc, color=:green) 
+        scatter!(ax1, xm[phm.==4]./Lc, zm[phm.==4]./Lc, color=:orange)
+        scatter!(ax1, xm[phm.==5]./Lc, zm[phm.==5]./Lc, color=:cyan)
+        scatter!(ax1, xm[phm.==6]./Lc, zm[phm.==6]./Lc, color=:black)
+
+        # lines!(ax1, xv./Lc, height./Lc)
         # scatter!(ax1, x_mark./Lc, z_mark./Lc)
        
         DataInspector(f)
