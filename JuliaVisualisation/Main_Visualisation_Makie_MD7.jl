@@ -250,6 +250,7 @@ function main()
             Mak.colgap!(f.layout, 20)
             if printfig Print2Disk( f, path, string(field), istep) end
         end
+        
 
         if field==:Viscosity
             ax1 = Axis(f[1, 1], title = L"$\eta$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
