@@ -20,3 +20,5 @@ MDLIB/*/*/*.png
 *.o
 .vscode
 Manifest.toml
+runs/
+RUNS/
