@@ -149,7 +149,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             BuildInitialTopography(*setup->BuildInitialTopography, &input, &topo_chain_ini );
 
             // Project topography on vertices
-            ProjectTopography( &topo, &topo_chain, input.model, mesh, input.scaling, mesh.xg_coord, 0 );
+            InterpTopoPart2Grid( &topo, &topo_chain, input.model, mesh, input.scaling, mesh.xg_coord, 0 );
 
             // Marker chain polynomial fit
             MarkerChainPolyFit( &topo, &topo_chain, input.model, mesh );
@@ -176,7 +176,8 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         if (input.model.free_surface == 1 ) CleanUpSurfaceParticles( &particles, &mesh, topo, input.scaling );
 
         // Create phase percentage arrays
-        CountPartCell( &particles, &mesh, input.model, topo, topo_ini, 0, input.scaling  );
+        if ( input.model.reseed_mode == 0 ) CountPartCell_OLD( &particles, &mesh, input.model, topo, topo_ini, 1, input.scaling );
+        if ( input.model.reseed_mode == 1 ) CountPartCell( &particles, &mesh, input.model, topo, topo_ini, 0, input.scaling );
 
         P2Mastah( &input.model, particles, input.materials.eta0, &mesh, mesh.eta_s, mesh.BCg.type,  0, 0, interp, vert, input.model.interp_stencil);
         P2Mastah( &input.model, particles, input.materials.eta0, &mesh, mesh.eta_n, mesh.BCp.type,  0, 0, interp, cent, input.model.interp_stencil);
@@ -436,7 +437,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
         clock_t t_omp_step = (double)omp_get_wtime();
 
-        printf(GREEN "Number of particles     = %d\n" RESET, particles.Nb_part    );
+        printf(GREEN "Initial number of particles = %d --- max allowed: %d\n" RESET, particles.Nb_part_ini, particles.Nb_part_max);
 
         // Old time step
         input.model.dt0 = input.model.dt;
@@ -590,9 +591,9 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             MinMaxArrayTag( mesh.rho0_n, input.scaling.rho,      (mesh.Nx-1)*(mesh.Nz-1), "rho0_n  ", mesh.BCp.type );
             MinMaxArrayTag( mesh.X0_s, 1.0,                      (mesh.Nx)*(mesh.Nz),     "X0_s    ", mesh.BCg.type );
             MinMaxArrayTag( mesh.X0_n, 1.0,                      (mesh.Nx-1)*(mesh.Nz-1), "X0_n    ", mesh.BCp.type );
-            MinMaxArrayTag( mesh.phi0_n,     1.0,               (mesh.Nx-1)*(mesh.Nz-1), "phi0_n   ", mesh.BCp.type );
-            MinMaxArrayTag( mesh.phi_n,      1.0,               (mesh.Nx-1)*(mesh.Nz-1), "phi_n    ", mesh.BCp.type );
-            MinMaxArrayTag( mesh.divth0_n,   input.scaling.E,   (mesh.Nx-1)*(mesh.Nz-1), "divth0_n ", mesh.BCp.type );
+            MinMaxArrayTag( mesh.phi0_n,     1.0,                (mesh.Nx-1)*(mesh.Nz-1), "phi0_n  ", mesh.BCp.type );
+            MinMaxArrayTag( mesh.phi_n,      1.0,                (mesh.Nx-1)*(mesh.Nz-1), "phi_n   ", mesh.BCp.type );
+            MinMaxArrayTag( mesh.divth0_n,   input.scaling.E,    (mesh.Nx-1)*(mesh.Nz-1), "divth0_n", mesh.BCp.type );
 
             // for (int p=0; p< input.model.Nb_phases; p++) {
             //     printf("Phase number %d:\n", p);
@@ -1045,6 +1046,9 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                 // Advect fluid particles
                 RogerGuntherII( &particles, input.model, mesh, 1, input.scaling );
 
+                // WriteOutputHDF5( &mesh, &particles, &topo, &topo_chain, input.model, Nmodel, BaseOutputFileName, input.materials, input.scaling );
+                // WriteOutputHDF5Particles( &mesh, &particles, &topo, &topo_chain, &topo_ini, &topo_chain_ini, input.model, BaseParticleFileName, input.materials, input.scaling );
+
                 // Correction for particle inflow 1
                 if (input.model.pure_shear_ALE == -1 && input.model.periodic_x == 0) ParticleInflowCheck( &particles, &mesh, input.model, topo, 1 );
 
@@ -1062,8 +1066,8 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                 if (input.model.free_surface == 1 ) {
 
                     // Get current topography
-                    ProjectTopography(  &topo,     &topo_chain,     input.model, mesh, input.scaling, mesh.xg_coord, 0 );
-                    ProjectTopography(  &topo_ini, &topo_chain_ini, input.model, mesh, input.scaling, mesh.xg_coord, 0 );
+                    InterpTopoPart2Grid(  &topo,     &topo_chain,     input.model, mesh, input.scaling, mesh.xg_coord, 0 );
+                    InterpTopoPart2Grid(  &topo_ini, &topo_chain_ini, input.model, mesh, input.scaling, mesh.xg_coord, 0 );
                     MarkerChainPolyFit( &topo,     &topo_chain,     input.model, mesh );
                     MarkerChainPolyFit( &topo_ini, &topo_chain_ini, input.model, mesh );
 
@@ -1072,8 +1076,8 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                     RemeshMarkerChain( &topo_chain_ini, &topo_ini, input.model, input.scaling, &mesh, 1 );
 
                     // Project topography on vertices
-                    ProjectTopography( &topo,     &topo_chain, input.model, mesh, input.scaling, mesh.xg_coord, 0 );
-                    ProjectTopography( &topo_ini, &topo_chain_ini, input.model, mesh, input.scaling, mesh.xg_coord, 0 );
+                    InterpTopoPart2Grid( &topo,     &topo_chain, input.model, mesh, input.scaling, mesh.xg_coord, 0 );
+                    InterpTopoPart2Grid( &topo_ini, &topo_chain_ini, input.model, mesh, input.scaling, mesh.xg_coord, 0 );
 
                     if ( input.model.writer_debug == 1 ) {
                         WriteOutputHDF5( &mesh, &particles, &topo, &topo_chain, input.model, Nmodel, "Output_AfterSurfRemesh", input.materials, input.scaling );
@@ -1093,7 +1097,8 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                     // Sedimentation
                     if ( input.model.surface_processes == 2 ) {
                         AddPartSed( &particles, input.materials, &topo_chain, &topo, input.model, input.scaling, &mesh);
-                        CountPartCell( &particles, &mesh, input.model, topo, topo_ini, 0, input.scaling );
+                        if ( input.model.reseed_mode == 0 ) CountPartCell_OLD( &particles, &mesh, input.model, topo, topo_ini, 1, input.scaling );
+                        if ( input.model.reseed_mode == 1 ) CountPartCell( &particles, &mesh, input.model, topo, topo_ini, 0, input.scaling );
                     }
 
                     if ( input.model.writer_debug == 1 ) {
@@ -1123,18 +1128,22 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                 }
 #endif
 
-                //                printf("*************************************\n");
-                //                printf("************** Reseeding ************\n");
-                //                printf("*************************************\n");
+                printf("*************************************\n");
+                printf("************** Reseeding ************\n");
+                printf("*************************************\n");
 
                 // Count the number of particle per cell
                 t_omp = (double)omp_get_wtime();
                 int NumPartOld  = particles.Nb_part;
-                if ( input.model.reseed_markers == 1 ) CountPartCell( &particles, &mesh, input.model, topo, topo_ini, 1, input.scaling );
-                CountPartCell( &particles, &mesh, input.model, topo, topo_ini, 0, input.scaling );
+                if ( input.model.reseed_markers == 1 ) {
+                        if ( input.model.reseed_mode == 0 ) CountPartCell_OLD( &particles, &mesh, input.model, topo, topo_ini, 1, input.scaling );
+                    if ( input.model.reseed_mode == 1 ) CountPartCell( &particles, &mesh, input.model, topo, topo_ini, 1, input.scaling );
+                }
+                        if ( input.model.reseed_mode == 0 ) CountPartCell_OLD( &particles, &mesh, input.model, topo, topo_ini, 1, input.scaling );
+                if ( input.model.reseed_mode == 1 ) CountPartCell( &particles, &mesh, input.model, topo, topo_ini, 0, input.scaling );
 
                 printf(GREEN "After re-seeding :\n" RESET);
-                printf(GREEN "Initial number of particles = %d\n" RESET, particles.Nb_part_ini);
+                printf(GREEN "Initial number of particles = %d --- max allowed: %d\n" RESET, particles.Nb_part_ini, particles.Nb_part_max);
                 printf(GREEN "Old number of particles     = %d\n" RESET, NumPartOld           );
                 printf(GREEN "New number of particles     = %d\n" RESET, particles.Nb_part    );
 
@@ -1148,9 +1157,6 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             }
             input.model.dt = dt_solve;
         }
-
-        // Update time
-        // input.model.time += input.model.dt;
 
         // Free solution arrays
         SFree( &Stokes );
