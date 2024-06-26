@@ -1,8 +1,8 @@
 import Pkg
 Pkg.activate(normpath(joinpath(@__DIR__, ".")))
 using HDF5, Printf, Colors, ColorSchemes, MathTeXEngine, LinearAlgebra, FFMPEG, Statistics
-using CairoMakie, GLMakie
-const Mak = GLMakie
+using CairoMakie#, GLMakie
+const Mak = CairoMakie
 Makie.update_theme!(fonts = (regular = texfont(), bold = texfont(:bold), italic = texfont(:italic)))
 
 const y    = 365*24*3600
@@ -32,7 +32,7 @@ function AddCountourQuivers!(PlotOnTop, ax1, xc, xv, zc, V, T, σ1, Fab, height,
         arrows!(ax1, xc./Lc, zc./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5, color=:white)
     end   
     if PlotOnTop.vel_vec
-        arrows!(ax1, xc./Lc, zc./Lc, V.x*cm_y, V.z*cm_y, arrowsize = V.arrow, lengthscale = V.scale)
+        arrows!(ax1, xc[1:V.step:end]./Lc, zc[1:V.step:end]./Lc, V.x[1:V.step:end,1:V.step:end]*cm_y, V.z[1:V.step:end,1:V.step:end]*cm_y, arrowsize = V.arrow, lengthscale = V.scale)
     end 
     if PlotOnTop.topo
         lines!(ax1, xv./Lc, height./Lc)
@@ -44,7 +44,9 @@ function main()
     # Set the path to your files
     path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/TEST_ROMAN_ANI3_00_MR/"
     path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/_p10_e18_t3/"
-    path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/_p10_e18_t1_nonconv/"
+    path ="/home/larafriedrichs/repositories/MDOODZ7.0/MDLIB/"
+    #path=raw"C:\Users\49176\OneDrive\Desktop\Test_c_code\\"
+    path="/home/larafriedrichs/repositories/MDOODZ7.0/runs/firstmodel/"
     path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/"
 
     # path ="/Users/tduretz/Downloads/"
@@ -58,19 +60,19 @@ function main()
     # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/1_NR09/"
 
     # File numbers
-    file_start = 130
-    file_step  = 100
-    file_end   = 130
+    file_start = 100
+    file_step  = 10
+    file_end   = 100
 
     # Select field to visualise
-    field = :Phases
+    # field = :Phases
     # field = :Cohesion
-    # field = :Density
+     field = :Density
     # field = :Viscosity 
     # field = :PlasticStrainrate
     # field = :Stress
     # field = :StrainRate
-    # field = :Pressure
+     field = :Pressure
     # field = :Divergence
     # field = :Temperature
     # field = :Velocity_x
@@ -94,11 +96,12 @@ function main()
         fabric      = false,  # add fabric quiver (normal to director)
         topo        = false,
         σ1_axis     = false,
-        vel_vec     = false,
+        vel_vec     = true,
     )
     α_heatmap   = 1.0 #0.85   # transparency of heatmap 
     vel_arrow   = 5
-    vel_scale   = 300000
+    vel_scale   = 1000000
+    vel_step    = 5
     nap         = 0.1    # pause for animation 
     resol       = 1000
     mov_name    = "$(path)/_$(field)/$(field)"  # Name of the movie
@@ -208,7 +211,7 @@ function main()
         end
         Vxc   = 0.5 .* (Vx[1:end-1,2:end-1] .+ Vx[2:end-0,2:end-1])
         Vzc   = 0.5 .* (Vz[2:end-1,1:end-1] .+ Vz[2:end-1,2:end-0])
-        V = (x=Vxc, z=Vzc, arrow=vel_arrow, scale=vel_scale)
+        V = (x=Vxc, z=Vzc, arrow=vel_arrow, step=vel_step, scale=vel_scale)
         σ1 = 0.
         if PlotOnTop.σ1_axis 
             σ1 = PrincipalStress(τxx, τzz, τxz, P) 
@@ -247,6 +250,7 @@ function main()
             Mak.colgap!(f.layout, 20)
             if printfig Print2Disk( f, path, string(field), istep) end
         end
+        
 
         if field==:Viscosity
             ax1 = Axis(f[1, 1], title = L"$\eta$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
