@@ -171,12 +171,10 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         MinMaxArray(particles.szzd, input.scaling.S, particles.Nb_part, "szzd part  ");
         MinMaxArray(particles.sxxd, input.scaling.S, particles.Nb_part, "sxz part  ");
 
-
-
         if (input.model.free_surface == 1 ) CleanUpSurfaceParticles( &particles, &mesh, topo, input.scaling );
 
         // Create phase percentage arrays
-        if ( input.model.reseed_mode == 0 ) CountPartCell_OLD( &particles, &mesh, input.model, topo, topo_ini, 1, input.scaling );
+        if ( input.model.reseed_mode == 0 ) CountPartCell_OLD( &particles, &mesh, input.model, topo, topo_ini, 0, input.scaling );
         if ( input.model.reseed_mode == 1 ) CountPartCell( &particles, &mesh, input.model, topo, topo_ini, 0, input.scaling );
 
         P2Mastah( &input.model, particles, input.materials.eta0, &mesh, mesh.eta_s, mesh.BCg.type,  0, 0, interp, vert, input.model.interp_stencil);
@@ -1097,7 +1095,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                     // Sedimentation
                     if ( input.model.surface_processes == 2 ) {
                         AddPartSed( &particles, input.materials, &topo_chain, &topo, input.model, input.scaling, &mesh);
-                        if ( input.model.reseed_mode == 0 ) CountPartCell_OLD( &particles, &mesh, input.model, topo, topo_ini, 1, input.scaling );
+                        if ( input.model.reseed_mode == 0 ) CountPartCell_OLD( &particles, &mesh, input.model, topo, topo_ini, 0, input.scaling );
                         if ( input.model.reseed_mode == 1 ) CountPartCell( &particles, &mesh, input.model, topo, topo_ini, 0, input.scaling );
                     }
 
@@ -1132,14 +1130,19 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                 printf("************** Reseeding ************\n");
                 printf("*************************************\n");
 
+                // WriteOutputHDF5( &mesh, &particles, &topo, &topo_chain, input.model, Nmodel, "Output", input.materials, input.scaling );
+                // WriteOutputHDF5Particles( &mesh, &particles, &topo, &topo_chain, &topo_ini, &topo_chain_ini, input.model, "Particles", input.materials, input.scaling );
+
                 // Count the number of particle per cell
                 t_omp = (double)omp_get_wtime();
                 int NumPartOld  = particles.Nb_part;
+                // Reseed
                 if ( input.model.reseed_markers == 1 ) {
-                        if ( input.model.reseed_mode == 0 ) CountPartCell_OLD( &particles, &mesh, input.model, topo, topo_ini, 1, input.scaling );
+                    if ( input.model.reseed_mode == 0 ) CountPartCell_OLD( &particles, &mesh, input.model, topo, topo_ini, 1, input.scaling );
                     if ( input.model.reseed_mode == 1 ) CountPartCell( &particles, &mesh, input.model, topo, topo_ini, 1, input.scaling );
                 }
-                        if ( input.model.reseed_mode == 0 ) CountPartCell_OLD( &particles, &mesh, input.model, topo, topo_ini, 1, input.scaling );
+                // Count
+                if ( input.model.reseed_mode == 0 ) CountPartCell_OLD( &particles, &mesh, input.model, topo, topo_ini, 0, input.scaling );
                 if ( input.model.reseed_mode == 1 ) CountPartCell( &particles, &mesh, input.model, topo, topo_ini, 0, input.scaling );
 
                 printf(GREEN "After re-seeding :\n" RESET);
@@ -1179,16 +1182,6 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             DoodzFree( Jacob.eqn_v );
             DoodzFree( Jacob.eqn_p );
         }
-
-        // double mean_z = 0.;
-        // int n=0;
-        // for (int i=0; i<topo_chain.Nb_part_max; i++) {
-        //     if (topo_chain.phase[i] != -1) {
-        //         mean_z += topo_chain.z[i];
-        //         n++;
-        //     }
-        // }
-        // printf("mean topo on markers = %2.2e --- %d out of %d and max is %d \n", mean_z/n*input.scaling.L, n, topo_chain.Nb_part, topo_chain.Nb_part_max);
 
         //------------------------------------------------------------------------------------------------------------------------------//
 

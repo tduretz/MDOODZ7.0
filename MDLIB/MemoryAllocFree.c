@@ -494,6 +494,8 @@ grid GridAlloc(params *model) {
   mesh.BCC_exp.val    = DoodzCalloc((Nx + 1) * (Nz + 1), sizeof(double));
   mesh.BCt.type       = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(char));
   mesh.BCt.val        = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  mesh.BCt_fine.type  = DoodzCalloc((2*Nx-2) * (2*Nz-2), sizeof(char));
+  mesh.BCt_fine.val   = DoodzCalloc((2*Nx-2) * (2*Nz-2), sizeof(double));
   mesh.Wdiss          = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
   mesh.Wel            = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
   mesh.Wtot           = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
@@ -797,13 +799,15 @@ void GridFree(grid *mesh, params *model) {
     DoodzFree(mesh->BCC_exp.val);
     DoodzFree(mesh->BCt.val);
     DoodzFree(mesh->BCt.type);
+    DoodzFree(mesh->BCt_fine.val);
+    DoodzFree(mesh->BCt_fine.type);
     DoodzFree(mesh->Wdiss);
     DoodzFree(mesh->Wel);
     DoodzFree(mesh->Wtot);
     
     // Chemical diffusion
     DoodzFree(mesh->BCc.val);
-    DoodzFree(mesh->BCc.type);;
+    DoodzFree(mesh->BCc.type);
 
     // Grid tagging
     DoodzFree(mesh->BCg.val);

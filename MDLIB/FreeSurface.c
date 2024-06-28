@@ -368,16 +368,16 @@ void InterpTopoPart2Grid( surface *topo, markers *topo_chain, params model, grid
     }
 
     // Get topography on the centroids of a twice finer mesh
-    int nvx = 2*Nx;
+    int nvx = 2*Nx-2;
     int ncx = nvx-1;
-    int k_coarse = 0;
-    for (int k=0;k<ncx;k+=2) {
-        topo->height_finer_c[k] = topo->height[k_coarse];
-        k_coarse++;
-    }
-    for (int k=1;k<ncx;k+=2) {
-        topo->height_finer_c[k] = 0.5*(topo->height[k_coarse] + topo->height[k_coarse+1]);
-        k_coarse++;
+    int k_fine = 0;
+    for (int k=0;k<Nx-1;k++) {
+        double hW = topo->height[k];
+        double hE = topo->height[k+1];
+        topo->height_finer_c[k_fine] = 0.75*hW + 0.25*hE;
+        k_fine++;
+        topo->height_finer_c[k_fine] = 0.25*hW + 0.75*hE;
+        k_fine++;
     }
 
     // Free memory
@@ -427,7 +427,7 @@ void AllocateMarkerChain( surface *topo, markers* topo_chain, params model ) {
     // for (int i=1; i<topo_chain->Nb_part_max; i++) topo_chain->phase[i] = -1; 
     topo->height            = DoodzCalloc( (model.Nx),sizeof(DoodzFP) );
     topo->height0           = DoodzCalloc( (model.Nx),sizeof(DoodzFP) );
-    topo->height_finer_c    = DoodzCalloc( (2*model.Nx-1),sizeof(DoodzFP) ); // height on twice finer mesh used for marker remeshing
+    topo->height_finer_c    = DoodzCalloc( (2*model.Nx-2),sizeof(DoodzFP) ); // height on twice finer mesh used for marker remeshing
     topo->vx                = DoodzCalloc( (model.Nx),sizeof(DoodzFP) );
     topo->vz                = DoodzCalloc( (model.Nx+1),sizeof(DoodzFP) );
     topo->a                 = DoodzCalloc( (model.Nx-1),sizeof(DoodzFP) );
