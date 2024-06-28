@@ -273,7 +273,7 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
     int    res_fact = 1;
     int    nxviz, nzviz, nxviz_hr, nzviz_hr;
     char  *compo, *compo_hr, *compo_dual_hr;
-    float *Cxviz, *Czviz, *Cxviz_hr, *Czviz_hr, *Cxtopo, *Cztopo, *Cheight, *Ctopovx, *Ctopovz, *Ctopovx_mark, *Ctopovz_mark;
+    float *Cxviz, *Czviz, *Cxviz_hr, *Czviz_hr, *Cxtopo, *Cztopo, *Cheight, *Cheight_finer_c, *Ctopovx, *Ctopovz, *Ctopovx_mark, *Ctopovz_mark;
     double *P_total;
     float  *Ccohesion, *Cfriction, *Cani_fac;
 
@@ -663,6 +663,10 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
         DoubleToFloat( topo->height, Cheight, model.Nx );
         ScaleBack( Cheight, scaling.L, model.Nx );
 
+        Cheight_finer_c = DoodzMalloc( sizeof(float)*(2*model.Nx-2));
+        DoubleToFloat( topo->height_finer_c, Cheight_finer_c, 2*model.Nx-2 );
+        ScaleBack( Cheight_finer_c, scaling.L, 2*model.Nx-2 );
+
         Ctopovx = DoodzMalloc( sizeof(float)*(model.Nx));
         DoubleToFloat( topo->vx, Ctopovx, model.Nx );
         ScaleBack( Ctopovx, scaling.V, model.Nx );
@@ -799,6 +803,7 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
 
     if ( model.free_surface == 1 ) {
         AddFieldToGroup( FileName, "Topo", "z_grid" , 'f', (model.Nx), Cheight, 1 );
+        AddFieldToGroup( FileName, "Topo", "z_finer_cent" , 'f', 2*(model.Nx)-2, Cheight_finer_c, 1 );
         AddFieldToGroup( FileName, "Topo", "Vx_grid" , 'f', (model.Nx), Ctopovx, 1 );
         AddFieldToGroup( FileName, "Topo", "Vz_grid" , 'f', (model.Nx+1), Ctopovz, 1 );
         AddFieldToGroup( FileName, "Topo", "x_mark" , 'f', topo_chain->Nb_part, Cxtopo, 1 );
@@ -839,6 +844,8 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
     AddFieldToGroup( FileName, "Flags", "tag_n" , 'c', (model.Nx-1)*(model.Nz-1), mesh->BCp.type,  1 );
     AddFieldToGroup( FileName, "Flags", "tag_u" , 'c', (model.Nx-0)*(model.Nz+1), mesh->BCu.type,  1 );
     AddFieldToGroup( FileName, "Flags", "tag_v" , 'c', (model.Nx+1)*(model.Nz-0), mesh->BCv.type,  1 );
+    AddFieldToGroup( FileName, "Flags", "tag_t_fine" , 'c', (2*model.Nx-2)*(2*model.Nz-2), mesh->BCt_fine.type,  1 );
+
 
     // Add non-iteration log
     AddFieldToGroup( FileName, "Iterations", "rx_abs"          , 'd', Nmodel.nit_max+1, Nmodel.rx_abs         ,  1 );
@@ -910,6 +917,7 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
         DoodzFree( Cxtopo );
         DoodzFree( Cztopo );
         DoodzFree( Cheight );
+        DoodzFree( Cheight_finer_c );
         DoodzFree( Ctopovx );
         DoodzFree( Ctopovz );
         DoodzFree( Ctopovx_mark );

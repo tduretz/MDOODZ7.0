@@ -973,6 +973,10 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
       }
 
       mesh->d_n[c0]          = 1.0/mesh->d_n[c0];
+      if (isinf(mesh->d_n[c0]) || isnan(mesh->d_n[c0]) ) {
+        for ( p=0; p<model->Nb_phases; p++) printf("mesh->phase_perc_n[%d][%d] = %lf\n", p, c0, mesh->phase_perc_n[p][c0]);
+        printf("Cell went empty!!! Exiting..."); exit(345);
+      }
       // if ( model->density_variations == 1 ) mesh->rho_n[c0]        = 1.0/mesh->rho_n[c0];
 
       // HARMONIC AVERAGE
@@ -1347,6 +1351,9 @@ void ShearModCompExpGrid( grid* mesh, mat_prop *materials, params *model, scale 
         if ( average==2 ) mesh->mu_n[c0]  = exp(mesh->mu_n[c0]);
         if ( average==1 ) mesh->bet_n[c0] = 1.0/mesh->bet_n[c0];
         if ( average==2 ) mesh->bet_n[c0] = exp(mesh->bet_n[c0]);
+      }
+      if (isinf( mesh->mu_n[c0])) {
+        printf("%f x = %2.6e z = %2.6e - BCp %d BCt %d\n", mesh->mu_n[c0], mesh->xc_coord[k]*scaling.L, mesh->zc_coord[l]*scaling.L, mesh->BCp.type[c0], mesh->BCt.type[c0]); exit(32);
       }
     }
   }
