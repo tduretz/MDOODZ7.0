@@ -73,7 +73,7 @@ typedef struct {
           *p_start, *divth_n, *divth0_n;
   int    *iter_smooth;
   int    *nb_part_cell, *nb_part_vert;
-  BC      BCu, BCv, BCp, BCp_exp, BCT_exp, BCt, BCg, BCC_exp, BCc;
+  BC      BCu, BCv, BCp, BCp_exp, BCT_exp, BCt, BCg, BCC_exp, BCc, BCt_fine;
   // TODO rename BCu and rename BCv to BCVx and BCVz
   // TODO rename BCp to BCP (P as pressure is always capital P)
   // TODO find and and do the same for (T as temperature)
@@ -255,6 +255,7 @@ void            Initialise2DArrayInt(int *, int, int, int);
 void            MinMaxArrayVal(DoodzFP *, int, double *, double *);
 void            MinMaxArrayTag(DoodzFP *, double, int, char *, char *);
 void            MinMaxArrayTagInt(int *, double, int, char *, char *);
+void            MinMaxArrayTagChar(char *, double, int, char *, char *);
 void            MinMaxArrayPart(DoodzFP *, double, int, char *, int *);
 double          SumArray(double *, double, int, char *);
 //void MinMaxArrayF( float*, double, int, char*);

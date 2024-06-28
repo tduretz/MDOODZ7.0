@@ -1481,12 +1481,16 @@ firstprivate( model )
             // Old stresses grid --> markers
             Interp_Grid2P_centroids2( *particles, txxm0, mesh, mesh->sxxd0, mesh->xvz_coord,  mesh->zvx_coord, Nx-1, Nz-1, mesh->BCp.type, model  );
             Interp_Grid2P_centroids2( *particles, tzzm0, mesh, mesh->szzd0, mesh->xvz_coord,  mesh->zvx_coord, Nx-1, Nz-1, mesh->BCp.type, model  );
-            Interp_Grid2P( *particles, txzm0, mesh, mesh->sxz0 , mesh->xg_coord,  mesh->zg_coord, Nx  , Nz  , mesh->BCg.type     );
+            Interp_Grid2P( *particles, txzm0, mesh, mesh->sxz0,       mesh->xg_coord,  mesh->zg_coord, Nx  , Nz  , mesh->BCg.type);
             Interp_Grid2P( *particles, etam,  mesh, mesh->eta_phys_s, mesh->xg_coord,  mesh->zg_coord, Nx  , Nz  , mesh->BCg.type);
-            
+        
+
             MinMaxArray(mesh->eta_phys_s, scaling->eta, Nx*Nz, "eta grid  ");
             MinMaxArrayTag( mesh->eta_phys_s, scaling->eta, Nx*Nz,   "eta_s", mesh->BCg.type );
             MinMaxArray(etam, scaling->eta, particles->Nb_part, "eta phys part  ");
+
+            // Interp_Grid2P_eta( *particles, etam,  mesh, mesh->eta_phys_s, mesh->xg_coord,  mesh->zg_coord, Nx  , Nz  , mesh->BCg.type);
+
             
             if ( model->subgrid_diffusion == 2 ) {
                 
@@ -1502,12 +1506,12 @@ firstprivate( model )
                         dtzzms[k] = -( particles->szzd[k] - tzzm0[k]) * (1.0 - exp(-d*dt/dtaum));
                         dtxzms[k] = -( particles->sxz[k]  - txzm0[k]) * (1.0 - exp(-d*dt/dtaum));
                         if (isinf(dtxxms[k])) {
-                            printf("Infinite dtxxms[k]: %2.2e %2.2e %2.2e\n", particles->sxxd[k], txxm0[k], exp(-d*dt/dtaum));
+                            printf("Inf dtxxms[k]: sxxd=%2.2e txxm0=%2.2e exp(-d*dt/dtaum)=%2.2e d=%2.2e dt=%2.2e dtaum=%2.2e etam=%2.2e G=%2.2e\n", particles->sxxd[k], txxm0[k], exp(-d*dt/dtaum), d, dt, dtaum, etam[k]*scaling->eta, materials->G[p]*scaling->S);
                             printf("%2.2e %2.2e %2.2e %2.2e %2.2e", d, dt, dtaum, etam[k]*scaling->eta, materials->G[p]*scaling->S );
                             exit(1);
                         }
                         if (isnan(dtxxms[k])) {
-                            printf("Infinite dtxxms[k]: %2.2e %2.2e %2.2e\n", particles->sxxd[k], txxm0[k], exp(-d*dt/dtaum));
+                            printf("NaN dtxxms[k]: sxxd=%2.2e txxm0=%2.2e exp(-d*dt/dtaum)=%2.2e d=%2.2e dt=%2.2e dtaum=%2.2e etam=%2.2e G=%2.2e\n", particles->sxxd[k], txxm0[k], exp(-d*dt/dtaum), d, dt, dtaum, etam[k]*scaling->eta, materials->G[p]*scaling->S);
                             exit(1);
                         }
                     }
