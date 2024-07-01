@@ -89,7 +89,15 @@ SetBC SetBCVx(MdoodzInput *instance, POSITION position, Coordinates coord) {
   const double mc     = 1e3;
   double       Vx, Vz, P, eta, sxx, szz, x, z;
   if (instance->model.shear_style == 0) {
-    if (position == W || position == E) {
+    if (position == W) {
+      x = coord.x;
+      z = coord.z;
+      eval_anal_Dani(&Vx, &Vz, &P, &eta, &sxx, &szz, x, z, 1, radius, mm, mc);
+      // bc.type  = 0;
+      // bc.value = Vx;
+      bc.type  = 2;
+      bc.value = sxx;
+    } else if (position == E) {
       x = coord.x;
       z = coord.z;
       eval_anal_Dani(&Vx, &Vz, &P, &eta, &sxx, &szz, x, z, 1, radius, mm, mc);

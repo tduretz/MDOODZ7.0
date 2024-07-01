@@ -779,6 +779,9 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
                 if (input.model.writer_debug == 1 ) WriteResiduals( mesh, input.model, Nmodel, input.scaling );
 
+                // Print2DArrayChar( mesh.BCu.type, input.model.Nx, input.model.Nz+1, 1 );
+                // Print2DArrayDouble( mesh.ru, input.model.Nx, input.model.Nz+1, 1.0 );
+
                 // if pass --> clear matrix break
                 if ( (Nmodel.resx < Nmodel.nonlin_abs_mom || Nmodel.resx/Nmodel.resx0 < Nmodel.nonlin_rel_mom) && (Nmodel.resz < Nmodel.nonlin_abs_mom || Nmodel.resz/Nmodel.resz0 < Nmodel.nonlin_rel_mom) && (Nmodel.resp < Nmodel.nonlin_abs_div || Nmodel.resp/Nmodel.resp0 < Nmodel.nonlin_rel_div) ) {
                     printf( "Non-linear solver converged to nonlin_abs_mom = %2.2e nonlin_abs_div = %2.2e nonlin_rel_mom = %2.2e nonlin_rel_div = %2.2e\n", Nmodel.nonlin_abs_mom, Nmodel.nonlin_abs_div, Nmodel.nonlin_rel_mom, Nmodel.nonlin_rel_div );

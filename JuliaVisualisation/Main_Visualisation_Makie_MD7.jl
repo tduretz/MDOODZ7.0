@@ -2,7 +2,7 @@ import Pkg
 Pkg.activate(normpath(joinpath(@__DIR__, ".")))
 using HDF5, Printf, Colors, ColorSchemes, MathTeXEngine, LinearAlgebra, FFMPEG, Statistics
 using CairoMakie#, GLMakie
-const Mak = CairoMakie
+Mak = CairoMakie
 Makie.update_theme!(fonts = (regular = texfont(), bold = texfont(:bold), italic = texfont(:italic)))
 
 const y    = 365*24*3600
@@ -47,7 +47,7 @@ function main()
     path ="/home/larafriedrichs/repositories/MDOODZ7.0/MDLIB/"
     #path=raw"C:\Users\49176\OneDrive\Desktop\Test_c_code\\"
     path="/home/larafriedrichs/repositories/MDOODZ7.0/runs/firstmodel/"
-    #path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/"
+    path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/"
 
     # path ="/Users/tduretz/Downloads/"
     # path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/DoubleSubduction_OMP16/"
@@ -60,9 +60,9 @@ function main()
     # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/1_NR09/"
 
     # File numbers
-    file_start = 100
+    file_start = 1
     file_step  = 10
-    file_end   = 100
+    file_end   = 1
 
     # Select field to visualise
     # field = :Phases
@@ -72,10 +72,10 @@ function main()
     # field = :PlasticStrainrate
     # field = :Stress
     # field = :StrainRate
-     field = :Pressure
+    #  field = :Pressure
     # field = :Divergence
     # field = :Temperature
-    # field = :Velocity_x
+    field = :Velocity_x
     # field = :Velocity_z
     # field = :Velocity
     # field = :GrainSize
@@ -97,7 +97,7 @@ function main()
         fabric      = false,  # add fabric quiver (normal to director)
         topo        = false,
         σ1_axis     = false,
-        vel_vec     = true,
+        vel_vec     = false,
     )
     α_heatmap   = 1.0 #0.85   # transparency of heatmap 
     vel_arrow   = 5

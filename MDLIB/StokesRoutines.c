@@ -343,21 +343,6 @@ void ApplyBC( grid* mesh, params* model ) {
         }
     }
 
-// for( j=0; j<nz+1; j++) {
-//     for( i=0; i<nx; i++) {
-//         printf("%03d ", i+j*(nx));
-//     }
-// printf("\n");
-// }
-
-// for( j=0; j<nz+1; j++) {
-//     for( i=0; i<nx; i++) {
-//         printf("%d ", mesh->BCu.type[i+j*(nx)]);
-//     }
-// printf("\n");
-// }
-
-
     // Vx Dirichlet
     for( i=0; i<nx; i++) {
         // South
@@ -705,6 +690,8 @@ void SolveStokesDefectDecoupled( SparseMat *StokesA, SparseMat *StokesB, SparseM
 
     // Call direct solver
     t_omp = (double)omp_get_wtime();
+
+    // DirectStokesDecoupled    ( StokesA, StokesB, StokesC, StokesD, PardisoStokes, StokesA->F, StokesC->F, dx, *model, mesh, scaling, Stokes );
     if ( model->lin_solver == 0 ) DirectStokesDecoupled    ( StokesA, StokesB, StokesC, StokesD, PardisoStokes, StokesA->F, StokesC->F, dx, *model, mesh, scaling, Stokes );
     if ( model->lin_solver == 1 ) KSPStokesDecoupled       ( StokesA, StokesB, StokesC, StokesD, PardisoStokes, StokesA->F, StokesC->F, dx, *model, mesh, scaling, Stokes, Stokes, JacobA, JacobB, JacobC );
     if ( model->lin_solver == 2 ) KillerSolver             ( StokesA, StokesB, StokesC, StokesD, PardisoStokes, StokesA->F, StokesC->F, dx, *model, mesh, scaling, Stokes, Stokes, JacobA, JacobB, JacobC );

@@ -36,13 +36,12 @@ end
 
 
 function main()
-
     solve = false
     γ     = 2.1e7
 
     # File
     path     ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/"
-    filename = string(path, "Stokes_01cpu_step1429_iter00.gzip.h5") 
+    filename = string(path, "Stokes_01cpu_step01_iter01.gzip.h5") 
     # path     ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/RiverTom/"
     # filename = string(path, "Stokes_01cpu_step229_iter00.gzip.h5") 
     # Matrix block A
@@ -75,13 +74,21 @@ function main()
     model = ExtractData(filename,"/model/params");
     nx, nz, Δx, Δz = model
 
+    display(reshape(equ, Int64(nx), Int64(nz+1))[:,end:-1:1]')
+    display(reshape(eqv, Int64(nx+1), Int64(nz))[:,end:-1:1]')
+
     # Spies
     Msc = MA - MB*(MD*MC);
     @show norm(MA-MA')
     @show norm(MB+MC')
     @show norm(Msc-Msc')
-    p = spy(MA-MA')
-    display(p)
+    if norm(Msc-Msc')>0
+        p = spy(MA-MA')
+        # p = spy(MA)
+        @show MA[11,101]
+        @show MA[101,11]
+        display(p)
+    end
 
 
     # Solve

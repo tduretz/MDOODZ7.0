@@ -1168,8 +1168,8 @@ void KillerSolver( SparseMat *matA,  SparseMat *matB,  SparseMat *matC,  SparseM
     L =  cs_di_multiply( Dc, Cc );
 
     //    //----- test - in case C' != B (assume B is deficient)
-    //    B1 = cs_di_transpose( Cc, 1);
-    //
+    //    cs_di *B1 = cs_di_transpose( Cc, 1);
+    
     //    // minus sign: B = -C'
     //    for (k=0; k<B1->nzmax; k++)  B1->x[k] *= -1.0; // could be implicitly included in the next lines
 
