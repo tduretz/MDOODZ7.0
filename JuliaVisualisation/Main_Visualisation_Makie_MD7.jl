@@ -72,10 +72,10 @@ function main()
     # field = :PlasticStrainrate
     # field = :Stress
     # field = :StrainRate
-    #  field = :Pressure
+     field = :Pressure
     # field = :Divergence
     # field = :Temperature
-    field = :Velocity_x
+    # field = :Velocity_x
     # field = :Velocity_z
     # field = :Velocity
     # field = :GrainSize
@@ -97,14 +97,14 @@ function main()
         fabric      = false,  # add fabric quiver (normal to director)
         topo        = false,
         σ1_axis     = false,
-        vel_vec     = false,
+        vel_vec     = true,
     )
     α_heatmap   = 1.0 #0.85   # transparency of heatmap 
     vel_arrow   = 5
-    vel_scale   = 1000000
+    vel_scale   = 1e-9
     vel_step    = 5
     nap         = 0.1    # pause for animation 
-    resol       = 1000
+    resol       = 500
     mov_name    = "$(path)/_$(field)/$(field)"  # Name of the movie
     Lx, Lz      = 1.0, 1.0
 
@@ -285,7 +285,7 @@ function main()
 
         if field==:Pressure
             ax1 = Axis(f[1, 1], title = L"$P$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
-            hm = heatmap!(ax1, xc./Lc, zc./Lc, P./1e9, colormap = (:turbo, α_heatmap)) #, colorrange=(1,1.2)1e4*365*24*3600
+            hm = heatmap!(ax1, xc./Lc, zc./Lc, P, colormap = (:turbo, α_heatmap)) #, colorrange=(1,1.2)1e4*365*24*3600
             AddCountourQuivers!(PlotOnTop, ax1, xc, xv, zc, V, T, σ1, Fab, height, Lc, cm_y, group_phases, Δ)                
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
             Mak.Colorbar(f[1, 2], hm, label =  L"$P$ [GPa]", width = 20, labelsize = 25, ticklabelsize = 14 )

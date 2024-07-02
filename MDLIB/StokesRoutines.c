@@ -406,6 +406,8 @@ void ApplyBC( grid* mesh, params* model ) {
     //    Print2DArrayDouble( mesh->v_in, nxvz, nz, 1.0 );
     //    printf("p\n");
     //    Print2DArrayDouble( mesh->p_in, nx-1, nz-1, 1.0 );
+
+    // Print2DArrayChar(mesh->BCu.type, nx, nzvx, 1.0 );
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/

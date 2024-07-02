@@ -928,22 +928,24 @@ void Xmomentum_InnerNodesDecoupled( SparseMat *Stokes, SparseMat *StokesA, Spars
     if (mesh->BCp.type[iPrW] == -1) inW = 1.0;
     if (mesh->BCp.type[iPrE] == -1) inE = 1.0;
     
-    double inS=1.0, inN = 1.0, NeuS = 0.0, NeuN = 0.0, DirS = 0.0, DirN = 0.0;
-    if (mesh->BCg.type[ixyS] == 30 || mesh->BCu.type[iVxS] == 13) {NeuS = 1.0; inS = 0.0;}
-    if (mesh->BCg.type[ixyN] == 30 || mesh->BCu.type[iVxN] == 13) {NeuN = 1.0; inN = 0.0;}
-    if (                              mesh->BCu.type[iVxS] == 11) {DirS = 1.0; inS = 0.0;}
-    if (                              mesh->BCu.type[iVxN] == 11) {DirN = 1.0; inN = 0.0;}
+    double inS=1.0, inN = 1.0, RegS = 1.0, RegN = 1.0, NeuS = 0.0, NeuN = 0.0, DirS = 0.0, DirN = 0.0;
+    if (mesh->BCg.type[ixyS] == 30 ) inS=0.0;
+    if (mesh->BCg.type[ixyN] == 30 ) inN=0.0;
+    if (mesh->BCu.type[iVxS] == 13) {NeuS = 1.0; RegS = 0.0;}
+    if (mesh->BCu.type[iVxN] == 13) {NeuN = 1.0; RegN = 0.0;}
+    if (mesh->BCu.type[iVxS] == 11) {DirS = 1.0; RegS = 0.0;}
+    if (mesh->BCu.type[iVxN] == 11) {DirN = 1.0; RegN = 0.0;}
 
     // Simpler
-    uW = D11W*inW*(0.33333333333333331*inW*out_of_plane - 1)/pow(dx, 2);
-    uC = (pow(dx, 2)*(D33N*(2*DirS + inN) + D33S*(2*DirN + inS)) - pow(dz, 2)*(D11E*inE*(0.33333333333333331*inE*out_of_plane - 1) + D11W*inW*(0.33333333333333331*inW*out_of_plane - 1)))/(pow(dx, 2)*pow(dz, 2));
-    uE = D11E*inE*(0.33333333333333331*inE*out_of_plane - 1)/pow(dx, 2);
-    uS = -D33S*inS/pow(dz, 2);
-    uN = -D33N*inN/pow(dz, 2);
-    vSW = (0.33333333333333331*D11W*pow(inW, 2)*out_of_plane - D33S)/(dx*dz);
-    vSE = (-0.33333333333333331*D11E*pow(inE, 2)*out_of_plane + D33S)/(dx*dz);
-    vNW = (-0.33333333333333331*D11W*pow(inW, 2)*out_of_plane + D33N)/(dx*dz);
-    vNE = (0.33333333333333331*D11E*pow(inE, 2)*out_of_plane - D33N)/(dx*dz);
+uW = -D11W*inW/pow(dx, 2);
+uC = (pow(dx, 2)*(D33N*inN*(2*DirS + RegN) + D33S*inS*(2*DirN + RegS)) + pow(dz, 2)*(D11E*inE + D11W*inW))/(pow(dx, 2)*pow(dz, 2));
+uE = -D11E*inE/pow(dx, 2);
+uS = -D33S*RegS*inS/pow(dz, 2);
+uN = -D33N*RegN*inN/pow(dz, 2);
+vSW = -D33S*inS/(dx*dz);
+vSE = D33S*inS/(dx*dz);
+vNW = D33N*inN/(dx*dz);
+vNE = -D33N*inN/(dx*dz);
     pW  =  -one_dx;
     pE  =   one_dx;
 
@@ -993,7 +995,119 @@ void Xmomentum_InnerNodesDecoupled( SparseMat *Stokes, SparseMat *StokesA, Spars
         StokesA->F[eqn] -= StokesA->b[eqn] - uC_corr*u[iVxC]; // no body force
         StokesA->F[eqn] *= celvol;
     }
-}
+} 
+
+// void Xmomentum_InnerNodesDecoupled( SparseMat *Stokes, SparseMat *StokesA, SparseMat *StokesB, int Assemble, int lev, int stab, int comp, double om, int sign, params model, double one_dx, double one_dz, double one_dx_dx, double one_dz_dz, double one_dx_dz, double celvol, grid* mesh, int ith, int c1, int c2, int c3, int nx, int ncx, int nxvz, int eqn, double* u, double* v, double* p, int **JtempA, double **AtempA, int *nnzc2A, int **JtempB, double **AtempB, int *nnzc2B  ) {
+    
+//     double dx = mesh->dx;
+//     double dz = mesh->dz;
+//     double out_of_plane = 1.0;
+//     if ( model.out_of_plane==1 ) out_of_plane = 3.0/2.0;
+//     double uC_corr = 0.0;
+
+//     comp  = 0;
+    
+//     int iVxC   = c1;
+//     int iVxW   = iVxC-1;
+//     int iVxE   = iVxC+1;
+//     int iVxS   = iVxC-nx;
+//     int iVxN   = iVxC+nx;
+//     int iVzSW  = c3-nxvz;
+//     int iVzSE  = c3-nxvz+1;
+//     int iVzNW  = c3;
+//     int iVzNE  = c3+1;
+//     int iPrW   = c2;
+//     int iPrE   = c2+1;
+//     int ixyN   = c1;
+//     int ixyS   = c1-nx;
+    
+//     // Periodic stencil
+//     if ( mesh->BCu.type[iVxC]==-2 ) {
+//         iVxW  = c1+nx-2;
+//         iPrW  = c2+ncx;
+//         iVzSW = c3-2;
+//         iVzNW = c3+nxvz-2;
+//     }
+    
+//     double D11E = mesh->D11_n[iPrE];
+//     double D11W = mesh->D11_n[iPrW];
+//     double D33N = mesh->D33_s[ixyN];
+//     double D33S = mesh->D33_s[ixyS];
+//     comp = 1;
+    
+//     double uS=0.0, uN=0.0, uW=0.0, uE=0.0, uC=0.0, vSW=0.0, vSE=0.0, vNW=0.0, vNE=0.0, pE=0.0, pW=0.0;
+
+//     // Flags
+//     double inE=0.0, inW=0.0;
+//     if (mesh->BCp.type[iPrW] == -1) inW = 1.0;
+//     if (mesh->BCp.type[iPrE] == -1) inE = 1.0;
+    
+//     double inS=1.0, inN = 1.0, NeuS = 0.0, NeuN = 0.0, DirS = 0.0, DirN = 0.0;
+//     if (mesh->BCg.type[ixyS] == 30 || mesh->BCu.type[iVxS] == 13) {NeuS = 1.0; inS = 0.0;}
+//     if (mesh->BCg.type[ixyN] == 30 || mesh->BCu.type[iVxN] == 13) {NeuN = 1.0; inN = 0.0;}
+//     if (                              mesh->BCu.type[iVxS] == 11) {DirS = 1.0; inS = 0.0;}
+//     if (                              mesh->BCu.type[iVxN] == 11) {DirN = 1.0; inN = 0.0;}
+
+//     // Simpler
+//     uW = D11W*inW*(0.33333333333333331*inW*out_of_plane - 1)/pow(dx, 2);
+//     uC = (pow(dx, 2)*(D33N*(2*DirS + inN) + D33S*(2*DirN + inS)) - pow(dz, 2)*(D11E*inE*(0.33333333333333331*inE*out_of_plane - 1) + D11W*inW*(0.33333333333333331*inW*out_of_plane - 1)))/(pow(dx, 2)*pow(dz, 2));
+//     uE = D11E*inE*(0.33333333333333331*inE*out_of_plane - 1)/pow(dx, 2);
+//     uS = -D33S*inS/pow(dz, 2);
+//     uN = -D33N*inN/pow(dz, 2);
+//     vSW = (0.33333333333333331*D11W*pow(inW, 2)*out_of_plane - D33S)/(dx*dz);
+//     vSE = (-0.33333333333333331*D11E*pow(inE, 2)*out_of_plane + D33S)/(dx*dz);
+//     vNW = (-0.33333333333333331*D11W*pow(inW, 2)*out_of_plane + D33N)/(dx*dz);
+//     vNE = (0.33333333333333331*D11E*pow(inE, 2)*out_of_plane - D33N)/(dx*dz);
+//     pW  =  -one_dx;
+//     pE  =   one_dx;
+
+//     // if (eqn== 1) printf("uN = %1.4f\n", uN);
+//     // if (eqn==10) printf("uS = %1.4f\n", uS);
+
+//     // Stabilisation with density gradients
+//     if ( stab==1 ) {
+//         double drhodx  = (mesh->rho_n[c2+1] - mesh->rho_n[c2])*one_dx;
+//         uC_corr = 1.00 * om * model.dt * mesh->gx[c1] * drhodx;
+//         // Importante trique, voire meme gigantesque!
+//         if (uC+uC_corr<0.0) uC_corr = 0.0;
+//         uC += uC_corr;
+//     }
+    
+//     if ( Assemble == 1 ) {
+//         StokesA->b[eqn] *= celvol;
+//         StokesB->b[eqn] *= celvol;
+//         //--------------------
+//         // dsxx/dx - normal stencil
+//         if (mesh->BCu.type[iVxS] != 30)    AddCoeff3( JtempA[ith], AtempA[ith], eqn, Stokes->eqn_u[iVxS], &(nnzc2A[ith]), uS*celvol, mesh->BCu.type[iVxS],     mesh->BCu.val[iVxS], StokesA->bbc);        
+//         if (mesh->BCu.type[iVxW] != 30)    AddCoeff3( JtempA[ith], AtempA[ith], eqn, Stokes->eqn_u[iVxW],  &(nnzc2A[ith]), uW*celvol, mesh->BCu.type[iVxW],  mesh->BCu.val[iVxW],  StokesA->bbc);
+//         AddCoeff3( JtempA[ith], AtempA[ith], eqn, eqn,                  &(nnzc2A[ith]), uC*celvol, mesh->BCu.type[iVxC],    mesh->BCu.val[iVxC],    StokesA->bbc);
+//         if (mesh->BCu.type[iVxE] != 30)   AddCoeff3( JtempA[ith], AtempA[ith], eqn, Stokes->eqn_u[iVxE],  &(nnzc2A[ith]), uE*celvol, mesh->BCu.type[iVxE],  mesh->BCu.val[iVxE],  StokesA->bbc);
+//         if (mesh->BCu.type[iVxN] != 30)   AddCoeff3( JtempA[ith], AtempA[ith], eqn, Stokes->eqn_u[iVxN], &(nnzc2A[ith]), uN*celvol, mesh->BCu.type[iVxN],   mesh->BCu.val[iVxN], StokesA->bbc);
+//         //--------------------
+//         if ( mesh->BCv.type[iVzSW] != 30 ) AddCoeff3( JtempA[ith], AtempA[ith], eqn, Stokes->eqn_v[iVzSW], &(nnzc2A[ith]), vSW*celvol, mesh->BCv.type[iVzSW], mesh->BCv.val[iVzSW], StokesA->bbc);
+//         if ( mesh->BCv.type[iVzSE] != 30 ) AddCoeff3( JtempA[ith], AtempA[ith], eqn, Stokes->eqn_v[iVzSE], &(nnzc2A[ith]), vSE*celvol, mesh->BCv.type[iVzSE], mesh->BCv.val[iVzSE], StokesA->bbc);
+//         if ( mesh->BCv.type[iVzNW] != 30 ) AddCoeff3( JtempA[ith], AtempA[ith], eqn, Stokes->eqn_v[iVzNW], &(nnzc2A[ith]), vNW*celvol, mesh->BCv.type[iVzNW], mesh->BCv.val[iVzNW], StokesA->bbc);
+//         if ( mesh->BCv.type[iVzNE] != 30 ) AddCoeff3( JtempA[ith], AtempA[ith], eqn, Stokes->eqn_v[iVzNE], &(nnzc2A[ith]), vNE*celvol, mesh->BCv.type[iVzNE], mesh->BCv.val[iVzNE], StokesA->bbc);
+//         //--------------------
+//         if ( mesh->BCp.type[iPrE] != 30 && mesh->BCp.type[iPrW] != 30 ) {
+//             AddCoeff3( JtempB[ith], AtempB[ith], eqn, Stokes->eqn_p[iPrW] - Stokes->neq_mom, &(nnzc2B[ith]), pW*celvol, mesh->BCp.type[iPrW], mesh->BCp.val[iPrW], StokesB->bbc);
+//             AddCoeff3( JtempB[ith], AtempB[ith], eqn, Stokes->eqn_p[iPrE] - Stokes->neq_mom, &(nnzc2B[ith]), pE*celvol, mesh->BCp.type[iPrE], mesh->BCp.val[iPrE], StokesB->bbc);
+//         }
+//     }
+//     else {
+//         // Residual function
+//         StokesA->F[eqn]  = 0.0;
+//         // StokesA->F[eqn] += (inE*mesh->sxxd[iPrE]   - inW*mesh->sxxd[iPrW]  )/dx;
+//         // StokesA->F[eqn] -= (inE*mesh->p_corr[iPrE] - inW*mesh->p_corr[iPrW])/dx;
+//         // StokesA->F[eqn] += (inN*mesh->sxz[ixyN]    - inS*mesh->sxz[ixyS]   )/dz;
+//         StokesA->F[eqn] += (mesh->sxxd[iPrE]   - mesh->sxxd[iPrW]  )/dx;
+//         StokesA->F[eqn] -= (mesh->p_corr[iPrE] - mesh->p_corr[iPrW])/dx;
+//         StokesA->F[eqn] += (mesh->sxz[ixyN]    - mesh->sxz[ixyS]   )/dz;
+//         StokesA->F[eqn] *= -1.0;
+//         StokesA->F[eqn] -= StokesA->b[eqn] - uC_corr*u[iVxC]; // no body force
+//         StokesA->F[eqn] *= celvol;
+//     }
+// }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
@@ -1030,23 +1144,27 @@ void Xmomentum_WestNeumannDecoupled( SparseMat *Stokes, SparseMat *StokesA, Spar
     double inE=0.0, inW=0.0;
     if (mesh->BCp.type[iPrE] == -1) inE = 1.0;
     
-    double inS=1.0, inN = 1.0, NeuS = 0.0, NeuN = 0.0, DirS = 0.0, DirN = 0.0;
-    if (mesh->BCg.type[ixyS] == 30 || mesh->BCu.type[iVxS] == 13) {NeuS = 1.0; inS = 0.0;}
-    if (mesh->BCg.type[ixyN] == 30 || mesh->BCu.type[iVxN] == 13) {NeuN = 1.0; inN = 0.0;}
-    if (                              mesh->BCu.type[iVxS] == 11) {DirS = 1.0; inS = 0.0;}
-    if (                              mesh->BCu.type[iVxN] == 11) {DirN = 1.0; inN = 0.0;}
+    double inS=1.0, inN = 1.0, RegS = 1.0, RegN = 1.0, NeuS = 0.0, NeuN = 0.0, DirS = 0.0, DirN = 0.0;
+    if (mesh->BCg.type[ixyS] == 30 ) inS=0.0;
+    if (mesh->BCg.type[ixyN] == 30 ) inN=0.0;
+    if (mesh->BCu.type[iVxS] == 13) {NeuS = 1.0; RegS = 0.0;}
+    if (mesh->BCu.type[iVxN] == 13) {NeuN = 1.0; RegN = 0.0;}
+    if (mesh->BCu.type[iVxS] == 11) {DirS = 1.0; RegS = 0.0;}
+    if (mesh->BCu.type[iVxN] == 11) {DirN = 1.0; RegN = 0.0;}
 
+    // printf("%lf %lf, %lf, %lf %lf, %lf %lf, %lf\n", inS, inN, RegS, RegN, NeuS, NeuN, DirS, DirN);
 
     // Simpler
-    uC = (-D11E*pow(dz, 2)*inE*(0.33333333333333331*inE*out_of_plane - 1) + pow(dx, 2)*(D33N*(2*DirS + inN) + D33S*(2*DirN + inS)))/(pow(dx, 2)*pow(dz, 2));
-    uE = D11E*inE*(0.33333333333333331*inE*out_of_plane - 1)/pow(dx, 2);
-    uS = -D33S*inS/pow(dz, 2);
-    uN = -D33N*inN/pow(dz, 2);
-    vSW = -D33S/(dx*dz);
-    vSE = (-0.33333333333333331*D11E*pow(inE, 2)*out_of_plane + D33S)/(dx*dz);
-    vNW = D33N/(dx*dz);
-    vNE = (0.33333333333333331*D11E*pow(inE, 2)*out_of_plane - D33N)/(dx*dz);
-    pE  =   inE*one_dx;
+    // ------------------
+    uC = (D11E*pow(dz, 2)*inE + (1.0/2.0)*pow(dx, 2)*(D33N*inN*(2*DirS + RegN) + D33S*inS*(2*DirN + RegS)))/(pow(dx, 2)*pow(dz, 2));
+    uE = -D11E*inE/pow(dx, 2);
+    uS = -1.0/2.0*D33S*RegS*inS/pow(dz, 2);
+    uN = -1.0/2.0*D33N*RegN*inN/pow(dz, 2);
+    vSW = 0;
+    vSE = D33S*inS/(dx*dz);
+    vNW = 0;
+    vNE = -D33N*inN/(dx*dz);
+    pE  =   one_dx;
 
     // Stabilisation with density gradients
     if ( stab==1 ) {
@@ -1071,28 +1189,23 @@ void Xmomentum_WestNeumannDecoupled( SparseMat *Stokes, SparseMat *StokesA, Spar
         if ( mesh->BCv.type[iVzSE] != 30 ) AddCoeff3( JtempA[ith], AtempA[ith], eqn, Stokes->eqn_v[iVzSE], &(nnzc2A[ith]), vSE*celvol, mesh->BCv.type[iVzSE], mesh->BCv.val[iVzSE], StokesA->bbc);
         if ( mesh->BCv.type[iVzNW] != 30 ) AddCoeff3( JtempA[ith], AtempA[ith], eqn, Stokes->eqn_v[iVzNW], &(nnzc2A[ith]), vNW*celvol, mesh->BCv.type[iVzNW], mesh->BCv.val[iVzNW], StokesA->bbc);
         if ( mesh->BCv.type[iVzNE] != 30 ) AddCoeff3( JtempA[ith], AtempA[ith], eqn, Stokes->eqn_v[iVzNE], &(nnzc2A[ith]), vNE*celvol, mesh->BCv.type[iVzNE], mesh->BCv.val[iVzNE], StokesA->bbc);
-        // printf("%d\n", Stokes->eqn_v[iVzSW]);
-        // printf("%d %d\n", eqn, Stokes->eqn_v[iVzSE]);
-        // printf("%d\n", Stokes->eqn_v[iVzNW]);
-        // printf("%d %d\n", eqn, Stokes->eqn_v[iVzNE]);
-
-
-
         //--------------------
         if ( mesh->BCp.type[iPrE] != 30) {
             AddCoeff3( JtempB[ith], AtempB[ith], eqn, Stokes->eqn_p[iPrE] - Stokes->neq_mom, &(nnzc2B[ith]), pE*celvol, mesh->BCp.type[iPrE], mesh->BCp.val[iPrE], StokesB->bbc);
-        }   
+        }  
     }
     else {
         // Residual function
         const double SxxE = mesh->sxxd[iPrE] - mesh->p_corr[iPrE];
-        const double SxxW = 2*mesh->BCu.val[iVxC] - SxxE;
+        const double SxxW = 2.0*mesh->BCu.val[iVxC] - SxxE;
         StokesA->F[eqn]  = 0.0;
         StokesA->F[eqn] += (SxxE - SxxW )/dx;
-        StokesA->F[eqn] += (mesh->sxz[ixyN] - mesh->sxz[ixyS])/dz*2; // dodgy factor 2 make it symmetric
-        StokesA->F[eqn] *= -1/2;
+        StokesA->F[eqn] += (mesh->sxz[ixyN] - mesh->sxz[ixyS])/dz;
+        StokesA->F[eqn] *= -1.0;
         StokesA->F[eqn] -= StokesA->b[eqn] - uC_corr*u[iVxC]; // no body force
+        StokesA->F[eqn] *= 0.5; // multiply residual by 1/2 to make matrix symmetric
         StokesA->F[eqn] *= celvol;
+        // printf("mesh->BCu.val[iVxC] =%lf, SxxW = %lf SxxE = %lf dSxxdx + dSxzdz = %lf b = %lf, F = %lf\n", mesh->BCu.val[iVxC], SxxW, SxxE, (SxxE - SxxW )/dx + (mesh->sxz[ixyN] - mesh->sxz[ixyS])/dz*2, StokesA->b[eqn], StokesA->F[eqn]);
     }
 }
 
@@ -1252,10 +1365,13 @@ void Zmomentum_InnerNodesDecoupled( SparseMat *Stokes, SparseMat *StokesA, Spars
     int iVzE   = iVzC+1;
     int iVzS   = iVzC-nxvz;
     int iVzN   = iVzC+nxvz;
-    int iVxSW  = c1-nx;
-    int iVxSE  = c1-nx+1;
-    int iVxNW  = c1;
-    int iVxNE  = c1+1;
+    // ------------------
+    // WTF!!!!!!!!!!!
+    int iVxNW  = c1+nx-1;
+    int iVxNE  = c1+nx;
+    int iVxSW  = c1-1;
+    int iVxSE  = c1;
+    // ------------------
     int iPrS   = c2;
     int iPrN   = c2+ncx;
     int ixyE   = c1;
@@ -1274,26 +1390,35 @@ void Zmomentum_InnerNodesDecoupled( SparseMat *Stokes, SparseMat *StokesA, Spars
     if (mesh->BCp.type[iPrS] == -1) inS = 1.0;
     if (mesh->BCp.type[iPrN] == -1) inN = 1.0;
     
-    double inW=1.0, inE = 1.0, NeuW = 0., NeuE = 0, DirW = 0., DirE = 0.;
-    if (mesh->BCg.type[ixyW] == 30 || mesh->BCv.type[iVzW] == 13) {NeuW = 1.0; inW = 0.0;}
-    if (mesh->BCg.type[ixyE] == 30 || mesh->BCv.type[iVzE] == 13) {NeuE = 1.0; inE = 0.0;}
-    if (                              mesh->BCv.type[iVzW] == 11) {DirW = 1.0; inW = 0.0;}
-    if (                              mesh->BCv.type[iVzE] == 11) {DirE = 1.0; inE = 0.0;}      
+    double inW=1.0, inE = 1.0, RegW = 1., RegE = 1., NeuW = 0., NeuE = 0, DirW = 0., DirE = 0.;
+    if (mesh->BCg.type[ixyW] == 30) inW = 0.0;
+    if (mesh->BCg.type[ixyE] == 30) inE = 0.0;
+    if (mesh->BCv.type[iVzW] == 13) {NeuW = 1.0; RegW = 0.0;}
+    if (mesh->BCv.type[iVzE] == 13) {NeuE = 1.0; RegE = 0.0;}
+    if (mesh->BCv.type[iVzW] == 11) {DirW = 1.0; RegW = 0.0;}
+    if (mesh->BCv.type[iVzE] == 11) {DirE = 1.0; RegE = 0.0;}      
 
     // Simpler
-    vW = -D33W*inW/pow(dx, 2);
-    vC = (-pow(dx, 2)*(D22N + D22S)*(0.33333333333333331*out_of_plane - 1) + pow(dz, 2)*(D33E*(2*DirE + inE) + D33W*(2*DirW + inW)))/(pow(dx, 2)*pow(dz, 2));
-    vE = -D33E*inE/pow(dx, 2);
-    vS = D22S*(0.33333333333333331*out_of_plane - 1)/pow(dz, 2);
-    vN = D22N*(0.33333333333333331*out_of_plane - 1)/pow(dz, 2);
-    uSW = (0.33333333333333331*D22S*out_of_plane - D33W)/(dx*dz);
-    uSE = (-0.33333333333333331*D22S*out_of_plane + D33E)/(dx*dz);
-    uNW = (-0.33333333333333331*D22N*out_of_plane + D33W)/(dx*dz);
-    uNE = (0.33333333333333331*D22N*out_of_plane - D33E)/(dx*dz);
+vW = -D33W*RegW*inW/pow(dx, 2);
+vC = (pow(dx, 2)*(D22N + D22S) + pow(dz, 2)*(D33E*inE*(2*DirE + RegE) + D33W*inW*(2*DirW + RegW)))/(pow(dx, 2)*pow(dz, 2));
+vE = -D33E*RegE*inE/pow(dx, 2);
+vS = -D22S/pow(dz, 2);
+vN = -D22N/pow(dz, 2);
+uSW = -D33W*inW/(dx*dz);
+uSE = D33E*inE/(dx*dz);
+uNW = D33W*inW/(dx*dz);
+uNE = -D33E*inE/(dx*dz);
     pS  =  -one_dz;
     pN  =   one_dz;
 
-    // if (eqn==100) printf("uSW = %2.2lf\n", uSW);
+    if (eqn==100) printf("%d %d %d\n", eqn, mesh->BCu.type[iVxSW], mesh->BCu.type[iVxNW]);
+
+    // if (mesh->BCu.type[iVxSW] == 2) uSW = 0.;
+    //  if (mesh->BCu.type[iVxNW] == 2) uNW = 0.;
+    //  if (mesh->BCu.type[iVxSW] == 2) uSE = 0.;
+    //  if (mesh->BCu.type[iVxNW] == 2) uNE = 0.;
+
+    if (eqn==100) printf("uSW = %2.2lf\n", uSW);
 
     // Stabilisation with density gradients
     if ( stab==1 ) {
@@ -1309,10 +1434,10 @@ void Zmomentum_InnerNodesDecoupled( SparseMat *Stokes, SparseMat *StokesA, Spars
         StokesA->b[eqn] *= celvol;
         StokesB->b[eqn] *= celvol;
         //--------------------        
-        if ( mesh->BCu.type[c1+nx]   != 30 ) AddCoeff3( JtempA[ith], AtempA[ith], eqn, Stokes->eqn_u[c1+nx],    &(nnzc2A[ith]), uNE*celvol, mesh->BCu.type[c1+nx],   mesh->BCu.val[c1+nx],   StokesA->bbc );
-        if ( mesh->BCu.type[c1]      != 30 ) AddCoeff3( JtempA[ith], AtempA[ith], eqn, Stokes->eqn_u[c1],       &(nnzc2A[ith]), uSE*celvol, mesh->BCu.type[c1],      mesh->BCu.val[c1],      StokesA->bbc );
-        if ( mesh->BCu.type[c1+nx-1] != 30 ) AddCoeff3( JtempA[ith], AtempA[ith], eqn, Stokes->eqn_u[c1+nx-1],  &(nnzc2A[ith]), uNW*celvol, mesh->BCu.type[c1+nx-1], mesh->BCu.val[c1+nx-1], StokesA->bbc );
-        if ( mesh->BCu.type[c1-1]    != 30 ) AddCoeff3( JtempA[ith], AtempA[ith], eqn, Stokes->eqn_u[c1-1],     &(nnzc2A[ith]), uSW*celvol, mesh->BCu.type[c1-1],    mesh->BCu.val[c1-1],    StokesA->bbc );
+        if ( mesh->BCu.type[iVxSW]   != 30 ) AddCoeff3( JtempA[ith], AtempA[ith], eqn, Stokes->eqn_u[iVxSW],  &(nnzc2A[ith]), uSW*celvol, mesh->BCu.type[iVxSW], mesh->BCu.val[iVxSW], StokesA->bbc );
+        if ( mesh->BCu.type[iVxSE]   != 30 ) AddCoeff3( JtempA[ith], AtempA[ith], eqn, Stokes->eqn_u[iVxSE],  &(nnzc2A[ith]), uSE*celvol, mesh->BCu.type[iVxSE], mesh->BCu.val[iVxSE], StokesA->bbc );
+        if ( mesh->BCu.type[iVxNW]   != 30 ) AddCoeff3( JtempA[ith], AtempA[ith], eqn, Stokes->eqn_u[iVxNW],  &(nnzc2A[ith]), uNW*celvol, mesh->BCu.type[iVxNW], mesh->BCu.val[iVxNW], StokesA->bbc );
+        if ( mesh->BCu.type[iVxNE]   != 30 ) AddCoeff3( JtempA[ith], AtempA[ith], eqn, Stokes->eqn_u[iVxNE],  &(nnzc2A[ith]), uNE*celvol, mesh->BCu.type[iVxNE], mesh->BCu.val[iVxNE], StokesA->bbc );
         //--------------------
         if ( mesh->BCv.type[c3-nxvz] != 30  ) AddCoeff3( JtempA[ith], AtempA[ith], eqn, Stokes->eqn_v[c3-nxvz],  &(nnzc2A[ith]), vS*celvol, mesh->BCv.type[c3-nxvz], mesh->BCv.val[c3-nxvz], StokesA->bbc );
         if ( mesh->BCv.type[c3-1] != 30 && mesh->BCv.type[c3-1] != -12  ) {
@@ -1352,6 +1477,119 @@ void Zmomentum_InnerNodesDecoupled( SparseMat *Stokes, SparseMat *StokesA, Spars
     }
 }
 
+
+// void Zmomentum_InnerNodesDecoupled( SparseMat *Stokes, SparseMat *StokesA, SparseMat *StokesB, int Assemble, int lev, int stab, int comp, double om, int sign, params model, double one_dx, double one_dz, double one_dx_dx, double one_dz_dz, double one_dx_dz, double celvol, grid* mesh, int ith, int c1, int c2, int c3, int nx, int ncx, int nxvz, int eqn, double* u, double* v, double* p, int **JtempA, double **AtempA, int *nnzc2A, int **JtempB, double **AtempB, int *nnzc2B ) {
+
+//     double dx = mesh->dx;
+//     double dz = mesh->dz;
+//     double out_of_plane = 1.0;
+//     if ( model.out_of_plane==1 ) out_of_plane = 3.0/2.0;
+//     double vC_corr = 0.0;
+    
+//     int iVzC   = c3;
+//     int iVzW   = iVzC-1;
+//     int iVzE   = iVzC+1;
+//     int iVzS   = iVzC-nxvz;
+//     int iVzN   = iVzC+nxvz;
+//     int iVxSW  = c1-nx;
+//     int iVxSE  = c1-nx+1;
+//     int iVxNW  = c1;
+//     int iVxNE  = c1+1;
+//     int iPrS   = c2;
+//     int iPrN   = c2+ncx;
+//     int ixyE   = c1;
+//     int ixyW   = c1-1;
+    
+//     double D22S  = mesh->D22_n[iPrS];
+//     double D22N  = mesh->D22_n[iPrN];
+//     double D33E  = mesh->D33_s[ixyE];
+//     double D33W  = mesh->D33_s[ixyW];
+//     comp = 1;
+    
+//     double vS=0.0, vN=0.0, vW=0.0, vE=0.0, vC=0.0, uSW=0.0, uSE=0.0, uNW=0.0, uNE=0.0, pN=0.0, pS=0.0;
+
+//     // Flags
+//     double inN=0.0, inS=0.0;
+//     if (mesh->BCp.type[iPrS] == -1) inS = 1.0;
+//     if (mesh->BCp.type[iPrN] == -1) inN = 1.0;
+    
+//     double inW=1.0, inE = 1.0, NeuW = 0., NeuE = 0, DirW = 0., DirE = 0.;
+//     if (mesh->BCg.type[ixyW] == 30 || mesh->BCv.type[iVzW] == 13) {NeuW = 1.0; inW = 0.0;}
+//     if (mesh->BCg.type[ixyE] == 30 || mesh->BCv.type[iVzE] == 13) {NeuE = 1.0; inE = 0.0;}
+//     if (                              mesh->BCv.type[iVzW] == 11) {DirW = 1.0; inW = 0.0;}
+//     if (                              mesh->BCv.type[iVzE] == 11) {DirE = 1.0; inE = 0.0;}      
+
+//     // Simpler
+//     vW = -D33W*inW/pow(dx, 2);
+//     vC = (-pow(dx, 2)*(D22N + D22S)*(0.33333333333333331*out_of_plane - 1) + pow(dz, 2)*(D33E*(2*DirE + inE) + D33W*(2*DirW + inW)))/(pow(dx, 2)*pow(dz, 2));
+//     vE = -D33E*inE/pow(dx, 2);
+//     vS = D22S*(0.33333333333333331*out_of_plane - 1)/pow(dz, 2);
+//     vN = D22N*(0.33333333333333331*out_of_plane - 1)/pow(dz, 2);
+//     uSW = (0.33333333333333331*D22S*out_of_plane - D33W)/(dx*dz);
+//     uSE = (-0.33333333333333331*D22S*out_of_plane + D33E)/(dx*dz);
+//     uNW = (-0.33333333333333331*D22N*out_of_plane + D33W)/(dx*dz);
+//     uNE = (0.33333333333333331*D22N*out_of_plane - D33E)/(dx*dz);
+//     pS  =  -one_dz;
+//     pN  =   one_dz;
+
+//     // if (eqn==100) printf("uSW = %2.2lf\n", uSW);
+
+//     // Stabilisation with density gradients
+//     if ( stab==1 ) {
+//         double drhodz  = (mesh->rho_n[c2+ncx] - mesh->rho_n[c2])*one_dz;
+//         vC_corr = 1.00 * om * model.dt * mesh->gz[c3] * drhodz;
+//         // Importante trique, voire meme gigantesque!
+//         if ((vC+vC_corr)<0.0 || (vC+vC_corr)<vW || (vC+vC_corr)<vE) vC_corr = 0.0;
+//         vC += vC_corr;
+//     }
+    
+//     if ( Assemble == 1 ) {
+
+//         StokesA->b[eqn] *= celvol;
+//         StokesB->b[eqn] *= celvol;
+//         //--------------------        
+//         if ( mesh->BCu.type[c1+nx]   != 30 ) AddCoeff3( JtempA[ith], AtempA[ith], eqn, Stokes->eqn_u[c1+nx],    &(nnzc2A[ith]), uNE*celvol, mesh->BCu.type[c1+nx],   mesh->BCu.val[c1+nx],   StokesA->bbc );
+//         if ( mesh->BCu.type[c1]      != 30 ) AddCoeff3( JtempA[ith], AtempA[ith], eqn, Stokes->eqn_u[c1],       &(nnzc2A[ith]), uSE*celvol, mesh->BCu.type[c1],      mesh->BCu.val[c1],      StokesA->bbc );
+//         if ( mesh->BCu.type[c1+nx-1] != 30 ) AddCoeff3( JtempA[ith], AtempA[ith], eqn, Stokes->eqn_u[c1+nx-1],  &(nnzc2A[ith]), uNW*celvol, mesh->BCu.type[c1+nx-1], mesh->BCu.val[c1+nx-1], StokesA->bbc );
+//         if ( mesh->BCu.type[c1-1]    != 30 ) AddCoeff3( JtempA[ith], AtempA[ith], eqn, Stokes->eqn_u[c1-1],     &(nnzc2A[ith]), uSW*celvol, mesh->BCu.type[c1-1],    mesh->BCu.val[c1-1],    StokesA->bbc );
+//         //--------------------
+//         if ( mesh->BCv.type[c3-nxvz] != 30  ) AddCoeff3( JtempA[ith], AtempA[ith], eqn, Stokes->eqn_v[c3-nxvz],  &(nnzc2A[ith]), vS*celvol, mesh->BCv.type[c3-nxvz], mesh->BCv.val[c3-nxvz], StokesA->bbc );
+//         if ( mesh->BCv.type[c3-1] != 30 && mesh->BCv.type[c3-1] != -12  ) {
+//             AddCoeff3( JtempA[ith], AtempA[ith], eqn, Stokes->eqn_v[c3-1],     &(nnzc2A[ith]), vW*celvol, mesh->BCv.type[c3-1],    mesh->BCv.val[c3-1],    StokesA->bbc );
+//         }
+//         // Periodic
+//         if ( mesh->BCv.type[c3-1] == -12 ) {
+//             AddCoeff3( JtempA[ith], AtempA[ith], eqn, Stokes->eqn_v[c3+nxvz-3],     &(nnzc2A[ith]), vW*celvol, mesh->BCv.type[c3+nxvz-3],    mesh->BCv.val[c3+nxvz-3],    StokesA->bbc );
+//         }
+//         AddCoeff3( JtempA[ith], AtempA[ith], eqn, eqn,                     &(nnzc2A[ith]), vC*celvol, mesh->BCv.type[c3],      mesh->BCv.val[c3],      StokesA->bbc );
+//         if ( mesh->BCv.type[c3+1] != 30 && mesh->BCv.type[c3+1] != -12  ) {
+//             AddCoeff3( JtempA[ith], AtempA[ith], eqn, Stokes->eqn_v[c3+1],     &(nnzc2A[ith]), vE*celvol, mesh->BCv.type[c3+1],    mesh->BCv.val[c3+1],    StokesA->bbc );
+//         }
+//         // Periodic
+//         if ( mesh->BCv.type[c3+1] == -12 ) {
+//             AddCoeff3( JtempA[ith], AtempA[ith], eqn, Stokes->eqn_v[c3-nxvz+3],     &(nnzc2A[ith]), vE*celvol, mesh->BCv.type[c3-nxvz+3],    mesh->BCv.val[c3-nxvz+3],    StokesA->bbc );
+//         }
+//         if ( mesh->BCv.type[c3+nxvz] != 30  ) AddCoeff3( JtempA[ith], AtempA[ith], eqn, Stokes->eqn_v[c3+nxvz],  &(nnzc2A[ith]), vN*celvol, mesh->BCv.type[c3+nxvz], mesh->BCv.val[c3+nxvz], StokesA->bbc );
+//         //--------------------
+//         if ( mesh->BCp.type[c2] != 30 && mesh->BCp.type[c2+ncx] != 30) {
+//             AddCoeff3( JtempB[ith], AtempB[ith], eqn, Stokes->eqn_p[c2] - Stokes->neq_mom,      &(nnzc2B[ith]), pS*celvol, mesh->BCp.type[c2],     mesh->BCp.val[c2],     StokesB->bbc );
+//             AddCoeff3( JtempB[ith], AtempB[ith], eqn, Stokes->eqn_p[c2+ncx] - Stokes->neq_mom,  &(nnzc2B[ith]), pN*celvol, mesh->BCp.type[c2+ncx], mesh->BCp.val[c2+ncx], StokesB->bbc );
+//         }
+//     }
+//     else {
+//         // Residual function
+//         StokesA->F[eqn]  = 0.0;
+//         // StokesA->F[eqn] += (inN*mesh->szzd[iPrN] - inS*mesh->szzd[iPrS])/dz;
+//         // StokesA->F[eqn] -= (inN*mesh->p_corr[iPrN] - inS*mesh->p_corr[iPrS])/dz;
+//         // StokesA->F[eqn] += (inE*mesh->sxz[ixyE]  - inW*mesh->sxz[ixyW]) /dx;
+//         StokesA->F[eqn] += (mesh->szzd[iPrN]   - mesh->szzd[iPrS])/dz;
+//         StokesA->F[eqn] -= (mesh->p_corr[iPrN] - mesh->p_corr[iPrS])/dz;
+//         StokesA->F[eqn] += (mesh->sxz[ixyE] - mesh->sxz[ixyW]) /dx;
+//         StokesA->F[eqn] *= -1.0;
+//         StokesA->F[eqn] -= StokesA->b[eqn] - vC_corr*v[iVzC]; 
+//         StokesA->F[eqn] *= celvol;
+//     }
+// }
 /*--------------------------------------------------------------------------------------------------------------------*/
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/

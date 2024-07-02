@@ -322,7 +322,7 @@ struct MdoodzInput {
   params             model;
   mat_prop           materials;
   scale              scaling;
-  LateralFlux        *flux;
+  LateralFlux       *flux;
   CrazyConductivity *crazyConductivity;
   Geometry          *geometry;
 };

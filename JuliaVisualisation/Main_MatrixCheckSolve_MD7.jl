@@ -1,5 +1,6 @@
-using HDF5, Plots, SparseArrays, LinearAlgebra, Statistics
-plotlyjs()
+using HDF5, SparseArrays, LinearAlgebra, Statistics
+# using Plots
+# plotlyjs()
 
 function ExtractData( file_path, data_path)
     data = h5open(file_path, "r") do file
@@ -83,11 +84,14 @@ function main()
     @show norm(MB+MC')
     @show norm(Msc-Msc')
     if norm(Msc-Msc')>0
-        p = spy(MA-MA')
-        # p = spy(MA)
-        @show MA[11,101]
+        f = Figure(fontsize=25)
+        ax = Axis(f[1, 1], title = L"A - A'", yreversed=true)
+        p = spy!(ax, (MA-MA'), markersize = 4, marker = :circle, framecolor = :lightgrey)
+        hidedecorations!(ax)
         @show MA[101,11]
-        display(p)
+        @show MA[11,101]
+        DataInspector(f)
+        display(f)
     end
 
 

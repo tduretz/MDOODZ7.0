@@ -2,7 +2,7 @@ import Pkg
 Pkg.activate(normpath(joinpath(@__DIR__, ".")))
 using HDF5, Printf, Colors, ColorSchemes, MathTeXEngine, LinearAlgebra, FFMPEG, Statistics
 using CairoMakie, GLMakie
-# const Mak = GLMakie
+Mak = GLMakie
 Makie.update_theme!(fonts = (regular = texfont(), bold = texfont(:bold), italic = texfont(:italic)))
 
 const y    = 365*24*3600
@@ -27,7 +27,7 @@ function main()
     istep = 1
 
     # Select field to visualise
-    field = :Residual_x
+    # field = :Residual_x
     # field = :Divergence
 
     # Switches

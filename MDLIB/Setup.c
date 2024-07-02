@@ -573,6 +573,12 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh, surface *topo) 
           position = SW;
         } else {
           position = W;
+          int kx = k + (l+1) * (NCX+1);
+          int ky = k + (l) * (NCX+2);
+          if (mesh->BCu.type[kx]==2 && mesh->BCv.type[ky]!=11 && mesh->BCv.type[ky+NCX+2]!=11) {
+            printf("ERROR: West Vx Neumann boundary condition (type 2) can only work with West Dirichlet Vy condition (type 11): Please fix this...");
+            exit(211);
+          }
         }
       } else if (k == NCX - 1) {
         if (l == NCZ - 1) {
