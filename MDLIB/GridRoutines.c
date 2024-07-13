@@ -418,7 +418,7 @@ void ComputeLithostaticPressure( grid *mesh, params *model, double RHO_REF, scal
     
     int nx, nz, ncx, ncz;
     int k, l, c, c1;
-    double rho_eff;
+    double rho;
     double eps = 1e-13; // perturbation to avoid zero pressure that results in Nan d(eta)dP in numerical differentiation
 
     
@@ -438,14 +438,13 @@ void ComputeLithostaticPressure( grid *mesh, params *model, double RHO_REF, scal
 
             mesh->p_lith[c]  = 0.0;
 
-            // density
-            if ( mode == 0 ) rho_eff = RHO_REF;
-            if ( mode == 1 ) rho_eff = mesh->rho_n[c];
+            // Density
+            if ( mode == 0 ) rho = RHO_REF;
+            if ( mode == 1 ) rho = mesh->rho_n[c];
 
             // Initialise pressure variables : Compute lithostatic pressure
             if ( mesh->BCp.type[c] != 30 && mesh->BCp.type[c] != 31 ) { // First row (surface)
-                mesh->p_lith[c]  = mesh->p_lith[c+ncx] -  model->gz * mesh->dz * rho_eff;
-
+                mesh->p_lith[c]  = mesh->p_lith[c+ncx] -  model->gz * mesh->dz * rho;
             }
         }
     }
@@ -454,28 +453,70 @@ void ComputeLithostaticPressure( grid *mesh, params *model, double RHO_REF, scal
     for( l=0; l<ncz; l++) {
         for( k=0; k<ncx; k++) {
             c  = k + l*ncx;
-            // density
-            if ( mode == 0 ) rho_eff = RHO_REF;
-            if ( mode == 1 ) rho_eff = mesh->rho_n[c];
+            // Density
+            if ( mode == 0 ) rho = RHO_REF;
+            if ( mode == 1 ) rho = mesh->rho_n[c];
             
+            // Correction
             if ( mesh->BCp.type[c] != 30 && mesh->BCp.type[c] != 31 ) {
                 mesh->p_lith[c] += model->bkg_pressure;
-                mesh->p_lith[c]  += 0.5*model->gz * mesh->dz * rho_eff;
+                mesh->p_lith[c] += 0.5*model->gz * mesh->dz * rho;
             }
         }
     }
+
+    // ---------------------------------------------
     
-    
-//    // + eps
-//    // Cell center arrays
-//    for( l=0; l<ncz; l++) {
-//        for( k=0; k<ncx; k++) {            
-//            c  = k + l*ncx;
-//            mesh->p_lith[c] += eps;
-//            mesh->p[c]       = mesh->p_in[c];
-//        }
-//    }
-    
+    // Stress boundary conditions: Lithostatic pressure on lateral sides
+    for( l=ncz-2; l>=0; l--) {
+
+        int kW = 0;
+        int kE = nx-2;
+        int c1W = kW + l*(nx-1);
+        int c1E = kE + l*(nx-1);
+
+        // Initialise
+        mesh->sxx_W[l]  = 0.0;
+        mesh->sxx_E[l]  = 0.0;
+
+        // Density
+        double rhoW, rhoE;
+        if ( mode == 0 ) rhoW = rhoE = RHO_REF;
+        if ( mode == 1 ) { 
+            rhoW = 0.5*(mesh->rho_s[kW + l*(nx)] + mesh->rho_s[kW + (l+1)*(nx)]);
+            rhoE = 0.5*(mesh->rho_s[kE + l*(nx)] + mesh->rho_s[kE + (l+1)*(nx)]);
+        }
+
+        // Initialise pressure variables : Compute lithostatic pressure
+        if ( mesh->BCp.type[c1W] != 30 ) mesh->sxx_W[l] = mesh->sxx_W[l+1] -  model->gz * mesh->dz * rhoW;
+        if ( mesh->BCp.type[c1E] != 30 ) mesh->sxx_E[l] = mesh->sxx_E[l+1] -  model->gz * mesh->dz * rhoE;
+    }
+
+     // Add confining pressure
+    for( l=0; l<ncz; l++) { 
+
+        int kW = 0;
+        int kE = nx-2;
+        int c1W = kW + l*(nx-1);
+        int c1E = kE + l*(nx-1);
+
+        // Density
+        double rhoW, rhoE;
+        if ( mode == 0 ) rhoW = rhoE = RHO_REF;
+        if ( mode == 1 ) { 
+            rhoW = 0.5*(mesh->rho_s[kW + l*(nx)] + mesh->rho_s[kW + (l+1)*(nx)]);
+            rhoE = 0.5*(mesh->rho_s[kE + l*(nx)] + mesh->rho_s[kE + (l+1)*(nx)]);
+        }
+
+        // Correction
+        if ( mesh->BCp.type[c1W] != 30 ) mesh->sxx_W[l] += model->bkg_pressure;
+        if ( mesh->BCp.type[c1E] != 30 ) mesh->sxx_E[l] += model->bkg_pressure;
+        if ( mesh->BCp.type[c1W] != 30 ) mesh->sxx_W[l] += 0.5*model->gz * mesh->dz * rhoW;
+        if ( mesh->BCp.type[c1E] != 30 ) mesh->sxx_E[l] += 0.5*model->gz * mesh->dz * rhoE;
+        if ( mesh->BCp.type[c1W] != 30 ) mesh->sxx_W[l] *= -1.;
+        if ( mesh->BCp.type[c1E] != 30 ) mesh->sxx_E[l] *= -1.;
+        // printf("mesh->sxx_W[l]  = %lf --- mesh->sxx_E[l] = %lf --- rhoW = %lf %d %d\n", mesh->sxx_W[l], mesh->sxx_E[l], model->gz,  mesh->BCp.type[c1W],  mesh->BCp.type[c1E]);
+    }
 
 }
 

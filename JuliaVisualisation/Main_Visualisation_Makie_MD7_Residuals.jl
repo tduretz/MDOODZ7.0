@@ -27,7 +27,7 @@ function main()
     istep = 1
 
     # Select field to visualise
-    # field = :Residual_x
+    field = :Residual_x
     # field = :Divergence
 
     # Switches

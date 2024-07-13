@@ -53,11 +53,12 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
     asprintf(&BaseParticleFileName, "Particles");
 
     MdoodzInput input = (MdoodzInput){
+        
             .model             = inputFile.model,
             .scaling           = inputFile.scaling,
             .materials         = inputFile.materials,
             .crazyConductivity = NULL,
-            .flux       = NULL,
+            .flux              = NULL,
     };
 
     if (input.model.free_surface) {
@@ -66,6 +67,11 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         *input.flux = (LateralFlux){.east = -0.0e3, .west = -0.0e3};
       }
     }
+
+    input.stress = malloc(sizeof(LateralFlux));
+      if (input.stress != NULL) {
+        *input.stress = (LateralFlux){.east = -0.0e3, .west = -0.0e3};
+      }
 
     if (setup->MutateInput) {
       setup->MutateInput(&input, setup->mutateInputParams);

@@ -201,6 +201,9 @@ void ValidateInternalPoint(POSITION position, char bcType, Coordinates coordinat
 /*--------------------------------------------------------------------------------------------------------------------*/
 
 void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh, surface *topo) {
+
+  // if (setBCs.SetBC_Manually) exit(1);
+
   /* --------------------------------------------------------------------------------------------------------*/
   /* Set the BCs for Vx on all grid levels */
   /* Type  0: Dirichlet point that matches the physical boundary (Vx:
@@ -223,6 +226,11 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh, surface *topo) 
     for (int k = 0; k < mesh->Nx; k++) {
       const int c = k + l * (mesh->Nx);
       if (mesh->BCu.type[c] != 30) {
+        // Lithostatic pressure for stress 
+        if (l>1 && l< mesh->Nz) {
+          instance->stress->west = mesh->sxx_W[l-1];
+          instance->stress->east = mesh->sxx_E[l-1];
+        }
         POSITION position;
         if (k == 0) {
           if (l == mesh->Nz) {
@@ -575,10 +583,10 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh, surface *topo) 
           position = W;
           int kx = k + (l+1) * (NCX+1);
           int ky = k + (l) * (NCX+2);
-          if (mesh->BCu.type[kx]==2 && mesh->BCv.type[ky]!=11 && mesh->BCv.type[ky+NCX+2]!=11) {
-            printf("ERROR: West Vx Neumann boundary condition (type 2) can only work with West Dirichlet Vy condition (type 11): Please fix this...");
-            exit(211);
-          }
+          // if (mesh->BCu.type[kx]==2 && mesh->BCv.type[ky]!=11 && mesh->BCv.type[ky+NCX+2]!=11) {
+          //   printf("ERROR: West Vx Neumann boundary condition (type 2) can only work with West Dirichlet Vy condition (type 11): Please fix this...");
+          //   exit(211);
+          // }
         }
       } else if (k == NCX - 1) {
         if (l == NCZ - 1) {

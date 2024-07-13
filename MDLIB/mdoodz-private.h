@@ -89,7 +89,7 @@ typedef struct {
   double  *ru, *rv, *rp;
   double  *rhs_u, *rhs_v, *rhs_p, *rhs_t, *gx, *gz;
   double   p_scale;
-  double  *alp, *bet_n, *bet_s, *p_lith, *p_lith0, *dp, *Qrho;
+  double  *alp, *bet_n, *bet_s, *p_lith, *p_lith0, *dp, *Qrho, *sxx_W, *sxx_E;
   double  *VxVz, *VzVx;
   int     *P2N, *P2C;
   int     *kvx, *lvx, *kvz, *lvz, *kp, *lp, *kn, *ln;

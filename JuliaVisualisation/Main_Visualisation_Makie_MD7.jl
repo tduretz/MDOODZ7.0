@@ -67,16 +67,16 @@ function main()
     # Select field to visualise
     # field = :Phases
     # field = :Cohesion
-     field = :Density
+    #  field = :Density
     # field = :Viscosity 
     # field = :PlasticStrainrate
     # field = :Stress
     # field = :StrainRate
-     field = :Pressure
+    #  field = :Pressure
     # field = :Divergence
     # field = :Temperature
     # field = :Velocity_x
-    # field = :Velocity_z
+    field = :Velocity_z
     # field = :Velocity
     # field = :GrainSize
     # field = :Topography
@@ -101,7 +101,7 @@ function main()
     )
     α_heatmap   = 1.0 #0.85   # transparency of heatmap 
     vel_arrow   = 5
-    vel_scale   = 1e-9
+    vel_scale   = 1e-10
     vel_step    = 5
     nap         = 0.1    # pause for animation 
     resol       = 500
@@ -115,10 +115,9 @@ function main()
 
     Lc = 1.0
     tc = My
-    Vc = 1.0
+    Vc = 1.0 # (100.0*3600.0*24.0*365.25)
 
     probe = (ϕeff = Float64.([]), t  = Float64.([]))
-    cm_yr = 100.0*3600.0*24.0*365.25
 
     # Time loop
     f = Figure(size = (Lx/Lz*resol*1.2, resol), fontsize=25)
@@ -187,7 +186,7 @@ function main()
         ε̇II   = sqrt.( 0.5*(ε̇xx.^2 .+ ε̇yy.^2 .+ ε̇zz.^2 .+ 0.5*(ε̇xz[1:end-1,1:end-1].^2 .+ ε̇xz[2:end,1:end-1].^2 .+ ε̇xz[1:end-1,2:end].^2 .+ ε̇xz[2:end,2:end].^2 ) ) ); ε̇II[mask_air] .= NaN
         τxzc  = 0.25*(τxz[1:end-1,1:end-1] .+ τxz[2:end,1:end-1] .+ τxz[1:end-1,2:end] .+ τxz[2:end,2:end]) 
         C     = Float64.(reshape(ExtractData( filename, "/Centers/cohesion"), ncx, ncz))
-        ϕ     = ExtractField(filename, "/Centers/phi", centroids, false, 0)
+        ϕ     = ExtractField(filename, "/Centers/phi",  centroids, false, 0)
         divu  = ExtractField(filename, "/Centers/divu", centroids, false, 0)
 
         Fab = 0.
@@ -217,6 +216,8 @@ function main()
         if PlotOnTop.σ1_axis 
             σ1 = PrincipalStress(τxx, τzz, τxz, P) 
         end
+
+        # @show Vx[:, 1] .-  Vx[:, 2]
         
         #####################################
 
@@ -340,7 +341,7 @@ function main()
 
         if field==:Velocity_x
             ax1 = Axis(f[1, 1], title = L"$Vx$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
-            hm = heatmap!(ax1, xv, zvx[2:end-1], Vx[2:end-1,:]*cm_yr, colormap = (:jet, α_heatmap))#, colorrange=(0., 0.6)
+            hm = heatmap!(ax1, xv, zvx[2:end-1], Vx[2:end-1,:]*Vc, colormap = (:jet, α_heatmap))#, colorrange=(0., 0.6)
             AddCountourQuivers!(PlotOnTop, ax1, xc, xv, zc, V, T, σ1, Fab, height, Lc, cm_y, group_phases, Δ)                
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
             Mak.Colorbar(f[1, 2], hm, label = L"$Vx$ [cm.yr$^{-1}$]", width = 20, labelsize = 25, ticklabelsize = 14 )
@@ -350,7 +351,7 @@ function main()
 
         if field==:Velocity_z
             ax1 = Axis(f[1, 1], title = L"$Vz$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
-            hm = heatmap!(ax1, xvz[2:end-1], zv, Vz[:,2:end-1]*cm_yr, colormap = (:jet, α_heatmap))#, colorrange=(0., 0.6)
+            hm = heatmap!(ax1, xvz[2:end-1], zv, Vz[:,2:end-1]*Vc, colormap = (:jet, α_heatmap))#, colorrange=(0., 0.6)
             AddCountourQuivers!(PlotOnTop, ax1, xc, xv, zc, V, T, σ1, Fab, height, Lc, cm_y, group_phases, Δ)                
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
             Mak.Colorbar(f[1, 2], hm, label = L"$Vz$ [cm.yr$^{-1}$]", width = 20, labelsize = 25, ticklabelsize = 14 )

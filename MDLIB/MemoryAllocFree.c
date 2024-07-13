@@ -516,6 +516,10 @@ grid GridAlloc(params *model) {
   mesh.bet_n          = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
   mesh.bet_s          = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double));
 
+  // Stress boundary conditions
+  mesh.sxx_W          = DoodzCalloc((Nz - 1), sizeof(double));
+  mesh.sxx_E          = DoodzCalloc((Nz - 1), sizeof(double));
+
   // Grid indices
   mesh.kvx            = DoodzCalloc(Nx * NzVx, sizeof(int));
   mesh.lvx            = DoodzCalloc(Nx * NzVx, sizeof(int));
@@ -820,6 +824,10 @@ void GridFree(grid *mesh, params *model) {
     DoodzFree(mesh->alp);
     DoodzFree(mesh->bet_n);
     DoodzFree(mesh->bet_s);
+
+    // Stress boundary conditions
+    DoodzFree(mesh->sxx_W);
+    DoodzFree(mesh->sxx_E);
 
     // Grid indices
     DoodzFree( mesh->kvx );

@@ -12,9 +12,9 @@ function main()
     path = "/Users/tduretz/REPO/MDOODZ7.0/MDLIB/"
 
     # File numbers
-    file_start = 86
+    file_start = 1
     file_step  = 1
-    file_end   = 86
+    file_end   = 1
 
     # Switches
     resolution  = 500
@@ -87,6 +87,7 @@ function main()
         tag_s   = Float64.(reshape(ExtractData( filename, "/Flags/tag_s"), nvx, nvz))
         tag_t   = Float64.(reshape(ExtractData( filename, "/Flags/tag_t_fine"), 2*nvx-2, 2*nvz-2))
         tag_n   = Float64.(reshape(ExtractData( filename, "/Centers/BCp"), ncx, ncz))
+        tag_u   = Float64.(reshape(ExtractData( filename, "/Flags/tag_u"), nvx, nvz+1))
 
         # Figure
         f = Figure(size = (Lx/Lz*resolution, resolution), fontsize=25)
@@ -115,13 +116,13 @@ function main()
             lines!(ax1, xv./Lc, zv[i]./Lc.*ones(size(xv)), color=:black)
         end
         
-        scatter!(ax1, xm[phm.==0]./Lc, zm[phm.==0]./Lc, color=:blue)  
-        scatter!(ax1, xm[phm.==1]./Lc, zm[phm.==1]./Lc, color=:red) 
-        scatter!(ax1, xm[phm.==2]./Lc, zm[phm.==2]./Lc, color=:red)  
-        scatter!(ax1, xm[phm.==3]./Lc, zm[phm.==3]./Lc, color=:green) 
-        scatter!(ax1, xm[phm.==4]./Lc, zm[phm.==4]./Lc, color=:orange)
-        scatter!(ax1, xm[phm.==5]./Lc, zm[phm.==5]./Lc, color=:cyan)
-        scatter!(ax1, xm[phm.==6]./Lc, zm[phm.==6]./Lc, color=:black)
+        # scatter!(ax1, xm[phm.==0]./Lc, zm[phm.==0]./Lc, color=:blue)  
+        # scatter!(ax1, xm[phm.==1]./Lc, zm[phm.==1]./Lc, color=:red) 
+        # scatter!(ax1, xm[phm.==2]./Lc, zm[phm.==2]./Lc, color=:red)  
+        # scatter!(ax1, xm[phm.==3]./Lc, zm[phm.==3]./Lc, color=:green) 
+        # scatter!(ax1, xm[phm.==4]./Lc, zm[phm.==4]./Lc, color=:orange)
+        # scatter!(ax1, xm[phm.==5]./Lc, zm[phm.==5]./Lc, color=:cyan)
+        # scatter!(ax1, xm[phm.==6]./Lc, zm[phm.==6]./Lc, color=:black)
 
         # scatter!(ax1, [-2.273688e+03]./Lc, [-2.279599e+03]./Lc, color=:black, marker=:cross )
 
@@ -143,7 +144,7 @@ function main()
         xv2f = xv2d[:]
         zv2f = zv2d[:]
         tag_sf = tag_s[:]
-        # scatter!(ax1, xv2f[tag_sf.==-1]./Lc, zv2f[tag_sf.==-1]./Lc, color=:black)
+        scatter!(ax1, xv2f[tag_sf.==-1]./Lc, zv2f[tag_sf.==-1]./Lc, color=:black)
         
         # Add centroid flags
         xc2d = xc .+ 0.0.*zc'
@@ -151,7 +152,16 @@ function main()
         xc2f = xc2d[:]
         zc2f = zc2d[:]
         tag_nf = tag_n[:]
-        # scatter!(ax1, xc2f[tag_nf.==-1]./Lc, zc2f[tag_nf.==-1]./Lc, color=:blue)
+        scatter!(ax1, xc2f[tag_nf.==-1]./Lc, zc2f[tag_nf.==-1]./Lc, color=:blue)
+
+        # Vx flags
+        zce  = [zc[1]-Δz/2; zc; zc[end]+Δz/2]
+        xc2d = xv .+ 0.0.*zv'
+        zc2d = 0.0.*zce .+ zce'
+        xc2f = xc2d[:]
+        zc2f = zc2d[:]
+        tag_uf = tag_u[:]
+        scatter!(ax1, xc2f[tag_uf.==-1]./Lc, zc2f[tag_uf.==-1]./Lc, color=:pink)
         
         # Add centroid flags from the twice finer mesh used for remeshing
         xc2d = xc2 .+ 0.0.*zc2'
@@ -159,13 +169,11 @@ function main()
         xc2f = xc2d[:]
         zc2f = zc2d[:]
         tag_tf = tag_t[:]
-        # scatter!(ax1, xc2f[tag_tf.==-1]./Lc, zc2f[tag_tf.==-1]./Lc, color=:blue, marker=:xcross)
+        scatter!(ax1, xc2f[tag_tf.==-1]./Lc, zc2f[tag_tf.==-1]./Lc, color=:blue, marker=:xcross)
 
         hidedecorations!(ax1)
         # scatter!(ax1, x_mark./Lc, z_mark./Lc)
 
-        
-       
         DataInspector(f)
         display(f)
     end

@@ -261,6 +261,7 @@ typedef struct {
   char   type;
 } SetBC;
 
+// typedef SetBC (*SetBC_Manually)(MdoodzInput *input, grid *mesh);
 typedef SetBC (*SetBCVx_f)(MdoodzInput *input, POSITION position, Coordinates coordinates);
 typedef SetBC (*SetBCVz_f)(MdoodzInput *input, POSITION position, Coordinates coordinates);
 typedef SetBC (*SetBCT_f)(MdoodzInput *input, POSITION position, double gridTemperature);
@@ -323,6 +324,7 @@ struct MdoodzInput {
   mat_prop           materials;
   scale              scaling;
   LateralFlux       *flux;
+  LateralFlux       *stress;
   CrazyConductivity *crazyConductivity;
   Geometry          *geometry;
 };
@@ -330,7 +332,6 @@ struct MdoodzInput {
 void  RunMDOODZ(char *inputFileName, MdoodzSetup *setup);
 
 // Setup templates
-
 SetBC SetPureShearBCVx(MdoodzInput *input, POSITION position, Coordinates coordinates);
 SetBC SetPureShearBCVz(MdoodzInput *input, POSITION position, Coordinates coordinates);
 SetBC SetSimpleShearBCVx(MdoodzInput *input, POSITION position, Coordinates coordinates);

@@ -1729,48 +1729,45 @@ void StrainRateComponents( grid* mesh, scale scaling, params* model ) {
     mesh->exz[c1] = 0.0;
 
     if ( mesh->BCg.type[c1] != 30 ) {
-      //            // Original implementation from Duretz et al., 2016
-      //            if (mesh->BCu.type[c1] != 30 && mesh->BCu.type[c1+Nx] != 30) mesh->exz[c1] +=  0.5 * (mesh->u_in[c1+Nx] - mesh->u_in[c1])/dz;
-      //            if (mesh->BCv.type[c2] != 30 && mesh->BCv.type[c2+1]  != 30) mesh->exz[c1] +=  0.5 * (mesh->v_in[c2+1]  - mesh->v_in[c2])/dx;
+      //  // Original implementation from Duretz et al., 2016
+      //  if (mesh->BCu.type[c1] != 30 && mesh->BCu.type[c1+Nx] != 30) mesh->exz[c1] +=  0.5 * (mesh->u_in[c1+Nx] - mesh->u_in[c1])/dz;
+      //  if (mesh->BCv.type[c2] != 30 && mesh->BCv.type[c2+1]  != 30) mesh->exz[c1] +=  0.5 * (mesh->v_in[c2+1]  - mesh->v_in[c2])/dx;
       // Simplified implementation
-      const double dvxdz = (mesh->u_in[c1+Nx] - mesh->u_in[c1])/dz;
-      const double dvzdx = (mesh->v_in[c2+1]  - mesh->v_in[c2])/dx;
+      double dvxdz = (mesh->u_in[c1+Nx] - mesh->u_in[c1])/dz;
+      double dvzdx = (mesh->v_in[c2+1]  - mesh->v_in[c2])/dx;
       mesh->exz[c1] =  0.5 * (dvxdz + dvzdx);
       mesh->wxz[c1] =  0.5 * (dvzdx - dvxdz);
     }
   }
 
-// TODO: DELETE 
-#pragma omp parallel for shared( mesh ) private( k1 ) firstprivate( Nx, Ncx, Ncz )
-  for ( k1=0; k1<Ncx*Ncz; k1++ ) {
+// // TODO: DELETE 
+// #pragma omp parallel for shared( mesh ) private( k1 ) firstprivate( Nx, Ncx, Ncz )
+//   for ( k1=0; k1<Ncx*Ncz; k1++ ) {
 
-    int k  = mesh->kp[k1];
-    int l  = mesh->lp[k1];
-    int c0 = k  + l*(Nx-1);
-    int c1 = k  + l*(Nx);
+//     int k  = mesh->kp[k1];
+//     int l  = mesh->lp[k1];
+//     int c0 = k  + l*(Nx-1);
+//     int c1 = k  + l*(Nx);
 
-    mesh->exz_n[c0] = 0.0;
-    mesh->wxz_n[c0] = 0.0;
+//     mesh->exz_n[c0] = 0.0;
+//     mesh->wxz_n[c0] = 0.0;
 
-    if ( mesh->BCp.type[c0] != 30 && mesh->BCp.type[c0] != 31 ) {
-      if (mesh->BCg.type[c1]      != 30 ) { mesh->exz_n[c0] += 0.25*mesh->exz[c1];      }
-      if (mesh->BCg.type[c1+1]    != 30 ) { mesh->exz_n[c0] += 0.25*mesh->exz[c1+1];    }
-      if (mesh->BCg.type[c1+Nx]   != 30 ) { mesh->exz_n[c0] += 0.25*mesh->exz[c1+Nx];   }
-      if (mesh->BCg.type[c1+Nx+1] != 30 ) { mesh->exz_n[c0] += 0.25*mesh->exz[c1+Nx+1]; }
-      if (mesh->BCg.type[c1]      != 30 ) { mesh->wxz_n[c0] += 0.25*mesh->wxz[c1];      }
-      if (mesh->BCg.type[c1+1]    != 30 ) { mesh->wxz_n[c0] += 0.25*mesh->wxz[c1+1];    }
-      if (mesh->BCg.type[c1+Nx]   != 30 ) { mesh->wxz_n[c0] += 0.25*mesh->wxz[c1+Nx];   }
-      if (mesh->BCg.type[c1+Nx+1] != 30 ) { mesh->wxz_n[c0] += 0.25*mesh->wxz[c1+Nx+1]; }
-    }
-  }
+//     if ( mesh->BCp.type[c0] != 30 && mesh->BCp.type[c0] != 31 ) {
+//       if (mesh->BCg.type[c1]      != 30 ) { mesh->exz_n[c0] += 0.25*mesh->exz[c1];      }
+//       if (mesh->BCg.type[c1+1]    != 30 ) { mesh->exz_n[c0] += 0.25*mesh->exz[c1+1];    }
+//       if (mesh->BCg.type[c1+Nx]   != 30 ) { mesh->exz_n[c0] += 0.25*mesh->exz[c1+Nx];   }
+//       if (mesh->BCg.type[c1+Nx+1] != 30 ) { mesh->exz_n[c0] += 0.25*mesh->exz[c1+Nx+1]; }
+//       if (mesh->BCg.type[c1]      != 30 ) { mesh->wxz_n[c0] += 0.25*mesh->wxz[c1];      }
+//       if (mesh->BCg.type[c1+1]    != 30 ) { mesh->wxz_n[c0] += 0.25*mesh->wxz[c1+1];    }
+//       if (mesh->BCg.type[c1+Nx]   != 30 ) { mesh->wxz_n[c0] += 0.25*mesh->wxz[c1+Nx];   }
+//       if (mesh->BCg.type[c1+Nx+1] != 30 ) { mesh->wxz_n[c0] += 0.25*mesh->wxz[c1+Nx+1]; }
+//     }
+//   }
 
   // Interpolate normal strain rate on vertices
   InterpCentroidsToVerticesDouble( mesh->exxd,  mesh->exxd_s,  mesh, model );
   InterpCentroidsToVerticesDouble( mesh->ezzd,  mesh->ezzd_s,  mesh, model );
   InterpCentroidsToVerticesDouble( mesh->div_u, mesh->div_u_s, mesh, model );
-
-  // TODO: DELETE 
-
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/

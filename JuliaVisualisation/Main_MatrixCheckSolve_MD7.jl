@@ -1,4 +1,4 @@
-using HDF5, SparseArrays, LinearAlgebra, Statistics
+using HDF5, SparseArrays, LinearAlgebra, Statistics, GLMakie
 # using Plots
 # plotlyjs()
 
@@ -42,7 +42,7 @@ function main()
 
     # File
     path     ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/"
-    filename = string(path, "Stokes_01cpu_step01_iter01.gzip.h5") 
+    filename = string(path, "Stokes_01cpu_step01_iter00.gzip.h5") 
     # path     ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/RiverTom/"
     # filename = string(path, "Stokes_01cpu_step229_iter00.gzip.h5") 
     # Matrix block A
@@ -83,13 +83,17 @@ function main()
     @show norm(MA-MA')
     @show norm(MB+MC')
     @show norm(Msc-Msc')
+    @show MA[9001,1]
+    @show MA[1,9001]
     if norm(Msc-Msc')>0
         f = Figure(fontsize=25)
         ax = Axis(f[1, 1], title = L"A - A'", yreversed=true)
         p = spy!(ax, (MA-MA'), markersize = 4, marker = :circle, framecolor = :lightgrey)
         hidedecorations!(ax)
-        @show MA[101,11]
-        @show MA[11,101]
+
+
+        @show MA[1,2]
+        @show MA[2,1]
         DataInspector(f)
         display(f)
     end
