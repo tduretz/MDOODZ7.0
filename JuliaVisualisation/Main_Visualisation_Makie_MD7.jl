@@ -67,16 +67,16 @@ function main()
     # Select field to visualise
     # field = :Phases
     # field = :Cohesion
-    #  field = :Density
+    # field = :Density
     # field = :Viscosity 
     # field = :PlasticStrainrate
     # field = :Stress
     # field = :StrainRate
-    #  field = :Pressure
+    # field = :Pressure
     # field = :Divergence
     # field = :Temperature
-    # field = :Velocity_x
-    field = :Velocity_z
+    field = :Velocity_x
+    # field = :Velocity_z
     # field = :Velocity
     # field = :GrainSize
     # field = :Topography
@@ -102,7 +102,7 @@ function main()
     α_heatmap   = 1.0 #0.85   # transparency of heatmap 
     vel_arrow   = 5
     vel_scale   = 1e-10
-    vel_step    = 5
+    vel_step    = 1
     nap         = 0.1    # pause for animation 
     resol       = 500
     mov_name    = "$(path)/_$(field)/$(field)"  # Name of the movie
@@ -211,7 +211,7 @@ function main()
         end
         Vxc   = 0.5 .* (Vx[1:end-1,2:end-1] .+ Vx[2:end-0,2:end-1])
         Vzc   = 0.5 .* (Vz[2:end-1,1:end-1] .+ Vz[2:end-1,2:end-0])
-        V = (x=Vxc, z=Vzc, arrow=vel_arrow, step=vel_step, scale=vel_scale)
+        V = (x=Vxc.*Vc, z=Vzc.*Vc, arrow=vel_arrow, step=vel_step, scale=vel_scale)
         σ1 = 0.
         if PlotOnTop.σ1_axis 
             σ1 = PrincipalStress(τxx, τzz, τxz, P) 

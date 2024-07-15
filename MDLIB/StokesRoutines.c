@@ -329,17 +329,21 @@ void RheologicalOperators( grid* mesh, params* model, mat_prop* materials, scale
 void ApplyBC( grid* mesh, params* model ) {
 
     int nx=model->Nx, nz=model->Nz, nzvx=nz+1, nxvz=nx+1;
-    int i, j;
+    int i, j, kv, kx, kz;
 
     // Vx Neumann
     for( i=0; i<nx; i++) {
+        kx = i + 0*nx;
+        kv = i + 0*nz;
         // South
-        if ( mesh->BCu.type[i] == 13 ) {
-            mesh->u_in[i] = mesh->u_in[i+nx];
+        if ( mesh->BCu.type[kx] == 13 ) {
+            mesh->u_in[kx] = mesh->u_in[kx+nx] - model->dz/mesh->eta_s[kv] * mesh->BCu.val[kx];
         }
         // North
-        if ( mesh->BCu.type[i + (nzvx-1)*nx] == 13 ) {
-            mesh->u_in[i + (nzvx-1)*nx] = mesh->u_in[i + (nzvx-2)*nx];
+        kx = i + (nzvx-1)*nx;
+        kv = i + (nz-1)*nz;
+        if ( mesh->BCu.type[kx] == 13 ) {
+            mesh->u_in[kx] = mesh->u_in[kx-nx] + model->dz/mesh->eta_s[kv] * mesh->BCu.val[kx];
         }
     }
 
@@ -360,12 +364,16 @@ void ApplyBC( grid* mesh, params* model ) {
     // Vz Neumann
     for( j=0; j<nz; j++) {
         // West
-        if ( mesh->BCv.type[j*nxvz] == 13 ) {
-            mesh->v_in[j*nxvz] = mesh->v_in[j*nxvz + 1];
+        kz = j*nxvz;
+        kv = j*nz;
+        if ( mesh->BCv.type[kz] == 13 ) {
+            mesh->v_in[kz] = mesh->v_in[kz+1] - model->dx/mesh->eta_s[kv] * mesh->BCv.val[kz];
         }
         // East
-        if ( mesh->BCv.type[j*nxvz+(nxvz-1)] == 13 ) {
-            mesh->v_in[j*nxvz+(nxvz-1)] = mesh->v_in[j*nxvz+(nxvz-1) -1];
+        kz = j*nxvz + (nxvz-1);
+        kv = j*nz   + (nx-1);
+        if ( mesh->BCv.type[kz] == 13 ) {
+            mesh->v_in[kz] = mesh->v_in[kz-1] + model->dx/mesh->eta_s[kv] * mesh->BCv.val[kz];
         }
     }
 

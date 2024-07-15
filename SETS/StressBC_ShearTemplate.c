@@ -32,6 +32,8 @@ SetBC SetBCVx(MdoodzInput *instance, POSITION position, Coordinates coord) {
   SetBC           bc;
   const double radius = instance->model.user1 / instance->scaling.L;
   double       x, z;
+  // Pure shear 
+  if (instance->model.shear_style==0) {
     if (position == W) {
       x = coord.x;
       z = coord.z;
@@ -49,7 +51,7 @@ SetBC SetBCVx(MdoodzInput *instance, POSITION position, Coordinates coord) {
         bc.value = 0*3e-3;
         // Pick a point in the middle
         if ( (fabs(x)-0.0) < instance->model.dx/2) {
-          printf("COUCOU x\n");
+          printf("COUCOU x S\n");
           bc.type  = 11;
           bc.value = 0*3e-3;
         }
@@ -58,48 +60,99 @@ SetBC SetBCVx(MdoodzInput *instance, POSITION position, Coordinates coord) {
       z = coord.z - instance->model.dx / 2.0;// make sure it lives on the boundary
       bc.type  = 13;
       bc.value = 0.0;
+        // Pick a point in the middle
+        if ( (fabs(x)-0.0) < instance->model.dx/2) {
+          printf("COUCOU x N\n");
+          bc.type  = 11;
+          bc.value = 0*3e-3;
+        }
     } else {
       bc.type  = -1;
       bc.value = 0.0;
     }
+  }
+  else {
+    const double Lz = (double) (instance->model.zmax - instance->model.zmin);
+    if (position == S || position == SE || position == SW) {
+      // bc.type  = 11;
+      // bc.value = -instance->model.bkg_strain_rate * Lz;
+      bc.type  = 13;
+      bc.value = -1.0;
+    } else if (position == N || position == NE || position == NW) {
+      // bc.type  = 11;
+      // bc.value =  instance->model.bkg_strain_rate * Lz;
+      bc.type  = 13;
+      bc.value = -1.0;
+    } else if (position == E) {
+      bc.type  = -12;
+      bc.value = 0.0;
+    } else if (position == W) {
+      bc.type  = -2;
+      bc.value = 0.0;
+    } else {
+      bc.type  = -1;
+      bc.value = 0.0;
+    }
+  }
   return bc;
 }
 
 SetBC SetBCVz(MdoodzInput *instance, POSITION position, Coordinates coord) {
   SetBC           bc;
   double       x, z;
-  if (position == N) {
-    x = coord.x;
-    z = coord.z;
-    bc.type  = 2;
-    bc.value = -1.;
+    // Pure shear 
+  if (instance->model.shear_style==0) {
+    if (position == N) {
+      x = coord.x;
+      z = coord.z;
+      bc.type  = 2;
+      bc.value = 1.;
+    }
+    else if (position == S) {
+      x = coord.x;
+      z = coord.z;
+      bc.type  = 2;
+      bc.value = 1.;
+    }
+    else if (position == W || position == SE || position == SW) {
+      x = coord.x + instance->model.dx / 2.0;
+      z = coord.z;
+      bc.type  = 13;
+      bc.value = 0.0;
+      // Pick a point in the middle
+        if ( (fabs(z)-0.0) < instance->model.dz/2) {
+          printf("COUCOU z W\n");
+          bc.type  = 11;
+          bc.value = 0;
+        }
+    }
+    else if (position == E || position == NE || position == NW) {
+      x = coord.x - instance->model.dx / 2.0;
+      z = coord.z;
+      bc.type  = 13;
+      bc.value = 0.0;
+          // Pick a point in the middle
+        if ( (fabs(z)-0.0) < instance->model.dz/2) {
+          printf("COUCOU z E\n");
+          bc.type  = 11;
+          bc.value = 0;
+        }
+    } else {
+      bc.type  = -1;
+      bc.value = 0.0;
+    }
   }
-  else if (position == S) {
-    x = coord.x;
-    z = coord.z;
-    bc.type  = 2;
-    bc.value = -1.;
-  }
-  else if (position == W || position == SE || position == SW) {
-    x = coord.x + instance->model.dx / 2.0;
-    z = coord.z;
-    bc.type  = 13;
+  else {
+    if (position == E || position == W || position == NE || position == NW || position == SE || position == SW) {
+    bc.type  = -12;
     bc.value = 0.0;
-    // Pick a point in the middle
-      if ( (fabs(z)-0.0) < instance->model.dz/2) {
-        printf("COUCOU z\n");
-        bc.type  = 13;
-        bc.value = 0;
-      }
-  }
-  else if (position == E || position == NE || position == NW) {
-    x = coord.x - instance->model.dx / 2.0;
-    z = coord.z;
-    bc.type  = 13;
-    bc.value = 0.0;
-  } else {
-    bc.type  = -1;
-    bc.value = 0.0;
+    } else if (position == S || position == N) {
+      bc.type  = 0;
+      bc.value = 0.0;
+    } else {
+      bc.type  = -1;
+      bc.value = 0.0;
+    }
   }
   return bc;
 }

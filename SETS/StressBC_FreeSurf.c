@@ -32,45 +32,44 @@ SetBC SetBCVx(MdoodzInput *instance, POSITION position, Coordinates coord) {
   SetBC           bc;
   const double radius = instance->model.user1 / instance->scaling.L;
   double       x, z;
-    if (position == W) {
-      x = coord.x;
-      z = coord.z;
-      bc.type  = 2;
-      bc.value = instance->stress->west*1.1;//1*z*4;
-      // bc.type  = 0;
-      // bc.value = 0.0;
-    } else if (position == E) {
-      x = coord.x;
-      z = coord.z;
-      bc.type  = 2;
-      bc.value = instance->stress->east*1.1;//1*z*4;
-      // bc.type  = 0;
-      // bc.value = 0.0;
-    } else if (position == SE || position == SW) {
-      x = coord.x;
-      z = coord.z + instance->model.dx / 2.0;// make sure it lives on the boundary
+  if (position == W) {
+    x = coord.x;
+    z = coord.z;
+    bc.type  = 2;
+    // bc.value = instance->stress->west*1.1;
+    bc.value = 1*z*4;
+    // bc.type  = 0;
+    // bc.value = 0.0;
+  } else if (position == E) {
+    x = coord.x;
+    z = coord.z;
+    bc.type  = 2;
+    // bc.value = instance->stress->east*1.1;//1*z*4;
+    bc.value = 1*z*4;
+  } else if (position == SE || position == SW) {
+    x = coord.x;
+    z = coord.z + instance->model.dx / 2.0;// make sure it lives on the boundary
+    bc.type  = 13;
+    bc.value = 0.0;
+  } else if (position == S) {
+    x = coord.x;
+    z = coord.z + instance->model.dx / 2.0;// make sure it lives on the boundary
       bc.type  = 13;
-      bc.value = 0.0;
-    } else if (position == S) {
-      x = coord.x;
-      z = coord.z + instance->model.dx / 2.0;// make sure it lives on the boundary
-        bc.type  = 13;
-        bc.value = 0*3e-3;
-      // Pick a point in the middle
-      if ( (fabs(x)-0.0) < instance->model.dx*5) {
-        printf("COUCOU\n");
-        bc.type  = 13;
-        bc.value = 0*3e-3;
-      }
-    } else if (position == N || position == NE || position == NW) {
-      x = coord.x;
-      z = coord.z - instance->model.dx / 2.0;// make sure it lives on the boundary
+      bc.value = 0*3e-3;
+    // Pick a point in the middle
+    if ( (fabs(x)-0.0) < instance->model.dx/2) {
       bc.type  = 11;
-      bc.value = 0.0;
-    } else {
-      bc.type  = -1;
-      bc.value = 0.0;
+      bc.value = 0*3e-3;
     }
+  } else if (position == N || position == NE || position == NW) {
+    x = coord.x;
+    z = coord.z - instance->model.dx / 2.0;// make sure it lives on the boundary
+    bc.type  = 11;
+    bc.value = 0.0;
+  } else {
+    bc.type  = -1;
+    bc.value = 0.0;
+  }
   return bc;
 }
 
@@ -88,10 +87,10 @@ SetBC SetBCVz(MdoodzInput *instance, POSITION position, Coordinates coord) {
     z = coord.z;
     bc.type  = 0;
     bc.value =  0.0;
-    // if (fabs(x)<0.1) {
-    //   bc.type  = 2;
-    //   bc.value = -1.5;
-    // }
+    if (fabs(x)<0.1) {
+      bc.type  = 2;
+      bc.value = -1.5;
+    }
   }
   else if (position == W) {
     x = coord.x + instance->model.dx / 2.0;
