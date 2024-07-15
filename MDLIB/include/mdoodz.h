@@ -358,4 +358,7 @@ typedef struct {
 bool IsEllipseCoordinates(Coordinates coordinates, Ellipse ellipse, double scalingL);
 bool IsRectangleCoordinates(Coordinates coordinates, Rectangle rectangle, double scalingL);
 
+char           *DefaultTextFilename(char*);
+
+
 #endif

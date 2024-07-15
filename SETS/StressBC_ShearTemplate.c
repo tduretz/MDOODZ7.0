@@ -2,6 +2,7 @@
 #include "stdio.h"
 #include "stdlib.h"
 #include "math.h"
+#include "string.h"
 
 double SetSurfaceZCoord(MdoodzInput *instance, double x_coord) {
   const double TopoLevel = 10 / instance->scaling.L;
@@ -77,12 +78,12 @@ SetBC SetBCVx(MdoodzInput *instance, POSITION position, Coordinates coord) {
       // bc.type  = 11;
       // bc.value = -instance->model.bkg_strain_rate * Lz;
       bc.type  = 13;
-      bc.value = -1.0;
+      bc.value = 1.0;
     } else if (position == N || position == NE || position == NW) {
       // bc.type  = 11;
       // bc.value =  instance->model.bkg_strain_rate * Lz;
       bc.type  = 13;
-      bc.value = -1.0;
+      bc.value = 1.0;
     } else if (position == E) {
       bc.type  = -12;
       bc.value = 0.0;
@@ -160,9 +161,9 @@ SetBC SetBCVz(MdoodzInput *instance, POSITION position, Coordinates coord) {
 int main(int nargs, char *args[]) {
   // Input file name
   char *input_file;
+
   if ( nargs < 2 ) {
-    // printf("%s", __FILE__);
-    asprintf(&input_file, "StressBC_PureShear.txt"); // Default
+    asprintf(&input_file, DefaultTextFilename(__FILE__)); // Default
   }
   else {
     asprintf(&input_file, "%s", args[1]);     // Custom
