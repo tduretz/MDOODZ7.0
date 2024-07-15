@@ -24,10 +24,10 @@ function main()
     path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/"
 
     # File numbers
-    istep = 1
+    istep = 9
 
     # Select field to visualise
-    field = :Residual_x
+    field = :Residual_z
     # field = :Divergence
 
     # Switches
@@ -64,7 +64,7 @@ function main()
     # Time loop
     f = Figure(size = (Lx/Lz*resol*1.2, resol), fontsize=25)
 
-    name     = @sprintf("Output%05d.gzip.h5", istep)
+    name     = @sprintf("Output%05d.gzip.h5", 1)
     filename = string(path, name)
     model    = ExtractData( filename, "/Model/Params")
     xc       = ExtractData( filename, "/Model/xc_coord")
@@ -83,7 +83,7 @@ function main()
     name     = @sprintf("Residuals%05d.gzip.h5", istep)
     @info "Reading $(name)"
     filename = string(path, name)
-       
+     
     Vx    = Float64.(reshape(ExtractData( filename, "/VxNodes/ru"), (ncx+1), (ncz+2)))
     Vz    = Float64.(reshape(ExtractData( filename, "/VzNodes/rv"), (ncx+2), (ncz+1)))
     divu  = ExtractField(filename, "/Centers/rp", centroids, false, 0)

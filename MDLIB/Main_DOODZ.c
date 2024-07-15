@@ -730,8 +730,8 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                     MinMaxArrayTag( mesh.rho_n, input.scaling.rho, (mesh.Nx-1)*(mesh.Nz-1), "rho_n     ", mesh.BCp.type );
                     MinMaxArrayTag( mesh.rho0_n, input.scaling.rho, (mesh.Nx-1)*(mesh.Nz-1), "rho0_n    ", mesh.BCp.type );
                     MinMaxArrayTag( mesh.d_n, input.scaling.L,   (mesh.Nx-1)*(mesh.Nz-1), "d         ", mesh.BCp.type );
-                    MinMaxArrayTag( mesh.X_s, 1.0, (mesh.Nx)*(mesh.Nz),     "X_s     ", mesh.BCg.type );
-                    MinMaxArrayTag( mesh.X_n, 1.0, (mesh.Nx-1)*(mesh.Nz-1), "X_n     ", mesh.BCp.type );
+                    MinMaxArrayTag( mesh.X_s, 1.0, (mesh.Nx)*(mesh.Nz),     "X_s       ", mesh.BCg.type );
+                    MinMaxArrayTag( mesh.X_n, 1.0, (mesh.Nx-1)*(mesh.Nz-1), "X_n       ", mesh.BCp.type );
                     if (input.model.anisotropy==1) {
                         MinMaxArrayTag( mesh.FS_AR_n,  1.0,   (mesh.Nx-1)*(mesh.Nz-1),      "FS_AR_n   ", mesh.BCp.type );
                         MinMaxArrayTag( mesh.FS_AR_s,  1.0,   (mesh.Nx)*(mesh.Nz),          "FS_AR_s   ", mesh.BCg.type );

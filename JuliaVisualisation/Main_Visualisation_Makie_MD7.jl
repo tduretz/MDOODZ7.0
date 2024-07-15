@@ -94,10 +94,10 @@ function main()
     PlotOnTop = (
         ph_contours = false,  # add phase contours
         T_contours  = false,   # add temperature contours
-        fabric      = false,  # add fabric quiver (normal to director)
+        fabric      = true,  # add fabric quiver (normal to director)
         topo        = false,
         σ1_axis     = false,
-        vel_vec     = true,
+        vel_vec     = false,
     )
     α_heatmap   = 1.0 #0.85   # transparency of heatmap 
     vel_arrow   = 5
@@ -137,7 +137,7 @@ function main()
         xv_hr    = ExtractData( filename, "/VizGrid/xviz_hr")
         zv_hr    = ExtractData( filename, "/VizGrid/zviz_hr")
         τzz_t    = ExtractData( filename, "TimeSeries/szzd_mean_time")
-        P_t     = ExtractData( filename, "TimeSeries/P_mean_time")
+        P_t      = ExtractData( filename, "TimeSeries/P_mean_time")
         τxz_t    = ExtractData( filename, "TimeSeries/sxz_mean_time")
         t_t      = ExtractData( filename, "TimeSeries/Time_time")
 
@@ -191,13 +191,13 @@ function main()
 
         Fab = 0.
         if PlotOnTop.fabric
-            δani  = ExtractField(filename, "/Centers/ani_fac", centroids, false, 0)
-            Nx    = Float64.(reshape(ExtractData( filename, "/Centers/nx"), ncx, ncz))
-            Nz    = Float64.(reshape(ExtractData( filename, "/Centers/nz"), ncx, ncz))
-            Fab   = (x=-Nz./Nx, z=ones(size(Nz)))
-            nrm   = sqrt.(Fab.x.^2 .+ Fab.z.^2)
-            Fabx ./= nrm
-            Fabz ./= nrm
+            δani    = ExtractField(filename, "/Centers/ani_fac", centroids, false, 0)
+            Nx      = Float64.(reshape(ExtractData( filename, "/Centers/nx"), ncx, ncz))
+            Nz      = Float64.(reshape(ExtractData( filename, "/Centers/nz"), ncx, ncz))
+            Fab     = (x=-Nz./Nx, z=ones(size(Nz)))
+            nrm     = sqrt.(Fab.x.^2 .+ Fab.z.^2)
+            Fab.x ./= nrm
+            Fab.z ./= nrm
         end
         height = 0.
         if PlotOnTop.topo

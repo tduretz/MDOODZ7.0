@@ -1011,7 +1011,6 @@ void Xmomentum_InnerNodesDecoupled( SparseMat *Stokes, SparseMat *StokesA, Spars
         F_W += (SxxE - SxxW)/dx;
         F_W += (mesh->sxz[ixyN] - mesh->sxz[ixyS])/dz;
         F_W *= 0.5;
-        // if (ix==0) printf("SxxW=%lf SxxE=%lf\n", SxxW, SxxE);
 
         // Residual: stress BC east
         SxxW = mesh->sxxd[iPrW] - mesh->p_corr[iPrW];
@@ -1019,15 +1018,11 @@ void Xmomentum_InnerNodesDecoupled( SparseMat *Stokes, SparseMat *StokesA, Spars
         F_E += (SxxE - SxxW)/dx;
         F_E += (mesh->sxz[ixyN] - mesh->sxz[ixyS])/dz;
         F_E *= 0.5;
-        // if (ix==nx-1) printf("SxxW=%lf SxxE=%lf\n", SxxW, SxxE);
 
         // Residual
         StokesA->F[eqn]  = (1.0 - SxxBCE - SxxBCW)*F_Reg + SxxBCW*F_W + SxxBCE*F_E;
         StokesA->F[eqn] += StokesA->b[eqn] - uC_corr*u[iVxC]; // no body force
         StokesA->F[eqn] *= -celvol;
-
-        // if (ix==0   ) printf("West Fx=%lf\n", StokesA->F[eqn]  );
-        // if (ix==nx-1) printf("East Fx=%lf\n", StokesA->F[eqn]  );
     }
 } 
 
@@ -1390,6 +1385,8 @@ void BuildStokesOperatorDecoupled( grid *mesh, params model, int lev, double *p_
         n_th = omp_get_num_threads();
     }
 #pragma omp barrier
+
+    if (Assemble==1) printf("Assemble Picard operator on %d threads\n", n_th);
     
     // Matrix initialisation
     if ( Assemble == 1 ) {
@@ -1485,7 +1482,6 @@ void BuildStokesOperatorDecoupled( grid *mesh, params model, int lev, double *p_
                     Xmomentum_InnerNodesDecoupled( Stokes, StokesA, StokesB, Assemble, k, stab, comp, theta, sign, model, one_dx, one_dz, one_dx_dx, one_dz_dz, one_dx_dz, celvol, mesh, ith, c1, c2, c3, nx, nz, eqn, u, v, p_corr, JtempA, AtempA, nnzc2A, JtempB, AtempB, nnzc2B );
                 }
             }
-           
         }
     }
 
@@ -1543,9 +1539,6 @@ void BuildStokesOperatorDecoupled( grid *mesh, params model, int lev, double *p_
                     // Maybe one should avoid sides (l>0 && l<nz-1) if  mesh->BCv.type[c3] != 2 ?? 
                     Zmomentum_InnerNodesDecoupled( Stokes, StokesA, StokesB, Assemble, l, stab, comp, theta, sign, model, one_dx, one_dz, one_dx_dx, one_dz_dz, one_dx_dz, celvol, mesh, ith, c1, c2, c3, nx, nz, eqn, u, v, p_corr, JtempA, AtempA, nnzc2A, JtempB, AtempB, nnzc2B );
                 }
-                
-                //--------------------- INNER NODES ---------------------//
-                
             }
         }
     }
@@ -1577,41 +1570,9 @@ void BuildStokesOperatorDecoupled( grid *mesh, params model, int lev, double *p_
         AllocateTempMatArraysDecoupled( &AtempC, &ItempC, &JtempC, n_th, nnzC, Stokes->neq_cont, DD, &nnzc2C  );
         AllocateTempMatArraysDecoupled( &AtempD, &ItempD, &JtempD, n_th, nnzD, Stokes->neq_cont, DD, &nnzc2D  );
     }
-    
-    //    printf("NC = %d %d %d %d %d\n", Stokes->neq_cont, estart[0], eend[0], DD[0], last_eqn[0]);
-    
-    //#pragma omp parallel shared( eend, estart, mesh, Stokes, u, v, p, nx, ncx, nzvx, nnzc2C, AtempC, JtempC, ItempC, nnzc2D, AtempD, JtempD, ItempD, last_eqn )  private( ith, l, k, c1, c2, c3, eqn ) firstprivate( model, Assemble, lev, one_dx_dx, one_dz_dz, one_dx_dz, one_dx, one_dz, sign, theta, stab, comp, celvol )
-    //    {
-    //
-    //        ith = omp_get_thread_num();
-    //
-    //        for( c2=estart[ith]; c2<eend[ith]+1; c2++) {
-    //
-    //            k   = mesh->kp[c2];
-    //            l   = mesh->lp[c2];
-    //            c1  = k   + (l+1)*nx;
-    //            c3  = k   + l*nxvz + 1;
-    //
-    //            //--------------------- INNER NODES ---------------------//
-    //            if ( mesh->BCp.type[c2] == -1) {
-    //
-    //
-    //                eqn = Stokes->eqn_p[c2]  - Stokes->neq_mom;
-    //                last_eqn[ith]   = eqn ;
-    //
-    //                if ( Assemble == 1 ) {
-    //                    ItempC[ith][eqn] = nnzc2C[ith];
-    //                    ItempD[ith][eqn] = nnzc2D[ith]; //printf("%d ",  nnzc2D[ith]);
-    //                }
-    //                //
-    //                Continuity_InnerNodesDecoupled( Stokes, StokesC, StokesD, Assemble, lev, stab, comp, theta, sign, model, one_dx, one_dz, one_dx_dx, one_dz_dz, one_dx_dz, celvol, mesh, ith, c1, c2, c3, nx, ncx, nxvz, eqn, u, v, p, JtempC, AtempC, nnzc2C, JtempD, AtempD, nnzc2D, k, l );
-    //            }
-    //        }
-    //    }
-    
+       
 #pragma omp parallel shared( eend, estart, mesh, Stokes, StokesC, StokesD, u, v, p, nnzc2C, AtempC, JtempC, ItempC, nnzc2D, AtempD, JtempD, ItempD, last_eqn )  private( ith, l, k, c1, c2, c3, eqn, comp ) firstprivate( model, Assemble, lev, one_dx_dx, one_dz_dz, one_dx_dz, one_dx, one_dz, sign, theta, stab, celvol, nx, ncx, nxvz, nzvx )
-    {
-        
+    {   
         ith = omp_get_thread_num();
         
         for( c2=estart[ith]; c2<eend[ith]+1; c2++) {
@@ -1934,6 +1895,8 @@ void BuildJacobianOperatorDecoupled( grid *mesh, params model, int lev, double *
         n_th = omp_get_num_threads();
     }
 #pragma omp barrier
+
+    if (Assemble==1) printf("Assemble Jacobian on %d threads\n", n_th);
     
     StokesA->neq = Stokes->neq_mom;
     StokesB->neq = Stokes->neq_mom;
