@@ -826,14 +826,14 @@ void Continuity_InnerNodesDecoupled( SparseMat *Stokes, SparseMat *StokesC, Spar
     
     double pc=0.0, uW=0.0, uE=0.0, vN=0.0, vS=0.0, oop_fact = 1.0, comp_fact = 0.0;
 
-    const double rhoW = 0.5*(mesh->rho_n[c1]   + mesh->rho_n[c1-nx]);
-    const double rhoE = 0.5*(mesh->rho_n[c1+1] + mesh->rho_n[c1-nx+1]);
-    const double rhoS = 0.5*(mesh->rho_n[c1-nx]+ mesh->rho_n[c1-nx+1]);
-    const double rhoN = 0.5*(mesh->rho_n[c1]   + mesh->rho_n[c1+1]);
-    const double drhodx = (rhoE-rhoW)*one_dx;
-    const double drhody = (rhoN-rhoS)*one_dz;
-    const double VxC = 0.5*(mesh->u_in[c1]   + mesh->u_in[c1+1]);
-    const double VzC = 0.5*(mesh->v_in[c3]   + mesh->v_in[c3+nxvz]);
+    // const double rhoW = 0.5*(mesh->rho_n[c1]   + mesh->rho_n[c1-nx]);
+    // const double rhoE = 0.5*(mesh->rho_n[c1+1] + mesh->rho_n[c1-nx+1]);
+    // const double rhoS = 0.5*(mesh->rho_n[c1-nx]+ mesh->rho_n[c1-nx+1]);
+    // const double rhoN = 0.5*(mesh->rho_n[c1]   + mesh->rho_n[c1+1]);
+    // const double drhodx = (rhoE-rhoW)*one_dx;
+    // const double drhody = (rhoN-rhoS)*one_dz;
+    // const double VxC = 0.5*(mesh->u_in[c1]   + mesh->u_in[c1+1]);
+    // const double VzC = 0.5*(mesh->v_in[c3]   + mesh->v_in[c3+nxvz]);
     const double adv_rho = 1.0; // + model.dt*VxC*drhodx/mesh->rho_n[c2] + model.dt*VzC*drhodx/mesh->rho_n[c2];
 
     // if (fabs(adv_rho)>1+1e-10) printf("%2.2e %2.2e\n ", model.dt*VxC*drhodx/mesh->rho_n[c2] + model.dt*VzC*drhodx/mesh->rho_n[c2], drhodx);
