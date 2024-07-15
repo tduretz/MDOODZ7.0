@@ -855,8 +855,8 @@ void EvaluateRHS( grid* mesh, params model, scale scaling, double RHO_REF ) {
 
                     // Free surface
                     inW=0.0, inE = 0.0, inS=0.0, inN = 0.0;
-                    if (mesh->BCp.type[iPrW] == -1) inW = 1.0;
-                    if (mesh->BCp.type[iPrE] == -1) inE = 1.0;
+                    if (k>0)    if (mesh->BCp.type[iPrW] == -1) inW = 1.0;
+                    if (k<Nx-1) if (mesh->BCp.type[iPrE] == -1) inE = 1.0;
                     if (mesh->BCg.type[ixyS] != 30 && mesh->BCu.type[iVxS] != 13) inS = 1.0;
                     if (mesh->BCg.type[ixyN] != 30 && mesh->BCu.type[iVxN] != 13) inN = 1.0;
 
@@ -924,8 +924,8 @@ void EvaluateRHS( grid* mesh, params model, scale scaling, double RHO_REF ) {
 
                     // Free surface
                     inS=0.0, inN = 0.0, inW=0.0, inE = 0.0;
-                    if (mesh->BCp.type[iPrS] == -1) inS = 1.0;
-                    if (mesh->BCp.type[iPrN] == -1) inN = 1.0;
+                    if (l>0)    if (mesh->BCp.type[iPrS] == -1) inS = 1.0;
+                    if (l<Nz-1) if (mesh->BCp.type[iPrN] == -1) inN = 1.0;
                     if (mesh->BCg.type[ixyW] != 30 && mesh->BCv.type[iVyW] != 13 ) inW = 1.0;
                     if (mesh->BCg.type[ixyE] != 30 && mesh->BCv.type[iVyE] != 13 ) inE = 1.0;
 
