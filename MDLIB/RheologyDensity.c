@@ -1740,29 +1740,29 @@ void StrainRateComponents( grid* mesh, scale scaling, params* model ) {
     }
   }
 
-// // TODO: DELETE 
-// #pragma omp parallel for shared( mesh ) private( k1 ) firstprivate( Nx, Ncx, Ncz )
-//   for ( k1=0; k1<Ncx*Ncz; k1++ ) {
+// Interpolate missing strain rate components for anisotropy and Newton iterations
+#pragma omp parallel for shared( mesh ) private( k1 ) firstprivate( Nx, Ncx, Ncz )
+  for ( k1=0; k1<Ncx*Ncz; k1++ ) {
 
-//     int k  = mesh->kp[k1];
-//     int l  = mesh->lp[k1];
-//     int c0 = k  + l*(Nx-1);
-//     int c1 = k  + l*(Nx);
+    int k  = mesh->kp[k1];
+    int l  = mesh->lp[k1];
+    int c0 = k  + l*(Nx-1);
+    int c1 = k  + l*(Nx);
 
-//     mesh->exz_n[c0] = 0.0;
-//     mesh->wxz_n[c0] = 0.0;
+    mesh->exz_n[c0] = 0.0;
+    mesh->wxz_n[c0] = 0.0;
 
-//     if ( mesh->BCp.type[c0] != 30 && mesh->BCp.type[c0] != 31 ) {
-//       if (mesh->BCg.type[c1]      != 30 ) { mesh->exz_n[c0] += 0.25*mesh->exz[c1];      }
-//       if (mesh->BCg.type[c1+1]    != 30 ) { mesh->exz_n[c0] += 0.25*mesh->exz[c1+1];    }
-//       if (mesh->BCg.type[c1+Nx]   != 30 ) { mesh->exz_n[c0] += 0.25*mesh->exz[c1+Nx];   }
-//       if (mesh->BCg.type[c1+Nx+1] != 30 ) { mesh->exz_n[c0] += 0.25*mesh->exz[c1+Nx+1]; }
-//       if (mesh->BCg.type[c1]      != 30 ) { mesh->wxz_n[c0] += 0.25*mesh->wxz[c1];      }
-//       if (mesh->BCg.type[c1+1]    != 30 ) { mesh->wxz_n[c0] += 0.25*mesh->wxz[c1+1];    }
-//       if (mesh->BCg.type[c1+Nx]   != 30 ) { mesh->wxz_n[c0] += 0.25*mesh->wxz[c1+Nx];   }
-//       if (mesh->BCg.type[c1+Nx+1] != 30 ) { mesh->wxz_n[c0] += 0.25*mesh->wxz[c1+Nx+1]; }
-//     }
-//   }
+    if ( mesh->BCp.type[c0] != 30 && mesh->BCp.type[c0] != 31 ) {
+      if (mesh->BCg.type[c1]      != 30 ) { mesh->exz_n[c0] += 0.25*mesh->exz[c1];      }
+      if (mesh->BCg.type[c1+1]    != 30 ) { mesh->exz_n[c0] += 0.25*mesh->exz[c1+1];    }
+      if (mesh->BCg.type[c1+Nx]   != 30 ) { mesh->exz_n[c0] += 0.25*mesh->exz[c1+Nx];   }
+      if (mesh->BCg.type[c1+Nx+1] != 30 ) { mesh->exz_n[c0] += 0.25*mesh->exz[c1+Nx+1]; }
+      if (mesh->BCg.type[c1]      != 30 ) { mesh->wxz_n[c0] += 0.25*mesh->wxz[c1];      }
+      if (mesh->BCg.type[c1+1]    != 30 ) { mesh->wxz_n[c0] += 0.25*mesh->wxz[c1+1];    }
+      if (mesh->BCg.type[c1+Nx]   != 30 ) { mesh->wxz_n[c0] += 0.25*mesh->wxz[c1+Nx];   }
+      if (mesh->BCg.type[c1+Nx+1] != 30 ) { mesh->wxz_n[c0] += 0.25*mesh->wxz[c1+Nx+1]; }
+    }
+  }
 
   // Interpolate normal strain rate on vertices
   InterpCentroidsToVerticesDouble( mesh->exxd,  mesh->exxd_s,  mesh, model );

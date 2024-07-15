@@ -43,7 +43,6 @@
 
 void CheckSym( DoodzFP* array, double scale, int nx, int nz, char* text, int mode, int show ) {
     
-
     int i, j, c1;
     double sump[nx];
     double err = 0.0;
@@ -55,7 +54,6 @@ void CheckSym( DoodzFP* array, double scale, int nx, int nz, char* text, int mod
         }
     }
     
-    
     for ( i=0; i<nx; i++ ) {
         if (mode ==0) {
         if (fabs(sump[i] - sump[nx-1-i])>err) err = fabs(sump[i] - sump[nx-1-i]);
@@ -64,13 +62,10 @@ void CheckSym( DoodzFP* array, double scale, int nx, int nz, char* text, int mod
         else {
             if (fabs(sump[i] + sump[nx-1-i])>err) err = fabs(sump[i] + sump[nx-1-i]);
             if (show==1)  printf("%s %2.6e %2.6e %2.6e\n", text, sump[i]*scale, sump[nx-1-i]*scale, (sump[i] + sump[nx-1-i])*scale);
-        }
-                               
+        }            
     }
     if (err>1e-10) {printf(text); exit(1);}
-    
 }
-
 
 /*--------------------------------------------------------------------------------------------------------------------*/
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
@@ -529,7 +524,7 @@ void MinMaxArrayPart( DoodzFP* array, double scale, int size, char* text, int* p
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-void  Print2DArrayDouble( DoodzFP* arr, int nx, int nz, double scale ) {
+void Print2DArrayDouble( DoodzFP* arr, int nx, int nz, double scale ) {
     int cx,cz,k;
     printf("\n");
     for(cz=0;cz<nz;cz++) {
