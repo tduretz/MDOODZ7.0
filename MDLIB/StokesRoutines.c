@@ -340,12 +340,14 @@ void ApplyBC( grid* mesh, params* model ) {
         // South
         if ( mesh->BCu.type[kx] == 13 ) {
             mesh->u_in[kx] = mesh->u_in[kx+nx] - model->dz/(mesh->D33_s[kv]) * (mesh->BCu.val[kx] - mesh->D31_s[kv]*mesh->exxd_s[kv] - mesh->D32_s[kv]*mesh->ezzd_s[kv]);
+            // mesh->u_in[kx] = mesh->u_in[kx+nx];
         }
         // North
         kx = i + (nzvx-1)*nx;
         kv = i + (nz-1)*nz;
         if ( mesh->BCu.type[kx] == 13 ) {
             mesh->u_in[kx] = mesh->u_in[kx-nx] + model->dz/(mesh->D33_s[kv]) * (mesh->BCu.val[kx] - mesh->D31_s[kv]*mesh->exxd_s[kv] - mesh->D32_s[kv]*mesh->ezzd_s[kv]);
+            // mesh->u_in[kx] = mesh->u_in[kx-nx];//
         }
     }
 

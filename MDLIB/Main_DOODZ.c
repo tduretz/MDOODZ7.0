@@ -185,7 +185,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
         P2Mastah( &input.model, particles, input.materials.eta0, &mesh, mesh.eta_s, mesh.BCg.type,  0, 0, interp, vert, input.model.interp_stencil);
         P2Mastah( &input.model, particles, input.materials.eta0, &mesh, mesh.eta_n, mesh.BCp.type,  0, 0, interp, cent, input.model.interp_stencil);
-        RheologicalOperators( &mesh, &input.model, &input.materials, &input.scaling, 0, 1 );
+        RheologicalOperators( &mesh, &input.model, &input.materials, &input.scaling, 0, input.model.anisotropy );
 
         P2Mastah( &input.model, particles, particles.noise, &mesh, mesh.noise_s, mesh.BCg.type,  1, 0, interp, vert, input.model.interp_stencil);
         P2Mastah( &input.model, particles, particles.noise, &mesh, mesh.noise_n, mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil);
@@ -627,7 +627,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                 printf("Running with normal conductivity for the asthenosphere...\n");
             }
             // Allocate and initialise solution and RHS vectors
-            RheologicalOperators( &mesh, &input.model, &input.materials, &input.scaling, 0, 1 );
+            RheologicalOperators( &mesh, &input.model, &input.materials, &input.scaling, 0, input.model.anisotropy );
             ApplyBC( &mesh, &input.model );
             SetBCs(*setup->SetBCs, &input, &mesh, &topo);
 
