@@ -170,9 +170,9 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         // Set phases on particles
         SetParticles(*setup->SetParticles, &input, &particles);
 
-        MinMaxArray(particles.Vx, input.scaling.V, particles.Nb_part, "Vxp init" );
-        MinMaxArray(particles.Vz, input.scaling.V, particles.Nb_part, "Vzp init" );
-        MinMaxArray(particles.T, input.scaling.T, particles.Nb_part,  "Tp init" );
+        MinMaxArray(particles.Vx,   input.scaling.V, particles.Nb_part, "Vxp init" );
+        MinMaxArray(particles.Vz,   input.scaling.V, particles.Nb_part, "Vzp init" );
+        MinMaxArray(particles.T,    input.scaling.T, particles.Nb_part, "Tp init" );
         MinMaxArray(particles.sxxd, input.scaling.S, particles.Nb_part, "sxxd part  ");
         MinMaxArray(particles.szzd, input.scaling.S, particles.Nb_part, "szzd part  ");
         MinMaxArray(particles.sxxd, input.scaling.S, particles.Nb_part, "sxz part  ");
@@ -185,6 +185,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
         P2Mastah( &input.model, particles, input.materials.eta0, &mesh, mesh.eta_s, mesh.BCg.type,  0, 0, interp, vert, input.model.interp_stencil);
         P2Mastah( &input.model, particles, input.materials.eta0, &mesh, mesh.eta_n, mesh.BCp.type,  0, 0, interp, cent, input.model.interp_stencil);
+        RheologicalOperators( &mesh, &input.model, &input.materials, &input.scaling, 0, 1 );
 
         P2Mastah( &input.model, particles, particles.noise, &mesh, mesh.noise_s, mesh.BCg.type,  1, 0, interp, vert, input.model.interp_stencil);
         P2Mastah( &input.model, particles, particles.noise, &mesh, mesh.noise_n, mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil);
@@ -253,7 +254,6 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
         MinMaxArrayTag( mesh.sxxd0, input.scaling.S,   (mesh.Nx-1)*(mesh.Nz-1), "Sxx initial ", mesh.BCp.type );
         MinMaxArrayTag( mesh.szzd0, input.scaling.S,   (mesh.Nx-1)*(mesh.Nz-1), "Szz initial ", mesh.BCp.type );
-
 
         printf("*************************************\n");
         printf("******** Initialize pressure ********\n");
@@ -627,6 +627,8 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                 printf("Running with normal conductivity for the asthenosphere...\n");
             }
             // Allocate and initialise solution and RHS vectors
+            RheologicalOperators( &mesh, &input.model, &input.materials, &input.scaling, 0, 1 );
+            ApplyBC( &mesh, &input.model );
             SetBCs(*setup->SetBCs, &input, &mesh, &topo);
 
             // Reset fields and BC values if needed
@@ -745,12 +747,12 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                     WriteOutputHDF5Particles( &mesh, &particles, &topo, &topo_chain, &topo_ini, &topo_chain_ini, input.model, "Particles_BeforeSolve", input.materials, input.scaling );
                 }
 
-                // Build discrete system of equations - Linearised Picard withou Newton linearisatio nor anisotripic contributions
+                // Build discrete system of equations - Linearised Picard without Newton linearisation nor anisotropic contributions
                 int kill_aniso = 0, kill_Newton = 0;
                 RheologicalOperators( &mesh, &input.model, &input.materials, &input.scaling, kill_Newton, kill_aniso );
                 BuildStokesOperatorDecoupled  ( &mesh, input.model, 0, mesh.p_corr, mesh.p_in, mesh.u_in, mesh.v_in, &Stokes, &StokesA, &StokesB, &StokesC, &StokesD, 1 );
 
-                // Rheological operators including physical contrbutions from anisotropy
+                // Rheological operators including physical contributions from anisotropy
                 RheologicalOperators( &mesh, &input.model, &input.materials, &input.scaling, 0, input.model.anisotropy );
 
                 // Build discrete system of equations - Jacobian (do it also for densification since drhodp is needed)

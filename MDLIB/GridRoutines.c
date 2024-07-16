@@ -404,7 +404,7 @@ void InitialiseSolutionFields( grid *mesh, params *model ) {
 
     // Very important step: Set BC's here!!!!!!!
     ApplyBC( mesh, model ); 
-    printf("Velocity field was set to background pure shear\n");
+    printf("Velocity field was set to background shear\n");
 }
 
 

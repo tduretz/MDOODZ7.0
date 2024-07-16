@@ -147,6 +147,7 @@ void RheologicalOperators( grid* mesh, params* model, mat_prop* materials, scale
         //----------------------------------------------------------//
         mesh->D31_s[k] =          -2.0*aniS_vep*d2        *eta_vep;
         mesh->D32_s[k] =           2.0*aniS_vep*d2        *eta_vep;
+        // printf("aniS_vep = %lf --- d2 = %lf --- eta_vep = %2.2e\n", aniS_vep, d2, eta_vep);
         mesh->D33_s[k] = eta_vep + 2.0*aniS_vep*(d1 - 0.5)*eta_vep;
         mesh->D34_s[k] =           0.0;
         //----------------------------------------------------------//
@@ -330,6 +331,7 @@ void ApplyBC( grid* mesh, params* model ) {
 
     int nx=model->Nx, nz=model->Nz, nzvx=nz+1, nxvz=nx+1;
     int i, j, kv, kx, kz;
+    double Exxd = 0., Ezzd = 0.;
 
     // Vx Neumann
     for( i=0; i<nx; i++) {
@@ -337,13 +339,13 @@ void ApplyBC( grid* mesh, params* model ) {
         kv = i + 0*nz;
         // South
         if ( mesh->BCu.type[kx] == 13 ) {
-            mesh->u_in[kx] = mesh->u_in[kx+nx] - model->dz/mesh->eta_s[kv] * mesh->BCu.val[kx];
+            mesh->u_in[kx] = mesh->u_in[kx+nx] - model->dz/(mesh->D33_s[kv]) * (mesh->BCu.val[kx] - mesh->D31_s[kv]*mesh->exxd_s[kv] - mesh->D32_s[kv]*mesh->ezzd_s[kv]);
         }
         // North
         kx = i + (nzvx-1)*nx;
         kv = i + (nz-1)*nz;
         if ( mesh->BCu.type[kx] == 13 ) {
-            mesh->u_in[kx] = mesh->u_in[kx-nx] + model->dz/mesh->eta_s[kv] * mesh->BCu.val[kx];
+            mesh->u_in[kx] = mesh->u_in[kx-nx] + model->dz/(mesh->D33_s[kv]) * (mesh->BCu.val[kx] - mesh->D31_s[kv]*mesh->exxd_s[kv] - mesh->D32_s[kv]*mesh->ezzd_s[kv]);
         }
     }
 
@@ -442,7 +444,7 @@ void DetectCompressibleCells ( grid* mesh, params *model ) {
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-void ExtractSolutions2( SparseMat *Stokes, grid* mesh, params* model, double* dx, double alpha ) {
+void ExtractSolutions2( SparseMat *Stokes, grid* mesh, params* model, double* dx, double alpha, scale scaling ) {
 
     int cc, nx=model->Nx, nz=model->Nz, nzvx=nz+1, nxvz=nx+1, ncx=nx-1, ncz=nz-1, kk;
 
@@ -481,6 +483,7 @@ void ExtractSolutions2( SparseMat *Stokes, grid* mesh, params* model, double* dx
     }
 
     // Apply Bc to Vx and Vz
+    // StrainRateComponents( mesh, scaling, model );
     ApplyBC( mesh, model );
 }
 
@@ -555,7 +558,7 @@ double LineSearchDecoupled( SparseMat *Stokes, SparseMat *StokesA, SparseMat *St
             ArrayEqualArray( mesh->p_in, p, ncx*ncz );
 
             // Consistent solution extraction
-            ExtractSolutions2( Stokes, mesh, model, dx, alpha );
+            ExtractSolutions2( Stokes, mesh, model, dx, alpha, scaling );
 
             // Update non-linearity
             UpdateNonLinearity( mesh, particles, topo_chain, topo, materials, model, Nmodel, scaling, 0, 1.0 );
@@ -715,7 +718,7 @@ void SolveStokesDefectDecoupled( SparseMat *StokesA, SparseMat *StokesB, SparseM
     if ( model->line_search == 1 ) alpha = LineSearchDecoupled( Stokes, StokesA, StokesB, StokesC, StokesD, dx, mesh, model, Nmodel, particles, topo_chain, topo, materials, scaling  );
     
     // Same solution extraction than in line search - consistent
-    ExtractSolutions2( Stokes, mesh, model, dx, alpha );
+    ExtractSolutions2( Stokes, mesh, model, dx, alpha, scaling );
 
     DoodzFree(dx);
 }

@@ -71,11 +71,12 @@ function main()
     # field = :Viscosity 
     # field = :PlasticStrainrate
     # field = :Stress
+    field = :τxz
     # field = :StrainRate
     # field = :Pressure
     # field = :Divergence
     # field = :Temperature
-    field = :Velocity_x
+    # field = :Velocity_x
     # field = :Velocity_z
     # field = :Velocity
     # field = :GrainSize
@@ -94,7 +95,7 @@ function main()
     PlotOnTop = (
         ph_contours = false,  # add phase contours
         T_contours  = false,   # add temperature contours
-        fabric      = true,  # add fabric quiver (normal to director)
+        fabric      = false,  # add fabric quiver (normal to director)
         topo        = false,
         σ1_axis     = false,
         vel_vec     = false,
@@ -116,6 +117,7 @@ function main()
     Lc = 1.0
     tc = My
     Vc = 1.0 # (100.0*3600.0*24.0*365.25)
+    τc = 1.0
 
     probe = (ϕeff = Float64.([]), t  = Float64.([]))
 
@@ -276,10 +278,20 @@ function main()
 
         if field==:Stress
             ax1 = Axis(f[1, 1], title = L"$\tau_\textrm{II}$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
-            hm = heatmap!(ax1, xc./Lc, zc./Lc, τII./1e6, colormap = (:turbo, α_heatmap)) 
+            hm = heatmap!(ax1, xc./Lc, zc./Lc, τII./τc, colormap = (:turbo, α_heatmap)) 
             AddCountourQuivers!(PlotOnTop, ax1, xc, xv, zc, V, T, σ1, Fab, height, Lc, cm_y, group_phases, Δ)                
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
             Mak.Colorbar(f[1, 2], hm, label = L"$\tau_\textrm{II}$ [MPa]", width = 20, labelsize = 25, ticklabelsize = 14 )
+            Mak.colgap!(f.layout, 20)
+            if printfig Print2Disk( f, path, string(field), istep) end
+        end
+
+        if field==:τxz
+            ax1 = Axis(f[1, 1], title = L"$\tau_{xz}$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
+            hm = heatmap!(ax1, xv./Lc, zv./Lc, τxz./τc, colormap = (:turbo, α_heatmap)) 
+            AddCountourQuivers!(PlotOnTop, ax1, xc, xv, zc, V, T, σ1, Fab, height, Lc, cm_y, group_phases, Δ)                
+            colsize!(f.layout, 1, Aspect(1, Lx/Lz))
+            Mak.Colorbar(f[1, 2], hm, label = L"$τxz$ [MPa]", width = 20, labelsize = 25, ticklabelsize = 14 )
             Mak.colgap!(f.layout, 20)
             if printfig Print2Disk( f, path, string(field), istep) end
         end

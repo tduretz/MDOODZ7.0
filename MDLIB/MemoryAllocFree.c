@@ -215,7 +215,6 @@ markers PartAlloc(ParticlesInput particlesInput, params *model) {
   particles.noise      = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
   particles.rho        = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
 
-
   particles.strain     = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
   particles.strain_el  = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
   particles.strain_pl  = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
@@ -639,6 +638,10 @@ grid GridAlloc(params *model) {
   if (model->anisotropy == 1) Initialise1DArrayDouble(mesh.FS_AR_s, (Nx - 0) * (Nz - 0), 1.0);
   if (model->anisotropy == 1) mesh.aniso_factor_n = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double)); // To delete
   if (model->anisotropy == 1) mesh.aniso_factor_s = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double)); // To delete
+  if (model->anisotropy == 1) {
+    for (int k=0; k<(Nx - 1) * (Nz - 1); k++) mesh.aniso_factor_n[k] = 1.0;
+    for (int k=0; k<(Nx - 0) * (Nz - 0); k++) mesh.aniso_factor_s[k] = 1.0;
+  }
   // Compressibility
   mesh.p0_n    = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
   mesh.p0_s    = DoodzCalloc((Nx) * (Nz), sizeof(double));

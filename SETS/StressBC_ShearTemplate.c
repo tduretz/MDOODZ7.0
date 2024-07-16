@@ -33,7 +33,7 @@ SetBC SetBCVx(MdoodzInput *instance, POSITION position, Coordinates coord) {
   SetBC           bc;
   const double radius = instance->model.user1 / instance->scaling.L;
   double       x, z;
-  // Pure shear 
+  // ----------- Pure shear ----------- //
   if (instance->model.shear_style==0) {
     if (position == W) {
       x = coord.x;
@@ -72,6 +72,7 @@ SetBC SetBCVx(MdoodzInput *instance, POSITION position, Coordinates coord) {
       bc.value = 0.0;
     }
   }
+  // ----------- Simple shear ----------- //
   else {
     const double Lz = (double) (instance->model.zmax - instance->model.zmin);
     if (position == S || position == SE || position == SW) {
@@ -101,7 +102,7 @@ SetBC SetBCVx(MdoodzInput *instance, POSITION position, Coordinates coord) {
 SetBC SetBCVz(MdoodzInput *instance, POSITION position, Coordinates coord) {
   SetBC           bc;
   double       x, z;
-    // Pure shear 
+  // ----------- Pure shear ----------- //
   if (instance->model.shear_style==0) {
     if (position == N) {
       x = coord.x;
@@ -143,6 +144,7 @@ SetBC SetBCVz(MdoodzInput *instance, POSITION position, Coordinates coord) {
       bc.value = 0.0;
     }
   }
+  // ----------- Simple shear ----------- //
   else {
     if (position == E || position == W || position == NE || position == NW || position == SE || position == SW) {
     bc.type  = -12;
