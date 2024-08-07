@@ -24,7 +24,7 @@ T               = 4.0e+02 /temperature
 /**** SPACE-TIME ****/
 Nx             = 1001               / No. grid points x
 Nz             = 381                / No. grid points z
-Nt             = 2000                  / No. time steps
+Nt             = 0                  / No. time steps
 xmin           = -1200.000000e3     / Minimum x-coordinate
 xmax           =  1200.000000e3     / Maximum x-coordinate
 zmin           = -660.000000e3      / Minimum z-coordinate
