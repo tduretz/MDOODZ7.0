@@ -47,6 +47,7 @@ function main()
     path ="/home/larafriedrichs/repositories/MDOODZ7.0/MDLIB/"
     #path=raw"C:\Users\49176\OneDrive\Desktop\Test_c_code\\"
     path="/home/larafriedrichs/repositories/MDOODZ7.0/runs/firstmodel/"
+    path="/Users/lcandiot/Developer/MDOODZ7.0/cmake-exec/ThanushikaSubduction/"
     #path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/"
 
     # path ="/Users/tduretz/Downloads/"
@@ -60,20 +61,20 @@ function main()
     # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/1_NR09/"
 
     # File numbers
-    file_start = 100
+    file_start = 0
     file_step  = 10
-    file_end   = 100
+    file_end   = 0
 
     # Select field to visualise
-    # field = :Phases
+    field = :Phases
     # field = :Cohesion
-     field = :Density
+    #  field = :Density
     # field = :Viscosity 
 
     # field = :PlasticStrainrate
     # field = :Stress
     # field = :StrainRate
-     field = :Pressure
+    #  field = :Pressure
     # field = :Divergence
     # field = :Temperature
     # field = :Velocity_x
@@ -89,7 +90,7 @@ function main()
 
 
     # Switches
-    printfig    = true  # print figures to disk
+    printfig    = false  # print figures to disk
     printvid    = false
     framerate   = 3
     PlotOnTop = (
@@ -98,7 +99,7 @@ function main()
         fabric      = false,  # add fabric quiver (normal to director)
         topo        = false,
         σ1_axis     = false,
-        vel_vec     = true,
+        vel_vec     = false,
     )
     α_heatmap   = 1.0 #0.85   # transparency of heatmap 
     vel_arrow   = 5
