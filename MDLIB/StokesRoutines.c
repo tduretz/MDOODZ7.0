@@ -339,15 +339,15 @@ void ApplyBC( grid* mesh, params* model ) {
         kv = i + 0*nz;
         // South
         if ( mesh->BCu.type[kx] == 13 ) {
-            mesh->u_in[kx] = mesh->u_in[kx+nx] - model->dz/(mesh->D33_s[kv]) * (mesh->BCu.val[kx] - mesh->D31_s[kv]*mesh->exxd_s[kv] - mesh->D32_s[kv]*mesh->ezzd_s[kv]);
-            // mesh->u_in[kx] = mesh->u_in[kx+nx];
+            // mesh->u_in[kx] = mesh->u_in[kx+nx] - model->dz/(mesh->D33_s[kv]) * (mesh->BCu.val[kx] - mesh->D31_s[kv]*mesh->exxd_s[kv] - mesh->D32_s[kv]*mesh->ezzd_s[kv]);
+            mesh->u_in[kx] = mesh->u_in[kx+nx];
         }
         // North
         kx = i + (nzvx-1)*nx;
         kv = i + (nz-1)*nz;
         if ( mesh->BCu.type[kx] == 13 ) {
-            mesh->u_in[kx] = mesh->u_in[kx-nx] + model->dz/(mesh->D33_s[kv]) * (mesh->BCu.val[kx] - mesh->D31_s[kv]*mesh->exxd_s[kv] - mesh->D32_s[kv]*mesh->ezzd_s[kv]);
-            // mesh->u_in[kx] = mesh->u_in[kx-nx];//
+            // mesh->u_in[kx] = mesh->u_in[kx-nx] + model->dz/(mesh->D33_s[kv]) * (mesh->BCu.val[kx] - mesh->D31_s[kv]*mesh->exxd_s[kv] - mesh->D32_s[kv]*mesh->ezzd_s[kv]);
+            mesh->u_in[kx] = mesh->u_in[kx-nx];
         }
     }
 
@@ -372,12 +372,14 @@ void ApplyBC( grid* mesh, params* model ) {
         kv = j*nz;
         if ( mesh->BCv.type[kz] == 13 ) {
             mesh->v_in[kz] = mesh->v_in[kz+1] - model->dx/mesh->eta_s[kv] * mesh->BCv.val[kz];
+            // mesh->v_in[kz] = mesh->v_in[kz+1];
         }
         // East
         kz = j*nxvz + (nxvz-1);
         kv = j*nz   + (nx-1);
         if ( mesh->BCv.type[kz] == 13 ) {
             mesh->v_in[kz] = mesh->v_in[kz-1] + model->dx/mesh->eta_s[kv] * mesh->BCv.val[kz];
+            // mesh->v_in[kz] = mesh->v_in[kz-1];
         }
     }
 
