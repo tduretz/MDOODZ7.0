@@ -27,103 +27,101 @@ int SetDualPhase(MdoodzInput *input, Coordinates coordinate, int phase) {
         dual_phase = input->model.Nb_phases;
     }
 
-  return dual_phase;
+    return dual_phase;
 }
 
 
 double SetSurfaceZCoord(MdoodzInput *instance, double x_coord) {
-  double TopoLevel           = -0.0e3 / instance->scaling.L;
-  const double seaLevel      = 0.0e3 / instance->scaling.L;
-  const double ht_iso        =  4.8e3 / instance->scaling.L;
-  const double weakZoneWidth = 10e3/instance->scaling.L;
-  const double x_ext_start   =  0.0e3 / instance->scaling.L;
-  const double x_ext_end     =  100.0e3 / instance->scaling.L;
-  const double marginWidth   =  x_ext_end - x_ext_start;
+    double TopoLevel           = -0.0e3 / instance->scaling.L;
+    const double seaLevel      = 0.0e3 / instance->scaling.L;
+    const double ht_iso        =  4.8e3 / instance->scaling.L;
+    const double weakZoneWidth = 5.0e3/instance->scaling.L;
+    const double x_ext_start   =  0.0e3 / instance->scaling.L;
+    const double x_ext_end     =  100.0e3 / instance->scaling.L;
+    const double marginWidth   =  x_ext_end - x_ext_start;
 
-  if (x_coord >= x_ext_start && x_coord <= x_ext_end)
-  {
-    // TopoLevel = ht_iso / 2.0 * ( 1.0 + tanh( ((x_coord - marginWidth / 2.0) / (2.0 * marginWidth)) ) );
-    TopoLevel = seaLevel + (ht_iso - seaLevel) / marginWidth * x_coord;
-  }
-  if (x_coord >= x_ext_end)
-  {
-    TopoLevel = ht_iso;
-  }
+    if (x_coord >= x_ext_start && x_coord <= x_ext_end)
+    {
+        // TopoLevel = ht_iso / 2.0 * ( 1.0 + tanh( ((x_coord - marginWidth / 2.0) / (2.0 * marginWidth)) ) );
+        TopoLevel = seaLevel + (ht_iso - seaLevel) / marginWidth * x_coord;
+    }
+    if (x_coord >= x_ext_end)
+    {
+        TopoLevel = ht_iso;
+    }
 
-  return TopoLevel;
+    return TopoLevel;
 }
 
 int SetPhase(MdoodzInput *instance, Coordinates coordinates) {
 
-  // Define parameters and initialise phases according to coordinates
-  const double lithosphereThickness = instance->model.user1 / instance->scaling.L;
-  const double weakZoneWidth        =  10.0e3/instance->scaling.L;
-  // const double weakZoneDepth        = -120e3 / instance->scaling.L;
-        double mohoLevel            = -instance->model.user0 / instance->scaling.L;
-  const double seaLevel             = 0.0e3 / instance->scaling.L;
-  const double ht_iso               = 4.8e3 / instance->scaling.L;
-  const bool   isBelowLithosphere   = coordinates.z < -lithosphereThickness;
-  const bool   isAboveMoho          = coordinates.z > mohoLevel;
-  const bool   isContinentalPlate   = coordinates.x > 0.0e3 / instance->scaling.L;
-  const double x_ext_start          =  0.0e3 / instance->scaling.L;
-  const double x_ext_end            =  100.0e3 / instance->scaling.L;
-  const double marginWidth          =  x_ext_end - x_ext_start;
-  const double subductionAngle      = tan((90.0 - instance->model.user4)/180*PI);
-  const double ocCrustThickness     = instance->model.user7 / instance->scaling.L;
-  const double ocLithThickness      = instance->model.user5 / instance->scaling.L;
-  const double sedimentThickness    = instance->model.user8 / instance->scaling.L;
-  const double weakZoneDepth        = -fmin(lithosphereThickness, ocLithThickness) - 20.0e3 / instance->scaling.L;
-  int phase = 0; // Upper mantle
-  
-  // Set all lithosphere
-  if (coordinates.z >= -lithosphereThickness && coordinates.x > -weakZoneWidth - coordinates.z*subductionAngle) 
-  {
-    phase = 1;
-  }
+    // Define parameters and initialise phases according to coordinates
+    const double lithosphereThickness = instance->model.user1 / instance->scaling.L;
+    const double weakZoneWidth        =  5.0e3/instance->scaling.L;
+          double mohoLevel            = -instance->model.user0 / instance->scaling.L;
+    const double seaLevel             = 0.0e3 / instance->scaling.L;
+    const double ht_iso               = 4.8e3 / instance->scaling.L;
+    const bool   isBelowLithosphere   = coordinates.z < -lithosphereThickness;
+    const bool   isAboveMoho          = coordinates.z > mohoLevel;
+    const bool   isContinentalPlate   = coordinates.x > 0.0e3 / instance->scaling.L;
+    const double x_ext_start          =  0.0e3 / instance->scaling.L;
+    const double x_ext_end            =  100.0e3 / instance->scaling.L;
+    const double marginWidth          =  x_ext_end - x_ext_start;
+    const double subductionAngle      = tan((90.0 - instance->model.user4)/180*PI);
+    const double ocCrustThickness     = instance->model.user7 / instance->scaling.L;
+    const double ocLithThickness      = instance->model.user5 / instance->scaling.L;
+    const double sedimentThickness    = instance->model.user8 / instance->scaling.L;
+    const double weakZoneDepth        = -fmin(lithosphereThickness, ocLithThickness) - 20.0e3 / instance->scaling.L;
+        double maxLithThickness       = fmax(ocCrustThickness,lithosphereThickness);
+          int    phase                = 0; // Upper mantle
+    
+    // Set all lithosphere
+    if (coordinates.z >= -lithosphereThickness && coordinates.x > -weakZoneWidth - coordinates.z*subductionAngle) 
+    {
+        phase = 1;
+    }
 
-  // Set oceanic lithosphere
-  if (coordinates.z > -ocLithThickness && coordinates.x < -weakZoneWidth - coordinates.z*subductionAngle && phase == 0)
-  {
-    phase = 2;
-  }
+    // Set oceanic lithosphere
+    if (coordinates.z > -ocLithThickness && coordinates.x < -weakZoneWidth - coordinates.z*subductionAngle && phase == 0)
+    {
+        phase = 2;
+    }
 
-  // Set oceanic crust
-  if (coordinates.z > -ocCrustThickness && coordinates.x < -weakZoneWidth - coordinates.z*subductionAngle)
-  {
-    phase = 5;
-  }
+    // Set oceanic crust
+    if (coordinates.z > -ocCrustThickness && coordinates.x < -weakZoneWidth - coordinates.z*subductionAngle)
+    {
+        phase = 5;
+    }
 
-  // Set sediments
-  if (coordinates.z > -sedimentThickness)
-  {
-    phase = 6;
-  }
+    // Set weak zone - first in the horizontal part, then along the plate interface
+    if (coordinates.z >= -weakZoneWidth)
+    {
+        phase = 3;
+    }
+    
+    if (coordinates.z > weakZoneDepth && coordinates.x > -weakZoneWidth - coordinates.z*subductionAngle && coordinates.x < weakZoneWidth - coordinates.z*subductionAngle)
+    {
+        phase = 3;
+    }
 
-  // Set continental crust
-  if (coordinates.x >= weakZoneWidth - coordinates.z*subductionAngle && coordinates.x >= x_ext_start && coordinates.x <= x_ext_end)
-  {
-    // mohoLevel = mohoLevel * ( 1.0 + tanh( ((coordinates.x - marginWidth / 2.0)) / (2.0 * marginWidth) ) );
-    mohoLevel = seaLevel + (mohoLevel + ht_iso - seaLevel) / marginWidth * coordinates.x;
-  }
-  else
-  {
-    mohoLevel = mohoLevel + ht_iso;
-  }
-  if (coordinates.z >= mohoLevel && coordinates.x >= weakZoneWidth - coordinates.z*subductionAngle)
-  {
-    phase = 4;
-  }
-  
-    // Set weak zone
-  double maxLithThickness = fmax(ocCrustThickness,lithosphereThickness);
-   if (coordinates.z > weakZoneDepth && coordinates.x > -weakZoneWidth - coordinates.z*subductionAngle && coordinates.x < weakZoneWidth - coordinates.z*subductionAngle)
-   {
-     phase = 3;
-   }
-   
-  // Return
-  return phase;
-  
+    // Set continental crust
+    if (coordinates.x >= weakZoneWidth - coordinates.z*subductionAngle && coordinates.x >= x_ext_start && coordinates.x <= x_ext_end)
+    {
+      // mohoLevel = mohoLevel * ( 1.0 + tanh( ((coordinates.x - marginWidth / 2.0)) / (2.0 * marginWidth) ) );
+      mohoLevel = seaLevel + (mohoLevel + ht_iso - seaLevel) / marginWidth * coordinates.x;
+    }
+    else
+    {
+      mohoLevel = mohoLevel + ht_iso;
+    }
+    if (coordinates.z >= mohoLevel && coordinates.x >= weakZoneWidth - coordinates.z*subductionAngle)
+    {
+      phase = 4;
+    }
+    
+    // Return
+    return phase;
+    
 }
 
 double SetTemperature(MdoodzInput *instance, Coordinates coordinates) {
@@ -330,7 +328,7 @@ int main(int nargs, char *args[]) {
   // Input file name
   char *input_file;
   if ( nargs < 2 ) {
-    asprintf(&input_file, "ThanushikaSubduction.txt"); // Default
+    asprintf(&input_file, "SubductionMelting.txt"); // Default
   }
   else {
     printf("dodo %s\n", args[1]);
