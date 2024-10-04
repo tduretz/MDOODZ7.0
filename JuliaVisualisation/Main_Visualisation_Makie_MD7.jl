@@ -48,6 +48,7 @@ function main()
     #path=raw"C:\Users\49176\OneDrive\Desktop\Test_c_code\\"
     path="/home/larafriedrichs/repositories/MDOODZ7.0/runs/firstmodel/"
     #path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/"
+    path = "/Users/lcandiot/Developer/MDOODZ7.0/cmake-exec/RiftingChenin/"
 
     # path ="/Users/tduretz/Downloads/"
     # path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/DoubleSubduction_OMP16/"
@@ -60,20 +61,20 @@ function main()
     # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/1_NR09/"
 
     # File numbers
-    file_start = 100
+    file_start = 00
     file_step  = 10
-    file_end   = 100
+    file_end   = 200
 
     # Select field to visualise
-    # field = :Phases
+    field = :Phases
     # field = :Cohesion
-     field = :Density
+    #  field = :Density
     # field = :Viscosity 
 
     # field = :PlasticStrainrate
     # field = :Stress
     # field = :StrainRate
-     field = :Pressure
+    #  field = :Pressure
     # field = :Divergence
     # field = :Temperature
     # field = :Velocity_x
@@ -89,7 +90,7 @@ function main()
 
 
     # Switches
-    printfig    = true  # print figures to disk
+    printfig    = false  # print figures to disk
     printvid    = false
     framerate   = 3
     PlotOnTop = (
@@ -98,7 +99,7 @@ function main()
         fabric      = false,  # add fabric quiver (normal to director)
         topo        = false,
         σ1_axis     = false,
-        vel_vec     = true,
+        vel_vec     = false,
     )
     α_heatmap   = 1.0 #0.85   # transparency of heatmap 
     vel_arrow   = 5
@@ -243,8 +244,8 @@ function main()
 
         if field==:Phases
             ax1 = Axis(f[1, 1], title = L"Phases at $t$ = %$(tMy) Ma", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
-            # hm = heatmap!(ax1, xc_hr./Lc, zc_hr./Lc, ph_hr, colormap = phase_colors)
-            hm = heatmap!(ax1, xc_hr./Lc, zc_hr./Lc, ph_hr, colormap = :turbo)
+            hm = heatmap!(ax1, xc_hr./Lc, zc_hr./Lc, ph_hr, colormap = phase_colors)
+            # hm = heatmap!(ax1, xc_hr./Lc, zc_hr./Lc, ph_hr, colormap = :turbo)
             hm = heatmap!(ax1, xc_hr./Lc, zc_hr./Lc, ph_dual_hr, colormap = :turbo)
             AddCountourQuivers!(PlotOnTop, ax1, xc, xv, zc, V, T, σ1, Fab, height, Lc, cm_y, group_phases, Δ)                
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))

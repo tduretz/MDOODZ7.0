@@ -68,7 +68,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
     }
 
     if (setup->MutateInput) {
-      setup->MutateInput(&input, setup->mutateInputParams);
+      setup->MutateInput(&input);
     }
 
     // ValidateSetup(setup, &input);
