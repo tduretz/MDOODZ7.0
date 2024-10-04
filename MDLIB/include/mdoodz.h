@@ -302,7 +302,8 @@ typedef struct {
   const char *str1;
 } MutateInputParams;
 
-typedef void(MutateInput_f)(MdoodzInput *input, MutateInputParams *mutateInputParams);
+// typedef void(MutateInput_f)(MdoodzInput *input, MutateInputParams *mutateInputParams);
+typedef void(MutateInput_f)(MdoodzInput *input);
 
 struct MdoodzSetup {
   BuildInitialTopography_ff *BuildInitialTopography;
