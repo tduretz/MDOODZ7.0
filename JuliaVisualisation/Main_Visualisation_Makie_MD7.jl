@@ -47,7 +47,7 @@ function main()
     path ="/home/larafriedrichs/repositories/MDOODZ7.0/MDLIB/"
     #path=raw"C:\Users\49176\OneDrive\Desktop\Test_c_code\\"
     path="/home/larafriedrichs/repositories/MDOODZ7.0/runs/firstmodel/"
-    path="/Users/lcandiot/Developer/MDOODZ7.0/cmake-exec/ThanushikaSubduction/"
+    path="/Users/lcandiot/Developer/MDOODZ7.0/cmake-exec/RiftingChenin/"
     #path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/"
 
     # path ="/Users/tduretz/Downloads/"
@@ -63,10 +63,10 @@ function main()
     # File numbers
     file_start = 0
     file_step  = 10
-    file_end   = 0
+    file_end   = 50
 
     # Select field to visualise
-    field = :Phases
+    # field = :Phases
     # field = :Cohesion
     #  field = :Density
     # field = :Viscosity 
@@ -76,7 +76,7 @@ function main()
     # field = :StrainRate
     #  field = :Pressure
     # field = :Divergence
-    # field = :Temperature
+    field = :Temperature
     # field = :Velocity_x
     # field = :Velocity_z
     # field = :Velocity
