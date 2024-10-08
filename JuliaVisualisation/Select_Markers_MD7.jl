@@ -124,6 +124,7 @@ function main()
         end
     end
 
+    # Delete markers that have not been there from the start
     fmark      = string(path, @sprintf("Particles%05d.gzip.h5", file_select_start))
     xm         = Float64.(ExtractData( fmark, "/Particles/x"))
     idx_delete = findall(x -> x > length(xm), idx_markers)
