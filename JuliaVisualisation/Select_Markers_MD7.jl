@@ -49,7 +49,7 @@ function main()
     file_step  = 10
     file_end   = 200
 
-    file_select_start = 0                             # Last time step - Select marker coordinates from here
+    file_select_start = 0                             # First time step - Select marker coordinates from here
     file_select_end   = 200                             # Last time step - Select marker coordinates from here
     target_coords = (-40e3, -30e3, -15e3, -10e3)        # Coordinate bounds (min(x), max(x), min(y), max(y))
 
