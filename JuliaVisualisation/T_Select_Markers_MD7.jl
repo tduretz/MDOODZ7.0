@@ -42,15 +42,15 @@ end
 function main()
 
     # Set the path to your files
-    path ="/Users/lcandiot/Developer/MDOODZ7.0/cmake-exec/RiftingChenin/"
+    path ="/home/thanushika/software/Results/Phase_Diagram_Model/Marker/Oth5km/"
 
     # File numbers
     file_start = 00
-    file_step  = 10
-    file_end   = 200
+    file_step  = 500
+    file_end   = 3000
 
     file_select_start = 0                             # First time step - Select marker coordinates from here
-    file_select_end   = 200                             # Last time step - Select marker coordinates from here
+    file_select_end   = 3000                             # Last time step - Select marker coordinates from here
     target_coords = (-40e3, -30e3, -15e3, -10e3)        # Coordinate bounds (min(x), max(x), min(y), max(y))
 
     # Select field to visualise
@@ -58,7 +58,6 @@ function main()
     # field = :Cohesion
     #  field = :Density
     # field = :Viscosity 
-
     # field = :PlasticStrainrate
     # field = :Stress
     # field = :StrainRate
@@ -78,7 +77,7 @@ function main()
 
 
     # Switches
-    printfig    = false  # print figures to disk
+    printfig    = true  # print figures to disk
     printvid    = false
     framerate   = 3
     PlotOnTop = (
