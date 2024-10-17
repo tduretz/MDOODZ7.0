@@ -3,7 +3,9 @@ Pkg.activate(normpath(joinpath(@__DIR__, ".")))
 using HDF5, Printf, Colors, ColorSchemes, MathTeXEngine, LinearAlgebra, FFMPEG, Statistics
 using CairoMakie#, GLMakie
 const Mak = CairoMakie
-Makie.update_theme!(fonts = (regular = texfont(), bold = texfont(:bold), italic = texfont(:italic)))
+Makie.update_theme!( fonts = (regular = texfont(), bold = texfont(:bold), italic = texfont(:italic)))
+# fontsize_theme = Theme(fontsize=200)
+# set_theme!(fontsize_theme)
 
 const y    = 365*24*3600
 const My   = 1e6*y
@@ -26,7 +28,7 @@ function AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, σ1, Fab, height, Lc,
         contour!(ax1, coords.c_hr.x./Lc, coords.c_hr.z./Lc, group_phases, levels=-1:1:maximum(group_phases), linewidth = 4, color=:white )  
     end
     if PlotOnTop.fabric 
-        arrows!(ax1, coords.c.x./Lc, coords.c.z./Lc, Fab.x, Fab.z, arrowsize = 0, lengthscale=Δ/1.5)
+        arrows!(ax1, coords.c.x[1:V.step:end]./Lc, coords.c.z[1:V.step:end]./Lc, Fab.x[1:V.step:end,1:V.step:end], Fab.z[1:V.step:end,1:V.step:end], arrowsize = 0, lengthscale=10Δ/1.5)
     end 
     if PlotOnTop.σ1_axis
         arrows!(ax1, coords.c.x./Lc, coords.c.z./Lc, σ1.x, σ1.z, arrowsize = 0, lengthscale=Δ/1.5, color=:white)
@@ -53,7 +55,7 @@ function main()
     # File numbers
     file_start = 0
     file_step  = 10
-    file_end   = 0
+    file_end   = 150
 
     # Select field to visualise
     # field = :Phases
@@ -76,6 +78,7 @@ function main()
     # field = :MeltFraction
     # field = :TimeSeries
     # field = :EffectiveFrictionTime
+    # field = :ChristmasTree
 
     # Switches
     printfig    = false  # print figures to disk
@@ -83,16 +86,16 @@ function main()
     framerate   = 3
     PlotOnTop = (
         ph_contours = true,  # add phase contours
-        T_contours  = false,   # add temperature contours
-        fabric      = false,  # add fabric quiver (normal to director)
+        T_contours  = true,   # add temperature contours
+        fabric      = true,  # add fabric quiver (normal to director)
         topo        = false,
         σ1_axis     = false,
         vel_vec     = false,
     )
     α_heatmap   = 1.0 #0.85   # transparency of heatmap 
     vel_arrow   = 5
-    vel_scale   = 1000000
-    vel_step    = 5
+    vel_scale   = 10000
+    vel_step    = 10
     nap         = 0.1    # pause for animation 
     resol       = 1000
     mov_name    = "$(path)/_$(field)/$(field)"  # Name of the movie
@@ -106,6 +109,7 @@ function main()
     Lc = 1.0
     tc = My
     Vc = 1.0
+    τc = 1e6
 
     probe = (ϕeff = Float64.([]), t  = Float64.([]))
     cm_yr = 100.0*3600.0*24.0*365.25
@@ -183,13 +187,13 @@ function main()
 
         Fab = 0.
         if PlotOnTop.fabric
-            δani  = ExtractField(filename, "/Centers/ani_fac", centroids, false, 0)
-            Nx    = Float64.(reshape(ExtractData( filename, "/Centers/nx"), ncx, ncz))
-            Nz    = Float64.(reshape(ExtractData( filename, "/Centers/nz"), ncx, ncz))
-            Fab   = (x=-Nz./Nx, z=ones(size(Nz)))
-            nrm   = sqrt.(Fab.x.^2 .+ Fab.z.^2)
-            Fabx ./= nrm
-            Fabz ./= nrm
+            δani    = ExtractField(filename, "/Centers/ani_fac", centroids, false, 0)
+            Nx      = Float64.(reshape(ExtractData( filename, "/Centers/nx"), ncx, ncz))
+            Nz      = Float64.(reshape(ExtractData( filename, "/Centers/nz"), ncx, ncz))
+            Fab     = (x=-Nz./Nx, z=ones(size(Nz)))
+            nrm     = sqrt.(Fab.x.^2 .+ Fab.z.^2)
+            Fab.x ./= nrm
+            Fab.z ./= nrm
         end
         height = 0.
         if PlotOnTop.topo
@@ -229,7 +233,7 @@ function main()
 
         #####################################
         empty!(f)
-        f = Figure(size = (Lx/Lz*resol*1.2, resol), fontsize=25)
+        f = Figure(size = (Lx/Lz*resol*1.2, resol), fontsize=40)
 
         if field==:Phases
             ax1 = Axis(f[1, 1], title = L"Phases at $t$ = %$(tMy) Ma", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
@@ -242,7 +246,6 @@ function main()
             Mak.colgap!(f.layout, 20)
             if printfig Print2Disk( f, path, string(field), istep) end
         end
-        
 
         if field==:Viscosity
             ax1 = Axis(f[1, 1], title = L"$\eta$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
@@ -443,7 +446,14 @@ function main()
                 ax1 = Axis(f[1, 1], title = L"$ϕ_\mathrm{eff}$", xlabel = L"$t$", ylabel = L"$ϕ_\mathrm{eff}$")
                 lines!(ax1, Float64.(probe.t), Float64.(probe.ϕeff))
             end
+        end
 
+        if field==:ChristmasTree
+            ax1 = Axis(f[1, 1], title = L"Stress profile at $t$ = %$(tMy) Ma", xlabel = L"$τII$ [MPa]", ylabel = L"$z$ [km]")
+            lines!(ax1, mean(τII, dims=1)[:]/τc, coords.c.z./Lc/1e3, )
+            lines!(ax1, mean(T, dims=1)[:], coords.c.z./Lc/1e3, )
+            ax2 = Axis(f[1, 2], title = L"Temperature profile at $t$ = %$(tMy) Ma", xlabel = L"$T$ [C]", ylabel = L"$h$ [km]")
+            lines!(ax2, mean(T, dims=1)[:], coords.c.z./Lc/1e3, )
         end
 
         if field!=:EffectiveFrictionTime || istep!=file_end

@@ -34,7 +34,7 @@ Tensor2D SetDefGrad(MdoodzInput *input, Coordinates coordinates, int phase) {
   }
 }
 
-double SetAnisoAngle(MdoodzInput *input, Coordinates coordinates, int phase) {
+double SetAnisoAngle(MdoodzInput *input, Coordinates coordinates, int phase, double predefined_angle) {
   const double radius = input->model.user1 / input->scaling.L;
   if (coordinates.x * coordinates.x + coordinates.z * coordinates.z < radius * radius) {
     // nothing special in the inclusion
