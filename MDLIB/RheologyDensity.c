@@ -1230,7 +1230,7 @@ void CohesionFrictionDilationGrid( grid* mesh, markers* particles, mat_prop mate
 
   int p, k, l, Nx, Nz, Ncx, Ncz, c0, c1;
   int average = 0;
-  double *strain_pl;
+  double *strain_pl, lap_strain_pl = 0., pl_str_W = 0., pl_str_E = 0., pl_str_S = 0., pl_str_N = 0.,  g= 5e2;
   int style = 0;
   int cent = 1, vert = 0, prop = 1, interp = 0;
 
@@ -1260,6 +1260,17 @@ void CohesionFrictionDilationGrid( grid* mesh, markers* particles, mat_prop mate
       Softening(c0, mesh->phase_perc_n, mesh->dil_n, mesh->fric_n, mesh->C_n, strain_pl[c0], model, materials, style, average );
       // Include random noise
       if (model.marker_noise == 1) mesh->C_n[c0] += mesh->noise_n[c0]*mesh->C_n[c0];
+
+    //   if (mesh->kp[c0] == 0 ) pl_str_W = strain_pl[c0];
+    //   else pl_str_W = strain_pl[c0-1];
+    //   if (mesh->kp[Ncx-1] == 0 ) pl_str_E = strain_pl[c0];
+    //   else pl_str_E = strain_pl[c0+1];
+    //   if (mesh->lp[c0] == 0 ) pl_str_S = strain_pl[c0];
+    //   else pl_str_S = strain_pl[c0-Ncx];
+    //   if (mesh->lp[Ncz-1] == 0 ) pl_str_N = strain_pl[c0];
+    //   else pl_str_N = strain_pl[c0+Ncx];
+    // //  printf("%2.2e %2.2e\n", mesh->C_n[c0], g*(pl_str_W + pl_str_E + pl_str_S + pl_str_N - 4.0*strain_pl[c0]));
+    //   mesh->C_n[c0] += g*( (pl_str_W + pl_str_E - 2.0*strain_pl[c0])/mesh->dx*mesh->dx + (pl_str_S + pl_str_N - 2.0*strain_pl[c0])/mesh->dz*mesh->dz );
     }
   }
 
@@ -1286,6 +1297,16 @@ void CohesionFrictionDilationGrid( grid* mesh, markers* particles, mat_prop mate
       Softening(c1, mesh->phase_perc_s, mesh->dil_s, mesh->fric_s, mesh->C_s, strain_pl[c1], model, materials, style, average );
       // Include random noise
       if (model.marker_noise == 1) mesh->C_s[c1] += mesh->noise_s[c1]*mesh->C_s[c1];
+      
+      // if (mesh->kn[c0] == 0 ) pl_str_W = strain_pl[c1];
+      // else pl_str_W = strain_pl[c1-1];
+      // if (mesh->kn[Nx-1] == 0 ) pl_str_E = strain_pl[c1];
+      // else pl_str_E = strain_pl[c1+1];
+      // if (mesh->ln[c0] == 0 ) pl_str_S = strain_pl[c1];
+      // else pl_str_S = strain_pl[c1-Nx];
+      // if (mesh->ln[Nz-1] == 0 ) pl_str_N = strain_pl[c1];
+      // else pl_str_N = strain_pl[c1+Nx];
+      // mesh->C_s[c1] += g*( (pl_str_W + pl_str_E - 2.0*strain_pl[c1])/mesh->dx*mesh->dx + (pl_str_S + pl_str_N - 2.0*strain_pl[c1])/mesh->dz*mesh->dz );
     }
   }
 

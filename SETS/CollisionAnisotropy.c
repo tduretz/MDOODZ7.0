@@ -139,7 +139,7 @@ int main(int nargs, char *args[]) {
   srand(time(NULL));
   char *input_file;
   if (nargs < 2) {
-    asprintf(&input_file, "RiftingRoman.txt");// Default
+    asprintf(&input_file, "CollisionAnisotropy.txt");// Default
   } else {
     printf("dodo %s\n", args[1]);
     asprintf(&input_file, "%s", args[1]);// Custom

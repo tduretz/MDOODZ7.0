@@ -1039,7 +1039,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                 }
 
                 // Correction for particle inflow 0
-                if (input.model.pure_shear_ALE == -1 && input.model.periodic_x == 0) ParticleInflowCheck( &particles, &mesh, input.model, topo, 0 );
+                if (input.model.pure_shear_ALE == -1 && input.model.periodic_x == 0) ParticleInflowCheck( &particles, &mesh,  &input, topo, 0, *setup->SetParticles );
 
                 // Advect fluid particles
                 RogerGuntherII( &particles, input.model, mesh, 1, input.scaling );
@@ -1048,7 +1048,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                 // WriteOutputHDF5Particles( &mesh, &particles, &topo, &topo_chain, &topo_ini, &topo_chain_ini, input.model, BaseParticleFileName, input.materials, input.scaling );
 
                 // Correction for particle inflow 1
-                if (input.model.pure_shear_ALE == -1 && input.model.periodic_x == 0) ParticleInflowCheck( &particles, &mesh, input.model, topo, 1 );
+                if (input.model.pure_shear_ALE == -1 && input.model.periodic_x == 0) ParticleInflowCheck( &particles, &mesh,  &input, topo, 1, *setup->SetParticles );
 
                 // Update accumulated strain
                 AccumulatedStrainII( &mesh, input.scaling, input.model, &particles,  mesh.xc_coord,  mesh.zc_coord, mesh.Nx-1, mesh.Nz-1, mesh.BCp.type );

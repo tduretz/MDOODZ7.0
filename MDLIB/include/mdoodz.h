@@ -114,7 +114,7 @@ typedef struct {
   int      residual_form;
   int      irestart, istep;
   int      writer, writer_step;
-  const char     *writer_subfolder;
+  char     *writer_subfolder;
   int      save_initial_markers, load_initial_markers;
   char    *initial_markers_file;
   int     marker_aniso_angle;
@@ -194,7 +194,7 @@ typedef double (*SetTxx_f)(MdoodzInput *input, Coordinates coordinates, int phas
 typedef double (*SetTzz_f)(MdoodzInput *input, Coordinates coordinates, int phase);
 typedef double (*SetTxz_f)(MdoodzInput *input, Coordinates coordinates, int phase);
 typedef double (*SetNoise_f)(MdoodzInput *input, Coordinates coordinates, int phase);
-typedef double (*SetAnisoAngle_f)(MdoodzInput *input, Coordinates coordinates, int phase);
+typedef double (*SetAnisoAngle_f)(MdoodzInput *input, Coordinates coordinates, int phase, double predefined);
 typedef Tensor2D (*SetDefGrad_f)(MdoodzInput *input, Coordinates coordinates, int phase);
 
 typedef struct {

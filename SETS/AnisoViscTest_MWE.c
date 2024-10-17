@@ -70,7 +70,7 @@ double SetDensity(MdoodzInput *input, Coordinates coordinates, int phase) {
   }
 }
 
-double SetAnisoAngle(MdoodzInput *input, Coordinates coordinates, int phase) {
+double SetAnisoAngle(MdoodzInput *input, Coordinates coordinates, int phase, double predefined_angle) {
   const double radius = input->model.user1 / input->scaling.L;
 
   // A1+A2) circles, same size, isotropic+anisotropic
