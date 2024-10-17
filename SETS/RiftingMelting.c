@@ -81,7 +81,6 @@ double SetTemperature(MdoodzInput *instance, Coordinates coordinates) {
   const double lithosphereThickness = instance->model.user1 / instance->scaling.L;
   const double surfaceTemperature   = 273.15 / instance->scaling.T;
   const double mantleTemperature    = (1330.0 + 273.15) / instance->scaling.T;
-  
   const double Tamp               = 50.0 / instance->scaling.T;
   const double x                  = coordinates.x - instance->model.user4 / instance->scaling.L;
   const double z                  = coordinates.z;
@@ -113,9 +112,12 @@ SetBC SetBCT(MdoodzInput *instance, POSITION position, double particleTemperatur
   SetBC     bc;
   double surface_temperature =          zeroC  / instance->scaling.T;
   double mantle_temperature  = (1330. + zeroC) / instance->scaling.T;
+  double mantle_heatflux     =  -55e-3 / (instance->scaling.W/pow(instance->scaling.L,2));
   if (position == S) {
-    bc.type  = constant_temperature;
-    bc.value = particleTemperature;
+    // bc.type  = constant_temperature;
+    // bc.value = particleTemperature;
+    bc.type  = constant_heatflux;
+    bc.value = mantle_heatflux;
   }
   if (position == free_surface || position == N) {
     bc.type  = constant_temperature;
