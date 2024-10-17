@@ -295,7 +295,7 @@ void            Interp_Grid2P(markers, DoodzFP *, grid *, double *, double *, do
 void            Interp_Grid2P_strain(markers, DoodzFP *, grid *, double *, double *, double *, int, int, char *);
 //void FreeP2Mesh( grid* );
 void            Interp_Phase2VizGrid(markers, int *, grid *, char *, double *, double *, int, int, params, surface);
-void            ParticleInflowCheck(markers *, grid *, params, surface, int);
+void            ParticleInflowCheck(markers *, grid *, MdoodzInput*, surface, int, SetParticles_ff); // SetParticles_ff setParticles, MdoodzInput *instance
 void            P2Mastah(params *, markers, DoodzFP *, grid *, double *, char *, int, int, int, int, int);
 //
 //// Stokes
@@ -472,6 +472,7 @@ void            cholmod_dense_plus_cholmod_dense(cholmod_dense *, cholmod_dense 
 
 void            ApplyBC(grid *, params *);
 void            AssignMarkerProperties(markers *, int, int, params *, grid *, int);
+void            AssignMarkerPropertiesInflow(markers *, int, int, MdoodzInput*, grid *, int, SetParticles_ff);
 
 
 // GLOBAL

@@ -57,7 +57,7 @@ double SetDensity(MdoodzInput *input, Coordinates coordinates, int phase) {
   }
 }
 
-double SetAnisoAngle(MdoodzInput *input, Coordinates coordinates, int phase) {
+double SetAnisoAngle(MdoodzInput *input, Coordinates coordinates, int phase, double predefined_angle) {
   const double radius = input->model.user1 / input->scaling.L;
 
   int nellipses = 0;

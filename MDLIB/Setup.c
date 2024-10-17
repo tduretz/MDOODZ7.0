@@ -132,7 +132,8 @@ void SetParticles(SetParticles_ff setParticles, MdoodzInput *instance, markers *
       particles->Fzz[np] = F.zz;
     }
     if (instance->model.marker_aniso_angle && setParticles.SetAnisoAngle) {
-      particles->aniso_angle[np] = setParticles.SetAnisoAngle(instance, coordinates, particles->phase[np]) *M_PI / 180.0;
+      double predefined_angle = 0.;
+      particles->aniso_angle[np] = setParticles.SetAnisoAngle(instance, coordinates, particles->phase[np], predefined_angle);
     }
     ValidatePhase(particles->phase[np], instance->model.Nb_phases);
   }
