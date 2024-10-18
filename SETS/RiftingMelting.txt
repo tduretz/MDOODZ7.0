@@ -17,8 +17,8 @@ T   = 1.e+02     /temperature
 /**** SPACE-TIME ****/
 Nx             = 311 /911
 Nz             = 251 /501 
-Nt             = 1000
-xmin           = -150.000000e3
+Nt             = 1
+xmin           = -200.000000e3
 xmax           =  200.000000e3
 zmin           = -160.000000e3
 zmax           = 10.000000e3 
