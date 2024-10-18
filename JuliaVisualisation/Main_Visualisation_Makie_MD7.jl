@@ -55,7 +55,7 @@ function main()
     # File numbers
     file_start = 0
     file_step  = 10
-    file_end   = 150
+    file_end   = 0
 
     # Select field to visualise
     # field = :Phases
@@ -80,12 +80,15 @@ function main()
     # field = :EffectiveFrictionTime
     # field = :ChristmasTree
 
+
     # Switches
     printfig    = false  # print figures to disk
     printvid    = false
     framerate   = 3
     PlotOnTop = (
         ph_contours = true,  # add phase contours
+        T_contours  = false,   # add temperature contours
+        fabric      = false,  # add fabric quiver (normal to director)
         T_contours  = true,   # add temperature contours
         fabric      = true,  # add fabric quiver (normal to director)
         topo        = false,
