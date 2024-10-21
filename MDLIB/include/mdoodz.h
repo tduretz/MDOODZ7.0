@@ -263,8 +263,8 @@ typedef struct {
 
 typedef SetBC (*SetBCVx_f)(MdoodzInput *input, POSITION position, Coordinates coordinates);
 typedef SetBC (*SetBCVz_f)(MdoodzInput *input, POSITION position, Coordinates coordinates);
-typedef SetBC (*SetBCT_f)(MdoodzInput *input, POSITION position, double gridTemperature);
-typedef SetBC (*SetBCC_f)(MdoodzInput *input, POSITION position, double gridXvalue);
+typedef SetBC (*SetBCT_f)(MdoodzInput *input, POSITION position, Coordinates coordinates, double gridTemperature);
+typedef SetBC (*SetBCC_f)(MdoodzInput *input, POSITION position, Coordinates coordinates, double gridXvalue);
 typedef double (*FixTemperature_f)(MdoodzInput *input, double pressure);
 typedef char (*SetBCPType_f)(MdoodzInput *input, POSITION position);
 
