@@ -7,18 +7,7 @@ Makie.update_theme!( fonts = (regular = texfont(), bold = texfont(:bold), italic
 # fontsize_theme = Theme(fontsize=200)
 # set_theme!(fontsize_theme)
 
-const y    = 365*24*3600
-const My   = 1e6*y
-const cm_y = y*100.
-
-function ExtractField(filename, field, size, mask_air, mask)
-    field = try (Float64.(reshape(ExtractData( filename, field), size...)))
-    catch 
-        @warn "$field not found"
-    end
-    mask_air ? field[mask] .= NaN : nothing
-    return field
-end 
+My = 1e6*365*24*3600
 
 function AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, σ1, Fab, height, Lc, cm_y, group_phases, Δ)
     if PlotOnTop.T_contours 
@@ -101,15 +90,13 @@ function main()
     vel_step    = 10
     nap         = 0.1    # pause for animation 
     resol       = 1000
-    mov_name    = "$(path)/_$(field)/$(field)"  # Name of the movie
-    Lx, Lz      = 1.0, 1.0
 
     # Scaling
     # Lc = 1000.
     # tc = My
     # Vc = 1e-9
 
-    Lc = 1.0
+    Lc = 1000.0
     tc = My
     Vc = 1.0
     τc = 1e6
@@ -153,19 +140,13 @@ function main()
         zmin, zmax = zv[1], zv[end]
         Lx, Lz    = (xmax-xmin)/Lc, (zv[end]-zv[1])/Lc
         Δx, Δz, Δ = Lx/ncx, Lz/ncz, sqrt( (Lx/ncx)^2 + (Lz/ncz)^2)
-        Lx>1e3 ? length_unit="km" :  length_unit="m"
-        @info "Model info"
         @show "Model apect ratio" Lx/Lz
         @show "Model time" t/My
-        @show length_unit
-        centroids, vertices = (ncx, ncz), (nvx, nvz)
 
-        ph           = ExtractField(filename,  "/VizGrid/compo", centroids, false, 0)
-        mask_air     = ph .== -1.00 
-        ph_hr        = ExtractField(filename,  "/VizGrid/compo_hr", (ncx_hr, ncz_hr), false, 0)
-        ph_dual_hr   = ExtractField(filename,  "/VizGrid/compo_dual_hr", (ncx_hr, ncz_hr), false, 0)
-        group_phases = copy(ph_hr); ph_hr[ph_hr.==-1.00] .= NaN
-        ηc           = ExtractField(filename,  "/Centers/eta_n", centroids, true, mask_air)
+        ph    = Float64.(reshape(ExtractData( filename, "/VizGrid/compo"), ncx, ncz));          mask_air = ph .== -1.00 
+        ph_hr = Float64.(reshape(ExtractData( filename, "/VizGrid/compo_hr"), ncx_hr, ncz_hr)); 
+        group_phases = copy( ph_hr); ph_hr[ph_hr.==-1.00] .= NaN
+        ηc    = Float64.(reshape(ExtractData( filename, "/Centers/eta_n"), ncx, ncz));          ηc[mask_air]  .= NaN
         ρc    = Float64.(reshape(ExtractData( filename, "/Centers/rho_n"), ncx, ncz));          ρc[mask_air]  .= NaN
         P     = Float64.(reshape(ExtractData( filename, "/Centers/P"), ncx, ncz));              P[mask_air]   .= NaN
         T     = Float64.(reshape(ExtractData( filename, "/Centers/T"), ncx, ncz)) .- 273.15;    T[mask_air]   .= NaN
@@ -175,11 +156,8 @@ function main()
         Vz    = Float64.(reshape(ExtractData( filename, "/VzNodes/Vz"), (ncx+2), (ncz+1)))
         τxx   = Float64.(reshape(ExtractData( filename, "/Centers/sxxd"), ncx, ncz))
         τzz   = Float64.(reshape(ExtractData( filename, "/Centers/szzd"), ncx, ncz))
-        τyy   = -(τzz .+ τxx)
         τxz   = Float64.(reshape(ExtractData( filename, "/Vertices/sxz"), nvx, nvz))
         ε̇xx   = Float64.(reshape(ExtractData( filename, "/Centers/exxd"), ncx, ncz))
-        ε̇zz   = Float64.(reshape(ExtractData( filename, "/Centers/ezzd"), ncx, ncz))
-        ε̇yy   = -(ε̇xx .+ ε̇zz)
         ε̇xz   = Float64.(reshape(ExtractData( filename, "/Vertices/exz"), nvx, nvz))
         τII   = sqrt.( 0.5*(τxx.^2 .+ τyy.^2 .+ τzz.^2 .+ 0.5*(τxz[1:end-1,1:end-1].^2 .+ τxz[2:end,1:end-1].^2 .+ τxz[1:end-1,2:end].^2 .+ τxz[2:end,2:end].^2 ) ) ); τII[mask_air] .= NaN
         ε̇II   = sqrt.( 0.5*(ε̇xx.^2 .+ ε̇yy.^2 .+ ε̇zz.^2 .+ 0.5*(ε̇xz[1:end-1,1:end-1].^2 .+ ε̇xz[2:end,1:end-1].^2 .+ ε̇xz[1:end-1,2:end].^2 .+ ε̇xz[2:end,2:end].^2 ) ) ); ε̇II[mask_air] .= NaN
@@ -229,12 +207,14 @@ function main()
         cmap[7] = RGBA{Float64}(223/255, 233/255, 219/255, 1.) 
         phase_colors = cgrad(cmap, length(cmap), categorical=true, rev=false)
 
-        # # Group phases for contouring
-        # group_phases[ ph_hr.==4 .|| ph_hr.==0 .|| ph_hr.==5  .|| ph_hr.==1  ] .= 0
-        # group_phases[ ph_hr.==2 .|| ph_hr.==6   ]                             .= 1
-        # group_phases[ ph_hr.==3 ]                                             .= 3
+        # Group phases for contouring
+        group_phases[ ph_hr.==4 .|| ph_hr.==0 .|| ph_hr.==5  ] .= 0
+        group_phases[ ph_hr.==2 .|| ph_hr.==6   ]                             .= 1
+        group_phases[ ph_hr.==3 ]                                             .= 2
+        group_phases[  ph_hr.==1  ]                                           .= 3
 
         #####################################
+    
         empty!(f)
         f = Figure(size = (Lx/Lz*resol*1.2, resol), fontsize=40)
 
@@ -251,7 +231,7 @@ function main()
         end
 
         if field==:Viscosity
-            ax1 = Axis(f[1, 1], title = L"$\eta$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
+            ax1 = Axis(f[1, 1], title = L"$\eta$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
             hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(ηc), colormap = (:turbo, α_heatmap))
             AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, σ1, Fab, height, Lc, cm_y, group_phases, Δ)                
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
@@ -301,7 +281,7 @@ function main()
         end
 
         if field==:StrainRate
-            ax1 = Axis(f[1, 1], title = L"$\dot{\varepsilon}_\textrm{II}$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [%$(length_unit)]", ylabel = L"$y$ [%$(length_unit)]")
+            ax1 = Axis(f[1, 1], title = L"$\dot{\varepsilon}_\textrm{II}$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
             hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(ε̇II), colormap = (:turbo, α_heatmap))
             AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, σ1, Fab, height, Lc, cm_y, group_phases, Δ)                
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
@@ -311,7 +291,6 @@ function main()
         end
 
         if field==:PlasticStrainrate
-            ε̇pl[ε̇pl.==0.0] .= 1e-30
             ax1 = Axis(f[1, 1], title = L"$\dot{\varepsilon}_\textrm{II}^\textrm{pl}$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
             hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(ε̇pl), colormap = (:turbo, α_heatmap))
             AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, σ1, Fab, height, Lc, cm_y, group_phases, Δ)                
@@ -324,7 +303,7 @@ function main()
         if field==:Velocity
             ax1 = Axis(f[1, 1], title = L"$V$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
             Vx_BG = 0*xc .- 2*zc'  
-            V     = sqrt.( (Vxc .- 0.0*Vx_BG).^2 + (Vzc).^2)
+            V     = sqrt.( (Vxc .- Vx_BG).^2 + (Vzc).^2)
             hm = heatmap!(ax1, xc./Lc, zc./Lc, V, colormap = (:jet, α_heatmap))#, colorrange=(0., 0.6)
             AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, σ1, Fab, height, Lc, cm_y, group_phases, Δ)                
             # xlims!(ax1, 0., 3.e-3)
