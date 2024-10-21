@@ -19,21 +19,21 @@
 // Structure surface contains free surface data
 typedef struct {
   double *a, *b, *height, *vx, *vz, *a0, *b0, *height0;
+  double *height_finer_c;
   int    *VertInd;
 } surface;
 
 // markers is the particles structure
 typedef struct {
   int     Nx_part, Nz_part, Nb_part, Nb_part_max, min_part_cell, Nb_part_ini;
-  double *x, *z, *Vx, *Vz, *P, *sxxd, *szzd, *sxz, *progress, *T, *d, *phi, *X,
-          *syy, *dsyy;
+  double *x, *z, *Vx, *Vz, *P, *sxxd, *szzd, *sxz, *progress, *T, *d, *phi, *X;
   double *strain, *strain_el, *strain_pl, *strain_pwl, *strain_exp, *strain_lin,
           *strain_gbs;
   int    *phase, *generation, *dual;
   int    *intag;
   double *Fxx, *Fxz, *Fzx, *Fzz, *nx, *nz;
   double *T0, *P0, *x0, *z0, *Tmax, *Pmax, *divth;
-  double *dsxxd, *dszzd, *dsxz;
+  // double *dsxxd, *dszzd, *dsxz, *syy, *dsyy;
   double *noise, *rho;
   double *aniso_angle;
 } markers;
@@ -73,7 +73,7 @@ typedef struct {
           *p_start, *divth_n, *divth0_n;
   int    *iter_smooth;
   int    *nb_part_cell, *nb_part_vert;
-  BC      BCu, BCv, BCp, BCp_exp, BCT_exp, BCt, BCg, BCC_exp, BCc;
+  BC      BCu, BCv, BCp, BCp_exp, BCT_exp, BCt, BCg, BCC_exp, BCc, BCt_fine;
   // TODO rename BCu and rename BCv to BCVx and BCVz
   // TODO rename BCp to BCP (P as pressure is always capital P)
   // TODO find and and do the same for (T as temperature)
@@ -255,6 +255,7 @@ void            Initialise2DArrayInt(int *, int, int, int);
 void            MinMaxArrayVal(DoodzFP *, int, double *, double *);
 void            MinMaxArrayTag(DoodzFP *, double, int, char *, char *);
 void            MinMaxArrayTagInt(int *, double, int, char *, char *);
+void            MinMaxArrayTagChar(char *, double, int, char *, char *);
 void            MinMaxArrayPart(DoodzFP *, double, int, char *, int *);
 double          SumArray(double *, double, int, char *);
 //void MinMaxArrayF( float*, double, int, char*);
@@ -294,7 +295,7 @@ void            Interp_Grid2P(markers, DoodzFP *, grid *, double *, double *, do
 void            Interp_Grid2P_strain(markers, DoodzFP *, grid *, double *, double *, double *, int, int, char *);
 //void FreeP2Mesh( grid* );
 void            Interp_Phase2VizGrid(markers, int *, grid *, char *, double *, double *, int, int, params, surface);
-void            ParticleInflowCheck(markers *, grid *, params, surface, int);
+void            ParticleInflowCheck(markers *, grid *, MdoodzInput*, surface, int, SetParticles_ff); // SetParticles_ff setParticles, MdoodzInput *instance
 void            P2Mastah(params *, markers, DoodzFP *, grid *, double *, char *, int, int, int, int, int);
 //
 //// Stokes
@@ -386,6 +387,7 @@ void            isout(markers *, params);
 void            isoutPart(markers *, params *, int);
 void            CountPartCell(markers *, grid *, params, surface, surface, int, scale);
 void            CountPartCell_Old(markers *, grid *, params, surface, int, scale);
+void            CountPartCell_OLD(markers *, grid *, params, surface, surface, int, scale);
 void            CountPartCell2(markers *, grid *, params, surface, surface, int, scale);
 
 void            AccumulatedStrain(grid *, scale, params, markers *);
@@ -410,7 +412,7 @@ void            SetTopoChainHorizontalCoords(surface *, markers *, params, grid,
 void            AllocateMarkerChain(surface *, markers *, params);
 void            FreeMarkerChain(surface *, markers *);
 void            CellFlagging(grid *, params, surface, scale);
-void            ProjectTopography(surface *, markers *, params, grid, scale, double *, int);
+void            InterpTopoPart2Grid(surface *, markers *, params, grid, scale, double *, int);
 void            MarkerChainPolyFit(surface *, markers *, params, grid);
 void            CleanUpSurfaceParticles(markers *, grid *, surface, scale);
 void            RemeshMarkerChain(markers *, surface *, params, scale, grid *, int);
@@ -470,6 +472,7 @@ void            cholmod_dense_plus_cholmod_dense(cholmod_dense *, cholmod_dense 
 
 void            ApplyBC(grid *, params *);
 void            AssignMarkerProperties(markers *, int, int, params *, grid *, int);
+void            AssignMarkerPropertiesInflow(markers *, int, int, MdoodzInput*, grid *, int, SetParticles_ff);
 
 
 // GLOBAL

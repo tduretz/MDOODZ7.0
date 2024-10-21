@@ -485,11 +485,12 @@ double Vertices2Particle( markers* particles, double* NodeField, double* X_vect,
         dst    = fabs(particles->z[k]-Z_vect[0]);
         i_part = ceil((dst/dz)) - 1;
         if (i_part<0) {
-            printf("Should never be here IV! (Vertices2Particle)\n"); exit(1);
+            // printf("particles->x[k] = %lf, zmin= %lf\n", particles->z[k], Z_vect[0]);
+            // printf("Should never be here IV! (Vertices2Particle)\n"); exit(1);
             i_part = 0;
         }
         if (i_part>Nz-2) {
-            printf("Should never be here V! (Vertices2Particle)\n"); exit(1);
+            // printf("Should never be here V! (Vertices2Particle)\n"); exit(1);
             i_part = Nz-2;
         }
         
@@ -504,7 +505,6 @@ double Vertices2Particle( markers* particles, double* NodeField, double* X_vect,
         if (tag[iSW]!=30 && tag[iSW]!=31) {
             val  += (1.0-dxm/dx) * (1.0-dzm/dz) * NodeField[iSW];
             sumW += (1.0-dxm/dx) * (1.0-dzm/dz);
-
         }
         if (tag[iSE]!=30 && tag[iSE]!=31) {
             val  += (dxm/dx) * (1.0-dzm/dz)  * NodeField[iSE];
@@ -546,8 +546,9 @@ double Vertices2Particle( markers* particles, double* NodeField, double* X_vect,
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-void ParticleInflowCheck ( markers* particles, grid *mesh, params model, surface topo, int flag ) {
+void ParticleInflowCheck ( markers* particles, grid *mesh, MdoodzInput *input, surface topo, int flag, SetParticles_ff setParticles  ) {
     
+    params model = input->model;
     int k, Nb_part=particles->Nb_part, npW=0, npE=0;
     double xW, xE, dx2=model.dx/2.0;
     int finite_strain = model.finite_strain;
@@ -638,7 +639,7 @@ reduction(+:npW,npE )
                     particles->x[NewIndex] = particles->x[k]-dx2;
                     particles->z[NewIndex] = particles->z[k];
                     // Assign new marker point properties
-                    AssignMarkerProperties ( particles, NewIndex, k, &model, mesh, 1 );
+                    AssignMarkerPropertiesInflow ( particles, NewIndex, k, input, mesh, 1, setParticles );
                 }
                 
                 // EAST COAST
@@ -665,7 +666,7 @@ reduction(+:npW,npE )
                     particles->x[NewIndex] = particles->x[k]+dx2;
                     particles->z[NewIndex] = particles->z[k];
                     // Assign new marker point properties
-                    AssignMarkerProperties ( particles, NewIndex, k, &model, mesh, 1 );
+                    AssignMarkerPropertiesInflow ( particles, NewIndex, k, input, mesh, 1, setParticles );
                 }
             }
         }
@@ -688,7 +689,7 @@ void AssignMarkerProperties (markers* particles, int new_ind, int min_index, par
     
     particles->phase[new_ind]         = particles->phase[min_index];
     particles->dual[new_ind]          = particles->dual[min_index];
-    if (particles->phase[min_index]==-1) {printf("AssignMarkerProperties\n" ); exit(99);}
+    if (particles->phase[min_index]==-1) {printf("New particle is has phase -1, error! (AssignMarkerProperties)\n" ); exit(99);}
     particles->Vx[new_ind]            = particles->Vx[min_index];
     particles->Vz[new_ind]            = particles->Vz[min_index];
     particles->strain[new_ind]        = particles->strain[min_index];
@@ -706,6 +707,9 @@ void AssignMarkerProperties (markers* particles, int new_ind, int min_index, par
         particles->phi[new_ind]           = particles->phi[min_index]; // to be changed
         particles->X[new_ind]             = particles->X[min_index];   // to be changed
         particles->noise[new_ind]         = particles->noise[min_index];   // to be changed
+        particles->sxxd[new_ind]          = particles->sxxd[min_index];
+        particles->szzd[new_ind]          = particles->szzd[min_index];
+        particles->sxz[new_ind]           = particles->sxz[min_index];
     }
     else {
         particles->d[new_ind]             = Centers2Particle( particles, mesh->d_n,     mesh->xvz_coord, mesh->zvx_coord, mesh->Nx-1, mesh->Nz-1, mesh->BCp.type, mesh->dx, mesh->dz, new_ind, model->periodic_x );
@@ -714,34 +718,16 @@ void AssignMarkerProperties (markers* particles, int new_ind, int min_index, par
         particles->phi[new_ind]           = Centers2Particle( particles, mesh->phi_n,     mesh->xvz_coord, mesh->zvx_coord, mesh->Nx-1, mesh->Nz-1, mesh->BCp.type, mesh->dx, mesh->dz, new_ind, model->periodic_x );
         particles->X[new_ind]             = Centers2Particle( particles, mesh->X_n,  mesh->xvz_coord, mesh->zvx_coord, mesh->Nx-1, mesh->Nz-1, mesh->BCp.type, mesh->dx, mesh->dz, new_ind, model->periodic_x );
         particles->noise[new_ind]         = Centers2Particle( particles, mesh->noise_n,  mesh->xvz_coord, mesh->zvx_coord, mesh->Nx-1, mesh->Nz-1, mesh->BCp.type, mesh->dx, mesh->dz, new_ind, model->periodic_x );
-    }
-
-   
-//    //    particles->generation[new_ind]    = particles->generation[min_index];
-    if ( direct_neighbour == 1 ) {
-        particles->sxxd[new_ind]          = particles->sxxd[min_index];
-        particles->szzd[new_ind]          = particles->szzd[min_index];
-        particles->sxz[new_ind]           = particles->sxz[min_index];
-    }
-    else {
         particles->sxxd[new_ind]          = Centers2Particle( particles, mesh->sxxd,     mesh->xvz_coord, mesh->zvx_coord, mesh->Nx-1, mesh->Nz-1, mesh->BCp.type, mesh->dx, mesh->dz, new_ind, model->periodic_x );
         particles->szzd[new_ind]          = Centers2Particle( particles, mesh->szzd,     mesh->xvz_coord, mesh->zvx_coord, mesh->Nx-1, mesh->Nz-1, mesh->BCp.type, mesh->dx, mesh->dz, new_ind, model->periodic_x );
         particles->sxz[new_ind]           = Vertices2Particle( particles, mesh->sxz,     mesh->xg_coord,  mesh->zg_coord,  mesh->Nx-0, mesh->Nz-0, mesh->BCg.type, mesh->dx, mesh->dz, new_ind );
-//        particles->sxz[new_ind]          = Centers2Particle( particles, mesh->sxz_n,     mesh->xvz_coord, mesh->zvx_coord, mesh->Nx-1, mesh->Nz-1, mesh->BCp.type, mesh->dx, mesh->dz, new_ind, model->periodic_x );
     }
-    particles->dsxxd[new_ind]         = particles->dsxxd[min_index];
-    particles->dszzd[new_ind]         = particles->dszzd[min_index];
-    particles->dsxz[new_ind]          = particles->dsxz[min_index];
-    particles->syy[new_ind]           = particles->syy[min_index];
-    particles->dsyy[new_ind]           = particles->dsyy[min_index];
-    
-//    particles->ddivth[new_ind]        = particles->ddivth[min_index];
-//    particles->dT[new_ind]            = particles->dT[min_index];
-//    particles->dP[new_ind]            = particles->dP[min_index];
-//    particles->dd[new_ind]            = particles->dd[min_index];
-//    particles->dphi[new_ind]          = particles->dphi[min_index];
-//    particles->dX[new_ind]            = particles->dX[min_index];
-    
+    // particles->dsxxd[new_ind]         = particles->dsxxd[min_index];
+    // particles->dszzd[new_ind]         = particles->dszzd[min_index];
+    // particles->dsxz[new_ind]          = particles->dsxz[min_index];
+    // particles->syy[new_ind]           = particles->syy[min_index];
+    // particles->dsyy[new_ind]           = particles->dsyy[min_index];
+     
     if (model->finite_strain == 1) {
         // do not set default to 0 beause then it can not accumulate, better to identify which markers are new and start to accumulate as we do for the general case (fxx=fyy=1, fxz=fzx=0).
         particles->Fxx[new_ind]           = particles->Fxx[min_index];
@@ -758,8 +744,91 @@ void AssignMarkerProperties (markers* particles, int new_ind, int min_index, par
         particles->Pmax[new_ind]         = particles->Pmax[min_index];
     }
     if (model->anisotropy == 1) {
+        // !!!! difference with AssignMarkerPropertiesInflow:
+        // inside the box AssignMarkerProperties does not need to know out inflow
         particles->nx[new_ind]           = particles->nx[min_index];
         particles->nz[new_ind]           = particles->nz[min_index];
+    }
+}
+
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
+
+void AssignMarkerPropertiesInflow (markers* particles, int new_ind, int min_index, MdoodzInput *input, grid* mesh, int direct_neighbour, SetParticles_ff setParticles ) {
+    
+    params *model = &(input->model);  
+    particles->phase[new_ind]         = particles->phase[min_index];
+    particles->dual[new_ind]          = particles->dual[min_index];
+    if (particles->phase[min_index]==-1) {printf("New particle is has phase -1, error! (AssignMarkerProperties)\n" ); exit(99);}
+    particles->Vx[new_ind]            = particles->Vx[min_index];
+    particles->Vz[new_ind]            = particles->Vz[min_index];
+    particles->strain[new_ind]        = particles->strain[min_index];
+    particles->strain_el[new_ind]     = particles->strain_el[min_index];
+    particles->strain_pl[new_ind]     = particles->strain_pl[min_index];
+    particles->strain_pwl[new_ind]    = particles->strain_pwl[min_index];
+    particles->strain_exp[new_ind]    = particles->strain_exp[min_index];
+    particles->strain_lin[new_ind]    = particles->strain_lin[min_index];
+    particles->strain_gbs[new_ind]    = particles->strain_gbs[min_index];
+    particles->divth[new_ind]         = particles->divth[min_index]; // to be changed
+    if ( direct_neighbour == 1 ) {
+        particles->d[new_ind]             = particles->d[min_index];
+        particles->T[new_ind]             = particles->T[min_index];
+        particles->P[new_ind]             = particles->P[min_index];
+        particles->phi[new_ind]           = particles->phi[min_index]; // to be changed
+        particles->X[new_ind]             = particles->X[min_index];   // to be changed
+        particles->noise[new_ind]         = particles->noise[min_index];   // to be changed
+        particles->sxxd[new_ind]          = particles->sxxd[min_index];
+        particles->szzd[new_ind]          = particles->szzd[min_index];
+        particles->sxz[new_ind]           = particles->sxz[min_index];
+    }
+    else {
+        particles->d[new_ind]             = Centers2Particle( particles, mesh->d_n,     mesh->xvz_coord, mesh->zvx_coord, mesh->Nx-1, mesh->Nz-1, mesh->BCp.type, mesh->dx, mesh->dz, new_ind, model->periodic_x );
+        particles->T[new_ind]             = Centers2Particle( particles, mesh->T,     mesh->xvz_coord, mesh->zvx_coord, mesh->Nx-1, mesh->Nz-1, mesh->BCp.type, mesh->dx, mesh->dz, new_ind, model->periodic_x );
+        particles->P[new_ind]             = Centers2Particle( particles, mesh->p_in,  mesh->xvz_coord, mesh->zvx_coord, mesh->Nx-1, mesh->Nz-1, mesh->BCp.type, mesh->dx, mesh->dz, new_ind, model->periodic_x );
+        particles->phi[new_ind]           = Centers2Particle( particles, mesh->phi_n,     mesh->xvz_coord, mesh->zvx_coord, mesh->Nx-1, mesh->Nz-1, mesh->BCp.type, mesh->dx, mesh->dz, new_ind, model->periodic_x );
+        particles->X[new_ind]             = Centers2Particle( particles, mesh->X_n,  mesh->xvz_coord, mesh->zvx_coord, mesh->Nx-1, mesh->Nz-1, mesh->BCp.type, mesh->dx, mesh->dz, new_ind, model->periodic_x );
+        particles->noise[new_ind]         = Centers2Particle( particles, mesh->noise_n,  mesh->xvz_coord, mesh->zvx_coord, mesh->Nx-1, mesh->Nz-1, mesh->BCp.type, mesh->dx, mesh->dz, new_ind, model->periodic_x );
+        particles->sxxd[new_ind]          = Centers2Particle( particles, mesh->sxxd,     mesh->xvz_coord, mesh->zvx_coord, mesh->Nx-1, mesh->Nz-1, mesh->BCp.type, mesh->dx, mesh->dz, new_ind, model->periodic_x );
+        particles->szzd[new_ind]          = Centers2Particle( particles, mesh->szzd,     mesh->xvz_coord, mesh->zvx_coord, mesh->Nx-1, mesh->Nz-1, mesh->BCp.type, mesh->dx, mesh->dz, new_ind, model->periodic_x );
+        particles->sxz[new_ind]           = Vertices2Particle( particles, mesh->sxz,     mesh->xg_coord,  mesh->zg_coord,  mesh->Nx-0, mesh->Nz-0, mesh->BCg.type, mesh->dx, mesh->dz, new_ind );
+    }
+    // particles->dsxxd[new_ind]         = particles->dsxxd[min_index];
+    // particles->dszzd[new_ind]         = particles->dszzd[min_index];
+    // particles->dsxz[new_ind]          = particles->dsxz[min_index];
+    // particles->syy[new_ind]           = particles->syy[min_index];
+    // particles->dsyy[new_ind]           = particles->dsyy[min_index];
+     
+    if (input->model.finite_strain == 1) {
+        // do not set default to 0 beause then it can not accumulate, better to identify which markers are new and start to accumulate as we do for the general case (fxx=fyy=1, fxz=fzx=0).
+        particles->Fxx[new_ind]           = particles->Fxx[min_index];
+        particles->Fxz[new_ind]           = particles->Fxz[min_index];
+        particles->Fzx[new_ind]           = particles->Fzx[min_index];
+        particles->Fzz[new_ind]           = particles->Fzz[min_index];
+    }
+    if (input->model.track_T_P_x_z == 1) {
+        particles->T0[new_ind]           = particles->T0[min_index];
+        particles->P0[new_ind]           = particles->P0[min_index];
+        particles->x0[new_ind]           = particles->x0[min_index];
+        particles->z0[new_ind]           = particles->z0[min_index];
+        particles->Tmax[new_ind]         = particles->Tmax[min_index];
+        particles->Pmax[new_ind]         = particles->Pmax[min_index];
+    }
+    if (input->model.anisotropy == 1) {
+        // add with William: the incoming markers does not need to inherit the nearest neighbour angle
+           Coordinates coordinates = {
+            .x = particles->x[new_ind],
+            .z = particles->z[new_ind]};
+        if (input->model.marker_aniso_angle && setParticles.SetAnisoAngle) {
+            double predefined_angle = acos(particles->nx[min_index]);
+            double angle = setParticles.SetAnisoAngle(input, coordinates, particles->phase[new_ind], predefined_angle);
+            particles->nx[new_ind]           = cos(angle);
+            particles->nz[new_ind]           = sin(angle);
+        }
+        else {
+            particles->nx[new_ind]           = particles->nx[min_index];
+            particles->nz[new_ind]           = particles->nz[min_index];
+        }
     }
 }
 
@@ -2262,7 +2331,301 @@ void P2Mastah ( params *model, markers particles, DoodzFP* mat_prop, grid *mesh,
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-void CountPartCell ( markers* particles, grid *mesh, params model, surface topo, surface topo_ini, int reseed_markers, scale scaling ) {
+void CountPartCell( markers* particles, grid *mesh, params model, surface topo, surface topo_ini, int reseed_markers, scale scaling ) {
+
+    // First operation - compute phase proportions on centroids and vertices
+    int cent=1, vert=0, prop=1, interp=0;
+    P2Mastah ( &model, *particles, NULL, mesh, NULL, mesh->BCp.type,  0, 0, prop, cent, model.interp_stencil);
+    P2Mastah ( &model, *particles, NULL, mesh, NULL, mesh->BCg.type,  0, 0, prop, vert, model.interp_stencil);
+
+    // Let's consider a finer mesh of double resolution shifted by -dx/4 and -dz/4, this way both centroids and vertices are coverer
+    const int nvx = 2*mesh->Nx-1, ncx = 2*mesh->Nx-2;  
+    const int nvz = 2*mesh->Nz-1, ncz = 2*mesh->Nz-2;
+    const double dx = model.dx/2.0;
+    const double dz = model.dz/2.0;
+    const double xmin = model.xmin, xmax = model.xmax;
+    const double zmin = model.zmin, zmax = model.zmax;
+
+    // (1) Let's count the number of active particle in each finer mesh cell
+    int Nb_part = particles->Nb_part, ic, jc, kc, nb_part_reuse = 0, icoarse, jcoarse, Ncx=model.Nx-1, Ncz=model.Nz-1;
+    double distance, x, z;
+
+    // One array will store the number of particle in each of the cells
+    int* nb_part_cell = DoodzCalloc(     ncx*ncz, sizeof(int));
+    int* part_reuse   = DoodzCalloc(     Nb_part, sizeof(int));
+    // char* Cell_flags  = DoodzCalloc(     ncx*ncz, sizeof(int));
+
+    // Copy flags from coarse to fine mesh
+    for (ic=0; ic<ncx; ic++) {
+        for (jc=0; jc<ncz; jc++) {
+            kc = ic + jc*ncx;
+
+            // Get the column:
+            x = xmin + dx/2.0 + ic*dx;
+            distance = (x - (xmin + model.dx/2) );
+            icoarse  = ceil( (distance/model.dx) + 0.5) - 1;
+            if (icoarse<0    ) icoarse = 0;
+            if (icoarse>Ncx-1) icoarse = Ncx-1;
+
+            // Get the line:
+            z = zmin + dz/2.0 + jc*dz;
+            distance = (z - (zmin + model.dz/2));
+            jcoarse  = ceil( (distance/model.dz) + 0.5) - 1;
+            if (jcoarse<0    ) jcoarse = 0;
+            if (jcoarse>Ncz-1) jcoarse = Ncz-1;
+
+            // Cell_flags[kc] = mesh->BCt.type[icoarse + jcoarse*Ncx];
+            mesh->BCt_fine.type[kc] = mesh->BCt.type[icoarse + jcoarse*Ncx];
+
+        }
+    }
+
+    // Count particles in cells
+    for (int k=0; k<Nb_part; k++) {
+        if ( particles->phase[k] != -1 )  {
+            // Get the column:
+            distance = ( particles->x[k] - (xmin + dx/2) );
+            ic       = ceil( (distance/dx) + 0.5) - 1;
+            if (ic<0    ) ic = 0;
+            if (ic>ncx-1) ic = ncx-1;
+
+            // Get the line:
+            distance = ( particles->z[k] - (zmin + dz/2) );
+            jc       = ceil( (distance/dz) + 0.5) - 1;
+            if (jc<0    ) jc = 0;
+            if (jc>ncz-1) jc = ncz-1;
+
+            // Center
+            kc = ic + jc*ncx;
+
+            // Add particle to finer mesh cell
+            nb_part_cell[kc] += 1;
+        }
+        else {
+            part_reuse[nb_part_reuse] = k;
+            nb_part_reuse++;
+        }
+    }
+
+    // // TBD
+    //     int should_fill = 0;
+    //     for (ic=0; ic<ncx; ic++) {
+    //         for (jc=0; jc<ncz; jc++) {
+    //             kc = ic + jc*ncx;
+    //             if (nb_part_cell[kc] < 2 && Cell_flags[kc]<30) {
+    //                 should_fill++;
+    //                 printf("should_fill %d i=%d j=%d, nc = %d\n", should_fill, ic, jc, nb_part_cell[kc]);
+    //             }
+    //         }
+    //     }
+
+    if (reseed_markers==1) {
+
+        // Allocate memory for an array that list particle indices in each cell
+        int** part_cell = DoodzCalloc(ncx*ncz, sizeof(int*));
+        for (kc=0; kc<ncx*ncz; kc++) {
+            part_cell[kc] = DoodzCalloc(nb_part_cell[kc], sizeof(int));
+        }
+
+        // Store indices
+        int kp;
+        int* part_count = DoodzCalloc(ncx*ncz, sizeof(int));
+        for (int k=0; k<Nb_part; k++) {
+            if ( particles->phase[k] != -1 )  {
+
+                // Get the column:
+                distance = ( particles->x[k] - (xmin + dx/2) );
+                ic       = ceil( (distance/dx) + 0.5) - 1;
+                if (ic<0    ) ic = 0;
+                if (ic>ncx-1) ic = ncx-1;
+
+                // Get the line:
+                distance = ( particles->z[k] - (zmin + dz/2) );
+                jc       = ceil( (distance/dz) + 0.5) - 1;
+                if (jc<0    ) jc = 0;
+                if (jc>ncz-1) jc = ncz-1;
+
+                // Center
+                kc = ic + jc*ncx;
+
+                part_cell[kc][part_count[kc]] = k;
+                part_count[kc] += 1;
+            }
+        }
+        DoodzFree(part_count);
+
+        // Identify cells that need a new particle
+        int nb_new_parts = 0, new_ind;
+        int count_part_reuse = 0, count_created = 0;
+        double new_x, new_z, h = model.zmax;
+
+        for (ic=0; ic<ncx; ic++) {
+            for (jc=0; jc<ncz; jc++) {
+                kc = ic + jc*ncx;
+                
+                h = model.free_surface == 1 ? topo.height_finer_c[ic] : model.zmax+model.dz/2;
+                double xc = xmin + dx/2 + ic*dx; // centroid of fine grid cell
+                double zc = zmin + dz/2 + jc*dz; // centroid of fine grid cell
+
+                if (nb_part_cell[kc] < 2 && mesh->BCt_fine.type[kc] != 30) {  // Cell_flags[kc]<30
+                    // printf("Adding... i=%d j=%d, nb = %d\n", ic, jc, nb_part_cell[kc]);
+                    int imin = ic>0     ? ic-1 : 0;
+                    int imax = ic<ncx-1 ? ic+1 : ncx-1;
+                    int jmin = jc>0     ? jc-1 : 0;
+                    int jmax = jc<ncz-1 ? jc+1 : ncz-1;
+
+                    if (ic>1    ) imin = ic-2; 
+                    if (ic<ncx-2) imax = ic+2;
+                    if (jc>1    ) jmin = jc-2; 
+                    if (jc<ncz-2) jmax = jc+2;
+
+                   // Number of particles in neigbour cells
+                    int nb_neigh = 0;
+                    for (int i=imin; i<=imax; i++) {
+                        for (int j=jmin; j<=jmax; j++) {
+                            int kk = i + j*ncx;
+                            nb_neigh += nb_part_cell[kk];
+                        }
+                    }
+                    if (nb_neigh==0) {
+                        printf("Cell i=%d j=%d,flag=%d has 0 neighouring particles... Exiting\nimin=%d imax=%d jmin=%d jmax=%d\n", ic, jc, mesh->BCt_fine.type[kc], imin, imax, jmin, jmax);
+                        for (int i=imin; i<=imax; i++) {
+                            for (int j=jmin; j<=jmax; j++) {
+                                printf("(%d,%d): %d", i, j, nb_part_cell[i+j*ncx]);
+                            }
+                        }
+                        printf("xmin = %lf - xmax = %lf --- zmin = %lf - zmax = %lf\n", xmin-dx/2.0 + imin*dx, xmin-dx/2.0 + imax*dx, xmin-dz/2.0 + jmin*dz, xmin-dz/2.0 + jmax*dz );
+                        exit(122);
+                    }
+                    // Collect particle indices in an array
+                    int* neighbours = DoodzCalloc(nb_neigh, sizeof(int));
+                    nb_neigh = 0;
+                    for (int i=imin; i<=imax; i++) {
+                        for (int j=jmin; j<=jmax; j++) {
+                            kc = i + j*ncx;
+                            for (int n=0; n<part_count[kc]; n++) {
+                                neighbours[nb_neigh] = part_cell[kc][n];
+                                nb_neigh++;
+                            }
+                        }
+                    }
+                    // Find which particle is the closest to the new position
+                    new_x = xc; // centroid of fine grid cell
+                    new_z = zc; // centroid of fine grid cell
+
+                    if ( new_x >= model.xmin && new_x <= model.xmax && new_z >= model.zmin && (new_z <= model.zmax || new_z <= h) ) { 
+                        // printf("Adding marker\n");
+                        if ( count_part_reuse < nb_part_reuse && nb_part_reuse>0  ) {
+                            new_ind = part_reuse[count_part_reuse];
+                            count_part_reuse++;
+                            // printf("reuse - nb_part_reuse = %d - count_part_reuse = %d\n", nb_part_reuse, count_part_reuse);
+                        }
+                        else {
+                            // printf("create\n");
+                            new_ind = particles->Nb_part;
+                            if (particles->Nb_part+1>=particles->Nb_part_max) {
+                                printf("Max number of particles reached, Exiting...");
+                                exit(190);
+                            }
+                            particles->Nb_part++;
+                            count_created++;
+                        }
+
+                        // Add 1 particule
+                        particles->x[new_ind]          = new_x;
+                        particles->z[new_ind]          = new_z;
+                        particles->generation[new_ind] = 1;
+
+                        double distance, closest_distance = model.xmax - model.xmin;
+                        int ind, closest_neighbour = neighbours[0];
+
+                        // Loop on the particles inside the current cell, find which one is the closest to the newly created one.
+                        for (ind=0; ind<nb_neigh; ind++) {
+
+                            distance = sqrt( pow (particles->x[new_ind] - particles->x[neighbours[ind]], 2.0) + pow(particles->z[new_ind] - particles->z[neighbours[ind]], 2.0) );
+
+                            if (distance<closest_distance) {
+                                closest_distance  = distance;
+                                closest_neighbour = neighbours[ind];
+                            }
+                        }
+
+                        // Closest neighbour was found, now assign properti of the new marker
+                        AssignMarkerProperties ( particles, new_ind, closest_neighbour, &model, mesh, model.direct_neighbour );
+                        // printf("new_x = %lf, new_z = %lf, ph = %d\n", new_x, new_z, particles->phase[new_ind]);
+                    }
+                    DoodzFree(neighbours);
+                    nb_new_parts++;
+                }
+            }
+        }
+        printf("%d markers reused, %d markers created, out of %d new markers\n", count_part_reuse, count_created, nb_new_parts);
+
+        // // TBD
+        // for (int k=0; k<Nb_part; k++) {
+        //     if ( particles->generation[k] == 1 )  {
+        //         printf("   k = %d\n",  k);
+        //     }
+        // }
+
+        // Freedom
+        for (kc=0; kc<ncx*ncz; kc++) {
+            DoodzFree(part_cell[kc]);
+        }
+        DoodzFree(part_cell);
+    }
+    // Infos
+    MinMaxArrayI(particles->phase,          1, particles->Nb_part, "phase       ");
+    MinMaxArrayTagChar(mesh->BCt_fine.type, 1, ncx*ncz           , "Cell_flags  ", mesh->BCt_fine.type );
+    MinMaxArrayTagInt(nb_part_cell,         1, ncx*ncz           , "nb_part_cell", mesh->BCt_fine.type );
+    DoodzFree(nb_part_cell);
+    // DoodzFree(Cell_flags);
+    DoodzFree(part_reuse);
+
+    // nb_part_cell = DoodzCalloc( Ncx*Ncz, sizeof(int));
+
+    // // Count particles in cells
+    // for (int k=0; k<Nb_part; k++) {
+    //     if ( particles->phase[k] != -1 )  {
+    //         // Get the column:
+    //         distance = ( particles->x[k] - (xmin + model.dx/2) );
+    //         ic       = ceil( (distance/model.dx) + 0.5) - 1;
+    //         if (ic<0   ) ic = 0;
+    //         if (ic>=Ncx) ic = Ncx-1;
+
+    //         // Get the line:
+    //         distance = ( particles->z[k] - (zmin + model.dz/2) );
+    //         jc       = ceil( (distance/model.dz) + 0.5) - 1;
+    //         if (jc<0   ) jc = 0;
+    //         if (jc>=Ncz) jc = Ncz-1;
+
+    //         // Center
+    //         kc = ic + jc*Ncx;
+
+    //         // Add particle to finer mesh cell
+    //         nb_part_cell[kc] += 1;
+
+    //     }
+    // }
+
+    // for (ic=0; ic<Ncx; ic++) {
+    //     for (jc=0; jc<Ncz; jc++) {
+    //         kc = ic + jc*Ncx;
+    //         if ( mesh->BCt.type[kc]!=30 && nb_part_cell[kc]==0) {
+    //             printf("There is a hole @ x=%lf z=%lf!\n", mesh->xc_coord[ic]*scaling.L, mesh->zc_coord[jc]*scaling.L); //exit(1);
+    //         }
+    //     }
+    // }
+
+    // DoodzFree(nb_part_cell);
+
+}
+
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
+
+void CountPartCell_OLD( markers* particles, grid *mesh, params model, surface topo, surface topo_ini, int reseed_markers, scale scaling ) {
 
     // This function counts the number of particle that are currently in each cell of the domain.
     // The function detects cells that are lacking of particle and call the particle re-seeding routine.
@@ -2761,7 +3124,7 @@ void CountPartCell ( markers* particles, grid *mesh, params model, surface topo,
                             ipcell[ith][kc][npcell[ith][kc]] = k;
                             npcell[ith][kc] ++;
                         }
-                        // Count particles from Wesr side to East side of last thread
+                        // Count particles from West side to East side of last thread
                         if (ic==0 && ith==nthreads-1) {
                             kc =  2*(ncx_e[ith]+0)-1+ jc * 2*(ncx_e[ith]+0);
                             ipcell[ith][kc][npcell[ith][kc]] = k;
@@ -2799,7 +3162,7 @@ void CountPartCell ( markers* particles, grid *mesh, params model, surface topo,
 
 
                     ip = ic + jc * Ncx;
-                    flag1 = mesh->BCt.type[ip];//mesh->BCp.type[0][ip];
+                    flag1 = mesh->BCt.type[ip]; //mesh->BCp.type[0][ip];
 
                     // ---  Get index of the corresponding coarse grid cell
 

@@ -298,6 +298,45 @@ void MinMaxArrayTagInt( int* array, double scale, int size, char* text, char* ta
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
+void MinMaxArrayTagChar( char* array, double scale, int size, char* text, char* tag ) {
+
+    // Search min/max values of an array and prints it to standard out
+    char min=array[0], max=array[0];
+    int k;
+
+#pragma omp parallel
+    {
+        double pmin=array[0], pmax=array[0];
+#pragma omp for
+        for (k=0; k<size; k++) {
+            if (tag[k] < 30) {
+                if (array[k]>pmax) pmax = array[k];
+                if (array[k]<pmin) pmin = array[k];
+            }
+        }
+#pragma omp flush (max)
+        if (pmax>max) {
+#pragma omp critical
+            {
+                if (pmax>max) max = pmax;
+            }
+        }
+
+#pragma omp flush (min)
+        if (pmin<min) {
+#pragma omp critical
+            {
+                if (pmin<min) min = pmin;
+            }
+        }
+    }
+    printf( "min(%s) = %03d max(%s) = %03d\n", text, min, text, max);
+}
+
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
+
 void MinMaxArrayVal( DoodzFP* array, int size, double* min, double* max ) {
 
     // Search min/max values of an array and prints it to standard out

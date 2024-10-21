@@ -54,132 +54,132 @@ void InitialiseGrainSizeParticles( markers* particles, mat_prop *materials ){
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-// Old deviatoric stress field and pressure
-void OldDeviatoricStressesPressure( grid* mesh, markers* particles, scale scaling, params* model ) {
+// // Old deviatoric stress field and pressure --- DEPRECATED
+// void OldDeviatoricStressesPressure( grid* mesh, markers* particles, scale scaling, params* model ) {
     
-    int k, l, c0, c1, c2, Nx, Nz, Ncx, Ncz, k1;
-    double *sxx0,  *syy0, *szz0, *sxz0;
-    int    cent=1, vert=0, prop=1, interp=0;
+//     int k, l, c0, c1, c2, Nx, Nz, Ncx, Ncz, k1;
+//     double *sxx0,  *syy0, *szz0, *sxz0;
+//     int    cent=1, vert=0, prop=1, interp=0;
     
-    Nx  = mesh->Nx;
-    Nz  = mesh->Nz;
-    Ncx = Nx-1;
-    Ncz = Nz-1;
+//     Nx  = mesh->Nx;
+//     Nz  = mesh->Nz;
+//     Ncx = Nx-1;
+//     Ncz = Nz-1;
     
-    sxx0 = DoodzCalloc(Ncx*Ncz, sizeof(DoodzFP));
-    syy0 = DoodzCalloc(Ncx*Ncz, sizeof(DoodzFP));
-    szz0 = DoodzCalloc(Ncx*Ncz, sizeof(DoodzFP));
-    sxz0 = DoodzCalloc(Ncx*Ncz, sizeof(DoodzFP));
+//     sxx0 = DoodzCalloc(Ncx*Ncz, sizeof(DoodzFP));
+//     syy0 = DoodzCalloc(Ncx*Ncz, sizeof(DoodzFP));
+//     szz0 = DoodzCalloc(Ncx*Ncz, sizeof(DoodzFP));
+//     sxz0 = DoodzCalloc(Ncx*Ncz, sizeof(DoodzFP));
     
-    P2Mastah( model, *particles, particles->sxxd,    mesh, sxx0,   mesh->BCp.type,  1, 0, interp, cent, model->interp_stencil);
-    P2Mastah( model, *particles, particles->szzd,    mesh, szz0,   mesh->BCp.type,  1, 0, interp, cent, model->interp_stencil);
-    P2Mastah( model, *particles, particles->syy,     mesh, syy0,   mesh->BCp.type,  1, 0, interp, cent, model->interp_stencil);
-    P2Mastah( model, *particles, particles->sxz,     mesh, mesh->sxz0,   mesh->BCg.type,  1, 0, interp, vert, model->interp_stencil);
+//     P2Mastah( model, *particles, particles->sxxd,    mesh, sxx0,   mesh->BCp.type,  1, 0, interp, cent, model->interp_stencil);
+//     P2Mastah( model, *particles, particles->szzd,    mesh, szz0,   mesh->BCp.type,  1, 0, interp, cent, model->interp_stencil);
+//     P2Mastah( model, *particles, particles->syy,     mesh, syy0,   mesh->BCp.type,  1, 0, interp, cent, model->interp_stencil);
+//     P2Mastah( model, *particles, particles->sxz,     mesh, mesh->sxz0,   mesh->BCg.type,  1, 0, interp, vert, model->interp_stencil);
     
-#pragma omp parallel for shared( mesh, sxx0, syy0, szz0 ) private( k, k1, l, c0, c1, c2 ) firstprivate( Nx, Ncx, Ncz )
-    for ( k1=0; k1<Ncx*Ncz; k1++ ) {
-        k  = mesh->kp[k1];
-        l  = mesh->lp[k1];
-        c0 = k  + l*(Nx-1);
-        c1 = k  + l*(Nx);
-        c2 = k  + l*(Nx+1);
+// #pragma omp parallel for shared( mesh, sxx0, syy0, szz0 ) private( k, k1, l, c0, c1, c2 ) firstprivate( Nx, Ncx, Ncz )
+//     for ( k1=0; k1<Ncx*Ncz; k1++ ) {
+//         k  = mesh->kp[k1];
+//         l  = mesh->lp[k1];
+//         c0 = k  + l*(Nx-1);
+//         c1 = k  + l*(Nx);
+//         c2 = k  + l*(Nx+1);
         
-        if ( mesh->BCp.type[c0] != 30 && mesh->BCp.type[c0] != 31) {
-            mesh->p0_n[c0]       = -1.0/3.0*(sxx0[c0] + syy0[c0] + szz0[c0] );
-            mesh->sxxd0[c0]      =  mesh->p0_n[c0] + sxx0[c0];
-            mesh->szzd0[c0]      =  mesh->p0_n[c0] + szz0[c0];
-        }
-    }
+//         if ( mesh->BCp.type[c0] != 30 && mesh->BCp.type[c0] != 31) {
+//             mesh->p0_n[c0]       = -1.0/3.0*(sxx0[c0] + syy0[c0] + szz0[c0] );
+//             mesh->sxxd0[c0]      =  mesh->p0_n[c0] + sxx0[c0];
+//             mesh->szzd0[c0]      =  mesh->p0_n[c0] + szz0[c0];
+//         }
+//     }
     
-    InterpCentroidsToVerticesDouble( mesh->sxxd0,  mesh->sxxd0_s, mesh, model );
-    InterpCentroidsToVerticesDouble( mesh->szzd0,  mesh->szzd0_s, mesh, model );
-    InterpCentroidsToVerticesDouble( mesh->p0_n,   mesh->p0_s,    mesh, model );
-    InterpVerticesToCentroidsDouble( mesh->sxz0_n, mesh->sxz0,    mesh, model );
+//     InterpCentroidsToVerticesDouble( mesh->sxxd0,  mesh->sxxd0_s, mesh, model );
+//     InterpCentroidsToVerticesDouble( mesh->szzd0,  mesh->szzd0_s, mesh, model );
+//     InterpCentroidsToVerticesDouble( mesh->p0_n,   mesh->p0_s,    mesh, model );
+//     InterpVerticesToCentroidsDouble( mesh->sxz0_n, mesh->sxz0,    mesh, model );
     
-    DoodzFree( sxx0 );
-    DoodzFree( szz0 );
-    DoodzFree( sxz0 );
-}
+//     DoodzFree( sxx0 );
+//     DoodzFree( szz0 );
+//     DoodzFree( sxz0 );
+// }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-// Total stress field
-void TotalStresses( grid* mesh, markers* particles, scale scaling, params* model ) {
+// // Total stress field --- DEPRECATED
+// void TotalStresses( grid* mesh, markers* particles, scale scaling, params* model ) {
     
-    int k, l, c0, c1, c2, Nx, Nz, Ncx, Ncz, k1;
-    double *dsxx, *dsyy, *dszz, *dsxz, sxx, syy, szz, tyy, tyy0, sxx0, syy0, szz0;
-    double *mdsxx, *mdszz, *mdsyy, *mdsxz;
+//     int k, l, c0, c1, c2, Nx, Nz, Ncx, Ncz, k1;
+//     double *dsxx, *dsyy, *dszz, *dsxz, sxx, syy, szz, tyy, tyy0, sxx0, syy0, szz0;
+//     double *mdsxx, *mdszz, *mdsyy, *mdsxz;
     
-    Nx  = mesh->Nx;
-    Nz  = mesh->Nz;
-    Ncx = Nx-1;
-    Ncz = Nz-1;
+//     Nx  = mesh->Nx;
+//     Nz  = mesh->Nz;
+//     Ncx = Nx-1;
+//     Ncz = Nz-1;
     
-    dsxx = DoodzCalloc(Ncx*Ncz, sizeof(DoodzFP));
-    dsyy = DoodzCalloc(Ncx*Ncz, sizeof(DoodzFP));
-    dszz = DoodzCalloc(Ncx*Ncz, sizeof(DoodzFP));
-    dsxz = DoodzCalloc(Nx *Nz , sizeof(DoodzFP));
+//     dsxx = DoodzCalloc(Ncx*Ncz, sizeof(DoodzFP));
+//     dsyy = DoodzCalloc(Ncx*Ncz, sizeof(DoodzFP));
+//     dszz = DoodzCalloc(Ncx*Ncz, sizeof(DoodzFP));
+//     dsxz = DoodzCalloc(Nx *Nz , sizeof(DoodzFP));
     
-    mdsxx = DoodzCalloc(particles->Nb_part, sizeof(DoodzFP));
-    mdsyy = DoodzCalloc(particles->Nb_part, sizeof(DoodzFP));
-    mdszz = DoodzCalloc(particles->Nb_part, sizeof(DoodzFP));
-    mdsxz = DoodzCalloc(particles->Nb_part, sizeof(DoodzFP));
+//     mdsxx = DoodzCalloc(particles->Nb_part, sizeof(DoodzFP));
+//     mdsyy = DoodzCalloc(particles->Nb_part, sizeof(DoodzFP));
+//     mdszz = DoodzCalloc(particles->Nb_part, sizeof(DoodzFP));
+//     mdsxz = DoodzCalloc(particles->Nb_part, sizeof(DoodzFP));
     
-#pragma omp parallel for shared( mesh, dsxx, dsyy, dszz ) private( k, k1, l, c0, c1, c2, sxx, syy, szz, tyy, tyy0, sxx0, syy0, szz0  ) firstprivate( Nx, Ncx, Ncz )
-    for ( k1=0; k1<Ncx*Ncz; k1++ ) {
-        k  = mesh->kp[k1];
-        l  = mesh->lp[k1];
-        c0 = k  + l*(Nx-1);
-        c1 = k  + l*(Nx);
-        c2 = k  + l*(Nx+1);
+// #pragma omp parallel for shared( mesh, dsxx, dsyy, dszz ) private( k, k1, l, c0, c1, c2, sxx, syy, szz, tyy, tyy0, sxx0, syy0, szz0  ) firstprivate( Nx, Ncx, Ncz )
+//     for ( k1=0; k1<Ncx*Ncz; k1++ ) {
+//         k  = mesh->kp[k1];
+//         l  = mesh->lp[k1];
+//         c0 = k  + l*(Nx-1);
+//         c1 = k  + l*(Nx);
+//         c2 = k  + l*(Nx+1);
         
-        if ( mesh->BCp.type[c0] != 30 && mesh->BCp.type[c0] != 31) {
-            tyy      = -(mesh->sxxd[c0]  + mesh->szzd[c0]);
-            tyy0     = -(mesh->sxxd0[c0] + mesh->szzd0[c0]);
-            sxx0     = -mesh->p0_n[c0] + mesh->sxxd0[c0];
-            szz0     = -mesh->p0_n[c0] + mesh->szzd0[c0];
-            syy0     = -mesh->p0_n[c0] + tyy0;
-            sxx      = -mesh->p_in[c0] + mesh->sxxd[c0];
-            szz      = -mesh->p_in[c0] + mesh->szzd[c0];
-            syy      = -mesh->p_in[c0] + tyy;
-            dsxx[c0] = sxx - sxx0;
-            dsyy[c0] = syy - syy0;
-            dszz[c0] = szz - szz0;
-        }
-    }
+//         if ( mesh->BCp.type[c0] != 30 && mesh->BCp.type[c0] != 31) {
+//             tyy      = -(mesh->sxxd[c0]  + mesh->szzd[c0]);
+//             tyy0     = -(mesh->sxxd0[c0] + mesh->szzd0[c0]);
+//             sxx0     = -mesh->p0_n[c0] + mesh->sxxd0[c0];
+//             szz0     = -mesh->p0_n[c0] + mesh->szzd0[c0];
+//             syy0     = -mesh->p0_n[c0] + tyy0;
+//             sxx      = -mesh->p_in[c0] + mesh->sxxd[c0];
+//             szz      = -mesh->p_in[c0] + mesh->szzd[c0];
+//             syy      = -mesh->p_in[c0] + tyy;
+//             dsxx[c0] = sxx - sxx0;
+//             dsyy[c0] = syy - syy0;
+//             dszz[c0] = szz - szz0;
+//         }
+//     }
     
-    // Vertex: shear stress change
-    for (k=0; k<Nx; k++) {
-        for (l=0; l<Nz; l++) {
-            c1 = k  + l*(Nx);
-            if (mesh->BCg.type[c1] !=30 ) dsxz[c1] =  mesh->sxz[c1] - mesh->sxz0[c1];
-        }
-    }
+//     // Vertex: shear stress change
+//     for (k=0; k<Nx; k++) {
+//         for (l=0; l<Nz; l++) {
+//             c1 = k  + l*(Nx);
+//             if (mesh->BCg.type[c1] !=30 ) dsxz[c1] =  mesh->sxz[c1] - mesh->sxz0[c1];
+//         }
+//     }
     
-    // Interpolate stress changes to markers
-    Interp_Grid2P_centroids2( *particles, mdsxx,  mesh, dsxx, mesh->xvz_coord,  mesh->zvx_coord,  mesh->Nx-1, mesh->Nz-1, mesh->BCp.type, model  );
-    Interp_Grid2P_centroids2( *particles, mdszz,  mesh, dszz, mesh->xvz_coord,  mesh->zvx_coord,  mesh->Nx-1, mesh->Nz-1, mesh->BCp.type, model  );
-    Interp_Grid2P_centroids2( *particles, mdsyy,  mesh, dsyy, mesh->xvz_coord,  mesh->zvx_coord,  mesh->Nx-1, mesh->Nz-1, mesh->BCp.type, model  );
-    Interp_Grid2P( *particles, mdsxz,  mesh, dsxz, mesh->xg_coord,  mesh->zg_coord,  mesh->Nx,   mesh->Nz,   mesh->BCg.type  );
+//     // Interpolate stress changes to markers
+//     Interp_Grid2P_centroids2( *particles, mdsxx,  mesh, dsxx, mesh->xvz_coord,  mesh->zvx_coord,  mesh->Nx-1, mesh->Nz-1, mesh->BCp.type, model  );
+//     Interp_Grid2P_centroids2( *particles, mdszz,  mesh, dszz, mesh->xvz_coord,  mesh->zvx_coord,  mesh->Nx-1, mesh->Nz-1, mesh->BCp.type, model  );
+//     Interp_Grid2P_centroids2( *particles, mdsyy,  mesh, dsyy, mesh->xvz_coord,  mesh->zvx_coord,  mesh->Nx-1, mesh->Nz-1, mesh->BCp.type, model  );
+//     Interp_Grid2P( *particles, mdsxz,  mesh, dsxz, mesh->xg_coord,  mesh->zg_coord,  mesh->Nx,   mesh->Nz,   mesh->BCg.type  );
     
-    // Update marker stresses
-    ArrayPlusArray( particles->sxxd, mdsxx, particles->Nb_part );
-    ArrayPlusArray( particles->szzd, mdszz, particles->Nb_part );
-    ArrayPlusArray( particles->syy , mdsyy, particles->Nb_part );
-    ArrayPlusArray( particles->sxz,  mdsxz, particles->Nb_part );
+//     // Update marker stresses
+//     ArrayPlusArray( particles->sxxd, mdsxx, particles->Nb_part );
+//     ArrayPlusArray( particles->szzd, mdszz, particles->Nb_part );
+//     ArrayPlusArray( particles->syy , mdsyy, particles->Nb_part );
+//     ArrayPlusArray( particles->sxz,  mdsxz, particles->Nb_part );
     
-    // Freedom
-    DoodzFree( dsxx );
-    DoodzFree( dsyy );
-    DoodzFree( dszz );
-    DoodzFree( dsxz );
-    DoodzFree(mdsxx);
-    DoodzFree(mdszz);
-    DoodzFree(mdsyy);
-    DoodzFree(mdsxz);
-}
+//     // Freedom
+//     DoodzFree( dsxx );
+//     DoodzFree( dsyy );
+//     DoodzFree( dszz );
+//     DoodzFree( dsxz );
+//     DoodzFree(mdsxx);
+//     DoodzFree(mdszz);
+//     DoodzFree(mdsyy);
+//     DoodzFree(mdsxz);
+// }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
@@ -1481,12 +1481,16 @@ firstprivate( model )
             // Old stresses grid --> markers
             Interp_Grid2P_centroids2( *particles, txxm0, mesh, mesh->sxxd0, mesh->xvz_coord,  mesh->zvx_coord, Nx-1, Nz-1, mesh->BCp.type, model  );
             Interp_Grid2P_centroids2( *particles, tzzm0, mesh, mesh->szzd0, mesh->xvz_coord,  mesh->zvx_coord, Nx-1, Nz-1, mesh->BCp.type, model  );
-            Interp_Grid2P( *particles, txzm0, mesh, mesh->sxz0 , mesh->xg_coord,  mesh->zg_coord, Nx  , Nz  , mesh->BCg.type     );
+            Interp_Grid2P( *particles, txzm0, mesh, mesh->sxz0,       mesh->xg_coord,  mesh->zg_coord, Nx  , Nz  , mesh->BCg.type);
             Interp_Grid2P( *particles, etam,  mesh, mesh->eta_phys_s, mesh->xg_coord,  mesh->zg_coord, Nx  , Nz  , mesh->BCg.type);
-            
+        
+
             MinMaxArray(mesh->eta_phys_s, scaling->eta, Nx*Nz, "eta grid  ");
             MinMaxArrayTag( mesh->eta_phys_s, scaling->eta, Nx*Nz,   "eta_s", mesh->BCg.type );
             MinMaxArray(etam, scaling->eta, particles->Nb_part, "eta phys part  ");
+
+            // Interp_Grid2P_eta( *particles, etam,  mesh, mesh->eta_phys_s, mesh->xg_coord,  mesh->zg_coord, Nx  , Nz  , mesh->BCg.type);
+
             
             if ( model->subgrid_diffusion == 2 ) {
                 
@@ -1502,12 +1506,12 @@ firstprivate( model )
                         dtzzms[k] = -( particles->szzd[k] - tzzm0[k]) * (1.0 - exp(-d*dt/dtaum));
                         dtxzms[k] = -( particles->sxz[k]  - txzm0[k]) * (1.0 - exp(-d*dt/dtaum));
                         if (isinf(dtxxms[k])) {
-                            printf("Infinite dtxxms[k]: %2.2e %2.2e %2.2e\n", particles->sxxd[k], txxm0[k], exp(-d*dt/dtaum));
+                            printf("Inf dtxxms[k]: sxxd=%2.2e txxm0=%2.2e exp(-d*dt/dtaum)=%2.2e d=%2.2e dt=%2.2e dtaum=%2.2e etam=%2.2e G=%2.2e\n", particles->sxxd[k], txxm0[k], exp(-d*dt/dtaum), d, dt, dtaum, etam[k]*scaling->eta, materials->G[p]*scaling->S);
                             printf("%2.2e %2.2e %2.2e %2.2e %2.2e", d, dt, dtaum, etam[k]*scaling->eta, materials->G[p]*scaling->S );
                             exit(1);
                         }
                         if (isnan(dtxxms[k])) {
-                            printf("Infinite dtxxms[k]: %2.2e %2.2e %2.2e\n", particles->sxxd[k], txxm0[k], exp(-d*dt/dtaum));
+                            printf("NaN dtxxms[k]: sxxd=%2.2e txxm0=%2.2e exp(-d*dt/dtaum)=%2.2e d=%2.2e dt=%2.2e dtaum=%2.2e etam=%2.2e G=%2.2e\n", particles->sxxd[k], txxm0[k], exp(-d*dt/dtaum), d, dt, dtaum, etam[k]*scaling->eta, materials->G[p]*scaling->S);
                             exit(1);
                         }
                     }
