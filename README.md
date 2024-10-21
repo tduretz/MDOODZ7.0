@@ -118,7 +118,23 @@ cd cmake-exec/YourSetName
 
 ## Windows 
 
-### Setting up vcpkg
+### Solution 1: Set up Windows Subsystem Linux (WSL)
+
+0) Open the Linux terminal
+1) Install the dependencies: `sudo apt update &&  sudo apt install -y cmake gcc g++ libhdf5-serial-dev libsuitesparse-dev libopenblas-dev`
+2) Set `LIBRARY_PATH` and `C_INCLUDE_PATH`, add these lines to you bash setup file (e.g., `.bashrc`, `.bash_profile`, `,zprofile`)
+
+example: `export LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/`
+
+example: `export C_INCLUDE_PATH=/usr/include/suitesparse:/usr/include/hdf5/serial`
+
+3) Compile the code using `make`: `make clean all SET=ViscousInclusion`
+
+4) This generates an executable file, which you can run, e.g.,: `./ViscousInclusion` 
+
+5) The output files are written in the WSL filesystem, to visualise them with `JuliaVisualisation`, run VSCode from Windows file system, use the remote explorer to log into the Linux filesystem. From there, you can open the folder `JuliaVisualisation` (inside MDOODZ7.0 folder) and run the scripts.
+
+### Solution 2: Setting up vcpkg
 
 1) Install vcpkg https://vcpkg.io/en/index.html
 2) By running vcpkg you will need to install HDF5 and SuiteSparse libraries by typing in 

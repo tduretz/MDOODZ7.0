@@ -1,76 +1,50 @@
 #include "math.h"
 #include "mdoodz.h"
 #include "stdbool.h"
+#include "stdio.h"
 #include "stdlib.h"
 #include "time.h"
-#include "stdio.h"
-
-int SetDualPhase(MdoodzInput *input, Coordinates coordinate, int phase) {
-    
-    int    dual_phase = phase;
-    double Lx = input->model.xmax - input->model.xmin;
-    double Lz = input->model.zmax - input->model.zmin;
-    double Ax, Az;
-
-    // Set checkerboard for phase 0
-    Az = sin( 48.0*2.0*M_PI*coordinate.z / Lz  );
-    if ( Az>0.0 && dual_phase==0 ) {
-        dual_phase += input->model.Nb_phases;
-    }
-
-    // Set checkerboard for phase 1
-    Az = sin( 48.0*2.0*M_PI*coordinate.z / Lz  );
-    if ( Az>0.0 && dual_phase==1 ) {
-        dual_phase += input->model.Nb_phases;
-    }
-
-    // Set checkerboard for phase 2
-    Az = sin( 48.0*2.0*M_PI*coordinate.z / Lz  );
-    if ( Az>0.0 && dual_phase==2 ) {
-        dual_phase += input->model.Nb_phases;
-    }
-
-  return dual_phase;
-}
-
 
 double SetSurfaceZCoord(MdoodzInput *instance, double x_coord) {
-  const double TopoLevel   = -0.0e3 / instance->scaling.L;
-  const double basin_width = 30.0e3 / instance->scaling.L;
-  const double h_pert      = instance->model.user3 / instance->scaling.L;
-  const double x           = x_coord - instance->model.user4 / instance->scaling.L;
-  return TopoLevel + h_pert * exp( - (x*x) / (2.0*basin_width*basin_width)   );
+  const double TopoLevel = -0.0e3 / instance->scaling.L;
+  return TopoLevel;
 }
 
 double SetNoise(MdoodzInput *instance, Coordinates coordinates, int phase) {
-  const double x        = coordinates.x - instance->model.user4 / instance->scaling.L;
-  const double z        = coordinates.z;
+  const double x           = coordinates.x - instance->model.user4 / instance->scaling.L;
+  const double z           = coordinates.z;
   const double basin_width = 30.0e3 / instance->scaling.L;
-  const double noise = ((double) rand() / (double) RAND_MAX) - 0.5;
-  const double filter_x = exp( - (x*x)/ (2.0*basin_width*basin_width) );
-  const double filter_z = exp( - (z*z)/ (2.0*basin_width*basin_width*4.0) );
-  return  noise * filter_x * filter_z;
+  const double noise       = ((double) rand() / (double) RAND_MAX) - 0.5;
+  const double filter_x    = exp(-(x * x) / (2.0 * basin_width * basin_width));
+  const double filter_z    = exp(-(z * z) / (2.0 * basin_width * basin_width * 4.0));
+  return noise * filter_x * filter_z;
+}
+
+static Ellipse GetMicaEllipse(double centreX, double centreZ) {
+  return (Ellipse) {
+          .radiusZ = 20e3,
+          .radiusX = 10e3,
+          .centreX = centreX,
+          .centreZ = centreZ,
+          .angle   = 0,
+  };
 }
 
 int SetPhase(MdoodzInput *instance, Coordinates coordinates) {
-  const double basin_width           = 30.0e3 / instance->scaling.L;
-  const double h_pert                = instance->model.user3 / instance->scaling.L;
-  const double lithosphereThickness  = instance->model.user1 / instance->scaling.L;
-  const double crustThickness        = instance->model.user2 / instance->scaling.L;
-  const double perturbationAmplitude = instance->model.user3 / instance->scaling.L;
-  const double x                     = coordinates.x - instance->model.user4 / instance->scaling.L;
-  const double mohoLevel             = -crustThickness + 0*h_pert * exp( - (x*x) / (2.0*basin_width*basin_width)   );
-  const bool   isBelowLithosphere    = coordinates.z < -lithosphereThickness;
-  const bool   isAboveMoho           = coordinates.z > mohoLevel;
-  const bool   isLowerCrust          = coordinates.z < (mohoLevel + 0.5*crustThickness);
+  // remove perturbation
+  // moho temperature should be around 500 degrees
+  // add weak inclusion
+  const double lithosphereThickness = instance->model.user1 / instance->scaling.L;
+  const double crustThickness       = instance->model.user2 / instance->scaling.L;
+  const double mohoLevel            = -crustThickness;
+  const bool   isBelowLithosphere   = coordinates.z < -lithosphereThickness;
+  const bool   isAboveMoho          = coordinates.z > mohoLevel;
+  const bool   isMicaEllipse         = IsEllipseCoordinates(coordinates, GetMicaEllipse(0e3, -55e3), instance->scaling.L);
 
-  if (isAboveMoho) {
-    if (isLowerCrust) {
+  if (isMicaEllipse) {
     return 1;
-    }
-    else {
+  } else if (isAboveMoho) {
     return 0;
-    }
   } else if (isBelowLithosphere) {
     return 3;
   } else {
@@ -82,13 +56,13 @@ double SetTemperature(MdoodzInput *instance, Coordinates coordinates) {
   const double lithosphereThickness = instance->model.user1 / instance->scaling.L;
   const double surfaceTemperature   = 273.15 / instance->scaling.T;
   const double mantleTemperature    = (1330.0 + 273.15) / instance->scaling.T;
-  
-  const double Tamp               = 50.0 / instance->scaling.T;
-  const double x                  = coordinates.x - instance->model.user4 / instance->scaling.L;
-  const double z                  = coordinates.z;
-  const double basin_width        = 30.0e3 / instance->scaling.L;
-  const double filter_x           = Tamp * exp( - (x*x)/ (2.0*basin_width*basin_width) );
-  
+
+  const double Tamp                 = 50.0 / instance->scaling.T;
+  const double x                    = coordinates.x - instance->model.user4 / instance->scaling.L;
+  const double z                    = coordinates.z;
+  const double basin_width          = 30.0e3 / instance->scaling.L;
+  const double filter_x             = Tamp * exp(-(x * x) / (2.0 * basin_width * basin_width));
+
   const double particleTemperature  = ((mantleTemperature - surfaceTemperature) / lithosphereThickness) * (-coordinates.z) + surfaceTemperature;
   if (particleTemperature > mantleTemperature) {
     return mantleTemperature + filter_x;
@@ -111,17 +85,17 @@ char SetBCPType(MdoodzInput *instance, POSITION position) {
 }
 
 SetBC SetBCT(MdoodzInput *instance, POSITION position, Coordinates coordinates,  double particleTemperature) {
-  SetBC     bc;
-  double surface_temperature =          zeroC  / instance->scaling.T;
+  SetBC  bc;
+  double surface_temperature = zeroC / instance->scaling.T;
   double mantle_temperature  = (1330. + zeroC) / instance->scaling.T;
   if (position == S) {
     bc.type  = constant_temperature;
-    bc.value = particleTemperature;
+    bc.value = mantle_temperature;
   }
   if (position == free_surface || position == N) {
     bc.type  = constant_temperature;
     bc.value = surface_temperature;
-  } 
+  }
   if (position == W || position == E) {
     bc.type  = constant_heatflux;
     bc.value = 0.;
@@ -129,7 +103,7 @@ SetBC SetBCT(MdoodzInput *instance, POSITION position, Coordinates coordinates, 
   return bc;
 }
 
-double SetAnisoAngle(MdoodzInput *input, Coordinates coordinates, int phase) {
+double SetAnisoAngle(MdoodzInput *input, Coordinates coordinates, int phase, double predefined_angle) {
   static unsigned int seedIncrement = 0;
   srand(time(NULL) + seedIncrement++);
 
@@ -164,26 +138,23 @@ void AddCrazyConductivity(MdoodzInput *input) {
 int main(int nargs, char *args[]) {
   srand(time(NULL));
   char *input_file;
-  if ( nargs < 2 ) {
-    asprintf(&input_file, "NeckingReview.txt"); // Default
-  }
-  else {
-
-    asprintf(&input_file, "%s", args[1]);     // Custom
+  if (nargs < 2) {
+    asprintf(&input_file, "CollisionAnisotropy.txt");// Default
+  } else {
+    printf("dodo %s\n", args[1]);
+    asprintf(&input_file, "%s", args[1]);// Custom
   }
   printf("Running MDoodz7.0 using %s\n", input_file);
-
-  srand(69); // Force random generator seed for reproducibility 
   MdoodzSetup setup = {
           .BuildInitialTopography = &(BuildInitialTopography_ff){
                   .SetSurfaceZCoord = SetSurfaceZCoord,
           },
           .SetParticles = &(SetParticles_ff){
-                  .SetPhase              = SetPhase,
-                  .SetTemperature        = SetTemperature,
-                  .SetGrainSize          = SetGrainSize,
-                  // .SetNoise              = SetNoise,
-                  .SetDualPhase          = SetDualPhase,
+                  .SetPhase       = SetPhase,
+                  .SetTemperature = SetTemperature,
+                  .SetGrainSize   = SetGrainSize,
+                  .SetNoise       = SetNoise,
+                  .SetAnisoAngle  = SetAnisoAngle,
 
           },
           .SetBCs = &(SetBCs_ff){
