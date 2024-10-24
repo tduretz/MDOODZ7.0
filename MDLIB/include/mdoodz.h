@@ -114,7 +114,7 @@ typedef struct {
   int      residual_form;
   int      irestart, istep;
   int      writer, writer_step;
-  const char     *writer_subfolder;
+  char     *writer_subfolder;
   int      save_initial_markers, load_initial_markers;
   char    *initial_markers_file;
   int     marker_aniso_angle;
@@ -194,7 +194,7 @@ typedef double (*SetTxx_f)(MdoodzInput *input, Coordinates coordinates, int phas
 typedef double (*SetTzz_f)(MdoodzInput *input, Coordinates coordinates, int phase);
 typedef double (*SetTxz_f)(MdoodzInput *input, Coordinates coordinates, int phase);
 typedef double (*SetNoise_f)(MdoodzInput *input, Coordinates coordinates, int phase);
-typedef double (*SetAnisoAngle_f)(MdoodzInput *input, Coordinates coordinates, int phase);
+typedef double (*SetAnisoAngle_f)(MdoodzInput *input, Coordinates coordinates, int phase, double predefined);
 typedef Tensor2D (*SetDefGrad_f)(MdoodzInput *input, Coordinates coordinates, int phase);
 
 typedef struct {
@@ -263,8 +263,8 @@ typedef struct {
 
 typedef SetBC (*SetBCVx_f)(MdoodzInput *input, POSITION position, Coordinates coordinates);
 typedef SetBC (*SetBCVz_f)(MdoodzInput *input, POSITION position, Coordinates coordinates);
-typedef SetBC (*SetBCT_f)(MdoodzInput *input, POSITION position, double gridTemperature);
-typedef SetBC (*SetBCC_f)(MdoodzInput *input, POSITION position, double gridXvalue);
+typedef SetBC (*SetBCT_f)(MdoodzInput *input, POSITION position, Coordinates coordinates, double gridTemperature);
+typedef SetBC (*SetBCC_f)(MdoodzInput *input, POSITION position, Coordinates coordinates, double gridXvalue);
 typedef double (*FixTemperature_f)(MdoodzInput *input, double pressure);
 typedef char (*SetBCPType_f)(MdoodzInput *input, POSITION position);
 
@@ -302,7 +302,7 @@ typedef struct {
   const char *str1;
 } MutateInputParams;
 
-typedef void(MutateInput_f)(MdoodzInput *input, MutateInputParams *mutateInputParams);
+typedef void(MutateInput_f)(MdoodzInput *input);
 
 struct MdoodzSetup {
   BuildInitialTopography_ff *BuildInitialTopography;

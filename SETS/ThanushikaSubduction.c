@@ -87,13 +87,6 @@ int SetPhase(MdoodzInput *instance, Coordinates coordinates) {
     phase = 2;
   }
 
-  // Set weak zone
-  double maxLithThickness = fmax(ocCrustThickness,lithosphereThickness);
-   if (coordinates.z > weakZoneDepth && coordinates.x > -weakZoneWidth - coordinates.z*subductionAngle && coordinates.x < weakZoneWidth - coordinates.z*subductionAngle)
-   {
-     phase = 3;
-   }
-
   // Set oceanic crust
   if (coordinates.z > -ocCrustThickness && coordinates.x < -weakZoneWidth - coordinates.z*subductionAngle)
   {
@@ -121,6 +114,13 @@ int SetPhase(MdoodzInput *instance, Coordinates coordinates) {
     phase = 4;
   }
   
+    // Set weak zone
+  double maxLithThickness = fmax(ocCrustThickness,lithosphereThickness);
+   if (coordinates.z > weakZoneDepth && coordinates.x > -weakZoneWidth - coordinates.z*subductionAngle && coordinates.x < weakZoneWidth - coordinates.z*subductionAngle)
+   {
+     phase = 3;
+   }
+   
   // Return
   return phase;
   
@@ -199,7 +199,7 @@ char SetBCPType(MdoodzInput *instance, POSITION position) {
   }
 }
 
-SetBC SetBCT(MdoodzInput *instance, POSITION position, double particleTemperature) {
+SetBC SetBCT(MdoodzInput *instance, POSITION position, Coordinates coordinates,  double particleTemperature) {
   SetBC     bc;
   double surface_temperature = (0.0 + 273.15) / instance->scaling.T ;
   double mantle_temperature  = (1350.0 + 273.15) / instance->scaling.T;

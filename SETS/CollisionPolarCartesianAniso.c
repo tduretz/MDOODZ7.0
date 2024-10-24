@@ -83,7 +83,7 @@ char SetBCPType(MdoodzInput *instance, POSITION position) {
   }
 }
 
-SetBC SetBCT(MdoodzInput *instance, POSITION position, double particleTemperature) {
+SetBC SetBCT(MdoodzInput *instance, POSITION position, Coordinates coordinates,  double particleTemperature) {
   SetBC     bc;
   double surface_temperature =                   (20. + zeroC) / instance->scaling.T;
   double mantle_temperature  = (instance->model.user3 + zeroC) / instance->scaling.T;
@@ -250,7 +250,7 @@ SetBC SetBCVz(MdoodzInput *instance, POSITION position, Coordinates coordinates)
   return bc;
 }
 
-double SetAnisoAngle(MdoodzInput *input, Coordinates coordinates, int phase) {
+double SetAnisoAngle(MdoodzInput *input, Coordinates coordinates, int phase, double predefined_angle) {
   //return 135;       // fixed value everywhere
   return rand()*360;  // random value everywhere
 }

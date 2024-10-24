@@ -2,11 +2,11 @@ istep    = 00000343
 irestart = 0
 
 /**** OUTPUT FILES ****/
-writer         = 0
-writer_step    = 10
+writer         = 1
+writer_step    = 1
 writer_markers = 0
 writer_debug   = 0
-writer_subfolder = transition_debug
+writer_subfolder = WeakIncl
 
 /**** SCALES ****/ Scaling parameters for
 eta = 1.e+22      /viscosity
@@ -15,21 +15,22 @@ V   = 1.5e-8      /velocity
 T   = 1.e+02      /temperature
 
 /**** SPACE ****/
-Nx      = 300
-Nz      = 140
+Nx      = 200
+Nz      = 105
 xmin    = -200.000000e3
 xmax    =  200.000000e3
 zmin    = -200.000000e3
 zmax    = 10.000000e3
 
 /**** TIME ****/
-Nt          = 7000
+Nt          = 1
 dt          = 1.2623e+11
 Courant     = 0.45
 penalty     = 1e2
 constant_dt = 0
 
 /**** SWITCHES ****/
+marker_aniso_angle = 1
 eta_average       = 0
 interp_stencil    = 9
 mechanical        = 1
@@ -91,7 +92,7 @@ gz = -9.81
 Nb_phases = 4
 
 ID           = 0
-rho          = 2800.00 / Upper Crust - Westerly granite
+rho          = 2800.00 / crust
 G            = 1.0e10
 Cp           = 1050.0
 k            = 2.5
@@ -110,12 +111,12 @@ coh_soft     = 1
 Ce           = 1e6
 plss         = 0.5
 plse         = 1.5
-aniso_factor = 9
+aniso_factor = 1
 aniso_angle  = 80
-eta_vp     = 5e21
+eta_vp     = 5e20
 
 ID       = 1
-rho      = 2800.00 / Lower crust
+rho      = 2800.00 / inclusion to activate rifting
 G        = 1.0e10
 Cp       = 1050.0
 k        = 2.5
@@ -126,7 +127,7 @@ Slim     = 500.0e9
 alp      = 32.0e-6
 bet      = 1.5e-11
 cstv     = 0
-pwlv     = 10
+pwlv     = 24
 linv     = 0
 gbsv     = 0
 expv     = 0
@@ -134,12 +135,12 @@ Ce       = 1e6
 cohe     = 1e6
 plss     = 0.5
 plse     = 1.5
-aniso_factor = 9
+aniso_factor = 1
 aniso_angle  = 80
-eta_vp     = 5e21
+eta_vp     = 5e20
 
 ID           = 2
-rho          = 3330.00 / lithospheric mantle - Dry Olivine
+rho          = 3330.00 / lithospheric mantle
 alp          = 32.0e-6
 bet          = 1.5e-11
 G            = 1.0e10
@@ -154,11 +155,11 @@ pwlv         = 40
 linv         = 40
 gbsv         = 0
 expv         = 40
-aniso_factor = 9
+aniso_factor = 1
 aniso_angle  = 80
-eta_vp     = 5e21
+eta_vp     = 5e20
 transmutation = 1
-transmutation_temperature = 1330
+transmutation_temperature = 1220
 transmutation_phase = 3
 
 ID         = 3
@@ -177,6 +178,6 @@ pwlv       = 41
 linv       = 41
 gbsv       = 0
 expv       = 40
-eta_vp     = 5e21
+eta_vp     = 5e20
 aniso_factor = 1
 aniso_angle  = 80

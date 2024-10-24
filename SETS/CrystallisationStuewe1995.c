@@ -51,7 +51,7 @@ double SetTemperature(MdoodzInput *instance, Coordinates coordinates) {
   return T;
 }
 
-SetBC SetBCT(MdoodzInput *instance, POSITION position, double particleTemperature) {
+SetBC SetBCT(MdoodzInput *instance, POSITION position, Coordinates coordinates,  double particleTemperature) {
   SetBC     bc;
   const double Tcountry   = instance->model.user0 / instance->scaling.T;
   if (position == W || position == E) {
