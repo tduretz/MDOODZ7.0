@@ -39,14 +39,14 @@ function AddCountourQuivers!(PlotOnTop, ax1, xc, xv, zc, V, T, σ1, Fab, height,
     end
 end
 
-function main()
+@views function main()
 
     # Set the path to your files
-    path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/TEST_ROMAN_ANI3_00_MR/"
-    path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/_p10_e18_t3/"
+    #path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/TEST_ROMAN_ANI3_00_MR/"
+    #path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/_p10_e18_t3/"
     path ="/home/larafriedrichs/repositories/MDOODZ7.0/MDLIB/"
     #path=raw"C:\Users\49176\OneDrive\Desktop\Test_c_code\\"
-    path="/home/larafriedrichs/repositories/MDOODZ7.0/runs/firstmodel/"
+    #path="/home/larafriedrichs/repositories/MDOODZ7.0/runs/"
     #path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/"
 
     # path ="/Users/tduretz/Downloads/"
@@ -60,19 +60,19 @@ function main()
     # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/1_NR09/"
 
     # File numbers
-    file_start = 100
-    file_step  = 10
-    file_end   = 100
+    file_start = 1500
+    file_step  = 50
+    file_end   = 1500
 
     # Select field to visualise
-    # field = :Phases
+     field = :Phases
     # field = :Cohesion
-     field = :Density
+    # field = :Density
     # field = :Viscosity 
     # field = :PlasticStrainrate
     # field = :Stress
     # field = :StrainRate
-     field = :Pressure
+    # field = :Pressure
     # field = :Divergence
     # field = :Temperature
     # field = :Velocity_x
@@ -86,6 +86,13 @@ function main()
     # field = :TimeSeries
     # field = :EffectiveFrictionTime
 
+    # define Tuple for Scaling
+    zoom = ( 
+        xmin = -50.e3, 
+        xmax = 50.e3,
+        zmin = -100.e3,
+        zmax = 20.e3,
+    )
 
     # Switches
     printfig    = true  # print figures to disk
@@ -93,11 +100,11 @@ function main()
     framerate   = 3
     PlotOnTop = (
         ph_contours = false,  # add phase contours
-        T_contours  = false,   # add temperature contours
+        T_contours  = true,   # add temperature contours
         fabric      = false,  # add fabric quiver (normal to director)
         topo        = false,
         σ1_axis     = false,
-        vel_vec     = true,
+        vel_vec     = false,
     )
     α_heatmap   = 1.0 #0.85   # transparency of heatmap 
     vel_arrow   = 5
@@ -112,8 +119,7 @@ function main()
     # Lc = 1000.
     # tc = My
     # Vc = 1e-9
-
-    Lc = 1.0
+    Lc = 1
     tc = My
     Vc = 1.0
 
@@ -121,7 +127,7 @@ function main()
     cm_yr = 100.0*3600.0*24.0*365.25
 
     # Time loop
-    f = Figure(size = (Lx/Lz*resol*1.2, resol), fontsize=25)
+    f = Figure(fontsize=500)
 
     for istep=file_start:file_step:file_end
     
@@ -138,7 +144,7 @@ function main()
         xv_hr    = ExtractData( filename, "/VizGrid/xviz_hr")
         zv_hr    = ExtractData( filename, "/VizGrid/zviz_hr")
         τzz_t    = ExtractData( filename, "TimeSeries/szzd_mean_time")
-        P_t     = ExtractData( filename, "TimeSeries/P_mean_time")
+        P_t      = ExtractData( filename, "TimeSeries/P_mean_time")
         τxz_t    = ExtractData( filename, "TimeSeries/sxz_mean_time")
         t_t      = ExtractData( filename, "TimeSeries/Time_time")
 
@@ -156,6 +162,20 @@ function main()
         Lx, Lz    = (xmax-xmin)/Lc, (zv[end]-zv[1])/Lc
         Δx, Δz, Δ = Lx/ncx, Lz/ncz, sqrt( (Lx/ncx)^2 + (Lz/ncz)^2)
         Lx>1e3 ? length_unit="km" :  length_unit="m"
+
+        if @isdefined zoom
+            Lx = zoom.xmax - zoom.xmin 
+            Lz = zoom.zmax - zoom.zmin
+            window = zoom
+        else
+            window = ( 
+                xmin = minimum(xv), 
+                xmax = maximum(xv),
+                zmin = minimum(zv),
+                zmax = maximum(zv),
+            )
+        end
+
         @info "Model info"
         @show "Model apect ratio" Lx/Lz
         @show "Model time" t/My
@@ -185,11 +205,12 @@ function main()
         ε̇xz   = Float64.(reshape(ExtractData( filename, "/Vertices/exz"), nvx, nvz))
         τII   = sqrt.( 0.5*(τxx.^2 .+ τyy.^2 .+ τzz.^2 .+ 0.5*(τxz[1:end-1,1:end-1].^2 .+ τxz[2:end,1:end-1].^2 .+ τxz[1:end-1,2:end].^2 .+ τxz[2:end,2:end].^2 ) ) ); τII[mask_air] .= NaN
         ε̇II   = sqrt.( 0.5*(ε̇xx.^2 .+ ε̇yy.^2 .+ ε̇zz.^2 .+ 0.5*(ε̇xz[1:end-1,1:end-1].^2 .+ ε̇xz[2:end,1:end-1].^2 .+ ε̇xz[1:end-1,2:end].^2 .+ ε̇xz[2:end,2:end].^2 ) ) ); ε̇II[mask_air] .= NaN
+        ε̇BG   = ε̇II .* t # Background strain rate
         τxzc  = 0.25*(τxz[1:end-1,1:end-1] .+ τxz[2:end,1:end-1] .+ τxz[1:end-1,2:end] .+ τxz[2:end,2:end]) 
         C     = Float64.(reshape(ExtractData( filename, "/Centers/cohesion"), ncx, ncz))
         ϕ     = ExtractField(filename, "/Centers/phi", centroids, false, 0)
         divu  = ExtractField(filename, "/Centers/divu", centroids, false, 0)
-
+        
         Fab = 0.
         if PlotOnTop.fabric
             δani  = ExtractField(filename, "/Centers/ani_fac", centroids, false, 0)
@@ -238,7 +259,7 @@ function main()
 
         #####################################
         empty!(f)
-        f = Figure(size = (Lx/Lz*resol*1.2, resol), fontsize=25)
+        f = Figure(size = (Lx/Lz*resol*1.2, resol), fontsize=45)
 
         if field==:Phases
             ax1 = Axis(f[1, 1], title = L"Phases at $t$ = %$(tMy) Ma", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
@@ -249,9 +270,10 @@ function main()
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
             Mak.Colorbar(f[1, 2], hm, label = "Phases", width = 20, labelsize = 25, ticklabelsize = 14 )
             Mak.colgap!(f.layout, 20)
+            xlims!(ax1, window.xmin, window.xmax)
+            ylims!(ax1, window.zmin, window.zmax)
             if printfig Print2Disk( f, path, string(field), istep) end
         end
-        
 
         if field==:Viscosity
             ax1 = Axis(f[1, 1], title = L"$\eta$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
@@ -260,6 +282,8 @@ function main()
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
             Mak.Colorbar(f[1, 2], hm, label = L"$\eta$ [Pa.s]", width = 20, labelsize = 25, ticklabelsize = 14 )
             Mak.colgap!(f.layout, 20)
+            xlims!(ax1, window.xmin, window.xmax)
+            ylims!(ax1, window.zmin, window.zmax)
             if printfig Print2Disk( f, path, string(field), istep) end
         end
 
@@ -268,8 +292,10 @@ function main()
             hm = heatmap!(ax1, xc./Lc, zc./Lc, ρc, colormap = (:turbo, α_heatmap))  
             AddCountourQuivers!(PlotOnTop, ax1, xc, xv, zc, V, T, σ1, Fab, height, Lc, cm_y, group_phases, Δ)                
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
-            Mak.Colorbar(f[1, 2], hm, label = L"$\rho$ [kg.m$^{-3}$]", width = 20, labelsize = 25, ticklabelsize = 14 )
+            Mak.Colorbar(f[1, 2], hm, label = L"$\rho$ [kg.m$^{-3}$]", width = 30, labelsize = 45, ticklabelsize = 14 )
             Mak.colgap!(f.layout, 20)
+            xlims!(ax1, window.xmin, window.xmax)
+            ylims!(ax1, window.zmin, window.zmax)
             if printfig Print2Disk( f, path, string(field), istep) end
         end
 
@@ -280,6 +306,8 @@ function main()
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
             Mak.Colorbar(f[1, 2], hm, label = L"$\tau_\textrm{II}$ [MPa]", width = 20, labelsize = 25, ticklabelsize = 14 )
             Mak.colgap!(f.layout, 20)
+            xlims!(ax1, window.xmin, window.xmax)
+            ylims!(ax1, window.zmin, window.zmax)
             if printfig Print2Disk( f, path, string(field), istep) end
         end
 
@@ -290,6 +318,8 @@ function main()
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
             Mak.Colorbar(f[1, 2], hm, label =  L"$P$ [GPa]", width = 20, labelsize = 25, ticklabelsize = 14 )
             Mak.colgap!(f.layout, 20)
+            xlims!(ax1, window.xmin, window.xmax)
+            ylims!(ax1, window.zmin, window.zmax)
             if printfig Print2Disk( f, path, string(field), istep) end
         end
 
@@ -300,17 +330,21 @@ function main()
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
             Mak.Colorbar(f[1, 2], hm, label =  L"∇⋅V [s$^{-1}$]", width = 20, labelsize = 25, ticklabelsize = 14 )
             Mak.colgap!(f.layout, 20)
+            xlims!(ax1, window.xmin, window.xmax)
+            ylims!(ax1, window.zmin, window.zmax)
             if printfig Print2Disk( f, path, string(field), istep) end
         end
 
         if field==:StrainRate
-            ax1 = Axis(f[1, 1], title = L"$\dot{\varepsilon}_\textrm{II}$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [%$(length_unit)]", ylabel = L"$y$ [%$(length_unit)]")
+            ax1 = Axis(f[1, 1], title = L"$\dot{\varepsilon}_\textrm{II}$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [%$(length_unit)]", ylabel = L"$y$ [%$(length_unit)]") # add ylim=(100,-0.75e5)?
             hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(ε̇II), colormap = (:turbo, α_heatmap))
             AddCountourQuivers!(PlotOnTop, ax1, xc, xv, zc, V, T, σ1, Fab, height, Lc, cm_y, group_phases, Δ)                
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
-            Mak.Colorbar(f[1, 2], hm, label =  L"$\dot{\varepsilon}_\textrm{II}$ [s$^{-1}$]", width = 20, labelsize = 25, ticklabelsize = 14 )
+            Mak.Colorbar(f[1, 2], hm, label =  L"$\dot{\varepsilon}_\textrm{II}$ [s$^{-1}$]", width = 30, labelsize = 45, ticklabelsize = 45 )
             Mak.colgap!(f.layout, 20)
-            if printfig Print2Disk( f, path, string(field), istep) end
+            xlims!(ax1, window.xmin, window.xmax)
+            ylims!(ax1, window.zmin, window.zmax)
+            if printfig Print2Disk( f, path, string(field), istep) end #if printfig Print2Disk( f, path, string(field),ε̇BG) end
         end
 
         if field==:PlasticStrainrate
@@ -321,6 +355,8 @@ function main()
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
             Mak.Colorbar(f[1, 2], hm, label = L"$\dot{\varepsilon}_\textrm{II}^\textrm{pl}$ [s$^{-1}$]", width = 20, labelsize = 25, ticklabelsize = 14 )
             Mak.colgap!(f.layout, 20)
+            xlims!(ax1, window.xmin, window.xmax)
+            ylims!(ax1, window.zmin, window.zmax)
             if printfig Print2Disk( f, path, string(field), istep) end
         end
 
@@ -335,6 +371,8 @@ function main()
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
             Mak.Colorbar(f[1, 2], hm, label = L"$V$ [m.s$^{-1}$]", width = 20, labelsize = 25, ticklabelsize = 14 )
             Mak.colgap!(f.layout, 20)
+            xlims!(ax1, window.xmin, window.xmax)
+            ylims!(ax1, window.zmin, window.zmax)
             if printfig Print2Disk( f, path, string(field), istep) end
         end
 
@@ -345,6 +383,8 @@ function main()
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
             Mak.Colorbar(f[1, 2], hm, label = L"$Vx$ [cm.yr$^{-1}$]", width = 20, labelsize = 25, ticklabelsize = 14 )
             Mak.colgap!(f.layout, 20)
+            xlims!(ax1, window.xmin, window.xmax)
+            ylims!(ax1, window.zmin, window.zmax)
             if printfig Print2Disk( f, path, string(field), istep) end
         end
 
@@ -355,6 +395,8 @@ function main()
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
             Mak.Colorbar(f[1, 2], hm, label = L"$Vz$ [cm.yr$^{-1}$]", width = 20, labelsize = 25, ticklabelsize = 14 )
             Mak.colgap!(f.layout, 20)
+            xlims!(ax1, window.xmin, window.xmax)
+            ylims!(ax1, window.zmin, window.zmax)
             if printfig Print2Disk( f, path, string(field), istep) end
         end
 
@@ -371,6 +413,8 @@ function main()
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
             Mak.Colorbar(f[1, 2], hm, label = "d", width = 20, labelsize = 25, ticklabelsize = 14 )
             Mak.colgap!(f.layout, 20)
+            xlims!(ax1, window.xmin, window.xmax)
+            ylims!(ax1, window.zmin, window.zmax)
             if printfig Print2Disk( f, path, string(field), istep) end
         end
 
@@ -387,6 +431,8 @@ function main()
             Mak.Colorbar(f[1, 2], hm, label = L"$δ_\textrm{ani}$", width = 20, labelsize = 25, ticklabelsize = 14 )
             Mak.colgap!(f.layout, 20)
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
+            xlims!(ax1, window.xmin, window.xmax)
+            ylims!(ax1, window.zmin, window.zmax)
             if printfig Print2Disk( f, path, string(field), istep) end
         end
 
@@ -397,6 +443,8 @@ function main()
             Mak.Colorbar(f[1, 2], hm, label = L"$ϕ$", width = 20, labelsize = 25, ticklabelsize = 14 )
             Mak.colgap!(f.layout, 20)
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
+            xlims!(ax1, window.xmin, window.xmax)
+            ylims!(ax1, window.zmin, window.zmax)
             if printfig Print2Disk( f, path, string(field), istep) end
         end
 
@@ -407,6 +455,8 @@ function main()
             Mak.Colorbar(f[1, 2], hm, label = L"$C$ [MPa]", width = 20, labelsize = 25, ticklabelsize = 14 )
             Mak.colgap!(f.layout, 20)
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
+            xlims!(ax1, window.xmin, window.xmax)
+            ylims!(ax1, window.zmin, window.zmax)
             if printfig Print2Disk( f, path, string(field), istep) end
         end
 
@@ -417,23 +467,36 @@ function main()
             Mak.Colorbar(f[1, 2], hm, label = L"$T$ [C]", width = 20, labelsize = 25, ticklabelsize = 14 )
             Mak.colgap!(f.layout, 20)
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
+            xlims!(ax1, window.xmin, window.xmax)
+            ylims!(ax1, window.zmin, window.zmax)
             if printfig Print2Disk( f, path, string(field), istep) end
         end
 
         if field==:Topography
+            height  = Float64.(ExtractData( filename, "/Topo/z_grid")); 
+            Vx_grid = Float64.(ExtractData( filename, "/Topo/Vx_grid"));
+            Vz_grid = Float64.(ExtractData( filename, "/Topo/Vz_grid"));  
+            Vx_mark = Float64.(ExtractData( filename, "/Topo/Vx_mark"));
+            Vz_mark = Float64.(ExtractData( filename, "/Topo/Vz_mark"));
+            x_mark  = Float64.(ExtractData( filename, "/Topo/x_mark"));
+            z_mark  = Float64.(ExtractData( filename, "/Topo/z_mark"));
+
             ax1 = Axis(f[1, 1], title = L"Topography at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$h$ [km]")
             @show mean(height)
             @show mean(z_mark)
             lines!(ax1, xv./Lc, height./Lc)
             scatter!(ax1, x_mark./Lc, z_mark./Lc)
+            xlims!(ax1, window.xmin, window.xmax)
 
             ax2 = Axis(f[2, 1], xlabel = L"$x$ [km]", ylabel = L"$Vx$ [km]")
             lines!(ax2, xv./Lc, Vx_grid./Vc)
             scatter!(ax2, x_mark./Lc, Vx_mark./Vc)
+            xlims!(ax1, window.xmin, window.xmax)
 
             ax3 = Axis(f[3, 1], xlabel = L"$x$ [km]", ylabel = L"$Vz$ [km]")
             lines!(ax3, xc./Lc, Vz_grid[2:end-1]./Vc)
             scatter!(ax3, x_mark/Lc, Vz_mark./Vc)
+            xlims!(ax1, window.xmin, window.xmax)
         end
 
         if field==:TimeSeries
