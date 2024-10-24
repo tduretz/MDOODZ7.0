@@ -84,7 +84,7 @@ char SetBCPType(MdoodzInput *instance, POSITION position) {
   }
 }
 
-SetBC SetBCT(MdoodzInput *instance, POSITION position, double particleTemperature) {
+SetBC SetBCT(MdoodzInput *instance, POSITION position, Coordinates coordinates,  double particleTemperature) {
   SetBC  bc;
   double surface_temperature = zeroC / instance->scaling.T;
   double mantle_temperature  = (1330. + zeroC) / instance->scaling.T;
@@ -103,7 +103,7 @@ SetBC SetBCT(MdoodzInput *instance, POSITION position, double particleTemperatur
   return bc;
 }
 
-double SetAnisoAngle(MdoodzInput *input, Coordinates coordinates, int phase) {
+double SetAnisoAngle(MdoodzInput *input, Coordinates coordinates, int phase, double predefined_angle) {
   static unsigned int seedIncrement = 0;
   srand(time(NULL) + seedIncrement++);
 

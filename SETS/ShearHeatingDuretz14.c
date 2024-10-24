@@ -26,7 +26,7 @@ double SetDensity(MdoodzInput *input, Coordinates coordinates, int phase) {
   }
 }
 
-SetBC SetBCT(MdoodzInput *instance, POSITION position, double particleTemperature) {
+SetBC SetBCT(MdoodzInput *instance, POSITION position, Coordinates coordinates,  double particleTemperature) {
   SetBC     bc;
   if (position == W || position == E || position == S || position == N) {
     bc.type  = constant_heatflux;
