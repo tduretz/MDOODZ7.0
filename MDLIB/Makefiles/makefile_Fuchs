@@ -1,4 +1,4 @@
-# MDOODZ 7.0 makefile
+# MDOODZ 7.0 makefile for Fuchs cluster
 SHELL := /bin/bash
 
 # Compiler
