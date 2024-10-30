@@ -22,3 +22,5 @@ MDLIB/*/*/*.png
 Manifest.toml
 runs/
 RUNS/
+*.mov
+*.bin

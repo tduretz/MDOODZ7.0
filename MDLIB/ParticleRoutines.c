@@ -3572,7 +3572,7 @@ void TransmutateMarkers(markers *particles, mat_prop *materials, double scaling_
 #pragma omp parallel for reduction(+:transmutated_particles) shared(particles)
   for (int k=0; k<particles->Nb_part-1; k++) {
     const int phase = particles->phase[k];
-    const double temperature = (particles->T[k] * scaling_T) - zeroC;
+    const double temperature = particles->T[k];
     const double transmutation = materials->transmutation[phase];
 
     if ((transmutation == -1 && materials->transmutation_temperature[phase] >= temperature)
