@@ -1177,7 +1177,8 @@ Input ReadInputFile( char *fileName ) {
     model.therm_perturb      = ReadInt2( fin, "therm_perturb",                 0 ); // Includes initial thermal perbation
     model.therm_perturb_x0   = ReadDou2( fin, "therm_perturb_x0",  0.0 )/scaling.L; // x position
     model.therm_perturb_z0   = ReadDou2( fin, "therm_perturb_z0",  0.0 )/scaling.L; // y position
-    model.therm_perturb_rad  = ReadDou2( fin, "therm_perturb_rad", 0.0 )/scaling.L; // Radius
+    model.therm_perturb_rad_x= ReadDou2( fin, "therm_perturb_rad_x", 0.0 )/scaling.L; // Radius
+    model.therm_perturb_rad_z= ReadDou2( fin, "therm_perturb_rad_z", 0.0 )/scaling.L; // Radius
     model.therm_perturb_dT   = ReadDou2( fin, "therm_perturb_dT" , 0.0 )/scaling.T; // Temperature anomaly
     // For rheological database reasons...
     model.force_act_vol_ast  = ReadInt2( fin, "force_act_vol_ast",   0 ); // if 1 then:
@@ -1344,7 +1345,7 @@ Input ReadInputFile( char *fileName ) {
         // temperature driven transition between phases
         materials.transmutation[k]             = (int)ReadMatProps( fin, "transmutation",    k,    0  ); // switcher: 0 - no transition; -1 transition happens when below transition_temperature; 1 transition happens when above transition_temperature;
         materials.transmutation_phase[k]       = (int)ReadMatProps( fin, "transmutation_phase",    k,    1  ); // phase to set
-        materials.transmutation_temperature[k] = ReadMatProps( fin, "transmutation_temperature",    k,    1400.0  ); // temperature boundary
+        materials.transmutation_temperature[k] = ReadMatProps( fin, "transmutation_temperature",    k,    1300.0  ) / scaling.T; // temperature boundary
         // Check if any flow law is active
         int sum = abs(materials.cstv[k]) + abs(materials.pwlv[k]) + abs(materials.linv[k]) + abs(materials.gbsv[k]) + abs(materials.expv[k]);
         if ( sum == 0 ) {

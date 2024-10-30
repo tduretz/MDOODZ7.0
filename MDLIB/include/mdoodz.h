@@ -84,7 +84,7 @@ typedef struct {
   // Surface processes
   double surf_diff, surf_sedirate, surf_baselev, surf_Winc, surf_Vinc;
   // Initial thermal perturbation
-  double therm_perturb_x0, therm_perturb_z0, therm_perturb_dT, therm_perturb_rad,
+  double therm_perturb_x0, therm_perturb_z0, therm_perturb_dT, therm_perturb_rad_x, therm_perturb_rad_z,
           cooling_duration;
   // For rheological database...
   int      force_act_vol_ast, force_melt_weak;

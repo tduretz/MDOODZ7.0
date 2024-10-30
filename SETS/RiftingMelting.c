@@ -4,6 +4,35 @@
 #include "stdlib.h"
 #include "stdio.h"
 
+int SetPhase(MdoodzInput *input, Coordinates coordinates) {
+  const double basin_width           = 30.0e3 / input->scaling.L;
+  const double h_pert                = input->model.user3 / input->scaling.L;
+  const double lithosphereThickness  = input->model.user1 / input->scaling.L;
+  const double crustThickness        = input->model.user2 / input->scaling.L;
+  const double perturbationAmplitude = input->model.user3 / input->scaling.L;
+  const double x                     = coordinates.x;// - input->model.user4 / input->scaling.L;
+  const double mohoLevel             = -crustThickness + 0*h_pert * exp( - (x*x) / (2.0*basin_width*basin_width)   );
+  const double w                     = input->model.user5 / input->scaling.L;
+  const double h_LAB                 = 0.0e3 / input->scaling.L;
+  const double LABLevel              = -lithosphereThickness + h_LAB * exp( -(x*x) / (2.0*w*w)   );
+  const bool   isBelowLithosphere    = coordinates.z < LABLevel;
+  const bool   isAboveMoho           = coordinates.z > mohoLevel;
+  const bool   isLowerCrust          = coordinates.z < (mohoLevel + 0.5*crustThickness);
+
+  if (isAboveMoho) {
+    if (isLowerCrust) {
+    return 1;
+    }
+    else {
+    return 0;
+    }
+  } else if (isBelowLithosphere) {
+    return 3;
+  } else {
+    return 2;
+  }
+}
+
 int SetDualPhase(MdoodzInput *input, Coordinates coordinate, int phase) {
     
     int    dual_phase = phase;
@@ -54,35 +83,6 @@ double SetNoise(MdoodzInput *input, Coordinates coordinates, int phase) {
   return  noise * filter_x * filter_z;
 }
 
-int SetPhase(MdoodzInput *input, Coordinates coordinates) {
-  const double basin_width           = 30.0e3 / input->scaling.L;
-  const double h_pert                = input->model.user3 / input->scaling.L;
-  const double lithosphereThickness  = input->model.user1 / input->scaling.L;
-  const double crustThickness        = input->model.user2 / input->scaling.L;
-  const double perturbationAmplitude = input->model.user3 / input->scaling.L;
-  const double x                     = coordinates.x;// - input->model.user4 / input->scaling.L;
-  const double mohoLevel             = -crustThickness + 0*h_pert * exp( - (x*x) / (2.0*basin_width*basin_width)   );
-  const double w                     = input->model.user5 / input->scaling.L;
-  const double h_LAB                 = 10e3 / input->scaling.L;
-  const double LABLevel              = -lithosphereThickness + h_LAB * exp( -(x*x) / (2.0*w*w)   );
-  const bool   isBelowLithosphere    = coordinates.z < LABLevel;
-  const bool   isAboveMoho           = coordinates.z > mohoLevel;
-  const bool   isLowerCrust          = coordinates.z < (mohoLevel + 0.5*crustThickness);
-
-  if (isAboveMoho) {
-    if (isLowerCrust) {
-    return 1;
-    }
-    else {
-    return 0;
-    }
-  } else if (isBelowLithosphere) {
-    return 3;
-  } else {
-    return 2;
-  }
-}
-
 double SetTemperature(MdoodzInput *input, Coordinates coordinates) {
   const double lithosphereThickness = input->model.user1 / input->scaling.L;
   const double surfaceTemperature   = 273.15 / input->scaling.T;
@@ -118,16 +118,16 @@ SetBC SetBCT(MdoodzInput *input, POSITION position, Coordinates coordinates, dou
   SetBC     bc;
   const double surface_temperature =          zeroC  / input->scaling.T;
   const double mantle_temperature  = (1330. + zeroC) / input->scaling.T;
-  const double qz0 =  -48e-3 / (input->scaling.W/pow(input->scaling.L,2));
+  const double qz0 =  -18e-3 / (input->scaling.W/pow(input->scaling.L,2));
   const double qz1 =   input->model.user6  / (input->scaling.W/pow(input->scaling.L,2));
   const double w   =   input->model.user5 /input->scaling.L; 
   const double qz  = qz0 + qz1 * exp( -(coordinates.x*coordinates.x)/(2*w*w) );
   // printf("%2.2e %2.2e\n", coordinates.x, qz*(input->scaling.W/pow(input->scaling.L,2)));
   if (position == S) {
-    // bc.type  = constant_temperature;
-    // bc.value = particleTemperature;
-    bc.type  = constant_heatflux;
-    bc.value = qz;
+    bc.type  = constant_temperature;
+    bc.value = particleTemperature;
+    // bc.type  = constant_heatflux;
+    // bc.value = qz;
   }
   if (position == free_surface || position == N) {
     bc.type  = constant_temperature;
