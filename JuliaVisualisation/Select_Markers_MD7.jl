@@ -134,18 +134,27 @@ function main()
     deleteat!(idx_markers, idx_delete)
 
     # Select markers and parameters for tracking
-    IDs    = idx_markers[1]
-    params = ("T [K]", "P [Pa]", "ph [Int]", "t [s]")
+    IDs    = idx_markers[1:10]
+    params = ("T [K]", "P [Pa]", "ph [Int]", "t [s]", "x [m]", "z [m]")
     store_types = Dict(
         "Time steps" => cld((file_end - file_start), file_step) + 1,
+        "Markers"    => size(IDs, 1)
     )
-    store_key = "Time steps"
+    store_key = "Markers"
 
     # Initialize storage arrays
-    data    = zeros(Float64, store_types[store_key], size(params, 1))
-    Tm_vec  = Float64[]
-    Pm_vec  = Float64[]
-    phm_vec = Int64[]
+    data = if store_key == "Time steps"
+        zeros(Float64, store_types[store_key], size(params, 1))
+    elseif store_key == "Markers"
+        (
+            [Vector{Float64}(undef, store_types["Time steps"]) for _ in eachindex(IDs)],
+            [Vector{Float64}(undef, store_types["Time steps"]) for _ in eachindex(IDs)],
+            [0                                                 for _ in eachindex(IDs)],
+            [Vector{Float64}(undef, store_types["Time steps"]) for _ in eachindex(IDs)],
+            [Vector{Float64}(undef, store_types["Time steps"]) for _ in eachindex(IDs)],
+            [Vector{Float64}(undef, store_types["Time steps"]) for _ in eachindex(IDs)]
+        )
+    end
 
     # Time loop
     ts_counter = 0
@@ -195,12 +204,20 @@ function main()
             data[ts_counter, 2] = Pm[IDs]
             data[ts_counter, 3] = phm[IDs]
             data[ts_counter, 4] = model[1]
+        elseif store_key == "Markers"
+            [data[1][Idx][ts_counter] = Tm[IDs[Idx]]  for Idx in eachindex(IDs)]
+            [data[2][Idx][ts_counter] = Pm[IDs[Idx]]  for Idx in eachindex(IDs)]
+            [data[3][Idx]             = phm[IDs[Idx]] for Idx in eachindex(IDs)]
+            [data[4][Idx][ts_counter] = model[1]      for Idx in eachindex(IDs)]
+            [data[5][Idx][ts_counter] = xm[IDs[Idx]]  for Idx in eachindex(IDs)]
+            [data[6][Idx][ts_counter] = zm[IDs[Idx]]  for Idx in eachindex(IDs)]
+        end
 
-            if istep == file_end
-                df = DataFrame(data, collect(params))
-                @show df
-                CSV.write("$(path)MarkerData.csv", df)
-            end
+        if istep == file_end
+            df = DataFrame()
+            [df[!, param] = data[idx] for (idx, param) in enumerate(params)]
+            @show df
+            CSV.write("$(path)MarkerData.csv", df)
         end
 
         t      = model[1]
