@@ -1,10 +1,10 @@
 /**** RESTART ****/
-istep = 06000
+istep = 2500
 irestart = 0
 
 /**** OUTPUT FILES ****/
 writer = 1
-writer_step = 50
+writer_step = 10
 writer_markers = 0
 writer_debug   = 0 
 
@@ -15,12 +15,12 @@ V   = 1.5e-8     /velocity
 T   = 1.e+02     /temperature
  
 /**** SPACE-TIME ****/
-Nx             = 911
-Nz             = 501 
-Nt             = 0
+Nx             = 611
+Nz             = 301 
+Nt             = 3000
 xmin           = -200.000000e3
 xmax           =  200.000000e3
-zmin           = -160.000000e3
+zmin           = -120.000000e3
 zmax           = 10.000000e3 
 dt             = 1.2623e+11
 Courant        = 0.3
@@ -69,11 +69,12 @@ force_melt_weak = 1
 melt_weak       = 30.
 min_eta         = 1e17
 
-therm_perturb     = 1
-therm_perturb_dT  = 100.0
-therm_perturb_x0  = 0.
-therm_perturb_z0  = -40e3
-therm_perturb_rad = -5e3
+therm_perturb       = 1
+therm_perturb_dT    = 300.0
+therm_perturb_x0    = 10e3
+therm_perturb_z0    = -40e3
+therm_perturb_rad_x = -50e3
+therm_perturb_rad_z = -3e3
 
 /**** GRAVITY ****/
 gx = 0.0000
@@ -158,6 +159,9 @@ cohe          = 1e6
 plss          = 0.5
 plse          = 1.5
 eta_vp        = 2.5e20
+/transmutation = 1
+/transmutation_temperature = 1573
+/transmutation_phase = 3
 
 ID   = 3
 melt          = 41
@@ -183,6 +187,9 @@ Ce            = 1e6
 plss          = 0.5
 plse          = 1.5
 eta_vp        = 2.5e20
+/transmutation = -1
+/transmutation_temperature = 1573
+/transmutation_phase = 2
 
 /**** DEFMAPS ****/
 nT    =    200      / Temperature resolution []
