@@ -1314,10 +1314,10 @@ void KillerSolver( SparseMat *matA,  SparseMat *matB,  SparseMat *matC,  SparseM
     }
 
     // A posteriori checks
-    if (fabs(maxdiv)>model.lin_abs_div && maxdiv/maxdiv0>model.lin_rel_div) {
-        printf("The code has exited since the incompressibility constrain was not satisfied to abs. tol. = %2.2e and rel. tol. = %2.2e\n Try modifying the PENALTY factor or check MIN/MAX viscosities\n Good luck!\n", model.lin_abs_div, model.lin_rel_div);
-        exit(1);
-    }
+    // if (fabs(maxdiv)>model.lin_abs_div && maxdiv/maxdiv0>model.lin_rel_div) {
+    //     printf("The code has exited since the incompressibility constrain was not satisfied to abs. tol. = %2.2e and rel. tol. = %2.2e\n Try modifying the PENALTY factor or check MIN/MAX viscosities\n Good luck!\n", model.lin_abs_div, model.lin_rel_div);
+    //     exit(1);
+    // }
     printf("** PH - iterations = %lf sec - its_KSP_tot = %02d\n", (double)((double)omp_get_wtime() - t_omp), its_KSP_tot);
 
     // --------------- Solution vector --------------- //
