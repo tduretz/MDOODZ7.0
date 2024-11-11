@@ -22,10 +22,7 @@ end
 function AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, Fab, height, Lc, cm_y, group_phases, Δ)
     if PlotOnTop.T_contours 
         contour!(ax1, coords.c.x./Lc, coords.c.z./Lc, T, levels=0:200:1400, linewidth = 4, color=:black )  
-    end 
-    # if PlotOnTop.T_contours 
-    #     contour!(ax1, coords.c.x./Lc, coords.c.z./Lc, T, levels=1300:1:1300, linewidth = 4, color=:black )  
-    # end 
+    end  
     if PlotOnTop.ph_contours 
         contour!(ax1, coords.c_hr.x./Lc, coords.c_hr.z./Lc, group_phases, levels=-1:1:maximum(group_phases), linewidth = 4, color=:white )  
     end
@@ -42,7 +39,7 @@ function AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, Fab, height,
         lines!(ax1, xv./Lc, height./Lc)
     end
     if PlotOnTop.ϕ_contours 
-        contour!(ax1, coords.c.x./Lc, coords.c.z./Lc, ϕ, levels=0:1:0.5, linewidth = 5, color=:white, linestyle= :dashdot )  
+        contour!(ax1, coords.c.x./Lc, coords.c.z./Lc, ϕ, levels=0:1:0.1, linewidth = 6, color=:white, linestyle= :dashdot )  
     end 
 end
 
@@ -56,9 +53,9 @@ end
     # path = "/Users/lcandiot/Developer/MDOODZ7.0/cmake-exec/RiftingChenin/"
 
     # File numbers
-    file_start = 1900
-    file_step  = 20
-    file_end   = 1900
+    file_start = 1
+    file_step  = 10
+    file_end   = 1
 
     # Select field to visualise
     field = :Phases
@@ -71,7 +68,7 @@ end
     # field = :Pressure
     # field = :Divergence
     # field = :Temperature
-    # field = :Velocity_x
+    field = :Velocity_x
     # field = :Velocity_z
     # field = :Velocity
     # field = :GrainSize
@@ -85,14 +82,14 @@ end
 
     # Define Tuple for enlargment window
     # zoom = ( 
-    #     xmin = -50.e3, 
-    #     xmax = 50.e3,
-    #     zmin = -100.e3,
-    #     zmax = 20.e3,
+    #     xmin = -100.e3, 
+    #     xmax = 140.e3,
+    #     zmin = -80.e3,
+    #     zmax = 5.e3,
     # )
 
     # Switches
-    printfig    = false  # print figures to disk
+    printfig    = true  # print figures to disk
     printvid    = false
     framerate   = 6
     PlotOnTop = (
@@ -102,14 +99,14 @@ end
         topo        = false,
         σ1_axis     = false,
         vel_vec     = false,
-        ϕ_contours  = false,
+        ϕ_contours  = true,
     )
     α_heatmap   = 1.0 #0.85   # transparency of heatmap 
     vel_arrow   = 5
     vel_scale   = 10000
     vel_step    = 10
     nap         = 0.1    # pause for animation 
-    resol       = 1000
+    resol       = 500
     mov_name    = "$(path)/_$(field)/$(field)"  # Name of the movie
     Lx, Lz      = 1.0, 1.0
 
@@ -127,7 +124,7 @@ end
     cm_yr = 100.0*3600.0*24.0*365.25
 
     # Time loop
-    f = Figure(size = (Lx/Lz*resol*1.2, resol), fontsize=25)
+    f = Figure(size = (Lx/Lz*resol*1.2, resol), fontsize=40)
 
     for istep=file_start:file_step:file_end
     
@@ -210,6 +207,11 @@ end
         C     = Float64.(reshape(ExtractData( filename, "/Centers/cohesion"), ncx, ncz))
         ϕ     = ExtractField(filename, "/Centers/phi", centroids, false, 0)
         divu  = ExtractField(filename, "/Centers/divu", centroids, false, 0)
+        T_hr  = zeros(size(ph_hr)); T_hr[1:2:end-1,1:2:end-1] .= T; T_hr[2:2:end-0,2:2:end-0] .= T
+        ph_hr[(ph_hr.==2 .|| ph_hr.==3) .&& T_hr.<1250] .= 2
+        ph_hr[(ph_hr.==2 .|| ph_hr.==3) .&& T_hr.>1250] .= 3
+        ph_dual_hr[(ph_dual_hr.==2 .|| ph_dual_hr.==3) .&& T_hr.<1250] .= 2
+        ph_dual_hr[(ph_dual_hr.==2 .|| ph_dual_hr.==3) .&& T_hr.>1250] .= 3
 
         Fab = 0.
         if PlotOnTop.fabric
