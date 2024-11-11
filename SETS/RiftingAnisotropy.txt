@@ -85,8 +85,12 @@ Nz_part  = 4
 min_part_cell = 16
 
 /**** NON-LINEAR ITERATIONS ****/
-Newton         = 0
-nit_max        = 1 // for high resolution use from 10 to 20
+Newton         = 1
+nit_max        = 15 // for high resolution use from 10 to 20
+Picard2Newton     = 1
+Picard2Newton_tol = 1e-2
+max_Pic_its       = 10
+preconditioner    = 0
 line_search    = 1
 nonlin_abs_mom = 5.0e-8
 nonlin_abs_div = 5.0e-8
