@@ -689,7 +689,8 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                     }
                 }
                 // Limit number of PH iters: inexact solve 
-                input.model.max_its_PH = (1 + Nmodel.nit > max_its_PH) ? max_its_PH : 1 + Nmodel.nit;
+                input.model.max_its_PH = max_its_PH;
+                // input.model.max_its_PH = (1 + Nmodel.nit > max_its_PH) ? max_its_PH : 1 + Nmodel.nit;
 
                 // Determine whether Jacobian matrix should be assembled
                 if (input.model.Newton == 1 || input.model.anisotropy == 1) IsJacobianUsed = 1;

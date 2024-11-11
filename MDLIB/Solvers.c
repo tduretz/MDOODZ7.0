@@ -1302,7 +1302,7 @@ void KillerSolver( SparseMat *matA,  SparseMat *matB,  SparseMat *matC,  SparseM
         // Residual P 
         copy_cholmod_dense_to_cholmod_dense( fp, bp );          // fp = bp
         cholmod_sdmult(  CcmJ, 0, mone, one, du, fp, &c );      // fp -= C*u
-        cholmod_sdmult( D1cm0, 0, mone, one, dp, fp, &c );      // fp -= D*p
+        // cholmod_sdmult( D1cm0, 0, mone, one, dp, fp, &c );      // fp -= D*p
 
         // Check: Stopping criteria
         MinMaxArrayVal( fp->x, matC->neq, &mindiv, &maxdiv );
@@ -1314,10 +1314,10 @@ void KillerSolver( SparseMat *matA,  SparseMat *matB,  SparseMat *matC,  SparseM
     }
 
     // A posteriori checks
-    // if (fabs(maxdiv)>model.lin_abs_div && maxdiv/maxdiv0>model.lin_rel_div) {
-    //     printf("The code has exited since the incompressibility constrain was not satisfied to abs. tol. = %2.2e and rel. tol. = %2.2e\n Try modifying the PENALTY factor or check MIN/MAX viscosities\n Good luck!\n", model.lin_abs_div, model.lin_rel_div);
-    //     exit(1);
-    // }
+    if (fabs(maxdiv)>model.lin_abs_div && maxdiv/maxdiv0>model.lin_rel_div) {
+        printf("The code has exited since the incompressibility constrain was not satisfied to abs. tol. = %2.2e and rel. tol. = %2.2e\n Try modifying the PENALTY factor or check MIN/MAX viscosities\n Good luck!\n", model.lin_abs_div, model.lin_rel_div);
+        exit(1);
+    }
     printf("** PH - iterations = %lf sec - its_KSP_tot = %02d\n", (double)((double)omp_get_wtime() - t_omp), its_KSP_tot);
 
     // --------------- Solution vector --------------- //
