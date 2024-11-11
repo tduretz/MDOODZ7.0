@@ -1103,7 +1103,7 @@ Input ReadInputFile( char *fileName ) {
     Nmodel.Picard2Newton_tol = ReadDou2( fin, "Picard2Newton_tol",  1e-1 ); // Condition for switching based on residual magnitude
     Nmodel.max_its_Pic       = ReadInt2( fin, "max_its_Pic",          10 ); // Condition for switching based on number of Picard iterations
     Nmodel.let_res_grow      = ReadInt2( fin, "let_res_grow",          0 ); // Allows residual to grow 
-    model.max_its_KSP        = ReadInt2( fin, "max_its_KSP",          40 ); // Condition for switching based on number of Picard iterations
+    model.max_its_KSP        = ReadInt2( fin, "max_its_KSP",         100 ); // Condition for switching based on number of Picard iterations
     model.rel_tol_KSP        = ReadDou2( fin, "rel_tol_KSP",        1e-4 ); // Relative tolerance for inner Krylov solver
     Nmodel.nonlin_abs_mom    = ReadDou2( fin, "nonlin_abs_mom",   1.0e-6 ); // Tolerance for non-linear mechanical solver
     Nmodel.nonlin_abs_div    = ReadDou2( fin, "nonlin_abs_div",   1.0e-6 ); // Tolerance for non-linear mechanical solver

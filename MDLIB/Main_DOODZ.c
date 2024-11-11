@@ -49,6 +49,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
     Input inputFile   = ReadInputFile(inputFileName);
     char *BaseOutputFileName, *BaseParticleFileName;
+    int max_its_PH = 20;
     asprintf(&BaseOutputFileName, "Output");
     asprintf(&BaseParticleFileName, "Particles");
 
@@ -687,6 +688,8 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                         IsNewtonStep = 1;
                     }
                 }
+                // Limit number of PH iters: inexact solve 
+                input.model.max_its_PH = (1 + Nmodel.nit > max_its_PH) ? max_its_PH : 1 + Nmodel.nit;
 
                 // Determine whether Jacobian matrix should be assembled
                 if (input.model.Newton == 1 || input.model.anisotropy == 1) IsJacobianUsed = 1;
@@ -786,7 +789,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                     break;
                 }
 
-                // Direct solve
+                // Direct-iterative solve
                 t_omp = (double)omp_get_wtime();
                 if ( IsJacobianUsed==1 ) SolveStokesDefectDecoupled( &StokesA, &StokesB, &StokesC, &StokesD, &Stokes, &CholmodSolver, &Nmodel, &mesh, &input.model, &particles, &topo_chain, &topo, input.materials, input.scaling,  &JacobA,  &JacobB,  &JacobC );
                 else                     SolveStokesDefectDecoupled( &StokesA, &StokesB, &StokesC, &StokesD, &Stokes, &CholmodSolver, &Nmodel, &mesh, &input.model, &particles, &topo_chain, &topo, input.materials, input.scaling, &StokesA, &StokesB, &StokesC );
