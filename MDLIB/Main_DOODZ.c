@@ -676,7 +676,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
                 if ( Nmodel.nit > 0 && Nmodel.Picard2Newton == 1 ) {
                     printf("input.model.Newton = %d --- %d\n", input.model.Newton, Nmodel.rp_rel[Nmodel.nit-1] < Nmodel.Picard2Newton_tol);
-                    if (Nmodel.rx_rel[Nmodel.nit-1] < Nmodel.Picard2Newton_tol || Nmodel.rz_rel[Nmodel.nit-1] < Nmodel.Picard2Newton_tol || Nmodel.rp_rel[Nmodel.nit-1] < Nmodel.Picard2Newton_tol || Nmodel.nit>= Nmodel.max_Pic_its) {
+                    if (Nmodel.rx_rel[Nmodel.nit-1] < Nmodel.Picard2Newton_tol || Nmodel.rz_rel[Nmodel.nit-1] < Nmodel.Picard2Newton_tol || Nmodel.rp_rel[Nmodel.nit-1] < Nmodel.Picard2Newton_tol || Nmodel.nit>= Nmodel.max_its_Pic) {
                         if ( IsFirstNewtonStep == 0 ) CholmodSolver.Analyze = 0;
                         if ( IsFirstNewtonStep == 1 ) {
                             cholmod_free_factor ( &CholmodSolver.Lfact, &CholmodSolver.c);

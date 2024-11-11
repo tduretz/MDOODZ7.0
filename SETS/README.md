@@ -88,11 +88,12 @@
 - `nit_max`: Maximum number of iterations. Default: 1
 - `Picard2Newton`: Switch from Picard to Newton. iterations. Default: 0
 - `Picard2Newton_tol`: Condition for switching based on residual magnitude. Default: 1e-1
-- `max_Pic_its`: Condition for switching based on number of Picard iterations. Default: 10
+- `max_its_Pic`: Condition for switching based on number of Picard iterations. Default: 10
 - `line_search`: Activates line search. Default: 0
 - `line_search_min`: Minimum alpha value for line search. Default: 0.0
 - `let_res_grow`: Allows residual to grow. Default: 0
 - `rel_tol_KSP`: Relative tolerance for inner Krylov solver. Default: 1e-4
+- `max_its_KSP`: Maximum number of inner Krylov solver. Default: 40
 - `nonlin_abs_mom`: Tolerance for non-linear mechanical solver. Default: 1e-6
 - `nonlin_abs_div`: Tolerance for non-linear mechanical solver. Default: 1e-6
 - `nonlin_rel_mom`: Tolerance for non-linear mechanical solver. Default: 1e-6
