@@ -51,11 +51,12 @@ end
     path="/home/larafriedrichs/repositories/MDOODZ7.0/runs/firstmodel/"
     path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/"#RiftingMelting00_HR/"
     # path = "/Users/lcandiot/Developer/MDOODZ7.0/cmake-exec/RiftingChenin/"
+    path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/RiftingAnisotropy/ref_d4_LR/"
 
     # File numbers
-    file_start = 1
+    file_start = 0
     file_step  = 10
-    file_end   = 1
+    file_end   = 300
 
     # Select field to visualise
     field = :Phases
@@ -68,7 +69,7 @@ end
     # field = :Pressure
     # field = :Divergence
     # field = :Temperature
-    field = :Velocity_x
+    # field = :Velocity_x
     # field = :Velocity_z
     # field = :Velocity
     # field = :GrainSize
@@ -89,26 +90,28 @@ end
     # )
 
     # Switches
-    printfig    = true  # print figures to disk
+    printfig    = false  # print figures to disk
     printvid    = false
     framerate   = 6
     PlotOnTop = (
         ph_contours = false,  # add phase contours
-        fabric      = false,  # add fabric quiver (normal to director)
+        fabric      = true,  # add fabric quiver (normal to director)
         T_contours  = true,   # add temperature contours
         topo        = false,
         σ1_axis     = false,
         vel_vec     = false,
         ϕ_contours  = true,
     )
-    α_heatmap   = 1.0 #0.85   # transparency of heatmap 
+    α_heatmap   = 0.5   # transparency of heatmap 
     vel_arrow   = 5
     vel_scale   = 10000
     vel_step    = 10
     nap         = 0.1    # pause for animation 
-    resol       = 500
+    resol       = 1000
     mov_name    = "$(path)/_$(field)/$(field)"  # Name of the movie
     Lx, Lz      = 1.0, 1.0
+    LAB_color   = true
+    LAB_T       = 1250
 
     # Scaling
     # Lc = 1000.
@@ -208,10 +211,14 @@ end
         ϕ     = ExtractField(filename, "/Centers/phi", centroids, false, 0)
         divu  = ExtractField(filename, "/Centers/divu", centroids, false, 0)
         T_hr  = zeros(size(ph_hr)); T_hr[1:2:end-1,1:2:end-1] .= T; T_hr[2:2:end-0,2:2:end-0] .= T
-        ph_hr[(ph_hr.==2 .|| ph_hr.==3) .&& T_hr.<1250] .= 2
-        ph_hr[(ph_hr.==2 .|| ph_hr.==3) .&& T_hr.>1250] .= 3
-        ph_dual_hr[(ph_dual_hr.==2 .|| ph_dual_hr.==3) .&& T_hr.<1250] .= 2
-        ph_dual_hr[(ph_dual_hr.==2 .|| ph_dual_hr.==3) .&& T_hr.>1250] .= 3
+        if LAB_color
+            ph_hr[(ph_hr.==2 .|| ph_hr.==3) .&& T_hr.<LAB_T] .= 2
+            ph_hr[(ph_hr.==2 .|| ph_hr.==3) .&& T_hr.>LAB_T] .= 3
+            ph_dual_hr[(ph_dual_hr.==2 .|| ph_dual_hr.==3) .&& T_hr.<LAB_T] .= 2
+            ph_dual_hr[(ph_dual_hr.==2 .|| ph_dual_hr.==3) .&& T_hr.>LAB_T] .= 3
+            ph_dual_hr[(ph_dual_hr.==2 .|| ph_dual_hr.==6) .&& T_hr.<LAB_T] .= 2
+            ph_dual_hr[(ph_dual_hr.==2 .|| ph_dual_hr.==6) .&& T_hr.>LAB_T] .= 3
+        end
 
         Fab = 0.
         if PlotOnTop.fabric
