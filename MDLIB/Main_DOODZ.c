@@ -49,7 +49,6 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
     Input inputFile   = ReadInputFile(inputFileName);
     char *BaseOutputFileName, *BaseParticleFileName;
-    int max_its_PH = 20;
     asprintf(&BaseOutputFileName, "Output");
     asprintf(&BaseParticleFileName, "Particles");
 
@@ -231,8 +230,9 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         P2Mastah( &input.model, particles, input.materials.Qr,    &mesh, mesh.Qr, mesh.BCp.type,  0, 0, interp, cent, 1);
 
         SetBCs(*setup->SetBCs, &input, &mesh, &topo);
-        if (input.model.initial_cooling == 1 ) ThermalSteps( &mesh, input.model,  mesh.rhs_t, &particles, input.model.cooling_duration, input.scaling );
-        if (input.model.therm_perturb == 1 ) SetThermalPert( &mesh, input.model, input.scaling );
+        UpdateDensity( &mesh, &particles, &input.materials, &input.model, &input.scaling );
+        if (input.model.initial_cooling == 1 ) ThermalSteps(   &mesh, input.model, mesh.rhs_t, &particles, input.model.cooling_duration, input.scaling );
+        if (input.model.therm_perturb   == 1 ) SetThermalPert( &mesh, input.model, input.scaling );
         Interp_Grid2P_centroids2( particles, particles.T,    &mesh, mesh.T, mesh.xvz_coord,  mesh.zvx_coord,  mesh.Nx-1, mesh.Nz-1, mesh.BCt.type, &input.model );
         ArrayEqualArray( mesh.T0_n, mesh.T, (mesh.Nx-1)*(mesh.Nz-1) );
 
@@ -689,7 +689,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                     }
                 }
                 // Limit number of PH iters: inexact solve 
-                input.model.max_its_PH = max_its_PH;
+                // input.model.max_its_PH = max_its_PH;
                 // input.model.max_its_PH = (1 + Nmodel.nit > max_its_PH) ? max_its_PH : 1 + Nmodel.nit;
 
                 // Determine whether Jacobian matrix should be assembled

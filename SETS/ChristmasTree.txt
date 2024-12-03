@@ -1,5 +1,5 @@
-istep    = 00000
-irestart = 0
+istep    = 001500
+irestart = 1
 
 /**** OUTPUT FILES ****/
 writer         = 1
