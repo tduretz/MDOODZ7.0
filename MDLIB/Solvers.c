@@ -122,7 +122,7 @@ void ArrayTimesArray( double* arr1, int* scalar, double* arr2, int size ) {
 void kspgcr( cholmod_sparse *M, cholmod_dense *b, cholmod_dense *x, cholmod_factor *Lfact, int N, cholmod_common *c, double eps, int noisy, int *its_tot, int max_it) {
     
     // Initialise KSP
-    int restart = 25, cc;//6;
+    int restart = 6, cc;//6;
     int ncycles = 0;
     int its     = 0, i1, i2, success=0;
     double  norm_r, rnorm0, fact, r_dot_v, nrm;

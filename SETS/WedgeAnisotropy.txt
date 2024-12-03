@@ -1,5 +1,5 @@
-istep    = 00000
-irestart = 0
+istep    = 001500
+irestart = 1
 
 /**** OUTPUT FILES ****/
 writer         = 1
@@ -87,9 +87,10 @@ min_part_cell = 16
 /**** NON-LINEAR ITERATIONS ****/
 Newton         = 1
 nit_max        = 15 // for high resolution use from 10 to 20
-max_its_KSP    = 30
-rel_tol_KSP    = 1e-2
-preconditioner = 0
+Picard2Newton     = 1
+Picard2Newton_tol = 1e-2
+max_its_Pic       = 10
+preconditioner    = 0
 line_search    = 1
 nonlin_abs_mom = 5.0e-8
 nonlin_abs_div = 5.0e-8

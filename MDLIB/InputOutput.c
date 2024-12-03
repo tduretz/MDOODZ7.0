@@ -1052,7 +1052,7 @@ Input ReadInputFile( char *fileName ) {
                         .T   = ReadDou2(fin, "T", 1.0),
     };
     ScaleMe( &scaling );
-    double Ga = 1e9*365.25*3600*24/scaling.t;
+    double Ga = 1e9*365.25*3600*24;
 
     // Spatial domain
     model.Nx                 = ReadInt2( fin, "Nx",        10 );            // Number of vertices in x direction
@@ -1096,6 +1096,7 @@ Input ReadInputFile( char *fileName ) {
     model.lin_abs_mom        = ReadDou2( fin, "lin_abs_mom",      1.0e-9 ); // Tolerance for linear mechanical solver
     model.lin_rel_mom        = ReadDou2( fin, "lin_rel_mom",      1.0e-5 ); // Tolerance for linear mechanical solver
     model.lin_solver         = ReadInt2( fin, "lin_solver",            2 ); // 1: Powell-Hestenes, 2: Powell-Hestenes augmented (killer solver) 
+    model.max_its_PH         = ReadInt2( fin, "max_its_PH",           10 ); // Max number of Powell-Hestenes iterations
     // Numerics: non-linear solver
     Nmodel.nit_max           = ReadInt2( fin, "nit_max",               1 ); // Maximum number of iterations
     model.Newton             = ReadInt2( fin, "Newton",                0 ); // Activates Newton iterations
@@ -1145,7 +1146,7 @@ Input ReadInputFile( char *fileName ) {
     model.topo_update        = ReadInt2( fin, "topo_update",           1 ); // 0: total topography update (diffusive); 1: incremental
     // Model configurations
     model.initial_cooling    = ReadInt2( fin, "initial_cooling",       0 ); // Activates initial cooling
-    model.cooling_duration   = ReadDou2( fin, "cooling_duration",     Ga ); // Initial cooling duration
+    model.cooling_duration   = ReadDou2( fin, "cooling_duration",     Ga ) /scaling.t; // Initial cooling duration
     model.shear_heating      = ReadInt2( fin, "shear_heating",         1 ); // Activates shear heating
     model.adiab_heating      = ReadInt2( fin, "adiab_heating",         0 ); // 0: zero, 1: lithostatic P assumption, 2: full derivative
     model.surface_processes  = ReadInt2( fin, "surface_processes",     0 ); // 1: diffusion; 2: diffusion + sedimentation

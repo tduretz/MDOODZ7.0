@@ -1264,8 +1264,8 @@ void PutPartInBox( markers *particles, grid *mesh, params model, surface topo, s
     // The particles are set with regular spacing.
     int i, j, ki, kj, np;
     double dx_particles, dz_particles;
-    int add_noise=model.initial_noise;
-    double noise=0.1, random_x, random_z;
+    int add_noise = model.initial_noise;
+    double noise = 0.1, random_x, random_z;
     
     // Compute the spacing between particles:
     dx_particles = mesh->dx/(double)(particles->Nx_part); // new

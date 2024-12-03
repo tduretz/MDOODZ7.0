@@ -149,7 +149,6 @@ void EnergyDirectSolve( grid *mesh, params model, double *rhs_t, markers *partic
             if ( mesh->BCT_exp.type[c0] != 30 ) {
 
                 // Contribution from transient
-                // printf("mesh->Cp = %2.2e\n", mesh->Cp[c2]*scaling.Cp);
                 rhoCp   = mesh->rho_n[c2]*mesh->Cp[c2];
                 b[eqn]  = transient * rhoCp * mesh->T[c2]/ dt;
 

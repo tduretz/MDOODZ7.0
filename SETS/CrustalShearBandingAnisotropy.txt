@@ -1,9 +1,9 @@
-istep    = 00000
+istep    = 00030
 irestart = 0
 
 /**** OUTPUT FILES ****/
 writer         = 1
-writer_step    = 10
+writer_step    = 5
 writer_markers = 0
 writer_debug   = 0
 
@@ -14,21 +14,22 @@ V   = 1.5e-8      /velocity
 T   = 1.e+02      /temperature
 
 /**** SPACE ****/
-Nx      = 300
-Nz      = 200
-xmin    = -250.000000e3
-xmax    =  250.000000e3
-zmin    = -150.000000e3
-zmax    = 10.000000e3
+Nx      = 200
+Nz      = 100
+xmin    = -40.000000e3
+xmax    =  40.000000e3
+zmin    = -35.000000e3
+zmax    = 5.000000e3
 
 /**** TIME ****/
-Nt          = 2000
+Nt          = 60
 dt          = 1.2623e+11
-Courant     = 0.45
+Courant     = 0.1
 penalty     = 1e2
 constant_dt = 0
 
 /**** SWITCHES ****/
+advection         = 1
 eta_average       = 0
 interp_stencil    = 9
 mechanical        = 1
@@ -36,12 +37,13 @@ RK                = 4
 periodic_x        = 0
 pure_shear_ALE    = -1  /1: box stretched at constant strain rate; -1 box of constant size
 elastic           = 1
+stress_rotation   = 1
+subgrid_diffusion = 2
 thermal           = 1
 isPl_soft         = 0
 free_surface      = 1
 free_surface_stab = 1
 initial_cooling   = 1
-subgrid_diffusion = 2
 shear_heating     = 1
 adiab_heating     = 0
 surface_processes = 1 /0 = none; 1 = diffusion only; 2 = fills instantaneously the basin up to the base level;  3 = diffusion + source term
@@ -57,6 +59,7 @@ reseed_markers    = 1
 
 /**** SETUP DEPENDANT ****/
 marker_noise      = 0
+initial_noise     = 0
 bkg_strain_rate   = -1e-15 /Background strain rate [s-1] => extension rate = 1 cm/yr
 user0             = 3.0e3     /Radius of perturbation [m]
 user1             = 125.0e3   /Initial lithosphere thickness [m]
@@ -72,12 +75,12 @@ force_melt_weak = 1
 melt_weak       = 30.
 min_eta         = 1e17
 
-/therm_perturb       = 1
-/therm_perturb_dT    = 300.0
-/therm_perturb_x0    = 0e3
-/therm_perturb_z0    = -40e3
-/therm_perturb_rad_x = -5e3
-/therm_perturb_rad_z = -3e3
+therm_perturb       = 1
+therm_perturb_dT    = 50.0
+therm_perturb_x0    = 0e3
+therm_perturb_z0    = -20e3
+therm_perturb_rad_x = -5e3
+therm_perturb_rad_z = -3e3
 
 /**** PARTICLES ****/
 Nx_part  = 4
@@ -85,9 +88,10 @@ Nz_part  = 4
 min_part_cell = 16
 
 /**** NON-LINEAR ITERATIONS ****/
-Newton         = 1
-nit_max        = 15 // for high resolution use from 10 to 20
-max_its_KSP    = 30
+Newton         = 0
+nit_max        = 10 // for high resolution use from 10 to 20
+max_its_PH     = 10
+max_its_KSP    = 5
 rel_tol_KSP    = 1e-2
 preconditioner = 0
 line_search    = 1
@@ -96,6 +100,8 @@ nonlin_abs_div = 5.0e-8
 min_eta        = 1.0e17
 max_eta        = 1.0e25
 eta_tol        = 1e-8
+Picard2Newton  = 0
+Picard2Newton_tol  = 1e-1
 
 /**** GRAVITY ****/
 gx = 0.0000
@@ -113,7 +119,7 @@ Cp            = 1050.0
 k             = 2.5
 Qr            = 0.55e-6
 C             = 5.0e7
-phi           = 30.
+phi           = 35.
 eta_vp        = 1e20
 Slim          = 500.0e9
 alp           = 32.0e-6
@@ -151,7 +157,7 @@ Ce            = 1e6
 cohe          = 1e6
 plss          = 0.5
 plse          = 1.5
-aniso_factor  = 4.
+aniso_factor  = 1.
 aniso_angle   = -80.
 
 ID            = 2
@@ -173,7 +179,7 @@ pwlv          = 40
 linv          = 40
 gbsv          = 0
 expv          = 40
-aniso_factor  = 4.
+aniso_factor  = 1.
 aniso_angle   = -80.
 
 ID            = 3
@@ -195,5 +201,5 @@ pwlv          = 40
 linv          = 40
 gbsv          = 0
 expv          = 40
-aniso_factor  = 4.
+aniso_factor  = 1.
 aniso_angle   = -80.
