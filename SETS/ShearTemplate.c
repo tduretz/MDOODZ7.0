@@ -1,5 +1,6 @@
 #include "mdoodz.h"
 #include "stdio.h"
+#include "stdlib.h"
 
 int SetPhase(MdoodzInput *input, Coordinates coordinates) {
   const double radius = input->model.user1 / input->scaling.L;
