@@ -24,7 +24,7 @@ int main(int nargs, char *args[]) {
   // Input file name
   char *input_file;
   if ( nargs < 2 ) {
-    asprintf(&input_file, "ShearTemplate.txt"); // Default
+    asprintf(&input_file, DefaultTextFilename(__FILE__)); // Default
   }
   else {
     asprintf(&input_file, "%s", args[1]);     // Custom

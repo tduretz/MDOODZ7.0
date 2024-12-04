@@ -321,7 +321,7 @@ struct MdoodzInput {
   params             model;
   mat_prop           materials;
   scale              scaling;
-  LateralFlux        *flux;
+  LateralFlux        *flux, *stress;
   CrazyConductivity *crazyConductivity;
   Geometry          *geometry;
 };
@@ -355,5 +355,7 @@ typedef struct {
 
 bool IsEllipseCoordinates(Coordinates coordinates, Ellipse ellipse, double scalingL);
 bool IsRectangleCoordinates(Coordinates coordinates, Rectangle rectangle, double scalingL);
+char           *DefaultTextFilename(char*);
+
 
 #endif

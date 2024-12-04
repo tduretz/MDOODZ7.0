@@ -404,7 +404,7 @@ void InitialiseSolutionFields( grid *mesh, params *model ) {
 
     // Very important step: Set BC's here!!!!!!!
     ApplyBC( mesh, model ); 
-    printf("Velocity field was set to background pure shear\n");
+    printf("Velocity field was set to background shear\n");
 }
 
 
@@ -460,10 +460,63 @@ void ComputeLithostaticPressure( grid *mesh, params *model, double RHO_REF, scal
             
             if ( mesh->BCp.type[c] != 30 && mesh->BCp.type[c] != 31 ) {
                 mesh->p_lith[c] += model->bkg_pressure;
-                mesh->p_lith[c]  += 0.5*model->gz * mesh->dz * rho_eff;
+                mesh->p_lith[c] += 0.5*model->gz * mesh->dz * rho_eff;
             }
         }
     }
+
+    // ---------------------------------------------
+    
+    // Stress boundary conditions: Lithostatic pressure on lateral sides
+    for( l=ncz-2; l>=0; l--) {
+
+        int kW = 0;
+        int kE = nx-2;
+        int c1W = kW + l*(nx-1);
+        int c1E = kE + l*(nx-1);
+
+        // Initialise
+        mesh->sxx_W[l]  = 0.0;
+        mesh->sxx_E[l]  = 0.0;
+
+        // Density
+        double rhoW, rhoE;
+        if ( mode == 0 ) rhoW = rhoE = RHO_REF;
+        if ( mode == 1 ) { 
+            rhoW = 0.5*(mesh->rho_s[kW + l*(nx)] + mesh->rho_s[kW + (l+1)*(nx)]);
+            rhoE = 0.5*(mesh->rho_s[kE + l*(nx)] + mesh->rho_s[kE + (l+1)*(nx)]);
+        }
+
+        // Initialise pressure variables : Compute lithostatic pressure
+        if ( mesh->BCp.type[c1W] != 30 ) mesh->sxx_W[l] = mesh->sxx_W[l+1] -  model->gz * mesh->dz * rhoW;
+        if ( mesh->BCp.type[c1E] != 30 ) mesh->sxx_E[l] = mesh->sxx_E[l+1] -  model->gz * mesh->dz * rhoE;
+    }
+
+    // Add confining pressure
+    for( l=0; l<ncz; l++) { 
+
+        int kW = 0;
+        int kE = nx-2;
+        int c1W = kW + l*(nx-1);
+        int c1E = kE + l*(nx-1);
+
+        // Density
+        double rhoW, rhoE;
+        if ( mode == 0 ) rhoW = rhoE = RHO_REF;
+        if ( mode == 1 ) { 
+            rhoW = 0.5*(mesh->rho_s[kW + l*(nx)] + mesh->rho_s[kW + (l+1)*(nx)]);
+            rhoE = 0.5*(mesh->rho_s[kE + l*(nx)] + mesh->rho_s[kE + (l+1)*(nx)]);
+        }
+
+        // Correction
+        if ( mesh->BCp.type[c1W] != 30 ) mesh->sxx_W[l] += model->bkg_pressure;
+        if ( mesh->BCp.type[c1E] != 30 ) mesh->sxx_E[l] += model->bkg_pressure;
+        if ( mesh->BCp.type[c1W] != 30 ) mesh->sxx_W[l] += 0.5*model->gz * mesh->dz * rhoW;
+        if ( mesh->BCp.type[c1E] != 30 ) mesh->sxx_E[l] += 0.5*model->gz * mesh->dz * rhoE;
+        if ( mesh->BCp.type[c1W] != 30 ) mesh->sxx_W[l] *= -1.;
+        if ( mesh->BCp.type[c1E] != 30 ) mesh->sxx_E[l] *= -1.;
+    }
+
     
     
 //    // + eps
