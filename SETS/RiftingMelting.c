@@ -64,7 +64,6 @@ int SetDualPhase(MdoodzInput *input, Coordinates coordinate, int phase) {
   return dual_phase;
 }
 
-
 double SetSurfaceZCoord(MdoodzInput *input, double x_coord) {
   const double TopoLevel   = -0.0e3 / input->scaling.L;
   const double basin_width = 30.0e3 / input->scaling.L;
