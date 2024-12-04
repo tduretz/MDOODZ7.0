@@ -1747,8 +1747,8 @@ void StrainRateComponents( grid* mesh, scale scaling, params* model ) {
       mesh->div_u[c0] = dvxdx + dvzdz + dvydy;
 
       // Normal strain rates
-      mesh->exxd[c0]  = dvxdx - 1.0/3.0*mesh->div_u[c0];
-      mesh->ezzd[c0]  = dvzdz - 1.0/3.0*mesh->div_u[c0];
+      mesh->exxd[c0]  = dvxdx - model->compressible*1.0/3.0*mesh->div_u[c0]; // SURE? 
+      mesh->ezzd[c0]  = dvzdz - model->compressible*1.0/3.0*mesh->div_u[c0]; // SURE?
     }
   }
 

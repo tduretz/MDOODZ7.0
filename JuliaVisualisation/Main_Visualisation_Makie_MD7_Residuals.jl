@@ -24,7 +24,7 @@ function main()
     path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/"
 
     # File numbers
-    istep = 1
+    istep = 6
 
     # Select field to visualise
     field = :Residual_x

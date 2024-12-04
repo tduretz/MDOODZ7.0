@@ -516,6 +516,12 @@ grid GridAlloc(params *model) {
   mesh.bet_n          = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
   mesh.bet_s          = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double));
 
+  // Stress boundary conditions
+  mesh.sxx_W          = DoodzCalloc((Nz - 1), sizeof(double));
+  mesh.sxx_E          = DoodzCalloc((Nz - 1), sizeof(double));
+  mesh.szz_S          = DoodzCalloc((Nx - 1), sizeof(double));
+  mesh.szz_N          = DoodzCalloc((Nx - 1), sizeof(double));
+
   // Grid indices
   mesh.kvx            = DoodzCalloc(Nx * NzVx, sizeof(int));
   mesh.lvx            = DoodzCalloc(Nx * NzVx, sizeof(int));
@@ -635,6 +641,10 @@ grid GridAlloc(params *model) {
   if (model->anisotropy == 1) Initialise1DArrayDouble(mesh.FS_AR_s, (Nx - 0) * (Nz - 0), 1.0);
   if (model->anisotropy == 1) mesh.aniso_factor_n = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double)); // To delete
   if (model->anisotropy == 1) mesh.aniso_factor_s = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double)); // To delete
+  if (model->anisotropy == 1) {
+    for (int k=0; k<(Nx - 1) * (Nz - 1); k++) mesh.aniso_factor_n[k] = 1.0;
+    for (int k=0; k<(Nx - 0) * (Nz - 0); k++) mesh.aniso_factor_s[k] = 1.0;
+  }
   // Compressibility
   mesh.p0_n    = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
   mesh.p0_s    = DoodzCalloc((Nx) * (Nz), sizeof(double));
@@ -820,6 +830,12 @@ void GridFree(grid *mesh, params *model) {
     DoodzFree(mesh->alp);
     DoodzFree(mesh->bet_n);
     DoodzFree(mesh->bet_s);
+
+    // Stress boundary conditions
+    DoodzFree(mesh->sxx_W);
+    DoodzFree(mesh->sxx_E);
+    DoodzFree(mesh->szz_S);
+    DoodzFree(mesh->szz_N);
 
     // Grid indices
     DoodzFree( mesh->kvx );

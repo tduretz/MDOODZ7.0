@@ -1039,3 +1039,47 @@ bool IsRectangleCoordinates(Coordinates coordinates, Rectangle rectangle, double
 /*--------------------------------------------------------------------------------------------------------------------*/
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
+
+char* DefaultTextFilename( char filename[] ) {
+
+  int n_basename = 0;
+  bool start=false, end=false;
+
+  // Go once reverse through the full file name 
+  for (int k=strlen(filename)-1; k>=0; k--){
+    // Look for slashes
+    if (filename[k] == '\\' || filename[k] == '/') end = true;
+    if (start==true && end==false) {
+      // printf("%c", filename[k]);
+      n_basename++;
+    }
+    // Look for start of file extension
+    if (filename[k] == '.') start = true;
+  }
+  
+  int len_basename = n_basename;
+  // char basename[len_basename];
+  char *basename = calloc(len_basename, sizeof(char));
+  start=false, end=false;
+  n_basename = 0;
+
+  for (int k=strlen(filename)-1; k>=0; k--){
+    // Look for slashes
+    if (filename[k] == '\\' || filename[k] == '/') end = true;
+    if (start==true && end==false) {
+      basename[len_basename-1-n_basename] = filename[k];
+      n_basename++;
+    }
+    // Look for start of file extension
+    if (filename[k] == '.') start = true;
+  }
+
+  strcat(basename, ".txt");
+  printf("%s\n", basename);
+
+  return basename;
+}
+
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/

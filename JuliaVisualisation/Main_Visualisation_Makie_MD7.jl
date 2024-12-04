@@ -65,9 +65,9 @@ end
     # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/RiftingAnisotropy/ref_d4_HR/"
 
     # File numbers
-    file_start = 1500
-    file_step  = 10
-    file_end   = 1500
+    file_start = 1
+    file_step  = 1
+    file_end   = 1
 
     # Select field to visualise
     field = :Phases
@@ -76,10 +76,12 @@ end
     # field = :Viscosity  
     # field = :PlasticStrainrate
     # field = :Stress
+    # field = :σxx
+    field = :σzz
     # field = :StrainRate
     # field = :Pressure
     # field = :Divergence
-    field = :Temperature
+    # field = :Temperature
     # field = :Velocity_x
     # field = :Velocity_z
     # field = :Velocity
@@ -93,32 +95,32 @@ end
     # field = :ChristmasTree
 
     # Define Tuple for enlargment window
-    zoom = ( 
-        xmin = -500, 
-        xmax = 500,
-        zmin = -300,
-        zmax = 5,
-    )
+    # zoom = ( 
+    #     xmin = -500, 
+    #     xmax = 500,
+    #     zmin = -300,
+    #     zmax = 5,
+    # )
 
     # Switches
-    printfig    = true  # print figures to disk
+    printfig    = false  # print figures to disk
     printvid    = false
     framerate   = 12
     PlotOnTop = (
-        ph_contours   = true,  # add phase contours
+        ph_contours   = false,  # add phase contours
         fabric        = false,   # add fabric quiver (normal to director)
-        T_contours    = true,  # add temperature contours
+        T_contours    = false,  # add temperature contours
         topo          = false,
-        quiver_origin = false,
-        σ1_axis       = false,
-        ε̇1_axis       = false,
+        quiver_origin = true,
+        σ1_axis       = true,
+        ε̇1_axis       = true,
         vel_vec       = false,
         ϕ_contours    = false,
         PT_window     = true,
     )
     α_heatmap   = 1.0   # transparency of heatmap 
     vel_arrow   = 5
-    vel_scale   = 50
+    vel_scale   = 0.00001
     vel_step    = 10
     nap         = 0.1    # pause for animation 
     resol       = 500
@@ -132,7 +134,7 @@ end
     # tc = My
     # Vc = 1e-9
 
-    Lc = 1e3
+    Lc = 1
     tc = My
     Vc = 1.0
     τc = 1
@@ -213,6 +215,8 @@ end
         τxx   = Float64.(reshape(ExtractData( filename, "/Centers/sxxd"), ncx, ncz))
         τzz   = Float64.(reshape(ExtractData( filename, "/Centers/szzd"), ncx, ncz))
         τyy   = -(τzz .+ τxx)
+        σzz   = -P + τzz
+        σxx   = -P + τxx
         τxz   = Float64.(reshape(ExtractData( filename, "/Vertices/sxz"), nvx, nvz))
         ε̇xx   = Float64.(reshape(ExtractData( filename, "/Centers/exxd"), ncx, ncz))
         ε̇zz   = Float64.(reshape(ExtractData( filename, "/Centers/ezzd"), ncx, ncz))
@@ -225,10 +229,6 @@ end
         C     = Float64.(reshape(ExtractData( filename, "/Centers/cohesion"), ncx, ncz))
         ϕ     = ExtractField(filename, "/Centers/phi", centroids, false, 0)
         divu  = ExtractField(filename, "/Centers/divu", centroids, false, 0)
-       
-        @show mean(τxx)
-        @show mean(τxzc)
-
        
         T_hr  = zeros(size(ph_hr)); T_hr[1:2:end-1,1:2:end-1] .= T; T_hr[2:2:end-0,2:2:end-0] .= T
         if LAB_color
@@ -346,9 +346,33 @@ end
             if printfig Print2Disk( f, path, string(field), istep) end
         end
 
+        if field==:σxx
+            ax1 = Axis(f[1, 1], title = L"$\sigma_\textrm{xx}$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
+            hm = heatmap!(ax1, xc./Lc, zc./Lc, σxx./τc, colormap = (:turbo, α_heatmap)) 
+            AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, group_phases, Δ)                
+            colsize!(f.layout, 1, Aspect(1, Lx/Lz))
+            Mak.Colorbar(f[1, 2], hm, label = L"$\sigma_\textrm{xx}$ [MPa]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
+            Mak.colgap!(f.layout, 20)
+            xlims!(ax1, window.xmin, window.xmax)
+            ylims!(ax1, window.zmin, window.zmax)
+            if printfig Print2Disk( f, path, string(field), istep) end
+        end
+
+        if field==:σzz
+            ax1 = Axis(f[1, 1], title = L"$\sigma_\textrm{zz}$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
+            hm = heatmap!(ax1, xc./Lc, zc./Lc, σzz./τc, colormap = (:turbo, α_heatmap)) 
+            AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, group_phases, Δ)                
+            colsize!(f.layout, 1, Aspect(1, Lx/Lz))
+            Mak.Colorbar(f[1, 2], hm, label = L"$\sigma_\textrm{zz}$ [MPa]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
+            Mak.colgap!(f.layout, 20)
+            xlims!(ax1, window.xmin, window.xmax)
+            ylims!(ax1, window.zmin, window.zmax)
+            if printfig Print2Disk( f, path, string(field), istep) end
+        end
+
         if field==:Pressure
             ax1 = Axis(f[1, 1], title = L"$P$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
-            hm = heatmap!(ax1, xc./Lc, zc./Lc, P./1e9, colormap = (:turbo, α_heatmap), colorrange=(0,2.5)) #, colorrange=(1,1.2)1e4*365*24*3600
+            hm = heatmap!(ax1, xc./Lc, zc./Lc, P./1e9, colormap = (:turbo, α_heatmap)) #, colorrange=(1,1.2)1e4*365*24*3600
             AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, group_phases, Δ)                
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
             Mak.Colorbar(f[1, 2], hm, label =  L"$P$ [GPa]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
@@ -412,8 +436,9 @@ end
         end
 
         if field==:Velocity_x
+            @show Vx
             ax1 = Axis(f[1, 1], title = L"$Vx$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
-            hm = heatmap!(ax1, xv, zvx[2:end-1], Vx[2:end-1,:]*cm_yr, colormap = (:jet, α_heatmap))#, colorrange=(0., 0.6)
+            hm = heatmap!(ax1, xv, zvx[2:end-1], Vx[2:end-1,:], colormap = (:jet, α_heatmap))#, colorrange=(0., 0.6)
             AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, group_phases, Δ)                
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
             Mak.Colorbar(f[1, 2], hm, label = L"$Vx$ [cm.yr$^{-1}$]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )

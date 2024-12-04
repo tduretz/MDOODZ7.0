@@ -57,14 +57,18 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             .scaling           = inputFile.scaling,
             .materials         = inputFile.materials,
             .crazyConductivity = NULL,
-            .flux       = NULL,
+            .flux              = NULL,
     };
 
     if (input.model.free_surface) {
       input.flux = malloc(sizeof(LateralFlux));
       if (input.flux != NULL) {
         *input.flux = (LateralFlux){.east = -0.0e3, .west = -0.0e3};
-      }
+          }
+        input.stress = malloc(sizeof(LateralFlux));
+        if (input.stress != NULL) {
+            *input.stress = (LateralFlux){.east = -0.0e3, .west = -0.0e3};
+        }
     }
 
     if (setup->MutateInput) {
@@ -622,6 +626,8 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                 printf("Running with normal conductivity for the asthenosphere...\n");
             }
             // Allocate and initialise solution and RHS vectors
+            RheologicalOperators( &mesh, &input.model, &input.materials, &input.scaling, 0, input.model.anisotropy );  // SURE?
+            ApplyBC( &mesh, &input.model ); // SURE?
             SetBCs(*setup->SetBCs, &input, &mesh, &topo);
 
             // Reset fields and BC values if needed
@@ -743,12 +749,12 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                     WriteOutputHDF5Particles( &mesh, &particles, &topo, &topo_chain, &topo_ini, &topo_chain_ini, input.model, "Particles_BeforeSolve", input.materials, input.scaling );
                 }
 
-                // Build discrete system of equations - Linearised Picard withou Newton linearisatio nor anisotripic contributions
+                // Build discrete system of equations - Linearised Picard without Newton linearisation nor anisotropic contributions
                 int kill_aniso = 0, kill_Newton = 0;
                 RheologicalOperators( &mesh, &input.model, &input.materials, &input.scaling, kill_Newton, kill_aniso );
                 BuildStokesOperatorDecoupled  ( &mesh, input.model, 0, mesh.p_corr, mesh.p_in, mesh.u_in, mesh.v_in, &Stokes, &StokesA, &StokesB, &StokesC, &StokesD, 1 );
 
-                // Rheological operators including physical contrbutions from anisotropy
+                // Rheological operators including physical contributions from anisotropy
                 RheologicalOperators( &mesh, &input.model, &input.materials, &input.scaling, 0, input.model.anisotropy );
 
                 // Build discrete system of equations - Jacobian (do it also for densification since drhodp is needed)
