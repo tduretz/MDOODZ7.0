@@ -158,7 +158,7 @@ struct _n_params {
   double  resx0, resz0, resp0;
   double  resx_f, resz_f, resp_f;
   double  vrlx, prlx, trlx;
-  int     Picard2Newton, let_res_grow, max_Pic_its, *LogIsNewtonStep;
+  int     Picard2Newton, let_res_grow, max_its_Pic, *LogIsNewtonStep;
   double  Picard2Newton_tol;
   double *rx_abs, *rz_abs, *rp_abs, *rx_rel, *rz_rel, *rp_rel;
 };
@@ -563,8 +563,8 @@ void            DerivativesOnTheFly_n( double*, double*, double*, double*, doubl
 void            DerivativesOnTheFly_s( double*, double*, double*, double*, double*, double*, double*, double*, int, double, double, double, double, double, double, double, double, double, double, grid*, mat_prop*, params*, scale* );
 void            ViscosityDerivatives(grid *, mat_prop *, params *, scale *);
 void            EffectiveStrainRate( double*, double*, double*, double, double, double, double, double, double, double, double d2, double, double, int );
-double          ViscosityConcise(int, double, double, double, double, double, double, double, double, double, double, double, double, mat_prop *, params *, scale *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double, double, double, double, double, double, double *, double *, double *, double *, double, double, double *, double *, double *, double *, double *, double *, int, int, int);
-double          ViscosityConciseAniso(int, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, mat_prop *, params *, scale *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double, double, double, double, double, double, double *, double *, double *, double *, double, double, double *, double *, double *, double *, double *, double *, int, int, int);
+double          ViscosityConcise(int, double, double, double, double, double, double, double, double, double, double, double, double, mat_prop *, params *, scale *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double, double, double, double, double, double, double *, double *, double *, double *, double, double, double *, double *, double *, double *, double *, double *, int, int, int, int);
+double          ViscosityConciseAniso(int, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, mat_prop *, params *, scale *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double, double, double, double, double, double, double *, double *, double *, double *, double, double, double *, double *, double *, double *, double *, double *, int, int, int, int);
 void            HuetAveragingModel( double *, double *, double *, int, double, double, int, double, double, mat_prop*);
 double          ItpRho1D( double, params*, int );
 double          Interpolate2Ddata( double, double, double, double, double, double, int, int, double* );

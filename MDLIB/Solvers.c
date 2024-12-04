@@ -119,11 +119,10 @@ void ArrayTimesArray( double* arr1, int* scalar, double* arr2, int size ) {
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-void kspgcr( cholmod_sparse *M, cholmod_dense *b, cholmod_dense *x, cholmod_factor *Lfact, int N, cholmod_common *c, double eps, int noisy, int *its_tot) {
+void kspgcr( cholmod_sparse *M, cholmod_dense *b, cholmod_dense *x, cholmod_factor *Lfact, int N, cholmod_common *c, double eps, int noisy, int *its_tot, int max_it) {
     
     // Initialise KSP
-    int restart = 25, cc;//6;
-    int max_it  = 1000;
+    int restart = 6, cc;//6;
     int ncycles = 0;
     int its     = 0, i1, i2, success=0;
     double  norm_r, rnorm0, fact, r_dot_v, nrm;
@@ -1050,7 +1049,7 @@ void KillerSolver( SparseMat *matA,  SparseMat *matB,  SparseMat *matC,  SparseM
     cs_di  AJ, BJ, CJ, *AJc, *BJc, *CJc;
     cs_di  *PC, *Jt, *Jts, *Js;
     DoodzFP  *u0, *p0, *F;
-    int  noisy = 1, preconditioner = model.preconditioner, nitmax = 20, k, cc, i;
+    int  noisy = 1, preconditioner = model.preconditioner, nitmax = model.max_its_PH, k, cc, i;
     double celvol = model.dx*model.dz;
     double maxdiv0, mindiv, maxdiv, maxdivit=0;
 
@@ -1287,7 +1286,7 @@ void KillerSolver( SparseMat *matA,  SparseMat *matB,  SparseMat *matC,  SparseM
         cholmod_sdmult ( BcmJ, 0, mone, one,   pdum, udum, &c);             // udum <-- bu - B*(D*fp) - B*dp          !!!!!!! needed?
 
         // Solve for velocity correction
-        kspgcr( Kcm, udum, du, Lfact, matA->neq, &c, model.rel_tol_KSP, noisy, &its_KSP);
+        kspgcr( Kcm, udum, du, Lfact, matA->neq, &c, model.rel_tol_KSP, noisy, &its_KSP, model.max_its_KSP);
         its_KSP_tot += its_KSP;
 
         // Solve for pressure correction
@@ -1303,7 +1302,7 @@ void KillerSolver( SparseMat *matA,  SparseMat *matB,  SparseMat *matC,  SparseM
         // Residual P 
         copy_cholmod_dense_to_cholmod_dense( fp, bp );          // fp = bp
         cholmod_sdmult(  CcmJ, 0, mone, one, du, fp, &c );      // fp -= C*u
-        cholmod_sdmult( D1cm0, 0, mone, one, dp, fp, &c );      // fp -= D*p
+        // cholmod_sdmult( D1cm0, 0, mone, one, dp, fp, &c );      // fp -= D*p
 
         // Check: Stopping criteria
         MinMaxArrayVal( fp->x, matC->neq, &mindiv, &maxdiv );
@@ -1311,7 +1310,7 @@ void KillerSolver( SparseMat *matA,  SparseMat *matB,  SparseMat *matC,  SparseM
         if (k==0) { maxdiv0 = maxdiv; maxru0 = maxru; }
 
         if ( noisy > 0 ) printf("PH comp it. %01d. its_KSP = %02d: max. cont. = %2.2e - rel. max. div. = %2.2e / max. mom. = %2.2e - rel. max. mom. = %2.2e\n", k, its_KSP, maxdiv, fabs(maxdiv/maxdiv0), maxru, maxru/maxru0);
-        if ( k>1 && (fabs(maxdiv)<model.lin_abs_div || maxdiv/maxdiv0<model.lin_rel_div )  && (fabs(maxru)<model.lin_abs_mom || maxru/maxru0<model.lin_rel_mom ) ) break;
+        if ( k>1 && (fabs(maxdiv)<model.lin_abs_div || maxdiv/maxdiv0<model.lin_rel_div ) && (fabs(maxru)<model.lin_abs_mom || maxru/maxru0<model.lin_rel_mom ) ) break;
     }
 
     // A posteriori checks

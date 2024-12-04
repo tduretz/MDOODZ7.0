@@ -230,8 +230,9 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         P2Mastah( &input.model, particles, input.materials.Qr,    &mesh, mesh.Qr, mesh.BCp.type,  0, 0, interp, cent, 1);
 
         SetBCs(*setup->SetBCs, &input, &mesh, &topo);
-        if (input.model.initial_cooling == 1 ) ThermalSteps( &mesh, input.model,  mesh.rhs_t, &particles, input.model.cooling_duration, input.scaling );
-        if (input.model.therm_perturb == 1 ) SetThermalPert( &mesh, input.model, input.scaling );
+        UpdateDensity( &mesh, &particles, &input.materials, &input.model, &input.scaling );
+        if (input.model.initial_cooling == 1 ) ThermalSteps(   &mesh, input.model, mesh.rhs_t, &particles, input.model.cooling_duration, input.scaling );
+        if (input.model.therm_perturb   == 1 ) SetThermalPert( &mesh, input.model, input.scaling );
         Interp_Grid2P_centroids2( particles, particles.T,    &mesh, mesh.T, mesh.xvz_coord,  mesh.zvx_coord,  mesh.Nx-1, mesh.Nz-1, mesh.BCt.type, &input.model );
         ArrayEqualArray( mesh.T0_n, mesh.T, (mesh.Nx-1)*(mesh.Nz-1) );
 
@@ -676,7 +677,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
                 if ( Nmodel.nit > 0 && Nmodel.Picard2Newton == 1 ) {
                     printf("input.model.Newton = %d --- %d\n", input.model.Newton, Nmodel.rp_rel[Nmodel.nit-1] < Nmodel.Picard2Newton_tol);
-                    if (Nmodel.rx_rel[Nmodel.nit-1] < Nmodel.Picard2Newton_tol || Nmodel.rz_rel[Nmodel.nit-1] < Nmodel.Picard2Newton_tol || Nmodel.rp_rel[Nmodel.nit-1] < Nmodel.Picard2Newton_tol || Nmodel.nit>= Nmodel.max_Pic_its) {
+                    if (Nmodel.rx_rel[Nmodel.nit-1] < Nmodel.Picard2Newton_tol || Nmodel.rz_rel[Nmodel.nit-1] < Nmodel.Picard2Newton_tol || Nmodel.rp_rel[Nmodel.nit-1] < Nmodel.Picard2Newton_tol || Nmodel.nit>= Nmodel.max_its_Pic) {
                         if ( IsFirstNewtonStep == 0 ) CholmodSolver.Analyze = 0;
                         if ( IsFirstNewtonStep == 1 ) {
                             cholmod_free_factor ( &CholmodSolver.Lfact, &CholmodSolver.c);
@@ -687,6 +688,9 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                         IsNewtonStep = 1;
                     }
                 }
+                // Limit number of PH iters: inexact solve 
+                // input.model.max_its_PH = max_its_PH;
+                // input.model.max_its_PH = (1 + Nmodel.nit > max_its_PH) ? max_its_PH : 1 + Nmodel.nit;
 
                 // Determine whether Jacobian matrix should be assembled
                 if (input.model.Newton == 1 || input.model.anisotropy == 1) IsJacobianUsed = 1;
@@ -786,7 +790,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                     break;
                 }
 
-                // Direct solve
+                // Direct-iterative solve
                 t_omp = (double)omp_get_wtime();
                 if ( IsJacobianUsed==1 ) SolveStokesDefectDecoupled( &StokesA, &StokesB, &StokesC, &StokesD, &Stokes, &CholmodSolver, &Nmodel, &mesh, &input.model, &particles, &topo_chain, &topo, input.materials, input.scaling,  &JacobA,  &JacobB,  &JacobC );
                 else                     SolveStokesDefectDecoupled( &StokesA, &StokesB, &StokesC, &StokesD, &Stokes, &CholmodSolver, &Nmodel, &mesh, &input.model, &particles, &topo_chain, &topo, input.materials, input.scaling, &StokesA, &StokesB, &StokesC );
