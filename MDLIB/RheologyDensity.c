@@ -635,7 +635,7 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
     // Check yield stress
     F_trial = Tii - Tyield;
 
-    // if (F_trial>0) printf("F=%2.2e C=%2.2e cos_fric=%2.2e P=%2.2e sin_fric=%2.2e\n", F_trial*scaling->S, C*scaling->S, cos_fric, P*scaling->S, sin_fric);
+    // printf("Tii=%2.2e F=%2.2e C=%2.2e cos_fric=%2.2e P=%2.2e sin_fric=%2.2e\n", Tii*scaling->S, F_trial*scaling->S, C*scaling->S, cos_fric, P*scaling->S, sin_fric);
 
     double Tiic;
     double Pc_chk;

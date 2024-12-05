@@ -90,15 +90,15 @@ SetBC SetBCVx(MdoodzInput *instance, POSITION position, Coordinates coord) {
       bc.type  = 11;
       bc.value =  instance->model.bkg_strain_rate * Lz;
     } else if (position == E) {
-      // bc.type  = -12;
+      // bc.type  = 0;
       // bc.value = 0.0;
-      bc.type  = 0;
+      bc.type  = -12;
       bc.value = 0.0;
     } else if (position == W) {
-      bc.type  = 0;
-      bc.value = 0.0;
-      // bc.type  = -2;
+      // bc.type  = 0;
       // bc.value = 0.0;
+      bc.type  = -2;
+      bc.value = 0.0;
     } else {
       bc.type  = -1;
       bc.value = 0.0;
@@ -111,6 +111,7 @@ SetBC SetBCVz(MdoodzInput *instance, POSITION position, Coordinates coord) {
   SetBC           bc;
   double       x, z;
   double stress = instance->model.user3 / instance->scaling.S;
+  int Szz_BC = (int) instance->model.user2;
   // ----------- Pure shear ----------- //
   if (instance->model.shear_style==0) {
     if (position == N) {
@@ -156,10 +157,10 @@ SetBC SetBCVz(MdoodzInput *instance, POSITION position, Coordinates coord) {
   // ----------- Simple shear ----------- //
   else {
     if ( position == W || position == NW || position == SW) {
-      // bc.type  = -12;
-      // bc.value = 0.0;
-      bc.type  = 13;
+      bc.type  = -12;
       bc.value = 0.0;
+      // bc.type  = 13;
+      // bc.value = 0.0;
       // // Pick a point in the middle
       // if ( (fabs(coord.z)-0.0) < instance->model.dz/2) {
       //   printf("COUCOU z W\n");
@@ -168,21 +169,26 @@ SetBC SetBCVz(MdoodzInput *instance, POSITION position, Coordinates coord) {
       // }
     }
     else if (position == E || position == NE || position == SE) {
-      // bc.type  = -12;
-      // bc.value = 0.0;
-      bc.type  = 13;
+      bc.type  = -12;
       bc.value = 0.0;
+      // bc.type  = 13;
+      // bc.value = 0.0;
     } else if (position == S) {
-      bc.type  = 2;
-      bc.value = stress;
+      bc.type  = 0;
+      bc.value = 0.;
       //  if ( (fabs(coord.x)-0.0) < instance->model.dx/2) {
       //   bc.type  = 2;
       //   bc.value = 1.0;
       // }
     }
       else if (position == N) {
-      bc.type  = 0;
-      bc.value = 0.0;
+        if (Szz_BC==1) {
+          bc.type  = 2;
+          bc.value = stress;
+        } else {
+          bc.type  = 0;
+          bc.value = 0.;
+        }
       // if ( (fabs(coord.x)-0.0) < instance->model.dx/2) {
       //   bc.type  = 2;
       //   bc.value = 1.0;

@@ -1166,11 +1166,11 @@ void KillerSolver( SparseMat *matA,  SparseMat *matB,  SparseMat *matC,  SparseM
     // Matrix multiplication: D*C
     L =  cs_di_multiply( Dc, Cc );
 
-    //    //----- test - in case C' != B (assume B is deficient)
-    //    B1 = cs_di_transpose( Cc, 1);
-    //
+       //----- test - in case C' != B (assume B is deficient)
+    //    B = cs_di_transpose( Cc, 1);
+    
     //    // minus sign: B = -C'
-    //    for (k=0; k<B1->nzmax; k++)  B1->x[k] *= -1.0; // could be implicitly included in the next lines
+    //    for (k=0; k<B->nzmax; k++)  B->x[k] *= -1.0; // could be implicitly included in the next lines
 
     // Matrix multiplication: B*(D*C)
     L1 = cs_di_multiply(  Bc, L);
@@ -1302,7 +1302,7 @@ void KillerSolver( SparseMat *matA,  SparseMat *matB,  SparseMat *matC,  SparseM
         // Residual P 
         copy_cholmod_dense_to_cholmod_dense( fp, bp );          // fp = bp
         cholmod_sdmult(  CcmJ, 0, mone, one, du, fp, &c );      // fp -= C*u
-        // cholmod_sdmult( D1cm0, 0, mone, one, dp, fp, &c );      // fp -= D*p
+        cholmod_sdmult( D1cm0, 0, mone, one, dp, fp, &c );      // fp -= D*p
 
         // Check: Stopping criteria
         MinMaxArrayVal( fp->x, matC->neq, &mindiv, &maxdiv );
