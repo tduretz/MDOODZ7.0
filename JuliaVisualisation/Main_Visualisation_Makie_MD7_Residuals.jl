@@ -2,7 +2,7 @@ import Pkg
 Pkg.activate(normpath(joinpath(@__DIR__, ".")))
 using HDF5, Printf, Colors, ColorSchemes, MathTeXEngine, LinearAlgebra, FFMPEG, Statistics
 using CairoMakie, GLMakie
-Mak = GLMakie
+Mak = CairoMakie
 Makie.update_theme!(fonts = (regular = texfont(), bold = texfont(:bold), italic = texfont(:italic)))
 
 const y    = 365*24*3600
@@ -24,7 +24,7 @@ function main()
     path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/"
 
     # File numbers
-    istep = 6
+    istep = 0
 
     # Select field to visualise
     field = :Residual_x

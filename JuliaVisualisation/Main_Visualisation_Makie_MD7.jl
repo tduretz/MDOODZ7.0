@@ -65,9 +65,9 @@ end
     # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/RiftingAnisotropy/ref_d4_HR/"
 
     # File numbers
-    file_start = 1
+    file_start = 5
     file_step  = 1
-    file_end   = 1
+    file_end   = 5
 
     # Select field to visualise
     field = :Phases
@@ -77,9 +77,9 @@ end
     # field = :PlasticStrainrate
     # field = :Stress
     # field = :σxx
-    field = :σzz
+    # field = :σzz
     # field = :StrainRate
-    # field = :Pressure
+    # field = :Pressure 
     # field = :Divergence
     # field = :Temperature
     # field = :Velocity_x
@@ -87,10 +87,10 @@ end
     # field = :Velocity
     # field = :GrainSize
     # field = :Topography
-    # field = :TimeSeries
+    # field = :TimeSeries 
     # field = :AnisotropyFactor
     # field = :MeltFraction
-    # field = :TimeSeries
+    field = :TimeSeries
     # field = :EffectiveFrictionTime
     # field = :ChristmasTree
 
@@ -372,7 +372,7 @@ end
 
         if field==:Pressure
             ax1 = Axis(f[1, 1], title = L"$P$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
-            hm = heatmap!(ax1, xc./Lc, zc./Lc, P./1e9, colormap = (:turbo, α_heatmap)) #, colorrange=(1,1.2)1e4*365*24*3600
+            hm = heatmap!(ax1, xc./Lc, zc./Lc, P, colormap = (:turbo, α_heatmap)) #, colorrange=(1,1.2)1e4*365*24*3600
             AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, group_phases, Δ)                
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
             Mak.Colorbar(f[1, 2], hm, label =  L"$P$ [GPa]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )

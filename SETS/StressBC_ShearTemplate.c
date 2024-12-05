@@ -165,7 +165,7 @@ SetBC SetBCVz(MdoodzInput *instance, POSITION position, Coordinates coord) {
       // bc.value = 0.0;
     } else if (position == S) {
       bc.type  = 2;
-      bc.value = 1.0;
+      bc.value = -1.0;
       //  if ( (fabs(coord.x)-0.0) < instance->model.dx/2) {
       //   bc.type  = 2;
       //   bc.value = 1.0;
