@@ -212,7 +212,7 @@ end
     # Switches
     PlotOnTop = (
         ph_contours = true,  # add phase contours
-        fabric      = false,  # add fabric quiver (normal to director)
+        fabric      = true,  # add fabric quiver (normal to director)
         T_contours  = false,   # add temperature contours
         topo        = false,
         quiver_origin = false,
@@ -289,16 +289,92 @@ end
     ftsz =  12*options.resol/500
     f = Figure(size = (1.1*Lx/4/Lz*options.resol*1.2, options.resol), fontsize=ftsz)
 
+    # if field==:Phases
+    #     ax1 = Axis(f[1, 1], title = L"Phases at $t$ = %$(tMy) Ma", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
+    #     hm = heatmap!(ax1, xc_hr./Lc, zc_hr./Lc, ph_hr, colormap = phase_colors)
+    #     # hm = heatmap!(ax1, xc_hr./Lc, zc_hr./Lc, ph_hr, colormap = :turbo)
+    #     hm = heatmap!(ax1, xc_hr./Lc, zc_hr./Lc, ph_dual_hr, colormap = :turbo)
+    #     AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, Fab, height, Lc, cm_y, group_phases, Δ)                
+    #     colsize!(f.layout, 1, Aspect(1, Lx/Lz))
+    #     Mak.Colorbar(f[1, 2], hm, label = "Phases", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
+    #     Mak.colgap!(f.layout, 20)
+    #     xlims!(ax1, window.xmin, window.xmax)
+    #     ylims!(ax1, window.zmin, window.zmax)
+    #     if printfig Print2Disk( f, path, string(field), istep) end
+    # end
+
+    # if field==:Viscosity
+    #     ax1 = Axis(f[1, 1], title = L"$\eta$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
+    #     hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(ηc), colormap = (:turbo, α_heatmap))
+    #     AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, Fab, height, Lc, cm_y, group_phases, Δ)                
+    #     colsize!(f.layout, 1, Aspect(1, Lx/Lz))
+    #     Mak.Colorbar(f[1, 2], hm, label = L"$\eta$ [Pa.s]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
+    #     Mak.colgap!(f.layout, 20)
+    #     xlims!(ax1, window.xmin, window.xmax)
+    #     ylims!(ax1, window.zmin, window.zmax)
+    #     if printfig Print2Disk( f, path, string(field), istep) end
+    # end
+
+    # if field==:Density
+    #     ax1 = Axis(f[1, 1], title = L"$\rho$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
+    #     hm = heatmap!(ax1, xc./Lc, zc./Lc, ρc, colormap = (:turbo, α_heatmap), colorrange=(2600, 3000))  
+    #     AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, Fab, height, Lc, cm_y, group_phases, Δ)                
+    #     colsize!(f.layout, 1, Aspect(1, Lx/Lz))
+    #     Mak.Colorbar(f[1, 2], hm, label = L"$\rho$ [kg.m$^{-3}$]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
+    #     Mak.colgap!(f.layout, 20)
+    #     xlims!(ax1, window.xmin, window.xmax)
+    #     ylims!(ax1, window.zmin, window.zmax)
+    #     if printfig Print2Disk( f, path, string(field), istep) end
+    # end
+
+    # if field==:Stress
+    #     ax1 = Axis(f[1, 1], title = L"$\tau_\textrm{II}$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
+    #     hm = heatmap!(ax1, xc./Lc, zc./Lc, τII./1e6, colormap = (:turbo, α_heatmap)) 
+    #     AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, Fab, height, Lc, cm_y, group_phases, Δ)                
+    #     colsize!(f.layout, 1, Aspect(1, Lx/Lz))
+    #     Mak.Colorbar(f[1, 2], hm, label = L"$\tau_\textrm{II}$ [MPa]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
+    #     Mak.colgap!(f.layout, 20)
+    #     xlims!(ax1, window.xmin, window.xmax)
+    #     ylims!(ax1, window.zmin, window.zmax)
+    #     if printfig Print2Disk( f, path, string(field), istep) end
+    # end
+
+    # if field==:Pressure
+    #     ax1 = Axis(f[1, 1], title = L"$P$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
+    #     hm = heatmap!(ax1, xc./Lc, zc./Lc, P./1e9, colormap = (:turbo, α_heatmap)) #, colorrange=(1,1.2)1e4*365*24*3600
+    #     AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, Fab, height, Lc, cm_y, group_phases, Δ)                
+    #     colsize!(f.layout, 1, Aspect(1, Lx/Lz))
+    #     Mak.Colorbar(f[1, 2], hm, label =  L"$P$ [GPa]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
+    #     Mak.colgap!(f.layout, 20)
+    #     xlims!(ax1, window.xmin, window.xmax)
+    #     ylims!(ax1, window.zmin, window.zmax)
+    #     if printfig Print2Disk( f, path, string(field), istep) end
+    # end
+
+    # if field==:Divergence
+    #     ax1 = Axis(f[1, 1], title = L"∇⋅V at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
+    #     hm = heatmap!(ax1, xc./Lc, zc./Lc, divu, colormap = (:turbo, α_heatmap))
+    #     AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, Fab, height, Lc, cm_y, group_phases, Δ)                
+    #     colsize!(f.layout, 1, Aspect(1, Lx/Lz))
+    #     Mak.Colorbar(f[1, 2], hm, label =  L"∇⋅V [s$^{-1}$]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
+    #     Mak.colgap!(f.layout, 20)
+    #     xlims!(ax1, window.xmin, window.xmax)
+    #     ylims!(ax1, window.zmin, window.zmax)
+    #     if printfig Print2Disk( f, path, string(field), istep) end
+    # end
+
     if field==:StrainRate
+
+        cmap = :vik
 
         options = (
             printfig    = false,  # print figures to disk
             printvid    = false,
             framerate   = 6,
-            α_heatmap   = 0.5,   # transparency of heatmap 
+            α_heatmap   = 0.75,   # transparency of heatmap 
             vel_arrow   = 5,
             vel_scale   = 10000,
-            vel_step    = 2,
+            vel_step    = 5,
             nap         = 0.1,    # pause for animation 
             resol       = 1000,
             Lx          = 1.0,
@@ -310,11 +386,12 @@ end
         model = ReadFile(path_LR, step[1], scales, options, PlotOnTop)
         @unpack tMy, length_unit, Lx, Lz, xc, zc, ε̇II, τII, coords, V, T, ϕ, σ1, ε̇1, Fab, height, group_phases, Δ = model
 
-        ax1 = Axis(f[1, 1], title = L"$\dot{\varepsilon}_\textrm{II}$ at $t$ = %$(tMy) Ma - 300 $\times$ 200 cells", ylabel = L"$y$ [%$(length_unit)]")
-        hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(ε̇II), colormap = (:turbo, options.α_heatmap), colorrange=(-17, -13))
+        tMy_string = @sprintf("%1.2lf", tMy)
+        ax1 = Axis(f[1, 1], title = L"A) $\tau_\textrm{II}$ at $t$ = %$(tMy_string) Ma - 300 $\times$ 200 cells", ylabel = L"$y$ [%$(length_unit)]")
+        hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(τII), colormap = (cmap, options.α_heatmap), colorrange=(6.69, 8.69))
         AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, Fab, height, Lc, cm_y, group_phases, Δ/2)                
         colsize!(f.layout, 1, Aspect(1, Lx/Lz))
-        Mak.Colorbar(f[1, 2], hm, label =  L"$\dot{\varepsilon}_\textrm{II}$ [s$^{-1}$]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
+        Mak.Colorbar(f[1, 2], hm, label =  L"$\tau_\textrm{II}$ [Pa]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
         Mak.colgap!(f.layout, 20)
         xlims!(ax1, window.xmin, window.xmax)
         ylims!(ax1, window.zmin, window.zmax)
@@ -331,10 +408,10 @@ end
         printfig    = false,  # print figures to disk
         printvid    = false,
         framerate   = 6,
-        α_heatmap   = 0.5,   # transparency of heatmap 
+        α_heatmap   = 0.75,   # transparency of heatmap 
         vel_arrow   = 5,
         vel_scale   = 10000,
-        vel_step    = 4,
+        vel_step    = 10,
         nap         = 0.1,    # pause for animation 
         resol       = 1000,
         Lx          = 1.0,
@@ -346,11 +423,12 @@ end
         model = ReadFile(path_MR, step[2], scales, options, PlotOnTop)
         @unpack tMy, length_unit, Lx, Lz, xc, zc, ε̇II, τII, coords, V, T, ϕ, σ1, ε̇1, Fab, height, group_phases, Δ = model
         
-        ax1 = Axis(f[2, 1], title = L"$\dot{\varepsilon}_\textrm{II}$ at $t$ = %$(tMy) Ma - 600 $\times$ 400 cells", ylabel = L"$y$ [%$(length_unit)]")
-        hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(ε̇II), colormap = (:turbo, options.α_heatmap), colorrange=(-17, -13))
+        tMy_string = @sprintf("%1.2lf", tMy)
+        ax1 = Axis(f[2, 1], title = L"B) $\tau_\textrm{II}$ at $t$ = %$(tMy_string) Ma - 600 $\times$ 400 cells", ylabel = L"$y$ [%$(length_unit)]")
+        hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(τII), colormap = (cmap, options.α_heatmap), colorrange=(6.69, 8.69))
         AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, Fab, height, Lc, cm_y, group_phases, Δ)                
         colsize!(f.layout, 1, Aspect(1, Lx/Lz))
-        Mak.Colorbar(f[2, 2], hm, label =  L"$\dot{\varepsilon}_\textrm{II}$ [s$^{-1}$]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
+        Mak.Colorbar(f[2, 2], hm, label =  L"$\tau_\textrm{II}$ [Pa]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
         Mak.colgap!(f.layout, 20)
         xlims!(ax1, window.xmin, window.xmax)
         ylims!(ax1, window.zmin, window.zmax)
@@ -368,10 +446,10 @@ end
             printfig    = true,  # print figures to disk
             printvid    = false,
             framerate   = 6,
-            α_heatmap   = 0.5,   # transparency of heatmap 
+            α_heatmap   = 0.75,   # transparency of heatmap 
             vel_arrow   = 5,
             vel_scale   = 10000,
-            vel_step    = 8,
+            vel_step    = 20,
             nap         = 0.1,    # pause for animation 
             resol       = 1000,
             Lx          = 1.0,
@@ -383,11 +461,12 @@ end
         model = ReadFile(path_HR, step[3], scales, options, PlotOnTop)
         @unpack tMy, length_unit, Lx, Lz, xc, zc, ε̇II, coords, V, T, ϕ, σ1, ε̇1, Fab, height, group_phases, Δ = model
         
-        ax1 = Axis(f[3, 1], title = L"$\dot{\varepsilon}_\textrm{II}$ at $t$ = %$(tMy) Ma - 1200 $\times$ 800 cells", xlabel = L"$x$ [%$(length_unit)]", ylabel = L"$y$ [%$(length_unit)]")
-        hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(ε̇II), colormap = (:turbo, options.α_heatmap), colorrange=(-17, -13))
+        tMy_string = @sprintf("%1.2lf", tMy)
+        ax1 = Axis(f[3, 1], title = L"C) $\tau_\textrm{II}$ at $t$ = %$(tMy_string) Ma - 1200 $\times$ 800 cells", xlabel = L"$x$ [%$(length_unit)]", ylabel = L"$y$ [%$(length_unit)]")
+        hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(τII), colormap = (cmap, options.α_heatmap), colorrange=(6.69, 8.69))
         AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, Fab, height, Lc, cm_y, group_phases, Δ*2)                
         colsize!(f.layout, 1, Aspect(1, Lx/Lz))
-        Mak.Colorbar(f[3, 2], hm, label =  L"$\dot{\varepsilon}_\textrm{II}$ [s$^{-1}$]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
+        Mak.Colorbar(f[3, 2], hm, label =  L"$\tau_\textrm{II}$ [Pa]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
         Mak.colgap!(f.layout, 20)
         xlims!(ax1, window.xmin, window.xmax)
         ylims!(ax1, window.zmin, window.zmax)
@@ -400,11 +479,10 @@ end
 
         ##############################################################
     
-        if options.printfig Print2Disk( f, path_HR, string(field), step[3]) end #if printfig Print2Disk( f, path, string(field),ε̇BG) end
+        if options.printfig Print2Disk( f, path_HR, "ResolutionTest", step[3]) end #if printfig Print2Disk( f, path, string(field),ε̇BG) end
     end
 
     display(f)
-
 end
 
 function PrincipalStress(τxx, τzz, τxz, P)

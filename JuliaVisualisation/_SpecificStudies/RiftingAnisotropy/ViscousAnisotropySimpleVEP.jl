@@ -11,8 +11,8 @@ function main_simple_ani_vis()
     ηe         = G*Δt
     ηve        = (1/ηv + 1/ηe)^-1
     C          = 5 
-    nt         = 10
-    
+    nt         = 100
+
     # Kinematics
     pure_shear = 1
     ε̇xxd       = pure_shear*5.0
