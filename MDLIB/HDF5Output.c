@@ -1011,8 +1011,10 @@ void WriteOutputHDF5Particles( grid *mesh, markers *particles, surface *topo, ma
     part_sxxd   = DoodzMalloc( sizeof(float) *Nb_part_viz );
     part_sxz    = DoodzMalloc( sizeof(float) *Nb_part_viz );
     part_index  = DoodzMalloc( sizeof(int) *Nb_part_viz );  // Tracer: allocate
-    part_nx    = DoodzMalloc( sizeof(float) *Nb_part_viz );
-    part_nz    = DoodzMalloc( sizeof(float) *Nb_part_viz );
+    if (model.anisotropy == 1 ) {
+        part_nx    = DoodzMalloc( sizeof(float) *Nb_part_viz );
+        part_nz    = DoodzMalloc( sizeof(float) *Nb_part_viz );
+    }
     
 //    // Tracer: store selected particle
 //    for (k=0; k<particles->Nb_part; k++) {
@@ -1043,8 +1045,8 @@ void WriteOutputHDF5Particles( grid *mesh, markers *particles, surface *topo, ma
         part_sxz[k]   = (float)particles->sxz[ind];
         part_ph[k]    = (char)particles->phase[ind];
         part_gen[k]   = (char)particles->generation[ind];
-        part_nx[k]    = (float)particles->nx[ind];
-        part_nz[k]   = (float)particles->nz[ind];
+        if (model.anisotropy == 1) part_nx[k]    = (float)particles->nx[ind];
+        if (model.anisotropy == 1) part_nz[k]   = (float)particles->nz[ind];
         part_index[k] = k;
         ind += d_part;
     }
@@ -1181,8 +1183,8 @@ void WriteOutputHDF5Particles( grid *mesh, markers *particles, surface *topo, ma
     AddFieldToGroup( FileName, "Particles", "sxxd", 'f', Nb_part_viz, part_sxxd,    1 );
     AddFieldToGroup( FileName, "Particles", "sxz",  'f', Nb_part_viz, part_sxz,    1 );
 
-    AddFieldToGroup( FileName, "Particles", "nx", 'f', Nb_part_viz, part_nx,    1 );
-    AddFieldToGroup( FileName, "Particles", "nz",  'f', Nb_part_viz, part_nz,    1 );
+    if (model.anisotropy == 1) AddFieldToGroup( FileName, "Particles", "nx", 'f', Nb_part_viz, part_nx,    1 );
+    if (model.anisotropy == 1) AddFieldToGroup( FileName, "Particles", "nz",  'f', Nb_part_viz, part_nz,    1 );
 
     if ( model.free_surface == 1 ) {
         AddFieldToGroup( FileName, "Topo", "height" , 'f', (model.Nx), Cheight, 1 );
@@ -1211,8 +1213,8 @@ void WriteOutputHDF5Particles( grid *mesh, markers *particles, surface *topo, ma
     DoodzFree( part_Vx );
     DoodzFree( part_Vz );
     DoodzFree( part_ph );
-    DoodzFree( part_nx );
-    DoodzFree( part_nz );
+    if (model.anisotropy == 1) DoodzFree( part_nx );
+    if (model.anisotropy == 1) DoodzFree( part_nz );
     DoodzFree( part_gen );
     DoodzFree( part_T );
     DoodzFree( part_P );

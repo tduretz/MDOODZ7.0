@@ -1,14 +1,22 @@
 #include "mdoodz.h"
-#include <stdlib.h>
 #include "stdio.h"
-#include <math.h>
+#include "stdlib.h"
+#include "math.h"
+#include "string.h"
 
-int SetPhase(MdoodzInput *input, Coordinates coord) {
-  const double r = input->model.user1 / input->scaling.L;
-  int phase = 0;
-  if ( fabs(coord.x)>0.5 ) phase = 1;
-  if (coord.x * coord.x + coord.z * coord.z < r*r ) phase = 2;
-  return phase;
+double SetSurfaceZCoord(MdoodzInput *instance, double x_coord) {
+  const double TopoLevel = 10 / instance->scaling.L;
+  const double h_pert    = instance->model.user3 / instance->scaling.L;
+  return TopoLevel + 0.0*x_coord;// + h_pert * (3330.0 - 2800.0) / 2800.0 * cos(2 * M_PI * x_coord / (instance->model.xmax - instance->model.xmin));
+}
+
+int SetPhase(MdoodzInput *input, Coordinates coordinates) {
+  const double radius = input->model.user1 / input->scaling.L;
+  if (coordinates.x * coordinates.x + coordinates.z * coordinates.z < radius * radius) {
+    return 1;
+  } else {
+    return 0;
+  }
 }
 
 double SetDensity(MdoodzInput *input, Coordinates coordinates, int phase) {
@@ -18,22 +26,6 @@ double SetDensity(MdoodzInput *input, Coordinates coordinates, int phase) {
   } else {
     return input->materials.rho[phase];
   }
-}
-
-double SetPressure(MdoodzInput *input, Coordinates coordinates, int phase) {
-  return input->model.bkg_pressure;
-}
-
-double SetTxx(MdoodzInput *input, Coordinates coordinates, int phase) {
-  return input->model.preload_sxxd;
-}
-
-double SetTzz(MdoodzInput *input, Coordinates coordinates, int phase) {
-  return input->model.preload_szzd;
-}
-
-double SetTxz(MdoodzInput *input, Coordinates coordinates, int phase) {
-  return input->model.preload_sxz;
 }
 
 
@@ -110,8 +102,6 @@ SetBC SetBCVx(MdoodzInput *instance, POSITION position, Coordinates coord) {
 SetBC SetBCVz(MdoodzInput *instance, POSITION position, Coordinates coord) {
   SetBC           bc;
   double       x, z;
-  double stress = instance->model.user3 / instance->scaling.S;
-  int Szz_BC = (int) instance->model.user2;
   // ----------- Pure shear ----------- //
   if (instance->model.shear_style==0) {
     if (position == N) {
@@ -174,21 +164,16 @@ SetBC SetBCVz(MdoodzInput *instance, POSITION position, Coordinates coord) {
       // bc.type  = 13;
       // bc.value = 0.0;
     } else if (position == S) {
-      bc.type  = 0;
-      bc.value = 0.;
+      bc.type  = 2;
+      bc.value = -1.0;
       //  if ( (fabs(coord.x)-0.0) < instance->model.dx/2) {
       //   bc.type  = 2;
       //   bc.value = 1.0;
       // }
     }
       else if (position == N) {
-        if (Szz_BC==1) {
-          bc.type  = 2;
-          bc.value = stress;
-        } else {
-          bc.type  = 0;
-          bc.value = 0.;
-        }
+      bc.type  = 0;
+      bc.value = 0.0;
       // if ( (fabs(coord.x)-0.0) < instance->model.dx/2) {
       //   bc.type  = 2;
       //   bc.value = 1.0;
@@ -202,26 +187,24 @@ SetBC SetBCVz(MdoodzInput *instance, POSITION position, Coordinates coord) {
   return bc;
 }
 
-
-
 int main(int nargs, char *args[]) {
   // Input file name
   char *input_file;
+
   if ( nargs < 2 ) {
-    asprintf(&input_file, "ShearBoxLaeti.txt"); // Default
+    asprintf(&input_file, DefaultTextFilename(__FILE__)); // Default
   }
   else {
     asprintf(&input_file, "%s", args[1]);     // Custom
   }
   printf("Running MDoodz7.0 using %s\n", input_file);
   MdoodzSetup setup = {
+          .BuildInitialTopography = &(BuildInitialTopography_ff){
+                  .SetSurfaceZCoord = SetSurfaceZCoord,
+          },
           .SetParticles  = &(SetParticles_ff){
                    .SetPhase              = SetPhase,
                    .SetDensity            = SetDensity,
-                   .SetPressure           = SetPressure,
-                   .SetTxx                = SetTxx,
-                   .SetTzz                = SetTzz,
-                   .SetTxz                = SetTxz,
           },
           .SetBCs = &(SetBCs_ff){
                   .SetBCVx = SetBCVx,

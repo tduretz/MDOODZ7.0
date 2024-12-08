@@ -2,7 +2,7 @@ import Pkg
 Pkg.activate(normpath(joinpath(@__DIR__, ".")))
 using HDF5, Printf, Colors, ColorSchemes, MathTeXEngine, LinearAlgebra, FFMPEG, Statistics
 using CairoMakie, GLMakie
-Mak = GLMakie
+Mak = CairoMakie
 Makie.update_theme!(fonts = (regular = texfont(), bold = texfont(:bold), italic = texfont(:italic)))
 
 const y    = 365*24*3600
@@ -17,7 +17,7 @@ function ExtractField(filename, field, size, mask_air, mask)
     mask_air ? field[mask] .= NaN : nothing
     return field
 end 
-`d`
+
 function main()
 
     # Set the path to your files
