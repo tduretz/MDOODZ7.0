@@ -3,17 +3,16 @@ import Statistics:mean
 
 function main_simple_ani_vis()
     # Material parameters
-    δ          = 3.0 
-    a          = sqrt(δ)
+    δ          = 2.0 
     ηv         = 1.0 # normal viscosity
     # Kinematics
     pure_shear = 1
-    ε̇xxd       = pure_shear*5.0
+    ε̇xxd       = pure_shear*.5
     ε̇yyd       = -ε̇xxd
     ε̇xyd       = ((1.0 - pure_shear)*5.0)
     ε̇bg        = sqrt(ε̇xxd^2 + ε̇xyd^2)
     # Arrays
-    θ          = LinRange( 0.0, π/2, 51 ) 
+    θ          = LinRange( 0.0, π, 51 ) 
     τii_cart   = zero(θ)
     τii_cart_MD7 = zero(θ)
     τii_rot1   = zero(θ)
@@ -105,18 +104,37 @@ function main_simple_ani_vis()
     end
 
     f = Figure(size = (500, 500), fontsize=18)
-    ax1 = Axis(f[1, 1], title="Stress invariant", xlabel="θ", ylabel="τᵢᵢ")
-    lines!(ax1, θ*180/π, τii_cart )
-    scatter!(ax1, θ*180/π, τii_cart_MD7 )
-    lines!(ax1, θ*180/π, τii_rot1 )
-    lines!(ax1, θ*180/π, τii_rot2 )
-    lines!(ax1, θ*180/π, τii_cart2 )
-    # scatter!(ax1, θ*180/π, τii_cart, marker=:xcross, markersize=10 )
+    ax1 = Axis(f[1, 1], title=L"$$A) $\tau_{II}$ and stress invariant $\tau_{II}'$", xlabel=L"$\theta$ [$^\circ$]", ylabel=L"$\tau_{II}$, $\tau_{II}'$  [-]")
+    lines!(ax1, θ*180/π, τii_cart, label=L"$\tau_{II}$  $(\delta$=2)$")
+    # scatter!(ax1, θ*180/π, τii_cart_MD7 )
+    lines!(ax1, θ*180/π, τii_rot1, label=L"$\tau_{II}'$ $(\delta$=2)$")
+    # text!(ax1, 50, 0.5; text=L"$\tau_{II} = \tau_{II}' \frac{\sqrt{(\delta^2-1)\cos{(2\theta)} + 1)}}{\delta} $", fontsize=12, rotation=π/2.7)
+
+    tii = 1.0*sqrt.((δ^2-1)*cos.(2*θ).^2 .+ 1)/δ
+    # scatter!(ax1, θ*180/π, tii, )
+
     
-    ax3 = Axis(f[2, 1:2], title="Flow enveloppe", xlabel=L"$τ_{xx}$", ylabel=L"$τ_{xy}$", aspect=DataAspect())
-    lines!(ax3, τxx_cart, τxy_cart, marker=:xcross )
-    scatter!(ax3, τxx_rot, τxy_rot, marker=:xcross )
-    scatter!(ax3, τxx_cart2, τxy_cart2, marker=:xcross )
+    scatter!(ax1, θ[1:5:end]*180/π, τii_rot2[1:5:end], label=L"$\tau_{II}$  $(\delta$=1)$" )
+    # lines!(ax1, θ*180/π, τii_cart2 )
+    # scatter!(ax1, θ*180/π, τii_cart, marker=:xcross, markersize=10 )
+    axislegend(position=:rb)
+
+    ax3 = Axis(f[2, 1], title=L"$$B) Flow enveloppe ($\delta = 2$)", xlabel=L"$\tau_{xx}'$ [-]", ylabel=L"$\tau_{xy}'$ [-]", aspect=DataAspect())
+    lines!(ax3, LinRange(0,1,10), zeros(10), color=:black)
+    text!(ax3, 0.3, 0.05; text=L"$\tau_{xx}' = \tau_{II}'$", fontsize=16)
+    lines!(ax3, zeros(10), LinRange(0,0.5,10), color=:black)
+    text!(ax3, -0.05, 0.0; text=L"$\tau_{xy}' = \frac{\tau_{II}'}{\delta}$", rotation=π/2, fontsize=16)
+
+    a = LinRange(0, 2π, 100)
+    txx = 1*cos.(a)
+    txy = 1*sin.(a)/δ
+
+    # lines!(ax3, τxx_cart, τxy_cart, marker=:xcross )
+    lines!(ax3, τxx_rot, τxy_rot, label=L"$\delta$=2$" )
+    # scatter!(ax3, txx, txy, marker=:xcross )
+
+    save("/Users/tduretz/PowerFolders/_manuscripts/RiftingAnisotropy/Figures/ViscousAnisotropySimple.png", f, px_per_unit = 4) 
+
     
     display(f)
 

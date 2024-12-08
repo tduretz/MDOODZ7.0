@@ -5,8 +5,8 @@ import Statistics:mean
 
 @views function ChrismasTreeAniso()
     # Anisotropy parameters
-    δ    = 3
-    θ    = π/5 #LinRange( 0.0, π, 51 ) .-0* π/2
+    δ    = 2
+    θ    = π/4 #LinRange( 0.0, π, 51 ) .-0* π/2
     # Domain
     ymin       = -150e3
     ymax       = 0.
@@ -41,6 +41,7 @@ import Statistics:mean
     T  = -(qm/k .- ρ.*H0.*hr./k.*exp.(h./hr)).*yc .+ ρ.*H0.*hr^2/k.*(1.0 .- exp.(yc./hr)) .+ T0
     T  .-= minimum(T)
     T  .+= T0
+    T[T.>1350] .= 1350
     # T = 773*ones(ncy)
     # Elasticity
     G          = 3e10
@@ -49,10 +50,10 @@ import Statistics:mean
     # Plasticity
     C          = 5e7
     fric       = 30*π/180
-    dil        = 10*π/180
-    ηvp        = 0.0
+    dil        = 0*π/180
+    ηvp        = 0*1e21
     # Pressure in extension
-    X    = 1 .+ (δ .- 1).*sind.(2*θ) 
+    X    = 1 / (sqrt((δ^2-1)*cos(2*θ)^2 + 1)/Δ, Mak)
     ϕeff = asin(sin(fric) / X)
     @show ϕeff*180/π
     σH = -Pl*(1-sin(ϕeff))/(1+sin(ϕeff))
@@ -150,7 +151,7 @@ import Statistics:mean
                 τyy[ic]         = τ[2]
                 τxy[ic]         = τ[3]
                 ε̇xxd_v = Cpwl[ic] *τii^((npwl[ic] -1))*τxx[ic] 
-                ε̇xyd_v = Cpwl[ic] *τii^((npwl[ic] -1))*(τxy[ic] *δ)
+                ε̇xyd_v = Cpwl[ic] *τii^((npwl[ic] -1))*(τxy[ic] *Δ, Mak)
                 ε̇xxd_e = (τxx[ic] - τ0_rot[1,1])/2/ηe
                 ε̇xyd_e = (τxy[ic] - τ0_rot[1,2])/2/ηe*δ
                 ε̇xxd_p = γ̇*τxxt/τii/2
@@ -187,15 +188,10 @@ import Statistics:mean
                      2.0*ani*d1 2.0-2.0*ani*d1 2.0*ani*d2;
                     -2.0*ani*d2     2.0*ani*d2 1.0  + 2.0*ani*(d1 - 0.5);]
             
-
-
                 E = [ε̇xxd; ε̇yyd; ε̇xyd]
                 τ0 = [τxx0/ηe; τyy0/ηe; τxy0/ηe]
-                Eeff = E + A\τ0
-
-                @show Eeff
-
- 
+                b = A\τ0
+                Eeff = E + b./[1; 1; 2]
 
                 Da11  = 2.0 - 2.0*ani*d1;
                 Da12  = 2.0*ani*d1;
@@ -239,7 +235,7 @@ import Statistics:mean
 
         #####################
 
-        ax2 = Axis(f[1, 1], xlabel = L"$T$ [C]", ylabel = L"$z$ [km]",  xticklabelcolor = :tomato, xaxisposition=:top) # , title = L"$$Pressure profile"
+        ax2 = Axis(f[1, 1], xlabel = L"A) $T$ [$^\circ$C]", ylabel = L"$z$ [km]",  xticklabelcolor = :tomato, xaxisposition=:top) # , title = L"$$Pressure profile"
         ax1 = Axis(f[1, 1], xlabel = L"$P$ [GPa]", xticklabelcolor = :blue,  xaxisposition=:bottom) # , title = L"$$Temperature profile"
         hidespines!(ax2)
         hideydecorations!(ax2)
@@ -252,21 +248,23 @@ import Statistics:mean
         
         #####################
 
-        τii_yield     = P*sin(fric) .+ C#*cos(fric)
-        τii_yield_min = τii_yield * (1 / (1 + (δ-1)*sin(2*θ[i]))) 
+        τii_yield     = P*sin(fric) .+ C*cos(fric)
+        τii_yield_min = τii_yield*sqrt((δ^2-1)*cos(2*θ[i])^2 + 1)/δ
 
-        ax3 = Axis(f[1, 2], title = L"$$Stress profile ($\delta = 3$)", xlabel = L"$τ_\mathrm{II}$ [GPa]")
+        ax3 = Axis(f[1, 2], title = L"B) $$Stress profile ($\delta = 3$)", xlabel = L"$τ_\mathrm{II}$ [GPa]")
         lines!(ax3, τii_rot1./1e9, yc./1e3, label=L"$\sqrt{Y_2^{'}}$", color=:blue )
         xlims!(ax3, 0, .7)
         # lines!(ax3, τii_rot2./1e9, yc./1e3 )
         lines!(ax3, τii_cart1./1e9, yc./1e3, label=L"$\sqrt{J_2}$", color=:tomato )
 
-        lines!(ax3, τii_yield./1e9,     yc./1e3, label=L"$τ_\mathrm{y}$ ($\theta = 0.0$)", linestyle=:dash, color=:blue )
-        lines!(ax3, τii_yield_min./1e9, yc./1e3, label=L"$τ_\mathrm{y}$ ($\theta = π/4$)", linestyle=:dash, color=:tomato )
+        lines!(ax3, τii_yield./1e9,     yc./1e3, label=L"$τ^\mathrm{fric}$ ($\theta = 0.0$)", linestyle=:dash, color=:blue )
+        lines!(ax3, τii_yield_min./1e9, yc./1e3, label=L"$τ^\mathrm{fric}$ ($\theta = π/4$)", linestyle=:dash, color=:tomato )
 
         # lines!(ax3, τii_cart2./1e9, yc./1e3 )
         axislegend(position=:rb)
         display(f)
+
+        save("/Users/tduretz/PowerFolders/_manuscripts/RiftingAnisotropy/Figures/ChristmasTreeAnisotropy.png", f, px_per_unit = 4) 
 
         @show τii_rot1./τii_cart1
 

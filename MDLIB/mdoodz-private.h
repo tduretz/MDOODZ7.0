@@ -129,6 +129,7 @@ typedef struct {
   double *kc_x, *kc_z;
   double *FreeSurfW_s, *FreeSurfW_n;
   double *noise_n, *noise_s;
+  double *sxx_W, *sxx_E, *szz_S, *szz_N;
 } grid;
 
 
