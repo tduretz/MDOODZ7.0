@@ -17,14 +17,14 @@ function ExtractField(filename, field, size, mask_air, mask)
     mask_air ? field[mask] .= NaN : nothing
     return field
 end 
-`d`
+
 function main()
 
     # Set the path to your files
     path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/"
 
     # File numbers
-    istep = 0
+    istep = 1
 
     # Select field to visualise
     field = :Residual_x

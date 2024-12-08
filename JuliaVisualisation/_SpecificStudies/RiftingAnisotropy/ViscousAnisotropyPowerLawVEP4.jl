@@ -130,7 +130,7 @@ function main_simple_ani_vis()
             τyy         = τ[2]
             τxy         = τ[3]
             ε̇xxd_v = Cpwl*τii^((npwl-1))*τxx
-            ε̇xyd_v = Cpwl*τii^((npwl-1))*(τxy*δ)
+            ε̇xyd_v = Cpwl*τii^((npwl-1))*(τxy*Δ, Mak)
             ε̇xxd_e = (τxx-τ0_rot[1,1])/2/ηe
             ε̇xyd_e = (τxy-τ0_rot[1,2])/2/ηe*δ
             ε̇xxd_p = γ̇*τxxt/τii/2

@@ -1,5 +1,6 @@
-import Pkg
-Pkg.activate(normpath(joinpath(@__DIR__, "../..")))
+# import Pkg
+# Pkg.activate(normpath(joinpath(@__DIR__, "../..")))
+using JuliaVisualisation
 using HDF5, Printf, Colors, ColorSchemes, MathTeXEngine, LinearAlgebra, FFMPEG, Statistics, UnPack
 using CairoMakie#, GLMakie
 Mak = CairoMakie
@@ -10,174 +11,15 @@ const y    = 365*24*3600
 const My   = 1e6*y
 const cm_y = y*100.
 
-function ExtractField(filename, field, size, mask_air, mask)
-    field = try (Float64.(reshape(ExtractData( filename, field), size...)))
-    catch 
-        @warn "$field not found"
-    end
-    mask_air ? field[mask] .= NaN : nothing
-    return field
-end 
-
-function AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, Fab, height, Lc, cm_y, group_phases, Δ)
-    if PlotOnTop.quiver_origin
-        xc2D = coords.c.x   .+ 0*coords.c.z'
-        zc2D = 0*coords.c.x .+ coords.c.z'
-        scatter!(ax1, xc2D[1:V.step:end,1:V.step:end][:]./Lc, zc2D[1:V.step:end,1:V.step:end][:]./Lc)
-    end
-    if PlotOnTop.T_contours 
-        contour!(ax1, coords.c.x./Lc, coords.c.z./Lc, T, levels=0:200:1400, linewidth = 4, color=:black )  
-    end  
-    if PlotOnTop.ph_contours 
-        contour!(ax1, coords.c_hr.x./Lc, coords.c_hr.z./Lc, group_phases, levels=-1:1:maximum(group_phases), linewidth = 4, color=:white )  
-    end
-    if PlotOnTop.fabric 
-        arrows!(ax1, coords.c.x[1:V.step:end]./Lc, coords.c.z[1:V.step:end]./Lc, Fab.x[1:V.step:end,1:V.step:end], Fab.z[1:V.step:end,1:V.step:end], arrowsize = 0, lengthscale=10Δ/1.5)
-    end 
-    if PlotOnTop.σ1_axis
-        arrows!(ax1, coords.c.x[1:V.step:end]./Lc, coords.c.z[1:V.step:end]./Lc, σ1.x[1:V.step:end,1:V.step:end], σ1.z[1:V.step:end,1:V.step:end], arrowsize = 0, lengthscale=10Δ/1.5, color=:red)
-    end 
-    if PlotOnTop.ε̇1_axis
-        arrows!(ax1, coords.c.x[1:V.step:end]./Lc, coords.c.z[1:V.step:end]./Lc, ε̇1.x[1:V.step:end,1:V.step:end], ε̇1.z[1:V.step:end,1:V.step:end], arrowsize = 0, lengthscale=10Δ/1.5, color=:black)
-    end  
-    if PlotOnTop.vel_vec
-        arrows!(ax1, coords.c.x[1:V.step:end]./Lc, coords.c.z[1:V.step:end]./Lc, V.x[1:V.step:end,1:V.step:end]*cm_y, V.z[1:V.step:end,1:V.step:end]*cm_y, arrowsize = V.arrow, lengthscale = V.scale)
-    end 
-    if PlotOnTop.topo
-        lines!(ax1, xv./Lc, height./Lc)
-    end
-    if PlotOnTop.ϕ_contours 
-        contour!(ax1, coords.c.x./Lc, coords.c.z./Lc, ϕ, levels=0:1:0.1, linewidth = 6, color=:white, linestyle= :dashdot )  
-    end 
-end
-
-function ReadFile(path, step, scales, options, PlotOnTop)
-
-    name     = @sprintf("Output%05d.gzip.h5", step)
-    @info "Reading $(name)"
-    filename = string(path, name)
-    model    = ExtractData( filename, "/Model/Params")
-    xc       = ExtractData( filename, "/Model/xc_coord")
-    zc       = ExtractData( filename, "/Model/zc_coord")
-    xv       = ExtractData( filename, "/Model/xg_coord")
-    zv       = ExtractData( filename, "/Model/zg_coord")
-    xvz      = ExtractData( filename, "/Model/xvz_coord")
-    zvx      = ExtractData( filename, "/Model/zvx_coord")
-    xv_hr    = ExtractData( filename, "/VizGrid/xviz_hr")
-    zv_hr    = ExtractData( filename, "/VizGrid/zviz_hr")
-    τzz_t    = ExtractData( filename, "TimeSeries/szzd_mean_time")
-    P_t      = ExtractData( filename, "TimeSeries/P_mean_time")
-    τxz_t    = ExtractData( filename, "TimeSeries/sxz_mean_time")
-    t_t      = ExtractData( filename, "TimeSeries/Time_time")
-
-    xc_hr  = 0.5.*(xv_hr[1:end-1] .+ xv_hr[2:end])
-    zc_hr  = 0.5.*(zv_hr[1:end-1] .+ zv_hr[2:end])
-    ncx_hr, ncz_hr = length(xc_hr), length(zc_hr)
-    coords = ( c=(x=xc, z=zc), c_hr=(x=xc_hr, z=zc_hr), v=(x=xv, z=zv))
-
-    t      = model[1]
-    tMy    = round(t/scales.tc, digits=6)
-    nvx    = Int(model[4])
-    nvz    = Int(model[5])
-    ncx, ncz = nvx-1, nvz-1
-    xmin, xmax = xv[1], xv[end]
-    zmin, zmax = zv[1], zv[end]
-    Lx, Lz    = (xmax-xmin)/scales.Lc, (zv[end]-zv[1])/scales.Lc
-    Δx, Δz, Δ = Lx/ncx, Lz/ncz, sqrt( (Lx/ncx)^2 + (Lz/ncz)^2)
-    (xmax-xmin)>1e3 ? length_unit="km" :  length_unit="m"
-
-    @info "Model info"
-    @show "Model apect ratio" Lx/Lz
-    @show "Model time" t/My
-    @show length_unit
-    centroids, vertices = (ncx, ncz), (nvx, nvz)
-
-    ph           = ExtractField(filename,  "/VizGrid/compo", centroids, false, 0)
-    mask_air     = ph .== -1.00 
-    ph_hr        = ExtractField(filename,  "/VizGrid/compo_hr", (ncx_hr, ncz_hr), false, 0)
-    ph_dual_hr   = ExtractField(filename,  "/VizGrid/compo_dual_hr", (ncx_hr, ncz_hr), false, 0)
-    group_phases = copy(ph_hr); ph_hr[ph_hr.==-1.00] .=   NaN; ph_dual_hr[ph_dual_hr.==-1.00] .=   NaN;
-    ηc           = ExtractField(filename,  "/Centers/eta_n", centroids, true, mask_air)
-    ρc    = Float64.(reshape(ExtractData( filename, "/Centers/rho_n"), ncx, ncz));          ρc[mask_air]  .= NaN
-    P     = Float64.(reshape(ExtractData( filename, "/Centers/P"), ncx, ncz));              P[mask_air]   .= NaN
-    T     = Float64.(reshape(ExtractData( filename, "/Centers/T"), ncx, ncz)) .- 273.15;    T[mask_air]   .= NaN
-    d     = Float64.(reshape(ExtractData( filename, "/Centers/d"), ncx, ncz));              d[mask_air]   .= NaN
-    ε̇pl   = Float64.(reshape(ExtractData( filename, "/Centers/eII_pl"), ncx, ncz));         ε̇pl[mask_air] .= NaN
-    Vx    = Float64.(reshape(ExtractData( filename, "/VxNodes/Vx"), (ncx+1), (ncz+2)))
-    Vz    = Float64.(reshape(ExtractData( filename, "/VzNodes/Vz"), (ncx+2), (ncz+1)))
-    τxx   = Float64.(reshape(ExtractData( filename, "/Centers/sxxd"), ncx, ncz))
-    τzz   = Float64.(reshape(ExtractData( filename, "/Centers/szzd"), ncx, ncz))
-    τyy   = -(τzz .+ τxx)
-    τxz   = Float64.(reshape(ExtractData( filename, "/Vertices/sxz"), nvx, nvz))
-    ε̇xx   = Float64.(reshape(ExtractData( filename, "/Centers/exxd"), ncx, ncz))
-    ε̇zz   = Float64.(reshape(ExtractData( filename, "/Centers/ezzd"), ncx, ncz))
-    ε̇yy   = -(ε̇xx .+ ε̇zz)
-    ε̇xz   = Float64.(reshape(ExtractData( filename, "/Vertices/exz"), nvx, nvz))
-    τII   = sqrt.( 0.5*(τxx.^2 .+ τyy.^2 .+ τzz.^2 .+ 0.5*(τxz[1:end-1,1:end-1].^2 .+ τxz[2:end,1:end-1].^2 .+ τxz[1:end-1,2:end].^2 .+ τxz[2:end,2:end].^2 ) ) ); τII[mask_air] .= NaN
-    ε̇II   = sqrt.( 0.5*(ε̇xx.^2 .+ ε̇yy.^2 .+ ε̇zz.^2 .+ 0.5*(ε̇xz[1:end-1,1:end-1].^2 .+ ε̇xz[2:end,1:end-1].^2 .+ ε̇xz[1:end-1,2:end].^2 .+ ε̇xz[2:end,2:end].^2 ) ) ); ε̇II[mask_air] .= NaN
-    τxzc  = 0.25*(τxz[1:end-1,1:end-1] .+ τxz[2:end,1:end-1] .+ τxz[1:end-1,2:end] .+ τxz[2:end,2:end]) 
-    C     = Float64.(reshape(ExtractData( filename, "/Centers/cohesion"), ncx, ncz))
-    ϕ     = ExtractField(filename, "/Centers/phi", centroids, false, 0)
-    divu  = ExtractField(filename, "/Centers/divu", centroids, false, 0)
-    T_hr  = zeros(size(ph_hr)); T_hr[1:2:end-1,1:2:end-1] .= T; T_hr[2:2:end-0,2:2:end-0] .= T
-    if options.LAB_color
-        ph_hr[(ph_hr.==2 .|| ph_hr.==3) .&& T_hr.<options.LAB_T] .= 2
-        ph_hr[(ph_hr.==2 .|| ph_hr.==3) .&& T_hr.>options.LAB_T] .= 3
-        ph_dual_hr[(ph_dual_hr.==2 .|| ph_dual_hr.==3) .&& T_hr.<options.LAB_T] .= 2
-        ph_dual_hr[(ph_dual_hr.==2 .|| ph_dual_hr.==3) .&& T_hr.>options.LAB_T] .= 3
-        ph_dual_hr[(ph_dual_hr.==2 .|| ph_dual_hr.==6) .&& T_hr.<options.LAB_T] .= 2
-        ph_dual_hr[(ph_dual_hr.==2 .|| ph_dual_hr.==6) .&& T_hr.>options.LAB_T] .= 3
-    end
-
-    Fab = 0.
-    if PlotOnTop.fabric
-        δani    = ExtractField(filename, "/Centers/ani_fac", centroids, false, 0)
-        Nx      = Float64.(reshape(ExtractData( filename, "/Centers/nx"), ncx, ncz))
-        Nz      = Float64.(reshape(ExtractData( filename, "/Centers/nz"), ncx, ncz))
-        Fab     = (x=-Nz./Nx, z=ones(size(Nz)))
-        nrm     = sqrt.(Fab.x.^2 .+ Fab.z.^2)
-        Fab.x ./= nrm
-        Fab.z ./= nrm
-    end
-    height = 0.
-    if PlotOnTop.topo
-        height  = Float64.(ExtractData( filename, "/Topo/z_grid")); 
-        Vx_grid = Float64.(ExtractData( filename, "/Topo/Vx_grid"));
-        Vz_grid = Float64.(ExtractData( filename, "/Topo/Vz_grid"));  
-        Vx_mark = Float64.(ExtractData( filename, "/Topo/Vx_mark"));
-        Vz_mark = Float64.(ExtractData( filename, "/Topo/Vz_mark"));
-        x_mark  = Float64.(ExtractData( filename, "/Topo/x_mark"));
-        z_mark  = Float64.(ExtractData( filename, "/Topo/z_mark"));
-    end
-    Vxc   = 0.5 .* (Vx[1:end-1,2:end-1] .+ Vx[2:end-0,2:end-1])
-    Vzc   = 0.5 .* (Vz[2:end-1,1:end-1] .+ Vz[2:end-1,2:end-0])
-    V = (x=Vxc, z=Vzc, arrow=options.vel_arrow, step=options.vel_step, scale=options.vel_scale)
-    σ1, ε̇1 = 0., 0.
-    if PlotOnTop.σ1_axis 
-        σ1 = PrincipalStress(τxx, τzz, τxz, P) 
-    end
-    if PlotOnTop.ε̇1_axis 
-        ε̇1 = PrincipalStress(ε̇xx, ε̇zz, ε̇xz, -1/3*divu) 
-        @show extrema(ε̇1.x)
-
-    end
-
-    return (tMy=tMy,length_unit=length_unit, Lx=Lx, Lz=Lz, xc=xc, zc=zc, ε̇II=ε̇II, τII=τII,
-    coords=coords, V=V, T=T, ϕ=ϕ, σ1=σ1, ε̇1=ε̇1, Fab=Fab, height=height, group_phases=group_phases, Δ=Δ)
-end
-
-
 @views function main()
 
     # Set the path to your files
-    path_LR ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/RiftingAnisotropy/ref_d4_LR/"
-    path_MR ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/RiftingAnisotropy/ref_d4_MR/"
-    path_HR ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/RiftingAnisotropy/ref_d4_HR/"
-
-
+    path  ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/RiftingAnisotropy/ref_d4_HR/"
+    
     # File numbers
-    step = [120; 160; 360]
-    step = [500; 1100; 2220]
+    step = [500; 1100; 2000]
+    step = [700; 1400; 2900]
+
     # Select field to visualise
     # field = :Phases
     # field = :Cohesion
@@ -202,33 +44,34 @@ end
     # field = :ChristmasTree
 
     # # Define Tuple for enlargment window
-    # zoom = ( 
-    #     xmin = 125, 
-    #     xmax = 150,
-    #     zmin = -15,
-    #     zmax = 0.e3,
-    # )
+    zoom = ( 
+        xmin = -150, 
+        xmax = 150,
+        zmin = -70,
+        zmax = 2.0,
+    )
 
     # Switches
     PlotOnTop = (
-        ph_contours = true,  # add phase contours
-        fabric      = true,  # add fabric quiver (normal to director)
-        T_contours  = false,   # add temperature contours
-        topo        = false,
+        ph_contours   = true,  # add phase contours
+        fabric        = true,  # add fabric quiver (normal to director)
+        T_contours    = true,   # add temperature contours
+        topo          = false,
         quiver_origin = false,
-        σ1_axis     = false,
-        ε̇1_axis     = false,
-        vel_vec     = false,
-        ϕ_contours  = false,
+        σ1_axis       = false,
+        ε̇1_axis       = false,
+        vel_vec       = false,
+        ϕ_contours    = false,
+        PT_window     = false,
     )
     options = (
         printfig    = true,  # print figures to disk
         printvid    = false,
         framerate   = 6,
-        α_heatmap   = 0.5,   # transparency of heatmap 
+        α_heatmap   = 0.75,   # transparency of heatmap 
         vel_arrow   = 5,
         vel_scale   = 10000,
-        vel_step    = 20,
+        vel_step    = 18,
         nap         = 0.1,    # pause for animation 
         resol       = 1000,
         Lx          = 1.0,
@@ -269,7 +112,7 @@ end
 
     @unpack Lc, tc, Vc, τc = scales
 
-    model = ReadFile(path_LR, step[1], scales, options, PlotOnTop)
+    model = ReadFile(path, step[1], scales, options, PlotOnTop)
     @unpack tMy, length_unit, Lx, Lz, xc, zc, ε̇II, τII, coords, V, T, ϕ, σ1, Fab, height, group_phases, Δ = model
 
     if @isdefined zoom
@@ -287,111 +130,21 @@ end
 
     #####################################
     ftsz =  12*options.resol/500
-    f = Figure(size = (1.1*Lx/4/Lz*options.resol*1.2, options.resol), fontsize=ftsz)
+    f = Figure(size = (0.8*Lx/4/Lz*options.resol*1.2, options.resol), fontsize=ftsz)
 
-    # if field==:Phases
-    #     ax1 = Axis(f[1, 1], title = L"Phases at $t$ = %$(tMy) Ma", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
-    #     hm = heatmap!(ax1, xc_hr./Lc, zc_hr./Lc, ph_hr, colormap = phase_colors)
-    #     # hm = heatmap!(ax1, xc_hr./Lc, zc_hr./Lc, ph_hr, colormap = :turbo)
-    #     hm = heatmap!(ax1, xc_hr./Lc, zc_hr./Lc, ph_dual_hr, colormap = :turbo)
-    #     AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, Fab, height, Lc, cm_y, group_phases, Δ)                
-    #     colsize!(f.layout, 1, Aspect(1, Lx/Lz))
-    #     Mak.Colorbar(f[1, 2], hm, label = "Phases", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
-    #     Mak.colgap!(f.layout, 20)
-    #     xlims!(ax1, window.xmin, window.xmax)
-    #     ylims!(ax1, window.zmin, window.zmax)
-    #     if printfig Print2Disk( f, path, string(field), istep) end
-    # end
-
-    # if field==:Viscosity
-    #     ax1 = Axis(f[1, 1], title = L"$\eta$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
-    #     hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(ηc), colormap = (:turbo, α_heatmap))
-    #     AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, Fab, height, Lc, cm_y, group_phases, Δ)                
-    #     colsize!(f.layout, 1, Aspect(1, Lx/Lz))
-    #     Mak.Colorbar(f[1, 2], hm, label = L"$\eta$ [Pa.s]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
-    #     Mak.colgap!(f.layout, 20)
-    #     xlims!(ax1, window.xmin, window.xmax)
-    #     ylims!(ax1, window.zmin, window.zmax)
-    #     if printfig Print2Disk( f, path, string(field), istep) end
-    # end
-
-    # if field==:Density
-    #     ax1 = Axis(f[1, 1], title = L"$\rho$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
-    #     hm = heatmap!(ax1, xc./Lc, zc./Lc, ρc, colormap = (:turbo, α_heatmap), colorrange=(2600, 3000))  
-    #     AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, Fab, height, Lc, cm_y, group_phases, Δ)                
-    #     colsize!(f.layout, 1, Aspect(1, Lx/Lz))
-    #     Mak.Colorbar(f[1, 2], hm, label = L"$\rho$ [kg.m$^{-3}$]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
-    #     Mak.colgap!(f.layout, 20)
-    #     xlims!(ax1, window.xmin, window.xmax)
-    #     ylims!(ax1, window.zmin, window.zmax)
-    #     if printfig Print2Disk( f, path, string(field), istep) end
-    # end
-
-    # if field==:Stress
-    #     ax1 = Axis(f[1, 1], title = L"$\tau_\textrm{II}$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
-    #     hm = heatmap!(ax1, xc./Lc, zc./Lc, τII./1e6, colormap = (:turbo, α_heatmap)) 
-    #     AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, Fab, height, Lc, cm_y, group_phases, Δ)                
-    #     colsize!(f.layout, 1, Aspect(1, Lx/Lz))
-    #     Mak.Colorbar(f[1, 2], hm, label = L"$\tau_\textrm{II}$ [MPa]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
-    #     Mak.colgap!(f.layout, 20)
-    #     xlims!(ax1, window.xmin, window.xmax)
-    #     ylims!(ax1, window.zmin, window.zmax)
-    #     if printfig Print2Disk( f, path, string(field), istep) end
-    # end
-
-    # if field==:Pressure
-    #     ax1 = Axis(f[1, 1], title = L"$P$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
-    #     hm = heatmap!(ax1, xc./Lc, zc./Lc, P./1e9, colormap = (:turbo, α_heatmap)) #, colorrange=(1,1.2)1e4*365*24*3600
-    #     AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, Fab, height, Lc, cm_y, group_phases, Δ)                
-    #     colsize!(f.layout, 1, Aspect(1, Lx/Lz))
-    #     Mak.Colorbar(f[1, 2], hm, label =  L"$P$ [GPa]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
-    #     Mak.colgap!(f.layout, 20)
-    #     xlims!(ax1, window.xmin, window.xmax)
-    #     ylims!(ax1, window.zmin, window.zmax)
-    #     if printfig Print2Disk( f, path, string(field), istep) end
-    # end
-
-    # if field==:Divergence
-    #     ax1 = Axis(f[1, 1], title = L"∇⋅V at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
-    #     hm = heatmap!(ax1, xc./Lc, zc./Lc, divu, colormap = (:turbo, α_heatmap))
-    #     AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, Fab, height, Lc, cm_y, group_phases, Δ)                
-    #     colsize!(f.layout, 1, Aspect(1, Lx/Lz))
-    #     Mak.Colorbar(f[1, 2], hm, label =  L"∇⋅V [s$^{-1}$]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
-    #     Mak.colgap!(f.layout, 20)
-    #     xlims!(ax1, window.xmin, window.xmax)
-    #     ylims!(ax1, window.zmin, window.zmax)
-    #     if printfig Print2Disk( f, path, string(field), istep) end
-    # end
+    cmap = :vik
 
     if field==:StrainRate
 
-        cmap = :vik
-
-        options = (
-            printfig    = false,  # print figures to disk
-            printvid    = false,
-            framerate   = 6,
-            α_heatmap   = 0.75,   # transparency of heatmap 
-            vel_arrow   = 5,
-            vel_scale   = 10000,
-            vel_step    = 5,
-            nap         = 0.1,    # pause for animation 
-            resol       = 1000,
-            Lx          = 1.0,
-            Lz          = 1.0,
-            LAB_color   = true,
-            LAB_T       = 1250,
-        )
-
-        model = ReadFile(path_LR, step[1], scales, options, PlotOnTop)
-        @unpack tMy, length_unit, Lx, Lz, xc, zc, ε̇II, τII, coords, V, T, ϕ, σ1, ε̇1, Fab, height, group_phases, Δ = model
+        model = ReadFile(path, step[1], scales, options, PlotOnTop)
+        @unpack tMy, length_unit, Lx, Lz, xc, zc, ε̇II, τII, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, group_phases, Δ = model
 
         tMy_string = @sprintf("%1.2lf", tMy)
-        ax1 = Axis(f[1, 1], title = L"A) $\tau_\textrm{II}$ at $t$ = %$(tMy_string) Ma - 300 $\times$ 200 cells", ylabel = L"$y$ [%$(length_unit)]")
-        hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(τII), colormap = (cmap, options.α_heatmap), colorrange=(6.69, 8.69))
-        AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, Fab, height, Lc, cm_y, group_phases, Δ/2)                
+        ax1 = Axis(f[1, 1], title = L"A) $\dot{\varepsilon}_\textrm{II}$ at $t$ = %$(tMy_string) Ma", ylabel = L"$y$ [%$(length_unit)]", xgridvisible = false, ygridvisible = false,)
+        hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(ε̇II), colormap = (cmap, options.α_heatmap), colorrange=(-17, -13))
+        AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, group_phases, 1.5Δ, Mak)                
         colsize!(f.layout, 1, Aspect(1, Lx/Lz))
-        Mak.Colorbar(f[1, 2], hm, label =  L"$\tau_\textrm{II}$ [Pa]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
+        Mak.Colorbar(f[1, 2], hm, label =  L"$\dot{\varepsilon}_\textrm{II}$ [s$^{-1}$]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
         Mak.colgap!(f.layout, 20)
         xlims!(ax1, window.xmin, window.xmax)
         ylims!(ax1, window.zmin, window.zmax)
@@ -403,32 +156,15 @@ end
         
         ##############################################################
 
-
-        options = (
-        printfig    = false,  # print figures to disk
-        printvid    = false,
-        framerate   = 6,
-        α_heatmap   = 0.75,   # transparency of heatmap 
-        vel_arrow   = 5,
-        vel_scale   = 10000,
-        vel_step    = 10,
-        nap         = 0.1,    # pause for animation 
-        resol       = 1000,
-        Lx          = 1.0,
-        Lz          = 1.0,
-        LAB_color   = true,
-        LAB_T       = 1250,
-    )
-
-        model = ReadFile(path_MR, step[2], scales, options, PlotOnTop)
-        @unpack tMy, length_unit, Lx, Lz, xc, zc, ε̇II, τII, coords, V, T, ϕ, σ1, ε̇1, Fab, height, group_phases, Δ = model
+        model = ReadFile(path, step[2], scales, options, PlotOnTop)
+        @unpack tMy, length_unit, Lx, Lz, xc, zc, ε̇II, τII, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, group_phases, Δ = model
         
         tMy_string = @sprintf("%1.2lf", tMy)
-        ax1 = Axis(f[2, 1], title = L"B) $\tau_\textrm{II}$ at $t$ = %$(tMy_string) Ma - 600 $\times$ 400 cells", ylabel = L"$y$ [%$(length_unit)]")
-        hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(τII), colormap = (cmap, options.α_heatmap), colorrange=(6.69, 8.69))
-        AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, Fab, height, Lc, cm_y, group_phases, Δ)                
+        ax1 = Axis(f[2, 1], title = L"B) $\dot{\varepsilon}_\textrm{II}$ at $t$ = %$(tMy_string) Ma", ylabel = L"$y$ [%$(length_unit)]", xgridvisible = false, ygridvisible = false,)
+        hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(ε̇II), colormap = (cmap, options.α_heatmap), colorrange=(-17, -13))
+        AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, group_phases, 1.5Δ, Mak)                
         colsize!(f.layout, 1, Aspect(1, Lx/Lz))
-        Mak.Colorbar(f[2, 2], hm, label =  L"$\tau_\textrm{II}$ [Pa]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
+        Mak.Colorbar(f[2, 2], hm, label =  L"$\dot{\varepsilon}_\textrm{II}$ [s$^{-1}$]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
         Mak.colgap!(f.layout, 20)
         xlims!(ax1, window.xmin, window.xmax)
         ylims!(ax1, window.zmin, window.zmax)
@@ -442,31 +178,15 @@ end
 
         # ##############################################################
 
-        options = (
-            printfig    = true,  # print figures to disk
-            printvid    = false,
-            framerate   = 6,
-            α_heatmap   = 0.75,   # transparency of heatmap 
-            vel_arrow   = 5,
-            vel_scale   = 10000,
-            vel_step    = 20,
-            nap         = 0.1,    # pause for animation 
-            resol       = 1000,
-            Lx          = 1.0,
-            Lz          = 1.0,
-            LAB_color   = true,
-            LAB_T       = 1250,
-        )
-
-        model = ReadFile(path_HR, step[3], scales, options, PlotOnTop)
-        @unpack tMy, length_unit, Lx, Lz, xc, zc, ε̇II, coords, V, T, ϕ, σ1, ε̇1, Fab, height, group_phases, Δ = model
+        model = ReadFile(path, step[3], scales, options, PlotOnTop)
+        @unpack tMy, length_unit, Lx, Lz, xc, zc, ε̇II, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, group_phases, Δ = model
         
         tMy_string = @sprintf("%1.2lf", tMy)
-        ax1 = Axis(f[3, 1], title = L"C) $\tau_\textrm{II}$ at $t$ = %$(tMy_string) Ma - 1200 $\times$ 800 cells", xlabel = L"$x$ [%$(length_unit)]", ylabel = L"$y$ [%$(length_unit)]")
-        hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(τII), colormap = (cmap, options.α_heatmap), colorrange=(6.69, 8.69))
-        AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, Fab, height, Lc, cm_y, group_phases, Δ*2)                
+        ax1 = Axis(f[3, 1], title = L"C) $\dot{\varepsilon}_\textrm{II}$ at $t$ = %$(tMy_string) Ma", xlabel = L"$x$ [%$(length_unit)]", ylabel = L"$y$ [%$(length_unit)]", xgridvisible = false, ygridvisible = false,)
+        hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(ε̇II), colormap = (cmap, options.α_heatmap), colorrange=(-17, -13))
+        AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, group_phases, 1.5Δ, Mak)                
         colsize!(f.layout, 1, Aspect(1, Lx/Lz))
-        Mak.Colorbar(f[3, 2], hm, label =  L"$\tau_\textrm{II}$ [Pa]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
+        Mak.Colorbar(f[3, 2], hm, label =  L"$\dot{\varepsilon}_\textrm{II}$ [s$^{-1}$]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
         Mak.colgap!(f.layout, 20)
         xlims!(ax1, window.xmin, window.xmax)
         ylims!(ax1, window.zmin, window.zmax)
@@ -479,7 +199,7 @@ end
 
         ##############################################################
     
-        if options.printfig Print2Disk( f, path_HR, "ResolutionTest", step[3]) end #if printfig Print2Disk( f, path, string(field),ε̇BG) end
+        save("/Users/tduretz/PowerFolders/_manuscripts/RiftingAnisotropy/Figures/TimeEvolution.png", f, px_per_unit = 4)   
     end
 
     display(f)

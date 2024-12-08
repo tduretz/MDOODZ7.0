@@ -1,5 +1,5 @@
-import Pkg
-Pkg.activate(normpath(joinpath(@__DIR__, "../..")))
+# import Pkg
+# Pkg.activate(normpath(joinpath(@__DIR__, "../..")))
 using JuliaVisualisation
 using HDF5, Printf, Colors, ColorSchemes, MathTeXEngine, LinearAlgebra, FFMPEG, Statistics, UnPack
 using CairoMakie#, GLMakie
@@ -14,14 +14,13 @@ const cm_y = y*100.
 @views function main()
 
     # Set the path to your files
-    path_LR ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/RiftingAnisotropy/ref_d4_LR/"
-    path_MR ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/RiftingAnisotropy/ref_d4_MR/"
-    path_HR ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/RiftingAnisotropy/ref_d4_HR/"
+    path_LR ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/RiftingAnisotropy/d1/"
+    path_MR ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/RiftingAnisotropy/d1_5/"
+    path_HR ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/RiftingAnisotropy/d6/"
 
 
     # File numbers
-    step = [120; 160; 360]
-    step = [500; 1060; 2220]
+    step = [1200; 1200; 1200]
     # Select field to visualise
     # field = :Phases
     # field = :Cohesion
@@ -45,32 +44,32 @@ const cm_y = y*100.
     # field = :EffectiveFrictionTime
     # field = :ChristmasTree
 
-    # # Define Tuple for enlargment window
-    # zoom = ( 
-    #     xmin = 125, 
-    #     xmax = 150,
-    #     zmin = -15,
-    #     zmax = 0.e3,
-    # )
+    # Define Tuple for enlargment window
+    zoom = ( 
+        xmin = -150, 
+        xmax = 150,
+        zmin = -70,
+        zmax = 2,
+    )
 
     # Switches
     PlotOnTop = (
-        ph_contours = true,  # add phase contours
-        fabric      = true,  # add fabric quiver (normal to director)
-        T_contours  = false,   # add temperature contours
-        topo        = false,
+        ph_contours   = true,  # add phase contours
+        fabric        = false,  # add fabric quiver (normal to director)
+        T_contours    = true,   # add temperature contours
+        topo          = false,
         quiver_origin = false,
-        σ1_axis     = false,
-        ε̇1_axis     = false,
-        vel_vec     = false,
-        ϕ_contours  = false,
-        PT_window   = false,
+        σ1_axis       = false,
+        ε̇1_axis       = false,
+        vel_vec       = false,
+        ϕ_contours    = false,
+        PT_window     = false,
     )
     options = (
         printfig    = true,  # print figures to disk
         printvid    = false,
         framerate   = 6,
-        α_heatmap   = 5,   # transparency of heatmap 
+        α_heatmap   = 0.75,   # transparency of heatmap 
         vel_arrow   = 5,
         vel_scale   = 10000,
         vel_step    = 20,
@@ -132,7 +131,7 @@ const cm_y = y*100.
 
     #####################################
     ftsz =  12*options.resol/500
-    f = Figure(size = (1.1*Lx/4/Lz*options.resol*1.2, options.resol), fontsize=ftsz)
+    f = Figure(size = (0.85*Lx/4/Lz*options.resol*1.2, options.resol), fontsize=ftsz)
 
     # if field==:Phases
     #     ax1 = Axis(f[1, 1], title = L"Phases at $t$ = %$(tMy) Ma", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
@@ -212,28 +211,12 @@ const cm_y = y*100.
 
         cmap = :vik
 
-        options = (
-            printfig    = false,  # print figures to disk
-            printvid    = false,
-            framerate   = 6,
-            α_heatmap   = 0.75,   # transparency of heatmap 
-            vel_arrow   = 5,
-            vel_scale   = 10000,
-            vel_step    = 6,
-            nap         = 0.1,    # pause for animation 
-            resol       = 1000,
-            Lx          = 1.0,
-            Lz          = 1.0,
-            LAB_color   = true,
-            LAB_T       = 1250,
-        )
-
         model = ReadFile(path_LR, step[1], scales, options, PlotOnTop)
         @unpack tMy, length_unit, Lx, Lz, xc, zc, ε̇II, τII, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, group_phases, Δ = model
 
         tMy_string = @sprintf("%1.2lf", tMy)
-        ax1 = Axis(f[1, 1], title = L"A) $\tau_\textrm{II}$ at $t$ = %$(tMy_string) Ma - 300 $\times$ 200 cells", ylabel = L"$y$ [%$(length_unit)]", xgridvisible = false, ygridvisible = false,)
-        hm = heatmap!(ax1, coords.v.x./Lc, coords.v.z./Lc, log10.(τII), colormap = (cmap, options.α_heatmap), colorrange=(6.69, 8.69))
+        ax1 = Axis(f[1, 1], title = L"A) $\tau_\textrm{II}$ at $t$ = %$(tMy_string) Ma - $\delta = 1.0$ (Isotropic)", ylabel = L"$y$ [%$(length_unit)]", xgridvisible = false, ygridvisible = false,)
+        hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(τII), colormap = (cmap, options.α_heatmap), colorrange=(6.69, 8.69))
         AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, group_phases, Δ/2, Mak)                
         colsize!(f.layout, 1, Aspect(1, Lx/Lz))
         Mak.Colorbar(f[1, 2], hm, label =  L"$\tau_\textrm{II}$ [Pa]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
@@ -248,28 +231,11 @@ const cm_y = y*100.
         
         ##############################################################
 
-
-        options = (
-        printfig    = false,  # print figures to disk
-        printvid    = false,
-        framerate   = 6,
-        α_heatmap   = 0.75,   # transparency of heatmap 
-        vel_arrow   = 5,
-        vel_scale   = 10000,
-        vel_step    = 12,
-        nap         = 0.1,    # pause for animation 
-        resol       = 1000,
-        Lx          = 1.0,
-        Lz          = 1.0,
-        LAB_color   = true,
-        LAB_T       = 1250,
-    )
-
         model = ReadFile(path_MR, step[2], scales, options, PlotOnTop)
         @unpack tMy, length_unit, Lx, Lz, xc, zc, ε̇II, τII, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, group_phases, Δ = model
         
         tMy_string = @sprintf("%1.2lf", tMy)
-        ax1 = Axis(f[2, 1], title = L"B) $\tau_\textrm{II}$ at $t$ = %$(tMy_string) Ma - 600 $\times$ 400 cells", ylabel = L"$y$ [%$(length_unit)]", xgridvisible = false, ygridvisible = false,)
+        ax1 = Axis(f[2, 1], title = L"B) $\tau_\textrm{II}$ at $t$ = %$(tMy_string) Ma - $\delta = 1.5$", ylabel = L"$y$ [%$(length_unit)]", xgridvisible = false, ygridvisible = false,)
         hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(τII), colormap = (cmap, options.α_heatmap), colorrange=(6.69, 8.69))
         AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, group_phases, Δ, Mak)                
         colsize!(f.layout, 1, Aspect(1, Lx/Lz))
@@ -287,27 +253,12 @@ const cm_y = y*100.
 
         # ##############################################################
 
-        options = (
-            printfig    = true,  # print figures to disk
-            printvid    = false,
-            framerate   = 6,
-            α_heatmap   = 0.75,   # transparency of heatmap 
-            vel_arrow   = 5,
-            vel_scale   = 10000,
-            vel_step    = 24,
-            nap         = 0.1,    # pause for animation 
-            resol       = 1000,
-            Lx          = 1.0,
-            Lz          = 1.0,
-            LAB_color   = true,
-            LAB_T       = 1250,
-        )
-
         model = ReadFile(path_HR, step[3], scales, options, PlotOnTop)
         @unpack tMy, length_unit, Lx, Lz, xc, zc, ε̇II, τII, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, group_phases, Δ = model
         
         tMy_string = @sprintf("%1.2lf", tMy)
-        ax1 = Axis(f[3, 1], title = L"C) $\tau_\textrm{II}$ at $t$ = %$(tMy_string) Ma - 1200 $\times$ 800 cells", xlabel = L"$x$ [%$(length_unit)]", ylabel = L"$y$ [%$(length_unit)]", xgridvisible = false, ygridvisible = false,)
+        ax1 = Axis(f[3, 1], title = L"C) $\tau_\textrm{II}$ at $t$ = %$(tMy_string) Ma - $\delta = 6.0$", xlabel = L"$x$ [%$(length_unit)]", ylabel = L"$y$ [%$(length_unit)]", xgridvisible = false, ygridvisible = false,)
+        @show size(xc), size(zc), size(log10.(τII))
         hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(τII), colormap = (cmap, options.α_heatmap), colorrange=(6.69, 8.69))
         AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, group_phases, Δ*2, Mak)                
         colsize!(f.layout, 1, Aspect(1, Lx/Lz))
@@ -324,7 +275,7 @@ const cm_y = y*100.
 
         ##############################################################
     
-        save("/Users/tduretz/PowerFolders/_manuscripts/RiftingAnisotropy/Figures/ResolutionTest.png", f, px_per_unit = 4)     end
+        save("/Users/tduretz/PowerFolders/_manuscripts/RiftingAnisotropy/Figures/CompareDelta.png", f, px_per_unit = 4)     end
 
     display(f)
 end
