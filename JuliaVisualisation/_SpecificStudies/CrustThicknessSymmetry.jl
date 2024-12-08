@@ -1,5 +1,3 @@
-import Pkg
-Pkg.activate(normpath(joinpath(@__DIR__, ".")))
 using JuliaVisualisation
 using HDF5, Printf, Colors, ColorSchemes, MathTeXEngine, LinearAlgebra, FFMPEG, Statistics
 using CairoMakie#, GLMakie
@@ -11,20 +9,18 @@ const y    = 365*24*3600
 const My   = 1e6*y
 const cm_y = y*100.
 
+ξcr  = [0.28 47.58 69.00 100.45 105.12 110.91 105.66921f0 98.70723f0 91.94]
+
+ 
 @views function main()
 
     # Set the path to your files
-    path ="/home/larafriedrichs/repositories/MDOODZ7.0/MDLIB/"
-    #path=raw"C:\Users\49176\OneDrive\Desktop\Test_c_code\\"
-    path="/home/larafriedrichs/repositories/MDOODZ7.0/runs/firstmodel/"
-    path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/"#RiftingMelting00_HR/"
-    # path = "/Users/lcandiot/Developer/MDOODZ7.0/cmake-exec/RiftingChenin/"
-    path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/RiftingAnisotropy/d1/"
+    path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/RiftingAnisotropy/d8/"
 
     # File numbers
-    file_start = 0
-    file_step  = 1
-    file_end   = 0
+    file_start = 800
+    file_step  = 20
+    file_end   = 800
 
     # Select field to visualise
     field = :Phases
@@ -32,7 +28,7 @@ const cm_y = y*100.
     # field = :Density
     # field = :Viscosity  
     # field = :PlasticStrainrate
-    field = :Stress
+    # field = :Stress
     # field = :σxx
     # field = :σzz
     # field = :StrainRate
@@ -49,7 +45,7 @@ const cm_y = y*100.
     # field = :MeltFraction
     # field = :TimeSeries
     # field = :EffectiveFrictionTime
-    field = :ChristmasTree
+    # field = :ChristmasTree
 
     # Define Tuple for enlargment window
     # zoom = ( 
@@ -254,17 +250,52 @@ const cm_y = y*100.
         f = Figure(size = (0.75*Lx/Lz*resol*1.2, resol), fontsize=ftsz)
 
         if field==:Phases
-            ax1 = Axis(f[1, 1], title = L"Phases at $t$ = %$(tMy) Ma", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
-            hm = heatmap!(ax1, xc_hr./Lc, zc_hr./Lc, ph_hr, colormap = phase_colors)
-            # hm = heatmap!(ax1, xc_hr./Lc, zc_hr./Lc, ph_hr, colormap = :turbo)
-            hm = heatmap!(ax1, xc_hr./Lc, zc_hr./Lc, ph_dual_hr, colormap = :turbo)
-            AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, group_phases, Δ, Mak)                
-            colsize!(f.layout, 1, Aspect(1, Lx/Lz))
-            Mak.Colorbar(f[1, 2], hm, label = "Phases", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
-            Mak.colgap!(f.layout, 20)
-            xlims!(ax1, window.xmin, window.xmax)
-            ylims!(ax1, window.zmin, window.zmax)
-            if printfig Print2Disk( f, path, string(field), istep) end
+            tMy_string = @sprintf("%1.2lf", tMy)
+            ax1 = Axis(f[1, 1], title = L"Thickness ratio at $t$ = %$(tMy_string) Ma - \delta = 8", xlabel = L"$x$ [km]", ylabel = L"$H^\textrm{left} / H^\textrm{right}$ [-]")
+            # hm = heatmap!(ax1, xc_hr./Lc, zc_hr./Lc, ph_hr, colormap = phase_colors)
+
+            ph_lit = ph_dual_hr.==4 .|| ph_dual_hr.==0 .|| ph_dual_hr.==2
+            lit_thick  = (sum(ph_lit, dims=2) .*Δz)[:]
+
+            ph_crust = ph_dual_hr.==4 .|| ph_dual_hr.==0# .|| ph_dual_hr.==2
+            crust_thick  = (sum(ph_crust, dims=2) .*Δz)[:]
+            
+            Nx_2 = Int64(size(ph_dual_hr,1)/2)
+            crust_left  = crust_thick[1:Nx_2]
+            crust_right = crust_thick[end:-1:end-Nx_2+1]
+
+            lit_left  = lit_thick[1:Nx_2]
+            lit_right = lit_thick[end:-1:end-Nx_2+1]
+
+            error = sum(abs.(crust_left.-crust_right)./abs.(crust_right))
+            @show error
+            # lines!(ax1, xc_hr[1:Nx_2]./1e3, crust_left ./1e3)  
+            # lines!(ax1, xc_hr[1:Nx_2]./1e3, crust_right./1e3)
+            # lines!(ax1, xc_hr[1:Nx_2]./1e3, lit_left ./1e3)  
+            # lines!(ax1, xc_hr[1:Nx_2]./1e3, lit_right./1e3)
+
+            lines!(ax1, xc_hr[1:Nx_2]./1e3, crust_left ./crust_right, label=L"$H_\textrm{crust}^\textrm{left} / H_\textrm{crust}^\textrm{right}$")  
+            lines!(ax1, xc_hr[1:Nx_2]./1e3, lit_left   ./lit_right,   label=L"$H_\textrm{lith}^\textrm{left} / H_\textrm{lith}^\textrm{right}$")  
+            axislegend(framevisible=false, position=:lt)
+
+            δ = [1 1.5 2 3 4 5 6 7 8]
+            ξlit = [0.051307674f0 7.64 10.84 16.83 22.91 26.42 29.65 31.86 33.428] 
+            ξcr  = [0.28 47.58 69.00 100.45 105.12 110.91 105.66921f0 98.70723f0 91.94]
+            ax2 = Axis(f[1, 2], title = L"$$Effect of anisotropy strength on asymmetry", ylabel=L"Thickness difference $(%)$", xlabel=L"$\delta$ [-]" )
+            lines!(ax2, δ[:], ξlit[:], label="Lithosphere")
+            lines!(ax2, δ[:], ξcr[:], label="Crust")
+            axislegend(framevisible=false, position=:lt)
+
+            save("/Users/tduretz/PowerFolders/_manuscripts/RiftingAnisotropy/Figures/ThicknessVariations.png", f, px_per_unit = 4)   
+            
+            # # hm = heatmap!(ax1, xc_hr./Lc, zc_hr./Lc, ph_crust, colormap = :turbo)
+            # AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, group_phases, Δ, Mak)                
+            # colsize!(f.layout, 1, Aspect(1, Lx/Lz))
+            # Mak.Colorbar(f[1, 2], hm, label = "Phases", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
+            # Mak.colgap!(f.layout, 20)
+            # xlims!(ax1, window.xmin, window.xmax)
+            # ylims!(ax1, window.zmin, window.zmax)
+            # if printfig Print2Disk( f, path, string(field), istep) end
         end
 
         if field==:Viscosity
@@ -301,6 +332,21 @@ const cm_y = y*100.
             xlims!(ax1, window.xmin, window.xmax)
             ylims!(ax1, window.zmin, window.zmax)
             if printfig Print2Disk( f, path, string(field), istep) end
+
+            @show size(τII)
+            @show mean((group_phases[1:599,:] .- group_phases[end:-1:600,:]))*100
+
+            error    = 0.
+            sumtot   = 0
+            for i=1:299, j=1:size(τII,2)
+                left  = τII[i,j]
+                right = τII[end+1-i,j]
+                if !isnan(left) && !isnan(right) && left>0.
+                    sum   += 1
+                    error += abs(left-right) / abs(left)
+                end
+            end
+            @show error/sumtot*100
         end
 
         if field==:σxx

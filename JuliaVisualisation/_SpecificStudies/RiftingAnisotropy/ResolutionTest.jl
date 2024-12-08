@@ -19,7 +19,7 @@ function ExtractField(filename, field, size, mask_air, mask)
     return field
 end 
 
-function AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, Fab, height, Lc, cm_y, group_phases, Δ)
+function AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, Fab, height, Lc, cm_y, group_phases, Δ, Mak)
     if PlotOnTop.quiver_origin
         xc2D = coords.c.x   .+ 0*coords.c.z'
         zc2D = 0*coords.c.x .+ coords.c.z'
@@ -163,7 +163,7 @@ function ReadFile(path, step, scales, options, PlotOnTop)
     end
 
     return (tMy=tMy,length_unit=length_unit, Lx=Lx, Lz=Lz, xc=xc, zc=zc, ε̇II=ε̇II, τII=τII,
-    coords=coords, V=V, T=T, ϕ=ϕ, σ1=σ1, ε̇1=ε̇1, Fab=Fab, height=height, group_phases=group_phases, Δ=Δ)
+    coords=coords, V=V, T=T, ϕ=ϕ, σ1=σ1, ε̇1=ε̇1, Fab=Fab, height=height, group_phases=group_phases, Δ=Δ, Mak)
 end
 
 
@@ -348,7 +348,7 @@ end
         
         ax1 = Axis(f[2, 1], title = L"$\dot{\varepsilon}_\textrm{II}$ at $t$ = %$(tMy) Ma - 600 $\times$ 400 cells", ylabel = L"$y$ [%$(length_unit)]")
         hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(ε̇II), colormap = (:turbo, options.α_heatmap), colorrange=(-17, -13))
-        AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, Fab, height, Lc, cm_y, group_phases, Δ)                
+        AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, Fab, height, Lc, cm_y, group_phases, Δ, Mak)                
         colsize!(f.layout, 1, Aspect(1, Lx/Lz))
         Mak.Colorbar(f[2, 2], hm, label =  L"$\dot{\varepsilon}_\textrm{II}$ [s$^{-1}$]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
         Mak.colgap!(f.layout, 20)

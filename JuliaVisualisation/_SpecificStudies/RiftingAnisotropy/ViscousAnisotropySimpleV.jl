@@ -104,11 +104,11 @@ function main_simple_ani_vis()
     end
 
     f = Figure(size = (500, 500), fontsize=18)
-    ax1 = Axis(f[1, 1], title=L"$$A) Stress invariant", xlabel=L"$\theta$ [$^\circ$]", ylabel=L"$\tau_{II}$, $\tau_{II}'$  [-]")
+    ax1 = Axis(f[1, 1], title=L"$$A) $\tau_{II}$ and stress invariant $\tau_{II}'$", xlabel=L"$\theta$ [$^\circ$]", ylabel=L"$\tau_{II}$, $\tau_{II}'$  [-]")
     lines!(ax1, θ*180/π, τii_cart, label=L"$\tau_{II}$  $(\delta$=2)$")
     # scatter!(ax1, θ*180/π, τii_cart_MD7 )
     lines!(ax1, θ*180/π, τii_rot1, label=L"$\tau_{II}'$ $(\delta$=2)$")
-    text!(ax1, 50, 0.6; text=L"$\tau_{II} = \tau_{II}' \frac{\sqrt{d}}{\delta} $", fontsize=16)
+    # text!(ax1, 50, 0.5; text=L"$\tau_{II} = \tau_{II}' \frac{\sqrt{(\delta^2-1)\cos{(2\theta)} + 1)}}{\delta} $", fontsize=12, rotation=π/2.7)
 
     tii = 1.0*sqrt.((δ^2-1)*cos.(2*θ).^2 .+ 1)/δ
     # scatter!(ax1, θ*180/π, tii, )
@@ -119,7 +119,7 @@ function main_simple_ani_vis()
     # scatter!(ax1, θ*180/π, τii_cart, marker=:xcross, markersize=10 )
     axislegend(position=:rb)
 
-    ax3 = Axis(f[2, 1], title=L"$$B) Flow enveloppe", xlabel=L"$\tau_{xx}'$ [-]", ylabel=L"$\tau_{xy}'$ [-]", aspect=DataAspect())
+    ax3 = Axis(f[2, 1], title=L"$$B) Flow enveloppe ($\delta = 2$)", xlabel=L"$\tau_{xx}'$ [-]", ylabel=L"$\tau_{xy}'$ [-]", aspect=DataAspect())
     lines!(ax3, LinRange(0,1,10), zeros(10), color=:black)
     text!(ax3, 0.3, 0.05; text=L"$\tau_{xx}' = \tau_{II}'$", fontsize=16)
     lines!(ax3, zeros(10), LinRange(0,0.5,10), color=:black)
@@ -132,6 +132,9 @@ function main_simple_ani_vis()
     # lines!(ax3, τxx_cart, τxy_cart, marker=:xcross )
     lines!(ax3, τxx_rot, τxy_rot, label=L"$\delta$=2$" )
     # scatter!(ax3, txx, txy, marker=:xcross )
+
+    save("/Users/tduretz/PowerFolders/_manuscripts/RiftingAnisotropy/Figures/ViscousAnisotropySimple.png", f, px_per_unit = 4) 
+
     
     display(f)
 
