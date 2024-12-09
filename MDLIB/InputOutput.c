@@ -1151,6 +1151,7 @@ Input ReadInputFile( char *fileName ) {
     model.adiab_heating      = ReadInt2( fin, "adiab_heating",         0 ); // 0: zero, 1: lithostatic P assumption, 2: full derivative
     model.surface_processes  = ReadInt2( fin, "surface_processes",     0 ); // 1: diffusion; 2: diffusion + sedimentation
     model.marker_aniso_angle = ReadInt2( fin, "marker_aniso_angle",    0 ); // Enables setting anisotropy angle per particles rather than phases
+    model.layering           = ReadInt2( fin, "layering",              0 ); // Activation of Layering (Anais setup)
     // Transformations
     model.chemical_diffusion = ReadInt2( fin, "chemical_diffusion",    0 ); // Activate progressive reactions
     model.no_return          = ReadInt2( fin, "no_return",             0 ); // Turns off retrogression if 1.0
@@ -1198,6 +1199,7 @@ Input ReadInputFile( char *fileName ) {
     model.user6              = ReadDou2( fin, "user6",           0.0 );
     model.user7              = ReadDou2( fin, "user7",           0.0 );
     model.user8              = ReadDou2( fin, "user8",           0.0 );
+    model.user9              = ReadDou2( fin, "user9",           0.0 );
     // Derived quantities
     model.dx                 = (model.xmax - model.xmin) / (model.Nx - 1);
     model.dz                 = (model.zmax - model.zmin) / (model.Nz - 1);
