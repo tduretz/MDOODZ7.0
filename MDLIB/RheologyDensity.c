@@ -514,8 +514,9 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
   X = X0;
 
   // Reaction stuff: 2. Mixture rheology (Huet et al., 2014)
-  if (  model->chemical_production == 1 ) {
+  if ( model->chemical_production == 1 ) {
       X     = (X0*tau_kin - 0.5*dt*erfc((P - Pr)/dPr) + dt)/(dt + tau_kin);
+      // if (phase==1) printf("X = %2.2e %1.2e\n", X, dt*scaling->t);
       // Parameters of end-members and averahing following Huet et al. (2014)
       // rho1   = materials->rho[phase];                rho2   = materials->rho[materials->reac_phase[phase]];
       HuetAveragingModel( &B_pwl, &C_pwl, &n_pwl, phase, R, T, t_pwl, X, pre_factor, materials );

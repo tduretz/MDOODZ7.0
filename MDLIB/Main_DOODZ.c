@@ -970,18 +970,23 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
         //--------------------------------------------------------------------------------------------------------------------------------//
 
+        printf("*************************************\n");
+        printf("********** Chemical solver **********\n");
+        printf("*************************************\n");
+
+        if (input.model.chemical_production == 1)  {
+            if (input.model.anisotropy==0) NonNewtonianViscosityGrid(      &mesh, &input.materials, &input.model, Nmodel, &input.scaling, 0 );
+            if (input.model.anisotropy==1) NonNewtonianViscosityGridAniso( &mesh, &input.materials, &input.model, Nmodel, &input.scaling, 0 );
+            MinMaxArrayTag( mesh.X_s, 1.0, (mesh.Nx)*(mesh.Nz),     "X_s     ", mesh.BCg.type );
+            MinMaxArrayTag( mesh.X_n, 1.0, (mesh.Nx-1)*(mesh.Nz-1), "X_n     ", mesh.BCp.type );
+        }
+
         if (input.model.chemical_diffusion == 1)  {
-            printf("*************************************\n");
-            printf("********** Chemical solver **********\n");
-            printf("*************************************\n");
-            ArrayEqualArray( mesh.X_n, mesh.X0_n,  (mesh.Nx-1)*(mesh.Nz-1) );
             P2Mastah ( &input.model, particles, input.materials.k_chem, &mesh, mesh.kc_x, mesh.BCu.type,  0, 0, interp, vxnodes, input.model.interp_stencil);
             P2Mastah ( &input.model, particles, input.materials.k_chem, &mesh, mesh.kc_z, mesh.BCv.type,  0, 0, interp, vznodes, input.model.interp_stencil);
             ChemicalDirectSolve( &mesh, input.model, &particles, &input.materials, input.model.dt, input.scaling );
         }
-        else {
-            ArrayEqualArray( mesh.X_n, mesh.X0_n,  (mesh.Nx-1)*(mesh.Nz-1) );
-        }
+     
         UpdateParticleX( &mesh, input.scaling, input.model, &particles, &input.materials );
 
         //--------------------------------------------------------------------------------------------------------------------------------//
