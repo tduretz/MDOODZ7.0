@@ -17,22 +17,23 @@ const cm_y = y*100.
     path ="/home/larafriedrichs/repositories/MDOODZ7.0/MDLIB/"
     #path=raw"C:\Users\49176\OneDrive\Desktop\Test_c_code\\"
     path="/home/larafriedrichs/repositories/MDOODZ7.0/runs/firstmodel/"
-    path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/"#RiftingMelting00_HR/"
+    path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/"
     # path = "/Users/lcandiot/Developer/MDOODZ7.0/cmake-exec/RiftingChenin/"
-    path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/RiftingAnisotropy/d1/"
+    # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/RiftingAnisotropy/d1/"
+    # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/RiftingMelting/"
 
     # File numbers
     file_start = 0
-    file_step  = 1
-    file_end   = 0
+    file_step  = 10
+    file_end   = 100
 
     # Select field to visualise
     field = :Phases
     # field = :Cohesion
     # field = :Density
-    # field = :Viscosity  
+    field = :Viscosity  
     # field = :PlasticStrainrate
-    field = :Stress
+    # field = :Stress
     # field = :σxx
     # field = :σzz
     # field = :StrainRate
@@ -47,9 +48,10 @@ const cm_y = y*100.
     # field = :TimeSeries 
     # field = :AnisotropyFactor
     # field = :MeltFraction
+    field = :X
     # field = :TimeSeries
     # field = :EffectiveFrictionTime
-    field = :ChristmasTree
+    # field = :ChristmasTree
 
     # Define Tuple for enlargment window
     # zoom = ( 
@@ -185,6 +187,7 @@ const cm_y = y*100.
         τxzc  = 0.25*(τxz[1:end-1,1:end-1] .+ τxz[2:end,1:end-1] .+ τxz[1:end-1,2:end] .+ τxz[2:end,2:end]) 
         C     = Float64.(reshape(ExtractData( filename, "/Centers/cohesion"), ncx, ncz))
         ϕ     = ExtractField(filename, "/Centers/phi", centroids, false, 0)
+        X     = ExtractField(filename, "/Centers/X", centroids, false, 0)
         divu  = ExtractField(filename, "/Centers/divu", centroids, false, 0)
        
         T_hr  = zeros(size(ph_hr)); T_hr[1:2:end-1,1:2:end-1] .= T; T_hr[2:2:end-0,2:2:end-0] .= T
@@ -456,6 +459,18 @@ const cm_y = y*100.
         if field==:MeltFraction
             ax1 = Axis(f[1, 1], title = L"ϕ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
             hm = heatmap!(ax1, xc./Lc, zc./Lc, ϕ, colormap = (:bilbao, α_heatmap))
+            AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, group_phases, Δ, Mak)                
+            Mak.Colorbar(f[1, 2], hm, label = L"$ϕ$", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
+            Mak.colgap!(f.layout, 20)
+            colsize!(f.layout, 1, Aspect(1, Lx/Lz))
+            xlims!(ax1, window.xmin, window.xmax)
+            ylims!(ax1, window.zmin, window.zmax)
+            if printfig Print2Disk( f, path, string(field), istep) end
+        end
+
+        if field==:X
+            ax1 = Axis(f[1, 1], title = L"X at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
+            hm = heatmap!(ax1, xc./Lc, zc./Lc, X, colormap = (:bilbao, α_heatmap))
             AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, group_phases, Δ, Mak)                
             Mak.Colorbar(f[1, 2], hm, label = L"$ϕ$", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
             Mak.colgap!(f.layout, 20)

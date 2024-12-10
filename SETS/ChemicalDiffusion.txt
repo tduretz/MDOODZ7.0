@@ -74,7 +74,7 @@ finite_strain         = 0
 chemical_diffusion        = 1  / !!!!
 no_return        = 0 
 density_variations        = 1  / renamed in MD7.0 (VolChangeReac)    
-unsplit_diff_reac = 0
+
 
 /**** SETUP DEPENDANT ****/
 bkg_strain_rate           = 0.0
