@@ -104,7 +104,7 @@ typedef struct {
   int      diffuse_X, diffuse_avg;
   double   diffusion_length;
   // For Pips
-  int      chemical_diffusion, no_return, density_variations, unsplit_diff_reac, kinetics;
+  int      chemical_diffusion, chemical_production, no_return, density_variations, kinetics;
   int      layering;
   // initial stresses
   int preload;

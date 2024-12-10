@@ -142,7 +142,6 @@
 - `kinetics`: Activates reaction kinetics. Only for coesite --> quartz transformation so far. Default: 0
 - `progress_transform`: Activate progressive reactions. Default: 0
 - `no_return`: Turns off retrogression if 1. Default: 0
-- `unsplit_diff_reac`: Unsplits diffusion and reaction. Default: 0
 - `smooth_softening`: Activates smooth explicit kinematic softening function. Default: 1
 
 ## Background ambient conditions

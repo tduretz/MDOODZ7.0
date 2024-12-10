@@ -142,32 +142,10 @@ void ChemicalDirectSolve( grid *mesh, params model, markers *particles, mat_prop
         if ( mesh->BCc.type[c2] != 30 ) {
             
             // Contribution from transient term
-            if ( model.unsplit_diff_reac == 0 ) b[eqn]  = transient * mesh->X_n[c2]/ dt;
-            
-            if ( model.unsplit_diff_reac == 1 ) {
-                b[eqn]  = transient * mesh->X0_n[c2]/ dt;
-
-                // Pr, dPr, tau_kin depends on phases
-                Pr          = 0.0;
-                dPr         = 0.0;
-                tau_kin[c2] = 0.0;
-
-                for ( p=0; p<model.Nb_phases; p++ ) {
-                    cond =  fabs(mesh->phase_perc_n[p][c2])>1.0e-13;
-                    if ( cond == 1 ) Pr          += mesh->phase_perc_n[p][c2] * materials->Pr[p];
-                    if ( cond == 1 ) dPr         += mesh->phase_perc_n[p][c2] * materials->dPr[p];
-                    if ( cond == 1 ) tau_kin[c2] += mesh->phase_perc_n[p][c2] * materials->tau_kin[p];
-                }
-
-                // Contribution for source
-                Xeq     = 0.5*erfc((-mesh->p_in[c2] + Pr)/dPr) ;
-                if (Xeq >= mesh->X0_n[c2]                       ) prod[c2] = 1.0;
-                if (Xeq <  mesh->X0_n[c2] && model.no_return==1 ) prod[c2] = 0.0;
-                b[eqn] += prod[c2] * Xeq / tau_kin[c2];
-            }
+            b[eqn]  = transient * mesh->X_n[c2]/ dt;
         }
     }
-    MinMaxArray(b, scaling.E, ncz*ncx, "b chemical");
+    MinMaxArray(b, scaling.E, ncz*ncx, "b chemical_diffusion");
     
     //----------------------------------------------------//
 
@@ -216,8 +194,7 @@ void ChemicalDirectSolve( grid *mesh, params model, markers *particles, mat_prop
                 }
                 
                 // ----------------- Center point ----------------- //
-                if ( model.unsplit_diff_reac == 1 ) val = transient/dt + prod[c2]/tau_kin[c2];
-                if ( model.unsplit_diff_reac == 0 ) val = transient/dt;
+                val = transient/dt;
                 
                 // Average conductivity for surface values (avoid zero conductivity)
                 ks = 0.25*(AE+AW+AN+AS);
