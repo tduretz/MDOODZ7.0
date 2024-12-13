@@ -4,8 +4,9 @@
 int SetPhase(MdoodzInput *input, Coordinates coordinates) {
   const double radius = 0.25 / input->scaling.L;
   const double x = coordinates.x;
-  const double z = coordinates.z;
-  if ( x*x + z*z < radius * radius) {
+  // const double z = coordinates.z;
+  if ( fabs(x) < radius) {
+  // if ( x*x + z*z < radius * radius) {
     return 1;
   } else {
     return 0;

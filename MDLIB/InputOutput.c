@@ -194,6 +194,7 @@ void LoadBreakpointParticles( markers *particles, grid* mesh, markers *topo_chai
     fread( particles->x,    s3, particles->Nb_part, file);
     fread( particles->z,    s3, particles->Nb_part, file);
     fread( particles->P,    s3, particles->Nb_part, file);
+    fread( particles->rho,  s3, particles->Nb_part, file);
     fread( particles->Vx,   s3, particles->Nb_part, file);
     fread( particles->Vz,   s3, particles->Nb_part, file);
     fread( particles->phi,  s3, particles->Nb_part, file);
@@ -371,6 +372,7 @@ void LoadBreakpointParticles( markers *particles, grid* mesh, markers *topo_chai
         particles->x[k]     /=scaling.L;
         particles->z[k]     /=scaling.L;
         particles->P[k]     /=scaling.S;
+        particles->rho[k]   /=scaling.rho;
         particles->Vx[k]    /=scaling.V;
         particles->Vz[k]    /=scaling.V;
         particles->phi[k]   /=1.0;
@@ -536,6 +538,7 @@ void MakeBreakpointParticles( markers *particles,  grid* mesh, markers *topo_cha
         particles->x[k]      *= scaling.L;
         particles->z[k]      *= scaling.L;
         particles->P[k]      *= scaling.S;
+        particles->rho[k]    *= scaling.rho;
         particles->Vx[k]     *= scaling.V;
         particles->Vz[k]     *= scaling.V;
         particles->phi[k]    *= 1.0;
@@ -701,6 +704,7 @@ void MakeBreakpointParticles( markers *particles,  grid* mesh, markers *topo_cha
     fwrite( particles->x,     s3, particles->Nb_part, file);
     fwrite( particles->z,     s3, particles->Nb_part, file);
     fwrite( particles->P,     s3, particles->Nb_part, file);
+    fwrite( particles->rho,   s3, particles->Nb_part, file);
     fwrite( particles->Vx,    s3, particles->Nb_part, file);
     fwrite( particles->Vz,    s3, particles->Nb_part, file);
     fwrite( particles->phi,   s3, particles->Nb_part, file);
@@ -876,6 +880,7 @@ void MakeBreakpointParticles( markers *particles,  grid* mesh, markers *topo_cha
         particles->x[k]     /= scaling.L;
         particles->z[k]     /= scaling.L;
         particles->P[k]     /= scaling.S;
+        particles->rho[k]   /= scaling.rho;
         particles->Vx[k]    /= scaling.V;
         particles->Vz[k]    /= scaling.V;
         particles->phi[k]   /= 1.0;
@@ -1072,6 +1077,7 @@ Input ReadInputFile( char *fileName ) {
     model.stress_rotation    = ReadInt2( fin, "stress_rotation",       1 ); // 0: no stress rotation, 1: analytic rotation, 2: upper convected rate
     model.dt_max             = ReadDou2( fin, "dt_max", 1e20 ) /scaling.t;  // maximum allowed time step, the default value is set to ~infinite, it we become effective only if specificaly set in XXX.txt (see e.g. LithoScale.txt)
     model.dt_min             = ReadDou2( fin, "dt_min",-1e20 ) /scaling.t;  // minimum allowed time step, defaut is negative such that it will never be activated unless specifically set in XXX.txt file
+    model.dt_reduction_factor= ReadDou2( fin, "dt_reduction_factor", 1);
     // Physics 
     model.mechanical         = ReadInt2( fin, "mechanical",            1 ); // Activates mechanical solver
     model.advection          = ReadInt2( fin, "advection",             1 ); // Activates advection

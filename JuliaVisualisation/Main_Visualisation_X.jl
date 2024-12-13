@@ -15,9 +15,9 @@ const cm_y = y*100.
     path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/"
 
     # File numbers
-    file_start = 0
-    file_step  = 10
-    file_end   = 0
+    file_start = 1
+    file_step  = 1
+    file_end   = 1
 
     # Select field to visualise
     field = :Phases
@@ -29,7 +29,7 @@ const cm_y = y*100.
     # field = :σxx
     # field = :σzz
     # field = :StrainRate
-    # field = :Pressure 
+    field = :Pressure 
     # field = :Divergence
     # field = :Temperature
     # field = :Velocity_x
@@ -298,20 +298,20 @@ const cm_y = y*100.
 
             k_chem  = 5e-10
             σ       = 0.1
-            # X_exact = exp.( -(xc.^2 .+ (zc').^2)/(σ^2) )
+            τkin    = 3.1558e9
+    
+            X_prod = ones(size(X)) .* (1.0 .- exp(-t./τkin))
+            X_diff = 1/(1+4*t*k_chem/σ^2) * exp.( -(xc.^2 .+ (zc').^2)/(σ^2 + 4*t*k_chem) )
 
-            X_exact = 1/(1+4*t*k_chem/σ^2) * exp.( -(xc.^2 .+ (zc').^2)/(σ^2 + 4*t*k_chem) )
-            # @show size(X_exact), size(X)
+            # ax2 = Axis(f[1, 1], title = L"$X$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
+            # lines!(ax2, xc,       X[:, Int64(floor(size(X,2)/2))])
+            # lines!(ax2, xc, X_prod[:, Int64(floor(size(X,2)/2))])
+            # ylims!(ax2, 0, 1)
 
-
-            ax2 = Axis(f[1, 1], title = L"$X$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
-            lines!(ax2, xc,       X[:, Int64(floor(size(X,2)/2))])
-            lines!(ax2, xc, X_exact[:, Int64(floor(size(X,2)/2))])
-
-            ax1 = Axis(f[2, 1], title = L"$X$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
-            hm = heatmap!(ax1, xc./Lc, zc./Lc, X, colormap = (:bilbao, α_heatmap))
+            ax1 = Axis(f[1, 1], title = L"$X$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
+            hm = heatmap!(ax1, xc./Lc, zc./Lc, X, colormap = (Reverse(:roma), α_heatmap))
             AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, group_phases, Δ, Mak)                
-            Mak.Colorbar(f[2, 2], hm, label = L"$X$", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
+            Mak.Colorbar(f[1, 2], hm, label = L"$X$", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
             Mak.colgap!(f.layout, 20)
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
             xlims!(ax1, window.xmin, window.xmax)

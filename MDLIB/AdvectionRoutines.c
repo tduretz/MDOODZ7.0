@@ -567,7 +567,7 @@ void EvaluateCourantCriterion( double* Vx, double* Vz, params *model, scale scal
     double C           = model->Courant;
     double Vinc        = model->surf_Vinc, dt_surf = 0.0;
     double min_tau_kin = model->user1/scaling.t;
-    double dt_reac     = min_tau_kin/model->user2;
+    double dt_reac     = min_tau_kin/model->dt_reduction_factor;
     double dTmax       = 0.0, dT, dt_therm = model->dt_max, max_dT_allowed = 5.0/scaling.T;
     const int Ncx      = model->Nx-1;
 

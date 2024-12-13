@@ -23,17 +23,17 @@ const cm_y = y*100.
     # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/RiftingMelting/"
 
     # File numbers
-    file_start = 0
+    file_start = 240
     file_step  = 10
-    file_end   = 100
+    file_end   = 240
 
     # Select field to visualise
-    field = :Phases
+    # field = :Phases
     # field = :Cohesion
     # field = :Density
-    field = :Viscosity  
+    # field = :Viscosity  
     # field = :PlasticStrainrate
-    # field = :Stress
+    field = :Stress
     # field = :σxx
     # field = :σzz
     # field = :StrainRate
@@ -48,7 +48,7 @@ const cm_y = y*100.
     # field = :TimeSeries 
     # field = :AnisotropyFactor
     # field = :MeltFraction
-    field = :X
+    # field = :X
     # field = :TimeSeries
     # field = :EffectiveFrictionTime
     # field = :ChristmasTree
@@ -231,6 +231,9 @@ const cm_y = y*100.
             ε̇1 = PrincipalStress(ε̇xx, ε̇zz, ε̇xz, zeros(size(ε̇xx))) 
         end
         PT = (P.>2.2e9 .&& P.<3.0e9 .&& T.>430 .&& T.<530).*ones(size(T))
+        @show extrema(P)
+        @show extrema(τII)
+        @show extrema(ε̇II)
      
         
         #####################################
@@ -254,7 +257,7 @@ const cm_y = y*100.
         #####################################
         empty!(f)
         ftsz =  30*resol/500
-        f = Figure(size = (0.75*Lx/Lz*resol*1.2, resol), fontsize=ftsz)
+        f = Figure(size = (1.1*Lx/Lz*resol*1.2, resol), fontsize=ftsz)
 
         if field==:Phases
             ax1 = Axis(f[1, 1], title = L"Phases at $t$ = %$(tMy) Ma", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
@@ -396,7 +399,6 @@ const cm_y = y*100.
         end
 
         if field==:Velocity_x
-            @show Vx
             ax1 = Axis(f[1, 1], title = L"$Vx$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
             hm = heatmap!(ax1, xv, zvx[2:end-1], Vx[2:end-1,:], colormap = (:jet, α_heatmap))#, colorrange=(0., 0.6)
             AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, group_phases, Δ, Mak)                
@@ -469,7 +471,7 @@ const cm_y = y*100.
         end
 
         if field==:X
-            ax1 = Axis(f[1, 1], title = L"X at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
+            ax1 = Axis(f[1, 1], title = L"$X$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
             hm = heatmap!(ax1, xc./Lc, zc./Lc, X, colormap = (:bilbao, α_heatmap))
             AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, group_phases, Δ, Mak)                
             Mak.Colorbar(f[1, 2], hm, label = L"$ϕ$", width = 20, labelsize = ftsz, ticklabelsize = ftsz )

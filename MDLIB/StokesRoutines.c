@@ -661,13 +661,14 @@ double LineSearchDecoupled( SparseMat *Stokes, SparseMat *StokesA, SparseMat *St
         }
 
         // Look for the minimum predicted residuals
-        double r, minxzp, minxz, minz, fxz, fx, fz, fxzp;
-        int ixzp, ixz, ix, iz;
-        double fxzp0;
+        double r, minxzp, minxz, minz, minp, fxz, fx, fz, fp, fxzp;
+        int ixzp, ixz, ix, iz, ip;
+        double fxzp0, fxz0, fp0;
         minxzp = sqrt( pow( rx[0],2 ) + pow( rz[0],2 ) + pow( rp[0],2 ) );
         minxz  = sqrt( pow( rx[0],2 ) + pow( rz[0],2 ) );
         minx   = rx[0];
         minz   = rz[0];
+        minp   = rp[0];
         ixz    = 0;
         ix     = 0;
         iz     = 0;
@@ -677,6 +678,7 @@ double LineSearchDecoupled( SparseMat *Stokes, SparseMat *StokesA, SparseMat *St
             fxz  = sqrt( pow( rx[k],2 ) + pow( rz[k],2 ) );
             fx   = rx[k];
             fz   = rz[k];
+            fp   = rp[k];
             if( fxzp < minxzp ) {
                 minxzp = fxzp;
                 ixzp   = k;
@@ -693,9 +695,17 @@ double LineSearchDecoupled( SparseMat *Stokes, SparseMat *StokesA, SparseMat *St
                 minz= fz;
                 iz  = k;
             }
+            if( fp < minp ) {
+                minp= fp;
+                ip  = k;
+            }
         }
         
         // if the minmimun residuals are lower than starting ones, then success
+        fxz   = sqrt( pow( rx[ixz],2 ) + pow( rz[ixz],2 ) );
+        fxz0  = sqrt( pow( Nmodel->resx_f,2 ) + pow( Nmodel->resz_f,2 ) );
+        fp    = fabs(rp[ip]);
+        fp0   = Nmodel->resp_f;
         fxzp  = sqrt( pow( rx[ixzp],2 ) + pow( rz[ixzp],2 ) + pow( rp[ixzp],2 ) );
         fxzp0 = sqrt( pow(Nmodel->resx_f, 2) + pow( Nmodel->resz_f, 2) +  pow(Nmodel->resp_f, 2) );
         
@@ -704,6 +714,12 @@ double LineSearchDecoupled( SparseMat *Stokes, SparseMat *StokesA, SparseMat *St
             success = 1;
             printf("\e[1;34mPredicted Residuals\e[m : alpha  = %lf --> rx = %2.4e rz = %2.4e rp = %2.4e\n", alphav[ixzp], rx[ixzp], rz[ixzp], rp[ixzp]);
         }
+
+        // if ( fp < frac*fp0 ) { //|| rp[ix]<frac*Nmodel->resp
+        //     alpha = alphav[ip];
+        //     success = 1;
+        //     printf("\e[1;34mPredicted Residuals\e[m : alpha  = %lf --> rx = %2.4e rz = %2.4e rp = %2.4e\n", alphav[ixzp], rx[ixzp], rz[ixzp], rp[ixzp]);
+        // }
 
         // if the minmimun residuals are lower than starting ones, then success
         if (success==0 && rx[ixz] < frac*Nmodel->resx_f && rz[ixz]<frac*Nmodel->resz_f  ) { //|| rp[ix]<frac*Nmodel->resp
