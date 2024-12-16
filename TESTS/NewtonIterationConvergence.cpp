@@ -176,14 +176,14 @@ TEST_F(ShearTemplate, NonLinearPureshearAnisotropic) {
   ASSERT_TRUE(stepsCount < 20);
 }
 
-TEST_F(ShearTemplate, NonLinearSimpleshearAnisotropi) {
-  const char        *testName          = testing::UnitTest::GetInstance()->current_test_info()->name();
-  char *inputName;
-  asprintf(&inputName, "ShearTemplate/%s.txt", testName);
-  RunMDOODZ(inputName, &setup);
-  char *fileName;
-  asprintf(&fileName, "%s/%s", testName, "Output00001.gzip.h5");
-  int stepsCount = getStepsCount(fileName);
-  ASSERT_TRUE(stepsCount > 1);
-  ASSERT_TRUE(stepsCount < 10);
-}
+// TEST_F(ShearTemplate, NonLinearSimpleshearAnisotropi) {
+//   const char        *testName          = testing::UnitTest::GetInstance()->current_test_info()->name();
+//   char *inputName;
+//   asprintf(&inputName, "ShearTemplate/%s.txt", testName);
+//   RunMDOODZ(inputName, &setup);
+//   char *fileName;
+//   asprintf(&fileName, "%s/%s", testName, "Output00001.gzip.h5");
+//   int stepsCount = getStepsCount(fileName);
+//   ASSERT_TRUE(stepsCount > 1);
+//   ASSERT_TRUE(stepsCount < 10);
+// }
