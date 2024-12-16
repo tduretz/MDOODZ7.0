@@ -1,5 +1,5 @@
 using JuliaVisualisation
-using HDF5, Printf, Colors, ColorSchemes, MathTeXEngine, LinearAlgebra, FFMPEG, Statistics
+using HDF5, Printf, Colors, ColorSchemes, MathTeXEngine, LinearAlgebra, FFMPEG, Statistics, UnPack
 using CairoMakie#, GLMakie
 Mak = CairoMakie
 Makie.update_theme!( fonts = (regular = texfont(), bold = texfont(:bold), italic = texfont(:italic)))
@@ -15,12 +15,11 @@ const cm_y = y*100.
 @views function main()
 
     # Set the path to your files
-    path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/RiftingAnisotropy/d8/"
+    path = ["/Users/tduretz/REPO/MDOODZ7.0/RUNS/RiftingAnisotropy/d1/",
+            "/Users/tduretz/REPO/MDOODZ7.0/RUNS/RiftingAnisotropy/d5/",
+            "/Users/tduretz/REPO/MDOODZ7.0/RUNS/RiftingAnisotropy/d10/"]
 
-    # File numbers
-    file_start = 800
-    file_step  = 20
-    file_end   = 800
+    step = [1100, 1100, 1100]    
 
     # Select field to visualise
     field = :Phases
@@ -71,161 +70,174 @@ const cm_y = y*100.
         ϕ_contours    = false,
         PT_window     = false,
     )
-    α_heatmap   = 1.0   # transparency of heatmap 
-    vel_arrow   = 5
-    vel_scale   = 0.00001
-    vel_step    = 10
-    nap         = 0.1    # pause for animation 
-    resol       = 500
-    mov_name    = "$(path)/_$(field)/$(field)"  # Name of the movie
-    Lx, Lz      = 1.0, 1.0
-    LAB_color   = true
-    LAB_T       = 1250
+    options = (
+        printfig    = true,  # print figures to disk
+        printvid    = false,
+        framerate   = 6,
+        α_heatmap   = 0.75,   # transparency of heatmap 
+        vel_arrow   = 5,
+        vel_scale   = 10000,
+        vel_step    = 20,
+        nap         = 0.1,    # pause for animation 
+        resol       = 500,
+        Lx          = 1.0,
+        Lz          = 1.0,
+        LAB_color   = true,
+        LAB_T       = 1250,
+    )
 
     # Scaling
     # Lc = 1000.
     # tc = My
     # Vc = 1e-9
 
-    Lc = 1
-    tc = My
-    Vc = 1.0
-    τc = 1
+    scales = (
+    Lc = 1,
+    tc = My,
+    Vc = 1.0,
+    τc = 1,
+    )
 
     probe = (ϕeff = Float64.([]), t  = Float64.([]))
     cm_yr = 100.0*3600.0*24.0*365.25
 
-    # Time loop
-    f = Figure(size = (Lx/Lz*resol*1.2, resol), fontsize=40)
-
-    for istep=file_start:file_step:file_end
     
-        name     = @sprintf("Output%05d.gzip.h5", istep)
-        @info "Reading $(name)"
-        filename = string(path, name)
-        model    = ExtractData( filename, "/Model/Params")
-        xc       = ExtractData( filename, "/Model/xc_coord")
-        zc       = ExtractData( filename, "/Model/zc_coord")
-        xv       = ExtractData( filename, "/Model/xg_coord")
-        zv       = ExtractData( filename, "/Model/zg_coord")
-        xvz      = ExtractData( filename, "/Model/xvz_coord")
-        zvx      = ExtractData( filename, "/Model/zvx_coord")
-        xv_hr    = ExtractData( filename, "/VizGrid/xviz_hr")
-        zv_hr    = ExtractData( filename, "/VizGrid/zviz_hr")
-        τzz_t    = ExtractData( filename, "TimeSeries/szzd_mean_time")
-        P_t      = ExtractData( filename, "TimeSeries/P_mean_time")
-        τxz_t    = ExtractData( filename, "TimeSeries/sxz_mean_time")
-        t_t      = ExtractData( filename, "TimeSeries/Time_time")
+        # name     = @sprintf("Output%05d.gzip.h5", istep)
+        # @info "Reading $(name)"
+        # filename = string(path, name)
+        # model    = ExtractData( filename, "/Model/Params")
+        # xc       = ExtractData( filename, "/Model/xc_coord")
+        # zc       = ExtractData( filename, "/Model/zc_coord")
+        # xv       = ExtractData( filename, "/Model/xg_coord")
+        # zv       = ExtractData( filename, "/Model/zg_coord")
+        # xvz      = ExtractData( filename, "/Model/xvz_coord")
+        # zvx      = ExtractData( filename, "/Model/zvx_coord")
+        # xv_hr    = ExtractData( filename, "/VizGrid/xviz_hr")
+        # zv_hr    = ExtractData( filename, "/VizGrid/zviz_hr")
+        # τzz_t    = ExtractData( filename, "TimeSeries/szzd_mean_time")
+        # P_t      = ExtractData( filename, "TimeSeries/P_mean_time")
+        # τxz_t    = ExtractData( filename, "TimeSeries/sxz_mean_time")
+        # t_t      = ExtractData( filename, "TimeSeries/Time_time")
 
-        xc_hr  = 0.5.*(xv_hr[1:end-1] .+ xv_hr[2:end])
-        zc_hr  = 0.5.*(zv_hr[1:end-1] .+ zv_hr[2:end])
-        ncx_hr, ncz_hr = length(xc_hr), length(zc_hr)
-        coords = ( c=(x=xc, z=zc), c_hr=(x=xc_hr, z=zc_hr), v=(x=xv, z=zv))
+        # xc_hr  = 0.5.*(xv_hr[1:end-1] .+ xv_hr[2:end])
+        # zc_hr  = 0.5.*(zv_hr[1:end-1] .+ zv_hr[2:end])
+        # ncx_hr, ncz_hr = length(xc_hr), length(zc_hr)
+        # coords = ( c=(x=xc, z=zc), c_hr=(x=xc_hr, z=zc_hr), v=(x=xv, z=zv))
 
-        t      = model[1]
-        tMy    = round(t/tc, digits=6)
-        nvx    = Int(model[4])
-        nvz    = Int(model[5])
-        ncx, ncz = nvx-1, nvz-1
-        xmin, xmax = xv[1], xv[end]
-        zmin, zmax = zv[1], zv[end]
-        Lx, Lz    = (xmax-xmin)/Lc, (zv[end]-zv[1])/Lc
-        Δx, Δz, Δ = Lx/ncx, Lz/ncz, sqrt( (Lx/ncx)^2 + (Lz/ncz)^2)
-        Lx>1e3 ? length_unit="km" :  length_unit="m"
+        # t      = model[1]
+        # tMy    = round(t/tc, digits=6)
+        # nvx    = Int(model[4])
+        # nvz    = Int(model[5])
+        # ncx, ncz = nvx-1, nvz-1
+        # xmin, xmax = xv[1], xv[end]
+        # zmin, zmax = zv[1], zv[end]
+        # Lx, Lz    = (xmax-xmin)/Lc, (zv[end]-zv[1])/Lc
+        # Δx, Δz, Δ = Lx/ncx, Lz/ncz, sqrt( (Lx/ncx)^2 + (Lz/ncz)^2)
+        # Lx>1e3 ? length_unit="km" :  length_unit="m"
 
-        if @isdefined zoom
-            Lx = (zoom.xmax - zoom.xmin)./Lc 
-            Lz = (zoom.zmax - zoom.zmin)./Lc
-            window = zoom
-        else
-            window = ( 
-                xmin = minimum(xv)/Lc, 
-                xmax = maximum(xv)/Lc,
-                zmin = minimum(zv)/Lc,
-                zmax = maximum(zv)/Lc,
-            )
-        end
+        # if @isdefined zoom
+        #     Lx = (zoom.xmax - zoom.xmin)./Lc 
+        #     Lz = (zoom.zmax - zoom.zmin)./Lc
+        #     window = zoom
+        # else
+        #     window = ( 
+        #         xmin = minimum(xv)/Lc, 
+        #         xmax = maximum(xv)/Lc,
+        #         zmin = minimum(zv)/Lc,
+        #         zmax = maximum(zv)/Lc,
+        #     )
+        # end
 
-        @info "Model info"
-        @show "Model apect ratio" Lx/Lz
-        @show "Model time" t/My
-        @show length_unit
-        centroids, vertices = (ncx, ncz), (nvx, nvz)
+        # @info "Model info"
+        # @show "Model apect ratio" Lx/Lz
+        # @show "Model time" t/My
+        # @show length_unit
+        # centroids, vertices = (ncx, ncz), (nvx, nvz)
 
-        ph           = ExtractField(filename,  "/VizGrid/compo", centroids, false, 0)
-        mask_air     = ph .== -1.00 
-        ph_hr        = ExtractField(filename,  "/VizGrid/compo_hr", (ncx_hr, ncz_hr), false, 0)
-        ph_dual_hr   = ExtractField(filename,  "/VizGrid/compo_dual_hr", (ncx_hr, ncz_hr), false, 0)
-        group_phases = copy(ph_hr); ph_hr[ph_hr.==-1.00] .=   NaN; ph_dual_hr[ph_dual_hr.==-1.00] .=   NaN;
-        ηc           = ExtractField(filename,  "/Centers/eta_n", centroids, true, mask_air)
-        ρc    = Float64.(reshape(ExtractData( filename, "/Centers/rho_n"), ncx, ncz));          ρc[mask_air]  .= NaN
-        P     = Float64.(reshape(ExtractData( filename, "/Centers/P"), ncx, ncz));              P[mask_air]   .= NaN
-        T     = Float64.(reshape(ExtractData( filename, "/Centers/T"), ncx, ncz)) .- 273.15;    T[mask_air]   .= NaN
-        d     = Float64.(reshape(ExtractData( filename, "/Centers/d"), ncx, ncz));              d[mask_air]   .= NaN
-        ε̇pl   = Float64.(reshape(ExtractData( filename, "/Centers/eII_pl"), ncx, ncz));         ε̇pl[mask_air] .= NaN
-        Vx    = Float64.(reshape(ExtractData( filename, "/VxNodes/Vx"), (ncx+1), (ncz+2)))
-        Vz    = Float64.(reshape(ExtractData( filename, "/VzNodes/Vz"), (ncx+2), (ncz+1)))
-        τxx   = Float64.(reshape(ExtractData( filename, "/Centers/sxxd"), ncx, ncz))
-        τzz   = Float64.(reshape(ExtractData( filename, "/Centers/szzd"), ncx, ncz))
-        τyy   = -(τzz .+ τxx)
-        σzz   = -P + τzz
-        σxx   = -P + τxx
-        τxz   = Float64.(reshape(ExtractData( filename, "/Vertices/sxz"), nvx, nvz))
-        ε̇xx   = Float64.(reshape(ExtractData( filename, "/Centers/exxd"), ncx, ncz))
-        ε̇zz   = Float64.(reshape(ExtractData( filename, "/Centers/ezzd"), ncx, ncz))
-        ε̇yy   = -(ε̇xx .+ ε̇zz)
-        ε̇xz   = Float64.(reshape(ExtractData( filename, "/Vertices/exz"), nvx, nvz))
-        τII   = sqrt.( 0.5*(τxx.^2 .+ τyy.^2 .+ τzz.^2 .+ 0.5*(τxz[1:end-1,1:end-1].^2 .+ τxz[2:end,1:end-1].^2 .+ τxz[1:end-1,2:end].^2 .+ τxz[2:end,2:end].^2 ) ) ); τII[mask_air] .= NaN
-        ε̇II   = sqrt.( 0.5*(ε̇xx.^2 .+ ε̇yy.^2 .+ ε̇zz.^2 .+ 0.5*(ε̇xz[1:end-1,1:end-1].^2 .+ ε̇xz[2:end,1:end-1].^2 .+ ε̇xz[1:end-1,2:end].^2 .+ ε̇xz[2:end,2:end].^2 ) ) ); ε̇II[mask_air] .= NaN
+        # ph           = ExtractField(filename,  "/VizGrid/compo", centroids, false, 0)
+        # mask_air     = ph .== -1.00 
+        # ph_hr        = ExtractField(filename,  "/VizGrid/compo_hr", (ncx_hr, ncz_hr), false, 0)
+        # ph_dual_hr   = ExtractField(filename,  "/VizGrid/compo_dual_hr", (ncx_hr, ncz_hr), false, 0)
+        # group_phases = copy(ph_hr); ph_hr[ph_hr.==-1.00] .=   NaN; ph_dual_hr[ph_dual_hr.==-1.00] .=   NaN;
+        # ηc           = ExtractField(filename,  "/Centers/eta_n", centroids, true, mask_air)
+        # ρc    = Float64.(reshape(ExtractData( filename, "/Centers/rho_n"), ncx, ncz));          ρc[mask_air]  .= NaN
+        # P     = Float64.(reshape(ExtractData( filename, "/Centers/P"), ncx, ncz));              P[mask_air]   .= NaN
+        # T     = Float64.(reshape(ExtractData( filename, "/Centers/T"), ncx, ncz)) .- 273.15;    T[mask_air]   .= NaN
+        # d     = Float64.(reshape(ExtractData( filename, "/Centers/d"), ncx, ncz));              d[mask_air]   .= NaN
+        # ε̇pl   = Float64.(reshape(ExtractData( filename, "/Centers/eII_pl"), ncx, ncz));         ε̇pl[mask_air] .= NaN
+        # Vx    = Float64.(reshape(ExtractData( filename, "/VxNodes/Vx"), (ncx+1), (ncz+2)))
+        # Vz    = Float64.(reshape(ExtractData( filename, "/VzNodes/Vz"), (ncx+2), (ncz+1)))
+        # τxx   = Float64.(reshape(ExtractData( filename, "/Centers/sxxd"), ncx, ncz))
+        # τzz   = Float64.(reshape(ExtractData( filename, "/Centers/szzd"), ncx, ncz))
+        # τyy   = -(τzz .+ τxx)
+        # σzz   = -P + τzz
+        # σxx   = -P + τxx
+        # τxz   = Float64.(reshape(ExtractData( filename, "/Vertices/sxz"), nvx, nvz))
+        # ε̇xx   = Float64.(reshape(ExtractData( filename, "/Centers/exxd"), ncx, ncz))
+        # ε̇zz   = Float64.(reshape(ExtractData( filename, "/Centers/ezzd"), ncx, ncz))
+        # ε̇yy   = -(ε̇xx .+ ε̇zz)
+        # ε̇xz   = Float64.(reshape(ExtractData( filename, "/Vertices/exz"), nvx, nvz))
+        # τII   = sqrt.( 0.5*(τxx.^2 .+ τyy.^2 .+ τzz.^2 .+ 0.5*(τxz[1:end-1,1:end-1].^2 .+ τxz[2:end,1:end-1].^2 .+ τxz[1:end-1,2:end].^2 .+ τxz[2:end,2:end].^2 ) ) ); τII[mask_air] .= NaN
+        # ε̇II   = sqrt.( 0.5*(ε̇xx.^2 .+ ε̇yy.^2 .+ ε̇zz.^2 .+ 0.5*(ε̇xz[1:end-1,1:end-1].^2 .+ ε̇xz[2:end,1:end-1].^2 .+ ε̇xz[1:end-1,2:end].^2 .+ ε̇xz[2:end,2:end].^2 ) ) ); ε̇II[mask_air] .= NaN
             
-        τxzc  = 0.25*(τxz[1:end-1,1:end-1] .+ τxz[2:end,1:end-1] .+ τxz[1:end-1,2:end] .+ τxz[2:end,2:end]) 
-        C     = Float64.(reshape(ExtractData( filename, "/Centers/cohesion"), ncx, ncz))
-        ϕ     = ExtractField(filename, "/Centers/phi", centroids, false, 0)
-        divu  = ExtractField(filename, "/Centers/divu", centroids, false, 0)
+        # τxzc  = 0.25*(τxz[1:end-1,1:end-1] .+ τxz[2:end,1:end-1] .+ τxz[1:end-1,2:end] .+ τxz[2:end,2:end]) 
+        # C     = Float64.(reshape(ExtractData( filename, "/Centers/cohesion"), ncx, ncz))
+        # ϕ     = ExtractField(filename, "/Centers/phi", centroids, false, 0)
+        # divu  = ExtractField(filename, "/Centers/divu", centroids, false, 0)
        
-        T_hr  = zeros(size(ph_hr)); T_hr[1:2:end-1,1:2:end-1] .= T; T_hr[2:2:end-0,2:2:end-0] .= T
-        if LAB_color
-            ph_hr[(ph_hr.==2 .|| ph_hr.==3) .&& T_hr.<LAB_T] .= 2
-            ph_hr[(ph_hr.==2 .|| ph_hr.==3) .&& T_hr.>LAB_T] .= 3
-            ph_dual_hr[(ph_dual_hr.==2 .|| ph_dual_hr.==3) .&& T_hr.<LAB_T] .= 2
-            ph_dual_hr[(ph_dual_hr.==2 .|| ph_dual_hr.==3) .&& T_hr.>LAB_T] .= 3
-            ph_dual_hr[(ph_dual_hr.==2 .|| ph_dual_hr.==6) .&& T_hr.<LAB_T] .= 2
-            ph_dual_hr[(ph_dual_hr.==2 .|| ph_dual_hr.==6) .&& T_hr.>LAB_T] .= 3
-        end
+        # T_hr  = zeros(size(ph_hr)); T_hr[1:2:end-1,1:2:end-1] .= T; T_hr[2:2:end-0,2:2:end-0] .= T
+        # if LAB_color
+        #     ph_hr[(ph_hr.==2 .|| ph_hr.==3) .&& T_hr.<LAB_T] .= 2
+        #     ph_hr[(ph_hr.==2 .|| ph_hr.==3) .&& T_hr.>LAB_T] .= 3
+        #     ph_dual_hr[(ph_dual_hr.==2 .|| ph_dual_hr.==3) .&& T_hr.<LAB_T] .= 2
+        #     ph_dual_hr[(ph_dual_hr.==2 .|| ph_dual_hr.==3) .&& T_hr.>LAB_T] .= 3
+        #     ph_dual_hr[(ph_dual_hr.==2 .|| ph_dual_hr.==6) .&& T_hr.<LAB_T] .= 2
+        #     ph_dual_hr[(ph_dual_hr.==2 .|| ph_dual_hr.==6) .&& T_hr.>LAB_T] .= 3
+        # end
 
-        Fab = 0.
-        if PlotOnTop.fabric
-            δani    = ExtractField(filename, "/Centers/ani_fac", centroids, false, 0)
-            Nx      = Float64.(reshape(ExtractData( filename, "/Centers/nx"), ncx, ncz))
-            Nz      = Float64.(reshape(ExtractData( filename, "/Centers/nz"), ncx, ncz))
-            Fab     = (x=-Nz./Nx, z=ones(size(Nz)))
-            nrm     = sqrt.(Fab.x.^2 .+ Fab.z.^2)
-            Fab.x ./= nrm
-            Fab.z ./= nrm
-        end
-        height = 0.
-        if PlotOnTop.topo
-            height  = Float64.(ExtractData( filename, "/Topo/z_grid")); 
-            Vx_grid = Float64.(ExtractData( filename, "/Topo/Vx_grid"));
-            Vz_grid = Float64.(ExtractData( filename, "/Topo/Vz_grid"));  
-            Vx_mark = Float64.(ExtractData( filename, "/Topo/Vx_mark"));
-            Vz_mark = Float64.(ExtractData( filename, "/Topo/Vz_mark"));
-            x_mark  = Float64.(ExtractData( filename, "/Topo/x_mark"));
-            z_mark  = Float64.(ExtractData( filename, "/Topo/z_mark"));
-        end
-        Vxc   = 0.5 .* (Vx[1:end-1,2:end-1] .+ Vx[2:end-0,2:end-1])
-        Vzc   = 0.5 .* (Vz[2:end-1,1:end-1] .+ Vz[2:end-1,2:end-0])
-        V = (x=Vxc, z=Vzc, arrow=vel_arrow, step=vel_step, scale=vel_scale)
-        σ1, ε̇1 = 0., 0.
-        if PlotOnTop.σ1_axis 
-            σ1 = PrincipalStress(τxx, τzz, τxz, P) 
-        end
-        if PlotOnTop.ε̇1_axis 
-            ε̇1 = PrincipalStress(ε̇xx, ε̇zz, ε̇xz, zeros(size(ε̇xx))) 
-        end
-        PT = (P.>2.2e9 .&& P.<3.0e9 .&& T.>430 .&& T.<530).*ones(size(T))
+        # Fab = 0.
+        # if PlotOnTop.fabric
+        #     δani    = ExtractField(filename, "/Centers/ani_fac", centroids, false, 0)
+        #     Nx      = Float64.(reshape(ExtractData( filename, "/Centers/nx"), ncx, ncz))
+        #     Nz      = Float64.(reshape(ExtractData( filename, "/Centers/nz"), ncx, ncz))
+        #     Fab     = (x=-Nz./Nx, z=ones(size(Nz)))
+        #     nrm     = sqrt.(Fab.x.^2 .+ Fab.z.^2)
+        #     Fab.x ./= nrm
+        #     Fab.z ./= nrm
+        # end
+        # height = 0.
+        # if PlotOnTop.topo
+        #     height  = Float64.(ExtractData( filename, "/Topo/z_grid")); 
+        #     Vx_grid = Float64.(ExtractData( filename, "/Topo/Vx_grid"));
+        #     Vz_grid = Float64.(ExtractData( filename, "/Topo/Vz_grid"));  
+        #     Vx_mark = Float64.(ExtractData( filename, "/Topo/Vx_mark"));
+        #     Vz_mark = Float64.(ExtractData( filename, "/Topo/Vz_mark"));
+        #     x_mark  = Float64.(ExtractData( filename, "/Topo/x_mark"));
+        #     z_mark  = Float64.(ExtractData( filename, "/Topo/z_mark"));
+        # end
+        # Vxc   = 0.5 .* (Vx[1:end-1,2:end-1] .+ Vx[2:end-0,2:end-1])
+        # Vzc   = 0.5 .* (Vz[2:end-1,1:end-1] .+ Vz[2:end-1,2:end-0])
+        # V = (x=Vxc, z=Vzc, arrow=vel_arrow, step=vel_step, scale=vel_scale)
+        # σ1, ε̇1 = 0., 0.
+        # if PlotOnTop.σ1_axis 
+        #     σ1 = PrincipalStress(τxx, τzz, τxz, P) 
+        # end
+        # if PlotOnTop.ε̇1_axis 
+        #     ε̇1 = PrincipalStress(ε̇xx, ε̇zz, ε̇xz, zeros(size(ε̇xx))) 
+        # end
+        # PT = (P.>2.2e9 .&& P.<3.0e9 .&& T.>430 .&& T.<530).*ones(size(T))
      
-        
+
+        d1 = ReadFile(path[1], step[1], scales, options, PlotOnTop)
+        @unpack tMy, length_unit, Lx, Lz, xc, zc, ε̇II, τII, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, group_phases, Δ = d1
+
+        d5 = ReadFile(path[2], step[2], scales, options, PlotOnTop)
+
+        d10 = ReadFile(path[3], step[3], scales, options, PlotOnTop)
+
+
+        Δz = zc[2] - zc[1]
+
         #####################################
 
         # Color palette for phase map
@@ -245,48 +257,44 @@ const cm_y = y*100.
         # group_phases[ ph_hr.==3 ]                                             .= 3
 
         #####################################
-        empty!(f)
-        ftsz =  30*resol/500
-        f = Figure(size = (0.75*Lx/Lz*resol*1.2, resol), fontsize=ftsz)
+        ftsz =  30*options.resol/500
+        f = Figure(size = (1.2*options.Lx/options.Lz*options.resol*1.2, options.resol), fontsize=ftsz)
 
         if field==:Phases
             tMy_string = @sprintf("%1.2lf", tMy)
-            ax1 = Axis(f[1, 1], title = L"Thickness ratio at $t$ = %$(tMy_string) Ma - \delta = 8", xlabel = L"$x$ [km]", ylabel = L"$H^\textrm{left} / H^\textrm{right}$ [-]")
             # hm = heatmap!(ax1, xc_hr./Lc, zc_hr./Lc, ph_hr, colormap = phase_colors)
 
-            ph_lit = ph_dual_hr.==4 .|| ph_dual_hr.==0 .|| ph_dual_hr.==2
-            lit_thick  = (sum(ph_lit, dims=2) .*Δz)[:]
+            d1_ph_lit = d1.group_phases.==4 .|| d1.group_phases.==0 .|| d1.group_phases.==2
+            d1_lit_thick  = (sum(d1_ph_lit, dims=2) .*Δz)[:]
+            d1_ph_crust = d1.group_phases.==4 .|| d1.group_phases.==0 
+            d1_crust_thick  = (sum(d1_ph_crust, dims=2) .*Δz)[:]
+  
+            d5_ph_lit = d5.group_phases.==4 .|| d5.group_phases.==0 .|| d5.group_phases.==2
+            d5_lit_thick  = (sum(d5_ph_lit, dims=2) .*Δz)[:]
+            d5_ph_crust = d5.group_phases.==4 .|| d5.group_phases.==0 
+            d5_crust_thick  = (sum(d5_ph_crust, dims=2) .*Δz)[:]
+  
+            d10_ph_lit = d10.group_phases.==4 .|| d10.group_phases.==0 .|| d10.group_phases.==2
+            d10_lit_thick  = (sum(d10_ph_lit, dims=2) .*Δz)[:]
+            d10_ph_crust = d10.group_phases.==4 .|| d10.group_phases.==0 
+            d10_crust_thick  = (sum(d10_ph_crust, dims=2) .*Δz)[:]
+  
 
-            ph_crust = ph_dual_hr.==4 .|| ph_dual_hr.==0 #.|| ph_dual_hr.==2
-            crust_thick  = (sum(ph_crust, dims=2) .*Δz)[:]
+            ax1 = Axis(f[1, 1:2], title = L"Thickness ratio at $t$ = %$(tMy_string) Ma - \delta = 8", xlabel = L"$x$ [km]", ylabel = L"$H^\textrm{left} / H^\textrm{right}$ [-]")
+            lines!(ax1, coords.c_hr.x./1e3, d1_crust_thick, label=L"$H_\textrm{crust}^\textrm{left} / H_\textrm{crust}^\textrm{right}$")  
             
-            Nx_2 = Int64(size(ph_dual_hr,1)/2)
-            crust_left  = crust_thick[1:Nx_2]
-            crust_right = crust_thick[end:-1:end-Nx_2+1]
+            ax2 = Axis(f[2, 1:2], title = L"Thickness ratio at $t$ = %$(tMy_string) Ma - \delta = 8", xlabel = L"$x$ [km]", ylabel = L"$H^\textrm{left} / H^\textrm{right}$ [-]")
 
-            lit_left  = lit_thick[1:Nx_2]
-            lit_right = lit_thick[end:-1:end-Nx_2+1]
-
-            error_lit = sum(abs.(lit_left.-lit_right)./abs.(lit_right))
-            error_cr  = sum(abs.(crust_left.-crust_right)./abs.(crust_right))
-            @show error_lit
-            @show error_cr
-            # lines!(ax1, xc_hr[1:Nx_2]./1e3, crust_left ./1e3)  
-            # lines!(ax1, xc_hr[1:Nx_2]./1e3, crust_right./1e3)
-            # lines!(ax1, xc_hr[1:Nx_2]./1e3, lit_left ./1e3)  
-            # lines!(ax1, xc_hr[1:Nx_2]./1e3, lit_right./1e3)
-
-            lines!(ax1, xc_hr[1:Nx_2]./1e3, crust_left ./crust_right, label=L"$H_\textrm{crust}^\textrm{left} / H_\textrm{crust}^\textrm{right}$")  
-            lines!(ax1, xc_hr[1:Nx_2]./1e3, lit_left   ./lit_right,   label=L"$H_\textrm{lith}^\textrm{left} / H_\textrm{lith}^\textrm{right}$")  
+            lines!(ax2, coords.c_hr.x./1e3, d1_lit_thick  ,   label=L"$H_\textrm{lith}^\textrm{left} / H_\textrm{lith}^\textrm{right}$")  
             axislegend(framevisible=false, position=:lt)
 
             δ = [1 1.5 2 3 4 5 6 7 8 10]
             ξlit = [0.051307674f0 7.64 10.84 16.83 22.91 26.42 29.65 31.86 33.428 35.20] 
             ξcr  = [0.28 47.58 69.00 100.45 105.12 110.91 105.66921f0 98.70723f0 91.94 81.53]
-            ax2 = Axis(f[1, 2], title = L"$$Effect of anisotropy strength on asymmetry", ylabel=L"Thickness difference $(%)$", xlabel=L"$\delta$ [-]" )
-            lines!(ax2, δ[:], ξlit[:], label="Lithosphere")
-            lines!(ax2, δ[:], ξcr[:], label="Crust")
-            ylims!(ax2, 0, 120)
+            ax3 = Axis(f[3, 1:2], title = L"$$Effect of anisotropy strength on asymmetry", ylabel=L"Thickness difference $(%)$", xlabel=L"$\delta$ [-]" )
+            lines!(ax3, δ[:], ξlit[:], label="Lithosphere")
+            lines!(ax3, δ[:], ξcr[:], label="Crust")
+            ylims!(ax3, 0, 120)
             axislegend(framevisible=false, position=:lt)
 
             save("/Users/tduretz/PowerFolders/_manuscripts/RiftingAnisotropy/Figures/ThicknessVariations.png", f, px_per_unit = 4)   
@@ -594,18 +602,12 @@ const cm_y = y*100.
         if field!=:EffectiveFrictionTime || istep!=file_end
             DataInspector(f)
             display(f)
-            sleep(nap)
         end
 
-    end
 
     yscale = Lz/Lx
 
-    if printfig && printvid
-        FFMPEG.ffmpeg_exe(`-framerate $(framerate) -f image2 -pattern_type glob -i $(path)_$(field)/'*'.png -vf "scale='bitand(oh*dar, 65534)':'bitand(ih/2, 65534)', setsar=1" -c:v libx264 -pix_fmt yuv420p -y "$(mov_name).mov"`)
-
-        # FFMPEG.ffmpeg_exe(`-framerate $(framerate) -f image2 -pattern_type glob -i $(path)_$(field)/'*'.png -vf "scale=1080:1080*$(yscale)" -c:v libx264 -pix_fmt yuv420p -y "$(mov_name).mov"`)
-    end
+   
 
 end
 

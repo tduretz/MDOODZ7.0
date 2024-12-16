@@ -1,6 +1,6 @@
 /**** RESTART ****/
 istep = 000500
-irestart = 1
+irestart = 0
 
 /**** OUTPUT FILES ****/
 writer          = 1
@@ -18,7 +18,7 @@ T   = 700
 /**** SPACE-TIME ****/
 Nx      = 151
 Nz      = 151
-Nt      = 800
+Nt      = 300
 xmin    =-1.0
 zmin    =-1.0
 xmax    = 1.0
@@ -171,7 +171,7 @@ density_model = 3     / Mdoodz6 setup =1
 
 /**** PHASE 2 ****/
 ID            = 2
-rho           = 2950.00 / Omphacite
+rho           = 2850.00 / Omphacite
 G             = 4.0e10
 Cp            = 1050.0
 k             = 2.3
