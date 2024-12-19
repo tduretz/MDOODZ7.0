@@ -29,8 +29,8 @@ int SetPhase(MdoodzInput *input, Coordinates coordinates) {
   }
   // Inclusion
   const double radius = (input->model.user3) / input->scaling.L;
-  const double b_ell = (input->model.user5)*radius/ input->scaling.L;
-  const double a_ell = (input->model.user4)*radius/ input->scaling.L;
+  const double b_ell = (input->model.user5)*radius;
+  const double a_ell = (input->model.user4)*radius;
   const double x0 = 0.0, z0 = 0.0/input->scaling.L;
   const double angle = -(input->model.user6)*M_PI/180.0;
   const double x_ell = (coordinates.x - x0)*cos(angle) + (coordinates.z - z0)*sin(angle);
@@ -80,7 +80,7 @@ int main(int nargs, char *args[]) {
   // Input file name
   char *input_file;
   if (nargs < 2) {
-    asprintf(&input_file, "PlasticityLayers.txt");// Default
+    asprintf(&input_file, DefaultTextFilename(__FILE__)); // Default
   } else {
     asprintf(&input_file, "%s", args[1]);// Custom
   }

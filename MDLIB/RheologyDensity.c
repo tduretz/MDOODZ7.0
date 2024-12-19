@@ -405,8 +405,8 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
   int    mix_avg             = model->diffuse_avg;
   double rho1                = materials->rho[phase];
   double rho2                = materials->rho[phase];
-  int    ProgressiveReaction = materials->reac_soft[phase], no_return = model->no_return;
   double tau_kin = materials->tau_kin[phase], Pr = materials->Pr[phase], dPr = materials->dPr[phase];
+  bool   phase_chemical_production = model->chemical_production && materials->reac_soft[phase];
   double divr = 0.0;
   if (model->diffuse_X == 0) constant_mix = 0;
 
@@ -514,19 +514,9 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
   X = X0;
 
   // Reaction stuff: 2. Mixture rheology (Huet et al., 2014)
-  if (  ProgressiveReaction == 1 ) {
-
-    if ( model->unsplit_diff_reac == 0 ) {
-
+  if (phase_chemical_production) {
       X     = (X0*tau_kin - 0.5*dt*erfc((P - Pr)/dPr) + dt)/(dt + tau_kin);
-
-      if ( X<X0 && no_return == 1 ) {
-        X      = X0;
-      }
-    }
-    // Parameters of end-members and averahing following Huet et al. (2014)
-    // rho1   = materials->rho[phase];                rho2   = materials->rho[materials->reac_phase[phase]];
-    HuetAveragingModel( &B_pwl, &C_pwl, &n_pwl, phase, R, T, t_pwl, X, pre_factor, materials );
+      HuetAveragingModel( &B_pwl, &C_pwl, &n_pwl, phase, R, T, t_pwl, X, pre_factor, materials );
   }
 
   if ( Melting == 1 ) PartialMelting( &phi1, &Ql1, P, T, phi0, tau_kin, dt, materials->melt[phase], scaling );
@@ -687,35 +677,13 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
   }
 
   // ----------------- Reaction volume changes, computation of updated density only on centroid nodes
-  // if ( centroid > 0 ) {
-  //   if (final_update==1) P = Pc;
-  //   if (ProgressiveReaction == 1) {
-  //     // rho_ref      = (1.0-X)*rho1 + X*rho2;
-  //     // *rho         = rho_ref * exp(P/K - alpha*T);
-  //     *rho = EvaluateDensity( phase, T, P, X, model, materials );
-  //   }
-  //   else {
-  //     rho_eq = EvaluateDensity( phase, T, P, X, model, materials );
-  //     if ( kinetics == 1 ) dG            = Interpolate2Ddata( T0, P0, model->kin_Tmin, model->kin_Tmax, model->kin_Pmin, model->kin_Pmax, model->kin_nT, model->kin_nP, model->kin_dG );
-  //     if ( kinetics == 1 && dG>0.0 ) {
-  //       Vkin          = kkin*T*( exp(-Qkin/R/T) * (1.0 - exp(-dG/R/T)) ); // growth rate [m/s]
-  //       tau_kin       = log(1-0.6666666) * pow(-2*Skin*Vkin, -1);
-  //       rho0          = EvaluateDensity( phase, T0, P0, X, model, materials );
-  //       *rho          = 1.0/(tau_kin + dt) * (tau_kin*rho0 + dt*rho_eq);
-  //     }
-  //     else {
-  //       *rho          = rho_eq;
-  //     }
-  //   }
-  // }
   if ( centroid > 0 ) {
     if (final_update==1) P = Pc;
-    if (ProgressiveReaction == 1 || Melting == 1) {
-      // rho_ref      = (1.0-X)*rho1 + X*rho2;
-      // *rho         = rho_ref * exp(P/K - alpha*T);
-      rho0 = EvaluateDensity( phase, T0, P0, X0, phi0, model, materials );
-      *rho = EvaluateDensity( phase, T,  P,  X,  phi1, model, materials );        
-      // if (materials->melt[phase]==1) printf("phi0 = %1.2e phi1 = %1.2e --- %1.8e %1.8e \n", phi0, phi1, rho0*scaling->rho, *rho*scaling->rho);
+    // if (model->chemical_production == 1 || Melting == 1) {
+    //   *rho = EvaluateDensity( phase, T,  P,  X,  phi1, model, materials );                     
+    // }
+    if (model->density_variations==1) {
+      *rho = EvaluateDensity( phase, T,  P,  X,  phi1, model, materials );  
     }
     else {
       rho_eq = EvaluateDensity( phase, T, P, X, phi1, model, materials );
@@ -847,7 +815,7 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
   int    p, k, l, Nx, Nz, Ncx, Ncz, c0, c1, k1;
   double eta, txx1, tzz1, txz1, etaVE, VEcoeff = 0.0, eII_el, eII_pl, eII_pwl, eII_exp, eII_lin, eII_gbs, eII_cst, dnew, div_el, div_pl, div_r;
   double Wtot, Wel, Wdiss;
-  int    average = model->eta_average, unsplit_diff_reac = model->unsplit_diff_reac;
+  int    average = model->eta_average;
   double Xreac;
   double OverS;
   double Pcorr, rho;
@@ -867,7 +835,7 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
   InterpCentroidsToVerticesDouble( mesh->phi0_n,  mesh->phi0_s,  mesh, model ); // ACHTUNG NOT FRICTION ANGLE
 
   // Evaluate cell center viscosities
-#pragma omp parallel for shared( mesh ) private( k, l, k1, p, eta, c1, c0, txx1, tzz1, txz1, etaVE, VEcoeff, eII_el, eII_pl, eII_pwl, eII_exp, eII_lin, eII_gbs, eII_cst, dnew, Xreac,OverS, Pcorr, rho, div_el, div_pl, div_r, Exx, Ezz, Exz, eta_e, Wtot, Wel, Wdiss ) firstprivate( el, unsplit_diff_reac, materials, scaling, average, model, Ncx, Ncz )
+#pragma omp parallel for shared( mesh ) private( k, l, k1, p, eta, c1, c0, txx1, tzz1, txz1, etaVE, VEcoeff, eII_el, eII_pl, eII_pwl, eII_exp, eII_lin, eII_gbs, eII_cst, dnew, Xreac,OverS, Pcorr, rho, div_el, div_pl, div_r, Exx, Ezz, Exz, eta_e, Wtot, Wel, Wdiss ) firstprivate( el, materials, scaling, average, model, Ncx, Ncz )
   for ( k1=0; k1<Ncx*Ncz; k1++ ) {
 
     //    for ( l=0; l<Ncz; l++ ) {
@@ -899,10 +867,8 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
     mesh->Wtot[c0]        = 0.0;
     mesh->Wel[c0]         = 0.0;
     mesh->Wdiss[c0]       = 0.0;
-    //        X                     =  mesh->Xreac_n[c0]; // Save X first
-    //        if (model->chemical_diffusion==1) mesh->Xreac_n[c0]    = 0.0;
-    if ( unsplit_diff_reac == 0 ) mesh->X_n[c0]        = 0.0;
-    mesh->OverS_n[c0]    = 0.0;
+    mesh->X_n[c0]         = 0.0;
+    mesh->OverS_n[c0]     = 0.0;
 
     if ( model->density_variations == 1 ) {
       mesh->rho_n[c0]  = 0.0;
@@ -975,13 +941,13 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
           mesh->div_u_pl[c0]    += mesh->phase_perc_n[p][c0] * div_pl;
           mesh->div_u_r[c0]     += mesh->phase_perc_n[p][c0] * div_r;
 
-          if ( unsplit_diff_reac == 0 ) mesh->X_n[c0]         += mesh->phase_perc_n[p][c0] * Xreac;
+// printf("%1.2e\n", Xreac);
+          mesh->X_n[c0]         += mesh->phase_perc_n[p][c0] * Xreac;
           mesh->OverS_n[c0]     += mesh->phase_perc_n[p][c0] * OverS;
 
           // Volume changes
           if ( model->density_variations == 1 ) {
             mesh->rho_n[c0]       += mesh->phase_perc_n[p][c0] * rho;
-            // mesh->rho_n[c0]       += mesh->phase_perc_n[p][c0] * 1.0/rho;
           }
         }
       }
@@ -1031,7 +997,7 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
   }
 
 // Calculate vertices viscosity
-#pragma omp parallel for shared( mesh ) private( k, l, k1, p, eta, c1, c0, txx1, tzz1, txz1, etaVE, VEcoeff, eII_el, eII_pl, eII_pwl, eII_exp, eII_lin, eII_gbs, eII_cst, dnew, Wtot, Wel, Wdiss, Xreac, OverS, Pcorr, rho, div_el, div_pl, div_r, Exx, Ezz, Exz, eta_e ) firstprivate( el, unsplit_diff_reac, materials, scaling, average, model, Nx, Nz )
+#pragma omp parallel for shared( mesh ) private( k, l, k1, p, eta, c1, c0, txx1, tzz1, txz1, etaVE, VEcoeff, eII_el, eII_pl, eII_pwl, eII_exp, eII_lin, eII_gbs, eII_cst, dnew, Wtot, Wel, Wdiss, Xreac, OverS, Pcorr, rho, div_el, div_pl, div_r, Exx, Ezz, Exz, eta_e ) firstprivate( el, materials, scaling, average, model, Nx, Nz )
   for ( k1=0; k1<Nx*Nz; k1++ ) {
 
     k  = mesh->kn[k1];
@@ -1043,8 +1009,7 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
     mesh->sxz[c1]        = 0.0;
     mesh->eta_phys_s[c1] = 0.0;
     mesh->eta_s[c1]      = 0.0;
-
-    if (unsplit_diff_reac == 0) mesh->X_s[c1]        = 0.0;
+    mesh->X_s[c1]        = 0.0;
 
     if ( mesh->BCg.type[c1] != 30 ) {
 
@@ -1085,7 +1050,7 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
               mesh->eta_phys_s[c1] += mesh->phase_perc_s[p][c1] * log(eta);
               break;
           }
-          if (unsplit_diff_reac == 0) mesh->X_s[c1]        += mesh->phase_perc_s[p][c1] * Xreac;
+          mesh->X_s[c1]        += mesh->phase_perc_s[p][c1] * Xreac;
         }
       }
       // HARMONIC AVERAGE
@@ -1132,8 +1097,6 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
   //  Print2DArrayDouble( mesh->szzd,  mesh->Nx-1, mesh->Nz-1, scaling->S );
   // printf("Txz:\n");
   //  Print2DArrayDouble( mesh->sxz,  mesh->Nx, mesh->Nz, scaling->S );
-
-
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
@@ -1463,7 +1426,6 @@ void ShearModCompExpGrid( grid* mesh, mat_prop *materials, params *model, scale 
 double EvaluateDensity( int p, double T, double P, double X, double phi, params *model, mat_prop *materials ) {
 
   double rho;
-  const int    ProgressiveReaction = materials->reac_soft[p], no_return = model->no_return;
   
   // Constant density
   if ( materials->density_model[p] == 0 ) {
@@ -1490,7 +1452,7 @@ double EvaluateDensity( int p, double T, double P, double X, double phi, params 
   }
 
   // P-T dependent density
-  if ( materials->density_model[p] == 3 && ProgressiveReaction == 0 ) {
+  if ( materials->density_model[p] == 3 && model->density_variations == 0 ) {
     const double rho_ref = materials->rho[p];
     const double beta    = materials->bet[p];
     const double alpha   = materials->alp[p];
@@ -1498,7 +1460,7 @@ double EvaluateDensity( int p, double T, double P, double X, double phi, params 
   }
 
   // P-T dependent density: models used for Yamato et al. (2022)
-  if ( materials->density_model[p] == 3  && ProgressiveReaction == 1) {
+  if ( materials->density_model[p] == 3 && model->density_variations == 1) {
     const double rho1    = materials->rho[p];
     const double rho2    = materials->rho[materials->reac_phase[p]];
     const double beta    = materials->bet[p];
@@ -1536,7 +1498,7 @@ double EvaluateDensity( int p, double T, double P, double X, double phi, params 
 void UpdateDensity( grid* mesh, markers* particles, mat_prop *materials, params *model, scale *scaling ) {
 
   int k, p, c0, Ncx=mesh->Nx-1, Ncz=mesh->Nz-1;
-  int    old = 1;
+  int    old = 0;
   double rho, rho0, epsi = 1e-13, mean_rho, mean_rho0;
   // printf("Update density fields on mesh\n");
 
@@ -1571,22 +1533,9 @@ void UpdateDensity( grid* mesh, markers* particles, mat_prop *materials, params 
     // mesh->rho_n[c0]              = 1.0/mesh->rho_n[c0]; 
     // if (old==1) mesh->rho0_n[c0] = 1.0/mesh->rho0_n[c0];
   }
-
-  // mean_rho0 = SumArray( mesh->rho0_n, scaling->rho, Ncx*Ncz, "mean rho" ) /(Ncx*Ncz);
-
-  // for ( c0=0; c0<Ncx*Ncz; c0++ ) {
-  //   mesh->rho0_n[c0] -= mean_rho0;
-  //   mesh->rho0_n[c0] += mean_rho;
-  // }
-
-
+  
   // Interpolate to vertices
   InterpCentroidsToVerticesDouble( mesh->rho_n, mesh->rho_s, mesh, model );
-
-  // double* rho0_s = DoodzCalloc((model->Nx)*(model->Nz), sizeof(double));
-  // InterpCentroidsToVerticesDouble( mesh->rho0_n, rho0_s, mesh, model );
-  // InterpVerticesToCentroidsDouble( mesh->rho0_n, rho0_s, mesh, model );
-  // DoodzFree(rho0_s);
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/

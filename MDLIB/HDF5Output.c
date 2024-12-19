@@ -639,13 +639,6 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
     DoubleToFloat( mesh->C_n, Ccohesion, (model.Nx-1)*(model.Nz-1) );
     ScaleBack( Ccohesion, scaling.S, (model.Nx-1)*(model.Nz-1) );
     
-//    // Get X from particles
-//    X  = DoodzCalloc((model.Nx-1)*(model.Nz-1),sizeof(double));
-//    Interp_P2C ( *particles,  particles->X, mesh, X, mesh->xg_coord, mesh->zg_coord, 1, 0 );
-//    CX  = DoodzMalloc( sizeof(float)*(model.Nx-1)*(model.Nz-1));
-//    DoubleToFloat( X, CX, (model.Nx-1)*(model.Nz-1) );
-
-
     //---------------------------------------------------
 
     // Topography
