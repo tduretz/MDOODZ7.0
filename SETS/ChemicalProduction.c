@@ -3,37 +3,19 @@
 
 int SetPhase(MdoodzInput *input, Coordinates coordinates) {
   const double radius = 0.25 / input->scaling.L;
-  const double x = coordinates.x + 0.25;
-  const double z = coordinates.z;
-  if ( x*x + z*z < radius * radius) {
-    return 0;
+  const double x = coordinates.x;
+  // const double z = coordinates.z;
+  if ( fabs(x) < radius) {
+  // if ( x*x + z*z < radius * radius) {
+    return 1;
   } else {
     return 0;
   }
 }
 
 double SetXComponent(MdoodzInput *input, Coordinates coordinates, int phase) {
-  double X = 0.0;
-  const double radius = 0.25 / input->scaling.L;
-  bool setup = false;
-  double x = coordinates.x;
-  double z = coordinates.z;
-  
-  if (setup) {
-    x += 0.25;  
-    if ( x*x + z*z < radius * radius) {
-      return 1.0;
-    }
-    else {
-      return X;
-    }
-  }
-  else {
-    const double sig = 0.1  / input->scaling.L;
-    X = exp(-(x*x + z*z)/(sig*sig));
-    return X;
-  }
-
+  double X = 0.0;  
+  return X;
 }
 
 int SetDualPhase(MdoodzInput *input, Coordinates coordinate, int phase) {
@@ -94,7 +76,6 @@ int main() {
           .SetParticles  = &(SetParticles_ff){
                    .SetHorizontalVelocity = SetHorizontalVelocity,
                    .SetPhase              = SetPhase,
-                   .SetDualPhase          = SetDualPhase,
                    .SetDensity            = SetDensity,
                    .SetXComponent         = SetXComponent,
           },
@@ -104,5 +85,5 @@ int main() {
                   .SetBCC  = SetBCC,
           },
   };
-  RunMDOODZ("ChemicalDiffusion.txt", &setup);
+  RunMDOODZ("ChemicalProduction.txt", &setup);
 }

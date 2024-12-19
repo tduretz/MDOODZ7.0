@@ -84,6 +84,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
     // Multi resolution allocation pointers
     grid mesh = GridAlloc(&input.model );
+    int          Ncx = mesh.Nx - 1 , Ncz =  mesh.Nz - 1;
 
     // Initialise grid coordinates
     SetGridCoordinates( &mesh, &input.model, input.model.Nx, input.model.Nz );
@@ -412,6 +413,9 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         LoadBreakpointParticles( &particles, &mesh, &topo_chain, &topo_chain_ini, &input.model, &topo, &topo_ini, input.scaling  );
         SetGridCoordinates( &mesh, &input.model, input.model.Nx, input.model.Nz ); // Overwrite previous grid
     }
+    Initialise1DArrayDouble( mesh.X_n,     (input.model.Nx-1)*(input.model.Nz-1), 0.0 );
+    Initialise1DArrayDouble( mesh.X_s,     (input.model.Nx-0)*(input.model.Nz-0), 0.0 );
+
 
     //------------------------------------------------------------------------------------------------------------------------------//
     //------------------------------------------------------------------------------------------------------------------------------//
@@ -494,20 +498,6 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         // Interpolate Melt fraction
         P2Mastah( &input.model, particles, particles.phi,   &mesh, mesh.phi0_n , mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil);
 
-        // Allocate and initialise solution and RHS vectors
-        UpdateDensity( &mesh, &particles, &input.materials, &input.model, &input.scaling );
-        // P2Mastah( &input.model, particles, particles.rho,     &mesh, mesh.rho0_n , mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil);
-
-        // Free surface - subgrid density correction
-        if (input.model.free_surface == 1 ) { // TODO: include into UpdateDensity
-            SurfaceDensityCorrection( &mesh, input.model, topo, input.scaling  );
-        }
-
-        // Lithostatic pressure
-        int          Ncx = mesh.Nx - 1 , Ncz =  mesh.Nz - 1;
-        ArrayEqualArray(  mesh.p_lith0,   mesh.p_lith, Ncx*Ncz );
-        ComputeLithostaticPressure( &mesh, &input.model, input.materials.rho[0], input.scaling, 1 );
-
         // Elasticity - interpolate advected/rotated stresses
         if  (input.model.elastic == 1 ) {
 
@@ -553,13 +543,19 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         // Detect compressible cells
         if (input.model.compressible == 1 ) DetectCompressibleCells ( &mesh, &input.model );
 
-        // Get physical properties that are constant throughout each timestep
-        // UpdateDensity( &mesh, &particles, &input.materials, &input.model, &input.scaling );
-        // P2Mastah( &input.model, particles, particles.rho,     &mesh, mesh.rho0_n , mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil);
-        // P2Mastah( &input.model, particles, particles.rho, &mesh, mesh.rho_s, mesh.BCg.type,  1, 0, interp, vert, input.model.interp_stencil);
+        // Allocate and initialise solution and RHS vectors
+        UpdateDensity( &mesh, &particles, &input.materials, &input.model, &input.scaling );
+    
+        P2Mastah( &input.model, particles, particles.rho,     &mesh, mesh.rho0_n , mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil);
 
-        // // Free surface - subgrid density correction
-        // if (input.model.free_surface == 1 ) SurfaceDensityCorrection( &mesh, input.model, topo, input.scaling  );
+        // Free surface - subgrid density correction
+        if (input.model.free_surface == 1 ) { // TODO: include into UpdateDensity
+            SurfaceDensityCorrection( &mesh, input.model, topo, input.scaling  );
+        }
+
+        // Lithostatic pressure
+        ArrayEqualArray(  mesh.p_lith0,   mesh.p_lith, Ncx*Ncz );
+        ComputeLithostaticPressure( &mesh, &input.model, input.materials.rho[0], input.scaling, 1 );
 
         // Update anisotropy factor (function of accumulated strain and phase)
         if ( input.model.anisotropy == 1 ) UpdateAnisoFactor( &mesh, &input.materials, &input.model, &input.scaling);
@@ -744,6 +740,11 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                     }
                 }
 
+
+                // UpdateDensity( &mesh, &particles, &input.materials, &input.model, &input.scaling );
+                // MinMaxArrayTag( mesh.rho_n, input.scaling.rho,       (mesh.Nx-1)*(mesh.Nz-1), "rho_n     ", mesh.BCp.type );
+                // if (input.model.step>2) exit(1);
+
                 if (input.model.writer_debug == 1 ) {
                     WriteOutputHDF5( &mesh, &particles, &topo, &topo_chain, input.model, Nmodel, "Output_BeforeSolve", input.materials, input.scaling );
                     WriteOutputHDF5Particles( &mesh, &particles, &topo, &topo_chain, &topo_ini, &topo_chain_ini, input.model, "Particles_BeforeSolve", input.materials, input.scaling );
@@ -908,9 +909,6 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         // Update pressure on markers
         UpdateParticlePressure( &mesh, input.scaling, input.model, &particles, &input.materials );
 
-        // // Update density on markers
-        // UpdateParticleDensity( &mesh, input.scaling, input.model, &particles, &input.materials );
-
         // Grain size evolution
         UpdateParticleGrainSize( &mesh, input.scaling, input.model, &particles, &input.materials );
 
@@ -963,31 +961,38 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
         if (input.model.melting == 1 ) {
             MeltFractionGrid( &mesh, &particles, &input.materials, &input.model, &input.scaling );
+            UpdateDensity( &mesh, &particles, &input.materials, &input.model, &input.scaling );
         }
-        UpdateDensity( &mesh, &particles, &input.materials, &input.model, &input.scaling );
-        // Update density on markers
-        UpdateParticleDensity( &mesh, input.scaling, input.model, &particles, &input.materials );
 
         //--------------------------------------------------------------------------------------------------------------------------------//
 
+        printf("*************************************\n");
+        printf("********** Chemical solver **********\n");
+        printf("*************************************\n");
+
+        if (input.model.chemical_production == 1)  {
+            if (input.model.anisotropy==0) NonNewtonianViscosityGrid(      &mesh, &input.materials, &input.model, Nmodel, &input.scaling, 0 );
+            if (input.model.anisotropy==1) NonNewtonianViscosityGridAniso( &mesh, &input.materials, &input.model, Nmodel, &input.scaling, 0 );
+            MinMaxArrayTag( mesh.X_s, 1.0, (mesh.Nx)*(mesh.Nz),     "X_s     ", mesh.BCg.type );
+            MinMaxArrayTag( mesh.X_n, 1.0, (mesh.Nx-1)*(mesh.Nz-1), "X_n     ", mesh.BCp.type );
+        }
+
         if (input.model.chemical_diffusion == 1)  {
-            if (input.model.unsplit_diff_reac == 0 ) ArrayEqualArray( mesh.X_n, mesh.X0_n,  (mesh.Nx-1)*(mesh.Nz-1) );
-            printf("*************************************\n");
-            printf("********** Chemical solver **********\n");
-            printf("*************************************\n");
             P2Mastah ( &input.model, particles, input.materials.k_chem, &mesh, mesh.kc_x, mesh.BCu.type,  0, 0, interp, vxnodes, input.model.interp_stencil);
             P2Mastah ( &input.model, particles, input.materials.k_chem, &mesh, mesh.kc_z, mesh.BCv.type,  0, 0, interp, vznodes, input.model.interp_stencil);
             ChemicalDirectSolve( &mesh, input.model, &particles, &input.materials, input.model.dt, input.scaling );
         }
-        else {
-            if (input.model.density_variations==0) ArrayEqualArray( mesh.X_n, mesh.X0_n,  (mesh.Nx-1)*(mesh.Nz-1) );
-        }
+     
         UpdateParticleX( &mesh, input.scaling, input.model, &particles, &input.materials );
 
         //--------------------------------------------------------------------------------------------------------------------------------//
 
+        // Density on particles
+        UpdateDensity( &mesh, &particles, &input.materials, &input.model, &input.scaling );
+        UpdateParticleDensity( &mesh, input.scaling, input.model, &particles, &input.materials );
+
         // Explicit mass source terms
-        if (input.model.compressible==1) {
+        if (input.model.compressible == 1) {
             MassSourceTerm( &mesh, &particles, &input.materials, &input.model, &input.scaling );
             UpdateParticleDivThermal( &mesh, input.scaling, input.model, &particles, &input.materials ); 
             MinMaxArrayTag( mesh.divth_n,  input.scaling.E, (mesh.Nx-1)*(mesh.Nz-1), "divth_n", mesh.BCp.type );

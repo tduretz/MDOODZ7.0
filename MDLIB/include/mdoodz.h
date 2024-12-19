@@ -48,7 +48,7 @@ typedef struct {
   int    balance_boundaries, zero_mean_topo; 
   char   description[500];
   double xmin, zmin, xmax, zmax, time, dx, dz, dt, dt0, dt_start, dt_max, L0,
-          dt_min;
+          dt_min, dt_reduction_factor;
   double  xmin0, zmin0, xmax0, zmax0;
   double  gx, gz;
   int     Nx, Nz, Nt, step, nit, Newton, noisy;
@@ -104,7 +104,7 @@ typedef struct {
   int      diffuse_X, diffuse_avg;
   double   diffusion_length;
   // For Pips
-  int      chemical_diffusion, no_return, density_variations, unsplit_diff_reac, kinetics;
+  int      chemical_diffusion, chemical_production, no_return, density_variations, kinetics;
   int      layering;
   // initial stresses
   int preload;

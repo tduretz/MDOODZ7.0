@@ -374,6 +374,7 @@ void            GenerateDeformationMaps(grid *, mat_prop *, params *, Nparams, s
 void            UpdateParticleGrainSize(grid *, scale, params, markers *, mat_prop *);
 void            UpdateParticleDensity(grid *, scale, params, markers *, mat_prop *);
 void            UpdateParticleX(grid *, scale, params, markers *, mat_prop *);
+void            UpdateParticleXpips(grid *, scale, params, markers *, mat_prop *);
 void            UpdateParticlePhi(grid *, scale, params, markers *, mat_prop *);
 // Anisotropy
 void            NonNewtonianViscosityGridAniso(grid *, mat_prop *, params *, Nparams, scale *, int);

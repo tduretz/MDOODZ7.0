@@ -257,7 +257,7 @@ const cm_y = y*100.
             ph_lit = ph_dual_hr.==4 .|| ph_dual_hr.==0 .|| ph_dual_hr.==2
             lit_thick  = (sum(ph_lit, dims=2) .*Δz)[:]
 
-            ph_crust = ph_dual_hr.==4 .|| ph_dual_hr.==0# .|| ph_dual_hr.==2
+            ph_crust = ph_dual_hr.==4 .|| ph_dual_hr.==0 #.|| ph_dual_hr.==2
             crust_thick  = (sum(ph_crust, dims=2) .*Δz)[:]
             
             Nx_2 = Int64(size(ph_dual_hr,1)/2)
@@ -267,8 +267,10 @@ const cm_y = y*100.
             lit_left  = lit_thick[1:Nx_2]
             lit_right = lit_thick[end:-1:end-Nx_2+1]
 
-            error = sum(abs.(crust_left.-crust_right)./abs.(crust_right))
-            @show error
+            error_lit = sum(abs.(lit_left.-lit_right)./abs.(lit_right))
+            error_cr  = sum(abs.(crust_left.-crust_right)./abs.(crust_right))
+            @show error_lit
+            @show error_cr
             # lines!(ax1, xc_hr[1:Nx_2]./1e3, crust_left ./1e3)  
             # lines!(ax1, xc_hr[1:Nx_2]./1e3, crust_right./1e3)
             # lines!(ax1, xc_hr[1:Nx_2]./1e3, lit_left ./1e3)  
@@ -278,12 +280,13 @@ const cm_y = y*100.
             lines!(ax1, xc_hr[1:Nx_2]./1e3, lit_left   ./lit_right,   label=L"$H_\textrm{lith}^\textrm{left} / H_\textrm{lith}^\textrm{right}$")  
             axislegend(framevisible=false, position=:lt)
 
-            δ = [1 1.5 2 3 4 5 6 7 8]
-            ξlit = [0.051307674f0 7.64 10.84 16.83 22.91 26.42 29.65 31.86 33.428] 
-            ξcr  = [0.28 47.58 69.00 100.45 105.12 110.91 105.66921f0 98.70723f0 91.94]
+            δ = [1 1.5 2 3 4 5 6 7 8 10]
+            ξlit = [0.051307674f0 7.64 10.84 16.83 22.91 26.42 29.65 31.86 33.428 35.20] 
+            ξcr  = [0.28 47.58 69.00 100.45 105.12 110.91 105.66921f0 98.70723f0 91.94 81.53]
             ax2 = Axis(f[1, 2], title = L"$$Effect of anisotropy strength on asymmetry", ylabel=L"Thickness difference $(%)$", xlabel=L"$\delta$ [-]" )
             lines!(ax2, δ[:], ξlit[:], label="Lithosphere")
             lines!(ax2, δ[:], ξcr[:], label="Crust")
+            ylims!(ax2, 0, 120)
             axislegend(framevisible=false, position=:lt)
 
             save("/Users/tduretz/PowerFolders/_manuscripts/RiftingAnisotropy/Figures/ThicknessVariations.png", f, px_per_unit = 4)   

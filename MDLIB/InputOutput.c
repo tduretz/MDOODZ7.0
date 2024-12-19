@@ -194,6 +194,7 @@ void LoadBreakpointParticles( markers *particles, grid* mesh, markers *topo_chai
     fread( particles->x,    s3, particles->Nb_part, file);
     fread( particles->z,    s3, particles->Nb_part, file);
     fread( particles->P,    s3, particles->Nb_part, file);
+    fread( particles->rho,  s3, particles->Nb_part, file);
     fread( particles->Vx,   s3, particles->Nb_part, file);
     fread( particles->Vz,   s3, particles->Nb_part, file);
     fread( particles->phi,  s3, particles->Nb_part, file);
@@ -371,6 +372,7 @@ void LoadBreakpointParticles( markers *particles, grid* mesh, markers *topo_chai
         particles->x[k]     /=scaling.L;
         particles->z[k]     /=scaling.L;
         particles->P[k]     /=scaling.S;
+        particles->rho[k]   /=scaling.rho;
         particles->Vx[k]    /=scaling.V;
         particles->Vz[k]    /=scaling.V;
         particles->phi[k]   /=1.0;
@@ -536,6 +538,7 @@ void MakeBreakpointParticles( markers *particles,  grid* mesh, markers *topo_cha
         particles->x[k]      *= scaling.L;
         particles->z[k]      *= scaling.L;
         particles->P[k]      *= scaling.S;
+        particles->rho[k]    *= scaling.rho;
         particles->Vx[k]     *= scaling.V;
         particles->Vz[k]     *= scaling.V;
         particles->phi[k]    *= 1.0;
@@ -701,6 +704,7 @@ void MakeBreakpointParticles( markers *particles,  grid* mesh, markers *topo_cha
     fwrite( particles->x,     s3, particles->Nb_part, file);
     fwrite( particles->z,     s3, particles->Nb_part, file);
     fwrite( particles->P,     s3, particles->Nb_part, file);
+    fwrite( particles->rho,   s3, particles->Nb_part, file);
     fwrite( particles->Vx,    s3, particles->Nb_part, file);
     fwrite( particles->Vz,    s3, particles->Nb_part, file);
     fwrite( particles->phi,   s3, particles->Nb_part, file);
@@ -876,6 +880,7 @@ void MakeBreakpointParticles( markers *particles,  grid* mesh, markers *topo_cha
         particles->x[k]     /= scaling.L;
         particles->z[k]     /= scaling.L;
         particles->P[k]     /= scaling.S;
+        particles->rho[k]   /= scaling.rho;
         particles->Vx[k]    /= scaling.V;
         particles->Vz[k]    /= scaling.V;
         particles->phi[k]   /= 1.0;
@@ -1072,6 +1077,7 @@ Input ReadInputFile( char *fileName ) {
     model.stress_rotation    = ReadInt2( fin, "stress_rotation",       1 ); // 0: no stress rotation, 1: analytic rotation, 2: upper convected rate
     model.dt_max             = ReadDou2( fin, "dt_max", 1e20 ) /scaling.t;  // maximum allowed time step, the default value is set to ~infinite, it we become effective only if specificaly set in XXX.txt (see e.g. LithoScale.txt)
     model.dt_min             = ReadDou2( fin, "dt_min",-1e20 ) /scaling.t;  // minimum allowed time step, defaut is negative such that it will never be activated unless specifically set in XXX.txt file
+    model.dt_reduction_factor= ReadDou2( fin, "dt_reduction_factor", 1);
     // Physics 
     model.mechanical         = ReadInt2( fin, "mechanical",            1 ); // Activates mechanical solver
     model.advection          = ReadInt2( fin, "advection",             1 ); // Activates advection
@@ -1153,10 +1159,9 @@ Input ReadInputFile( char *fileName ) {
     model.marker_aniso_angle = ReadInt2( fin, "marker_aniso_angle",    0 ); // Enables setting anisotropy angle per particles rather than phases
     model.layering           = ReadInt2( fin, "layering",              0 ); // Activation of Layering (Anais setup)
     // Transformations
-    model.chemical_diffusion = ReadInt2( fin, "chemical_diffusion",    0 ); // Activate progressive reactions
-    model.no_return          = ReadInt2( fin, "no_return",             0 ); // Turns off retrogression if 1.0
-    model.unsplit_diff_reac  = ReadInt2( fin, "unsplit_diff_reac",     0 ); // Unsplits diffusion and reaction
-    model.smooth_softening   = ReadInt2( fin, "smooth_softening",      1 ); // Activates smooth explicit kinematic softening function
+    model.chemical_diffusion  = ReadInt2( fin, "chemical_diffusion",              0 ); // Activate progressive reactions
+    model.chemical_production = ReadInt2( fin, "chemical_production",              0 ); // Activate progressive reactions
+    model.smooth_softening    = ReadInt2( fin, "smooth_softening",      1 ); // Activates smooth explicit kinematic softening function
     // Background ambient conditions
     model.bkg_strain_rate    = ReadDou2( fin, "bkg_strain_rate", 1e-30)/scaling.E; // Background tectonic rate, default is close to zero to avoid any Nans of Infs in rheology
     model.bkg_div_rate       = ReadDou2( fin, "bkg_div_rate",      0.0)/scaling.E; // Background divergence rate
