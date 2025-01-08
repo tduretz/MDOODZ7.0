@@ -51,7 +51,7 @@ function main()
 
     file_select_start = 0                             # First time step - Select marker coordinates from here
     file_select_end   = 3000                             # Last time step - Select marker coordinates from here
-    target_coords = (-40e3, -30e3, -15e3, -10e3)        # Coordinate bounds (min(x), max(x), min(y), max(y))
+    target_coords = (-70e4, -69e4, -81.5e3, -79e3)        # Coordinate bounds (min(x), max(x), min(y), max(y))
 
     # Select field to visualise
     field = :Phases
