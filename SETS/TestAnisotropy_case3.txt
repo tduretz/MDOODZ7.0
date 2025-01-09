@@ -1,0 +1,110 @@
+/**** RESTART ****/
+istep = 00001
+irestart = 0
+
+/**** OUTPUT FILES ****/
+writer          = 1
+writer_step     = 1
+writer_markers  = 0
+writer_debug    = 0
+writer_energies = 0
+
+/**** SCALES ****/
+eta = 1
+L   = 1
+V   = 1
+T   = 1
+
+/**** SPACE ****/
+Nx      = 100
+Nz      = 100
+Nt      = 150
+xmin    = -0.500000e-0 
+xmax    =  0.500000e-0
+zmin    = -0.500000e-0
+zmax    =  0.500000e-0
+
+/**** PARTICLES ****/
+Nx_part = 4
+Nz_part = 4
+
+/**** TIME ****/
+constant_dt = 1
+Courant     = 0.3
+dt          = 0.01
+constant_dt = 1
+RK          = 4
+
+/**** LINEAR SOLVER ****/
+lin_solver   = 2
+penalty      = 1e5
+diag_scaling = 0
+lin_abs_div  = 1e-8
+lin_rel_div  = 1e-8
+lin_abs_mom  = 1e-10
+lin_rel_mom  = 1e-10
+
+/**** NON-LINEAR SOLVER ****/
+Newton           = 1
+line_search      = 1
+nit_max          = 100
+rel_tol_KSP      = 1e-4
+max_ts_KSP       = 10
+nonlin_abs_mom   = 1e-10
+nonlin_rel_mom   = 1e-10
+nonlin_abs_div   = 1e-10
+nonlin_rel_div   = 1e-10
+gnuplot_log_res  = 0
+
+/**** VISCOSITY CUT-OFF ****/
+min_eta      = 1e-3
+max_eta      = 1e6
+
+/**** SWITCHES ****/
+noisy            = 0
+elastic          = 1
+finite_strain    = 1
+advection        = 0
+eta_average      = 1
+anisotropy       = 1
+
+/**** SETUP-DEPENDANT ****/
+shear_style     = 0
+pure_shear_ALE  = 1
+bkg_strain_rate = -5
+user0           = 1     / activate inclusion  
+user1           = 0.05  / inclusion radius [m]
+user2           = 0
+user3           = 0
+
+/**** GRAVITY ****/
+gx = 0.0000
+gz = 0.000
+
+/**** MAT PROPERTIES ****/
+Nb_phases = 2
+
+/**** PHASE 1 ****/
+ID           = 0
+plast        = 1
+C            = 5
+eta_vp       = 1e-3
+phi          = 0
+cstv         = 1             / constant visc law
+pwlv         = 0
+eta0         = 1
+G            = 1
+npwl         = 1.0
+Qpwl         = 0
+aniso_factor = 3.0
+aniso_angle  = -30.6
+
+/**** PHASE 2 ****/
+ID           = 1
+plast        = 0
+cstv         = 1             / constant visc law
+eta0         = 1e-2
+npwl         = 1.0
+Qpwl         = 0
+aniso_factor = 1.0
+aniso_angle  = 0.0

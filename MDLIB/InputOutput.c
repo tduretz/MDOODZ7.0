@@ -194,6 +194,7 @@ void LoadBreakpointParticles( markers *particles, grid* mesh, markers *topo_chai
     fread( particles->x,    s3, particles->Nb_part, file);
     fread( particles->z,    s3, particles->Nb_part, file);
     fread( particles->P,    s3, particles->Nb_part, file);
+    fread( particles->rho,  s3, particles->Nb_part, file);
     fread( particles->Vx,   s3, particles->Nb_part, file);
     fread( particles->Vz,   s3, particles->Nb_part, file);
     fread( particles->phi,  s3, particles->Nb_part, file);
@@ -371,6 +372,7 @@ void LoadBreakpointParticles( markers *particles, grid* mesh, markers *topo_chai
         particles->x[k]     /=scaling.L;
         particles->z[k]     /=scaling.L;
         particles->P[k]     /=scaling.S;
+        particles->rho[k]   /=scaling.rho;
         particles->Vx[k]    /=scaling.V;
         particles->Vz[k]    /=scaling.V;
         particles->phi[k]   /=1.0;
@@ -536,6 +538,7 @@ void MakeBreakpointParticles( markers *particles,  grid* mesh, markers *topo_cha
         particles->x[k]      *= scaling.L;
         particles->z[k]      *= scaling.L;
         particles->P[k]      *= scaling.S;
+        particles->rho[k]    *= scaling.rho;
         particles->Vx[k]     *= scaling.V;
         particles->Vz[k]     *= scaling.V;
         particles->phi[k]    *= 1.0;
@@ -701,6 +704,7 @@ void MakeBreakpointParticles( markers *particles,  grid* mesh, markers *topo_cha
     fwrite( particles->x,     s3, particles->Nb_part, file);
     fwrite( particles->z,     s3, particles->Nb_part, file);
     fwrite( particles->P,     s3, particles->Nb_part, file);
+    fwrite( particles->rho,   s3, particles->Nb_part, file);
     fwrite( particles->Vx,    s3, particles->Nb_part, file);
     fwrite( particles->Vz,    s3, particles->Nb_part, file);
     fwrite( particles->phi,   s3, particles->Nb_part, file);
@@ -876,6 +880,7 @@ void MakeBreakpointParticles( markers *particles,  grid* mesh, markers *topo_cha
         particles->x[k]     /= scaling.L;
         particles->z[k]     /= scaling.L;
         particles->P[k]     /= scaling.S;
+        particles->rho[k]   /= scaling.rho;
         particles->Vx[k]    /= scaling.V;
         particles->Vz[k]    /= scaling.V;
         particles->phi[k]   /= 1.0;
@@ -1052,7 +1057,7 @@ Input ReadInputFile( char *fileName ) {
                         .T   = ReadDou2(fin, "T", 1.0),
     };
     ScaleMe( &scaling );
-    double Ga = 1e9*365.25*3600*24/scaling.t;
+    double Ga = 1e9*365.25*3600*24;
 
     // Spatial domain
     model.Nx                 = ReadInt2( fin, "Nx",        10 );            // Number of vertices in x direction
@@ -1072,6 +1077,7 @@ Input ReadInputFile( char *fileName ) {
     model.stress_rotation    = ReadInt2( fin, "stress_rotation",       1 ); // 0: no stress rotation, 1: analytic rotation, 2: upper convected rate
     model.dt_max             = ReadDou2( fin, "dt_max", 1e20 ) /scaling.t;  // maximum allowed time step, the default value is set to ~infinite, it we become effective only if specificaly set in XXX.txt (see e.g. LithoScale.txt)
     model.dt_min             = ReadDou2( fin, "dt_min",-1e20 ) /scaling.t;  // minimum allowed time step, defaut is negative such that it will never be activated unless specifically set in XXX.txt file
+    model.dt_reduction_factor= ReadDou2( fin, "dt_reduction_factor", 1);
     // Physics 
     model.mechanical         = ReadInt2( fin, "mechanical",            1 ); // Activates mechanical solver
     model.advection          = ReadInt2( fin, "advection",             1 ); // Activates advection
@@ -1096,13 +1102,15 @@ Input ReadInputFile( char *fileName ) {
     model.lin_abs_mom        = ReadDou2( fin, "lin_abs_mom",      1.0e-9 ); // Tolerance for linear mechanical solver
     model.lin_rel_mom        = ReadDou2( fin, "lin_rel_mom",      1.0e-5 ); // Tolerance for linear mechanical solver
     model.lin_solver         = ReadInt2( fin, "lin_solver",            2 ); // 1: Powell-Hestenes, 2: Powell-Hestenes augmented (killer solver) 
+    model.max_its_PH         = ReadInt2( fin, "max_its_PH",           10 ); // Max number of Powell-Hestenes iterations
     // Numerics: non-linear solver
     Nmodel.nit_max           = ReadInt2( fin, "nit_max",               1 ); // Maximum number of iterations
     model.Newton             = ReadInt2( fin, "Newton",                0 ); // Activates Newton iterations
     Nmodel.Picard2Newton     = ReadInt2( fin, "Picard2Newton",         0 ); // Switch from Picard to Newton iterations
     Nmodel.Picard2Newton_tol = ReadDou2( fin, "Picard2Newton_tol",  1e-1 ); // Condition for switching based on residual magnitude
-    Nmodel.max_Pic_its       = ReadInt2( fin, "max_Pic_its",          10 ); // Condition for switching based on number of Picard iterations
+    Nmodel.max_its_Pic       = ReadInt2( fin, "max_its_Pic",          10 ); // Condition for switching based on number of Picard iterations
     Nmodel.let_res_grow      = ReadInt2( fin, "let_res_grow",          0 ); // Allows residual to grow 
+    model.max_its_KSP        = ReadInt2( fin, "max_its_KSP",         100 ); // Condition for switching based on number of Picard iterations
     model.rel_tol_KSP        = ReadDou2( fin, "rel_tol_KSP",        1e-4 ); // Relative tolerance for inner Krylov solver
     Nmodel.nonlin_abs_mom    = ReadDou2( fin, "nonlin_abs_mom",   1.0e-6 ); // Tolerance for non-linear mechanical solver
     Nmodel.nonlin_abs_div    = ReadDou2( fin, "nonlin_abs_div",   1.0e-6 ); // Tolerance for non-linear mechanical solver
@@ -1144,16 +1152,16 @@ Input ReadInputFile( char *fileName ) {
     model.topo_update        = ReadInt2( fin, "topo_update",           1 ); // 0: total topography update (diffusive); 1: incremental
     // Model configurations
     model.initial_cooling    = ReadInt2( fin, "initial_cooling",       0 ); // Activates initial cooling
-    model.cooling_duration   = ReadDou2( fin, "cooling_duration",     Ga ); // Initial cooling duration
+    model.cooling_duration   = ReadDou2( fin, "cooling_duration",     Ga ) /scaling.t; // Initial cooling duration
     model.shear_heating      = ReadInt2( fin, "shear_heating",         1 ); // Activates shear heating
     model.adiab_heating      = ReadInt2( fin, "adiab_heating",         0 ); // 0: zero, 1: lithostatic P assumption, 2: full derivative
     model.surface_processes  = ReadInt2( fin, "surface_processes",     0 ); // 1: diffusion; 2: diffusion + sedimentation
     model.marker_aniso_angle = ReadInt2( fin, "marker_aniso_angle",    0 ); // Enables setting anisotropy angle per particles rather than phases
+    model.layering           = ReadInt2( fin, "layering",              0 ); // Activation of Layering (Anais setup)
     // Transformations
-    model.chemical_diffusion = ReadInt2( fin, "chemical_diffusion",    0 ); // Activate progressive reactions
-    model.no_return          = ReadInt2( fin, "no_return",             0 ); // Turns off retrogression if 1.0
-    model.unsplit_diff_reac  = ReadInt2( fin, "unsplit_diff_reac",     0 ); // Unsplits diffusion and reaction
-    model.smooth_softening   = ReadInt2( fin, "smooth_softening",      1 ); // Activates smooth explicit kinematic softening function
+    model.chemical_diffusion  = ReadInt2( fin, "chemical_diffusion",              0 ); // Activate progressive reactions
+    model.chemical_production = ReadInt2( fin, "chemical_production",              0 ); // Activate progressive reactions
+    model.smooth_softening    = ReadInt2( fin, "smooth_softening",      1 ); // Activates smooth explicit kinematic softening function
     // Background ambient conditions
     model.bkg_strain_rate    = ReadDou2( fin, "bkg_strain_rate", 1e-30)/scaling.E; // Background tectonic rate, default is close to zero to avoid any Nans of Infs in rheology
     model.bkg_div_rate       = ReadDou2( fin, "bkg_div_rate",      0.0)/scaling.E; // Background divergence rate
@@ -1177,7 +1185,8 @@ Input ReadInputFile( char *fileName ) {
     model.therm_perturb      = ReadInt2( fin, "therm_perturb",                 0 ); // Includes initial thermal perbation
     model.therm_perturb_x0   = ReadDou2( fin, "therm_perturb_x0",  0.0 )/scaling.L; // x position
     model.therm_perturb_z0   = ReadDou2( fin, "therm_perturb_z0",  0.0 )/scaling.L; // y position
-    model.therm_perturb_rad  = ReadDou2( fin, "therm_perturb_rad", 0.0 )/scaling.L; // Radius
+    model.therm_perturb_rad_x= ReadDou2( fin, "therm_perturb_rad_x", 0.0 )/scaling.L; // Radius
+    model.therm_perturb_rad_z= ReadDou2( fin, "therm_perturb_rad_z", 0.0 )/scaling.L; // Radius
     model.therm_perturb_dT   = ReadDou2( fin, "therm_perturb_dT" , 0.0 )/scaling.T; // Temperature anomaly
     // For rheological database reasons...
     model.force_act_vol_ast  = ReadInt2( fin, "force_act_vol_ast",   0 ); // if 1 then:
@@ -1195,6 +1204,7 @@ Input ReadInputFile( char *fileName ) {
     model.user6              = ReadDou2( fin, "user6",           0.0 );
     model.user7              = ReadDou2( fin, "user7",           0.0 );
     model.user8              = ReadDou2( fin, "user8",           0.0 );
+    model.user9              = ReadDou2( fin, "user9",           0.0 );
     // Derived quantities
     model.dx                 = (model.xmax - model.xmin) / (model.Nx - 1);
     model.dz                 = (model.zmax - model.zmin) / (model.Nz - 1);
@@ -1331,7 +1341,7 @@ Input ReadInputFile( char *fileName ) {
         materials.phase_mix[k]  = (int)ReadMatProps( fin, "phase_mix",k,          0.0  );
         materials.phase_two[k]  = (int)ReadMatProps( fin, "phase_mix",k,    (double)k  );
         // Anisotropy
-        materials.aniso_angle[k]    =  ReadMatProps( fin, "aniso_angle",  k,   90.0  )  * M_PI/ 180.0;
+        materials.aniso_angle[k]    =  ReadMatProps( fin, "aniso_angle",     k,   90.0  )  * M_PI/ 180.0;
         materials.aniso_factor[k]   =  ReadMatProps( fin, "aniso_factor",    k,    1.0  ); 
         // materials.ani_fac_v[k]      =  ReadMatProps( fin, "ani_fac_v",    k,    1.0  );        // viscous anisotropy strength
         // materials.ani_fac_e[k]      =  ReadMatProps( fin, "ani_fac_e",    k,    1.0  );        // elastic anisotropy strength
@@ -1344,7 +1354,7 @@ Input ReadInputFile( char *fileName ) {
         // temperature driven transition between phases
         materials.transmutation[k]             = (int)ReadMatProps( fin, "transmutation",    k,    0  ); // switcher: 0 - no transition; -1 transition happens when below transition_temperature; 1 transition happens when above transition_temperature;
         materials.transmutation_phase[k]       = (int)ReadMatProps( fin, "transmutation_phase",    k,    1  ); // phase to set
-        materials.transmutation_temperature[k] = ReadMatProps( fin, "transmutation_temperature",    k,    1400.0  ); // temperature boundary
+        materials.transmutation_temperature[k] = ReadMatProps( fin, "transmutation_temperature",    k,    1300.0  ) / scaling.T; // temperature boundary
         // Check if any flow law is active
         int sum = abs(materials.cstv[k]) + abs(materials.pwlv[k]) + abs(materials.linv[k]) + abs(materials.gbsv[k]) + abs(materials.expv[k]);
         if ( sum == 0 ) {

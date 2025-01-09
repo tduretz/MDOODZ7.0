@@ -157,7 +157,7 @@ aniso_factor = 1
 aniso_angle  = 80
 eta_vp     = 6e20
 transmutation = 1
-transmutation_temperature = 1220
+transmutation_temperature = 1493.0
 transmutation_phase = 3
 
 ID         = 3

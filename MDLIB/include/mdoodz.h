@@ -48,7 +48,7 @@ typedef struct {
   int    balance_boundaries, zero_mean_topo; 
   char   description[500];
   double xmin, zmin, xmax, zmax, time, dx, dz, dt, dt0, dt_start, dt_max, L0,
-          dt_min;
+          dt_min, dt_reduction_factor;
   double  xmin0, zmin0, xmax0, zmax0;
   double  gx, gz;
   int     Nx, Nz, Nt, step, nit, Newton, noisy;
@@ -63,7 +63,7 @@ typedef struct {
   int surface_processes, loc_iter, therm_perturb, surf_ised1,
           surf_ised2, MantleID, topografix, reseed_markers, smooth_softening, fix_temperature;
   double bkg_strain_rate, bkg_div_rate, user0, user1, user2, user3, user4, user5, user6, user7,
-          user8;
+          user8, user9;
   char  *import_file;
   char  *import_files_dir;
   int    Nb_phases;
@@ -72,9 +72,8 @@ typedef struct {
   // Particles
   int    initial_noise, reseed_mode;
   // Linear solver
-  int    lin_solver, diag_scaling, preconditioner;
-  double penalty, lin_abs_div, lin_rel_div, lin_abs_mom, lin_rel_mom, auto_penalty, compressible,
-          rel_tol_KSP;
+  int    lin_solver, diag_scaling, preconditioner, max_its_KSP, max_its_PH;
+  double penalty, lin_abs_div, lin_rel_div, lin_abs_mom, lin_rel_mom, auto_penalty, compressible, rel_tol_KSP; 
   // Non-linear solver
   double line_search_min, safe_dt_div;
   int    safe_mode, max_num_stag;
@@ -84,7 +83,7 @@ typedef struct {
   // Surface processes
   double surf_diff, surf_sedirate, surf_baselev, surf_Winc, surf_Vinc;
   // Initial thermal perturbation
-  double therm_perturb_x0, therm_perturb_z0, therm_perturb_dT, therm_perturb_rad,
+  double therm_perturb_x0, therm_perturb_z0, therm_perturb_dT, therm_perturb_rad_x, therm_perturb_rad_z,
           cooling_duration;
   // For rheological database...
   int      force_act_vol_ast, force_melt_weak;
@@ -105,7 +104,8 @@ typedef struct {
   int      diffuse_X, diffuse_avg;
   double   diffusion_length;
   // For Pips
-  int      chemical_diffusion, no_return, density_variations, unsplit_diff_reac, kinetics;
+  int      chemical_diffusion, chemical_production, no_return, density_variations, kinetics;
+  int      layering;
   // initial stresses
   int preload;
   double preload_sxxd,preload_szzd,preload_sxz;
@@ -114,7 +114,7 @@ typedef struct {
   int      residual_form;
   int      irestart, istep;
   int      writer, writer_step;
-  const char     *writer_subfolder;
+  char     *writer_subfolder;
   int      save_initial_markers, load_initial_markers;
   char    *initial_markers_file;
   int     marker_aniso_angle;
@@ -194,7 +194,7 @@ typedef double (*SetTxx_f)(MdoodzInput *input, Coordinates coordinates, int phas
 typedef double (*SetTzz_f)(MdoodzInput *input, Coordinates coordinates, int phase);
 typedef double (*SetTxz_f)(MdoodzInput *input, Coordinates coordinates, int phase);
 typedef double (*SetNoise_f)(MdoodzInput *input, Coordinates coordinates, int phase);
-typedef double (*SetAnisoAngle_f)(MdoodzInput *input, Coordinates coordinates, int phase);
+typedef double (*SetAnisoAngle_f)(MdoodzInput *input, Coordinates coordinates, int phase, double predefined);
 typedef Tensor2D (*SetDefGrad_f)(MdoodzInput *input, Coordinates coordinates, int phase);
 
 typedef struct {
@@ -263,8 +263,8 @@ typedef struct {
 
 typedef SetBC (*SetBCVx_f)(MdoodzInput *input, POSITION position, Coordinates coordinates);
 typedef SetBC (*SetBCVz_f)(MdoodzInput *input, POSITION position, Coordinates coordinates);
-typedef SetBC (*SetBCT_f)(MdoodzInput *input, POSITION position, double gridTemperature);
-typedef SetBC (*SetBCC_f)(MdoodzInput *input, POSITION position, double gridXvalue);
+typedef SetBC (*SetBCT_f)(MdoodzInput *input, POSITION position, Coordinates coordinates, double gridTemperature);
+typedef SetBC (*SetBCC_f)(MdoodzInput *input, POSITION position, Coordinates coordinates, double gridXvalue);
 typedef double (*FixTemperature_f)(MdoodzInput *input, double pressure);
 typedef char (*SetBCPType_f)(MdoodzInput *input, POSITION position);
 
@@ -302,7 +302,6 @@ typedef struct {
   const char *str1;
 } MutateInputParams;
 
-// typedef void(MutateInput_f)(MdoodzInput *input, MutateInputParams *mutateInputParams);
 typedef void(MutateInput_f)(MdoodzInput *input);
 
 struct MdoodzSetup {
@@ -323,7 +322,7 @@ struct MdoodzInput {
   params             model;
   mat_prop           materials;
   scale              scaling;
-  LateralFlux        *flux;
+  LateralFlux        *flux, *stress;
   CrazyConductivity *crazyConductivity;
   Geometry          *geometry;
 };
@@ -357,5 +356,7 @@ typedef struct {
 
 bool IsEllipseCoordinates(Coordinates coordinates, Ellipse ellipse, double scalingL);
 bool IsRectangleCoordinates(Coordinates coordinates, Rectangle rectangle, double scalingL);
+char           *DefaultTextFilename(char*);
+
 
 #endif

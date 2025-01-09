@@ -44,6 +44,8 @@
 #define printf(...) printf("")
 #endif
 
+const bool DEBUG_ANISOTROPY = true;
+
 /*--------------------------------------------------------------------------------------------------------------------*/
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
@@ -116,6 +118,49 @@ void RheologicalOperators( grid* mesh, params* model, mat_prop* materials, scale
         mesh->D23_n[k] =                      2.0*aniS_vep*d2*eta_vep;
         mesh->D24_n[k] =                      0.0;
         //----------------------------------------------------------//
+
+
+
+
+        // To be removed                
+        if (DEBUG_ANISOTROPY && k==50 && anisotropy==1) {
+        double aniS_e = 0., ani_fstrain = 1.;
+        //----------------------------------------------------------//
+        if ( model->elastic==1 ) eta_e = model->dt*mesh->mu_n[k];
+        else                       eta_e = 1.; // set to arbitrary value to avoid division by 0.0
+        if ( comp==1 )             K     = 1./mesh->bet_n[k];
+        else                       K     = 0.;
+        //----------------------------------------------------------//
+        if ( anisotropy == 0 ) {
+          aniS_e = 0.; aniS_vep = 0.0; d1   = 0.0; d2   = 0.0; angle = 0.; lxlz = 0.; lx2 = 0.;
+        }
+        else {
+          // Anisotropy
+          ani_vep     = mesh->aniso_factor_n[k];
+          ani_fstrain = mesh->FS_AR_n[k];
+          aniS_vep = 1.0 - 1.0 / ani_vep;
+          d1      = mesh->d1_n[k];
+          d2      = mesh->d2_n[k];
+          angle   = mesh->angle_n[k];
+          lay_ang = angle - M_PI/2.0;
+          lxlz    = cos(lay_ang)*sin(lay_ang);
+          lx2     = cos(lay_ang)*cos(lay_ang);
+        }
+        EffectiveStrainRate( &Exx, &Ezz, &Exz, mesh->exxd[k], mesh->ezzd[k], mesh->exz_n[k], mesh->sxxd0[k], mesh->szzd0[k], mesh->sxz0_n[k], d1, d2, aniS_vep, eta_e, model->elastic ); 
+
+        const double Txx = mesh->D11_n[k]*Exx + mesh->D12_n[k]*Ezz + mesh->D13_n[k]*2*Exz;
+        const double Tzz = mesh->D21_n[k]*Exx + mesh->D22_n[k]*Ezz + mesh->D23_n[k]*2*Exz;
+
+        // if (fabs(mesh->sxxd[k] - Txx)>1e-10 || (fabs(mesh->szzd[k] - Tzz)>1e-10))  {
+            // printf("\n");
+            // printf("Txx = %2.8e %2.8e\n", mesh->sxxd[k], Txx);
+            // printf("Tzz = %2.8e %2.8e\n", mesh->szzd[k], Tzz);
+            // printf("dTxx = %2.2e dTxx %2.2e\n", mesh->sxxd[k] - Txx, mesh->szzd[k] - Tzz);
+            // exit(1);
+        // }
+        }
+        // To be removed
+
       }
       else {
         //----------------------------------------------------------//
@@ -150,6 +195,45 @@ void RheologicalOperators( grid* mesh, params* model, mat_prop* materials, scale
         mesh->D33_s[k] = eta_vep + 2.0*aniS_vep*(d1 - 0.5)*eta_vep;
         mesh->D34_s[k] =           0.0;
         //----------------------------------------------------------//
+        
+        // To be removed
+                
+        if (DEBUG_ANISOTROPY && k==10 && anisotropy==1) {
+
+        double aniS_e = 0., ani_fstrain = 1.;
+        //----------------------------------------------------------//
+        if ( model->elastic==1 ) eta_e = model->dt*mesh->mu_s[k];
+        else                       eta_e = 1.; // set to arbitrary value to avoid division by 0.0
+        //----------------------------------------------------------//
+        if ( anisotropy == 0 ) {
+          aniS_e = 0.; aniS_vep = 0.0; d1   = 0.; d2   = 0.;
+        }
+        else {
+          // Anisotropy
+          ani_vep     = mesh->aniso_factor_s[k];
+          ani_fstrain = mesh->FS_AR_s[k];
+          aniS_vep = 1.0 - 1.0 / ani_vep;
+          d1    = mesh->d1_s[k];
+          d2    = mesh->d2_s[k];
+          angle = mesh->angle_s[k];
+          lay_ang = angle - M_PI/2.0;
+          lxlz    = cos(lay_ang)*sin(lay_ang);
+          lx2     = cos(lay_ang)*cos(lay_ang);
+        }
+        //----------------------------------------------------------//
+        EffectiveStrainRate( &Exx, &Ezz, &Exz, mesh->exxd_s[k], mesh->ezzd_s[k], mesh->exz[k], mesh->sxxd0_s[k], mesh->szzd0_s[k], mesh->sxz0[k], d1, d2, aniS_vep, eta_e, model->elastic );
+        const double Txz = mesh->D31_s[k]*Exx + mesh->D32_s[k]*Ezz + mesh->D33_s[k]*Exz*2;
+
+        // if (fabs(mesh->sxz[k] - Txz)>1e-10)  {
+            // printf("\n");
+            // printf("Txz = %2.8e %2.8e\n", mesh->sxz[k], Txz);
+            // printf("dTxz = %2.2e\n", mesh->sxz[k] - Txz);
+        //     exit(1);
+        // }
+        // To be removed
+        }
+
+
       }
       else {
         //----------------------------------------------------------//
@@ -577,13 +661,14 @@ double LineSearchDecoupled( SparseMat *Stokes, SparseMat *StokesA, SparseMat *St
         }
 
         // Look for the minimum predicted residuals
-        double r, minxzp, minxz, minz, fxz, fx, fz, fxzp;
-        int ixzp, ixz, ix, iz;
-        double fxzp0;
+        double r, minxzp, minxz, minz, minp, fxz, fx, fz, fp, fxzp;
+        int ixzp, ixz, ix, iz, ip;
+        double fxzp0, fxz0, fp0;
         minxzp = sqrt( pow( rx[0],2 ) + pow( rz[0],2 ) + pow( rp[0],2 ) );
         minxz  = sqrt( pow( rx[0],2 ) + pow( rz[0],2 ) );
         minx   = rx[0];
         minz   = rz[0];
+        minp   = rp[0];
         ixz    = 0;
         ix     = 0;
         iz     = 0;
@@ -593,6 +678,7 @@ double LineSearchDecoupled( SparseMat *Stokes, SparseMat *StokesA, SparseMat *St
             fxz  = sqrt( pow( rx[k],2 ) + pow( rz[k],2 ) );
             fx   = rx[k];
             fz   = rz[k];
+            fp   = rp[k];
             if( fxzp < minxzp ) {
                 minxzp = fxzp;
                 ixzp   = k;
@@ -609,9 +695,17 @@ double LineSearchDecoupled( SparseMat *Stokes, SparseMat *StokesA, SparseMat *St
                 minz= fz;
                 iz  = k;
             }
+            if( fp < minp ) {
+                minp= fp;
+                ip  = k;
+            }
         }
         
         // if the minmimun residuals are lower than starting ones, then success
+        fxz   = sqrt( pow( rx[ixz],2 ) + pow( rz[ixz],2 ) );
+        fxz0  = sqrt( pow( Nmodel->resx_f,2 ) + pow( Nmodel->resz_f,2 ) );
+        fp    = fabs(rp[ip]);
+        fp0   = Nmodel->resp_f;
         fxzp  = sqrt( pow( rx[ixzp],2 ) + pow( rz[ixzp],2 ) + pow( rp[ixzp],2 ) );
         fxzp0 = sqrt( pow(Nmodel->resx_f, 2) + pow( Nmodel->resz_f, 2) +  pow(Nmodel->resp_f, 2) );
         
@@ -620,6 +714,12 @@ double LineSearchDecoupled( SparseMat *Stokes, SparseMat *StokesA, SparseMat *St
             success = 1;
             printf("\e[1;34mPredicted Residuals\e[m : alpha  = %lf --> rx = %2.4e rz = %2.4e rp = %2.4e\n", alphav[ixzp], rx[ixzp], rz[ixzp], rp[ixzp]);
         }
+
+        // if ( fp < frac*fp0 ) { //|| rp[ix]<frac*Nmodel->resp
+        //     alpha = alphav[ip];
+        //     success = 1;
+        //     printf("\e[1;34mPredicted Residuals\e[m : alpha  = %lf --> rx = %2.4e rz = %2.4e rp = %2.4e\n", alphav[ixzp], rx[ixzp], rz[ixzp], rp[ixzp]);
+        // }
 
         // if the minmimun residuals are lower than starting ones, then success
         if (success==0 && rx[ixz] < frac*Nmodel->resx_f && rz[ixz]<frac*Nmodel->resz_f  ) { //|| rp[ix]<frac*Nmodel->resp
@@ -740,14 +840,26 @@ void EvaluateStokesResidualDecoupled( SparseMat *Stokes, SparseMat *StokesA, Spa
     // Function evaluation
     BuildStokesOperatorDecoupled(   mesh, model, 0, mesh->p_corr, mesh->p_in,  mesh->u_in,  mesh->v_in, Stokes, StokesA, StokesB, StokesC, StokesD, 0 );
 
-    // Integrate residuals
+//     // Integrate residuals
+// #pragma omp parallel for shared( mesh, Stokes, StokesA ) private( cc ) firstprivate( nx, nzvx ) reduction(+:resx,ndofx)
+//     for( cc=0; cc<nzvx*nx; cc++) {
+//         if ( mesh->BCu.type[cc] != 0 && mesh->BCu.type[cc] != 30 && mesh->BCu.type[cc] != 11 && mesh->BCu.type[cc] != 13 && mesh->BCu.type[cc] != -12) {
+//             ndofx++;
+//             resx                          += StokesA->F[Stokes->eqn_u[cc]]*StokesA->F[Stokes->eqn_u[cc]];
+//             mesh->ru[cc]                   = StokesA->F[Stokes->eqn_u[cc]];
+//             StokesA->F[Stokes->eqn_u[cc]] *= StokesA->d[Stokes->eqn_u[cc]]; // Need to scale the residual here for Defect Correction formulation (F is the RHS)
+//         }
+//     }
 #pragma omp parallel for shared( mesh, Stokes, StokesA ) private( cc ) firstprivate( nx, nzvx ) reduction(+:resx,ndofx)
     for( cc=0; cc<nzvx*nx; cc++) {
         if ( mesh->BCu.type[cc] != 0 && mesh->BCu.type[cc] != 30 && mesh->BCu.type[cc] != 11 && mesh->BCu.type[cc] != 13 && mesh->BCu.type[cc] != -12) {
-            ndofx++;
-            resx                          += StokesA->F[Stokes->eqn_u[cc]]*StokesA->F[Stokes->eqn_u[cc]];
+            int l   = mesh->lvx[cc];
             mesh->ru[cc]                   = StokesA->F[Stokes->eqn_u[cc]];
             StokesA->F[Stokes->eqn_u[cc]] *= StokesA->d[Stokes->eqn_u[cc]]; // Need to scale the residual here for Defect Correction formulation (F is the RHS)
+            if (l>2 && l<nzvx-2) {
+                ndofx++;
+                resx                          += StokesA->F[Stokes->eqn_u[cc]]*StokesA->F[Stokes->eqn_u[cc]];
+            }
         }
     }
     Nmodel->resx = resx;
@@ -755,10 +867,13 @@ void EvaluateStokesResidualDecoupled( SparseMat *Stokes, SparseMat *StokesA, Spa
 #pragma omp parallel for shared( mesh, Stokes, StokesA ) private( cc ) firstprivate( nz, nxvz ) reduction(+:resz,ndofz)
     for( cc=0; cc<nz*nxvz; cc++) {
         if ( mesh->BCv.type[cc] != 0 && mesh->BCv.type[cc] != 30 && mesh->BCv.type[cc] != 11 && mesh->BCv.type[cc] != 13 && mesh->BCv.type[cc] != -12) {
-            ndofz++;
-            resz                          += StokesA->F[Stokes->eqn_v[cc]]*StokesA->F[Stokes->eqn_v[cc]];
+            int k   = mesh->kvz[cc];
             mesh->rv[cc]                   = StokesA->F[Stokes->eqn_v[cc]];
             StokesA->F[Stokes->eqn_v[cc]] *= StokesA->d[Stokes->eqn_v[cc]]; // Need to scale the residual here for Defect Correction formulation (F is the RHS)
+            if (k>2 && k<nxvz-2) {
+                ndofz++;
+                resz                          += StokesA->F[Stokes->eqn_v[cc]]*StokesA->F[Stokes->eqn_v[cc]];
+            }
         }
     }
     Nmodel->resz = resz;

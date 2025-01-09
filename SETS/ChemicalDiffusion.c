@@ -6,7 +6,7 @@ int SetPhase(MdoodzInput *input, Coordinates coordinates) {
   const double x = coordinates.x + 0.25;
   const double z = coordinates.z;
   if ( x*x + z*z < radius * radius) {
-    return 1;
+    return 0;
   } else {
     return 0;
   }
@@ -15,14 +15,25 @@ int SetPhase(MdoodzInput *input, Coordinates coordinates) {
 double SetXComponent(MdoodzInput *input, Coordinates coordinates, int phase) {
   double X = 0.0;
   const double radius = 0.25 / input->scaling.L;
-  const double x = coordinates.x + 0.25;
-  const double z = coordinates.z;
-  if ( x*x + z*z < radius * radius) {
-    return 1.0;
+  bool setup = false;
+  double x = coordinates.x;
+  double z = coordinates.z;
+  
+  if (setup) {
+    x += 0.25;  
+    if ( x*x + z*z < radius * radius) {
+      return 1.0;
+    }
+    else {
+      return X;
+    }
   }
   else {
+    const double sig = 0.1  / input->scaling.L;
+    X = exp(-(x*x + z*z)/(sig*sig));
     return X;
   }
+
 }
 
 int SetDualPhase(MdoodzInput *input, Coordinates coordinate, int phase) {
@@ -57,7 +68,7 @@ double SetDensity(MdoodzInput *input, Coordinates coordinates, int phase) {
   }
 }
 
-SetBC SetBCC(MdoodzInput *instance, POSITION position, double particleTemperature) {
+SetBC SetBCC(MdoodzInput *instance, POSITION position, Coordinates coordinates, double particleTemperature) {
   SetBC     bc;
   // if (position == W  || position == N || position == E || position == S) {
   //   bc.type  = constant_X;

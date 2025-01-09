@@ -161,7 +161,7 @@ char SetBCPType(MdoodzInput *instance, POSITION position) {
   }
 }
 
-SetBC SetBCT(MdoodzInput *instance, POSITION position, double particleTemperature) {
+SetBC SetBCT(MdoodzInput *instance, POSITION position, Coordinates coordinates,  double particleTemperature) {
   SetBC     bc;
   double surface_temperature =                   (20. + zeroC) / instance->scaling.T;
   double mantle_temperature  = (instance->model.user3 + zeroC) / instance->scaling.T;
