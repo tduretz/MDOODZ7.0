@@ -546,8 +546,9 @@ double Vertices2Particle( markers* particles, double* NodeField, double* X_vect,
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-void ParticleInflowCheck ( markers* particles, grid *mesh, params model, surface topo, int flag ) {
+void ParticleInflowCheck ( markers* particles, grid *mesh, MdoodzInput *input, surface topo, int flag, SetParticles_ff setParticles  ) {
     
+    params model = input->model;
     int k, Nb_part=particles->Nb_part, npW=0, npE=0;
     double xW, xE, dx2=model.dx/2.0;
     int finite_strain = model.finite_strain;
@@ -638,7 +639,7 @@ reduction(+:npW,npE )
                     particles->x[NewIndex] = particles->x[k]-dx2;
                     particles->z[NewIndex] = particles->z[k];
                     // Assign new marker point properties
-                    AssignMarkerProperties ( particles, NewIndex, k, &model, mesh, 1 );
+                    AssignMarkerPropertiesInflow ( particles, NewIndex, k, input, mesh, 1, setParticles );
                 }
                 
                 // EAST COAST
@@ -665,7 +666,7 @@ reduction(+:npW,npE )
                     particles->x[NewIndex] = particles->x[k]+dx2;
                     particles->z[NewIndex] = particles->z[k];
                     // Assign new marker point properties
-                    AssignMarkerProperties ( particles, NewIndex, k, &model, mesh, 1 );
+                    AssignMarkerPropertiesInflow ( particles, NewIndex, k, input, mesh, 1, setParticles );
                 }
             }
         }
@@ -743,8 +744,91 @@ void AssignMarkerProperties (markers* particles, int new_ind, int min_index, par
         particles->Pmax[new_ind]         = particles->Pmax[min_index];
     }
     if (model->anisotropy == 1) {
+        // !!!! difference with AssignMarkerPropertiesInflow:
+        // inside the box AssignMarkerProperties does not need to know out inflow
         particles->nx[new_ind]           = particles->nx[min_index];
         particles->nz[new_ind]           = particles->nz[min_index];
+    }
+}
+
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
+
+void AssignMarkerPropertiesInflow (markers* particles, int new_ind, int min_index, MdoodzInput *input, grid* mesh, int direct_neighbour, SetParticles_ff setParticles ) {
+    
+    params *model = &(input->model);  
+    particles->phase[new_ind]         = particles->phase[min_index];
+    particles->dual[new_ind]          = particles->dual[min_index];
+    if (particles->phase[min_index]==-1) {printf("New particle is has phase -1, error! (AssignMarkerProperties)\n" ); exit(99);}
+    particles->Vx[new_ind]            = particles->Vx[min_index];
+    particles->Vz[new_ind]            = particles->Vz[min_index];
+    particles->strain[new_ind]        = particles->strain[min_index];
+    particles->strain_el[new_ind]     = particles->strain_el[min_index];
+    particles->strain_pl[new_ind]     = particles->strain_pl[min_index];
+    particles->strain_pwl[new_ind]    = particles->strain_pwl[min_index];
+    particles->strain_exp[new_ind]    = particles->strain_exp[min_index];
+    particles->strain_lin[new_ind]    = particles->strain_lin[min_index];
+    particles->strain_gbs[new_ind]    = particles->strain_gbs[min_index];
+    particles->divth[new_ind]         = particles->divth[min_index]; // to be changed
+    if ( direct_neighbour == 1 ) {
+        particles->d[new_ind]             = particles->d[min_index];
+        particles->T[new_ind]             = particles->T[min_index];
+        particles->P[new_ind]             = particles->P[min_index];
+        particles->phi[new_ind]           = particles->phi[min_index]; // to be changed
+        particles->X[new_ind]             = particles->X[min_index];   // to be changed
+        particles->noise[new_ind]         = particles->noise[min_index];   // to be changed
+        particles->sxxd[new_ind]          = particles->sxxd[min_index];
+        particles->szzd[new_ind]          = particles->szzd[min_index];
+        particles->sxz[new_ind]           = particles->sxz[min_index];
+    }
+    else {
+        particles->d[new_ind]             = Centers2Particle( particles, mesh->d_n,     mesh->xvz_coord, mesh->zvx_coord, mesh->Nx-1, mesh->Nz-1, mesh->BCp.type, mesh->dx, mesh->dz, new_ind, model->periodic_x );
+        particles->T[new_ind]             = Centers2Particle( particles, mesh->T,     mesh->xvz_coord, mesh->zvx_coord, mesh->Nx-1, mesh->Nz-1, mesh->BCp.type, mesh->dx, mesh->dz, new_ind, model->periodic_x );
+        particles->P[new_ind]             = Centers2Particle( particles, mesh->p_in,  mesh->xvz_coord, mesh->zvx_coord, mesh->Nx-1, mesh->Nz-1, mesh->BCp.type, mesh->dx, mesh->dz, new_ind, model->periodic_x );
+        particles->phi[new_ind]           = Centers2Particle( particles, mesh->phi_n,     mesh->xvz_coord, mesh->zvx_coord, mesh->Nx-1, mesh->Nz-1, mesh->BCp.type, mesh->dx, mesh->dz, new_ind, model->periodic_x );
+        particles->X[new_ind]             = Centers2Particle( particles, mesh->X_n,  mesh->xvz_coord, mesh->zvx_coord, mesh->Nx-1, mesh->Nz-1, mesh->BCp.type, mesh->dx, mesh->dz, new_ind, model->periodic_x );
+        particles->noise[new_ind]         = Centers2Particle( particles, mesh->noise_n,  mesh->xvz_coord, mesh->zvx_coord, mesh->Nx-1, mesh->Nz-1, mesh->BCp.type, mesh->dx, mesh->dz, new_ind, model->periodic_x );
+        particles->sxxd[new_ind]          = Centers2Particle( particles, mesh->sxxd,     mesh->xvz_coord, mesh->zvx_coord, mesh->Nx-1, mesh->Nz-1, mesh->BCp.type, mesh->dx, mesh->dz, new_ind, model->periodic_x );
+        particles->szzd[new_ind]          = Centers2Particle( particles, mesh->szzd,     mesh->xvz_coord, mesh->zvx_coord, mesh->Nx-1, mesh->Nz-1, mesh->BCp.type, mesh->dx, mesh->dz, new_ind, model->periodic_x );
+        particles->sxz[new_ind]           = Vertices2Particle( particles, mesh->sxz,     mesh->xg_coord,  mesh->zg_coord,  mesh->Nx-0, mesh->Nz-0, mesh->BCg.type, mesh->dx, mesh->dz, new_ind );
+    }
+    // particles->dsxxd[new_ind]         = particles->dsxxd[min_index];
+    // particles->dszzd[new_ind]         = particles->dszzd[min_index];
+    // particles->dsxz[new_ind]          = particles->dsxz[min_index];
+    // particles->syy[new_ind]           = particles->syy[min_index];
+    // particles->dsyy[new_ind]           = particles->dsyy[min_index];
+     
+    if (input->model.finite_strain == 1) {
+        // do not set default to 0 beause then it can not accumulate, better to identify which markers are new and start to accumulate as we do for the general case (fxx=fyy=1, fxz=fzx=0).
+        particles->Fxx[new_ind]           = particles->Fxx[min_index];
+        particles->Fxz[new_ind]           = particles->Fxz[min_index];
+        particles->Fzx[new_ind]           = particles->Fzx[min_index];
+        particles->Fzz[new_ind]           = particles->Fzz[min_index];
+    }
+    if (input->model.track_T_P_x_z == 1) {
+        particles->T0[new_ind]           = particles->T0[min_index];
+        particles->P0[new_ind]           = particles->P0[min_index];
+        particles->x0[new_ind]           = particles->x0[min_index];
+        particles->z0[new_ind]           = particles->z0[min_index];
+        particles->Tmax[new_ind]         = particles->Tmax[min_index];
+        particles->Pmax[new_ind]         = particles->Pmax[min_index];
+    }
+    if (input->model.anisotropy == 1) {
+        // add with William: the incoming markers does not need to inherit the nearest neighbour angle
+           Coordinates coordinates = {
+            .x = particles->x[new_ind],
+            .z = particles->z[new_ind]};
+        if (input->model.marker_aniso_angle && setParticles.SetAnisoAngle) {
+            double predefined_angle = acos(particles->nx[min_index]);
+            double angle = setParticles.SetAnisoAngle(input, coordinates, particles->phase[new_ind], predefined_angle);
+            particles->nx[new_ind]           = cos(angle);
+            particles->nz[new_ind]           = sin(angle);
+        }
+        else {
+            particles->nx[new_ind]           = particles->nx[min_index];
+            particles->nz[new_ind]           = particles->nz[min_index];
+        }
     }
 }
 
@@ -1180,8 +1264,8 @@ void PutPartInBox( markers *particles, grid *mesh, params model, surface topo, s
     // The particles are set with regular spacing.
     int i, j, ki, kj, np;
     double dx_particles, dz_particles;
-    int add_noise=model.initial_noise;
-    double noise=0.1, random_x, random_z;
+    int add_noise = model.initial_noise;
+    double noise = 0.1, random_x, random_z;
     
     // Compute the spacing between particles:
     dx_particles = mesh->dx/(double)(particles->Nx_part); // new
@@ -3488,7 +3572,7 @@ void TransmutateMarkers(markers *particles, mat_prop *materials, double scaling_
 #pragma omp parallel for reduction(+:transmutated_particles) shared(particles)
   for (int k=0; k<particles->Nb_part-1; k++) {
     const int phase = particles->phase[k];
-    const double temperature = (particles->T[k] * scaling_T) - zeroC;
+    const double temperature = particles->T[k];
     const double transmutation = materials->transmutation[phase];
 
     if ((transmutation == -1 && materials->transmutation_temperature[phase] >= temperature)

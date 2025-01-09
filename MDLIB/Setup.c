@@ -3,6 +3,7 @@
 #include "stdbool.h"
 #include "stdio.h"
 #include "stdlib.h"
+#include "string.h"
 
 /*--------------------------------------------------------------------------------------------------------------------*/
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
@@ -132,7 +133,8 @@ void SetParticles(SetParticles_ff setParticles, MdoodzInput *instance, markers *
       particles->Fzz[np] = F.zz;
     }
     if (instance->model.marker_aniso_angle && setParticles.SetAnisoAngle) {
-      particles->aniso_angle[np] = setParticles.SetAnisoAngle(instance, coordinates, particles->phase[np]) *M_PI / 180.0;
+      double predefined_angle = 0.;
+      particles->aniso_angle[np] = setParticles.SetAnisoAngle(instance, coordinates, particles->phase[np], predefined_angle);
     }
     ValidatePhase(particles->phase[np], instance->model.Nb_phases);
   }
@@ -631,13 +633,20 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh, surface *topo) 
 
       mesh->BCT_exp.type[c1] = mesh->BCt.type[c];
 
+      Coordinates coordinates = {
+                .k = k,
+                .l = l,
+                .x = mesh->xc_coord[k],
+                .z = mesh->zc_coord[l],
+      };
+
       if (mesh->BCt.type[c] != 30) {
 
         // WEST
         if (k == 0) {
           position = W;
           if (setBCs.SetBCT) {
-            SetBC bc          = setBCs.SetBCT(instance, position, mesh->T[c]);
+            SetBC bc          = setBCs.SetBCT(instance, position, coordinates, mesh->T[c]);
             mesh->BCT_exp.type[c1-1] = bc.type;
             mesh->BCT_exp.val[c1-1]  = bc.value;
           }
@@ -647,7 +656,7 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh, surface *topo) 
         if (k == NCX-1) {
           position = E;
           if (setBCs.SetBCT) {
-            SetBC bc          = setBCs.SetBCT(instance, position, mesh->T[c]);
+            SetBC bc          = setBCs.SetBCT(instance, position, coordinates, mesh->T[c]);
             mesh->BCT_exp.type[c1+1] = bc.type;
             mesh->BCT_exp.val[c1+1]  = bc.value;
           }
@@ -657,7 +666,7 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh, surface *topo) 
         if (l == 0) {
           position = S;
           if (setBCs.SetBCT) {
-            SetBC bc          = setBCs.SetBCT(instance, position, mesh->T[c]);
+            SetBC bc          = setBCs.SetBCT(instance, position, coordinates, mesh->T[c]);
             mesh->BCT_exp.type[c1-(NCX+2)] = bc.type;
             mesh->BCT_exp.val[c1-(NCX+2)]  = bc.value;
           }
@@ -667,7 +676,7 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh, surface *topo) 
         if (l == NCZ-1) {
           position = N;
           if (setBCs.SetBCT) {
-            SetBC bc          = setBCs.SetBCT(instance, position, mesh->T[c]);
+            SetBC bc          = setBCs.SetBCT(instance, position, coordinates, mesh->T[c]);
             mesh->BCT_exp.type[c1+(NCX+2)] = bc.type;
             mesh->BCT_exp.val[c1+(NCX+2)]  = bc.value;
           }
@@ -678,7 +687,7 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh, surface *topo) 
           if ((mesh->BCt.type[c] == -1 || mesh->BCt.type[c] == 1 || mesh->BCt.type[c] == 0) && mesh->BCt.type[c + NCX] == 30) {
             position = free_surface;
             if (setBCs.SetBCT) {
-              SetBC bc          = setBCs.SetBCT(instance, position, mesh->T[c]);
+              SetBC bc          = setBCs.SetBCT(instance, position, coordinates, mesh->T[c]);
               mesh->BCT_exp.type[c1] = bc.type;
               mesh->BCT_exp.val[c1]  = bc.value;
             }
@@ -696,6 +705,13 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh, surface *topo) 
       const int c1 = (k+1) + (l+1) * (NCX+2);
       POSITION  position = INTERNAL;
 
+      Coordinates coordinates = {
+              .k = k,
+              .l = l,
+              .x = mesh->xc_coord[k],
+              .z = mesh->zc_coord[l],
+      };
+
       mesh->BCC_exp.type[c1] = mesh->BCc.type[c];
 
       if (mesh->BCc.type[c] != 30) {
@@ -704,7 +720,7 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh, surface *topo) 
         if (k == 0) {
           position = W;
           if (setBCs.SetBCC) {
-            SetBC bc          = setBCs.SetBCC(instance, position, mesh->T[c]);
+            SetBC bc          = setBCs.SetBCC(instance, position, coordinates, mesh->T[c]);
             mesh->BCC_exp.type[c1-1] = bc.type;
             mesh->BCC_exp.val[c1-1]  = bc.value;
           }
@@ -714,7 +730,7 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh, surface *topo) 
         if (k == NCX-1) {
           position = E;
           if (setBCs.SetBCC) {
-            SetBC bc          = setBCs.SetBCC(instance, position, mesh->T[c]);
+            SetBC bc          = setBCs.SetBCC(instance, position, coordinates, mesh->T[c]);
             mesh->BCC_exp.type[c1+1] = bc.type;
             mesh->BCC_exp.val[c1+1]  = bc.value;
           }
@@ -724,7 +740,7 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh, surface *topo) 
         if (l == 0) {
           position = S;
           if (setBCs.SetBCC) {
-            SetBC bc          = setBCs.SetBCC(instance, position, mesh->T[c]);
+            SetBC bc          = setBCs.SetBCC(instance, position, coordinates, mesh->T[c]);
             mesh->BCC_exp.type[c1-(NCX+2)] = bc.type;
             mesh->BCC_exp.val[c1-(NCX+2)]  = bc.value;
           }
@@ -734,7 +750,7 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh, surface *topo) 
         if (l == NCZ-1) {
           position = N;
           if (setBCs.SetBCC) {
-            SetBC bc          = setBCs.SetBCC(instance, position, mesh->T[c]);
+            SetBC bc          = setBCs.SetBCC(instance, position, coordinates, mesh->T[c]);
             mesh->BCC_exp.type[c1+(NCX+2)] = bc.type;
             mesh->BCC_exp.val[c1+(NCX+2)]  = bc.value;
           }
@@ -745,7 +761,7 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh, surface *topo) 
           if ((mesh->BCc.type[c] == -1 || mesh->BCc.type[c] == 1 || mesh->BCt.type[c] == 0) && mesh->BCt.type[c + NCX] == 30) {
             position = free_surface;
             if (setBCs.SetBCC) {
-              SetBC bc          = setBCs.SetBCC(instance, position, mesh->T[c]);
+              SetBC bc          = setBCs.SetBCC(instance, position, coordinates, mesh->T[c]);
               mesh->BCC_exp.type[c1] = bc.type;
               mesh->BCC_exp.val[c1]  = bc.value;
             }
@@ -1019,6 +1035,50 @@ bool IsRectangleCoordinates(Coordinates coordinates, Rectangle rectangle, double
   } else {
     return false;
   }
+}
+
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
+
+char* DefaultTextFilename( char filename[] ) {
+
+  int n_basename = 0;
+  bool start=false, end=false;
+
+  // Go once reverse through the full file name 
+  for (int k=strlen(filename)-1; k>=0; k--){
+    // Look for slashes
+    if (filename[k] == '\\' || filename[k] == '/') end = true;
+    if (start==true && end==false) {
+      // printf("%c", filename[k]);
+      n_basename++;
+    }
+    // Look for start of file extension
+    if (filename[k] == '.') start = true;
+  }
+  
+  int len_basename = n_basename;
+  // char basename[len_basename];
+  char *basename = calloc(len_basename, sizeof(char));
+  start=false, end=false;
+  n_basename = 0;
+
+  for (int k=strlen(filename)-1; k>=0; k--){
+    // Look for slashes
+    if (filename[k] == '\\' || filename[k] == '/') end = true;
+    if (start==true && end==false) {
+      basename[len_basename-1-n_basename] = filename[k];
+      n_basename++;
+    }
+    // Look for start of file extension
+    if (filename[k] == '.') start = true;
+  }
+
+  strcat(basename, ".txt");
+  printf("%s\n", basename);
+
+  return basename;
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/

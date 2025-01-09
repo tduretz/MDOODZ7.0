@@ -129,6 +129,7 @@ typedef struct {
   double *kc_x, *kc_z;
   double *FreeSurfW_s, *FreeSurfW_n;
   double *noise_n, *noise_s;
+  double *sxx_W, *sxx_E, *szz_S, *szz_N;
 } grid;
 
 
@@ -158,7 +159,7 @@ struct _n_params {
   double  resx0, resz0, resp0;
   double  resx_f, resz_f, resp_f;
   double  vrlx, prlx, trlx;
-  int     Picard2Newton, let_res_grow, max_Pic_its, *LogIsNewtonStep;
+  int     Picard2Newton, let_res_grow, max_its_Pic, *LogIsNewtonStep;
   double  Picard2Newton_tol;
   double *rx_abs, *rz_abs, *rp_abs, *rx_rel, *rz_rel, *rp_rel;
 };
@@ -295,7 +296,7 @@ void            Interp_Grid2P(markers, DoodzFP *, grid *, double *, double *, do
 void            Interp_Grid2P_strain(markers, DoodzFP *, grid *, double *, double *, double *, int, int, char *);
 //void FreeP2Mesh( grid* );
 void            Interp_Phase2VizGrid(markers, int *, grid *, char *, double *, double *, int, int, params, surface);
-void            ParticleInflowCheck(markers *, grid *, params, surface, int);
+void            ParticleInflowCheck(markers *, grid *, MdoodzInput*, surface, int, SetParticles_ff); // SetParticles_ff setParticles, MdoodzInput *instance
 void            P2Mastah(params *, markers, DoodzFP *, grid *, double *, char *, int, int, int, int, int);
 //
 //// Stokes
@@ -373,6 +374,7 @@ void            GenerateDeformationMaps(grid *, mat_prop *, params *, Nparams, s
 void            UpdateParticleGrainSize(grid *, scale, params, markers *, mat_prop *);
 void            UpdateParticleDensity(grid *, scale, params, markers *, mat_prop *);
 void            UpdateParticleX(grid *, scale, params, markers *, mat_prop *);
+void            UpdateParticleXpips(grid *, scale, params, markers *, mat_prop *);
 void            UpdateParticlePhi(grid *, scale, params, markers *, mat_prop *);
 // Anisotropy
 void            NonNewtonianViscosityGridAniso(grid *, mat_prop *, params *, Nparams, scale *, int);
@@ -472,6 +474,7 @@ void            cholmod_dense_plus_cholmod_dense(cholmod_dense *, cholmod_dense 
 
 void            ApplyBC(grid *, params *);
 void            AssignMarkerProperties(markers *, int, int, params *, grid *, int);
+void            AssignMarkerPropertiesInflow(markers *, int, int, MdoodzInput*, grid *, int, SetParticles_ff);
 
 
 // GLOBAL
@@ -562,8 +565,8 @@ void            DerivativesOnTheFly_n( double*, double*, double*, double*, doubl
 void            DerivativesOnTheFly_s( double*, double*, double*, double*, double*, double*, double*, double*, int, double, double, double, double, double, double, double, double, double, double, grid*, mat_prop*, params*, scale* );
 void            ViscosityDerivatives(grid *, mat_prop *, params *, scale *);
 void            EffectiveStrainRate( double*, double*, double*, double, double, double, double, double, double, double, double d2, double, double, int );
-double          ViscosityConcise(int, double, double, double, double, double, double, double, double, double, double, double, double, mat_prop *, params *, scale *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double, double, double, double, double, double, double *, double *, double *, double *, double, double, double *, double *, double *, double *, double *, double *, int, int, int);
-double          ViscosityConciseAniso(int, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, mat_prop *, params *, scale *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double, double, double, double, double, double, double *, double *, double *, double *, double, double, double *, double *, double *, double *, double *, double *, int, int, int);
+double          ViscosityConcise(int, double, double, double, double, double, double, double, double, double, double, double, double, mat_prop *, params *, scale *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double, double, double, double, double, double, double *, double *, double *, double *, double, double, double *, double *, double *, double *, double *, double *, int, int, int, int);
+double          ViscosityConciseAniso(int, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, mat_prop *, params *, scale *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double, double, double, double, double, double, double *, double *, double *, double *, double, double, double *, double *, double *, double *, double *, double *, int, int, int, int);
 void            HuetAveragingModel( double *, double *, double *, int, double, double, int, double, double, mat_prop*);
 double          ItpRho1D( double, params*, int );
 double          Interpolate2Ddata( double, double, double, double, double, double, int, int, double* );

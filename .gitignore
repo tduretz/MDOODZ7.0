@@ -14,6 +14,7 @@ env.cmake
 visualtests-out
 build/
 RUNS/
+MDLIB/makefile
 MDLIB/*/*.png
 MDLIB/*/*/*.png
 *.out
@@ -22,3 +23,5 @@ MDLIB/*/*/*.png
 Manifest.toml
 runs/
 RUNS/
+*.mov
+*.bin

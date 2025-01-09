@@ -2,6 +2,7 @@
 #include "mdoodz.h"
 #include "stdbool.h"
 #include "stdlib.h"
+#include "time.h"
 #include "stdio.h"
 
 int SetDualPhase(MdoodzInput *input, Coordinates coordinate, int phase) {
@@ -109,7 +110,7 @@ char SetBCPType(MdoodzInput *instance, POSITION position) {
   }
 }
 
-SetBC SetBCT(MdoodzInput *instance, POSITION position, double particleTemperature) {
+SetBC SetBCT(MdoodzInput *instance, POSITION position, Coordinates coordinates,  double particleTemperature) {
   SetBC     bc;
   double surface_temperature =          zeroC  / instance->scaling.T;
   double mantle_temperature  = (1330. + zeroC) / instance->scaling.T;
@@ -128,6 +129,28 @@ SetBC SetBCT(MdoodzInput *instance, POSITION position, double particleTemperatur
   return bc;
 }
 
+double SetAnisoAngle(MdoodzInput *input, Coordinates coordinates, int phase) {
+  static unsigned int seedIncrement = 0;
+  srand(time(NULL) + seedIncrement++);
+
+  // Use coordinates to determine the base angle, ensuring smooth variation
+  double baseAngle = fmod((coordinates.x + coordinates.z), 180.0);
+
+  // Generate a small random offset, for example within [-10, 10] degrees
+  double offsetRange = 10.0; // Adjust this value to control the degree of randomness
+  double randomOffset = ((rand() / (double)RAND_MAX) * 2 * offsetRange) - offsetRange;
+
+  // Combine base angle with random offset
+  double angle = baseAngle + randomOffset;
+
+  // Ensure angle is within desired range, e.g., [0, 180]
+  if (angle < 0.0) angle += 180.0;
+  else if (angle > 180.0) angle -= 180.0;
+
+  return angle;
+}
+
+
 void AddCrazyConductivity(MdoodzInput *input) {
   int               *asthenospherePhases = (int *) malloc(sizeof(int));
   CrazyConductivity *crazyConductivity   = (CrazyConductivity *) malloc(sizeof(CrazyConductivity));
@@ -139,7 +162,7 @@ void AddCrazyConductivity(MdoodzInput *input) {
 }
 
 int main(int nargs, char *args[]) {
-  // Input file name
+  srand(time(NULL));
   char *input_file;
   if ( nargs < 2 ) {
     asprintf(&input_file, "NeckingReview.txt"); // Default
@@ -149,6 +172,7 @@ int main(int nargs, char *args[]) {
     asprintf(&input_file, "%s", args[1]);     // Custom
   }
   printf("Running MDoodz7.0 using %s\n", input_file);
+
   srand(69); // Force random generator seed for reproducibility 
   MdoodzSetup setup = {
           .BuildInitialTopography = &(BuildInitialTopography_ff){
