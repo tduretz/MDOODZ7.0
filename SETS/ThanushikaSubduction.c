@@ -68,7 +68,8 @@ int SetPhase(MdoodzInput *instance, Coordinates coordinates) {
   const double x_ext_start          =  0.0e3 / instance->scaling.L;
   const double x_ext_end            =  100.0e3 / instance->scaling.L;
   const double marginWidth          =  x_ext_end - x_ext_start;
-  const double subductionAngle      = tan((90.0 - instance->model.user4)/180*PI);
+  // const double subductionAngle      = tan((90.0 - instance->model.user4)/180*PI);
+  const double subductionAngle      = instance->model.user4/180*PI;
   const double ocCrustThickness     = instance->model.user7 / instance->scaling.L;
   const double ocLithThickness      = instance->model.user5 / instance->scaling.L;
   const double sedimentThickness    = instance->model.user8 / instance->scaling.L;
@@ -76,31 +77,33 @@ int SetPhase(MdoodzInput *instance, Coordinates coordinates) {
   int phase = 0; // Upper mantle
   
   // Set all lithosphere
-  if (coordinates.z >= -lithosphereThickness && coordinates.x > -weakZoneWidth - coordinates.z*subductionAngle) 
+  double x_weak_start = x_ext_start - weakZoneWidth - coordinates.z / tan(subductionAngle);
+  double x_weak_end   = x_weak_start + weakZoneWidth / sin(subductionAngle);
+  if (coordinates.z >= -lithosphereThickness && coordinates.x > x_weak_end) 
   {
     phase = 1;
   }
 
   // Set oceanic lithosphere
-  if (coordinates.z > -ocLithThickness && coordinates.x < -weakZoneWidth - coordinates.z*subductionAngle && phase == 0)
+  if (coordinates.z > -ocLithThickness && coordinates.x < x_weak_start)
   {
     phase = 2;
   }
 
   // Set oceanic crust
-  if (coordinates.z > -ocCrustThickness && coordinates.x < -weakZoneWidth - coordinates.z*subductionAngle)
+  if (coordinates.z > -ocCrustThickness && coordinates.x < x_weak_start)
   {
     phase = 5;
   }
 
   // Set sediments
-  if (coordinates.z > -sedimentThickness)
+  if (coordinates.z > -sedimentThickness && coordinates.x < x_weak_start)
   {
     phase = 6;
   }
 
   // Set continental crust
-  if (coordinates.x >= weakZoneWidth - coordinates.z*subductionAngle && coordinates.x >= x_ext_start && coordinates.x <= x_ext_end)
+  if (coordinates.x >= x_ext_start && coordinates.x <= x_ext_end)
   {
     // mohoLevel = mohoLevel * ( 1.0 + tanh( ((coordinates.x - marginWidth / 2.0)) / (2.0 * marginWidth) ) );
     mohoLevel = seaLevel + (mohoLevel + ht_iso - seaLevel) / marginWidth * coordinates.x;
@@ -109,14 +112,14 @@ int SetPhase(MdoodzInput *instance, Coordinates coordinates) {
   {
     mohoLevel = mohoLevel + ht_iso;
   }
-  if (coordinates.z >= mohoLevel && coordinates.x >= weakZoneWidth - coordinates.z*subductionAngle)
+  if (coordinates.z >= mohoLevel && coordinates.x >= x_weak_start)
   {
     phase = 4;
   }
   
-    // Set weak zone
+  // Set weak zone
   double maxLithThickness = fmax(ocCrustThickness,lithosphereThickness);
-   if (coordinates.z > weakZoneDepth && coordinates.x > -weakZoneWidth - coordinates.z*subductionAngle && coordinates.x < weakZoneWidth - coordinates.z*subductionAngle)
+   if (coordinates.z > weakZoneDepth && coordinates.x >= x_weak_start && coordinates.x <= x_weak_end)
    {
      phase = 3;
    }
@@ -143,13 +146,13 @@ double SetTemperature(MdoodzInput *instance, Coordinates coordinates) {
   particleTemperature  = ((mantleTemperature - surfaceTemperature) / ocLithThickness) * (-coordinates.z) + surfaceTemperature;
   
   // Set temperature in the continental crust
-  if (coordinates.x > weakZoneWidth - coordinates.z * subductionAngle && coordinates.z >= -crustThickness )
+  if (coordinates.x > weakZoneWidth - coordinates.z / tan(subductionAngle) && coordinates.z >= -crustThickness )
   {
     particleTemperature  = ((mohoTemperature - surfaceTemperature) / crustThickness) * (-coordinates.z) + surfaceTemperature;
   }
   
   // Set conductive thermal gradient in the continental lithosphere
-  if (coordinates.x > weakZoneWidth - coordinates.z * subductionAngle && coordinates.z >= -lithosphereThickness && coordinates.z < -crustThickness)
+  if (coordinates.x > weakZoneWidth - coordinates.z / tan(subductionAngle) && coordinates.z >= -lithosphereThickness && coordinates.z < -crustThickness)
   {
       particleTemperature  = ((mantleTemperature - mohoTemperature) / (lithosphereThickness - crustThickness)) * (-coordinates.z) + mohoTemperature;
   }
