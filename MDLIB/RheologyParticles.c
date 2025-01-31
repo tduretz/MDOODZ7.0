@@ -1690,3 +1690,49 @@ void UpdateParticleDivThermal( grid* mesh, scale scaling, params model, markers*
 /*--------------------------------------------------------------------------------------------------------------------*/
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
+
+void UpdateAdvectionMode( scale scaling, params* model ) {
+    
+    double real_time = model->time;
+    double t_wanted = model->time_advection_start;
+
+    printf("real_time = %2.2e and t_wanted = %2.2e\n", real_time * scaling.t, t_wanted * scaling.t);
+
+    if (real_time>t_wanted){
+        printf("real_time > t_wanted => model advection set to 1!\n");
+        model->advection = 1;
+        printf("model.advection = %d\n", model->advection);
+    }
+    else {
+        printf("real_time < t_wanted => model advection set to 0!\n");
+        model->advection = 0;
+        printf("model.advection = %d\n", model->advection);    
+    }    
+}
+
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
+
+void UpdateParticlePhase( grid* mesh, scale scaling, params* model, markers* particles, mat_prop* materials ) {
+    
+    int k;
+
+    double real_time = model->time;
+    double t_wanted = model->time_switch_phase;
+
+    printf("real_time = %2.2e and t_wanted = %2.2e\n", real_time * scaling.t, t_wanted * scaling.t);
+
+    if (real_time>t_wanted){
+    printf("real_time > t_wanted => Phase switch!\n");
+
+    // Change phase if t > t_wanted
+#pragma omp parallel for shared ( particles ) private( k )
+    for (k=0; k<particles->Nb_part; k++) {
+        if (particles->phase[k] == model->phase_switch_init) particles->phase[k] = model->phase_switch_final;
+        if (particles->dual[k] == model->phase_switch_init) particles->dual[k] = model->phase_switch_final;
+    }
+
+    }
+ 
+}

@@ -106,6 +106,9 @@ typedef struct {
   // For Pips
   int      chemical_diffusion, chemical_production, no_return, density_variations, kinetics;
   int      layering;
+  // For Pips : Static loading before ADVECTION and TRANSFORMATION?
+  double time_advection_start, time_switch_phase;
+  int phase_switch_init, phase_switch_final;
   // initial stresses
   int preload;
   double preload_sxxd,preload_szzd,preload_sxz;
