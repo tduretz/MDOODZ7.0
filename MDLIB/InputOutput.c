@@ -1205,6 +1205,12 @@ Input ReadInputFile( char *fileName ) {
     model.user7              = ReadDou2( fin, "user7",           0.0 );
     model.user8              = ReadDou2( fin, "user8",           0.0 );
     model.user9              = ReadDou2( fin, "user9",           0.0 );
+    // Static loading before ADVECTION and TRANSFORMATION?
+    model.time_advection_start = ReadDou2( fin, "time_advection_start", 0.0 ) * (365.25*24.0*3600.0) / scaling.t; // time in yrs when advection = 1 (advection = 0 before)
+    model.time_switch_phase    = ReadDou2( fin, "time_switch_phase",    0.0 ) * (365.25*24.0*3600.0) / scaling.t; // time in yrs when phase switch from phase_switch_init to phase_switch_final
+    model.phase_switch_init    = ReadInt2( fin, "phase_switch_init",    0 ); // 2
+    model.phase_switch_final   = ReadInt2( fin, "phase_switch_final",   0 ); // 3
+    
     // Derived quantities
     model.dx                 = (model.xmax - model.xmin) / (model.Nx - 1);
     model.dz                 = (model.zmax - model.zmin) / (model.Nz - 1);
