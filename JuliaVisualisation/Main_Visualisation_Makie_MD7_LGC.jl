@@ -57,7 +57,7 @@ const cm_y = y*100.
     # )
 
     # Switches
-    printfig    = false  # print figures to disk
+    printfig    = true  # print figures to disk
     printvid    = false
     framerate   = 12
     PlotOnTop = (
@@ -117,7 +117,7 @@ const cm_y = y*100.
     cm_yr = 100.0*3600.0*24.0*365.25
 
     # Time loop
-    f = Figure(size = (Lx/Lz*resol*1.2, resol), fontsize=40)
+    f = Figure(size = (500, 500), fontsize=40)
 
     for istep=file_start:file_step:file_end
     
@@ -246,9 +246,6 @@ const cm_y = y*100.
             ε̇1 = PrincipalStress(ε̇xx, ε̇zz, ε̇xz, zeros(size(ε̇xx))) 
         end
         PT = (P.>2.2e9 .&& P.<3.0e9 .&& T.>430 .&& T.<530).*ones(size(T))
-        @show extrema(P)
-        @show extrema(τII)
-        @show extrema(ε̇II)
      
         x_R1 = Float64[]; z_R1 = Float64[]; x_R2 = Float64[]; z_R2 = Float64[]
         if PlotOnTop.reactions
@@ -338,7 +335,7 @@ const cm_y = y*100.
             Mak.colgap!(f.layout, 20)
             xlims!(ax1, window.xmin, window.xmax)
             ylims!(ax1, window.zmin, window.zmax)
-            if printfig Print2Disk( f, path, string(field), istep) end
+            if printfig Print2Disk( f, path, string(field), istep, Mak) end
         end
 
         if field==:Viscosity
