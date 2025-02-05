@@ -347,7 +347,7 @@ const cm_y = y*100.
             Mak.colgap!(f.layout, 20)
             xlims!(ax1, window.xmin, window.xmax)
             ylims!(ax1, window.zmin, window.zmax)
-            if printfig Print2Disk( f, path, string(field), istep) end
+            if printfig Print2Disk( f, path, string(field), istep, Mak) end
         end
 
         if field==:Density
@@ -359,7 +359,7 @@ const cm_y = y*100.
             Mak.colgap!(f.layout, 20)
             xlims!(ax1, window.xmin, window.xmax)
             ylims!(ax1, window.zmin, window.zmax)
-            if printfig Print2Disk( f, path, string(field), istep) end
+            if printfig Print2Disk( f, path, string(field), istep, Mak) end
         end
 
         if field==:Stress
@@ -371,7 +371,7 @@ const cm_y = y*100.
             Mak.colgap!(f.layout, 20)
             xlims!(ax1, window.xmin, window.xmax)
             ylims!(ax1, window.zmin, window.zmax)
-            if printfig Print2Disk( f, path, string(field), istep) end
+            if printfig Print2Disk( f, path, string(field), istep, Mak) end
         end
 
         if field==:σxx
@@ -383,7 +383,7 @@ const cm_y = y*100.
             Mak.colgap!(f.layout, 20)
             xlims!(ax1, window.xmin, window.xmax)
             ylims!(ax1, window.zmin, window.zmax)
-            if printfig Print2Disk( f, path, string(field), istep) end
+            if printfig Print2Disk( f, path, string(field), istep, Mak) end
         end
 
         if field==:σzz
@@ -395,7 +395,7 @@ const cm_y = y*100.
             Mak.colgap!(f.layout, 20)
             xlims!(ax1, window.xmin, window.xmax)
             ylims!(ax1, window.zmin, window.zmax)
-            if printfig Print2Disk( f, path, string(field), istep) end
+            if printfig Print2Disk( f, path, string(field), istep, Mak) end
         end
 
         if field==:Pressure
@@ -407,7 +407,7 @@ const cm_y = y*100.
             Mak.colgap!(f.layout, 20)
             xlims!(ax1, window.xmin, window.xmax)
             ylims!(ax1, window.zmin, window.zmax)
-            if printfig Print2Disk( f, path, string(field), istep) end
+            if printfig Print2Disk( f, path, string(field), istep, Mak) end
         end
 
         if field==:Divergence
@@ -419,7 +419,7 @@ const cm_y = y*100.
             Mak.colgap!(f.layout, 20)
             xlims!(ax1, window.xmin, window.xmax)
             ylims!(ax1, window.zmin, window.zmax)
-            if printfig Print2Disk( f, path, string(field), istep) end
+            if printfig Print2Disk( f, path, string(field), istep, Mak) end
         end
 
         if field==:StrainRate
@@ -431,7 +431,7 @@ const cm_y = y*100.
             Mak.colgap!(f.layout, 20)
             xlims!(ax1, window.xmin, window.xmax)
             ylims!(ax1, window.zmin, window.zmax)
-            if printfig Print2Disk( f, path, string(field), istep) end #if printfig Print2Disk( f, path, string(field),ε̇BG) end
+            if printfig Print2Disk( f, path, string(field), istep, Mak) end #if printfig Print2Disk( f, path, string(field),ε̇BG) end
         end
 
         if field==:PlasticStrainrate
@@ -444,7 +444,7 @@ const cm_y = y*100.
             Mak.colgap!(f.layout, 20)
             xlims!(ax1, window.xmin, window.xmax)
             ylims!(ax1, window.zmin, window.zmax)
-            if printfig Print2Disk( f, path, string(field), istep) end
+            if printfig Print2Disk( f, path, string(field), istep, Mak) end
         end
 
         if field==:Velocity
@@ -460,7 +460,7 @@ const cm_y = y*100.
             Mak.colgap!(f.layout, 20)
             xlims!(ax1, window.xmin, window.xmax)
             ylims!(ax1, window.zmin, window.zmax)
-            if printfig Print2Disk( f, path, string(field), istep) end
+            if printfig Print2Disk( f, path, string(field), istep, Mak) end
         end
 
         if field==:Velocity_x
@@ -472,7 +472,7 @@ const cm_y = y*100.
             Mak.colgap!(f.layout, 20)
             xlims!(ax1, window.xmin, window.xmax)
             ylims!(ax1, window.zmin, window.zmax)
-            if printfig Print2Disk( f, path, string(field), istep) end
+            if printfig Print2Disk( f, path, string(field), istep, Mak) end
         end
 
         if field==:Velocity_z
@@ -484,7 +484,7 @@ const cm_y = y*100.
             Mak.colgap!(f.layout, 20)
             xlims!(ax1, window.xmin, window.xmax)
             ylims!(ax1, window.zmin, window.zmax)
-            if printfig Print2Disk( f, path, string(field), istep) end
+            if printfig Print2Disk( f, path, string(field), istep, Mak) end
         end
 
         if field==:GrainSize
@@ -502,7 +502,7 @@ const cm_y = y*100.
             Mak.colgap!(f.layout, 20)
             xlims!(ax1, window.xmin, window.xmax)
             ylims!(ax1, window.zmin, window.zmax)
-            if printfig Print2Disk( f, path, string(field), istep) end
+            if printfig Print2Disk( f, path, string(field), istep, Mak) end
         end
 
         if field==:AnisotropyFactor
@@ -520,7 +520,7 @@ const cm_y = y*100.
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
             xlims!(ax1, window.xmin, window.xmax)
             ylims!(ax1, window.zmin, window.zmax)
-            if printfig Print2Disk( f, path, string(field), istep) end
+            if printfig Print2Disk( f, path, string(field), istep, Mak) end
         end
 
         if field==:MeltFraction
@@ -532,7 +532,7 @@ const cm_y = y*100.
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
             xlims!(ax1, window.xmin, window.xmax)
             ylims!(ax1, window.zmin, window.zmax)
-            if printfig Print2Disk( f, path, string(field), istep) end
+            if printfig Print2Disk( f, path, string(field), istep, Mak) end
         end
 
         if field==:X
@@ -544,7 +544,7 @@ const cm_y = y*100.
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
             xlims!(ax1, window.xmin, window.xmax)
             ylims!(ax1, window.zmin, window.zmax)
-            if printfig Print2Disk( f, path, string(field), istep) end
+            if printfig Print2Disk( f, path, string(field), istep, Mak) end
         end
 
         if field==:Cohesion
@@ -556,7 +556,7 @@ const cm_y = y*100.
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
             xlims!(ax1, window.xmin, window.xmax)
             ylims!(ax1, window.zmin, window.zmax)
-            if printfig Print2Disk( f, path, string(field), istep) end
+            if printfig Print2Disk( f, path, string(field), istep, Mak) end
         end
 
         if field==:Temperature
@@ -568,7 +568,7 @@ const cm_y = y*100.
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
             xlims!(ax1, window.xmin, window.xmax)
             ylims!(ax1, window.zmin, window.zmax)
-            if printfig Print2Disk( f, path, string(field), istep) end
+            if printfig Print2Disk( f, path, string(field), istep, Mak) end
         end
 
         if field==:Topography
