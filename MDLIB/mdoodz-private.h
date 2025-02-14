@@ -376,6 +376,9 @@ void            UpdateParticleDensity(grid *, scale, params, markers *, mat_prop
 void            UpdateParticleX(grid *, scale, params, markers *, mat_prop *);
 void            UpdateParticleXpips(grid *, scale, params, markers *, mat_prop *);
 void            UpdateParticlePhi(grid *, scale, params, markers *, mat_prop *);
+// Advection mode and Phase Switch
+void            UpdateAdvectionMode(scale, params *);
+void            UpdateParticlePhase(grid *, scale, params *, markers *, mat_prop *);
 // Anisotropy
 void            NonNewtonianViscosityGridAniso(grid *, mat_prop *, params *, Nparams, scale *, int);
 double          AnisoFactorEvolv( double FS_AR, double aniso_fac_max );
