@@ -442,6 +442,17 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
         TransmutateMarkers(&particles, &input.materials, input.scaling.T);
 
+        // pipo: loading before advection and phase change swich: ----
+        if (input.model.time_advection_start > 0.0) {
+            UpdateAdvectionMode( input.scaling, &input.model );
+            printf("model.advection in MainDOODZ = %d \n", input.model.advection);
+        }
+
+        if (input.model.time_switch_phase > 0.0) {
+                UpdateParticlePhase( &mesh, input.scaling, &input.model, &particles, &input.materials );
+        }
+        // pipo: loading before advection and phase change swich: ----
+        
         clock_t t_omp_step = (double)omp_get_wtime();
 
         printf(GREEN "Initial number of particles = %d --- max allowed: %d\n" RESET, particles.Nb_part_ini, particles.Nb_part_max);
