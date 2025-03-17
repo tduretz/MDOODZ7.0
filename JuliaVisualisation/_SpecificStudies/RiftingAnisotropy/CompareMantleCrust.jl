@@ -14,13 +14,12 @@ const cm_y = y*100.
 @views function main()
 
     # Set the path to your files
-    path_LR ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/RiftingAnisotropy/d1/"
-    path_MR ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/RiftingAnisotropy/d1_5/"
-    path_HR ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/RiftingAnisotropy/d6/"
-
+    path =  ["/Users/tduretz/REPO/MDOODZ7.0/RUNS/RiftingAnisotropy/crust_only/",
+             "/Users/tduretz/REPO/MDOODZ7.0/RUNS/RiftingAnisotropy/ref_d4_MR/",
+             "/Users/tduretz/REPO/MDOODZ7.0/RUNS/RiftingAnisotropy/mantle_only/",]
 
     # File numbers
-    step = [1200; 1200; 1200]
+    step = [1360; 1600; 1660]
     # Select field to visualise
     # field = :Phases
     # field = :Cohesion
@@ -113,7 +112,7 @@ const cm_y = y*100.
 
     @unpack Lc, tc, Vc, τc = scales
 
-    model = ReadFile(path_LR, step[1], scales, options, PlotOnTop)
+    model = ReadFile(path[1], step[1], scales, options, PlotOnTop)
     @unpack tMy, length_unit, Lx, Lz, xc, zc, ε̇II, τII, coords, V, T, ϕ, σ1, Fab, height, group_phases, Δ = model
 
     if @isdefined zoom
@@ -211,13 +210,13 @@ const cm_y = y*100.
 
         cmap = :vik
 
-        model = ReadFile(path_LR, step[1], scales, options, PlotOnTop)
+        model = ReadFile(path[1], step[1], scales, options, PlotOnTop)
         @unpack tMy, length_unit, Lx, Lz, xc, zc, ε̇II, τII, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, group_phases, Δ = model
 
         tMy_string = @sprintf("%1.2lf", tMy)
-        ax1 = Axis(f[1, 1], title = L"A) $\delta = 1.0$ (Isotropic) - $t$ = %$(tMy_string) Ma", ylabel = L"$y$ [%$(length_unit)]", xgridvisible = false, ygridvisible = false,)
+        ax1 = Axis(f[1, 1], title = L"A) Crustal anisotropy only - $t$ = %$(tMy_string) Ma", ylabel = L"$y$ [%$(length_unit)]", xgridvisible = false, ygridvisible = false,)
         hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(τII), colormap = (cmap, options.α_heatmap), colorrange=(6.69, 8.69))
-        AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, group_phases, Δ/2, Mak)                
+        AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, group_phases, Δ, Mak)                
         colsize!(f.layout, 1, Aspect(1, Lx/Lz))
         Mak.Colorbar(f[1, 2], hm, label =  L"$\tau_\textrm{II}$ [Pa]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
         Mak.colgap!(f.layout, 20)
@@ -231,11 +230,11 @@ const cm_y = y*100.
         
         ##############################################################
 
-        model = ReadFile(path_MR, step[2], scales, options, PlotOnTop)
+        model = ReadFile(path[2], step[2], scales, options, PlotOnTop)
         @unpack tMy, length_unit, Lx, Lz, xc, zc, ε̇II, τII, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, group_phases, Δ = model
         
         tMy_string = @sprintf("%1.2lf", tMy)
-        ax1 = Axis(f[2, 1], title = L"B) $\delta = 1.5$ - $t$ = %$(tMy_string) Ma", ylabel = L"$y$ [%$(length_unit)]", xgridvisible = false, ygridvisible = false,)
+        ax1 = Axis(f[2, 1], title = L"B) Both crustal and mantle anisotropy (reference) - $t$ = %$(tMy_string) Ma", ylabel = L"$y$ [%$(length_unit)]", xgridvisible = false, ygridvisible = false,)
         hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(τII), colormap = (cmap, options.α_heatmap), colorrange=(6.69, 8.69))
         AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, group_phases, Δ, Mak)                
         colsize!(f.layout, 1, Aspect(1, Lx/Lz))
@@ -253,14 +252,14 @@ const cm_y = y*100.
 
         # ##############################################################
 
-        model = ReadFile(path_HR, step[3], scales, options, PlotOnTop)
+        model = ReadFile(path[3], step[3], scales, options, PlotOnTop)
         @unpack tMy, length_unit, Lx, Lz, xc, zc, ε̇II, τII, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, group_phases, Δ = model
         
         tMy_string = @sprintf("%1.2lf", tMy)
-        ax1 = Axis(f[3, 1], title = L"C) $\delta = 6.0$ - $t$ = %$(tMy_string) Ma", xlabel = L"$x$ [%$(length_unit)]", ylabel = L"$y$ [%$(length_unit)]", xgridvisible = false, ygridvisible = false,)
+        ax1 = Axis(f[3, 1], title = L"C) Mantle anisotropy only  - $\tau_\textrm{II}$ at $t$ = %$(tMy_string) Ma", xlabel = L"$x$ [%$(length_unit)]", ylabel = L"$y$ [%$(length_unit)]", xgridvisible = false, ygridvisible = false,)
         @show size(xc), size(zc), size(log10.(τII))
         hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(τII), colormap = (cmap, options.α_heatmap), colorrange=(6.69, 8.69))
-        AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, group_phases, Δ*2, Mak)                
+        AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, group_phases, Δ, Mak)                
         colsize!(f.layout, 1, Aspect(1, Lx/Lz))
         Mak.Colorbar(f[3, 2], hm, label =  L"$\tau_\textrm{II}$ [Pa]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
         Mak.colgap!(f.layout, 20)
@@ -275,7 +274,8 @@ const cm_y = y*100.
 
         ##############################################################
     
-        save("/Users/tduretz/PowerFolders/_manuscripts/RiftingAnisotropy/Figures/CompareDelta.png", f, px_per_unit = 4)     end
+        # save("/Users/tduretz/PowerFolders/_manuscripts/RiftingAnisotropy/Figures/CompareMantleCrust.png", f, px_per_unit = 4)     
+    end
 
     display(f)
 end

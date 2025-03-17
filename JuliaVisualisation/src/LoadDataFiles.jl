@@ -1,3 +1,5 @@
+import CairoMakie
+
 function ExtractData( file_path, data_path)
     data = h5open(file_path, "r") do file
         read(file, data_path)
@@ -17,7 +19,7 @@ end
 function Print2Disk( f, path, field, istep; res=4)
     path1 = path*"/_$field/"
     mkpath(path1)
-    save(path1*"$field"*@sprintf("%05d", istep)*".png", f, px_per_unit = res) 
+    CairoMakie.save(path1*"$field"*@sprintf("%05d", istep)*".png", f, px_per_unit = res) 
 end
 
 function ReadFile(path, step, scales, options, PlotOnTop)
@@ -94,6 +96,11 @@ function ReadFile(path, step, scales, options, PlotOnTop)
     C     = Float64.(reshape(ExtractData( filename, "/Centers/cohesion"), ncx, ncz))
     ϕ     = ExtractField(filename, "/Centers/phi", centroids, false, 0)
     divu  = ExtractField(filename, "/Centers/divu", centroids, false, 0)
+    εII_pwl  = Float64.(reshape(ExtractData( filename, "/Centers/strain_pwl"), ncx, ncz)); εII_pwl[mask_air]  .= NaN
+    εII_pl   = Float64.(reshape(ExtractData( filename, "/Centers/strain_pl"), ncx, ncz)); εII_pl[mask_air]  .= NaN
+    εII = εII_pwl + εII_pl
+    # εII   = Float64.(reshape(ExtractData( filename, "/Centers/strain"), ncx, ncz)); εII[mask_air]  .= NaN
+
     T_hr  = zeros(size(ph_hr)); T_hr[1:2:end-1,1:2:end-1] .= T; T_hr[2:2:end-0,2:2:end-0] .= T
     if options.LAB_color
         ph_hr[(ph_hr.==2 .|| ph_hr.==3) .&& T_hr.<options.LAB_T] .= 2
@@ -115,7 +122,15 @@ function ReadFile(path, step, scales, options, PlotOnTop)
         Fab.z ./= nrm
     end
     height = 0.
-    if PlotOnTop.topo
+
+    read_topo = true
+    try Float64.(ExtractData( filename, "/Topo/z_grid"));
+    catch 
+        @warn "no topo data"
+        read_topo = false
+    end
+
+    if read_topo
         height  = Float64.(ExtractData( filename, "/Topo/z_grid")); 
         Vx_grid = Float64.(ExtractData( filename, "/Topo/Vx_grid"));
         Vz_grid = Float64.(ExtractData( filename, "/Topo/Vz_grid"));  
@@ -138,5 +153,5 @@ function ReadFile(path, step, scales, options, PlotOnTop)
     end
 
     return (tMy=tMy,length_unit=length_unit, Lx=Lx, Lz=Lz, xc=xc, zc=zc, ε̇II=ε̇II, τII=τII,
-    coords=coords, V=V, T=T, ϕ=ϕ, σ1=σ1, ε̇1=ε̇1, PT=PT, Fab=Fab, height=height, group_phases=group_phases, Δ=Δ)
+    coords=coords, V=V, T=T, ϕ=ϕ, σ1=σ1, ε̇1=ε̇1, PT=PT, Fab=Fab, height=height, all_phases=(ph=ph, ph_hr=ph_hr, ph_dual_hr=ph_dual_hr, group_phases=group_phases), εII=εII, C=C, Δ=Δ)
 end

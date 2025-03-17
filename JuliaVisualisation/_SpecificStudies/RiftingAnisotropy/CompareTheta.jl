@@ -14,13 +14,13 @@ const cm_y = y*100.
 @views function main()
 
     # Set the path to your files
-    path_LR ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/RiftingAnisotropy/d1/"
-    path_MR ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/RiftingAnisotropy/d1_5/"
-    path_HR ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/RiftingAnisotropy/d6/"
+    path_LR ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/RiftingAnisotropy/ref_d4_MR/"
+    path_MR ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/RiftingAnisotropy/t45/"
+    path_HR ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/RiftingAnisotropy/t80/"
 
 
     # File numbers
-    step = [1200; 1200; 1200]
+    step = [1360; 860; 1660]
     # Select field to visualise
     # field = :Phases
     # field = :Cohesion
@@ -55,8 +55,8 @@ const cm_y = y*100.
     # Switches
     PlotOnTop = (
         ph_contours   = true,  # add phase contours
-        fabric        = false,  # add fabric quiver (normal to director)
-        T_contours    = true,   # add temperature contours
+        fabric        = true,  # add fabric quiver (normal to director)
+        T_contours    = false,   # add temperature contours
         topo          = false,
         quiver_origin = false,
         σ1_axis       = false,
@@ -215,9 +215,9 @@ const cm_y = y*100.
         @unpack tMy, length_unit, Lx, Lz, xc, zc, ε̇II, τII, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, group_phases, Δ = model
 
         tMy_string = @sprintf("%1.2lf", tMy)
-        ax1 = Axis(f[1, 1], title = L"A) $\delta = 1.0$ (Isotropic) - $t$ = %$(tMy_string) Ma", ylabel = L"$y$ [%$(length_unit)]", xgridvisible = false, ygridvisible = false,)
+        ax1 = Axis(f[1, 1], title = L"A) $\theta_\textrm{ini} = 10^\circ$ - $t$ = %$(tMy_string) Ma", ylabel = L"$y$ [%$(length_unit)]", xgridvisible = false, ygridvisible = false,)
         hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(τII), colormap = (cmap, options.α_heatmap), colorrange=(6.69, 8.69))
-        AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, group_phases, Δ/2, Mak)                
+        AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, group_phases, Δ, Mak)                
         colsize!(f.layout, 1, Aspect(1, Lx/Lz))
         Mak.Colorbar(f[1, 2], hm, label =  L"$\tau_\textrm{II}$ [Pa]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
         Mak.colgap!(f.layout, 20)
@@ -235,7 +235,7 @@ const cm_y = y*100.
         @unpack tMy, length_unit, Lx, Lz, xc, zc, ε̇II, τII, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, group_phases, Δ = model
         
         tMy_string = @sprintf("%1.2lf", tMy)
-        ax1 = Axis(f[2, 1], title = L"B) $\delta = 1.5$ - $t$ = %$(tMy_string) Ma", ylabel = L"$y$ [%$(length_unit)]", xgridvisible = false, ygridvisible = false,)
+        ax1 = Axis(f[2, 1], title = L"B) $\theta_\textrm{ini} = 45^\circ$ - $t$ = %$(tMy_string) Ma", ylabel = L"$y$ [%$(length_unit)]", xgridvisible = false, ygridvisible = false,)
         hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(τII), colormap = (cmap, options.α_heatmap), colorrange=(6.69, 8.69))
         AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, group_phases, Δ, Mak)                
         colsize!(f.layout, 1, Aspect(1, Lx/Lz))
@@ -257,10 +257,10 @@ const cm_y = y*100.
         @unpack tMy, length_unit, Lx, Lz, xc, zc, ε̇II, τII, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, group_phases, Δ = model
         
         tMy_string = @sprintf("%1.2lf", tMy)
-        ax1 = Axis(f[3, 1], title = L"C) $\delta = 6.0$ - $t$ = %$(tMy_string) Ma", xlabel = L"$x$ [%$(length_unit)]", ylabel = L"$y$ [%$(length_unit)]", xgridvisible = false, ygridvisible = false,)
+        ax1 = Axis(f[3, 1], title = L"C) $\theta_\textrm{ini} = 80^\circ$ - $\tau_\textrm{II}$ at $t$ = %$(tMy_string) Ma", xlabel = L"$x$ [%$(length_unit)]", ylabel = L"$y$ [%$(length_unit)]", xgridvisible = false, ygridvisible = false,)
         @show size(xc), size(zc), size(log10.(τII))
         hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(τII), colormap = (cmap, options.α_heatmap), colorrange=(6.69, 8.69))
-        AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, group_phases, Δ*2, Mak)                
+        AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, group_phases, Δ, Mak)                
         colsize!(f.layout, 1, Aspect(1, Lx/Lz))
         Mak.Colorbar(f[3, 2], hm, label =  L"$\tau_\textrm{II}$ [Pa]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
         Mak.colgap!(f.layout, 20)
@@ -275,7 +275,8 @@ const cm_y = y*100.
 
         ##############################################################
     
-        save("/Users/tduretz/PowerFolders/_manuscripts/RiftingAnisotropy/Figures/CompareDelta.png", f, px_per_unit = 4)     end
+        # save("/Users/tduretz/PowerFolders/_manuscripts/RiftingAnisotropy/Figures/CompareTheta.png", f, px_per_unit = 4)     
+    end
 
     display(f)
 end
