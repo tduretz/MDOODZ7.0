@@ -121,7 +121,11 @@ double ViscosityConciseAniso( int phase, double lxlz, double lx2, double angle, 
     if ( elastic==0                 ) { G = 1e1; dil = 0.0;}; //K = 1e1;
     // Zero C limit
     if ( T< zeroC/scaling->T        ) T = zeroC/scaling->T;
-     // Precomputations
+
+    // Tensional cut-off
+    if ( model->gz<0.0 && P<0.0     ) { P = 0.0; } 
+
+    // Precomputations
     if ( dislocation == 1 ) {
       B_pwl = pre_factor * F_pwl * pow(A_pwl,-1.0/n_pwl) * exp( (Q_pwl + P*V_pwl)/R/n_pwl/T ) * pow(d0, m_pwl/n_pwl) * pow(f_pwl, -r_pwl/n_pwl) * exp(-a_pwl*phi/n_pwl);
       C_pwl   = pow(2.0*B_pwl, -n_pwl);
@@ -299,8 +303,8 @@ double ViscosityConciseAniso( int phase, double lxlz, double lx2, double angle, 
 
     // Update effective viscosity and anisotropy factor
     *Pcorr   = Pc;
-    eta      = *eta_vep;
-    eta_pl   = Tii/gdot;
+    eta      = fabs(*eta_vep);
+    eta_pl   = fabs(Tii/gdot);
     divp     = gdot*sin(dil);
 
       //-------- Post-Processing
@@ -341,7 +345,7 @@ double ViscosityConciseAniso( int phase, double lxlz, double lx2, double angle, 
       // printf("eta = %2.6e --- eta_ve = %2.6e --- eta_ve1 = %2.6e\n", eta, eta_ve, 1.0/(1./eta+1./eta_el));
     }
   }
-  return eta;
+  return fabs(eta);
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
