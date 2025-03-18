@@ -118,6 +118,8 @@ typedef struct {
   int      save_initial_markers, load_initial_markers;
   char    *initial_markers_file;
   int     marker_aniso_angle;
+  int     boundary_filter;
+  double  boundary_position, boundary_width;
 } params;
 
 // Stucture scale contains scaling parameters

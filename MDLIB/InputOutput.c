@@ -1157,6 +1157,9 @@ Input ReadInputFile( char *fileName ) {
     model.adiab_heating      = ReadInt2( fin, "adiab_heating",         0 ); // 0: zero, 1: lithostatic P assumption, 2: full derivative
     model.surface_processes  = ReadInt2( fin, "surface_processes",     0 ); // 1: diffusion; 2: diffusion + sedimentation
     model.marker_aniso_angle = ReadInt2( fin, "marker_aniso_angle",    0 ); // Enables setting anisotropy angle per particles rather than phases
+    model.boundary_filter    = ReadInt2( fin, "boundary_filter",       0 ); // Filter that smoothly transitions to delta = 1 at the boundary
+    model.boundary_position  = ReadDou2( fin, "boundary_position",  200e3)/scaling.L; // position of  the center of boundary filter
+    model.boundary_width     = ReadDou2( fin, "boundary_width",      10e3)/scaling.L; // width of filter
     model.layering           = ReadInt2( fin, "layering",              0 ); // Activation of Layering (Anais setup)
     // Transformations
     model.chemical_diffusion  = ReadInt2( fin, "chemical_diffusion",              0 ); // Activate progressive reactions

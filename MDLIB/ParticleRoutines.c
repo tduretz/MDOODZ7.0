@@ -474,10 +474,12 @@ double Vertices2Particle( markers* particles, double* NodeField, double* X_vect,
             // printf("Should never be here I! (Vertices2Particle)\n");
             // printf("%2.10e %2.10e\n", particles->x[k],  X_vect[0]);
             // exit(1);
+            particles->phase[k] = -1;
             j_part = 0;
         }
         if (j_part>Nx-2) {
-            printf("Should never be here II! (Vertices2Particle)\n"); exit(1);
+            // printf("Should never be here II! (Vertices2Particle) - xp= %1.5f\n", particles->x[k]); exit(1);
+            particles->phase[k] = -1;
             j_part = Nx-2;
         }
         
@@ -537,7 +539,7 @@ double Vertices2Particle( markers* particles, double* NodeField, double* X_vect,
         
     }
     else {
-        printf("Should never be here VI ! (Vertices2Particle)\n"); exit(1);
+        // printf("Should never be here VI ! (Vertices2Particle)\n"); exit(1);
     }
     return val;
 }

@@ -352,7 +352,13 @@ void UpdateAnisoFactor( grid *mesh, mat_prop *materials, params *model, scale *s
 
   printf("Update anisotropy factor\n");
     int p, k, l, Nx, Nz, Ncx, Ncz, c0, c1;
-  int average = model->ani_average; // SHOULD NOT BE ALLOWED TO BE ELSE THAN 1 - but why??
+  int average = model->ani_average;
+
+  bool boundary_filter = false;
+  if (model->boundary_filter==1) boundary_filter = true;
+  const double x1 = -model->boundary_position, x2 = model->boundary_position, a = 1.0/model->boundary_width;
+  const double d_iso = 1.0;
+  double d_ani, x;
 
   Nx = mesh->Nx;
   Nz = mesh->Nz;
@@ -404,6 +410,15 @@ void UpdateAnisoFactor( grid *mesh, mat_prop *materials, params *model, scale *s
         // Post-process for geometric/harmonic averages
         if ( average==1 ) mesh->aniso_factor_n[c0] = 1.0/mesh->aniso_factor_n[c0];
         if ( average==2 ) mesh->aniso_factor_n[c0] = exp(mesh->aniso_factor_n[c0]);
+
+        if (boundary_filter) {
+        // Apply boundary filter
+        d_ani = mesh->aniso_factor_n[c0];
+        x     = mesh->xc_coord[mesh->kp[c0]];
+        // if (x<x1) mesh->aniso_factor_n[c0] = d_iso;
+        mesh->aniso_factor_n[c0] = d_iso + (d_ani-d_iso) / (1.0 + exp( -a*(x - x1)) ) - (d_ani-d_iso) / (1.0 + exp( -a*(x - x2)) );
+        }
+
       }
     }
   }
@@ -454,6 +469,15 @@ void UpdateAnisoFactor( grid *mesh, mat_prop *materials, params *model, scale *s
         // Post-process for geometric/harmonic averages
         if ( average==1 ) mesh->aniso_factor_s[c1] = 1.0/mesh->aniso_factor_s[c1];
         if ( average==2 ) mesh->aniso_factor_s[c1] = exp(mesh->aniso_factor_s[c1]);
+
+
+        if (boundary_filter) {
+          // Apply boundary filter
+          d_ani = mesh->aniso_factor_s[c1];
+          x     = mesh->xg_coord[mesh->kn[c1]];
+          mesh->aniso_factor_s[c1] = d_iso + (d_ani-d_iso) / (1 + exp( -a*(x - x1)) ) - (d_ani-d_iso) / (1 + exp( -a*(x - x2)) );
+        }
+        
       }
     }
   }
