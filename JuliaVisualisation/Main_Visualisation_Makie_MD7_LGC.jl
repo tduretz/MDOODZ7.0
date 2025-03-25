@@ -18,9 +18,9 @@ const cm_y = y*100.
     path = "/Users/lcandiot/Desktop/tmp/Thanushika/"
 
     # File numbers
-    file_start = 1000
+    file_start = 100
     file_step  = 10
-    file_end   = 1000
+    file_end   = 100
 
     # Select field to visualise
     field = :Phases
