@@ -67,7 +67,7 @@ user0              = 30.0e3         / Continental crustal thickness [m]         
 user1              = 80e3           / Lithospheric thickness [m]                                         ***** SYSTEMATIC PARAMETER *****
 user2              = -3.17e-9       / Plate velocity [m/s] (compression -> negative)                     ***** SYSTEMATIC PARAMETER *****
 user3              = 0.5            / Boundary velocity partitioning: 1 = full push WEST, 0 = full push EAST
-user4              = 40             / Angle of Subduction [°]                                            ***** SYSTEMATIC PARAMETER *****
+user4              = 15             / Angle of Subduction [°]                                            ***** SYSTEMATIC PARAMETER *****
 user5              = 70e3           / Thickness of oceanic lithosphere - Computed from thermal age       ***** SYSTEMATIC PARAMETER *****
 user6              = 0.0e-3         / Mantle adiabat [K/m]                                               ***** SYSTEMATIC PARAMETER *****
 user7              = 10.0e3         / Oceanic crustal thickness [m]

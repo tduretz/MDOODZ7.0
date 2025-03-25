@@ -18,28 +18,28 @@ const cm_y = y*100.
     #path=raw"C:\Users\49176\OneDrive\Desktop\Test_c_code\\"
     path="/home/larafriedrichs/repositories/MDOODZ7.0/runs/firstmodel/"
     path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/"
-    # path = "/Users/lcandiot/Developer/MDOODZ7.0/cmake-exec/RiftingChenin/"
+    path = "/Users/lcandiot/Developer/MDOODZ7.0/cmake-exec/ThanushikaSubduction/"
     # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/RiftingAnisotropy/d1/"
     # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/RiftingMelting/"
 
     # File numbers
-    file_start = 240
-    file_step  = 10
-    file_end   = 240
+    file_start = 0
+    file_step  = 100
+    file_end   = 100
 
     # Select field to visualise
     # field = :Phases
     # field = :Cohesion
-    # field = :Density
+    field = :Density
     # field = :Viscosity  
     # field = :PlasticStrainrate
-    field = :Stress
+    # field = :Stress
     # field = :σxx
     # field = :σzz
     # field = :StrainRate
     # field = :Pressure 
     # field = :Divergence
-    field = :Temperature
+    # field = :Temperature
     # field = :Velocity_x
     # field = :Velocity_z
     # field = :Velocity
@@ -82,10 +82,10 @@ const cm_y = y*100.
     vel_scale   = 0.00001
     vel_step    = 10
     nap         = 0.1    # pause for animation 
-    resol       = 500
+    resol       = 1000
     mov_name    = "$(path)/_$(field)/$(field)"  # Name of the movie
     Lx, Lz      = 1.0, 1.0
-    LAB_color   = true
+    LAB_color   = false
     LAB_T       = 1250
 
     # Scaling
@@ -102,7 +102,7 @@ const cm_y = y*100.
     cm_yr = 100.0*3600.0*24.0*365.25
 
     # Time loop
-    f = Figure(size = (Lx/Lz*resol*1.2, resol), fontsize=40)
+    f = Figure(size = (Lx/Lz*resol, resol), fontsize=40, figure_padding=10)
 
     for istep=file_start:file_step:file_end
     
@@ -257,16 +257,16 @@ const cm_y = y*100.
         #####################################
         empty!(f)
         ftsz =  30*resol/500
-        f = Figure(size = (1.1*Lx/Lz*resol*1.2, resol), fontsize=ftsz)
+        f = Figure(size = (Lx/Lz*resol, resol), fontsize=ftsz)
 
         if field==:Phases
-            ax1 = Axis(f[1, 1], title = L"Phases at $t$ = %$(tMy) Ma", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
+            ax1 = Axis(f[1, 1], title = L"Phases at $t$ = %$(tMy) Ma", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]", aspect = Lx/Lz)
             hm = heatmap!(ax1, xc_hr./Lc, zc_hr./Lc, ph_hr, colormap = phase_colors)
             # hm = heatmap!(ax1, xc_hr./Lc, zc_hr./Lc, ph_hr, colormap = :turbo)
             hm = heatmap!(ax1, xc_hr./Lc, zc_hr./Lc, ph_dual_hr, colormap = :turbo)
             AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, group_phases, Δ, Mak)                
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
-            Mak.Colorbar(f[1, 2], hm, label = "Phases", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
+            Mak.Colorbar(f[1, 2], hm, label = "Phases", labelsize = ftsz, ticklabelsize = ftsz )
             Mak.colgap!(f.layout, 20)
             xlims!(ax1, window.xmin, window.xmax)
             ylims!(ax1, window.zmin, window.zmax)
@@ -287,7 +287,7 @@ const cm_y = y*100.
 
         if field==:Density
             ax1 = Axis(f[1, 1], title = L"$\rho$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
-            hm = heatmap!(ax1, xc./Lc, zc./Lc, ρc, colormap = (:turbo, α_heatmap), colorrange=(2600, 3000))  
+            hm = heatmap!(ax1, xc./Lc, zc./Lc, ρc, colormap = (:turbo, α_heatmap), colorrange=(2600, 5000))  
             AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, group_phases, Δ, Mak)                
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
             Mak.Colorbar(f[1, 2], hm, label = L"$\rho$ [kg.m$^{-3}$]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
