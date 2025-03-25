@@ -177,15 +177,15 @@ macro(SuiteSparse_FIND_COMPONENTS )
 						/usr/local/include/suitesparse
 						/usr/include/${suitesparseComp}
 						/usr/local/include/${suitesparseComp}
-						$ENV{brew_SuiteSparse_path}/include/suitesparse
-						${SuiteSparse_DIR}/include
-						${SuiteSparse_DIR}/include/suitesparse
-						${SuiteSparse_DIR}/suitesparse/include
-						${SuiteSparse_DIR}/include/${suitesparseComp}
-						${SuiteSparse_DIR}/${suitesparseComp}/include
-						${${suitesparseCompUC}_DIR}/include
-						${${suitesparseCompUC}_DIR}/${suitesparseComp}/include
-						${${suitesparseCompUC}_DIR}
+						/opt/homebrew/Cellar/suite-sparse/7.10.1/include/suitesparse
+						#${SuiteSparse_DIR}/include
+						#${SuiteSparse_DIR}/include/suitesparse
+						#${SuiteSparse_DIR}/suitesparse/include
+						#${SuiteSparse_DIR}/include/${suitesparseComp}
+						#${SuiteSparse_DIR}/${suitesparseComp}/include
+						#${${suitesparseCompUC}_DIR}/include
+						#${${suitesparseCompUC}_DIR}/${suitesparseComp}/include
+						#${${suitesparseCompUC}_DIR}
 		)
 		## check if found
 		if(NOT SuiteSparse_${suitesparseCompUC}_INCLUDE_DIR)
