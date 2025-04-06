@@ -76,30 +76,13 @@ int SetPhase(MdoodzInput *instance, Coordinates coordinates) {
   const double weakZoneDepth        = -fmin(lithosphereThickness, ocLithThickness) - 20.0e3 / instance->scaling.L;
   int phase = 0; // Upper mantle
   
-  // Set all lithosphere
-  double x_weak_start = x_ext_start - weakZoneWidth - coordinates.z / tan(subductionAngle);
-  double x_weak_end   = x_weak_start + weakZoneWidth / sin(subductionAngle);
-  if (coordinates.z >= -lithosphereThickness && coordinates.x > x_weak_end) 
+  // Calculate distance of current point from center line of weak layer
+  double d = (coordinates.x - x_ext_start) * sin(subductionAngle) - (-coordinates.z - 0.0) * cos(subductionAngle);
+
+  // Set continental lithosphere
+  if (coordinates.z >= -lithosphereThickness && d > weakZoneWidth / 2.0) 
   {
     phase = 1;
-  }
-
-  // Set oceanic lithosphere
-  if (coordinates.z > -ocLithThickness && coordinates.x < x_weak_start)
-  {
-    phase = 2;
-  }
-
-  // Set oceanic crust
-  if (coordinates.z > -ocCrustThickness && coordinates.x < x_weak_start)
-  {
-    phase = 5;
-  }
-
-  // Set sediments
-  if (coordinates.z > -sedimentThickness && coordinates.x < x_weak_start)
-  {
-    phase = 6;
   }
 
   // Set continental crust
@@ -112,17 +95,34 @@ int SetPhase(MdoodzInput *instance, Coordinates coordinates) {
   {
     mohoLevel = mohoLevel + ht_iso;
   }
-  if (coordinates.z >= mohoLevel && coordinates.x >= x_weak_start)
+  if (coordinates.z >= mohoLevel && coordinates.x >= x_ext_start)
   {
     phase = 4;
   }
   
   // Set weak zone
-  double maxLithThickness = fmax(ocCrustThickness,lithosphereThickness);
-   if (coordinates.z > weakZoneDepth && coordinates.x >= x_weak_start && coordinates.x <= x_weak_end)
-   {
-     phase = 3;
-   }
+  if (coordinates.z > weakZoneDepth && fabs(d) <= weakZoneWidth / 2.0)
+  {
+    phase = 3;
+  }
+
+  // Set oceanic lithosphere
+  if (coordinates.z > -ocLithThickness && d < -weakZoneWidth / 2.0)
+  {
+    phase = 2;
+  }
+
+  // Set oceanic crust
+  if (coordinates.z > -(ocCrustThickness + sedimentThickness) && d < -weakZoneWidth / 2.0)
+  {
+    phase = 5;
+  }
+
+  // Set sediments
+  if (coordinates.z > -sedimentThickness && d < -weakZoneWidth / 2.0)
+  {
+    phase = 6;
+  }
    
   // Return
   return phase;
