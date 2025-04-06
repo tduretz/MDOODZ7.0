@@ -14,10 +14,10 @@ function ExtractField(filename, field, size, mask_air, mask)
     return field
 end 
 
-function Print2Disk( f, path, field, istep; res=4)
+function Print2Disk( f, path, field, istep, Mak; res=4)
     path1 = path*"/_$field/"
     mkpath(path1)
-    save(path1*"$field"*@sprintf("%05d", istep)*".png", f, px_per_unit = res) 
+    Mak.save(path1*"$field"*@sprintf("%05d", istep)*".png", f, px_per_unit = res) 
 end
 
 function ReadFile(path, step, scales, options, PlotOnTop)

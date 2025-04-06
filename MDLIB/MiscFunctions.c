@@ -67,7 +67,7 @@ void CheckSym( DoodzFP* array, double scale, int nx, int nz, char* text, int mod
         }
                                
     }
-    if (err>1e-10) {printf(text); exit(1);}
+    if (err>1e-10) {printf("%s\n", text); exit(1);}
     
 }
 
