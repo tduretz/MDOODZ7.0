@@ -42,8 +42,8 @@ function main_simple_ani_vis()
     if abs(τbg - τ_chk)/τbg > 1e-6 error("Power-law breaks down") end
     # -------------------- TEST: Anisotropic power law -------------------- #
     # Arrays
-    θ = [π/3]
-    # θ          = LinRange( 0.0, π/2, 51 ) .-0* π/2
+    # θ = [π/3]
+    θ          = LinRange( 0.0, π/2, 51 ) .-0* π/2
     τii_cart1  = zero(θ) 
     τii_cart2  = zero(θ)
     ε̇ii_rot    = zero(θ)
@@ -130,7 +130,7 @@ function main_simple_ani_vis()
             τyy         = τ[2]
             τxy         = τ[3]
             ε̇xxd_v = Cpwl*τii^((npwl-1))*τxx
-            ε̇xyd_v = Cpwl*τii^((npwl-1))*(τxy*Δ, Mak)
+            ε̇xyd_v = Cpwl*τii^((npwl-1))*(τxy*δ)
             ε̇xxd_e = (τxx-τ0_rot[1,1])/2/ηe
             ε̇xyd_e = (τxy-τ0_rot[1,2])/2/ηe*δ
             ε̇xxd_p = γ̇*τxxt/τii/2

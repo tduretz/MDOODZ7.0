@@ -92,6 +92,9 @@ function ReadFile(path, step, scales, options, PlotOnTop)
     ε̇xz   = Float64.(reshape(ExtractData( filename, "/Vertices/exz"), nvx, nvz))
     τII   = sqrt.( 0.5*(τxx.^2 .+ τyy.^2 .+ τzz.^2 .+ 0.5*(τxz[1:end-1,1:end-1].^2 .+ τxz[2:end,1:end-1].^2 .+ τxz[1:end-1,2:end].^2 .+ τxz[2:end,2:end].^2 ) ) ); τII[mask_air] .= NaN
     ε̇II   = sqrt.( 0.5*(ε̇xx.^2 .+ ε̇yy.^2 .+ ε̇zz.^2 .+ 0.5*(ε̇xz[1:end-1,1:end-1].^2 .+ ε̇xz[2:end,1:end-1].^2 .+ ε̇xz[1:end-1,2:end].^2 .+ ε̇xz[2:end,2:end].^2 ) ) ); ε̇II[mask_air] .= NaN
+    εII_pl= Float64.(reshape(ExtractData( filename, "/Centers/strain_pl"), ncx, ncz))
+    εII_pwl= Float64.(reshape(ExtractData( filename, "/Centers/strain_pwl"), ncx, ncz))
+    εII   = εII_pl + εII_pwl
     τxzc  = 0.25*(τxz[1:end-1,1:end-1] .+ τxz[2:end,1:end-1] .+ τxz[1:end-1,2:end] .+ τxz[2:end,2:end]) 
     C     = Float64.(reshape(ExtractData( filename, "/Centers/cohesion"), ncx, ncz))
     ϕ     = ExtractField(filename, "/Centers/phi", centroids, false, 0)

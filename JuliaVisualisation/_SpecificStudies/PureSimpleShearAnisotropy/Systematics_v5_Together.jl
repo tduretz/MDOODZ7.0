@@ -1,5 +1,5 @@
 using JuliaVisualisation
-using HDF5, Printf, Colors, ColorSchemes, MathTeXEngine, LinearAlgebra, FFMPEG, Statistics
+using HDF5, Printf, Colors, ColorSchemes, MathTeXEngine, LinearAlgebra, FFMPEG, Statistics, UnPack, JLD2
 using CairoMakie#, GLMakie
 Mak = CairoMakie
 Makie.update_theme!( fonts = (regular = texfont(), bold = texfont(:bold), italic = texfont(:italic)))
@@ -358,6 +358,13 @@ function Asymmetry( path, istep, show )
                 group_phases1[isnan.(group_phases1)] .= -1 # add air
                 group_phases1[group_phases1.==1] .= 2   # remove inclusion
 
+
+                cmap  = cgrad(:bilbao, length(εII), categorical=true)
+                colors = [(cmap[i], 1-i/length(εII)) for i in 1:length(εII)]
+    
+                hm = heatmap!(ax1, xc./scales.Lc, zc./scales.Lc, (εII), colormap = (Reverse(colors), 1.0), colorrange=(0,1.5) )
+    
+
                 # lines!(ax1, 𝐗_moho[1].*ones(size(zc)), zc./1e3, color=:black, linewidth=3)
                 # lines!(ax1,  𝐗_lab[1].*ones(size(zc)), zc./1e3, color=:black, linewidth=3)
                 lines!(ax1,  xc_hr./scales.Lc, z_moho./scales.Lc, color=:black, linewidth=3)
@@ -437,178 +444,6 @@ function Asymmetry( path, istep, show )
 
 end
 
-function FindFileNumberCorrespondingToTime(path, target_time)
-
-    # File numbers
-    file_start = 000
-    file_step  = 20
-    file_end   = 1300
-
-    options = (
-        printfig    = true,  # print figures to disk
-        printvid    = false,
-        framerate   = 6,
-        α_heatmap   = 0.75,   # transparency of heatmap 
-        vel_arrow   = 5,
-        vel_scale   = 10000,
-        vel_step    = 20,
-        nap         = 0.1,    # pause for animation 
-        resol       = 500,
-        Lx          = 1.0,
-        Lz          = 1.0,
-        LAB_color   = true,
-        LAB_T       = 1250,
-    )
-
-    PlotOnTop = (
-        ph_contours   = false,  # add phase contours
-        fabric        = true,   # add fabric quiver (normal to director)
-        T_contours    = false,  # add temperature contours
-        topo          = false,
-        quiver_origin = false,
-        σ1_axis       = false,
-        ε̇1_axis       = false,
-        vel_vec       = false,
-        ϕ_contours    = false,
-        PT_window     = false,
-    )
-
-    scales = (
-        Lc = 1e3,
-        tc = My,
-        Vc = 1.0,
-        τc = 1e6,
-    )
-
-    probe = (number = Float64.([]), t  = Float64.([]))
-    cm_yr = 100.0*3600.0*24.0*365.25
-
-    @unpack Lc, tc, Vc, τc = scales
-    max_offset = 0.
-
-    for step=file_start:file_step:file_end
-
-        model = ReadFile(path, step, scales, options, PlotOnTop)
-        @unpack tMy, length_unit, Lx, Lz, xc, zc, ε̇II, τII, coords, V, T, ϕ, σ1, Fab, height, all_phases, Δ = model
-    
-        crust, mantle, Stefan = Asymmetry(path, step, false)
-        if (Stefan>max_offset) 
-             max_offset = Stefan 
-        end
-
-
-        push!(probe.t, tMy)
-        push!(probe.number, step)
-
-    end
-
-
-    return probe.number[argmin(abs.(probe.t .- target_time))], max_offset
-
-end
-
-function FindNumberTime() 
-    time = 5 # Ma
-    
-    number = []
-    offset = []
-
-    # Define the root folder
-    root_folder = "/Users/tduretz/REPO/MDOODZ7.0/RUNS/RiftingAnisotropy/systematics/"
-
-    # Get a list of all items in the parent folder
-    items = readdir(root_folder)
-
-    # Loop through each item
-    for item in items
-
-        @show isdir(joinpath(root_folder, item))
-        if isdir(joinpath(root_folder, item))==true
-            dirpath = joinpath(root_folder, item)
-            println("Subfolder: ", dirpath)
-            n, max_offset = FindFileNumberCorrespondingToTime(dirpath*'/', time)
-            push!(number, n)
-            push!(offset, max_offset)
-        end
-        
-        # # You can also do something with the files in the directory
-        # for file in filenames
-        #     println("File: ", joinpath(dirpath, file))
-        # end
-    end
-    save(root_folder*"Number$(time)Ma.jld2", "number", number, "offset", offset)
-end
-
-# Step 1
-FindNumberTime() 
-
-function MakeSystematicsMap() 
-
-    time = 7 # Ma
-
-    root_folder = "/Users/tduretz/REPO/MDOODZ7.0/RUNS/RiftingAnisotropy/systematics/"
-    data = load(root_folder*"Number$(time)Ma.jld2")
-    number = data["number"]
-
-    count = 0
-
-    asym_Stefan = []
-    asym_crust  = []
-    asym_mantle = []
-    delta       = []
-    theta       = []
-
-    # Get a list of all items in the parent folder
-    items = readdir(root_folder)
-
-    # Loop through each item
-    for item in items
-
-        @show isdir(joinpath(root_folder, item))
-        if isdir(joinpath(root_folder, item))==true #$ != ".DS_Store"
-
-            count += 1
-
-            # Construct the full path for each item
-            full_path = joinpath(root_folder, item)
-
-            # Check if it's a directory (and not a subfolder of a subfolder)
-            if isdir(full_path)
-                println("Subfolder: ", full_path)
-            end
-
-            crust, mantle, Stefan = Asymmetry(full_path*'/', number[count], false)
-            push!(asym_crust, crust)
-            push!(asym_mantle, mantle)
-            push!(asym_Stefan, Stefan)
-
-            ##########################################################
-            # Split the string by non-digit characters (spaces, punctuation, etc.)
-            words = split(full_path, r"\D+")
-            
-            # Filter out the numbers that are not 2-digit numbers
-            numbers = filter(x -> length(x) == 2 && tryparse(Int, x) != nothing, words)
-            
-            numbers = [parse(Int, num) for num in numbers]
-            @show numbers
-
-            ############################################################
-            push!(delta, numbers[1])
-            push!(theta, numbers[2])
-
-        end
-
-    end
-
-    save(root_folder*"Asymmetry$(time)Ma.jld2", "delta", delta, "theta", theta, "asym_crust", asym_crust, "asym_mantle", asym_mantle, "asym_Stefan", asym_Stefan)
-
-
-end
-
-# Step 2
-MakeSystematicsMap() 
-
-
 
 # Step 3
 let 
@@ -636,29 +471,51 @@ let
     mantle = reshape(mantle,6,6)
     number = reshape(number,6,6)
     Stefan = reshape(Stefan,6,6)
+
+    crust  = hcat(zeros(6), crust)
+    mantle  = hcat(zeros(6), mantle)
     # offset = reshape(offset,6,6)
 
-    dx = delta[1,2]-delta[1,1]
-    x  =  [delta[1,2] .- dx/2; delta[1,end] .+ dx/2] 
+    dx = diff(delta[1,:])
+    dy = diff(theta[:,1] )
+    x  =  [0.5 1.5 2.5 4 5.5 7 9 11][:] 
+    y  =  [theta[:,1] .- dy[1]/2; theta[end,1] .+ dy[end]/2] 
 
 
-    f = Figure(size = (1500,800), fontsize=40)
+    f = Figure(size = (1950, 1300), fontsize=40)
 
-    ax1 = Axis(f[1, 1], title = L"$$Crust asymmetry", xlabel = L"δ [-]", ylabel = L"$\theta_\text{ini}$ [$^\circ$]")
-    hm = heatmap!(ax1, delta[1,:], theta[:,1], crust') #, colorrange=(0, 50) 
-    Colorbar(f[1, 2], hm, label = " ", width = 20, labelsize = 18, ticklabelsize = 40, vertical=true )
+    left = f[1:2,1]
+    right = f[1:2,2:3]
 
-    scatter!(ax1, [5.], [5.], color=:white, marker=:star6, markersize=40)
-    scatter!(ax1, [10.], [65.], color=:white, marker=:xcross, markersize=40)
-    available_marker_symbols()
+    ax1 = Axis(left[1, 1], title = L"$$A) Crust asymmetry", xlabel = L"δ [-]", ylabel = L"$\theta_\text{ini}$ [$^\circ$]")
+    hm = heatmap!(ax1, x, y, crust', colorrange=(0, 120), colormap=:amp)
+    ylims!(ax1, 0, 90)
+ 
+    # Colorbar(f[1, 2], hm, label = " ", width = 20, labelsize = 18, ticklabelsize = 40, vertical=true )
 
-    ax2 = Axis(f[1, 3], title = L"$$Lithosphere asymmetry", xlabel = L"δ [-]", ylabel = L"$\theta_\text{ini}$ [$^\circ$]")
+    scatter!(ax1, [5.], [5.], color=:white, marker=:xcross, markersize=40)
+    scatter!(ax1, [10.], [69.], color=:white, marker=:star6, markersize=40)
+    scatter!(ax1, [5.], [85.], color=:white, marker=:circle, markersize=40)
+
+    hidexdecorations!(ax1)
+
+
+    ######################################################################
+
+    ax2 = Axis(left[2, 1], title = L"$$B) Lithosphere asymmetry", xlabel = L"δ [-]", ylabel = L"$\theta_\text{ini}$ [$^\circ$]")
     # hm = heatmap!(ax2, delta[1,:], theta[:,1], offset') #, colorrange=(0, 50) 
     # hm = heatmap!(ax2, delta[1,:], theta[:,1], mantle') #, colorrange=(0, 50) 
-    hm = heatmap!(ax2, delta[1,:], theta[:,1], mantle' ) # colorrange=(0, 20)`
-    Colorbar(f[1, 4], hm, label = " ", width = 20, labelsize = 18, ticklabelsize = 40, vertical=true )
+    hm = heatmap!(ax2, x, y, mantle', colorrange=(0, 120), colormap=:amp ) # colorrange=(0, 20)`
+    ylims!(ax2, 0, 90)
+    # Colorbar(left[3, 1], hm, label = "Degree of asymmetry [%]", labelsize = 40, ticklabelsize = 40, vertical=false, height=50, flipaxis=true )
 
-    hideydecorations!(ax2)
+    Colorbar(left[3, 1], hm, label = "Degree of asymmetry [%]", labelsize = 40, ticklabelsize = 40, height=50, vertical=false, valign=true, flipaxis = false)
+
+    scatter!(ax2, [5.], [5.], color=:white, marker=:xcross, markersize=40)
+    scatter!(ax2, [10.], [69.], color=:white, marker=:star6, markersize=40)
+    scatter!(ax2, [5.], [85.], color=:white, marker=:circle, markersize=40)
+
+    # hideydecorations!(ax2)
     # ax3 = Axis(f[2, 1])
     # lines!(ax3, delta[5,:], mantle[5,:])
     
@@ -673,26 +530,264 @@ let
     # lines!(ax4, theta[:,4], mantle[:,4])
     # @show number[:,4]
 
+    # display(f)
+
+
       
-    @show number[end,end]
-    @show theta[end,end]
-    @show delta[end,end]
-    @show crust[end,end]
-    @show mantle[end,end]
+    # @show number[end,end]
+    # @show theta[end,end]
+    # @show delta[end,end]
+    # @show crust[end,end]
+    # @show mantle[end,end]
 
- 
+    # @show diff(delta[1,:])
+    # @show x
+    # @show x[2:end] .- x[1:end-1] 
+    # @show 0.5.*(x[2:end] .+ x[1:end-1])
 
+    @show y
+    @show 0.5.*(y[2:end] .+ y[1:end-1])
+    @show theta[:,end]
+    @show diff(theta[:,end])
+
+    # Cross
+    istep    = [1300; 1300; 1300]
+    δ        = [5; 10; 5        ]
+    θ        = [5; 69; 85       ]
+
+    # # Star
+    # number    = 1300
+    # δ         = 10
+    # θ         = 69
+
+    # # Circle
+    # number    = 1300
+    # δ         = 5
+    # θ         = 85
+    path = [
+        "/Users/tduretz/REPO/MDOODZ7.0/RUNS/RiftingAnisotropy/systematics/run_d$(@sprintf("%02d", δ[1]))_t$(@sprintf("%02d", θ[1]))/";
+        "/Users/tduretz/REPO/MDOODZ7.0/RUNS/RiftingAnisotropy/systematics/run_d$(@sprintf("%02d", δ[2]))_t$(@sprintf("%02d", θ[2]))/";
+        "/Users/tduretz/REPO/MDOODZ7.0/RUNS/RiftingAnisotropy/systematics/run_d$(@sprintf("%02d", δ[3]))_t$(@sprintf("%02d", θ[3]))/";
+    ]
+
+    #####################################
+
+    # Switches
+    printfig    = true  # print figures to disk
+    printvid    = false
+    framerate   = 12
+    PlotOnTop = (
+        ph_contours   = false,  # add phase contours
+        fabric        = false,   # add fabric quiver (normal to director)
+        T_contours    = false,  # add temperature contours
+        topo          = false,
+        quiver_origin = false,
+        σ1_axis       = false,
+        ε̇1_axis       = false,
+        vel_vec       = false,
+        ϕ_contours    = false,
+        PT_window     = false,
+    )
+    α_heatmap   = 1.0   # transparency of heatmap 
+    vel_arrow   = 5
+    vel_scale   = 0.00001
+    vel_step    = 10
+    nap         = 0.1    # pause for animation 
+    resol       = 500
+    Lx, Lz      = 1.0, 1.0
+    LAB_color   = true
+    LAB_T       = 1250
+
+    # Scaling
+    # Lc = 1000.
+    # tc = My
+    # Vc = 1e-9
+
+    Lc = 1
+    tc = My
+    Vc = 1.0
+    τc = 1
+
+    probe = (ϕeff = Float64.([]), t  = Float64.([]))
+    cm_yr = 100.0*3600.0*24.0*365.25
+    
+# #####################################
+
+# Color palette for phase map
+cmap    = zeros(RGB{Float64}, 7)
+cmap[1] = RGBA{Float64}(221/255, 205/255, 176/255, 1.)  
+cmap[2] = RGBA{Float64}(1/255, 1/255, 1/255, 1.)  
+cmap[3] = RGBA{Float64}(190/255, 216/255, 172/255, 1.) 
+cmap[4] = RGBA{Float64}(157/255, 199/255, 189/255, 1.) 
+cmap[5] = RGBA{Float64}(190/255, 216/255, 172/255, 1.) 
+cmap[6] = RGBA{Float64}(255/255, 255/255, 255/255, 1.) 
+cmap[7] = RGBA{Float64}(157/255, 199/255, 189/255, 1.) 
+phase_colors = cgrad(cmap, length(cmap), categorical=true, rev=false)
+
+    options = (
+        printfig    = true,  # print figures to disk
+        printvid    = false,
+        framerate   = 6,
+        α_heatmap   = 0.75,   # transparency of heatmap 
+        vel_arrow   = 5,
+        vel_scale   = 10000,
+        vel_step    = 20,
+        nap         = 0.1,    # pause for animation 
+        resol       = 1000,
+        Lx          = 1.0,
+        Lz          = 1.0,
+        LAB_color   = true,
+        LAB_T       = 1200,
+    )
+
+    scales = (
+        Lc = 1e3,
+        tc = My,
+        Vc = 1.0,
+        τc = 1e6,
+    )
+
+    ######################################################################################
+
+    model = ReadFile(path[1], istep[1], scales, options, PlotOnTop)
+    @unpack tMy, length_unit, Lx, Lz, xc, zc, ε̇II, τII, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, all_phases, εII, C, Δ = model
+    
+
+    𝐗_moho, 𝐗_lab = Moho_LAB_offset(all_phases, T, coords, height)
+    off = (abs(𝐗_moho[1] - 𝐗_lab[1]))
+    tMy_string = @sprintf("%1.2lf", tMy)
+    off_string = @sprintf("%1.2lf", off)
+    ax1 = Axis(right[1, 1], title = L"$$C) Symmetric crust / symmetric lithosphere (cross)", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]", aspect=DataAspect(), yaxisposition = :right)
+
+        # Find x position of highest moho
+    z_moho = zeros(size(all_phases.ph_hr, 1))
+    for ix in axes(all_phases.ph_hr, 1)
+        indz = findfirst(all_phases.ph_hr[ix,:] .== 0)
+        z_moho[ix] = coords.c_hr.z[indz] 
+    end
+
+    Nx_2 = Int64(size(all_phases.ph_dual_hr,1)/2)
+    z_moho_left  = z_moho[1:Nx_2]
+    z_moho_right = z_moho[end:-1:end-Nx_2+1]
+    @show mean(abs.(z_moho_left.-z_moho_right))
+
+
+    # ax1 = Axis(f[1, 1], title = L"Anisotropic model (\delta = 6)  at $t$ = %$(tMy_string) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
+    hm = heatmap!(ax1, coords.c_hr.x./scales.Lc, coords.c_hr.z./scales.Lc, all_phases.ph_hr, colormap = phase_colors)
+    
+    # group_phases1 = copy(ph_hr)
+    # group_phases1[isnan.(group_phases1)] .= -1 # add air
+    # group_phases1[group_phases1.==1] .= 2   # remove inclusion
+
+
+    cmap  = cgrad(:bilbao, length(εII), categorical=true)
+    colors = [(cmap[i], 1-i/length(εII)) for i in 1:length(εII)]
+
+    hm = heatmap!(ax1, coords.c.x./scales.Lc, coords.c.z/scales.Lc, (εII), colormap = (Reverse(colors), 1.0), colorrange=(0,1.5) )
+    text!(ax1, -245, -145, text=L"$%$(tMy_string)$ Ma")
+
+    # lines!(ax1, 𝐗_moho[1].*ones(size(zc)), zc./1e3, color=:black, linewidth=3)
+    # lines!(ax1,  𝐗_lab[1].*ones(size(zc)), zc./1e3, color=:black, linewidth=3)
+    lines!(ax1,  coords.c_hr.x./scales.Lc, z_moho./scales.Lc, color=:black, linewidth=3)
+    
+    hidexdecorations!(ax1)
+
+
+    ######################################################################################
+
+
+    model = ReadFile(path[2], istep[2], scales, options, PlotOnTop)
+    @unpack tMy, length_unit, Lx, Lz, xc, zc, ε̇II, τII, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, all_phases, εII, C, Δ = model
+    
+
+    𝐗_moho, 𝐗_lab = Moho_LAB_offset(all_phases, T, coords, height)
+    off = (abs(𝐗_moho[1] - 𝐗_lab[1]))
+    tMy_string = @sprintf("%1.2lf", tMy)
+    off_string = @sprintf("%1.2lf", off)
+    ax1 = Axis(right[2, 1], title = L"$$D) Symmetric crust / asymmetric lithosphere (star)", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]", aspect=DataAspect(), yaxisposition = :right)
+
+        # Find x position of highest moho
+    z_moho = zeros(size(all_phases.ph_hr, 1))
+    for ix in axes(all_phases.ph_hr, 1)
+        indz = findfirst(all_phases.ph_hr[ix,:] .== 0)
+        z_moho[ix] = coords.c_hr.z[indz] 
+    end
+
+    Nx_2 = Int64(size(all_phases.ph_dual_hr,1)/2)
+    z_moho_left  = z_moho[1:Nx_2]
+    z_moho_right = z_moho[end:-1:end-Nx_2+1]
+    @show mean(abs.(z_moho_left.-z_moho_right))
+
+
+    # ax1 = Axis(f[1, 1], title = L"Phases at $t$ = %$(tMy_string) Ma - \delta = 4 - offset = %$(off_string) km", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
+
+    # ax1 = Axis(f[1, 1], title = L"Anisotropic model (\delta = 6)  at $t$ = %$(tMy_string) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
+    hm = heatmap!(ax1, coords.c_hr.x./scales.Lc, coords.c_hr.z./scales.Lc, all_phases.ph_hr, colormap = phase_colors)
+    
+    # group_phases1 = copy(ph_hr)
+    # group_phases1[isnan.(group_phases1)] .= -1 # add air
+    # group_phases1[group_phases1.==1] .= 2   # remove inclusion
+
+
+    cmap  = cgrad(:bilbao, length(εII), categorical=true)
+    colors = [(cmap[i], 1-i/length(εII)) for i in 1:length(εII)]
+
+    hm = heatmap!(ax1, coords.c.x./scales.Lc, coords.c.z/scales.Lc, (εII), colormap = (Reverse(colors), 1.0), colorrange=(0,1.5) )
+    text!(ax1, -245, -145, text=L"$%$(tMy_string)$ Ma")
+
+    # lines!(ax1, 𝐗_moho[1].*ones(size(zc)), zc./1e3, color=:black, linewidth=3)
+    # lines!(ax1,  𝐗_lab[1].*ones(size(zc)), zc./1e3, color=:black, linewidth=3)
+    lines!(ax1,  coords.c_hr.x./scales.Lc, z_moho./scales.Lc, color=:black, linewidth=3)
+
+    hidexdecorations!(ax1)
+
+    ######################################################################################
+
+    model = ReadFile(path[3], istep[3], scales, options, PlotOnTop)
+    @unpack tMy, length_unit, Lx, Lz, xc, zc, ε̇II, τII, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, all_phases, εII, C, Δ = model
+    
+    𝐗_moho, 𝐗_lab = Moho_LAB_offset(all_phases, T, coords, height)
+    off = (abs(𝐗_moho[1] - 𝐗_lab[1]))
+    tMy_string = @sprintf("%1.2lf", tMy)
+    off_string = @sprintf("%1.2lf", off)
+    ax1 = Axis(right[3, 1], title = L"$$E) Aymmetric crust / symmetric lithosphere (circle)", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]", aspect=DataAspect(), yaxisposition = :right)
+
+    # Find x position of highest moho
+    z_moho = zeros(size(all_phases.ph_hr, 1))
+    for ix in axes(all_phases.ph_hr, 1)
+        indz = findfirst(all_phases.ph_hr[ix,:] .== 0)
+        z_moho[ix] = coords.c_hr.z[indz] 
+    end
+
+    Nx_2 = Int64(size(all_phases.ph_dual_hr,1)/2)
+    z_moho_left  = z_moho[1:Nx_2]
+    z_moho_right = z_moho[end:-1:end-Nx_2+1]
+    @show mean(abs.(z_moho_left.-z_moho_right))
+
+    # ax1 = Axis(f[1, 1], title = L"Anisotropic model (\delta = 6)  at $t$ = %$(tMy_string) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
+    hm = heatmap!(ax1, coords.c_hr.x./scales.Lc, coords.c_hr.z./scales.Lc, all_phases.ph_hr, colormap = phase_colors)
+    text!(ax1, -245, -145, text=L"$%$(tMy_string)$ Ma")
+    # group_phases1 = copy(ph_hr)
+    # group_phases1[isnan.(group_phases1)] .= -1 # add air
+    # group_phases1[group_phases1.==1] .= 2   # remove inclusion
+
+
+    cmap  = cgrad(:bilbao, length(εII), categorical=true)
+    colors = [(cmap[i], 1-i/length(εII)) for i in 1:length(εII)]
+
+    hm = heatmap!(ax1, coords.c.x./scales.Lc, coords.c.z/scales.Lc, (εII), colormap = (Reverse(colors), 1.0), colorrange=(0,1.5) )
+
+    # lines!(ax1, 𝐗_moho[1].*ones(size(zc)), zc./1e3, color=:black, linewidth=3)
+    # lines!(ax1,  𝐗_lab[1].*ones(size(zc)), zc./1e3, color=:black, linewidth=3)
+    lines!(ax1,  coords.c_hr.x./scales.Lc, z_moho./scales.Lc, color=:black, linewidth=3)
+
+    
     display(f)
+
+    save("/Users/tduretz/PowerFolders/_manuscripts/PureSimpleShearAnisotropy/Figures/Systematics.png", f, px_per_unit = 4)   
+
+
 end
 
-let  
-    number    = 1300
-    δ         = 5
-    θ         = 5
 
-    number    = 1300
-    δ         = 10
-    θ         = 69
-    full_path = "/Users/tduretz/REPO/MDOODZ7.0/RUNS/RiftingAnisotropy/systematics/run_d$(@sprintf("%02d", δ))_t$(@sprintf("%02d", θ))/"
-    crust, mantle, Stefan = Asymmetry(full_path, number, true)
-end
+
