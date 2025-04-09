@@ -912,8 +912,9 @@ void DiffuseAlongTopography( grid *mesh, params model, scale scaling, double *ar
     double correct[size], s, e;
     double base_level = model.surf_baselev; // left side
     double sedi_rate  = model.surf_sedirate;
-    double Wvalley    = model.surf_Winc;
-    double Vinc       = -model.surf_Vinc, Vinc_num;
+    double W_inc      = model.surf_Winc;
+    double V_inc      = -model.surf_Vinc, V_inc_num;
+    double x_inc     = 0.0;
     
     printf("****** Surface processes ******\n");
     printf("Going to make %03d substeps for surface processes\n", nstep);
@@ -922,24 +923,24 @@ void DiffuseAlongTopography( grid *mesh, params model, scale scaling, double *ar
     if ( model.surface_processes == 1 || model.surface_processes == 5 ) {
 
         if ( model.surface_processes == 5 ) {
-            printf("W valley   = %2.2e m\n", Wvalley*scaling.L);
-            printf("Vincision  = %2.2e m.s-1\n", Vinc*scaling.V);
+            printf("W valley   = %2.2e m\n", W_inc*scaling.L);
+            printf("V_incision  = %2.2e m.s-1\n", V_inc*scaling.V);
         
             // Compute volume of cells in the valley region
             int ncell = 0;
             for (i=1; i<size-1; i++) {
-                if (fabs(mesh->xg_coord[i]) < 0.5*Wvalley){
+                if (fabs(mesh->xg_coord[i]-x_inc) < 0.5*W_inc){
                     ncell += 1;
                 }
             }
 
             // Recompute erosion rate to satisfy mass
-            Vinc_num = Wvalley*dt*Vinc / (ncell*dx*dt);
+            V_inc_num = W_inc*dt*V_inc / (ncell*dx*dt);
 
             printf("We currently have %0d cell(s) within the valley region\n", ncell);
-            printf("Real surface of eroded material should be: %2.2e\n", Wvalley*dt*Vinc);
-            printf("Actual surface of eroded material is     : %2.2e\n", ncell*dx*dt*Vinc);
-            printf("Corrected surface of eroded material is  : %2.2e\n", ncell*dx*dt*Vinc_num);
+            printf("Real surface of eroded material should be: %2.2e\n", W_inc*dt*V_inc);
+            printf("Actual surface of eroded material is     : %2.2e\n", ncell*dx*dt*V_inc);
+            printf("Corrected surface of eroded material is  : %2.2e\n", ncell*dx*dt*V_inc_num);
         }
         
         // Calculate timestep for diffusion sub-steps
@@ -960,8 +961,8 @@ void DiffuseAlongTopography( grid *mesh, params model, scale scaling, double *ar
                 s = 0.0;
                 e = 0.0;
                 
-                if ( model.surface_processes == 5 && fabs(mesh->xg_coord[i] ) < 0.5*Wvalley) {
-                    e = dtr*Vinc_num;
+                if ( model.surface_processes == 5 && fabs(mesh->xg_coord[i]-x_inc) < 0.5*W_inc) {
+                    e = dtr*V_inc_num;
                 }
                 
                 if (array[i]<base_level) s = sedi_rate*dtr;

@@ -129,6 +129,7 @@ typedef struct {
   double *kc_x, *kc_z;
   double *FreeSurfW_s, *FreeSurfW_n;
   double *noise_n, *noise_s;
+  double *sxx_W, *sxx_E, *szz_S, *szz_N;
 } grid;
 
 
@@ -373,6 +374,7 @@ void            GenerateDeformationMaps(grid *, mat_prop *, params *, Nparams, s
 void            UpdateParticleGrainSize(grid *, scale, params, markers *, mat_prop *);
 void            UpdateParticleDensity(grid *, scale, params, markers *, mat_prop *);
 void            UpdateParticleX(grid *, scale, params, markers *, mat_prop *);
+void            UpdateParticleXpips(grid *, scale, params, markers *, mat_prop *);
 void            UpdateParticlePhi(grid *, scale, params, markers *, mat_prop *);
 // Anisotropy
 void            NonNewtonianViscosityGridAniso(grid *, mat_prop *, params *, Nparams, scale *, int);

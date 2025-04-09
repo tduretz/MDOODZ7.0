@@ -48,7 +48,7 @@ typedef struct {
   int    balance_boundaries, zero_mean_topo; 
   char   description[500];
   double xmin, zmin, xmax, zmax, time, dx, dz, dt, dt0, dt_start, dt_max, L0,
-          dt_min;
+          dt_min, dt_reduction_factor;
   double  xmin0, zmin0, xmax0, zmax0;
   double  gx, gz;
   int     Nx, Nz, Nt, step, nit, Newton, noisy;
@@ -63,7 +63,7 @@ typedef struct {
   int surface_processes, loc_iter, therm_perturb, surf_ised1,
           surf_ised2, MantleID, topografix, reseed_markers, smooth_softening, fix_temperature;
   double bkg_strain_rate, bkg_div_rate, user0, user1, user2, user3, user4, user5, user6, user7,
-          user8;
+          user8, user9;
   char  *import_file;
   char  *import_files_dir;
   int    Nb_phases;
@@ -104,7 +104,8 @@ typedef struct {
   int      diffuse_X, diffuse_avg;
   double   diffusion_length;
   // For Pips
-  int      chemical_diffusion, no_return, density_variations, unsplit_diff_reac, kinetics;
+  int      chemical_diffusion, chemical_production, no_return, density_variations, kinetics;
+  int      layering;
   // initial stresses
   int preload;
   double preload_sxxd,preload_szzd,preload_sxz;
@@ -323,7 +324,7 @@ struct MdoodzInput {
   params             model;
   mat_prop           materials;
   scale              scaling;
-  LateralFlux        *flux;
+  LateralFlux        *flux, *stress;
   CrazyConductivity *crazyConductivity;
   Geometry          *geometry;
 };
@@ -357,5 +358,7 @@ typedef struct {
 
 bool IsEllipseCoordinates(Coordinates coordinates, Ellipse ellipse, double scalingL);
 bool IsRectangleCoordinates(Coordinates coordinates, Rectangle rectangle, double scalingL);
+char           *DefaultTextFilename(char*);
+
 
 #endif

@@ -776,10 +776,13 @@ void UpdateParticleDensity( grid* mesh, scale scaling, params model, markers* pa
     
     rho_inc_mark = DoodzCalloc(particles->Nb_part, sizeof(DoodzFP));
     rho_inc_grid = DoodzCalloc(Ncx*Ncz, sizeof(DoodzFP));
-    
+
+    //----------------------
+
     //    Interp_Grid2P_centroids2( *particles, particles->rho, mesh, mesh->rho_n, mesh->xvz_coord,  mesh->zvx_coord, Nx-1, Nz-1, mesh->BCt.type, &model  );
     
-    
+    //----------------------
+
     for (k=0;k<Ncx*Ncz;k++) {
         rho_inc_grid[k] = 0.0;
         if (mesh->BCp.type[k] != 30 && mesh->BCp.type[k] != 31) rho_inc_grid[k] = mesh->rho_n[k] - mesh->rho0_n[k];
@@ -793,6 +796,8 @@ void UpdateParticleDensity( grid* mesh, scale scaling, params model, markers* pa
     
     DoodzFree(rho_inc_grid);
     DoodzFree(rho_inc_mark);
+
+    //----------------------
 
     // for (int k=0; k<particles->Nb_part; k++ ) {
     //     particles->rho[k] = EvaluateDensity( particles->phase[k], particles->T[k], particles->P[k], particles->X[k],  particles->phi[k], &model, materials );

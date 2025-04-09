@@ -11,8 +11,8 @@ function main_simple_ani_vis()
     ηe         = G*Δt
     ηve        = (1/ηv + 1/ηe)^-1
     C          = 5 
-    nt         = 10
-    
+    nt         = 100
+
     # Kinematics
     pure_shear = 1
     ε̇xxd       = pure_shear*5.0
@@ -153,7 +153,7 @@ function main_simple_ani_vis()
             Exx = ε̇xxd
             Eyy = ε̇yyd
             Exy = ε̇xyd
-            τii_cart_y[i] = (C^2/δ) / sqrt(C^2*cos(2*θ[i])^2 + C^2/δ^2*sin(2*θ[i])^2)
+            τii_cart_y[i] = (C^2/Δ, Mak) / sqrt(C^2*cos(2*θ[i])^2 + C^2/δ^2*sin(2*θ[i])^2)
             #
             τii_cart_y[i] = C .* sqrt((0.25 * Exx .^ 2 .* delta .^ 2 .* cos(2 * theta) .^ 2 + 0.25 * Exx .^ 2 .* delta .^ 2 - 0.25 * Exx .^ 2 .* cos(2 * theta) .^ 2 + 0.25 * Exx .^ 2 + 0.5 * Exx .* Exy .* delta .^ 2 .* sin(4 * theta) - 0.5 * Exx .* Exy .* sin(4 * theta) - 0.5 * Exx .* Eyy .* delta .^ 2 .* cos(2 * theta) .^ 2 + 0.5 * Exx .* Eyy .* delta .^ 2 + 0.5 * Exx .* Eyy .* cos(2 * theta) .^ 2 - 0.5 * Exx .* Eyy - 1.0 * Exy .^ 2 .* delta .^ 2 .* cos(2 * theta) .^ 2 + 1.0 * Exy .^ 2 .* delta .^ 2 + 1.0 * Exy .^ 2 .* cos(2 * theta) .^ 2 - 0.5 * Exy .* Eyy .* delta .^ 2 .* sin(4 * theta) + 0.5 * Exy .* Eyy .* sin(4 * theta) + 0.25 * Eyy .^ 2 .* delta .^ 2 .* cos(2 * theta) .^ 2 + 0.25 * Eyy .^ 2 .* delta .^ 2 - 0.25 * Eyy .^ 2 .* cos(2 * theta) .^ 2 + 0.25 * Eyy .^ 2) ./ (0.5 * Exx .^ 2 + 1.0 * Exy .^ 2 + 0.5 * Eyy .^ 2)) ./ delta
 

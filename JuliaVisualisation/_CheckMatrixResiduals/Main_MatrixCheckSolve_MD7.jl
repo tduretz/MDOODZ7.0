@@ -42,7 +42,7 @@ function main()
 
     # File
     path     ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/"
-    filename = string(path, "Stokes_01cpu_step1429_iter00.gzip.h5") 
+    filename = string(path, "Stokes_01cpu_step01_iter00.gzip.h5") 
     # path     ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/RiverTom/"
     # filename = string(path, "Stokes_01cpu_step229_iter00.gzip.h5") 
     # Matrix block A
@@ -74,6 +74,11 @@ function main()
     # Model parameters
     model = ExtractData(filename,"/model/params");
     nx, nz, Δx, Δz = model
+
+    @show size(MA)
+    @show size(MB)
+    @show size(MC)
+    @show size(MD)
 
     # Spies
     Msc = MA - MB*(MD*MC);
