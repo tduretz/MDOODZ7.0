@@ -1619,7 +1619,6 @@ void BuildStokesOperatorDecoupled( grid *mesh, params model, int lev, double *p_
         // bufd      = DoodzRealloc(StokesD->A, nnzcD*sizeof(double));
         // StokesD->J = bufi;
         // StokesD->A = bufd;
-        
         //        printf("System size: ndof = %d, nzA = %d nzB = %d nzC = %d nzD = %d\n", Stokes->neq, nnzcA, nnzcB, nnzcC, nnzcD);
         
         printf("Number of momentum equations: %d\n", StokesA->neq);
