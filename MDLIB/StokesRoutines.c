@@ -673,6 +673,7 @@ double LineSearchDecoupled( SparseMat *Stokes, SparseMat *StokesA, SparseMat *St
         ix     = 0;
         iz     = 0;
         ixzp   = 0;
+        ip     = 0;
         for( k=1; k<ntry; k++ ) {
             fxzp = sqrt( pow( rx[k],2 ) + pow( rz[k],2 ) + pow( rp[k],2 ) );
             fxz  = sqrt( pow( rx[k],2 ) + pow( rz[k],2 ) );

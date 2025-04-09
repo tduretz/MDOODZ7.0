@@ -1614,10 +1614,10 @@ void BuildStokesOperatorDecoupled( grid *mesh, params model, int lev, double *p_
         StokesC->J = bufi;
         StokesC->A = bufd;
         
-        bufi      = DoodzRealloc(StokesD->J, nnzcD*sizeof(int));
-        bufd      = DoodzRealloc(StokesD->A, nnzcD*sizeof(double));
-        StokesD->J = bufi;
-        StokesD->A = bufd;
+        // bufi      = DoodzRealloc(StokesD->J, nnzcD*sizeof(int));
+        // bufd      = DoodzRealloc(StokesD->A, nnzcD*sizeof(double));
+        // StokesD->J = bufi;
+        // StokesD->A = bufd;
         
         
         //        printf("System size: ndof = %d, nzA = %d nzB = %d nzC = %d nzD = %d\n", Stokes->neq, nnzcA, nnzcB, nnzcC, nnzcD);
@@ -2150,10 +2150,10 @@ void BuildJacobianOperatorDecoupled( grid *mesh, params model, int lev, double *
         StokesC->J = bufi;
         StokesC->A = bufd;
         
-        bufi      = DoodzRealloc(StokesD->J, nnzcD*sizeof(int));
-        bufd      = DoodzRealloc(StokesD->A, nnzcD*sizeof(double));
-        StokesD->J = bufi;
-        StokesD->A = bufd;
+        // bufi      = DoodzRealloc(StokesD->J, nnzcD*sizeof(int));
+        // bufd      = DoodzRealloc(StokesD->A, nnzcD*sizeof(double));
+        // StokesD->J = bufi;
+        // StokesD->A = bufd;
         
         //        printf("System size: ndof = %d, nzA = %d nzB = %d nzC = %d nzD = %d\n", Stokes->neq, nnzcA, nnzcB, nnzcC, nnzcD);
         
