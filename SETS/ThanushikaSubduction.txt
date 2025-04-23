@@ -11,8 +11,8 @@ import_files_dir = ../../IMPORT/
 
 /**** OUTPUT FILES ****/
 writer          = 1  / Write grid data switch
-writer_step     = 400 / Write interval 
-writer_markers  = 0  / Write marker data switch
+writer_step     = 500 / Write interval 
+writer_markers  = 1  / Write marker data switch
 writer_debug    = 0  / Write debug data switch 
 
 /**** SCALES ****/ (Setup dependent) Scaling parameters for
@@ -22,16 +22,16 @@ V               = 1.0e-9  /velocity
 T               = 4.0e+02 /temperature
  
 /**** SPACE-TIME ****/
-Nx             = 1001               / No. grid points x
-Nz             = 381                / No. grid points z
-Nt             = 0                  / No. time steps
+Nx             = 1201               / No. grid points x
+Nz             = 681                / No. grid points z
+Nt             = 3000                  / No. time steps
 xmin           = -1200.000000e3     / Minimum x-coordinate
 xmax           =  1200.000000e3     / Maximum x-coordinate
 zmin           = -660.000000e3      / Minimum z-coordinate
 zmax           = 20.000000e3        / Maximum z-coordinate
 dt             = 1.2623e+11         / Initial time step
 Courant        = 0.4                / CFL-Criterion: should be between 0.1 and 0.5
-penalty        = 1e2                / Numerical parameter for matrix penalization
+penalty        = 1e3                / Numerical parameter for matrix penalization
 eta_average    = 1
 interp_stencil = 1
 
@@ -51,14 +51,15 @@ subgrid_diffusion  	= 2       / Subgrid diffusion algorithm switch
 shear_heating      	= 1       / Shear heating switch
 adiab_heating      	= 1       / Adiabatic heating switch
 
-surface_processes  = 2         / 0 = none; 1 = diffusion only; 2 = fills instantaneously the basin up to the
+surface_processes  = 1         / 0 = none; 1 = diffusion only; 2 = fills instantaneously the basin up to the
+surf_diff          = 1e-6
 track_T_P_x_z      = 1         / initial P and T field record
 polar              = 0         / Switch to polar coordinate representation
 anisotropy         = 0         / Viscous anisotropy switch
 surf_ised1         = 6         / Sediment phase 1 ID
 surf_ised2         = 6         / Sediment phase 2 ID
 surf_sedirate      = 3.171e-11 / Sedimentation rate: 1 mm/yr -> 3.171e-11 m/s
-surf_baselev       = -2.5e3    / Level of topography below which sediments will start to accumulate [m]
+surf_baselev       = -4.0e3    / Level of topography below which sediments will start to accumulate [m]
 
 /**** SETUP DEPENDANT ****/
 marker_noise       = 1              / Marker noise switch
@@ -67,7 +68,7 @@ user0              = 30.0e3         / Continental crustal thickness [m]         
 user1              = 80e3           / Lithospheric thickness [m]                                         ***** SYSTEMATIC PARAMETER *****
 user2              = -3.17e-9       / Plate velocity [m/s] (compression -> negative)                     ***** SYSTEMATIC PARAMETER *****
 user3              = 0.5            / Boundary velocity partitioning: 1 = full push WEST, 0 = full push EAST
-user4              = 15             / Angle of Subduction [°]                                            ***** SYSTEMATIC PARAMETER *****
+user4              = 20             / Angle of Subduction [Â°]                                            ***** SYSTEMATIC PARAMETER *****
 user5              = 70e3           / Thickness of oceanic lithosphere - Computed from thermal age       ***** SYSTEMATIC PARAMETER *****
 user6              = 0.0e-3         / Mantle adiabat [K/m]                                               ***** SYSTEMATIC PARAMETER *****
 user7              = 10.0e3         / Oceanic crustal thickness [m]
@@ -105,7 +106,7 @@ eta0   = 1e22                       / Constant viscosity value
 npwl   = 1                          / Custom power-law exponent
 Qpwl   = 0                          / Custom power-law activation energy
 gs_ref = 5e-3                       / Reference grain size
-density_model = 3                   / Material dependent buoyancy calculation: 2 - Phase diagram
+density_model = 2                   / Material dependent buoyancy calculation: 2 - Phase diagram
 phase_diagram = 1                   / Peridotite Stixrude
 
 ID     = 1
@@ -130,7 +131,7 @@ eta0   = 1e22
 npwl   = 2
 Qpwl   = 0
 gs_ref = 5e-3
-density_model = 3           / Material dependent buoyancy calculation: 2 - Phase diagram
+density_model = 2           / Material dependent buoyancy calculation: 2 - Phase diagram
 phase_diagram = 1           / Peridotite Stixrude
 
 ID     = 2
@@ -155,7 +156,7 @@ eta0   = 5e20
 npwl   = 0
 Qpwl   = 0
 gs_ref = 5e-3
-density_model = 3                   / Material dependent buoyancy calculation: 2 - Phase diagram
+density_model = 2                   / Material dependent buoyancy calculation: 2 - Phase diagram
 phase_diagram = 1                   / Peridotite Stixrude
 
 ID     = 3                          / Weak plate interface
@@ -262,8 +263,8 @@ phase_diagram = 6                   / Pelite
 nT    =    200            / Temperature resolution []
 nE    =    200            / Strain rate resolution []
 nd    =    6              / Grain size resolution []
-Tmin  =    127.0          / Temperature minimum [°C]
-Tmax  =    1827.0         / Temperature maximum [°C]
+Tmin  =    127.0          / Temperature minimum [Â°C]
+Tmax  =    1827.0         / Temperature maximum [Â°C]
 Emin  =    -50            / Strain rate minimum log_10 [1/s]
 Emax  =    5              / Strain rate maximum log_10 [1/s]
 dmin  =    -7             / Grain size minimum log_10 [m]
@@ -277,7 +278,7 @@ min_part_cell = 16        / Minimum no. particles per cell
 
 /**** NON-LINEAR ITERATIONS ****/
 Newton           = 0      / Newton iteration switch
-nit_max          = 1      / No. Nonlinear iterations. At least 5, for high resolution use from 10 to 20
+nit_max          = 3      / No. Nonlinear iterations. At least 5, for high resolution use from 10 to 20
 line_search      = 0      / Activate line search algorithm
 nonlin_abs_mom   = 5.0e-8 / Residual tolerances
 nonlin_abs_div   = 5.0e-8
