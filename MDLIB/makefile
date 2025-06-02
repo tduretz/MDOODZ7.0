@@ -2,7 +2,7 @@
 SHELL := /bin/bash
 
 # Compiler
-CC = gcc-mp-13
+CC = gcc
 
 # Path to setup file folder
 SET_PATH = ../SETS
