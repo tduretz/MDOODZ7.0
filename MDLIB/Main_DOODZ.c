@@ -556,8 +556,12 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
         // Allocate and initialise solution and RHS vectors
         UpdateDensity( &mesh, &particles, &input.materials, &input.model, &input.scaling );
-    
-        P2Mastah( &input.model, particles, particles.rho,     &mesh, mesh.rho0_n , mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil);
+
+        // This somehow is the reason for instability: rho0 = f(rho_particles)
+        // P2Mastah( &input.model, particles, particles.rho,     &mesh, mesh.rho0_n , mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil);
+
+        // This "fixes" the bug ==> rhof = f(T0, P0, ...)
+        ArrayEqualArray(  mesh.rho0_n,   mesh.rho_n, Ncx*Ncz );
 
         // Free surface - subgrid density correction
         if (input.model.free_surface == 1 ) { // TODO: include into UpdateDensity
