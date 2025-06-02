@@ -61,6 +61,9 @@ void SetParticles(SetParticles_ff setParticles, MdoodzInput *instance, markers *
     if (setParticles.AdjustPhaseToTemperature) {
       particles->phase[np] = setParticles.AdjustPhaseToTemperature(instance, coordinates, particles->T[np], particles->phase[np]);
     }
+    if (setParticles.AdjustTemperatureToPhase) {
+      particles->T[np] = setParticles.AdjustTemperatureToPhase(instance, coordinates, particles->T[np], particles->phase[np]);
+    }
     if (setParticles.SetDualPhase) {
       particles->dual[np] = setParticles.SetDualPhase(instance, coordinates, particles->phase[np]);
     } else {

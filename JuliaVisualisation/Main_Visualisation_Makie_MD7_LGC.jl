@@ -15,15 +15,16 @@ const cm_y = y*100.
 @views function main()
 
     # Set the path to your files
-    path = "/Users/lcandiot/Desktop/tmp/Thanushika/"
+    path = "/Users/lcandiot/Developer/MDOODZ7.0/cmake-exec/PressurizedMagmaChamber/"
+    # path = "/Users/lcandiot/Developer/MDOODZ7.0/cmake-exec/RiftingChenin/"
 
     # File numbers
-    file_start = 100
-    file_step  = 10
-    file_end   = 100
+    file_start = 17
+    file_step  = 1
+    file_end   = 17
 
     # Select field to visualise
-    field = :Phases
+    # field = :Phases
     # field = :Cohesion
     # field = :Density
     # field = :Viscosity  
@@ -35,7 +36,7 @@ const cm_y = y*100.
     # field = :Pressure 
     # field = :Divergence
     # field = :Temperature
-    # field = :Velocity_x
+    field = :Velocity_x
     # field = :Velocity_z
     # field = :Velocity
     # field = :GrainSize
@@ -71,7 +72,7 @@ const cm_y = y*100.
         vel_vec       = false,
         ϕ_contours    = false,
         PT_window     = false,
-        reactions     = true
+        reactions     = false
     )
     α_heatmap   = 1.0   # transparency of heatmap 
     vel_arrow   = 5
@@ -247,6 +248,7 @@ const cm_y = y*100.
         end
         PT = (P.>2.2e9 .&& P.<3.0e9 .&& T.>430 .&& T.<530).*ones(size(T))
      
+        @printf "min(P) = %.2e \t max(P) = %.2e\n" minimum(P) maximum(P)
         x_R1 = Float64[]; z_R1 = Float64[]; x_R2 = Float64[]; z_R2 = Float64[]
         if PlotOnTop.reactions
             for (T_react, P_react) in R1                                                # Loop along reaction line
@@ -319,8 +321,8 @@ const cm_y = y*100.
 
         #####################################
         empty!(f)
-        ftsz =  30*resol/500
-        f = Figure(size = (1.1*Lx/Lz*resol*1.2, resol), fontsize=ftsz)
+        ftsz =  20
+        f = Figure(size = (1000, 1000), fontsize=ftsz, figure_padding=40)
 
         if field==:Phases
             ax1 = Axis(f[1, 1], title = L"Phases at $t$ = %$(tMy) Ma", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
