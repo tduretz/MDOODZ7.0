@@ -981,9 +981,11 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
         //--------------------------------------------------------------------------------------------------------------------------------//
 
-        printf("*************************************\n");
-        printf("********** Chemical solver **********\n");
-        printf("*************************************\n");
+        if (input.model.chemical_production==1 || input.model.chemical_diffusion == 1) { 
+            printf("*************************************\n");
+            printf("********** Chemical solver **********\n");
+            printf("*************************************\n");
+        }
 
         if (input.model.chemical_production == 1)  {
             if (input.model.anisotropy==0) NonNewtonianViscosityGrid(      &mesh, &input.materials, &input.model, Nmodel, &input.scaling, 0 );
