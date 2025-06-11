@@ -45,18 +45,19 @@ end
 function main()
 
     # Set the path to your files
-    path = "/Users/lcandiot/Developer/MDOODZ7.0/cmake-exec/RiftingChenin/"
+    #path = "/Users/lcandiot/Developer/MDOODZ7.0/cmake-exec/RiftingChenin/"
     # path ="/home/thanushika/software/Results/Phase_Diagram_Model/Marker/Oth5km/"
+    path ="/home/thanushika/software/Results/Phase_Diagram_Model/New_Marker/WestPush/OceThick5/"
 
     # File numbers
     file_start = 00
-    file_step  = 10
-    file_end   = 200
+    file_step  = 500
+    file_end   = 1500
 
     file_select_start = 0                             # First time step - Select marker coordinates from here
-    file_select_end   = 200                             # Last time step - Select marker coordinates from here
-    target_coords = (-50e3, -25e3, -15e3, -10e3)        # Coordinate bounds (min(x), max(x), min(y), max(y))
-
+    file_select_end   = 1500                             # Last time step - Select marker coordinates from here
+    #target_coords = (-50e3, -25e3, -15e3, -10e3)        # Coordinate bounds (min(x), max(x), min(y), max(y))
+    target_coords = (0.999e5, 1.03e5, -2.9e5, -2.7e5) 
     # Select field to visualise
     field = :Phases
     # field = :Cohesion
@@ -81,7 +82,7 @@ function main()
 
 
     # Switches
-    printfig    = false  # print figures to disk
+    printfig    = true  # print figures to disk
     printvid    = false
     framerate   = 3
     PlotOnTop = (
@@ -134,7 +135,7 @@ function main()
     deleteat!(idx_markers, idx_delete)
 
     # Select markers and parameters for tracking
-    IDs    = idx_markers[1:10]
+    IDs    = idx_markers[1:100]
     params = ("T [K]", "P [Pa]", "ph [Int]", "t [s]", "x [m]", "z [m]")
     store_types = Dict(
         "Time steps" => cld((file_end - file_start), file_step) + 1,

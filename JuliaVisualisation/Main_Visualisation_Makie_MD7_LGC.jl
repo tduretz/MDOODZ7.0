@@ -15,18 +15,17 @@ const cm_y = y*100.
 @views function main()
 
     # Set the path to your files
-    path = "/Users/lcandiot/Desktop/tmp/Thanushika/"
-
+    path = "/home/thanushika/software/Results/Phase_Diagram_Model/New_Marker/WestPush/Dip5/"
     # File numbers
-    file_start = 100
-    file_step  = 10
-    file_end   = 100
+    file_start = 0
+    file_step  = 500
+    file_end   = 1500
 
     # Select field to visualise
-    field = :Phases
+    field = :PhasesDehy
     # field = :Cohesion
-    # field = :Density
-    # field = :Viscosity  
+    #field = :Density
+    field = :Viscosity  
     # field = :PlasticStrainrate
     # field = :Stress
     # field = :σxx
@@ -87,7 +86,7 @@ const cm_y = y*100.
     # Load reaction lines
     df = DataFrame(); R1 = 0.0; R2 = 0.0
     if PlotOnTop.reactions
-        dfile = "/Users/lcandiot/Library/CloudStorage/Dropbox/Thanushika_Lorenzo_Evangelos/WORK_FOLDER/DehydrationReactions/DehydrationReactions_HydrPeridotite.csv"
+        dfile = "/home/thanushika/software/Results/Phase_Diagram_Model/Marker/Oth5km/DehydrationReactions_HydrPeridotite.csv"
         if isfile(dfile)
             nothing
         else
@@ -300,17 +299,33 @@ const cm_y = y*100.
         end
 
         #####################################
-
+        
         # Color palette for phase map
-        cmap    = zeros(RGB{Float64}, 7)
-        cmap[1] = RGBA{Float64}(210/255, 218/255, 205/255, 1.)  
-        cmap[2] = RGBA{Float64}(207/255, 089/255, 087/255, 1.)  
-        cmap[3] = RGBA{Float64}(117/255, 164/255, 148/255, 1.) 
-        cmap[4] = RGBA{Float64}(213/255, 213/255, 209/255, 1.) 
-        cmap[5] = RGBA{Float64}(117/255, 099/255, 097/255, 1.) 
-        cmap[6] = RGBA{Float64}(244/255, 218/255, 205/255, 1.) 
-        cmap[7] = RGBA{Float64}(223/255, 233/255, 219/255, 1.) 
+        cmap = zeros(RGB{Float64}, 6)
+        #cmap[1] = RGBA{Float64}(30/255, 0/255, 60/255, 1.0)       # Mantle - very dark purple
+        cmap[1] = RGBA{Float64}(0/255, 0/255, 100/255, 1.0)   # Mantle – very dark blue
+   # Mantle – dark blue
+
+        cmap[2] = RGBA{Float64}(144/255, 238/255, 144/255, 1.0)   # Oceanic slab - light green
+        cmap[3] = RGBA{Float64}(255/255, 165/255, 0/255, 1.0)     # Overriding plate - orange
+        cmap[4] = RGBA{Float64}(128/255, 0/255, 128/255, 1.0)     # Sediments/weak zone - purple
+        cmap[5] = RGBA{Float64}(173/255, 216/255, 230/255, 1.0)   # Continental lithosphere - light blue
+        cmap[6] = RGBA{Float64}(255/255, 255/255, 0/255, 1.0)     # Oceanic crust - yellow
+
         phase_colors = cgrad(cmap, length(cmap), categorical=true, rev=false)
+
+
+
+             
+        # cmap    = zeros(RGB{Float64}, 7)
+        # cmap[1] = RGBA{Float64}(210/255, 218/255, 205/255, 1.)  
+        # cmap[2] = RGBA{Float64}(207/255, 089/255, 087/255, 1.)  
+        # cmap[3] = RGBA{Float64}(117/255, 164/255, 148/255, 1.) 
+        # cmap[4] = RGBA{Float64}(213/255, 213/255, 209/255, 1.) 
+        # cmap[5] = RGBA{Float64}(117/255, 099/255, 097/255, 1.) 
+        # cmap[6] = RGBA{Float64}(244/255, 218/255, 205/255, 1.) 
+        # cmap[7] = RGBA{Float64}(223/255, 233/255, 219/255, 1.) 
+        # phase_colors = cgrad(cmap, length(cmap), categorical=true, rev=false)
 
         # # Group phases for contouring
         # group_phases[ ph_hr.==4 .|| ph_hr.==0 .|| ph_hr.==5  .|| ph_hr.==1  ] .= 0
@@ -322,14 +337,16 @@ const cm_y = y*100.
         ftsz =  30*resol/500
         f = Figure(size = (1.1*Lx/Lz*resol*1.2, resol), fontsize=ftsz)
 
-        if field==:Phases
+        if field==:PhasesDehy
             ax1 = Axis(f[1, 1], title = L"Phases at $t$ = %$(tMy) Ma", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
             hm = heatmap!(ax1, xc_hr./Lc, zc_hr./Lc, ph_hr, colormap = phase_colors)
             # hm = heatmap!(ax1, xc_hr./Lc, zc_hr./Lc, ph_hr, colormap = :turbo)
-            hm = heatmap!(ax1, xc_hr./Lc, zc_hr./Lc, ph_dual_hr, colormap = :turbo)
-            r1 = lines!(ax1, x_R1./Lc, z_R1./Lc, color = :magenta)
-            r2 = lines!(ax1, x_R2./Lc, z_R2./Lc, color = :black)
+            #hm = heatmap!(ax1, xc_hr./Lc, zc_hr./Lc, ph_dual_hr, colormap = :turbo)
+            r1 = scatter!(ax1, x_R1./Lc, z_R1./Lc, color = :magenta)
+            r2 = scatter!(ax1, x_R2./Lc, z_R2./Lc, color = :black)
             AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, group_phases, Δ, Mak)                
+            xlims!(ax1, -2.e+5, 6.e+5)
+            ylims!(ax1, -5.e+5, 0.)
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
             Mak.Colorbar(f[1, 2], hm, label = "Phases", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
             Mak.colgap!(f.layout, 20)
