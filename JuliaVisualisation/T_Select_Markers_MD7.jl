@@ -59,7 +59,7 @@ function main()
     #  field = :Density
     # field = :Viscosity 
     # field = :PlasticStrainrate
-    # field = :Stress
+    field = :Stress
     # field = :StrainRate
     #  field = :Pressure
     # field = :Divergence

@@ -59,13 +59,13 @@ function main()
     #target_coords = (-50e3, -25e3, -15e3, -10e3)        # Coordinate bounds (min(x), max(x), min(y), max(y))
     target_coords = (0.999e5, 1.03e5, -2.9e5, -2.7e5) 
     # Select field to visualise
-    field = :Phases
+    #field = :Phases
     # field = :Cohesion
     #  field = :Density
     # field = :Viscosity 
     # field = :PlasticStrainrate
     # field = :Stress
-    # field = :StrainRate
+    field = :StrainRate
     #  field = :Pressure
     # field = :Divergence
     # field = :Temperature
