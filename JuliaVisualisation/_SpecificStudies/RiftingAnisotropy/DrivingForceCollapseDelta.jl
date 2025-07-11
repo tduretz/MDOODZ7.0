@@ -1,5 +1,5 @@
 using JuliaVisualisation
-using HDF5, Printf, Colors, ColorSchemes, MathTeXEngine, LinearAlgebra, FFMPEG, Statistics, UnPack, JLD2
+using HDF5, Printf, Colors, ColorSchemes, MathTeXEngine, LinearAlgebra, FFMPEG, Statistics, UnPack, JLD2, Printf
 using CairoMakie#, GLMakie
 Mak = CairoMakie
 
@@ -76,7 +76,7 @@ function main()
 
     @show coeffs(p)
 
-    ax1 = Axis(f[1, 1:2], title = L"$$A) Maximum driving force Vs. anisotropy strength", xlabel = L"$\delta$", ylabel = L"max. $F_\textrm{D}$ [TN/m]")
+    ax1 = Axis(f[1, 1:2], title = L"$$A) Maximum driving force Vs. Anisotropy strength", xlabel = L"$\delta$", ylabel = L"max. $F_\textrm{D}$ [TN/m]")
     # hidexdecorations!(ax1)
     # lines!(ax1, d1["time"], d1["F_driving"]./1e12, label=L"$\delta = 1$")  
     # lines!(ax1, d1_5["time"], d1_5["F_driving"]./1e12, label=L"$\delta = 1.5$") 
@@ -94,7 +94,12 @@ function main()
     fit_force = coeffs(p)[2]*δ .+ coeffs(p)[3]*δ.^2 .+ coeffs(p)[1]
     lines!(ax1, δ, fit_force, linestyle=:dash, color=:black)
     scatter!(ax1, δ, maxF, marker=:xcross, markersize=18)
-    text!(ax1, 5, 17, text=L"$F_\text{pred} = 24.05 - 2.85\delta + 0.12\delta^2$", rotation=0.)
+    
+    a0 = @sprintf("%1.3f", coeffs(p)[1])
+    a1 = @sprintf("%1.3f", coeffs(p)[2])
+    a2 = @sprintf("%1.3f", coeffs(p)[3])
+
+    text!(ax1, 5, 17, text=L"$F_\text{pred} = %$(a0) %$(a1)\delta + %$(a2)\delta^2$", rotation=0.)
 
 
 
@@ -102,17 +107,24 @@ function main()
     # axislegend(framevisible=false, position=:rt, orientation = :horizontal, labelsize=14, nbanks=2)
 
 
+    cmap = :roma10
+
     ax2 = Axis(f[2, 1:2], title = L"$$B) Scaled driving force through time", xlabel = L"$t$ [Ma]", ylabel = L"$F_\textrm{D} / F_\textrm{pred}$")
-    lines!(ax2, d1["time"], d1["F_driving"]./1e12 ./  fit_force[1], label=L"$\delta = 1$")  
-    lines!(ax2, d1_5["time"], d1_5["F_driving"]./1e12 ./  fit_force[2], label=L"$\delta = 1.5$") 
-    lines!(ax2, d2["time"], d2["F_driving"]./1e12 ./  fit_force[3], label=L"$\delta = 2$")  
-    lines!(ax2, d3["time"], d3["F_driving"]./1e12 ./  fit_force[4], label=L"$\delta = 3$")  
-    lines!(ax2, d4["time"], d4["F_driving"]./1e12 ./  fit_force[5], label=L"$\delta = 4$")  
-    lines!(ax2, d5["time"], d5["F_driving"]./1e12 ./  fit_force[6], label=L"$\delta = 5$")  
-    lines!(ax2, d6["time"], d6["F_driving"]./1e12 ./  fit_force[7] , label=L"$\delta = 6$")  
-    lines!(ax2, d7["time"], d7["F_driving"]./1e12 ./  fit_force[8], label=L"$\delta = 7$")  
-    lines!(ax2, d8["time"], d8["F_driving"]./1e12 ./  fit_force[9], label=L"$\delta = 8$")  
-    lines!(ax2, d10["time"], d10["F_driving"]./1e12./ fit_force[10] , label=L"$\delta = 10$")  
+    lines!(ax2, d1["time"], d1["F_driving"]./1e12 ./  fit_force[1],     label=L"$\delta = 1$"  , color= colorschemes[cmap].colors[1])  
+    lines!(ax2, d1_5["time"], d1_5["F_driving"]./1e12 ./  fit_force[2], label=L"$\delta = 1.5$", color= colorschemes[cmap].colors[2]) 
+    lines!(ax2, d2["time"], d2["F_driving"]./1e12 ./  fit_force[3],     label=L"$\delta = 2$"  , color= colorschemes[cmap].colors[3])  
+    lines!(ax2, d3["time"], d3["F_driving"]./1e12 ./  fit_force[4],     label=L"$\delta = 3$"  , color= colorschemes[cmap].colors[4])  
+    lines!(ax2, d4["time"], d4["F_driving"]./1e12 ./  fit_force[5],     label=L"$\delta = 4$"  , color= colorschemes[cmap].colors[5])  
+    lines!(ax2, d5["time"], d5["F_driving"]./1e12 ./  fit_force[6],     label=L"$\delta = 5$"  , color= colorschemes[cmap].colors[6])  
+    lines!(ax2, d6["time"], d6["F_driving"]./1e12 ./  fit_force[7] ,    label=L"$\delta = 6$"  , color= colorschemes[cmap].colors[7])  
+    lines!(ax2, d7["time"], d7["F_driving"]./1e12 ./  fit_force[8],     label=L"$\delta = 7$"  , color= colorschemes[cmap].colors[8])  
+    lines!(ax2, d8["time"], d8["F_driving"]./1e12 ./  fit_force[9],     label=L"$\delta = 8$"  , color= colorschemes[cmap].colors[9])  
+    lines!(ax2, d10["time"], d10["F_driving"]./1e12./ fit_force[10] ,   label=L"$\delta = 10$" , color= colorschemes[cmap].colors[10])  
+
+    xlims!(ax2, 0, 10)
+
+    Colorbar(f, limits = (0, 10), colormap = :roma10,
+    label = L"δ", vertical = false, flipaxis = true, bbox=BBox(450, 550, -650, 900))
 
 
     # ax2 = Axis(f[2, 1:2], title = L"$$Driving force versus initial anisotropy angle", xlabel = L"$t$ [Ma]", ylabel = L"$F_\textrm{D}$ [TN/m]")

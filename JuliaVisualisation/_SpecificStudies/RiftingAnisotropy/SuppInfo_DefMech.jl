@@ -1,7 +1,7 @@
 # import Pkg
 # Pkg.activate(normpath(joinpath(@__DIR__, "../..")))
 using JuliaVisualisation
-using HDF5, Printf, Colors, ColorSchemes, MathTeXEngine, LinearAlgebra, FFMPEG, Statistics, UnPack
+using HDF5, Printf, Colors, ColorSchemes, MathTeXEngine, LinearAlgebra, FFMPEG, Statistics, UnPack, JLD2
 using CairoMakie#, GLMakie
 Mak = CairoMakie
 Makie.update_theme!( fonts = (regular = texfont(), bold = texfont(:bold), italic = texfont(:italic)))
@@ -19,8 +19,7 @@ include("ChristmasTreeAnisotropy_AsFunction.jl")
     path  ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/RiftingAnisotropy/ref_d4_HR/"
     
     # File numbers
-    step = [500; 1100; 2000]
-    step = [00; 1400; 2900]
+    step = [60; 140; 660]
 
     # Select field to visualise
     # field = :Phases
@@ -118,9 +117,9 @@ include("ChristmasTreeAnisotropy_AsFunction.jl")
     @unpack tMy, length_unit, Lx, Lz, xc, zc, ε̇II, τII, coords, V, T, ϕ, σ1, Fab, height, all_phases, Δ = model
 
     zoom = ( 
-            xmin = -60., 
-            xmax = 60.,
-            zmin = minimum(zc)/scales.Lc,
+            xmin = -100., 
+            xmax = 100.,
+            zmin = -110,
             zmax = maximum(zc)/scales.Lc,
         )
 
@@ -138,83 +137,121 @@ include("ChristmasTreeAnisotropy_AsFunction.jl")
     end
 
     #####################################
-    ftsz =  24*options.resol/500
-    f = Figure(size = (2.1*options.resol, options.resol), fontsize=ftsz)
+    ftsz =  24*options.resol/600
+    f = Figure(size = (2.2*options.resol, options.resol), fontsize=ftsz)
 
-    cmap = :roma
+    cmap = :vik
+
+    path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/RiftingAnisotropy/ref_d4_MR/"
+    d4 = load(path*"DrivingForce.jld2")
 
     if field==:StrainRate
 
         model = ReadFile(path, step[1], scales, options, PlotOnTop)
         @unpack tMy, length_unit, Lx, Lz, xc, zc, ε̇II, τII, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, all_phases, Δ = model
 
+        ################
+
+        DefMech = NaN.*ones(size(ε̇II.ε̇lin))
+        DefMech[(ε̇II.ε̇el .> ε̇II.ε̇pl) .&& (ε̇II.ε̇el .> ε̇II.ε̇lin) .&& (ε̇II.ε̇el .> ε̇II.ε̇pwl)] .= 1.0
+        DefMech[(ε̇II.ε̇pl .> ε̇II.ε̇el) .&& (ε̇II.ε̇pl .> ε̇II.ε̇lin) .&& (ε̇II.ε̇pl .> ε̇II.ε̇pwl)] .= 2.0
+        DefMech[(ε̇II.ε̇pwl.> ε̇II.ε̇el) .&& (ε̇II.ε̇pwl.> ε̇II.ε̇pl ) .&& (ε̇II.ε̇pwl.> ε̇II.ε̇lin)] .= 3.0
+        DefMech[(ε̇II.ε̇lin.> ε̇II.ε̇el) .&& (ε̇II.ε̇lin.> ε̇II.ε̇pl ) .&& (ε̇II.ε̇lin.> ε̇II.ε̇pwl)] .= 4.0
+
         tMy_string = @sprintf("%1.2lf", tMy)
-        ax1 = Axis(f[1, 1], title = L"$$A) Initial model configuration", ylabel = L"$y$ [%$(length_unit)]", xlabel = L"$x$ [%$(length_unit)]", xgridvisible = false, ygridvisible = false, aspect=DataAspect())
-        hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(τII), colormap = (Reverse(cmap), options.α_heatmap), colorrange=(6.69, 8.69))
-        AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, all_phases.group_phases, Δ, Mak)                
+        ax2 = Axis(f[1, 1], title = L"$$A) Def. mechanisms at %$(tMy_string) My", ylabel = L"$y$ [%$(length_unit)]", xlabel = L"$x$ [%$(length_unit)]", xgridvisible = false, ygridvisible = false, aspect=DataAspect())
+        hm = heatmap!(ax2, xc./Lc, zc./Lc, DefMech, colormap = (cmap, options.α_heatmap), colorrange=(1, 4))
+        AddCountourQuivers!(PlotOnTop, ax2, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, all_phases.group_phases, Δ, Mak)                
         # colsize!(f.layout, 1, Aspect(1, Lx/Lz))
         # Mak.Colorbar(f[1, 2], hm, label =  L"$\tau_\textrm{II}$ [Pa]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
-
-        Colorbar(f, hm, label = L"$\tau_\textrm{II}$ [Pa]", width = 320, height = 30,
-        labelsize = 40, ticklabelsize = 30, bbox=BBox(400, 1250, -450, 900),
+        Colorbar(f, hm, label = L"$$Mechanisms", width = 320, height = 25,
+        labelsize = 40, ticklabelsize = 40, bbox=BBox(360, 1250, -480, 1350),
         alignmode = Outside(20), halign = :left, ticklabelcolor = :black, labelcolor = :black, vertical=false,
         tickcolor = :black)
-        xb = [5.; 60.]
-        yb = [-150.; -124.]
-        heatmap!(ax1, xb, yb, zeros(2,2), colormap=(:broc, 0.5))
+        xb = -[0.; -100.]
+        yb = [-100.; -70.]
+        heatmap!(ax2, xb, yb, zeros(2,2), colormap=(:broc, 0.7))
+        xlims!(ax2, window.xmin, window.xmax)
+        ylims!(ax2, window.zmin, window.zmax)
 
-        xlims!(ax1, window.xmin, window.xmax)
-        ylims!(ax1, window.zmin, window.zmax)
+        ################
 
-        Tprofile = T[1,:]
-        yprofile =  zc./Lc
+        model = ReadFile(path, step[2], scales, options, PlotOnTop)
+        @unpack tMy, length_unit, Lx, Lz, xc, zc, ε̇II, τII, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, all_phases, Δ = model
 
-        τii_rot1, yc, τii_cart1, τii_yield, τii_yield_min, T, T0, P = ChrismasTreeAniso(4, π/4)
+        DefMech = NaN.*ones(size(ε̇II.ε̇lin))
+        DefMech[(ε̇II.ε̇el .> ε̇II.ε̇pl) .&& (ε̇II.ε̇el .> ε̇II.ε̇lin) .&& (ε̇II.ε̇el .> ε̇II.ε̇pwl)] .= 1.0
+        DefMech[(ε̇II.ε̇pl .> ε̇II.ε̇el) .&& (ε̇II.ε̇pl .> ε̇II.ε̇lin) .&& (ε̇II.ε̇pl .> ε̇II.ε̇pwl)] .= 2.0
+        DefMech[(ε̇II.ε̇pwl.> ε̇II.ε̇el) .&& (ε̇II.ε̇pwl.> ε̇II.ε̇pl ) .&& (ε̇II.ε̇pwl.> ε̇II.ε̇lin)] .= 3.0
+        DefMech[(ε̇II.ε̇lin.> ε̇II.ε̇el) .&& (ε̇II.ε̇lin.> ε̇II.ε̇pl ) .&& (ε̇II.ε̇lin.> ε̇II.ε̇pwl)] .= 4.0
 
-        τii_rot_ref, yc, τii_cart_ref, τii_yield_ref, τii_yield_ref, T, T0, P = ChrismasTreeAniso(4, 10*π/180)
+        tMy_string = @sprintf("%1.2lf", tMy)
+        ax3 = Axis(f[1, 2], title = L"$$B) Def. mechanisms at %$(tMy_string) My", xlabel = L"$x$ [%$(length_unit)]", xgridvisible = false, ygridvisible = false, aspect=DataAspect())
+        hm = heatmap!(ax3, xc./Lc, zc./Lc, DefMech, colormap = (cmap, options.α_heatmap), colorrange=(1, 4))
+        AddCountourQuivers!(PlotOnTop, ax3, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, all_phases.group_phases, Δ, Mak)                
+        xlims!(ax3, window.xmin, window.xmax)
+        ylims!(ax3, window.zmin, window.zmax)
+        # hideydecorations!(ax3)
 
+        ################
+
+        model = ReadFile(path, step[3], scales, options, PlotOnTop)
+        @unpack tMy, length_unit, Lx, Lz, xc, zc, ε̇II, τII, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, all_phases, Δ = model
+        Mak.colgap!(f.layout, 20)
+
+        DefMech = NaN.*ones(size(ε̇II.ε̇lin))
+        DefMech[(ε̇II.ε̇el .> ε̇II.ε̇pl) .&& (ε̇II.ε̇el .> ε̇II.ε̇lin) .&& (ε̇II.ε̇el .> ε̇II.ε̇pwl)] .= 1.0
+        DefMech[(ε̇II.ε̇pl .> ε̇II.ε̇el) .&& (ε̇II.ε̇pl .> ε̇II.ε̇lin) .&& (ε̇II.ε̇pl .> ε̇II.ε̇pwl)] .= 2.0
+        DefMech[(ε̇II.ε̇pwl.> ε̇II.ε̇el) .&& (ε̇II.ε̇pwl.> ε̇II.ε̇pl ) .&& (ε̇II.ε̇pwl.> ε̇II.ε̇lin)] .= 3.0
+        DefMech[(ε̇II.ε̇lin.> ε̇II.ε̇el) .&& (ε̇II.ε̇lin.> ε̇II.ε̇pl ) .&& (ε̇II.ε̇lin.> ε̇II.ε̇pwl)] .= 4.0
+
+        tMy_string = @sprintf("%1.2lf", tMy)
+        ax4 = Axis(f[1, 3], title = L"$$C) Def. mechanisms at %$(tMy_string) My", xlabel = L"$x$ [%$(length_unit)]", xgridvisible = false, ygridvisible = false, aspect=DataAspect())
+        # hm = heatmap!(ax4, xc./Lc, zc./Lc, DefMech, colormap = (cmap, options.α_heatmap), colorrange=(1, 4))
+        hm = heatmap!(ax4, xc./Lc, zc./Lc, DefMech, colormap = Makie.Categorical((cmap,  options.α_heatmap)), colorrange=(1, 4))
+        AddCountourQuivers!(PlotOnTop, ax4, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, all_phases.group_phases, Δ, Mak)                
+        xlims!(ax4, window.xmin, window.xmax)
+        ylims!(ax4, window.zmin, window.zmax)
+        # hideydecorations!(ax4)
+
+        colgap!(f.layout, 20)
 
         #####################
 
-        ax2 = Axis(f[1, 2], xlabel = L"B) $T$ [$^\circ$C]", ylabel = L"$z$ [km]",  xticklabelcolor = :tomato, xaxisposition=:top, yticklabelsvisible=false) # , title = L"$$Pressure profile"
-        ax1 = Axis(f[1, 2], xlabel = L"$P$ [GPa]", xticklabelcolor = :blue,  xaxisposition=:bottom, yticklabelsvisible=false) # , title = L"$$Temperature profile"
-        hidespines!(ax2)
-        hideydecorations!(ax2)
+        # ax2 = Axis(f[1, 2], xlabel = L"B) $T$ [$^\circ$C]", ylabel = L"$z$ [km]",  xticklabelcolor = :tomato, xaxisposition=:top, yticklabelsvisible=false) # , title = L"$$Pressure profile"
+        # ax1 = Axis(f[1, 2], xlabel = L"$P$ [GPa]", xticklabelcolor = :blue,  xaxisposition=:bottom, yticklabelsvisible=false) # , title = L"$$Temperature profile"
+        # hidespines!(ax2)
+        # hideydecorations!(ax2)
         
-        lines!(ax2, T .- T0, -35*ones(size(T)), color=:gray, linestyle=:dash, linewidth=3)
-        lines!(ax1, P./1e9, yc./1e3, color=:blue, linewidth=4 )
-        lines!(ax2, Tprofile, yprofile, color=:tomato, linewidth=4)
+        # lines!(ax2, T .- T0, -35*ones(size(T)), color=:gray, linestyle=:dash, linewidth=3)
+        # lines!(ax1, P./1e9, yc./1e3, color=:blue, linewidth=4 )
+        # lines!(ax2, Tprofile, yprofile, color=:tomato, linewidth=4)
 
-        # lines!(ax2, T .- T0, yc./1e3, color=:blue ) 
-        lines!(ax1, P./1e9, -125*ones(size(P)), color=:gray, linestyle=:dash, linewidth=3)
+        # # lines!(ax2, T .- T0, yc./1e3, color=:blue ) 
+        # lines!(ax1, P./1e9, -125*ones(size(P)), color=:gray, linestyle=:dash, linewidth=3)
 
-        ylims!(ax2,-150, 10)
-        ylims!(ax1,-150, 10)
+        # ylims!(ax2,-150, 10)
+        # ylims!(ax1,-150, 10)
 
-        #####################
-        Mak.colgap!(f.layout, 10)
+        # #####################
+        # Mak.colgap!(f.layout, 10)
 
-        ax3 = Axis(f[1, 3], title = L"C) $τ_\mathrm{II}$ ($\delta = 4$)", xlabel = L"$τ_\mathrm{II}$ [GPa]", yticklabelsvisible=false)
-        xlims!(ax3, 0, .7)
-        # lines!(ax3, τii_rot2./1e9, yc./1e3 )
+        # ax3 = Axis(f[1, 3], title = L"C) $τ_\mathrm{II}$ ($\delta = 3$)", xlabel = L"$τ_\mathrm{II}$ [GPa]", yticklabelsvisible=false)
+        # lines!(ax3, τii_rot1./1e9, yc./1e3, label=L"$\sqrt{Y_2^{'}}$", color=:blue, linewidth=4 )
+        # xlims!(ax3, 0, .7)
+        # # lines!(ax3, τii_rot2./1e9, yc./1e3 )
+        # lines!(ax3, τii_cart1./1e9, yc./1e3, label=L"$\sqrt{J_2}$", color=:tomato, linewidth=4 )
 
-        lines!(ax3, τii_rot1./1e9, yc./1e3, label=L"$\tau_{II} ($\theta = 0^\circ$)$", color=:blue, linewidth=4 )
-        lines!(ax3, τii_yield./1e9,     yc./1e3, label=L"$τ^\mathrm{fric}$ ($\theta = 0$)", linestyle=:dash, color=:blue, linewidth=4 )
-        
-        lines!(ax3, τii_cart1./1e9, yc./1e3, label=L"$\tau_{II} ($\theta = 45^\circ$)$", color=:tomato, linewidth=4 )
-        lines!(ax3, τii_yield_min./1e9, yc./1e3, label=L"$τ^\mathrm{fric}$ ($\theta = 45^\circ$)", linestyle=:dash, color=:tomato, linewidth=4 )
+        # lines!(ax3, τii_yield./1e9,     yc./1e3, label=L"$τ^\mathrm{fric}$ ($\theta = 0.0$)", linestyle=:dash, color=:blue, linewidth=4 )
+        # lines!(ax3, τii_yield_min./1e9, yc./1e3, label=L"$τ^\mathrm{fric}$ ($\theta = π/4$)", linestyle=:dash, color=:tomato, linewidth=4 )
 
-        lines!(ax3, τii_cart_ref./1e9, yc./1e3, label=L"$τ^\mathrm{fric}$ ($\theta = 10^\circ$)", color=:gray, linewidth=4 )
-        lines!(ax3, τii_yield_ref./1e9, yc./1e3, label=L"$τ^\mathrm{fric}$ ($\theta = 10^\circ$)", linestyle=:dash, color=:gray, linewidth=4 )
+        # ylims!(ax3,-150, 10)
 
+        # # lines!(ax3, τii_cart2./1e9, yc./1e3 )
+        # axislegend(position=:rb)
+        # display(f)
 
-        ylims!(ax3,-150, 10)
-
-        # lines!(ax3, τii_cart2./1e9, yc./1e3 )
-        axislegend(position=:rb, nbanks=2, labelsize=40)
-        display(f)
-
-        Mak.colgap!(f.layout, 50)
+        # Mak.colgap!(f.layout, 50)
 
 
 
@@ -283,7 +320,7 @@ include("ChristmasTreeAnisotropy_AsFunction.jl")
 
         ##############################################################
     
-        save("/Users/tduretz/PowerFolders/_manuscripts/RiftingAnisotropy/Figures/InitialConfiguration.png", f, px_per_unit = 4)   
+        save("/Users/tduretz/PowerFolders/_manuscripts/RiftingAnisotropy/Figures/SuppInfo/DefMech.png", f, px_per_unit = 4)   
     end
 
     display(f)

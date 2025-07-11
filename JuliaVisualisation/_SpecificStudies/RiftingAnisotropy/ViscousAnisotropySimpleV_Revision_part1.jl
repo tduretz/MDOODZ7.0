@@ -1,4 +1,4 @@
-using CairoMakie, Printf, LinearAlgebra, MathTeXEngine
+using CairoMakie, Printf, LinearAlgebra, MathTeXEngine, GridGeometryUtils
 import Statistics:mean
 
 function main_simple_ani_vis()
@@ -37,6 +37,7 @@ function main_simple_ani_vis()
         ε           = [ε̇_rot[1,1]; ε̇_rot[2,2]; ε̇_rot[1,2]]
         D           = 2*ηv*[1 0 0; 0 1 0; 0 0 1.0/δ;]
         τ           = D*ε
+        # a           = (δ^2)
         Y2          = 0.5*(τ[1]^2 + τ[2]^2) + τ[3]^2*δ^2
         τii_rot1[i] = sqrt(Y2)
         # Check strain rate components
@@ -103,9 +104,147 @@ function main_simple_ani_vis()
 
     end
 
-    f = Figure(size = (500, 500), fontsize=18)
-    ax1 = Axis(f[1, 1], title=L"$$A) $\tau_{II}$ and stress invariant $\tau_{II}'$", xlabel=L"$\theta$ [$^\circ$]", ylabel=L"$\tau_{II}$, $\tau_{II}'$  [-]")
-    lines!(ax1, θ*180/π, τii_cart, label=L"$\tau_{II}$  $(\delta=2)$")
+    f = Figure(size = (500, 400), fontsize=18)
+
+
+    ncx, ncy = 1000, 1000    
+    phase  = zeros(ncx, ncy)
+    dx, dy = 1/ncx, 1/ncy
+    xc     = LinRange(-1/2+dx/2, 1/2-dx/2, ncx)
+    yc     = LinRange(-1/2+dy/2, 1/2-dy/2, ncy)
+
+    ############################ Flat 
+    layering = Layering(
+            (0., 0.), 
+            0.1, 
+            0.5; 
+            θ = 0,  
+            perturb_amp=0*1.0, 
+            perturb_width=1.0
+        )
+
+    # Set material geometry 
+    phase .= 0.
+    for I in CartesianIndices(phase)   # loop on centroids
+        𝐱 = @SVector([xc[I[1]], yc[I[2]]])
+        isin = inside(𝐱, layering)
+        if isin 
+            phase[I[1], I[2]] = 2
+        end 
+    end
+
+    ax1 = Axis(f[3, 1], aspect=DataAspect(), title=L"$\theta=0$")
+    heatmap!(ax1, xc, yc, phase, colormap=:grays)
+    hidedecorations!(ax1)
+
+    ############################ 45 
+    
+    layering = Layering(
+            (0., 0.), 
+            0.1, 
+            0.5; 
+            θ = π/4,  
+            perturb_amp=0*1.0, 
+            perturb_width=1.0
+        )
+
+    # Set material geometry 
+    phase .= 0.
+    for I in CartesianIndices(phase)   # loop on centroids
+        𝐱 = @SVector([xc[I[1]], yc[I[2]]])
+        isin = inside(𝐱, layering)
+        if isin 
+            phase[I[1], I[2]] = 2
+        end 
+    end
+
+    ax1 = Axis(f[3, 2], aspect=DataAspect(), title=L"$\theta= 45^\circ$")
+    heatmap!(ax1, xc, yc, phase, colormap=:grays)
+    hidedecorations!(ax1)
+
+    rowsize!(f.layout, 1, Relative(0.5))
+
+
+    ############################ vertical 
+    phase .= 0
+    layering = Layering(
+            (0., 0.), 
+            0.1, 
+            0.5; 
+            θ = π/2,  
+            perturb_amp=0*1.0, 
+            perturb_width=1.0
+        )
+
+    # Set material geometry 
+    phase .= 0.
+    for I in CartesianIndices(phase)   # loop on centroids
+        𝐱 = @SVector([xc[I[1]], yc[I[2]]])
+        isin = inside(𝐱, layering)
+        if isin 
+            phase[I[1], I[2]] = 2
+        end 
+    end
+
+    ax1 = Axis(f[3, 3], aspect=DataAspect(), title=L"$\theta= 90^\circ$")
+    heatmap!(ax1, xc, yc, phase, colormap=:grays)
+    hidedecorations!(ax1)
+
+    ############################ 45 
+    phase .= 0
+    layering = Layering(
+            (0., 0.), 
+            0.1, 
+            0.5; 
+            θ = 3*π/4,  
+            perturb_amp=0*1.0, 
+            perturb_width=1.0
+        )
+
+    # Set material geometry 
+    phase .= 0.
+    for I in CartesianIndices(phase)   # loop on centroids
+        𝐱 = @SVector([xc[I[1]], yc[I[2]]])
+        isin = inside(𝐱, layering)
+        if isin 
+            phase[I[1], I[2]] = 2
+        end 
+    end
+
+    ax1 = Axis(f[3, 4], aspect=DataAspect(), title=L"$\theta= 135^\circ$")
+    heatmap!(ax1, xc, yc, phase, colormap=:grays)
+    hidedecorations!(ax1)
+
+
+   ############################ Flat 
+   layering = Layering(
+    (0., 0.), 
+    0.1, 
+    0.5; 
+    θ = 0,  
+    perturb_amp=0, 
+    perturb_width=1.0
+)
+
+    # Set material geometry 
+    phase .= 0.
+    for I in CartesianIndices(phase)   # loop on centroids
+        𝐱 = @SVector([xc[I[1]], yc[I[2]]])
+        isin = inside(𝐱, layering)
+        if isin 
+            phase[I[1], I[2]] = 2
+        end 
+    end
+
+    ax1 = Axis(f[3, 5], aspect=DataAspect(), title=L"$\theta= 0$")
+    heatmap!(ax1, xc, yc, phase, colormap=:grays)
+    hidedecorations!(ax1)
+    rowsize!(f.layout, 1, Relative(0.5))
+
+    ax1 = Axis(f[1, 1:5], title=L"$$Horizontal extension: variable $\tau_{II}$ and invariant $\tau_{II}'$", xlabel=L"$\theta$ [$^\circ$]", ylabel=L"$\tau_{II}$, $\tau_{II}'$  [-]")
+    lines!(ax1, θ*180/π, τii_cart, label=L"$\tau_{II}$  ($\delta=2$, transformations)")
+    scatter!(ax1, θ*180/π, τii_cart_MD7, label=L"$\tau_{II}$  ($\delta=2$, tensor)")
+
     # scatter!(ax1, θ*180/π, τii_cart_MD7 )
     lines!(ax1, θ*180/π, τii_rot1, label=L"$\tau_{II}'$ $(\delta=2)$")
     # text!(ax1, 50, 0.5; text=L"$\tau_{II} = \tau_{II}' \frac{\sqrt{(\delta^2-1)\cos{(2\theta)} + 1)}}{\delta} $", fontsize=12, rotation=π/2.7)
@@ -113,27 +252,28 @@ function main_simple_ani_vis()
     tii = 1.0*sqrt.((δ^2-1)*cos.(2*θ).^2 .+ 1)/δ
     # scatter!(ax1, θ*180/π, tii, )
 
-    
     scatter!(ax1, θ[1:5:end]*180/π, τii_rot2[1:5:end], label=L"$\tau_{II}$ $(\delta=1)$")#, label=L"$\tau_{II}$  $(\delta$=1)$" )
     # lines!(ax1, θ*180/π, τii_cart2 )
     # scatter!(ax1, θ*180/π, τii_cart, marker=:xcross, markersize=10 )
-    axislegend(position=:rb)
+    # axislegend(position=:rb)
 
-    ax3 = Axis(f[2, 1], title=L"$$B) Deviatoric stress components ($\delta = 2$)", xlabel=L"$\tau_{xx}'$ [-]", ylabel=L"$\tau_{xy}'$ [-]", aspect=DataAspect())
-    lines!(ax3, LinRange(0,1,10), zeros(10), color=:black)
-    text!(ax3, 0.3, 0.05; text=L"$\tau_{xx}' = \tau_{II}'$", fontsize=16)
-    lines!(ax3, zeros(10), LinRange(0,0.5,10), color=:black)
-    text!(ax3, -0.05, 0.0; text=L"$\tau_{xy}' = \frac{\tau_{II}'}{\delta}$", rotation=π/2, fontsize=16)
+    f[2, 1:5] = Legend(f, ax1, framevisible = false, orientation = :horizontal, labelsize=20, nbanks=2)
 
-    a = LinRange(0, 2π, 100)
-    txx = 1*cos.(a)
-    txy = 1*sin.(a)/δ
+    # ax3 = Axis(f[1, 1], title=L"$$A) Deviatoric stress components ($\delta = 2$)", xlabel=L"$\tau_{xx}'$ [-]", ylabel=L"$\tau_{xy}'$ [-]", aspect=DataAspect())
+    # lines!(ax3, LinRange(0,1,10), zeros(10), color=:black)
+    # text!(ax3, 0.3, 0.05; text=L"$\tau_{xx}' = \tau_{II}'$", fontsize=16)
+    # lines!(ax3, zeros(10), LinRange(0,0.5,10), color=:black)
+    # text!(ax3, -0.05, 0.0; text=L"$\tau_{xy}' = \frac{\tau_{II}'}{\delta}$", rotation=π/2, fontsize=16)
 
-    # lines!(ax3, τxx_cart, τxy_cart, marker=:xcross )
-    lines!(ax3, τxx_rot, τxy_rot, label=L"$\delta$=2$" )
-    # scatter!(ax3, txx, txy, marker=:xcross )
+    # a = LinRange(0, 2π, 100)
+    # txx = 1*cos.(a)
+    # txy = 1*sin.(a)/δ
 
-    save("/Users/tduretz/PowerFolders/_manuscripts/RiftingAnisotropy/Figures/ViscousAnisotropySimple.png", f, px_per_unit = 4) 
+    # # lines!(ax3, τxx_cart, τxy_cart, marker=:xcross )
+    # lines!(ax3, τxx_rot, τxy_rot, label=L"$\delta$=2$" )
+    # # scatter!(ax3, txx, txy, marker=:xcross )
+
+    save("/Users/tduretz/PowerFolders/_manuscripts/RiftingAnisotropy/Figures/ViscousAnisotropySimple_Revision1.png", f, px_per_unit = 4) 
 
     
     display(f)

@@ -54,7 +54,7 @@ const cm_y = y*100.
     # Switches
     PlotOnTop = (
         ph_contours   = true,  # add phase contours
-        fabric        = false,  # add fabric quiver (normal to director)
+        fabric        = true,  # add fabric quiver (normal to director)
         T_contours    = true,   # add temperature contours
         topo          = false,
         quiver_origin = false,
@@ -113,7 +113,7 @@ const cm_y = y*100.
     @unpack Lc, tc, Vc, τc = scales
 
     model = ReadFile(path[1], step[1], scales, options, PlotOnTop)
-    @unpack tMy, length_unit, Lx, Lz, xc, zc, ε̇II, τII, coords, V, T, ϕ, σ1, Fab, height, group_phases, Δ = model
+    @unpack tMy, length_unit, Lx, Lz, xc, zc, ε̇II, τII, coords, V, T, ϕ, σ1, Fab, height, all_phases, Δ = model
 
     if @isdefined zoom
         Lx = (zoom.xmax - zoom.xmin)./scales.Lc 
@@ -208,17 +208,19 @@ const cm_y = y*100.
 
     if field==:StrainRate
 
-        cmap = :vik
+        cmap = Reverse(:roma)
 
         model = ReadFile(path[1], step[1], scales, options, PlotOnTop)
-        @unpack tMy, length_unit, Lx, Lz, xc, zc, ε̇II, τII, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, group_phases, Δ = model
+        @unpack tMy, length_unit, Lx, Lz, xc, zc, ε̇II, τII, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, all_phases, Δ = model
 
         tMy_string = @sprintf("%1.2lf", tMy)
         ax1 = Axis(f[1, 1], title = L"A) Crustal anisotropy only - $t$ = %$(tMy_string) Ma", ylabel = L"$y$ [%$(length_unit)]", xgridvisible = false, ygridvisible = false,)
-        hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(τII), colormap = (cmap, options.α_heatmap), colorrange=(6.69, 8.69))
-        AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, group_phases, Δ, Mak)                
+        # hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(τII), colormap = (cmap, options.α_heatmap), colorrange=(6.69, 8.69))
+        hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(ε̇II.ε̇II), colormap = (cmap, options.α_heatmap), colorrange=(-16.5, -13.25))
+
+        AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, all_phases.group_phases, Δ, Mak)                
         colsize!(f.layout, 1, Aspect(1, Lx/Lz))
-        Mak.Colorbar(f[1, 2], hm, label =  L"$\tau_\textrm{II}$ [Pa]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
+        Mak.Colorbar(f[1, 2], hm, label =   L"$\dot{\varepsilon}_\textrm{II}$ [s$^{-1}$]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
         Mak.colgap!(f.layout, 20)
         xlims!(ax1, window.xmin, window.xmax)
         ylims!(ax1, window.zmin, window.zmax)
@@ -231,14 +233,16 @@ const cm_y = y*100.
         ##############################################################
 
         model = ReadFile(path[2], step[2], scales, options, PlotOnTop)
-        @unpack tMy, length_unit, Lx, Lz, xc, zc, ε̇II, τII, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, group_phases, Δ = model
+        @unpack tMy, length_unit, Lx, Lz, xc, zc, ε̇II, τII, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, all_phases, Δ = model
         
         tMy_string = @sprintf("%1.2lf", tMy)
-        ax1 = Axis(f[2, 1], title = L"B) Both crustal and mantle anisotropy (reference) - $t$ = %$(tMy_string) Ma", ylabel = L"$y$ [%$(length_unit)]", xgridvisible = false, ygridvisible = false,)
-        hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(τII), colormap = (cmap, options.α_heatmap), colorrange=(6.69, 8.69))
-        AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, group_phases, Δ, Mak)                
+        ax1 = Axis(f[3, 1], title = L"C) Both crustal and mantle anisotropy (reference) - $t$ = %$(tMy_string) Ma", ylabel = L"$y$ [%$(length_unit)]", xgridvisible = false, ygridvisible = false,)
+        # hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(τII), colormap = (cmap, options.α_heatmap), colorrange=(6.69, 8.69))
+        hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(ε̇II.ε̇II), colormap = (cmap, options.α_heatmap), colorrange=(-16.5, -13.25))
+
+        AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, all_phases.group_phases, Δ, Mak)                
         colsize!(f.layout, 1, Aspect(1, Lx/Lz))
-        Mak.Colorbar(f[2, 2], hm, label =  L"$\tau_\textrm{II}$ [Pa]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
+        Mak.Colorbar(f[3, 2], hm, label =   L"$\dot{\varepsilon}_\textrm{II}$ [s$^{-1}$]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
         Mak.colgap!(f.layout, 20)
         xlims!(ax1, window.xmin, window.xmax)
         ylims!(ax1, window.zmin, window.zmax)
@@ -253,15 +257,16 @@ const cm_y = y*100.
         # ##############################################################
 
         model = ReadFile(path[3], step[3], scales, options, PlotOnTop)
-        @unpack tMy, length_unit, Lx, Lz, xc, zc, ε̇II, τII, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, group_phases, Δ = model
+        @unpack tMy, length_unit, Lx, Lz, xc, zc, ε̇II, τII, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, all_phases, Δ = model
         
         tMy_string = @sprintf("%1.2lf", tMy)
-        ax1 = Axis(f[3, 1], title = L"C) Mantle anisotropy only  - $\tau_\textrm{II}$ at $t$ = %$(tMy_string) Ma", xlabel = L"$x$ [%$(length_unit)]", ylabel = L"$y$ [%$(length_unit)]", xgridvisible = false, ygridvisible = false,)
-        @show size(xc), size(zc), size(log10.(τII))
-        hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(τII), colormap = (cmap, options.α_heatmap), colorrange=(6.69, 8.69))
-        AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, group_phases, Δ, Mak)                
+        ax1 = Axis(f[2, 1], title = L"B) Mantle anisotropy only  - $t$ = %$(tMy_string) Ma", xlabel = L"$x$ [%$(length_unit)]", ylabel = L"$y$ [%$(length_unit)]", xgridvisible = false, ygridvisible = false,)
+        # hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(τII), colormap = (cmap, options.α_heatmap), colorrange=(6.69, 8.69))
+        hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(ε̇II.ε̇II), colormap = (cmap, options.α_heatmap), colorrange=(-16.5, -13.25))
+
+        AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, all_phases.group_phases, Δ, Mak)                
         colsize!(f.layout, 1, Aspect(1, Lx/Lz))
-        Mak.Colorbar(f[3, 2], hm, label =  L"$\tau_\textrm{II}$ [Pa]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
+        Mak.Colorbar(f[2, 2], hm, label =   L"$\dot{\varepsilon}_\textrm{II}$ [s$^{-1}$]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
         Mak.colgap!(f.layout, 20)
         xlims!(ax1, window.xmin, window.xmax)
         ylims!(ax1, window.zmin, window.zmax)
@@ -274,38 +279,10 @@ const cm_y = y*100.
 
         ##############################################################
     
-        # save("/Users/tduretz/PowerFolders/_manuscripts/RiftingAnisotropy/Figures/CompareMantleCrust.png", f, px_per_unit = 4)     
+        save("/Users/tduretz/PowerFolders/_manuscripts/RiftingAnisotropy/Figures/CompareMantleCrust.png", f, px_per_unit = 4)     
     end
 
     display(f)
-end
-
-function PrincipalStress(τxx, τzz, τxz, P)
-    σ1   = (x=zeros(size(τxx)), z=zeros(size(τxx)) )
-    τxzc = 0.25*(τxz[1:end-1,1:end-1] .+ τxz[2:end-0,1:end-1] .+ τxz[1:end-1,2:end-0] .+ τxz[2:end-0,2:end-0]) 
-    for i in eachindex(τxzc)
-        if P[i]>-1e-13
-            σ = [-P[i]+τxx[i] τxzc[i]; τxzc[i] -P[i]+τzz[i]]
-            v = eigvecs(σ)
-            σ1.x[i] = v[1,1]
-            σ1.z[i] = v[2,1]
-        end
-    end
-    return σ1
-end
-
-function ExtractData( file_path, data_path)
-    data = h5open(file_path, "r") do file
-        read(file, data_path)
-    end
-    return data
-end
-
-function Print2Disk( f, path, field, istep; res=4)
-     path1 = path*"/_$field/"
-     mkpath(path1)
-     @show name = path1*"$field"*@sprintf("%05d", istep)*".png"
-     save(name, f, px_per_unit = res) 
 end
 
 main()

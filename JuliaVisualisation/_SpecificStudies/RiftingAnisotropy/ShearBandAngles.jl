@@ -44,8 +44,8 @@ function ShearBandAngle()
 
     s1_angle2 = zero(s1_angle)
 
-    # s1_angle = zeros(length(Δ, Mak), length(θ))
-    for i=1:length(Δ, Mak), j=1:length(θ)
+    # s1_angle = zeros(length(δ), length(θ))
+    for i=1:length(δ), j=1:length(θ)
         delta = δ[i]
         theta = θ[j]*π/180
 

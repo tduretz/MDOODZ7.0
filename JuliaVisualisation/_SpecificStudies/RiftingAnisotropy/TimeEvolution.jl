@@ -113,7 +113,7 @@ const cm_y = y*100.
     @unpack Lc, tc, Vc, τc = scales
 
     model = ReadFile(path, step[1], scales, options, PlotOnTop)
-    @unpack tMy, length_unit, Lx, Lz, xc, zc, ε̇II, τII, coords, V, T, ϕ, σ1, Fab, height, group_phases, Δ = model
+    @unpack tMy, length_unit, Lx, Lz, xc, zc, ε̇II, τII, coords, V, T, ϕ, σ1, Fab, height, all_phases, Δ = model
 
     if @isdefined zoom
         Lx = (zoom.xmax - zoom.xmin)./scales.Lc 
@@ -132,17 +132,17 @@ const cm_y = y*100.
     ftsz =  12*options.resol/500
     f = Figure(size = (0.8*Lx/4/Lz*options.resol*1.2, options.resol), fontsize=ftsz)
 
-    cmap = :vik
+    cmap = Reverse(:roma)
 
     if field==:StrainRate
 
         model = ReadFile(path, step[1], scales, options, PlotOnTop)
-        @unpack tMy, length_unit, Lx, Lz, xc, zc, ε̇II, τII, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, group_phases, Δ = model
+        @unpack tMy, length_unit, Lx, Lz, xc, zc, ε̇II, τII, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, all_phases, Δ = model
 
         tMy_string = @sprintf("%1.2lf", tMy)
         ax1 = Axis(f[1, 1], title = L"A) $\dot{\varepsilon}_\textrm{II}$ at $t$ = %$(tMy_string) Ma", ylabel = L"$y$ [%$(length_unit)]", xgridvisible = false, ygridvisible = false,)
-        hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(ε̇II), colormap = (cmap, options.α_heatmap), colorrange=(-17, -13))
-        AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, group_phases, 1.5Δ, Mak)                
+        hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(ε̇II.ε̇II), colormap = (cmap, options.α_heatmap), colorrange=(-16.5, -13.5))
+        AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, all_phases.group_phases, 1.5Δ, Mak)                
         colsize!(f.layout, 1, Aspect(1, Lx/Lz))
         Mak.Colorbar(f[1, 2], hm, label =  L"$\dot{\varepsilon}_\textrm{II}$ [s$^{-1}$]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
         Mak.colgap!(f.layout, 20)
@@ -157,12 +157,12 @@ const cm_y = y*100.
         ##############################################################
 
         model = ReadFile(path, step[2], scales, options, PlotOnTop)
-        @unpack tMy, length_unit, Lx, Lz, xc, zc, ε̇II, τII, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, group_phases, Δ = model
+        @unpack tMy, length_unit, Lx, Lz, xc, zc, ε̇II, τII, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, all_phases, Δ = model
         
         tMy_string = @sprintf("%1.2lf", tMy)
         ax1 = Axis(f[2, 1], title = L"B) $\dot{\varepsilon}_\textrm{II}$ at $t$ = %$(tMy_string) Ma", ylabel = L"$y$ [%$(length_unit)]", xgridvisible = false, ygridvisible = false,)
-        hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(ε̇II), colormap = (cmap, options.α_heatmap), colorrange=(-17, -13))
-        AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, group_phases, 1.5Δ, Mak)                
+        hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(ε̇II.ε̇II), colormap = (cmap, options.α_heatmap), colorrange=(-16.5, -13.5))
+        AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, all_phases.group_phases, 1.5Δ, Mak)                
         colsize!(f.layout, 1, Aspect(1, Lx/Lz))
         Mak.Colorbar(f[2, 2], hm, label =  L"$\dot{\varepsilon}_\textrm{II}$ [s$^{-1}$]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
         Mak.colgap!(f.layout, 20)
@@ -179,12 +179,12 @@ const cm_y = y*100.
         # ##############################################################
 
         model = ReadFile(path, step[3], scales, options, PlotOnTop)
-        @unpack tMy, length_unit, Lx, Lz, xc, zc, ε̇II, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, group_phases, Δ = model
+        @unpack tMy, length_unit, Lx, Lz, xc, zc, ε̇II, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, all_phases, Δ = model
         
         tMy_string = @sprintf("%1.2lf", tMy)
         ax1 = Axis(f[3, 1], title = L"C) $\dot{\varepsilon}_\textrm{II}$ at $t$ = %$(tMy_string) Ma", xlabel = L"$x$ [%$(length_unit)]", ylabel = L"$y$ [%$(length_unit)]", xgridvisible = false, ygridvisible = false,)
-        hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(ε̇II), colormap = (cmap, options.α_heatmap), colorrange=(-17, -13))
-        AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, group_phases, 1.5Δ, Mak)                
+        hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(ε̇II.ε̇II), colormap = (cmap, options.α_heatmap), colorrange=(-16.5, -13.5))
+        AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, all_phases.group_phases, 1.5Δ, Mak)                
         colsize!(f.layout, 1, Aspect(1, Lx/Lz))
         Mak.Colorbar(f[3, 2], hm, label =  L"$\dot{\varepsilon}_\textrm{II}$ [s$^{-1}$]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
         Mak.colgap!(f.layout, 20)

@@ -153,7 +153,7 @@ function main_simple_ani_vis()
             Exx = ε̇xxd
             Eyy = ε̇yyd
             Exy = ε̇xyd
-            τii_cart_y[i] = (C^2/Δ, Mak) / sqrt(C^2*cos(2*θ[i])^2 + C^2/δ^2*sin(2*θ[i])^2)
+            # τii_cart_y[i] = (C^2/Δ, Mak) / sqrt(C^2*cos(2*θ[i])^2 + C^2/δ^2*sin(2*θ[i])^2)
             #
             τii_cart_y[i] = C .* sqrt((0.25 * Exx .^ 2 .* delta .^ 2 .* cos(2 * theta) .^ 2 + 0.25 * Exx .^ 2 .* delta .^ 2 - 0.25 * Exx .^ 2 .* cos(2 * theta) .^ 2 + 0.25 * Exx .^ 2 + 0.5 * Exx .* Exy .* delta .^ 2 .* sin(4 * theta) - 0.5 * Exx .* Exy .* sin(4 * theta) - 0.5 * Exx .* Eyy .* delta .^ 2 .* cos(2 * theta) .^ 2 + 0.5 * Exx .* Eyy .* delta .^ 2 + 0.5 * Exx .* Eyy .* cos(2 * theta) .^ 2 - 0.5 * Exx .* Eyy - 1.0 * Exy .^ 2 .* delta .^ 2 .* cos(2 * theta) .^ 2 + 1.0 * Exy .^ 2 .* delta .^ 2 + 1.0 * Exy .^ 2 .* cos(2 * theta) .^ 2 - 0.5 * Exy .* Eyy .* delta .^ 2 .* sin(4 * theta) + 0.5 * Exy .* Eyy .* sin(4 * theta) + 0.25 * Eyy .^ 2 .* delta .^ 2 .* cos(2 * theta) .^ 2 + 0.25 * Eyy .^ 2 .* delta .^ 2 - 0.25 * Eyy .^ 2 .* cos(2 * theta) .^ 2 + 0.25 * Eyy .^ 2) ./ (0.5 * Exx .^ 2 + 1.0 * Exy .^ 2 + 0.5 * Eyy .^ 2)) ./ delta
 
@@ -180,7 +180,7 @@ function main_simple_ani_vis()
     lines!(ax1, θ*180/π, τii_cart, label="τii_cart" )
     scatter!(ax1, θ[2:2:end]*180/π, τii_cart2[2:2:end], label="τii_cart2" )
     scatter!(ax1, θ[3:2:end]*180/π, τii_cart_MD7[3:2:end], label="τii_cart_MD7", marker=:dtriangle )
-    lines!(ax1, θ*180/π, τii_cart_y, label="plastic yield", marker=:dtriangle )
+    lines!(ax1, θ*180/π, τii_cart_y, label="plastic yield")#, marker=:dtriangle )
     scatter!(ax1, θ[3:3:end]*180/π, τii_min[3:3:end], label="τii_min", marker=:xcross )
     # Principal plane
     lines!(ax1, θ*180/π, τii_rot2, label="τii_rot2" )
@@ -193,7 +193,7 @@ function main_simple_ani_vis()
     scatter!(ax2, θ*180/π, plastic, label="plastic", marker=:xcross )
 
     ax3 = Axis(f[2, 1:2], title="Flow enveloppe", xlabel=L"$τ_{xx}$", ylabel=L"$τ_{xy}$", aspect=DataAspect())
-    lines!(ax3, τxx_cart, τxy_cart, marker=:xcross )
+    lines!(ax3, τxx_cart, τxy_cart)#, marker=:xcross )
     scatter!(ax3, τxx_rot, τxy_rot, marker=:xcross )
     scatter!(ax3, τxx_rot2, τxy_rot2, marker=:xcross )
 
@@ -203,16 +203,16 @@ function main_simple_ani_vis()
     @info "Control points"
     @printf("| dir. angle | lay. angle | tauxx    | tauxy   | σ1 angle |\n")
     i = 1
-    @printf("| %+1.4f   | %+1.4f   | %+1.4f | %+1.4f | %+1.4f |\n", (θ[i] - π/2)*180/π,  θ[i], τxx_cart[i], τxy_cart[i], σ1_angle[i])
+    @printf("| %+1.4f   | %+1.4f    | %+1.4f  | %+1.4f | %+1.4f |\n", (θ[i] - π/2)*180/π,  θ[i], τxx_cart[i], τxy_cart[i], σ1_angle[i])
 
     i = Int(round(length(θ)*1//3))
-    @printf("| %+1.4f   | %+1.4f   | %+1.4f  | %+1.4f | %+1.4f |\n", (θ[i] - π/2)*180/π, θ[i], τxx_cart[i], τxy_cart[i], σ1_angle[i])
+    @printf("| %+1.4f   | %+1.4f    | %+1.4f  | %+1.4f | %+1.4f |\n", (θ[i] - π/2)*180/π, θ[i], τxx_cart[i], τxy_cart[i], σ1_angle[i])
 
     i = Int(round(length(θ)*1//2))
-    @printf("| %+1.4f   | %+1.4f   | %+1.4f  | %+1.4f | %+1.4f |\n", (θ[i] - π/2)*180/π, θ[i], τxx_cart[i], τxy_cart[i], σ1_angle[i])
+    @printf("| %+1.4f   | %+1.4f    | %+1.4f  | %+1.4f | %+1.4f |\n", (θ[i] - π/2)*180/π, θ[i], τxx_cart[i], τxy_cart[i], σ1_angle[i])
 
     i = Int(round(length(θ)*2//3))
-    @printf("| %+1.4f  | %+1.4f    | %+1.4f  | %+1.4f | %+1.4f |\n", (θ[i] - π/2)*180/π, θ[i], τxx_cart[i], τxy_cart[i], σ1_angle[i])
+    @printf("| %+1.4f   | %+1.4f    | %+1.4f  | %+1.4f | %+1.4f |\n", (θ[i] - π/2)*180/π, θ[i], τxx_cart[i], τxy_cart[i], σ1_angle[i])
 
     display(f)
 

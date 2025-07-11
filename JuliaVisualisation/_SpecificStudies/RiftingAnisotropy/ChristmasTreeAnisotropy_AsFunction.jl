@@ -3,10 +3,10 @@ import Statistics:mean
 
 # Try to implement anistropic friction but resulting invariants are not objective
 
-@views function ChrismasTreeAniso()
-    # Anisotropy parameters
-    δ    = 3
-    θ    = π/4 #LinRange( 0.0, π, 51 ) .-0* π/2
+@views function ChrismasTreeAniso(δ, θ)
+    # # Anisotropy parameters
+    # δ    = 3
+    # θ    = π/4 #LinRange( 0.0, π, 51 ) .-0* π/2
     # Domain
     ymin       = -150e3
     ymax       = 0e3

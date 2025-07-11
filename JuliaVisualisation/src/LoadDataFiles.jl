@@ -75,11 +75,15 @@ function ReadFile(path, step, scales, options, PlotOnTop)
     ph_dual_hr   = ExtractField(filename,  "/VizGrid/compo_dual_hr", (ncx_hr, ncz_hr), false, 0)
     group_phases = copy(ph_hr); ph_hr[ph_hr.==-1.00] .=   NaN; ph_dual_hr[ph_dual_hr.==-1.00] .=   NaN;
     ηc           = ExtractField(filename,  "/Centers/eta_n", centroids, true, mask_air)
-    ρc    = Float64.(reshape(ExtractData( filename, "/Centers/rho_n"), ncx, ncz));          ρc[mask_air]  .= NaN
-    P     = Float64.(reshape(ExtractData( filename, "/Centers/P"), ncx, ncz));              P[mask_air]   .= NaN
-    T     = Float64.(reshape(ExtractData( filename, "/Centers/T"), ncx, ncz)) .- 273.15;    T[mask_air]   .= NaN
-    d     = Float64.(reshape(ExtractData( filename, "/Centers/d"), ncx, ncz));              d[mask_air]   .= NaN
-    ε̇pl   = Float64.(reshape(ExtractData( filename, "/Centers/eII_pl"), ncx, ncz));         ε̇pl[mask_air] .= NaN
+    ρc    = Float64.(reshape(ExtractData( filename, "/Centers/rho_n"), ncx, ncz));          ρc[mask_air]   .= NaN
+    P     = Float64.(reshape(ExtractData( filename, "/Centers/P"), ncx, ncz));              P[mask_air]    .= NaN
+    T     = Float64.(reshape(ExtractData( filename, "/Centers/T"), ncx, ncz)) .- 273.15;    T[mask_air]    .= NaN
+    d     = Float64.(reshape(ExtractData( filename, "/Centers/d"), ncx, ncz));              d[mask_air]    .= NaN
+    ε̇pl   = Float64.(reshape(ExtractData( filename, "/Centers/eII_pl"), ncx, ncz));         ε̇pl[mask_air]  .= NaN
+    ε̇el   = Float64.(reshape(ExtractData( filename, "/Centers/eII_el"), ncx, ncz));         ε̇el[mask_air]  .= NaN
+    ε̇pwl  = Float64.(reshape(ExtractData( filename, "/Centers/eII_pwl"), ncx, ncz));        ε̇pwl[mask_air] .= NaN
+    ε̇lin  = Float64.(reshape(ExtractData( filename, "/Centers/eII_lin"), ncx, ncz));        ε̇lin[mask_air] .= NaN
+
     Vx    = Float64.(reshape(ExtractData( filename, "/VxNodes/Vx"), (ncx+1), (ncz+2)))
     Vz    = Float64.(reshape(ExtractData( filename, "/VzNodes/Vz"), (ncx+2), (ncz+1)))
     τxx   = Float64.(reshape(ExtractData( filename, "/Centers/sxxd"), ncx, ncz))
@@ -99,6 +103,8 @@ function ReadFile(path, step, scales, options, PlotOnTop)
     C     = Float64.(reshape(ExtractData( filename, "/Centers/cohesion"), ncx, ncz))
     ϕ     = ExtractField(filename, "/Centers/phi", centroids, false, 0)
     divu  = ExtractField(filename, "/Centers/divu", centroids, false, 0)
+    εII_el   = Float64.(reshape(ExtractData( filename, "/Centers/strain_el"), ncx, ncz)); εII_el[mask_air]  .= NaN
+    εII_lin  = Float64.(reshape(ExtractData( filename, "/Centers/strain_lin"), ncx, ncz)); εII_lin[mask_air]  .= NaN
     εII_pwl  = Float64.(reshape(ExtractData( filename, "/Centers/strain_pwl"), ncx, ncz)); εII_pwl[mask_air]  .= NaN
     εII_pl   = Float64.(reshape(ExtractData( filename, "/Centers/strain_pl"), ncx, ncz)); εII_pl[mask_air]  .= NaN
     εII = εII_pwl + εII_pl
@@ -152,9 +158,8 @@ function ReadFile(path, step, scales, options, PlotOnTop)
     if PlotOnTop.ε̇1_axis 
         ε̇1 = PrincipalStress(ε̇xx, ε̇zz, ε̇xz, -1/3*divu) 
         @show extrema(ε̇1.x)
-
     end
 
-    return (tMy=tMy,length_unit=length_unit, Lx=Lx, Lz=Lz, xc=xc, zc=zc, ε̇II=ε̇II, τII=τII,
+    return (tMy=tMy,length_unit=length_unit, Lx=Lx, Lz=Lz, xc=xc, zc=zc, ε̇II=(ε̇II=ε̇II, ε̇el=ε̇el, ε̇lin=ε̇lin, ε̇pl=ε̇pl, ε̇pwl=ε̇pwl), τII=τII,
     coords=coords, V=V, T=T, ϕ=ϕ, σ1=σ1, ε̇1=ε̇1, PT=PT, Fab=Fab, height=height, all_phases=(ph=ph, ph_hr=ph_hr, ph_dual_hr=ph_dual_hr, group_phases=group_phases), εII=εII, C=C, Δ=Δ)
 end
