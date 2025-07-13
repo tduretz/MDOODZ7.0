@@ -20,15 +20,17 @@ const cm_y = y*100.
     path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/"
     path = "/Users/lcandiot/Developer/MDOODZ7.0/cmake-exec/ThanushikaSubduction/"
     # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/RiftingAnisotropy/d1/"
+    path ="/Users/tduretz/Downloads/"
     # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/RiftingMelting/"
 
+
     # File numbers
-    file_start = 0
+    file_start = 1000
     file_step  = 100
-    file_end   = 100
+    file_end   = 1000
 
     # Select field to visualise
-    # field = :Phases
+    field = :Phases
     # field = :Cohesion
     # field = :Density
     # field = :Viscosity  
@@ -42,7 +44,7 @@ const cm_y = y*100.
     # field = :Temperature
     # field = :Velocity_x
     # field = :Velocity_z
-    field = :Velocity
+    # field = :Velocity
     # field = :GrainSize
     # field = :Topography
     # field = :TimeSeries 
@@ -52,13 +54,14 @@ const cm_y = y*100.
     # field = :TimeSeries
     # field = :EffectiveFrictionTime
     # field = :ChristmasTree
+    field = :GPE
 
     # Define Tuple for enlargment window
     # zoom = ( 
-    #     xmin = -500, 
-    #     xmax = 500,
-    #     zmin = -300,
-    #     zmax = 5,
+    #     xmin = -200e3, 
+    #     xmax = 200e3,
+    #     zmin = -5e3,
+    #     zmax = 1e3,
     # )
 
     # Switches
@@ -557,6 +560,117 @@ const cm_y = y*100.
             lines!(ax1, mean(T, dims=1)[:], coords.c.z./Lc/1e3, )
             ax2 = Axis(f[1, 2], title = L"Temperature profile at $t$ = %$(tMy) Ma", xlabel = L"$T$ [C]", ylabel = L"$h$ [km]")
             lines!(ax2, mean(T, dims=1)[:], coords.c.z./Lc/1e3, )
+        end
+
+        if field==:GPE
+
+            f = Figure(size = (Lx/Lz/1.8*resol*2.5, 2.5*resol), fontsize=ftsz)
+
+            # Here we load data without NaNs
+            NaN_air = false
+            τxx  = ExtractField(filename,  "/Centers/sxxd",   centroids, NaN_air, mask_air)
+            P    = ExtractField(filename,  "/Centers/P",      centroids, NaN_air, mask_air)
+            T    = ExtractField(filename,  "/Centers/T",      centroids, NaN_air, mask_air)
+            ρc   = ExtractField(filename,  "/Centers/rho_n",  centroids, NaN_air, mask_air)
+            ρv   = ExtractField(filename,  "/Vertices/rho_s", vertices,  NaN_air, mask_air)
+            tagv = ExtractField(filename,  "/Flags/tag_s",    vertices,  NaN_air, mask_air)
+            tagc = ExtractField(filename,  "/Flags/tag_n",    centroids, NaN_air, mask_air)
+
+            ρc   = 0.25(ρv[1:end-1,1:end-1] .+ ρv[2:end,1:end-1] .+ ρv[1:end-1,2:end] .+ ρv[2:end,2:end])
+
+            height  = Float64.(ExtractData( filename, "/Topo/z_grid"));
+
+            # 
+            for I in CartesianIndices(ρc)
+                i, j = I[1], I[2]
+                ρ = 0.0
+                n = 0
+                if tagv[i,j] != 30
+                    ρ += ρv[i,j]
+                    n += 1
+                end
+                if tagv[i+1,j] != 30
+                    ρ += ρv[i+1,j]
+                    n += 1
+                end
+                if tagv[i,j+1] != 30
+                    ρ += ρv[i,j+1]
+                    n += 1
+                end
+                if tagv[i+1,j+1] != 30
+                    ρ += ρv[i+1,j+1]
+                    n += 1
+                end
+                if n > 0
+                    ρc[i,j] = ρ / n
+                else
+                    ρc[i,j] = 0
+                end
+            end
+
+            weight = zeros(size(ρc))
+
+            # 2D loop on centroids
+            for I in CartesianIndices(ρc)
+                i, j = I[1], I[2]
+                if j<size(ρc,2) # avoid to boundary
+                    if tagc[i,j] == -1
+                        weight[i,j] = 1.0
+                    end
+                    if tagc[i,j+1] == 31 
+                        h = 0.5*(height[i] + height[i+1])  # Height of surface within the cell        
+                        weight[i,j] = (h - zc[j]-Δz/2)/Δz  # Volume of rocks versus air                   
+                    end
+                end
+            end
+
+            # Example how to extract surface density 
+            ρsurf = zeros(size(ρc,1))
+            index = zeros(size(ρc,1))
+            for i in axes(ρc,1)
+                ind      = findlast(x->x>0, ρc[i,:]) 
+                index[i] = ind
+                ρsurf[i] = ρc[i,ind]
+            end
+        
+            # Relationships from Schmalholz et al. (2019) 
+            gz   = -9.81
+            σxx  = - P .+ τxx
+            ∫σxx = sum(σxx, dims=2)*Δz
+            Pl   = -(gz*reverse(cumsum(reverse(ρc.*weight, dims=2), dims=2))*Δz)
+            Po   = P .- Pl
+            ∫Po  = sum(Po, dims=2)*Δz
+            ∫τxx = sum(τxx, dims=2)*Δz
+            Fx   = ∫τxx - ∫Po
+            GPE  = sum(Pl, dims=2)*Δz
+            ∫σxz = sum(τxz, dims=2)*Δz
+            Pb   = -diff(∫σxz[:])/Δx
+
+            # Visualise
+            Lc    = 1000
+
+            ax1 = Axis(f[1, 1], title = L"Cell weights at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
+            hm = heatmap!(ax1, xc/Lc, zc/Lc, weight, colormap = (Reverse(:bilbao), α_heatmap)) 
+            AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, group_phases, Δ, Mak)                
+            Mak.Colorbar(f[1, 2], hm, label = L"$w$ [-]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
+            ylims!(ax1, -5, 5)
+ 
+            ax3 = Axis(f[2, 1], title = L"∫σxx dz at $t$ = %$(tMy) Ma", xlabel = L"$τII$ [MPa]", ylabel = L"$∫σxx$ [TN/m]")
+            lines!(ax3, xc/Lc, (∫σxx[:] .- ∫σxx[:][1])./1e12 )
+            xlims!(ax3, -200, 200)
+
+            ax2 = Axis(f[3, 1], title = L"Force at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$F$ [TN/m]")
+            lines!(ax2, xc/Lc, (Fx[:]  .-  Fx[1] )./1e12)
+            lines!(ax2, xc/Lc, (GPE[:] .-  GPE[1])./1e12)
+            xlims!(ax2, -200, 200)
+
+            ax4 = Axis(f[4, 1], title = L"Basal overpressure at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$Po$ [MPa]")
+            lines!(ax4, xc/Lc, (Po[:,1] )./1e6)
+            lines!(ax4, xc/Lc,  Pb ./1e6)
+            xlims!(ax4, -200, 200)
+
+
+            if printfig Print2Disk( f, path, string(field), istep) end
         end
 
         if field!=:EffectiveFrictionTime || istep!=file_end
