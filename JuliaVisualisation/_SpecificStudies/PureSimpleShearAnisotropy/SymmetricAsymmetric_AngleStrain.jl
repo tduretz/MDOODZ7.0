@@ -1,7 +1,7 @@
 # import Pkg
 # Pkg.activate(normpath(joinpath(@__DIR__, "../..")))
 using JuliaVisualisation
-using HDF5, Printf, Colors, ColorSchemes, MathTeXEngine, LinearAlgebra, FFMPEG, Statistics, UnPack
+using HDF5, Printf, Colors, ColorSchemes, MathTeXEngine, LinearAlgebra, FFMPEG, Statistics, UnPack, GeometryTypes
 using CairoMakie#, GLMakie
 Mak = CairoMakie
 Makie.update_theme!( fonts = (regular = texfont(), bold = texfont(:bold), italic = texfont(:italic)))
@@ -71,6 +71,8 @@ end
 
     # Set the path to your files
     path_LR ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/RiftingAnisotropy/d1/"
+    path_LR1 ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/RiftingAnisotropy/t0/"
+
 
     path_MR ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/RiftingAnisotropy/d1_5/"
     path_HR ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/RiftingAnisotropy/d6/"
@@ -193,80 +195,6 @@ end
     ftsz =  18*options.resol/500
     f = Figure(size = (2*0.85*Lx/4/Lz*options.resol*1.2, options.resol), fontsize=ftsz)
 
-    # if field==:Phases
-    #     ax1 = Axis(f[1, 1], title = L"Phases at $t$ = %$(tMy) Ma", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
-    #     hm = heatmap!(ax1, xc_hr./Lc, zc_hr./Lc, ph_hr, colormap = phase_colors)
-    #     # hm = heatmap!(ax1, xc_hr./Lc, zc_hr./Lc, ph_hr, colormap = :turbo)
-    #     hm = heatmap!(ax1, xc_hr./Lc, zc_hr./Lc, ph_dual_hr, colormap = :turbo)
-    #     AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, Fab, height, Lc, cm_y, all_phases, Δ, Mak)                
-    #     colsize!(f.layout, 1, Aspect(1, Lx/Lz))
-    #     Mak.Colorbar(f[1, 2], hm, label = "Phases", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
-    #     Mak.colgap!(f.layout, 20)
-    #     xlims!(ax1, window.xmin, window.xmax)
-    #     ylims!(ax1, window.zmin, window.zmax)
-    #     if printfig Print2Disk( f, path, string(field), istep) end
-    # end
-
-    # if field==:Viscosity
-    #     ax1 = Axis(f[1, 1], title = L"$\eta$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
-    #     hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(ηc), colormap = (:turbo, α_heatmap))
-    #     AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, Fab, height, Lc, cm_y, all_phases, Δ, Mak)                
-    #     colsize!(f.layout, 1, Aspect(1, Lx/Lz))
-    #     Mak.Colorbar(f[1, 2], hm, label = L"$\eta$ [Pa.s]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
-    #     Mak.colgap!(f.layout, 20)
-    #     xlims!(ax1, window.xmin, window.xmax)
-    #     ylims!(ax1, window.zmin, window.zmax)
-    #     if printfig Print2Disk( f, path, string(field), istep) end
-    # end
-
-    # if field==:Density
-    #     ax1 = Axis(f[1, 1], title = L"$\rho$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
-    #     hm = heatmap!(ax1, xc./Lc, zc./Lc, ρc, colormap = (:turbo, α_heatmap), colorrange=(2600, 3000))  
-    #     AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, Fab, height, Lc, cm_y, all_phases, Δ, Mak)                
-    #     colsize!(f.layout, 1, Aspect(1, Lx/Lz))
-    #     Mak.Colorbar(f[1, 2], hm, label = L"$\rho$ [kg.m$^{-3}$]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
-    #     Mak.colgap!(f.layout, 20)
-    #     xlims!(ax1, window.xmin, window.xmax)
-    #     ylims!(ax1, window.zmin, window.zmax)
-    #     if printfig Print2Disk( f, path, string(field), istep) end
-    # end
-
-    # if field==:Stress
-    #     ax1 = Axis(f[1, 1], title = L"$\tau_\textrm{II}$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
-    #     hm = heatmap!(ax1, xc./Lc, zc./Lc, τII./1e6, colormap = (:turbo, α_heatmap)) 
-    #     AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, Fab, height, Lc, cm_y, all_phases, Δ, Mak)                
-    #     colsize!(f.layout, 1, Aspect(1, Lx/Lz))
-    #     Mak.Colorbar(f[1, 2], hm, label = L"$\tau_\textrm{II}$ [MPa]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
-    #     Mak.colgap!(f.layout, 20)
-    #     xlims!(ax1, window.xmin, window.xmax)
-    #     ylims!(ax1, window.zmin, window.zmax)
-    #     if printfig Print2Disk( f, path, string(field), istep) end
-    # end
-
-    # if field==:Pressure
-    #     ax1 = Axis(f[1, 1], title = L"$P$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
-    #     hm = heatmap!(ax1, xc./Lc, zc./Lc, P./1e9, colormap = (:turbo, α_heatmap)) #, colorrange=(1,1.2)1e4*365*24*3600
-    #     AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, Fab, height, Lc, cm_y, all_phases, Δ, Mak)                
-    #     colsize!(f.layout, 1, Aspect(1, Lx/Lz))
-    #     Mak.Colorbar(f[1, 2], hm, label =  L"$P$ [GPa]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
-    #     Mak.colgap!(f.layout, 20)
-    #     xlims!(ax1, window.xmin, window.xmax)
-    #     ylims!(ax1, window.zmin, window.zmax)
-    #     if printfig Print2Disk( f, path, string(field), istep) end
-    # end
-
-    # if field==:Divergence
-    #     ax1 = Axis(f[1, 1], title = L"∇⋅V at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
-    #     hm = heatmap!(ax1, xc./Lc, zc./Lc, divu, colormap = (:turbo, α_heatmap))
-    #     AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, Fab, height, Lc, cm_y, all_phases, Δ, Mak)                
-    #     colsize!(f.layout, 1, Aspect(1, Lx/Lz))
-    #     Mak.Colorbar(f[1, 2], hm, label =  L"∇⋅V [s$^{-1}$]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
-    #     Mak.colgap!(f.layout, 20)
-    #     xlims!(ax1, window.xmin, window.xmax)
-    #     ylims!(ax1, window.zmin, window.zmax)
-    #     if printfig Print2Disk( f, path, string(field), istep) end
-    # end
-
     if field==:StrainRate
 
         # Switches
@@ -302,8 +230,10 @@ end
 
         AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, all_phases.group_phases, Δ/2, Mak)                
         
-        lines!(𝐗_moho[1].*ones(size(zc)), zc./Lc, color=:black, linewidth=3)
-        lines!( 𝐗_lab[1].*ones(size(zc)), zc./Lc, color=:black, linewidth=3)
+        # lines!(𝐗_moho[1].*ones(size(zc)), zc./Lc, color=:black, linewidth=3)
+        # lines!( 𝐗_lab[1].*ones(size(zc)), zc./Lc, color=:black, linewidth=3)
+
+        # text!(ax1, window.zmin, window.zmax)
 
 
         # Colorbar(f, hm, label = L"$\log_{10}$ $\varepsilon_\textrm{II}$ [-]", width = 30,
@@ -319,6 +249,17 @@ end
         xlims!(ax1, window.xmin, window.xmax)
         ylims!(ax1, window.zmin, window.zmax)
 
+
+        # Wite box with transparency
+        x1 = [65.; 150.]
+        z1 = [-100; -48.]
+        heatmap!(ax1, x1, z1, ones(length(x1), length(z1)), alpha= 0.7, colormap=:broc)
+        # poly!(ax1, Rectangle{Float32}(125, 25, 50, 50),    color = :gray, strokewidth = 2, strokecolor = :red)
+        Colorbar(f, hm, label = L"$\log_{10}$ $\varepsilon_\textrm{II}$ [-]", width = 320, height = 30,
+        labelsize = 40, ticklabelsize = 30, bbox=BBox(700, 1850, 690, 900),
+        alignmode = Outside(20), halign = :left, ticklabelcolor = :black, labelcolor = :black, vertical=false,
+        tickcolor = :black)
+
         # lines!(ax1, xc./Lc, log10.(ε̇II[:, 170]) )
         # lines!(ax1, xc./Lc, atand.(ε̇1.z[:, 170]) ./ ε̇1.x[:, 170] )
         # xlims!(ax1, window.xmin, window.xmax)
@@ -326,7 +267,21 @@ end
 
         ##############################################################
 
-        model = ReadFile(path_LR, step[1], scales, options, PlotOnTop)
+        # Switches
+        PlotOnTop = (
+            ph_contours   = true,  # add phase contours
+            fabric        = true,  # add fabric quiver (normal to director)
+            T_contours    = true,   # add temperature contours
+            topo          = false,
+            quiver_origin = false,
+            σ1_axis       = false,
+            ε̇1_axis       = false,
+            vel_vec       = false,
+            ϕ_contours    = false,
+            PT_window     = false,
+        )
+
+        model = ReadFile(path_LR1, step[1], scales, options, PlotOnTop)
         @unpack tMy, length_unit, Lx, Lz, xc, zc, ε̇II, τII, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, all_phases, εII, C, Δ = model
 
         𝐗_moho, 𝐗_lab = Moho_LAB_offset(all_phases, T, coords, height)
@@ -335,16 +290,23 @@ end
         stretch_string = @sprintf("%1.2lf", stretch)
         ax1 = Axis(f[1, 2], title = L"B) Anisotropic model ($\delta = 4$, $\theta_\text{ini} = 0^\text{o}$) -  $\varepsilon$ = %$(stretch_string) %", ylabel = L"$y$ [%$(length_unit)]", xgridvisible = false, ygridvisible = false, aspect=DataAspect())
         hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(εII), colormap = cmap, colorrange=(-1, 1))
-        AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, all_phases.group_phases, Δ/2, Mak)                
         
-        lines!(𝐗_moho[1].*ones(size(zc)), zc./Lc, color=:black, linewidth=3)
-        lines!( 𝐗_lab[1].*ones(size(zc)), zc./Lc, color=:black, linewidth=3)
+        AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, all_phases.group_phases, Δ, Mak)                
+        
+        # lines!(𝐗_moho[1].*ones(size(zc)), zc./Lc, color=:black, linewidth=3)
+        # lines!( 𝐗_lab[1].*ones(size(zc)), zc./Lc, color=:black, linewidth=3)
 
 
-        Colorbar(f, hm, label = L"$\log_{10}$ $\varepsilon_\textrm{II}$ [-]", width = 400, height = 30,
-        labelsize = 40, ticklabelsize = 30, bbox=BBox(1660, 1850, 690, 900),
-        alignmode = Outside(20), halign = :right, ticklabelcolor = :black, labelcolor = :black, vertical=false,
-        tickcolor = :black)
+        # # Wite box with transarency
+        # x1 = [65.; 150.]
+        # z1 = [-100; -48.]
+        # heatmap!(ax1, x1, z1, ones(length(x1), length(z1)), alpha= 0.9, colormap=:broc)
+        # # poly!(ax1, Rectangle{Float32}(125, 25, 50, 50),    color = :gray, strokewidth = 2, strokecolor = :red)
+        # Colorbar(f, hm, label = L"$\log_{10}$ $\varepsilon_\textrm{II}$ [-]", width = 320, height = 30,
+        # labelsize = 40, ticklabelsize = 30, bbox=BBox(1660+50, 1850, 690, 900),
+        # alignmode = Outside(20), halign = :left, ticklabelcolor = :black, labelcolor = :black, vertical=false,
+        # tickcolor = :black)
+
 
         # colsize!(f.layout, 2, Aspect(1, Lx/Lz))
         # Mak.Colorbar(f[1, 3], hm, label =  L"$\log_{10}$ $\varepsilon_\textrm{II}$ [-]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
@@ -393,8 +355,8 @@ end
 
         AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, all_phases.group_phases, Δ, Mak)                
         
-        lines!(𝐗_moho[1].*ones(size(zc)), zc./Lc, color=:black, linewidth=3)
-        lines!( 𝐗_lab[1].*ones(size(zc)), zc./Lc, color=:black, linewidth=3)
+        # lines!(𝐗_moho[1].*ones(size(zc)), zc./Lc, color=:black, linewidth=3)
+        # lines!( 𝐗_lab[1].*ones(size(zc)), zc./Lc, color=:black, linewidth=3)
         
         # colsize!(f.layout, 1, Aspect(1, Lx/Lz))
         # # Mak.Colorbar(f[2, 2], hm, label =  L"$\log_{10}$ $\varepsilon_\textrm{II}$ [-]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
@@ -428,7 +390,7 @@ end
 
         stretch = tMy * (1e-15*3600*24*365.25*1e6) *100
         stretch_string = @sprintf("%1.2lf", stretch)
-        ax1 = Axis(f[3, 1], title = L"D) Anisotropic model: $\delta = 6.0$ ($\theta_\text{ini} = 10^\text{o}$) - $\varepsilon$ = %$(stretch_string) %", ylabel = L"$y$ [%$(length_unit)]", xlabel = L"$x$ [%$(length_unit)]", xgridvisible = false, ygridvisible = false, aspect=DataAspect())
+        ax1 = Axis(f[2, 2], title = L"D) Anisotropic model: $\delta = 6.0$ ($\theta_\text{ini} = 10^\text{o}$) - $\varepsilon$ = %$(stretch_string) %", ylabel = L"$y$ [%$(length_unit)]", xlabel = L"$x$ [%$(length_unit)]", xgridvisible = false, ygridvisible = false, aspect=DataAspect())
         @show size(xc), size(zc), size(log10.(τII))
         # hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(τII), colormap = (cmap, options.α_heatmap), colorrange=(6.69, 8.69))
         # hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(εII), colormap = (cmap, options.α_heatmap), colorrange=(-1, 1))
@@ -438,14 +400,17 @@ end
 
         AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, all_phases.group_phases, Δ, Mak)                
         
-        lines!(𝐗_moho[1].*ones(size(zc)), zc./Lc, color=:black, linewidth=3)
-        lines!( 𝐗_lab[1].*ones(size(zc)), zc./Lc, color=:black, linewidth=3)
+        # lines!(𝐗_moho[1].*ones(size(zc)), zc./Lc, color=:black, linewidth=3)
+        # lines!( 𝐗_lab[1].*ones(size(zc)), zc./Lc, color=:black, linewidth=3)
 
         # # colsize!(f.layout, 1, Aspect(1, Lx/Lz))
         # # Mak.Colorbar(f[3, 2], hm, label =  L"$\log_{10}$ $\varepsilon_\textrm{II}$ [-]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
         # # Mak.colgap!(f.layout, 20)
         xlims!(ax1, window.xmin, window.xmax)
         ylims!(ax1, window.zmin, window.zmax)
+        hideydecorations!(ax1)
+        hidexdecorations!(ax1)
+
 
         ##############################################################
 
@@ -470,7 +435,7 @@ end
 
         stretch = tMy * (1e-15*3600*24*365.25*1e6) *100
         stretch_string = @sprintf("%1.2lf", stretch)
-        ax1 = Axis(f[2, 2], title = L"E) Anisotropic model: $\theta_\text{ini} = 80^\text{o}$ ($\delta = 4.0$) - $\varepsilon$ = %$(stretch_string) %", xgridvisible = false, ygridvisible = false, aspect=DataAspect())
+        ax1 = Axis(f[3, 1], title = L"E) Anisotropic model: $\theta_\text{ini} = 80^\text{o}$ ($\delta = 4.0$) - $\varepsilon$ = %$(stretch_string) %", xgridvisible = false, ygridvisible = false, aspect=DataAspect(), xlabel = L"$x$ [%$(length_unit)]", ylabel = L"$y$ [%$(length_unit)]")
         # hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(τII), colormap = (cmap, options.α_heatmap), colorrange=(6.69, 8.69))
         # hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(εII), colormap = (cmap, options.α_heatmap), colorrange=(-1, 1))
         # hm = heatmap!(ax1, coords.c_hr.x./Lc, coords.c_hr.z./Lc, all_phases.ph_dual_hr, colormap = :turbo)
@@ -479,8 +444,8 @@ end
 
         AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, all_phases.group_phases, Δ, Mak)                
         
-        lines!(𝐗_moho[1].*ones(size(zc)), zc./Lc, color=:black, linewidth=3)
-        lines!( 𝐗_lab[1].*ones(size(zc)), zc./Lc, color=:black, linewidth=3)
+        # lines!(𝐗_moho[1].*ones(size(zc)), zc./Lc, color=:black, linewidth=3)
+        # lines!( 𝐗_lab[1].*ones(size(zc)), zc./Lc, color=:black, linewidth=3)
         
         # # colsize!(f.layout, 1, Aspect(1, Lx/Lz))
         # # Mak.Colorbar(f[2, 3], hm, label =  L"$\log_{10}$ $\varepsilon_\textrm{II}$ [-]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
@@ -488,9 +453,6 @@ end
         # # Mak.colgap!(f.layout, 20)
         xlims!(ax1, window.xmin, window.xmax)
         ylims!(ax1, window.zmin, window.zmax)
-
-        hideydecorations!(ax1)
-        hidexdecorations!(ax1)
 
 
 
@@ -527,8 +489,8 @@ end
 
         AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, all_phases.group_phases, Δ, Mak)                
         
-        lines!(𝐗_moho[1].*ones(size(zc)), zc./Lc, color=:black, linewidth=3)
-        lines!( 𝐗_lab[1].*ones(size(zc)), zc./Lc, color=:black, linewidth=3)
+        # lines!(𝐗_moho[1].*ones(size(zc)), zc./Lc, color=:black, linewidth=3)
+        # lines!( 𝐗_lab[1].*ones(size(zc)), zc./Lc, color=:black, linewidth=3)
 
         # # colsize!(f.layout, 1, Aspect(1, Lx/Lz))
         # # Mak.Colorbar(f[3, 3], hm, label =  L"$\log_{10}$ $\varepsilon_\textrm{II}$ [-]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
