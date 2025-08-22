@@ -23,12 +23,12 @@ const cm_y = y*100.
     # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/RiftingMelting/"
 
     # File numbers
-    file_start = 240
+    file_start = 100
     file_step  = 10
-    file_end   = 240
+    file_end   = 100
 
     # Select field to visualise
-    # field = :Phases
+    field = :Phases
     # field = :Cohesion
     # field = :Density
     # field = :Viscosity  
@@ -67,8 +67,8 @@ const cm_y = y*100.
     framerate   = 12
     PlotOnTop = (
         ph_contours   = false,  # add phase contours
-        fabric        = false,   # add fabric quiver (normal to director)
-        T_contours    = false,  # add temperature contours
+        fabric        = true,   # add fabric quiver (normal to director)
+        T_contours    = true,  # add temperature contours
         topo          = false,
         quiver_origin = false,
         σ1_axis       = false,
@@ -85,7 +85,7 @@ const cm_y = y*100.
     resol       = 500
     mov_name    = "$(path)/_$(field)/$(field)"  # Name of the movie
     Lx, Lz      = 1.0, 1.0
-    LAB_color   = true
+    LAB_color   = false
     LAB_T       = 1250
 
     # Scaling
