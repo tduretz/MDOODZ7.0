@@ -4,7 +4,7 @@ irestart = 0
 
 /**** OUTPUT FILES ****/
 writer          = 1
-writer_step     = 1
+writer_step     = 20
 writer_markers  = 0
 writer_debug    = 0
 writer_energies = 0
@@ -18,13 +18,13 @@ T   = 700
 /**** SPACE-TIME ****/
 Nx          = 201
 Nz          = 201
-Nt          = 100
+Nt          = 1000
 xmin        =-25e3
 zmin        =-35e3
 xmax        = 25e3
 zmax        = 5e3
 dt          = 1e10
-constant_dt = 1
+constant_dt = 1             # We might have to use a constant dt for this setup
 Courant     = 0.2
 
 /**** SWITCHES ****/
@@ -140,8 +140,8 @@ G             = 4.0e9
 Cp            = 1050.0
 k             = 2.3        
 Qr            = 1e-6
-C             = 1e7
-phi           = 30.0
+C             = 1e6
+phi           = 15.0
 eta_vp        = 5.0e19
 Slim          = 500e9
 cstv          = 0             / constant visc law

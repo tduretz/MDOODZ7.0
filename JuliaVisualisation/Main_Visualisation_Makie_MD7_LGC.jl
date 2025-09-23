@@ -19,8 +19,8 @@ const cm_y = y*100.
 
     # File numbers
     file_start = 0
-    file_step  = 1
-    file_end   = 0
+    file_step  = 20
+    file_end   = 40
 
     # Select field to visualise
     # field = :Phases
@@ -61,7 +61,7 @@ const cm_y = y*100.
     printvid    = false
     framerate   = 12
     PlotOnTop = (
-        ph_contours   = false,  # add phase contours
+        ph_contours   = true,  # add phase contours
         fabric        = false,   # add fabric quiver (normal to director)
         T_contours    = false,  # add temperature contours
         topo          = false,
