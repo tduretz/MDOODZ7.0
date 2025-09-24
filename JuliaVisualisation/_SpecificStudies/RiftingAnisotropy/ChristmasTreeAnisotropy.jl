@@ -53,7 +53,7 @@ import Statistics:mean
     dil        = 0*π/180
     ηvp        = 0*1e21
     # Pressure in extension
-    X    = 1 / (sqrt((δ^2-1)*cos(2*θ)^2 + 1)/Δ, Mak)
+    X    = 1 / (sqrt((δ^2-1)*cos(2*θ)^2 + 1)/δ)
     ϕeff = asin(sin(fric) / X)
     @show ϕeff*180/π
     σH = -Pl*(1-sin(ϕeff))/(1+sin(ϕeff))
@@ -151,7 +151,7 @@ import Statistics:mean
                 τyy[ic]         = τ[2]
                 τxy[ic]         = τ[3]
                 ε̇xxd_v = Cpwl[ic] *τii^((npwl[ic] -1))*τxx[ic] 
-                ε̇xyd_v = Cpwl[ic] *τii^((npwl[ic] -1))*(τxy[ic] *Δ, Mak)
+                ε̇xyd_v = Cpwl[ic] *τii^((npwl[ic] -1))*(τxy[ic] * δ)
                 ε̇xxd_e = (τxx[ic] - τ0_rot[1,1])/2/ηe
                 ε̇xyd_e = (τxy[ic] - τ0_rot[1,2])/2/ηe*δ
                 ε̇xxd_p = γ̇*τxxt/τii/2
@@ -264,7 +264,7 @@ import Statistics:mean
         axislegend(position=:rb)
         display(f)
 
-        save("/Users/tduretz/PowerFolders/_manuscripts/RiftingAnisotropy/Figures/ChristmasTreeAnisotropy.png", f, px_per_unit = 4) 
+        # save("/Users/tduretz/PowerFolders/_manuscripts/RiftingAnisotropy/Figures/ChristmasTreeAnisotropy.png", f, px_per_unit = 4) 
 
         @show τii_rot1./τii_cart1
 
