@@ -419,6 +419,8 @@ void EnergyDirectSolve( grid *mesh, params model, double *rhs_t, markers *partic
                     mesh->T[c2]  = x[eqn];
                     dUt         += mesh->rho_n[c2]*mesh->Cp[c2]*dT;
                     if (mesh->T[c2] < 0.0) {
+                        // printf("%2.2f %1.2f\n", mesh->T[c2]*scaling.T, mesh->zc_coord[l]*scaling.L);
+                        // printf("%1.2e %1.2e %1.2e\n", mesh->alp[c2]/scaling.T, mesh->p0_n[c2]*scaling.S, mesh->p_in[c2]*scaling.S);
                         printf("Negative temperature --- Are you crazy! (EnergyDirectSolve)\n");
                         exit(1);
                     }
