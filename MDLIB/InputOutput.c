@@ -1158,6 +1158,7 @@ Input ReadInputFile( char *fileName ) {
     model.surface_processes  = ReadInt2( fin, "surface_processes",     0 ); // 1: diffusion; 2: diffusion + sedimentation
     model.marker_aniso_angle = ReadInt2( fin, "marker_aniso_angle",    0 ); // Enables setting anisotropy angle per particles rather than phases
     model.layering           = ReadInt2( fin, "layering",              0 ); // Activation of Layering (Anais setup)
+    model.inject_dikes       = ReadInt2( fin, "inject_dikes",          0 ); // Activation of dike and sill injection
     // Transformations
     model.chemical_diffusion  = ReadInt2( fin, "chemical_diffusion",              0 ); // Activate progressive reactions
     model.chemical_production = ReadInt2( fin, "chemical_production",              0 ); // Activate progressive reactions

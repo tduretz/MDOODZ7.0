@@ -255,3 +255,126 @@ void MassSourceTerm( grid* mesh, markers* particles, mat_prop *materials, params
 /*--------------------------------------------------------------------------------------------------------------------*/
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
+// This is the main function
+void InjectDikesAndSills(markers *particles, MdoodzInput *instance){
+    // Initialize and fix the semi-major and minor axis of the dikes, read in the rate and current time step to calcuted the magma budget
+    double semi_maj = 2.5e3 / instance->scaling.L; // This times 2 is the length of the dike
+    double semi_min = 1.0e3 / instance->scaling.L; // This times 2 is the width of the dike
+    double dike_ext = 0.5e3 / instance->scaling.L; // Extend of the dike in the third dimension. Used to calculate the area magma budget below
+    double dt       = instance->model.dt;          // Current time step - ACHTUNG this value is scaled
+    double conv     = pow(1000.0, 3) / (3600.0*24.0*365.25); // Convert km3/yr to m3/s
+    double Vdot     = instance->model.user4 * conv / (pow(instance->scaling.L, 3)) * instance->scaling.t;       // Fixed magma injection rate
+    double Abud     = Vdot / dike_ext * instance->model.dt;             // This is the area magma budget we need to get provide at the current time step
+    
+    // Initialize central coords, angle of the dikes to be injected, and the current area budget - these are not fixed but change during dike injection
+    double Lx         = instance->model.xmax - instance->model.xmin;
+    double Lz         = instance->model.zmax - instance->model.zmin;
+    double Ainj       = 0.0;
+    double xinj_s     = instance->model.xmin + Lx / 5.0; // Vertex coordinates of injection area
+    double xinj_e     = instance->model.xmax - Lx / 5.0;
+    double zinj_s     = instance->model.zmin + Lz / 5.0;
+    double zinj_e     = instance->model.zmax - Lz / 5.0;
+    double xc         = 0.0;
+    double zc         = 0.0;
+    double dx_dike    = 5.0 * instance->model.dx;
+    double dz_dike    = 5.0 * instance->model.dz;
+    double angle_dike = 0.0;
+    int    ph_dike    = (int)instance->model.user5;
+    double T_dike     = (instance->model.user6 + zeroC) / instance->scaling.T;
+
+    // Inject dikes until the area magma budget is met
+    int iter = 0, max_iter = 1e3;
+    double tol = 1e-8;
+    while (Ainj < Abud)
+    {
+        // Update counter
+        iter += 1;
+
+        // Calculate coordinates of dike center
+        xc = rand_between_float_asep(xinj_s + semi_min, xinj_e - semi_min, dx_dike, xc);
+        zc = rand_between_float_asep(zinj_s + semi_maj, zinj_e - semi_maj, dz_dike, zc);
+
+        // Depth dependent dike angle
+        if (zc * instance->scaling.L < -10.0e3)
+        {
+            angle_dike = rand_between_float(1.0, 15.0) / 180.0 * M_PI;
+        }
+        else{
+            angle_dike = rand_between_float(60.0, 120.0) / 180.0 * M_PI;
+        }
+
+        // Update injected dike area
+        Ainj += M_PI * semi_maj * semi_min;
+
+        // Assign new phase and temperature for particles within the injection zone
+        int    ip;
+        double xp, zp, xr, zr;
+#pragma omp parallel for shared(particles, xc, zc, xinj_s, xinj_e, zinj_s, zinj_e, semi_maj, semi_min, angle_dike, ph_dike, T_dike) private(ip, xp, zp, xr, zr)
+        for (ip = 0; ip < particles->Nb_part; ip++)
+        {
+            // Get local coords
+            xp = particles->x[ip];
+            zp = particles->z[ip];
+            // Only compute if we are in the injection zone
+            if ( 
+                (xinj_s <= xp && xinj_e >= xp) && 
+                (zinj_s <= zp && zinj_e >= zp)
+            )
+            {
+                // Compute particle coordinate w.r.t. dike location
+                xr =  (xp - xc) * cos(angle_dike) + (zp - zc) * sin(angle_dike);
+                zr = -(xp - xc) * sin(angle_dike) + (zp - zc) * cos(angle_dike);
+
+                // Reset phase and temperature for dike particle
+                if ( (xr*xr)/(semi_min*semi_min) + (zr*zr)/(semi_maj*semi_maj) <= 1.0 )
+                {
+                    particles->phase[ip] = ph_dike;
+                    particles->T[ip]     = T_dike;
+                }
+            }
+            
+        }
+        
+        // Break criterion
+        if (iter > max_iter)
+        {
+            printf(RED "WARNING: Maximum iteration reached befor the entire magma budget has been used\n");
+            printf(RED "Area budget: \t %.2f m2 \t Area injected: \t %.2f m2\n", Abud * pow(instance->scaling.L, 2), Ainj * pow(instance->scaling.L, 2));
+            break;
+        }
+    }
+}
+
+// This calculates a random number between two floats
+double rand_between_float(double min, double max){
+    return (min + ((double)rand() + 0.5) / ((double)RAND_MAX + 1.0) * (max - min)); // Adding 0.5 and 1.0 avoids the first value to be exactly min value
+}
+
+// This calculates a random number between two floats using an absolute separator
+double rand_between_float_asep(double min, double max, double sep, double prev){
+    double curr  = prev;    // Set initial guess for current value
+    int max_iter = 1e6;     // Maximum iteration limit
+    int count    = 0;       // counter
+
+    // Repeat computation until the desired distance is met
+    while (fabs(prev - curr) < sep)
+    {
+        // Increment counter
+        count += 1;
+
+        // Compute new value
+        curr = min + ((double)rand() + 0.5) / ((double)RAND_MAX + 1.0) * (max - min);
+
+        // Break condition
+        if (count > max_iter)
+        {
+            printf(RED "WARNING: Maximum iterations for rejection sampling reached. Previous value: \t %.4f | Current value: \t %.4f\n", prev, curr);
+            break;
+        }
+    }
+    
+    return curr; // Adding 0.5 and 1.0 avoids the first value to be exactly min value
+}
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/

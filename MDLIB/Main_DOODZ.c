@@ -440,6 +440,12 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
         //------------------------------------------------------------------------------------------------------------------------------//
 
+        // Inject dikes and sills
+        if (input.model.inject_dikes == 1)
+        {
+            InjectDikesAndSills(&particles, &input);
+        }
+
         TransmutateMarkers(&particles, &input.materials, input.scaling.T);
 
         // pipo: loading before advection and phase change swich: ----
@@ -470,7 +476,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
         // Track particule generation index
         Initialise1DArrayInt( particles.generation,   particles.Nb_part  , 0 );
-
+        
         //------------------------------------------------------------------------------------------------------------------------------//
 
         // Remove particles that would be above the surface
