@@ -19,8 +19,8 @@ const cm_y = y*100.
 
     # File numbers
     file_start = 0
-    file_step  = 1
-    file_end   = 10
+    file_step  = 20
+    file_end   = 100
 
     # Select field to visualise
     # field = :Phases
@@ -31,13 +31,13 @@ const cm_y = y*100.
     # field = :Stress
     # field = :σxx
     # field = :σzz
-    # field = :StrainRate
+    field = :StrainRate
     # field = :Pressure 
     # field = :Overpressure 
     # field = :PressureGradient_x
     # field = :PressureGradient_z
     # field = :Divergence
-    field = :Temperature
+    # field = :Temperature
     # field = :Velocity_x
     # field = :Velocity_z
     # field = :Velocity
@@ -52,12 +52,12 @@ const cm_y = y*100.
     # field = :ChristmasTree
 
     # Define Tuple for enlargment window
-    # zoom = ( 
-    #     xmin = -10e3, 
-    #     xmax = 10e3,
-    #     zmin = -15e3,
-    #     zmax = 5e3,
-    # )
+    zoom = ( 
+        xmin = -10e3, 
+        xmax = 10e3,
+        zmin = -15e3,
+        zmax = 5e3,
+    )
 
     # Switches
     printfig    = true  # print figures to disk
@@ -429,7 +429,7 @@ const cm_y = y*100.
 
         if field==:PressureGradient_x
             ax1 = Axis(f[1, 1], title = L"$\partial P \partial x$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
-            hm = heatmap!(ax1, xv[2:end-1]./Lc, zc./Lc, ∂P∂x, colormap = (:oslo, α_heatmap)) #, colorrange=(1,1.2)1e4*365*24*3600
+            hm = heatmap!(ax1, xv[2:end-1]./Lc, zc./Lc, ∂P∂x, colormap = (:bam, α_heatmap), colorrange = (-1e6, 1e6)) #, colorrange=(1,1.2)1e4*365*24*3600
             AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, group_phases, Δ, Mak)                
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
             Mak.Colorbar(f[1, 2], hm, label =  L"$P$ [GPa]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
@@ -441,7 +441,7 @@ const cm_y = y*100.
 
         if field==:PressureGradient_z
             ax1 = Axis(f[1, 1], title = L"$\partial P \partial z$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
-            hm = heatmap!(ax1, xc./Lc, zv[2:end-1]./Lc, ∂P∂z, colormap = (:oslo, α_heatmap)) #, colorrange=(1,1.2)1e4*365*24*3600
+            hm = heatmap!(ax1, xc./Lc, zv[2:end-1]./Lc, ∂P∂z, colormap = (:bam, α_heatmap), colorrange = (-1e6, 1e6)) #, colorrange=(1,1.2)1e4*365*24*3600
             AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, group_phases, Δ, Mak)                
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
             Mak.Colorbar(f[1, 2], hm, label =  L"$P$ [GPa]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )

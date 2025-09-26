@@ -41,13 +41,13 @@ int SetPhase(MdoodzInput *input, Coordinates coordinates) {
   // Set faulted zone
   if (s_l <= 0.0 && s_r >= 0.0 && z >= zc_e)
   {
-    phase = 0;
+    phase = 3;
   }
   
   // Set chamber and mush
-  // if (position_out <= 1.0) {
-  //   phase = 1;
-  // }
+  if (position_out <= 1.0) {
+    phase = 1;
+  }
   // if (position_inn <= 1.0) {
   //   phase = 2;
   // }
@@ -107,9 +107,9 @@ double SetTemperature(MdoodzInput *instance, Coordinates coordinates) {
   
   double particleTemperature = gradT * (-z) + surfaceTemperature;
 
-  // if (position_out <= 1.0) {
-  //   particleTemperature = Tamp;
-  // }
+  if (position_out <= 1.0) {
+    particleTemperature = Tamp;
+  }
   
   return particleTemperature;
 }
