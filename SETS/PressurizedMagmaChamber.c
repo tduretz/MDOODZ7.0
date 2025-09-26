@@ -13,22 +13,44 @@ double SetSurfaceZCoord(MdoodzInput *instance, double x_coord) {
 }
 
 int SetPhase(MdoodzInput *input, Coordinates coordinates) {
-  const double a_out = 4.0e3 / input->scaling.L;
-  const double b_out = 2.0e3 / input->scaling.L;
-  const double a_inn = 2.0e3 / input->scaling.L;
-  const double b_inn = 1.0e3 / input->scaling.L;
-  const double xc_e  = 0.0 / input->scaling.L;
-  const double zc_e  = -10.0e3 / input->scaling.L;
-  const double x = coordinates.x, z =  coordinates.z;
+  const double a_out   =   4.0e3 / input->scaling.L;
+  const double b_out   =   2.0e3 / input->scaling.L;
+  const double a_inn   =   2.0e3 / input->scaling.L;
+  const double b_inn   =   1.0e3 / input->scaling.L;
+  const double xc_e    =   0.0e3 / input->scaling.L;  // X-coord of ellipse center
+  const double zc_e    = -10.0e3 / input->scaling.L;  // Z-coord of ellipse center
+  const double d_f     =   1.0e3 / input->scaling.L;  // Fault zone width (true)
+  const double xc_fl   =   0.0e3 / input->scaling.L;  // X-coord of left fault boundary
+  const double zc_fl   =  -5.0e3 / input->scaling.L;  // Z-coord of left fault boundary
+  const double angle_f = 60.0 / 180.0 * M_PI;           // Fault zone angle
+  const double xc_fr   = cos(angle_f) * d_f + xc_fl;  // X-coord of right fault boundary
+  const double zc_fr   = sin(angle_f) * d_f + zc_fl;  // Z-coord of right fault boundary
+  const double x = coordinates.x, z =  coordinates.z; // Coords of current marker
+
+  // Determine position of marker w.r.t. magma chamber (ellipse)
   const double position_out = (x - xc_e) * (x - xc_e) / (a_out * a_out) + (z - zc_e) * (z - zc_e) / (b_out * b_out);
   const double position_inn = (x - xc_e) * (x - xc_e) / (a_inn * a_inn) + (z - zc_e) * (z - zc_e) / (b_inn * b_inn);
+  
+  // Determine position of marker w.r.t. fault zone
+  const double s_l = -(sin(angle_f) * (x - xc_fl) + cos(angle_f) * (z - zc_fl)); // Signed value: if s >= 0 -> point is above fault boundary, s <= 0 point is below fault boundary
+  const double s_r = -(sin(angle_f) * (x - xc_fr) + cos(angle_f) * (z - zc_fr));
+  
+  // Initialize phase for current marker
   int phase = 0;
-  if (position_out <= 1.0) {
-    phase = 1;
+
+  // Set faulted zone
+  if (s_l <= 0.0 && s_r >= 0.0 && z >= zc_e)
+  {
+    phase = 0;
   }
-  if (position_inn <= 1.0) {
-    phase = 2;
-  }
+  
+  // Set chamber and mush
+  // if (position_out <= 1.0) {
+  //   phase = 1;
+  // }
+  // if (position_inn <= 1.0) {
+  //   phase = 2;
+  // }
   return phase;
 }
 
@@ -85,9 +107,9 @@ double SetTemperature(MdoodzInput *instance, Coordinates coordinates) {
   
   double particleTemperature = gradT * (-z) + surfaceTemperature;
 
-  if (position_out <= 1.0) {
-    particleTemperature = Tamp;
-  }
+  // if (position_out <= 1.0) {
+  //   particleTemperature = Tamp;
+  // }
   
   return particleTemperature;
 }

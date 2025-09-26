@@ -4,7 +4,7 @@ irestart = 0
 
 /**** OUTPUT FILES ****/
 writer          = 1
-writer_step     = 20
+writer_step     = 1
 writer_markers  = 0
 writer_debug    = 0
 writer_energies = 0
@@ -16,9 +16,9 @@ V   = 1.0e-7
 T   = 700
 
 /**** SPACE-TIME ****/
-Nx          = 201
-Nz          = 201
-Nt          = 1000
+Nx          = 501
+Nz          = 401
+Nt          = 10
 xmin        =-25e3
 zmin        =-35e3
 xmax        = 25e3
@@ -85,22 +85,27 @@ gnuplot_log_res       = 0
 
 /**** SETUP DEPENDANT ****/
 shear_style     = 0
+inject_dikes    = 1
 bkg_strain_rate = 1e-15
 bkg_pressure    = 0.0e9
 user0           = 1100.0     / temperature [K]
 user1           = 3.1558e9
 user2           = 10.0
 user3           = 0
+user4           = 0.0001      / Magma Injection rate [km3/yr]
+user5           = 0         / Phase ID of the dike material
+user6           = 900.0     / Dike temperature [°C]
 
 /**** GRAVITY ****/
 gx = 0.0000
 gz = -9.81000
 
 /**** MAT PROPERTIES ****/
-Nb_phases = 3
+Nb_phases = 4
 
 /**** PHASE 0 ****/
 ID            = 0
+melt          = 10
 density_model = 3
 rho           = 2900.00         / Host rock
 drho          = 0
@@ -180,6 +185,35 @@ gbsv          = 0             / grain boundary sliding
 expv          = 0             / peierls creep
 gsel          = 0             / grain size evo.
 eta0          = 1.0e18
+npwl          = 1.0
+Qpwl          = 0
+Pr            = 1.0e80
+dPr           = 700.0e6
+tau_kin       = 3.1558e9
+k_chem        = 5.0e-26
+
+/**** PHASE 4 ****/
+ID            = 3
+density_model = 3
+rho           = 2900.00         / Faulted zone: identical to host rock except low friction angle and cohesion
+drho          = 0
+alp           = 3.2e-5
+bet           = 1.25e-11      / (K=80e9)
+G             = 4.0e10
+Cp            = 1050.0
+k             = 2.3
+Qr            = 1e-6
+C             = 1e6
+phi           = 5.0
+eta_vp        = 5.0e19
+Slim          = 500e9
+cstv          = 0             / constant visc law
+pwlv          = 13             / disloc. creep
+linv          = 0             / diff. creep
+gbsv          = 0             / grain boundary sliding
+expv          = 0             / peierls creep
+gsel          = 0             / grain size evo.
+eta0          = 1.0e25
 npwl          = 1.0
 Qpwl          = 0
 Pr            = 1.0e80

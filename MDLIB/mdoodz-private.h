@@ -211,6 +211,8 @@ void            ScaleMe(scale *);
 Input           ReadInputFile(char *fileName);
 void            UpdateInputFile(char[], int);
 int             ReadInt2(FILE *, char[], int);
+double          rand_between_float(double, double);                       // A random value between floats
+double          rand_between_float_asep(double, double, double, double);          // A random value between floats with an absolute separation distance
 double          ReadDou2(FILE *, char[], double);
 //float   ReadFlo2( FILE*, char[], float );
 double          ReadMatProps(FILE *, char[], int, double);
@@ -595,3 +597,4 @@ void            UpdateAlphaCp( grid*, markers*, mat_prop*, params*, scale* );
 void            MeltFractionGrid( grid*, markers*, mat_prop*, params*, scale* );
 void            MassSourceTerm( grid*, markers*, mat_prop*, params*, scale* );
 void            UpdateParticleDivThermal( grid*, scale, params, markers*, mat_prop* );
+void            InjectDikesAndSills(markers*, MdoodzInput*);

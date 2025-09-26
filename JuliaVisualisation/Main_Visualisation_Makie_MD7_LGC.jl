@@ -19,8 +19,8 @@ const cm_y = y*100.
 
     # File numbers
     file_start = 0
-    file_step  = 20
-    file_end   = 40
+    file_step  = 1
+    file_end   = 10
 
     # Select field to visualise
     # field = :Phases
@@ -33,6 +33,9 @@ const cm_y = y*100.
     # field = :σzz
     # field = :StrainRate
     # field = :Pressure 
+    # field = :Overpressure 
+    # field = :PressureGradient_x
+    # field = :PressureGradient_z
     # field = :Divergence
     field = :Temperature
     # field = :Velocity_x
@@ -50,10 +53,10 @@ const cm_y = y*100.
 
     # Define Tuple for enlargment window
     # zoom = ( 
-    #     xmin = -500, 
-    #     xmax = 500,
-    #     zmin = -300,
-    #     zmax = 5,
+    #     xmin = -10e3, 
+    #     xmax = 10e3,
+    #     zmin = -15e3,
+    #     zmax = 5e3,
     # )
 
     # Switches
@@ -74,8 +77,8 @@ const cm_y = y*100.
         reactions     = false
     )
     α_heatmap   = 1.0   # transparency of heatmap 
-    vel_arrow   = 5
-    vel_scale   = 0.00001
+    vel_arrow   = 10
+    vel_scale   = 1.0
     vel_step    = 10
     nap         = 0.1    # pause for animation 
     resol       = 500
@@ -181,6 +184,8 @@ const cm_y = y*100.
         ηc           = ExtractField(filename,  "/Centers/eta_n", centroids, true, mask_air)
         ρc    = Float64.(reshape(ExtractData( filename, "/Centers/rho_n"), ncx, ncz));          ρc[mask_air]  .= NaN
         P     = Float64.(reshape(ExtractData( filename, "/Centers/P"), ncx, ncz));              P[mask_air]   .= NaN
+        ∂P∂x  = diff(P, dims = 1) ./ (xc[2] .- xc[1])
+        ∂P∂z  = diff(P, dims = 2) ./ (zc[2] .- zc[1])
         T     = Float64.(reshape(ExtractData( filename, "/Centers/T"), ncx, ncz)) .- 273.15;    T[mask_air]   .= NaN
         d     = Float64.(reshape(ExtractData( filename, "/Centers/d"), ncx, ncz));              d[mask_air]   .= NaN
         ε̇pl   = Float64.(reshape(ExtractData( filename, "/Centers/eII_pl"), ncx, ncz));         ε̇pl[mask_air] .= NaN
@@ -189,8 +194,8 @@ const cm_y = y*100.
         τxx   = Float64.(reshape(ExtractData( filename, "/Centers/sxxd"), ncx, ncz))
         τzz   = Float64.(reshape(ExtractData( filename, "/Centers/szzd"), ncx, ncz))
         τyy   = -(τzz .+ τxx)
-        σzz   = -P + τzz
-        σxx   = -P + τxx
+        σzz   = -P .+ τzz
+        σxx   = -P .+ τxx
         τxz   = Float64.(reshape(ExtractData( filename, "/Vertices/sxz"), nvx, nvz))
         ε̇xx   = Float64.(reshape(ExtractData( filename, "/Centers/exxd"), ncx, ncz))
         ε̇zz   = Float64.(reshape(ExtractData( filename, "/Centers/ezzd"), ncx, ncz))
@@ -198,7 +203,7 @@ const cm_y = y*100.
         ε̇xz   = Float64.(reshape(ExtractData( filename, "/Vertices/exz"), nvx, nvz))
         τII   = sqrt.( 0.5*(τxx.^2 .+ τyy.^2 .+ τzz.^2 .+ 0.5*(τxz[1:end-1,1:end-1].^2 .+ τxz[2:end,1:end-1].^2 .+ τxz[1:end-1,2:end].^2 .+ τxz[2:end,2:end].^2 ) ) ); τII[mask_air] .= NaN
         ε̇II   = sqrt.( 0.5*(ε̇xx.^2 .+ ε̇yy.^2 .+ ε̇zz.^2 .+ 0.5*(ε̇xz[1:end-1,1:end-1].^2 .+ ε̇xz[2:end,1:end-1].^2 .+ ε̇xz[1:end-1,2:end].^2 .+ ε̇xz[2:end,2:end].^2 ) ) ); ε̇II[mask_air] .= NaN
-            
+        Pl = cumsum(ρc, dims = 2) .* (zc[2] .- zc[1])
         τxzc  = 0.25*(τxz[1:end-1,1:end-1] .+ τxz[2:end,1:end-1] .+ τxz[1:end-1,2:end] .+ τxz[2:end,2:end]) 
         C     = Float64.(reshape(ExtractData( filename, "/Centers/cohesion"), ncx, ncz))
         ϕ     = ExtractField(filename, "/Centers/phi", centroids, false, 0)
@@ -401,6 +406,42 @@ const cm_y = y*100.
         if field==:Pressure
             ax1 = Axis(f[1, 1], title = L"$P$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
             hm = heatmap!(ax1, xc./Lc, zc./Lc, P, colormap = (:turbo, α_heatmap)) #, colorrange=(1,1.2)1e4*365*24*3600
+            AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, group_phases, Δ, Mak)                
+            colsize!(f.layout, 1, Aspect(1, Lx/Lz))
+            Mak.Colorbar(f[1, 2], hm, label =  L"$P$ [GPa]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
+            Mak.colgap!(f.layout, 20)
+            xlims!(ax1, window.xmin, window.xmax)
+            ylims!(ax1, window.zmin, window.zmax)
+            if printfig Print2Disk( f, path, string(field), istep, Mak) end
+        end
+
+        if field==:Overpressure
+            ax1 = Axis(f[1, 1], title = L"$Po$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
+            hm = heatmap!(ax1, xc./Lc, zc./Lc, P.-Pl, colormap = (:turbo, α_heatmap), colorrange = (1e8, 3.5e8)) #, colorrange=(1,1.2)1e4*365*24*3600
+            AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, group_phases, Δ, Mak)                
+            colsize!(f.layout, 1, Aspect(1, Lx/Lz))
+            Mak.Colorbar(f[1, 2], hm, label =  L"$P$ [GPa]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
+            Mak.colgap!(f.layout, 20)
+            xlims!(ax1, window.xmin, window.xmax)
+            ylims!(ax1, window.zmin, window.zmax)
+            if printfig Print2Disk( f, path, string(field), istep, Mak) end
+        end
+
+        if field==:PressureGradient_x
+            ax1 = Axis(f[1, 1], title = L"$\partial P \partial x$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
+            hm = heatmap!(ax1, xv[2:end-1]./Lc, zc./Lc, ∂P∂x, colormap = (:oslo, α_heatmap)) #, colorrange=(1,1.2)1e4*365*24*3600
+            AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, group_phases, Δ, Mak)                
+            colsize!(f.layout, 1, Aspect(1, Lx/Lz))
+            Mak.Colorbar(f[1, 2], hm, label =  L"$P$ [GPa]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
+            Mak.colgap!(f.layout, 20)
+            xlims!(ax1, window.xmin, window.xmax)
+            ylims!(ax1, window.zmin, window.zmax)
+            if printfig Print2Disk( f, path, string(field), istep, Mak) end
+        end
+
+        if field==:PressureGradient_z
+            ax1 = Axis(f[1, 1], title = L"$\partial P \partial z$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
+            hm = heatmap!(ax1, xc./Lc, zv[2:end-1]./Lc, ∂P∂z, colormap = (:oslo, α_heatmap)) #, colorrange=(1,1.2)1e4*365*24*3600
             AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, group_phases, Δ, Mak)                
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
             Mak.Colorbar(f[1, 2], hm, label =  L"$P$ [GPa]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
