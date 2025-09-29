@@ -234,6 +234,13 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         P2Mastah( &input.model, particles, input.materials.Cp,    &mesh, mesh.Cp, mesh.BCp.type,  0, 0, interp, cent, 1);
         P2Mastah( &input.model, particles, input.materials.Qr,    &mesh, mesh.Qr, mesh.BCp.type,  0, 0, interp, cent, 1);
 
+        UpdateDensity( &mesh, &particles, &input.materials, &input.model, &input.scaling );
+        //   UpdateAlphaCp( &mesh, &particles, &input.materials, &input.model, &input.scaling );
+        MinMaxArrayTag( mesh.Cp,         input.scaling.Cp,             (mesh.Nx-1)*(mesh.Nz-1), "Cp     ", mesh.BCp.type );
+        MinMaxArrayTag( mesh.alp,    1.0/input.scaling.T,              (mesh.Nx-1)*(mesh.Nz-1), "alp     ", mesh.BCp.type );
+        MinMaxArrayTag( mesh.rho_s,      input.scaling.rho, (mesh.Nx-0)*(mesh.Nz-0), "rho_s     ", mesh.BCg.type );
+        MinMaxArrayTag( mesh.rho_n,      input.scaling.rho, (mesh.Nx-1)*(mesh.Nz-1), "rho_n     ", mesh.BCp.type );
+
         SetBCs(*setup->SetBCs, &input, &mesh, &topo);
         UpdateDensity( &mesh, &particles, &input.materials, &input.model, &input.scaling );
         if (input.model.initial_cooling == 1 ) ThermalSteps(   &mesh, input.model, mesh.rhs_t, &particles, input.model.cooling_duration, input.scaling );
@@ -253,7 +260,6 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
         MinMaxArrayTag( mesh.sxxd0, input.scaling.S,   (mesh.Nx-1)*(mesh.Nz-1), "Sxx initial ", mesh.BCp.type );
         MinMaxArrayTag( mesh.szzd0, input.scaling.S,   (mesh.Nx-1)*(mesh.Nz-1), "Szz initial ", mesh.BCp.type );
-
 
         printf("*************************************\n");
         printf("******** Initialize pressure ********\n");

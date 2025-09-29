@@ -4,7 +4,7 @@ const y    = 365*24*3600
 const My   = 1e6*y
 const cm_y = y*100.
 
-using Printf, HDF5
+using Printf, HDF5, LinearAlgebra
 
 include("LoadDataFiles.jl")
 export ExtractField, ReadFile, ExtractData, Print2Disk
