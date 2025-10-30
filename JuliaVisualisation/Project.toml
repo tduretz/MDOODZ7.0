@@ -22,6 +22,7 @@ SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
+Typstry = "f0ed7684-a786-439e-b1e3-3b82803b501e"
 UnPack = "3a884ed6-31ef-47d7-9d2a-63182c4928ed"
 
 [compat]
@@ -29,3 +30,4 @@ CairoMakie = "0.12.18"
 GridGeometryUtils = "0.1.10"
 MakieTeX = "0.4.3"
 Polynomials = "4.0.21"
+Typstry = "0.3.0"

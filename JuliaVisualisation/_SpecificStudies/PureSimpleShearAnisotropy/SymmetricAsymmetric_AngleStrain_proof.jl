@@ -193,7 +193,7 @@ end
 
     #####################################
     ftsz =  18*options.resol/500
-    f = Figure(size = (2*0.85*Lx/4/Lz*options.resol*1.2, options.resol), fontsize=ftsz,  fonts = (; regular = "helvetica"))
+    f = Figure(size = (2*0.85*Lx/4/Lz*options.resol*1.2, options.resol), fontsize=ftsz,  fonts = (; regular = "helvetica") )
 
     if field==:StrainRate
 
@@ -221,7 +221,7 @@ end
         stretch = tMy * (1e-15*3600*24*365.25*1e6) *100
         stretch_string = @sprintf("%1.2lf", stretch)
         # ax1 = Axis(f[1, 1], title = L"A) Isotropic model (δ$ = 1.0$, \text{\theta}$_\text{ini} = 10^\text{o}$) -  $\mathrm{\varepsilon}$ = %$(stretch_string) %", ylabel = L"$y$ (%$(length_unit))", xgridvisible = false, ygridvisible = false, aspect=DataAspect())
-        ax1 = Axis(f[1, 1], title = L="A) Isotropic model (δ = 1.0, θini = 10ᵒ) -  ε = 19.7 %", ylabel = "y (km)", titlefont = :regular, xgridvisible = false, ygridvisible = false, aspect=DataAspect())
+        ax1 = Axis(f[1, 1], title = L="A) Isotropic model (δ = 1.0, θini = 10ᵒ) -  ε = 19.7 %", ylabel = "y (km)", titlefont = :regular, xgridvisible = false, ygridvisible = false, aspect=DataAspect(), yticks = ([0, -25, -50], ["0", "25", "50"]))
 
         # hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(εII), colormap = Reverse(:amp), colorrange=(-1, 1))
         hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(εII), colormap = cmap, colorrange=(-1, 1))
@@ -262,6 +262,9 @@ end
         alignmode = Outside(20), halign = :left, ticklabelcolor = :black, labelcolor = :black, vertical=false,
         tickcolor = :black)
 
+        hidexdecorations!(ax1)
+
+
         # lines!(ax1, xc./Lc, log10.(ε̇II[:, 170]) )
         # lines!(ax1, xc./Lc, atand.(ε̇1.z[:, 170]) ./ ε̇1.x[:, 170] )
         # xlims!(ax1, window.xmin, window.xmax)
@@ -291,7 +294,7 @@ end
         stretch = tMy * (1e-15*3600*24*365.25*1e6) *100
         stretch_string = @sprintf("%1.2lf", stretch)
         # ax1 = Axis(f[1, 2], title = L"B) Anisotropic model ($\delta = 4$, $\theta_\text{ini} = 0^\text{o}$) -  $\varepsilon$ = %$(stretch_string) %", ylabel = L"$y$ (%$(length_unit))", xgridvisible = false, ygridvisible = false, aspect=DataAspect())
-        ax1 = Axis(f[1, 2], title = L="B) Anisotropic model: δ = 4.0 (θini = 0ᵒ) -  ε = 18.2 %", ylabel = "y (km)", titlefont = :regular, xgridvisible = false, ygridvisible = false, aspect=DataAspect())
+        ax1 = Axis(f[1, 2], title = L="B) Anisotropic model: δ = 4.0 (θini = 0ᵒ) -  ε = 18.2 %", ylabel = "y (km)", titlefont = :regular, xgridvisible = false, ygridvisible = false, aspect=DataAspect(), yticks = ([0, -25, -50], ["0", "25", "50"]))
 
         hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(εII), colormap = cmap, colorrange=(-1, 1))
         
@@ -320,7 +323,9 @@ end
         xlims!(ax1, window.xmin, window.xmax)
         ylims!(ax1, window.zmin, window.zmax)
 
+        hidexdecorations!(ax1)
         hideydecorations!(ax1)
+
 
         # lines!(ax1, xc./Lc, log10.(ε̇II[:, 170]) )
         # lines!(ax1, xc./Lc, atand.(ε̇1.z[:, 170]) ./ ε̇1.x[:, 170] )
@@ -351,7 +356,7 @@ end
         stretch = tMy * (1e-15*3600*24*365.25*1e6) *100
         stretch_string = @sprintf("%1.2lf", stretch)
         # ax1 = Axis(f[2, 1], title = L"C) Anisotropic model: $\delta = 1.5$ ($\theta_\text{ini} = 10^\text{o}$) - $\varepsilon$ = %$(stretch_string) %", ylabel = L"$y$ (%$(length_unit))", xgridvisible = false, ygridvisible = false, aspect=DataAspect())
-        ax1 = Axis(f[2, 1], title = L="C) Anisotropic model: δ = 1.5 (θini = 10ᵒ) -  ε = 22.6 %", ylabel = "y (km)", titlefont = :regular, xgridvisible = false, ygridvisible = false, aspect=DataAspect())
+        ax1 = Axis(f[2, 1], title = L="C) Anisotropic model: δ = 1.5 (θini = 10ᵒ) -  ε = 22.6 %", ylabel = "y (km)", titlefont = :regular, xgridvisible = false, ygridvisible = false, aspect=DataAspect(), yticks = ([0, -25, -50], ["0", "25", "50"]))
 
         # hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(τII), colormap = (cmap, options.α_heatmap), colorrange=(6.69, 8.69))
         # hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(εII), colormap = (cmap, options.α_heatmap), colorrange=(-1, 1))
@@ -397,7 +402,7 @@ end
         stretch = tMy * (1e-15*3600*24*365.25*1e6) *100
         stretch_string = @sprintf("%1.2lf", stretch)
         # ax1 = Axis(f[2, 2], title = L"D) Anisotropic model: $\delta = 6.0$ ($\theta_\text{ini} = 10^\text{o}$) - $\varepsilon$ = %$(stretch_string) %", ylabel = L"$y$ (%$(length_unit))", xlabel = L"$x$ (%$(length_unit))", xgridvisible = false, ygridvisible = false, aspect=DataAspect())
-        ax1 = Axis(f[2, 2], title = L="D) Anisotropic model: δ = 6.0 (θini = 10ᵒ) -  ε = 22.0 %", ylabel = "y (km)", titlefont = :regular, xgridvisible = false, ygridvisible = false, aspect=DataAspect())
+        ax1 = Axis(f[2, 2], title = L="D) Anisotropic model: δ = 6.0 (θini = 10ᵒ) -  ε = 22.0 %", ylabel = "y (km)", titlefont = :regular, xgridvisible = false, ygridvisible = false, aspect=DataAspect(), yticks = ([0, -25, -50], ["0", "25", "50"]))
 
         @show size(xc), size(zc), size(log10.(τII))
         # hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(τII), colormap = (cmap, options.α_heatmap), colorrange=(6.69, 8.69))
@@ -444,7 +449,7 @@ end
         stretch = tMy * (1e-15*3600*24*365.25*1e6) *100
         stretch_string = @sprintf("%1.2lf", stretch)
         # ax1 = Axis(f[3, 1], title = L"E) Anisotropic model: $\theta_\text{ini} = 80^\text{o}$ ($\delta = 4.0$) - $\varepsilon$ = %$(stretch_string) %", xgridvisible = false, ygridvisible = false, aspect=DataAspect(), xlabel = L"$x$ (%$(length_unit)) ", ylabel = L"$y$ (%$(length_unit))")
-        ax1 = Axis(f[3, 1], title = L="E) Anisotropic model: θini = 80ᵒ (δ = 4.0) -  ε = 18.7 %", xlabel = "x (km)", ylabel = "y (km)", titlefont = :regular, xgridvisible = false, ygridvisible = false, aspect=DataAspect())
+        ax1 = Axis(f[3, 1], title = L="E) Anisotropic model: θini = 80ᵒ (δ = 4.0) -  ε = 18.7 %", xlabel = "x (km)", ylabel = "y (km)", titlefont = :regular, xgridvisible = false, ygridvisible = false, aspect=DataAspect(), yticks = ([0, -25, -50], ["0", "25", "50"]))
         # hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(τII), colormap = (cmap, options.α_heatmap), colorrange=(6.69, 8.69))
         # hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(εII), colormap = (cmap, options.α_heatmap), colorrange=(-1, 1))
         # hm = heatmap!(ax1, coords.c_hr.x./Lc, coords.c_hr.z./Lc, all_phases.ph_dual_hr, colormap = :turbo)
@@ -489,7 +494,7 @@ end
         stretch = tMy * (1e-15*3600*24*365.25*1e6) *100
         stretch_string = @sprintf("%1.2lf", stretch)
         # ax1 = Axis(f[3, 2], title = L"F) Anisotropic model: $\theta_\text{ini} = 5^\text{o}$ ($\delta = 4.0$) - $\varepsilon$ = %$(stretch_string) %", xlabel = L"$x$ [%$(length_unit)]", xgridvisible = false, ygridvisible = false, aspect=DataAspect())
-        ax1 = Axis(f[3, 2], title = L="F) Anisotropic model: θini = 5ᵒ (δ = 4.0) -  ε = 20.8 %", xlabel = "x (km)",  ylabel = "y (km)", titlefont = :regular, xgridvisible = false, ygridvisible = false, aspect=DataAspect())
+        ax1 = Axis(f[3, 2], title = L="F) Anisotropic model: θini = 5ᵒ (δ = 4.0) -  ε = 20.8 %", xlabel = "x (km)",  ylabel = "y (km)", titlefont = :regular, xgridvisible = false, ygridvisible = false, aspect=DataAspect(), yticks = ([0, -25, -50], ["0", "25", "50"]))
         @show size(xc), size(zc), size(log10.(τII))
         # hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(τII), colormap = (cmap, options.α_heatmap), colorrange=(6.69, 8.69))
         # hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(εII), colormap = (cmap, options.α_heatmap), colorrange=(-1, 1))

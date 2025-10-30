@@ -482,12 +482,14 @@ let
     y  =  [theta[:,1] .- dy[1]/2; theta[end,1] .+ dy[end]/2] 
 
 
-    f = Figure(size = (1950, 1300), fontsize=40)
+    f = Figure(size = (1950, 1300), fontsize=40,  fonts = (; regular = "helvetica") )
 
     left = f[1:2,1]
     right = f[1:2,2:3]
 
-    ax1 = Axis(left[1, 1], title = L"$$A) Crust asymmetry", xlabel = L"δ [-]", ylabel = L"$\theta_\text{ini}$ ($^\circ$)")
+    # ax1 = Axis(left[1, 1], title = L"$$A) Crust asymmetry", xlabel = L"δ [-]", ylabel = L"$\theta_\text{ini}$ ($^\circ$)")
+    ax1 = Axis(left[1, 1], title = "A) Crust asymmetry", titlefont = :regular, xlabel = "δ", ylabel = "θini (ᵒ)")
+
     hm = heatmap!(ax1, x, y, crust', colorrange=(0, 120), colormap=:amp)
     ylims!(ax1, 0, 90)
  
@@ -502,7 +504,8 @@ let
 
     ######################################################################
 
-    ax2 = Axis(left[2, 1], title = L"$$B) Lithosphere asymmetry", xlabel = L"δ", ylabel = L"$\theta_\text{ini}$ ($^\circ$])")
+    ax2 = Axis(left[2, 1], title = "B) Lithosphere asymmetry", titlefont = :regular, xlabel = "δ", ylabel = "θini (ᵒ)")
+    
     # hm = heatmap!(ax2, delta[1,:], theta[:,1], offset') #, colorrange=(0, 50) 
     # hm = heatmap!(ax2, delta[1,:], theta[:,1], mantle') #, colorrange=(0, 50) 
     hm = heatmap!(ax2, x, y, mantle', colorrange=(0, 120), colormap=:amp ) # colorrange=(0, 20)`
@@ -636,7 +639,7 @@ phase_colors = cgrad(cmap, length(cmap), categorical=true, rev=false)
         resol       = 1000,
         Lx          = 1.0,
         Lz          = 1.0,
-        LAB_color   = true,
+        LAB_color   = false,
         LAB_T       = 1200,
     )
 
@@ -657,7 +660,8 @@ phase_colors = cgrad(cmap, length(cmap), categorical=true, rev=false)
     off = (abs(𝐗_moho[1] - 𝐗_lab[1]))
     tMy_string = @sprintf("%1.2lf", tMy)
     off_string = @sprintf("%1.2lf", off)
-    ax1 = Axis(right[1, 1], title = L"$$C) Symmetric crust / symmetric lithosphere (cross)", xlabel = L"$x$ (km)", ylabel = L"$y$ (km)", aspect=DataAspect(), yaxisposition = :right)
+    # ax1 = Axis(right[1, 1], title = L"$$C) Symmetric crust / symmetric lithosphere (cross)", xlabel = L"$x$ (km)", ylabel = L"$y$ (km)", aspect=DataAspect(), yaxisposition = :right, yticks = ([0, -50, -100, -150], ["0", "50", "100", "150"]))
+    ax1 = Axis(right[1, 1], title = "C) Symmetric crust / symmetric lithosphere (cross)", titlefont = :regular, xlabel = "x (km)", ylabel = "y (km)", aspect=DataAspect(), yaxisposition = :right, yticks = ([0, -50, -100, -150], ["0", "50", "100", "150"]))
 
         # Find x position of highest moho
     z_moho = zeros(size(all_phases.ph_hr, 1))
@@ -684,12 +688,15 @@ phase_colors = cgrad(cmap, length(cmap), categorical=true, rev=false)
     colors = [(cmap[i], 1-i/length(εII)) for i in 1:length(εII)]
 
     hm = heatmap!(ax1, coords.c.x./scales.Lc, coords.c.z/scales.Lc, (εII), colormap = (Reverse(colors), 1.0), colorrange=(0,1.5) )
-    text!(ax1, -245, -145, text=L"$%$(tMy_string)$ m.y.")
+    text!(ax1, -245, -145, text="$(tMy_string) m.y.")
 
     # lines!(ax1, 𝐗_moho[1].*ones(size(zc)), zc./1e3, color=:black, linewidth=3)
     # lines!(ax1,  𝐗_lab[1].*ones(size(zc)), zc./1e3, color=:black, linewidth=3)
-    lines!(ax1,  coords.c_hr.x./scales.Lc, z_moho./scales.Lc, color=:black, linewidth=3)
-    
+    # lines!(ax1,  coords.c_hr.x./scales.Lc, z_moho./scales.Lc, color=:black, linewidth=3)
+            
+
+    Mak.contour!(ax1, coords.c_hr.x./scales.Lc, coords.c_hr.z./scales.Lc, all_phases.group_phases, levels=-1:1:maximum(all_phases.group_phases), linewidth = 4, color=:black )  
+
     hidexdecorations!(ax1)
 
 
@@ -704,7 +711,7 @@ phase_colors = cgrad(cmap, length(cmap), categorical=true, rev=false)
     off = (abs(𝐗_moho[1] - 𝐗_lab[1]))
     tMy_string = @sprintf("%1.2lf", tMy)
     off_string = @sprintf("%1.2lf", off)
-    ax1 = Axis(right[2, 1], title = L"$$D) Symmetric crust / asymmetric lithosphere (star)", xlabel = L"$x$ (km)", ylabel = L"$y$ (km)", aspect=DataAspect(), yaxisposition = :right)
+    ax1 = Axis(right[2, 1], title = "D) Symmetric crust / asymmetric lithosphere (star)", titlefont = :regular, xlabel = "x (km)", ylabel = "y (km)", aspect=DataAspect(), yaxisposition = :right, yticks = ([0, -50, -100, -150], ["0", "50", "100", "150"]))
 
         # Find x position of highest moho
     z_moho = zeros(size(all_phases.ph_hr, 1))
@@ -733,11 +740,12 @@ phase_colors = cgrad(cmap, length(cmap), categorical=true, rev=false)
     colors = [(cmap[i], 1-i/length(εII)) for i in 1:length(εII)]
 
     hm = heatmap!(ax1, coords.c.x./scales.Lc, coords.c.z/scales.Lc, (εII), colormap = (Reverse(colors), 1.0), colorrange=(0,1.5) )
-    text!(ax1, -245, -145, text=L"$%$(tMy_string)$ m.y.")
+    text!(ax1, -245, -145, text="$(tMy_string) m.y.")
 
     # lines!(ax1, 𝐗_moho[1].*ones(size(zc)), zc./1e3, color=:black, linewidth=3)
     # lines!(ax1,  𝐗_lab[1].*ones(size(zc)), zc./1e3, color=:black, linewidth=3)
-    lines!(ax1,  coords.c_hr.x./scales.Lc, z_moho./scales.Lc, color=:black, linewidth=3)
+    # lines!(ax1,  coords.c_hr.x./scales.Lc, z_moho./scales.Lc, color=:black, linewidth=3)
+    Mak.contour!(ax1, coords.c_hr.x./scales.Lc, coords.c_hr.z./scales.Lc, all_phases.group_phases, levels=-1:1:maximum(all_phases.group_phases), linewidth = 4, color=:black )  
 
     hidexdecorations!(ax1)
 
@@ -750,7 +758,7 @@ phase_colors = cgrad(cmap, length(cmap), categorical=true, rev=false)
     off = (abs(𝐗_moho[1] - 𝐗_lab[1]))
     tMy_string = @sprintf("%1.2lf", tMy)
     off_string = @sprintf("%1.2lf", off)
-    ax1 = Axis(right[3, 1], title = L"$$E) Aymmetric crust / symmetric lithosphere (circle)", xlabel = L"$x$ (km)", ylabel = L"$y$ (km)", aspect=DataAspect(), yaxisposition = :right)
+    ax1 = Axis(right[3, 1], title = "E) Aymmetric crust / symmetric lithosphere (circle)", titlefont = :regular, xlabel = "x (km)", ylabel = "y (km)", aspect=DataAspect(), yaxisposition = :right, yticks = ([0, -50, -100, -150], ["0", "50", "100", "150"]))
 
     # Find x position of highest moho
     z_moho = zeros(size(all_phases.ph_hr, 1))
@@ -766,7 +774,7 @@ phase_colors = cgrad(cmap, length(cmap), categorical=true, rev=false)
 
     # ax1 = Axis(f[1, 1], title = L"Anisotropic model (\delta = 6)  at $t$ = %$(tMy_string) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
     hm = heatmap!(ax1, coords.c_hr.x./scales.Lc, coords.c_hr.z./scales.Lc, all_phases.ph_hr, colormap = phase_colors)
-    text!(ax1, -245, -145, text=L"$%$(tMy_string)$ m.y.")
+    text!(ax1, -245, -145, text="$(tMy_string) m.y.")
     # group_phases1 = copy(ph_hr)
     # group_phases1[isnan.(group_phases1)] .= -1 # add air
     # group_phases1[group_phases1.==1] .= 2   # remove inclusion
@@ -779,7 +787,8 @@ phase_colors = cgrad(cmap, length(cmap), categorical=true, rev=false)
 
     # lines!(ax1, 𝐗_moho[1].*ones(size(zc)), zc./1e3, color=:black, linewidth=3)
     # lines!(ax1,  𝐗_lab[1].*ones(size(zc)), zc./1e3, color=:black, linewidth=3)
-    lines!(ax1,  coords.c_hr.x./scales.Lc, z_moho./scales.Lc, color=:black, linewidth=3)
+    # lines!(ax1,  coords.c_hr.x./scales.Lc, z_moho./scales.Lc, color=:black, linewidth=3)
+    Mak.contour!(ax1, coords.c_hr.x./scales.Lc, coords.c_hr.z./scales.Lc, all_phases.group_phases, levels=-1:1:maximum(all_phases.group_phases), linewidth = 4, color=:black )  
 
     
     display(f)
