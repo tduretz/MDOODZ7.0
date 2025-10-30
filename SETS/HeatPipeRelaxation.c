@@ -19,9 +19,11 @@ int SetPhase(MdoodzInput *input, Coordinates coordinates) {
   const double x = coordinates.x, z =  coordinates.z;
   const double position_out = (x - xc_e) * (x - xc_e) / (a_out * a_out) + (z - zc_e) * (z - zc_e) / (b_out * b_out);
   int phase = 0;
+
   if (position_out <= 1.0) {
     phase = 1;
   }
+
   return phase;
 }
 
@@ -62,15 +64,38 @@ double SetDensity(MdoodzInput *input, Coordinates coordinates, int phase) {
 double SetTemperature(MdoodzInput *instance, Coordinates coordinates) {
   const double surfaceTemperature = (15.0+273.15) / instance->scaling.T;
   const double mantleTemperature  = (1400.0 + zeroC) / instance->scaling.T;
+  const double ttenpc             = (instance->model.zmin)*0.3;
   const double gradT              = (mantleTemperature - surfaceTemperature) / fabs(instance->model.zmin);
   const double Tamp               = (900.0 + zeroC) / instance->scaling.T;
-  const double z =  coordinates.z;
-  
+  const double z                  =  coordinates.z;
+  const double kappa              = (instance->materials.k[0])/(instance->materials.rho[0]*instance->materials.Cp[0]); // thermal diffusivity
+
   // Initial temperature: set the non linear function here
-  double particleTemperature      = (500.0 + zeroC) / instance->scaling.T;
+  //double particleTemperature      = (500.0 + zeroC) / instance->scaling.T;
 
   // Linear gradient example:
-  // double particleTemperature = gradT * (-z) + surfaceTemperature;
+  //double particleTemperature = gradT * (-z) + surfaceTemperature;
+
+  // O'reilly and Davies Heat pipe geotherm
+  // u = downward advection velocity / thermal diffusivity 
+  double u = ((instance->model.user4))/(kappa);
+  // Q = Volumetric heat production rate/ (density * heat capacity * Thermal diffusivity)
+  double Q = (instance->materials.Qr[0])/((instance->materials.rho[0])*(instance->materials.Cp[0])*(kappa));
+  
+  double particleTemperature = surfaceTemperature + Q * -z/u + ((mantleTemperature-surfaceTemperature-Q*fabs(instance->model.zmin)/u)/(1-exp(-u*fabs(instance->model.zmin))))*(exp(u*(-z-fabs(instance->model.zmin)))-exp(-u*fabs(instance->model.zmin)));
+
+  if (particleTemperature > 1800.0) {
+    particleTemperature = 1800.0;
+  }
+
+  //Linear to constant geotherm from KANKANAMGE AND MOORE 2019
+  // double particleTemperature = 0;
+
+  // if (z>((instance->model.zmin)*ttenpc)) {
+  //   particleTemperature = gradT * (-z) + surfaceTemperature;
+  // } else {
+  //   particleTemperature = mantleTemperature;
+  // }
 
   return particleTemperature;
 }
