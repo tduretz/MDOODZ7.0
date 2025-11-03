@@ -64,38 +64,40 @@ double SetDensity(MdoodzInput *input, Coordinates coordinates, int phase) {
 double SetTemperature(MdoodzInput *instance, Coordinates coordinates) {
   const double surfaceTemperature = (15.0+273.15) / instance->scaling.T;
   const double mantleTemperature  = (1400.0 + zeroC) / instance->scaling.T;
-  const double ttenpc             = (instance->model.zmin)*0.3;
   const double gradT              = (mantleTemperature - surfaceTemperature) / fabs(instance->model.zmin);
   const double Tamp               = (900.0 + zeroC) / instance->scaling.T;
-  const double z                  =  coordinates.z;
-  const double kappa              = (instance->materials.k[0])/(instance->materials.rho[0]*instance->materials.Cp[0]); // thermal diffusivity
+  const double d                  =  coordinates.z;
 
   // Initial temperature: set the non linear function here
   //double particleTemperature      = (500.0 + zeroC) / instance->scaling.T;
 
   // Linear gradient example:
-  //double particleTemperature = gradT * (-z) + surfaceTemperature;
+  //double particleTemperature = gradT * (-d) + surfaceTemperature;
 
   // O'reilly and Davies Heat pipe geotherm
-  // u = downward advection velocity / thermal diffusivity 
-  double u = ((instance->model.user4))/(kappa);
-  // Q = Volumetric heat production rate/ (density * heat capacity * Thermal diffusivity)
-  double Q = (instance->materials.Qr[0])/((instance->materials.rho[0])*(instance->materials.Cp[0])*(kappa));
-  
-  double particleTemperature = surfaceTemperature + Q * -z/u + ((mantleTemperature-surfaceTemperature-Q*fabs(instance->model.zmin)/u)/(1-exp(-u*fabs(instance->model.zmin))))*(exp(u*(-z-fabs(instance->model.zmin)))-exp(-u*fabs(instance->model.zmin)));
+  // Load and set values
+  const double T_s = surfaceTemperature;
+  const double T_D = mantleTemperature;
+  const double rho = instance->materials.rho[0];
+  const double c_p = instance->materials.Cp[0];
+  const double v_z = (instance->model.user4)/(instance->scaling.V);
+  const double H = instance->materials.Qr[0];
+  const double t_cond = instance->materials.k[0];
 
-  if (particleTemperature > 1800.0) {
-    particleTemperature = 1800.0;
-  }
+  // Spatial vals
+  const double z = (-d);
+  const double D = fabs(instance->model.zmin);
 
-  //Linear to constant geotherm from KANKANAMGE AND MOORE 2019
-  // double particleTemperature = 0;
+  // Dependent equations
+  const double kappa = ((t_cond)/(rho*c_p)); // thermal diffusivity (m^2/s)
+  // u = downward advection velocity / thermal diffusivity (m-1)
+  const double u = (v_z/kappa);
+  // Q (volumetric heat flux) = Volumetric heat production rate/ (density * heat capacity * Thermal diffusivity) (K m2)
+  const double Q = ((H)/(rho*c_p*kappa));
 
-  // if (z>((instance->model.zmin)*ttenpc)) {
-  //   particleTemperature = gradT * (-z) + surfaceTemperature;
-  // } else {
-  //   particleTemperature = mantleTemperature;
-  // }
+  const double particleTemperature = (T_s + Q * z/u + ((T_D-T_s-Q*D/u)/(1-exp(-u*D)))*(exp(u*(z-D))-exp(-u*D)));
+
+  //printf("checkvals: %e %e %e %e %e %e %e %e %e %e\n", kappa, u, Q, v_z, rho, c_p, H, z, D, t_cond);
 
   return particleTemperature;
 }

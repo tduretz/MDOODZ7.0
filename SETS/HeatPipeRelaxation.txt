@@ -13,13 +13,13 @@ writer_subfolder = ../outputs/test
 /**** SCALES ****/
 eta = 1e18
 L   = 5e3
-V   = 1.0e-7
-T   = 700
+V   = 1.51e-11 / kappa/D
+T   = 1400
 
 /**** SPACE-TIME ****/
 Nx          = 201
-Nz          = 101
-Nt          = 100
+Nz          = 51
+Nt          = 200
 xmin        =-200e3
 xmax        = 200e3
 zmin        =-50e3
@@ -66,7 +66,7 @@ lin_abs_mom       = 1e-10  / momentum tolerance (new in MD7.0)
 lin_rel_mom       = 1e-10
 
 /**** NON-LINEAR ITERATIONS ****/
-Newton                = 0
+Newton                = 1
 let_res_grow          = 0
 line_search_min       = 0.0 
 Picard2Newton         = 1
@@ -78,7 +78,7 @@ nonlin_abs_div        = 1e-9
 nonlin_rel_mom        = 1e-9
 nonlin_rel_div        = 1e-9
 min_eta               = 1e10
-max_eta               = 1e30
+max_eta               = 1e27
 safe_mode             = 0
 safe_dt_div           = 2.0
 max_num_stag          = 10
@@ -104,15 +104,15 @@ Nb_phases = 2
 /**** PHASE 0 ****/
 ID            = 0
 density_model = 3
-rho           = 2900.00         / Mantle
+rho           = 2900.00         / Mantle (kg/m^3)
 drho          = 0
 alp           = 3.2e-5          
 bet           = 1.25e-11      / (K=80e9)
 G             = 4.0e10
-Cp            = 1050.0        / heat capacity
-k             = 2.3           / thermal conductivity
-Qr            = 1e-6
-C             = 1e6           / cohesion
+Cp            = 1050.0        / heat capacity (J/kg/K)
+k             = 2.3           / thermal conductivity (W/m/k)
+Qr            = 1e-6         / (W/m3)
+C             = 1e7           / cohesion
 phi           = 44            / angle of friction
 eta_vp        = 5.0e19
 Slim          = 500e9
@@ -122,7 +122,7 @@ linv          = 40            / diff. creep
 gbsv          = 0             / grain boundary sliding
 expv          = 40            / peierls creep
 gsel          = 0             / grain size evo.
-
+eta0          = 1.0e23
 npwl          = 1.0
 Qpwl          = 0
 Pr            = 1.0e80
@@ -141,7 +141,7 @@ G             = 4.0e10
 Cp            = 1050.0
 k             = 2.3
 Qr            = 1e-6
-C             = 1e6
+C             = 1e7
 phi           = 44
 eta_vp        = 5.0e19
 Slim          = 500e9
@@ -151,7 +151,7 @@ linv          = 00            / diff. creep
 gbsv          = 0             / grain boundary sliding
 expv          = 0            / peierls creep
 gsel          = 0             / grain size evo.
-        / turn off viscosity to reach elasto-plastic limit
+eta0          = 1.0e23        / turn off viscosity to reach elasto-plastic limit
 npwl          = 1.0
 Qpwl          = 0
 Pr            = 1.0e80
