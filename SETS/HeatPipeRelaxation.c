@@ -61,9 +61,9 @@ double SetDensity(MdoodzInput *input, Coordinates coordinates, int phase) {
   }
 }
 
-double SetTemperature(MdoodzInput *instance, Coordinates coordinates) {
+double SetTemperature(MdoodzInput *instance, Coordinates coordinates, int phase) {
   const double surfaceTemperature = (15.0+273.15) / instance->scaling.T;
-  const double mantleTemperature  = (1400.0 + zeroC) / instance->scaling.T;
+  const double mantleTemperature  = (1000.0) / instance->scaling.T;
   const double gradT              = (mantleTemperature - surfaceTemperature) / fabs(instance->model.zmin);
   const double Tamp               = (900.0 + zeroC) / instance->scaling.T;
   const double d                  =  coordinates.z;
@@ -72,17 +72,17 @@ double SetTemperature(MdoodzInput *instance, Coordinates coordinates) {
   //double particleTemperature      = (500.0 + zeroC) / instance->scaling.T;
 
   // Linear gradient example:
-  //double particleTemperature = gradT * (-d) + surfaceTemperature;
+  //double particleTemperature = gradT * (-d) + surfaceTemperature;  
 
   // O'reilly and Davies Heat pipe geotherm
   // Load and set values
   const double T_s = surfaceTemperature;
   const double T_D = mantleTemperature;
-  const double rho = instance->materials.rho[0];
-  const double c_p = instance->materials.Cp[0];
+  const double rho = instance->materials.rho[1];
+  const double c_p = instance->materials.Cp[1];
   const double v_z = (instance->model.user4)/(instance->scaling.V);
-  const double H = instance->materials.Qr[0];
-  const double t_cond = instance->materials.k[0];
+  const double H = instance->materials.Qr[1];
+  const double t_cond = instance->materials.k[1];
 
   // Spatial vals
   const double z = (-d);
@@ -95,9 +95,14 @@ double SetTemperature(MdoodzInput *instance, Coordinates coordinates) {
   // Q (volumetric heat flux) = Volumetric heat production rate/ (density * heat capacity * Thermal diffusivity) (K m2)
   const double Q = ((H)/(rho*c_p*kappa));
 
-  const double particleTemperature = (T_s + Q * z/u + ((T_D-T_s-Q*D/u)/(1-exp(-u*D)))*(exp(u*(z-D))-exp(-u*D)));
+  double particleTemperature = (T_s + Q * z/u + ((T_D-T_s-Q*D/u)/(1-exp(-u*D)))*(exp(u*(z-D))-exp(-u*D)));
 
-  //printf("checkvals: %e %e %e %e %e %e %e %e %e %e\n", kappa, u, Q, v_z, rho, c_p, H, z, D, t_cond);
+  if (particleTemperature>1000)
+  {
+    particleTemperature == 1000/(instance->scaling.T);
+  }
+  
+  //printf("checkvals: %e %e %e %e %e %e %e %e %e %e\n", particleTemperature, u, Q, v_z, rho, c_p, H, z, D, t_cond);
 
   return particleTemperature;
 }
@@ -113,11 +118,11 @@ double SetVerticalVelocity(MdoodzInput *instance, Coordinates coordinates) {
 SetBC SetBCT(MdoodzInput *instance, POSITION position, Coordinates coordinates,  double particleTemperature) {
   SetBC     bc;
   const double surface_temperature =          zeroC  / instance->scaling.T;
-  const double mantleTemperature  = (1400.0 + zeroC) / instance->scaling.T;
-
+  const double basalTemperature  = (1000.0 + zeroC) / instance->scaling.T;
+  
   if (position == S) {
     bc.type  = constant_temperature;
-    bc.value = mantleTemperature;
+    bc.value = basalTemperature;
   }
   if (position == free_surface || position == N) {
     bc.type  = constant_temperature;

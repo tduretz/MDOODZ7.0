@@ -13,13 +13,13 @@ writer_subfolder = ../outputs/test
 /**** SCALES ****/
 eta = 1e18
 L   = 5e3
-V   = 1.51e-11 / kappa/D
-T   = 1400
+V   = 1e-7 / kappa/D
+T   = 700
 
 /**** SPACE-TIME ****/
 Nx          = 201
 Nz          = 51
-Nt          = 200
+Nt          = 100
 xmin        =-200e3
 xmax        = 200e3
 zmin        =-50e3
@@ -37,12 +37,12 @@ adiab_heating      = 2
 advection          = 1
 eta_average        = 1
 stress_rotation    = 1
-compressible       = 0
+compressible       = 1
 elastic            = 1
 plastic            = 1
 RK                 = 4
 periodic_x         = 0
-pure_shear_ALE     = 1
+pure_shear_ALE     = 0
 line_search        = 1
 free_surface       = 1
 free_surface_stab  = 1
@@ -86,7 +86,7 @@ gnuplot_log_res       = 0
 
 /**** SETUP DEPENDANT ****/
 shear_style     = 0
-bkg_strain_rate = 1e-19
+bkg_strain_rate = 1e-30
 bkg_pressure    = 0.0e9
 user0           = 1100.0     / temperature [K]
 user1           = 3.1558e9
@@ -111,7 +111,7 @@ bet           = 1.25e-11      / (K=80e9)
 G             = 4.0e10
 Cp            = 1050.0        / heat capacity (J/kg/K)
 k             = 2.3           / thermal conductivity (W/m/k)
-Qr            = 1e-6         / (W/m3)
+Qr            = 0         / (W/m3)
 C             = 1e7           / cohesion
 phi           = 44            / angle of friction
 eta_vp        = 5.0e19
@@ -140,7 +140,7 @@ bet           = 1.25e-11      / (K=80e9)
 G             = 4.0e10
 Cp            = 1050.0
 k             = 2.3
-Qr            = 1e-6
+Qr            = 0
 C             = 1e7
 phi           = 44
 eta_vp        = 5.0e19
