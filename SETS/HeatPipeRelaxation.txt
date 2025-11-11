@@ -8,7 +8,7 @@ writer_step     = 1
 writer_markers  = 0
 writer_debug    = 0
 writer_energies = 0
-writer_subfolder = ../outputs/test
+/writer_subfolder = ../outputs/test
 
 /**** SCALES ****/
 eta = 1e18
@@ -19,12 +19,13 @@ T   = 700
 /**** SPACE-TIME ****/
 Nx          = 201
 Nz          = 51
-Nt          = 100
+Nt          = 300
 xmin        =-200e3
 xmax        = 200e3
 zmin        =-50e3
 zmax        = 10e3
 dt          = 1e10
+dt_max      = 5e14
 constant_dt = 0
 Courant     = 0.49
 
@@ -36,7 +37,7 @@ shear_heating      = 1
 adiab_heating      = 2
 advection          = 1
 eta_average        = 1
-stress_rotation    = 1
+stress_rotation    = 2
 compressible       = 1
 elastic            = 1
 plastic            = 1
@@ -49,11 +50,6 @@ free_surface_stab  = 1
 initial_cooling    = 0
 subgrid_diffusion  = 2
 finite_strain      = 1
-
-/*** CHEMICAL ***/
-chemical_diffusion = 0  / 
-no_return          = 0 
-density_variations = 0  / renamed in MD7.0 (VolChangeReac)    
 
 /**** LINEAR ITERATIONS ****/
 lin_solver        = 2

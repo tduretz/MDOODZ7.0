@@ -61,7 +61,7 @@ double SetDensity(MdoodzInput *input, Coordinates coordinates, int phase) {
   }
 }
 
-double SetTemperature(MdoodzInput *instance, Coordinates coordinates, int phase) {
+double SetTemperature(MdoodzInput *instance, Coordinates coordinates) {
   const double surfaceTemperature = (15.0+273.15) / instance->scaling.T;
   const double mantleTemperature  = (1000.0) / instance->scaling.T;
   const double gradT              = (mantleTemperature - surfaceTemperature) / fabs(instance->model.zmin);
