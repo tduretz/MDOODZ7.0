@@ -371,7 +371,7 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
   else dt = model->dt;
 
   // Parameters for deformation map calculations
-  int    plastic = 0, constant = 0, dislocation = 0, peierls = 0, diffusion = 0, gbs = 0, elastic = model->elastic, kinetics = 0;
+  int    plastic = 0, tensile = 0, constant = 0, dislocation = 0, peierls = 0, diffusion = 0, gbs = 0, elastic = model->elastic, kinetics = 0;
   double tol = model->eta_tol, res_pl = 0.0, Tii = 0.0, Tii0 = sqrt(Txx0 * Txx0 + Txz0 * Txz0);
   double eta_lo = 0.0, eta_up = 0.0, eta_ve = 0.0;
   double eta_pwl = 0.0, eta_exp = 0.0, eta_vep = 0.0, eta_lin = 0.0, eta_el = 0.0, eta_gbs = 0.0, eta_cst = 0.0, eta_pl = 0.0;
@@ -393,7 +393,7 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
   double Ag;
   double Qkin = materials->Qkin[phase], Skin = materials->Skin[phase], kkin = materials->kkin[phase], Vkin, dG = -1.0, rho_eq, rho0;
 
-  double eta_vp0 = materials->eta_vp[phase], n_vp = materials->n_vp[phase], eta_vp = materials->eta_vp[phase];
+  double eta_vp0 = materials->eta_vp[phase], n_vp = materials->n_vp[phase], eta_vp = materials->eta_vp[phase], T_st = materials->T_st[phase];
   double dQdP = 0.0, K = 1.0 / beta;
   double F_trial0 = F_trial;
   double dFdgdot, divp = 0.0, Pc = P;
@@ -441,15 +441,16 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
 // printf("%d\n", materials->cstv[phase]);
 
   // Activate deformation mechanisms
-  if ( materials->cstv[phase] !=0                  ) constant    = 1;
+  if ( materials->cstv[phase]   !=0                  ) constant    = 1;
   // printf("%d\n", materials->cstv[phase]);
-  if ( materials->pwlv[phase] !=0                  ) dislocation = 1;
-  if ( materials->expv[phase] !=0 && T<TmaxPeierls ) peierls     = 1;
-  if ( materials->linv[phase] !=0                  ) diffusion   = 1;
-  if ( materials->gbsv[phase] !=0                  ) gbs         = 1;
-  if ( materials->gs[phase]   !=0                  ) gs          = 1;
-  if ( materials->kin[phase]  !=0                  ) kinetics    = 1;
-  if ( materials->plast[phase]!=0                  ) plastic     = 1;
+  if ( materials->pwlv[phase]   !=0                  ) dislocation = 1;
+  if ( materials->expv[phase]   !=0 && T<TmaxPeierls ) peierls     = 1;
+  if ( materials->linv[phase]   !=0                  ) diffusion   = 1;
+  if ( materials->gbsv[phase]   !=0                  ) gbs         = 1;
+  if ( materials->gs[phase]     !=0                  ) gs          = 1;
+  if ( materials->kin[phase]    !=0                  ) kinetics    = 1;
+  if ( materials->plast[phase]  !=0                  ) plastic     = 1;
+  if ( materials->tensile[phase]!=0                  ) tensile     = 1;
 
   // Turn of elasticity for the initialisation step  (viscous flow stress)
   if ( model->step    == 0                         ) elastic     = 0;
@@ -467,6 +468,9 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
   // Zero C limit
   if ( T< zeroC/scaling->T        ) T = zeroC/scaling->T;
 
+  // Avoid redundant plasticity formulation
+  if (plastic == 1 && tensile == 1){ plastic = 0; }
+  
   //------------------------------------------------------------------------//
 
   // Precomputations
@@ -619,7 +623,7 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
 
   // if (centroid==0 && index==65) printf("eta_ve = %2.4e Eii_pwl = %2.4e Eii=%2.4e C_pwl=%2.4e\n", eta_ve, *Eii_pwl, Eii, C_pwl);
 
-
+  is_pl = 0;
   //------------------------------------------------------------------------//
   if (plastic == 1) {
     // Check yield stress
@@ -628,7 +632,7 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
     // printf("Tii=%2.2e F=%2.2e C=%2.2e cos_fric=%2.2e P=%2.2e sin_fric=%2.2e\n", Tii*scaling->S, F_trial*scaling->S, C*scaling->S, cos_fric, P*scaling->S, sin_fric);
 
     double Tiic;
-    double Pc_chk;
+    double Pc_chk;  // <- This parameter does not seem to be used (comment by Lorenzo G. Candioti, 2025)
 
     if (F_trial > 1e-17) {
 
@@ -673,6 +677,137 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
       *Pcorr  = Pc;
       eta_vep = Tiic / (2.0*Eii);
       Tii     = Tiic;
+    }
+  }
+
+  // ----------------- Combined mode-I mode-II formulation of Popov et al. 2025, GMD
+  if (tensile == 1)
+  {
+    // Step 1: Get tensile yield parameters
+    double k        = sin_fric;
+    double kq       = sin_dil;
+    double c        = C * cos_fric;
+    double a        = pow(1.0 + pow(k, 2.0), 0.5 );
+    double b        = pow(1.0 + pow(kq, 2.0), 0.5);
+    double py       = (T_st + c/a) / (1.0 - k/a);     // Center of yield cap circle
+    double Ry       = py - T_st;                      // Radius of yield cap circle
+    double pd       = py - Ry * k/a;                  // Pressure coordinate of the delimiter point (yield)
+    double tau_d    = k * pd + c;                     // Stress coordinate of the delimiter point (yield)
+    double pq       = pd + kq * tau_d;                // Center of potential flow cap circle
+    double Rq       = pq - T_st;                      // Radius of potential flow cap circle
+    double R_haty   = pow(pow(Tii, 2.0) + pow((P - py), 2.0), 0.5);
+    double R_hatq   = pow(pow(Tii, 2.0) + pow((P - pq), 2.0), 0.5);
+    int    on_yield = 0, on_flow = 0;
+    gdot = 0.0, divp = 0.0;
+
+    double Tiic = Tii;
+    Pc = P;
+    // Step 2: Evaluate yield function
+    if (Tii *(py - pd) >= tau_d * (py - P))     // On Drucker-Prager yield
+    {
+      F_trial = Tii - k * P - c;
+    }else                                       // On Cap
+    {
+      F_trial = a * (R_haty - Ry);
+    }
+
+    // Step 3: Start correction if above the yield
+    if (F_trial > 1e-17)
+    {
+      // Initialize
+      is_pl = 1;
+      double R = 1.0, dR = 0.0, lam = 0.0, dlam = 0.0;
+      double dFdTii = 0.0, dFdP = 0.0, dTiidlam = 0.0, dPdlam = 0.0;          // Partial derivatives of F w.r.t. Tii and P, and of Tii and P w.r.t. multiplier gdot
+      double dQdTii = 0.0, trQ = 0.0;                                           // Partial derivatives of the flow Potential Q w.r.t. Tii and P (-> trace of potential)
+      double dFdlam = 0.0, R0 = 1.0;
+
+      // Newton iterations
+      for (int it = 0; it < nitmax; it++)
+      {
+        // Yield and flow conditions
+        on_yield = (Tiic *(py - pd) >= tau_d * (py - Pc));
+        on_flow  = (Tiic *(pq - pd) >= tau_d * (pq - Pc));
+
+        // Evaluate yield function
+        R_haty = pow(pow(Tiic, 2.0) + pow((Pc - py), 2.0), 0.5);
+        R_hatq = pow(pow(Tiic, 2.0) + pow((Pc - pq), 2.0), 0.5);
+        if (on_yield)                     // On Drucker-Prager yield
+        {
+          F_trial = Tiic - k * Pc - c;
+        }else                             // On Cap
+        {
+          F_trial = a * (R_haty - Ry);
+        }
+        // Get current residual and scaling
+        if (eta_vp0 == 0.0)
+        {
+          R = F_trial;
+        } else
+        {
+          R  = F_trial - (eta_vp0/dt) * lam;
+        }
+
+        // Residual check
+        if ( noisy>0 ) printf("%02d Viscoplastic iterations It., F = %2.2e Frel = %2.2e --- eta_vp0 = %2.2e\n", it, fabs(R), fabs(R)/fabs(R0), eta_vp0*scaling->eta);
+        if ( it > 0 && fabs(R) < tol || it > 0 && fabs(R)/fabs(R0) < tol ) break;
+        
+        // Compute partial derivatives of yield function
+        if (on_yield)     // ... on DP yield
+        {
+          dFdTii = 1.0;
+          dFdP   = -k;
+        }else
+        {                 // ... or on cap
+          dFdTii = a * Tiic / R_haty;
+          dFdP   = a * (Pc - py) / R_haty; 
+        }
+        if (on_flow)    // ... and flow potential on DP yield
+        {
+          dQdTii = 0.5;
+          trQ    = kq;
+        }else           // ... or on cap
+        {
+          dQdTii =  b * Tiic / (2.0 * R_hatq);
+          trQ    = -b * (Pc - pq) / R_hatq;
+        }
+        // Partial derivatives of Tii, P, and F w.r.t. multiplier
+        dTiidlam = -(2.0 * eta_ve / dt) * dQdTii;
+        dPdlam   =  K * trQ;
+        dFdlam   = dFdTii * dTiidlam + dFdP * dPdlam;
+        
+        // Compute residual derivative
+        if (eta_vp0 == 0.0)
+        {
+          dR = dFdlam;
+        } else
+        {
+          dR = dFdlam - (eta_vp0/dt);
+        }
+
+        //  Compute increment and assemble multiplier
+        dlam = -R / dR;
+        lam += dlam;
+        
+        //  Incremental stress update
+        Tiic += -2.0 * (eta_ve/dt) * dlam * dQdTii;
+        Pc   += K * dlam * trQ;
+
+        // Reference residual
+        if (it == 0)
+        {
+          R0 = R;
+        }
+
+        // Stop if Newton residual did not converge
+        if ( noisy>0 && it==nitmax-1 && (fabs(R) > tol || fabs(R)/fabs(R0) > tol)  ) { printf("Visco-Plastic iterations failed!\n"); exit(0);}
+      }
+      // Otherwise store values
+      *Pcorr  = Pc;
+      eta_vep = Tiic / (2.0*Eii);
+      Tii     = Tiic;
+      gdot    = lam / dt;
+      divp    = gdot * trQ;
+      eta_vp  = eta_vp0;
     }
   }
 
