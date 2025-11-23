@@ -1279,12 +1279,14 @@ Input ReadInputFile( char *fileName ) {
         materials.melt[k]     = (int)ReadMatProps( fin, "melt",     k,    0.0   );     // 0: No plasticity --- >1: Yes, the type should be selected accordingly 
         // Read plasticity switches
         materials.plast[k]    = (int)ReadMatProps( fin, "plast",    k,    1.0   );     // 0: No plasticity --- 1: Yes 
+        materials.tensile[k]  = (int)ReadMatProps( fin, "tensile",  k,    0.0   );     // 0: No tensile plasticity --- 1: Yes 
         materials.yield[k]    = (int)ReadMatProps( fin, "yield",    k,    1.0   );     // 1: Drucker-Prager
         // Read plasticity parameters
-        materials.sig_tens[k] = ReadMatProps( fin, "sig_tens", k,  1.0e7 )/ scaling.S; // Tension stress for hyperbolic Drucker-Prager
-        materials.sig1[k]     = ReadMatProps( fin, "sig1",     k,  1.0e7 )/ scaling.S; // Transition stress to 0 dilatancy for hyperbolic Drucker-Prager
-        materials.dsig1[k]    = ReadMatProps( fin, "dsig1",    k,  1.0e7 )/ scaling.S; // Width of transition for hyperbolic Drucker-Prager
-        materials.C[k]        = ReadMatProps( fin, "C",        k,  1.0e7 )  / scaling.S;
+        materials.sig_tens[k] = ReadMatProps( fin, "sig_tens", k,  1.0e7 ) / scaling.S; // Tension stress for hyperbolic Drucker-Prager
+        materials.sig1[k]     = ReadMatProps( fin, "sig1",     k,  1.0e7 ) / scaling.S; // Transition stress to 0 dilatancy for hyperbolic Drucker-Prager
+        materials.dsig1[k]    = ReadMatProps( fin, "dsig1",    k,  1.0e7 ) / scaling.S; // Width of transition for hyperbolic Drucker-Prager
+        materials.C[k]        = ReadMatProps( fin, "C",        k,  1.0e7 ) / scaling.S;
+        materials.T_st[k]     = ReadMatProps( fin, "T_st",     k, -10.0e6) / scaling.S; // Tensile strength for Popov 2025 combined mode-I, mode-II plasticity
         materials.phi[k]      = ReadMatProps( fin, "phi",      k,   30.0 )  * M_PI/ 180.0;
         materials.psi[k]      = ReadMatProps( fin, "psi",      k,    0.0 )  * M_PI/ 180.0;
         if (materials.psi[k]>0.0 && model.compressible==0) { printf("Set compressible=1 to activate dilation\n"); exit(1); }
