@@ -62,7 +62,7 @@ typedef struct {
           shear_heating, advection, finite_strain, conserv_interp;
   int surface_processes, loc_iter, therm_perturb, surf_ised1,
           surf_ised2, MantleID, topografix, reseed_markers, smooth_softening, fix_temperature;
-  double bkg_strain_rate, bkg_div_rate, user0, user1, user2, user3, user4, user5, user6, user7,
+  double planet_radius, bkg_strain_rate, bkg_div_rate, user0, user1, user2, user3, user4, user5, user6, user7,
           user8, user9;
   char  *import_file;
   char  *import_files_dir;

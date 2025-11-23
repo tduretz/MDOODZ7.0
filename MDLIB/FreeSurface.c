@@ -359,7 +359,7 @@ void InterpTopoPart2Grid( surface *topo, markers *topo_chain, params model, grid
     }
 
     // Correct for sides when working in polar mode
-    double Rad=6370e3/scaling.L, zW, zE;
+    double Rad=model.planet_radius, zW, zE;
     if ( model.polar==1 ) {
         zW = sqrt((Rad - mesh.xg_coord[   0] )*(Rad + mesh.xg_coord[   0]));
         zE = sqrt((Rad - mesh.xg_coord[Nx-1] )*(Rad + mesh.xg_coord[Nx-1]));

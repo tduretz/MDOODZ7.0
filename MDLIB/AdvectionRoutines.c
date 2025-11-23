@@ -623,10 +623,11 @@ void EvaluateCourantCriterion( double* Vx, double* Vz, params *model, scale scal
         printf("Courant number = %2.2e --- dtc     = %2.2e\n", C, dtc*scaling.t);
         
         // Surface dt
-        if ( model->surface_processes>0 ) {
+        if ( model->surface_processes==5 ) {
             dt_surf = C * dmin / fabs(Vinc) ;
             printf("Courant number = %2.2e --- dt_surf = %2.2e\n", C, dt_surf*scaling.t);
         }
+        else dt_surf = 2*dtc;
 
         // Timestep cutoff : Do not allow for very large timestep increase
         if (dtc > fact*model->dt0 ) {

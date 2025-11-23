@@ -17,7 +17,7 @@ const cm_y = y*100.
     path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/"
 
     # File numbers
-    file_start = 0
+    file_start = 00
     file_step  = 10
     file_end   = 00
 
@@ -27,7 +27,7 @@ const cm_y = y*100.
     # field = :Density
     # field = :Viscosity  
     # field = :PlasticStrainrate
-    # field = :Stress
+    field = :Stress
     # field = :σxx
     # field = :σzz
     # field = :StrainRate
@@ -75,7 +75,7 @@ const cm_y = y*100.
     vel_scale   = 0.00001
     vel_step    = 8
     nap         = 0.1    # pause for animation 
-    resol       = 500    # resolution
+    resol       = 300    # resolution
     ar          = 1.2    # aspect ratio for Makie
     mov_name    = "$(path)/_$(field)/$(field)"  # Name of the movie
     Lx, Lz      = 1.0, 1.0
