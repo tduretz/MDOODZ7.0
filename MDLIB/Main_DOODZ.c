@@ -510,7 +510,8 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
         //-----------------------------------------------------------------------------------------------------------
         // Interp P --> p0_n , p0_s
-        P2Mastah( &input.model, particles, particles.P,     &mesh, mesh.p0_n,   mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil);
+        P2Mastah( &input.model, particles, particles.P,   &mesh, mesh.p0_n,  mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil);
+        P2Mastah( &input.model, particles, particles.P,   &mesh, mesh.p0_s,  mesh.BCg.type,  1, 0, interp, vert, input.model.interp_stencil);
 
         // Interpolate Melt fraction
         P2Mastah( &input.model, particles, particles.phi,   &mesh, mesh.phi0_n , mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil);
