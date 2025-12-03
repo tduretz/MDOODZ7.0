@@ -359,7 +359,7 @@ void LocalIterationViscoElasticGrainSize(LocalIterationMutables mutables, LocalI
 
 double ViscosityConcise( int phase, double G, double T, double P, double d, double phi, double X0, double Exx, double Ezz, double Exz, double Txx0, double Tzz0, double Txz0, mat_prop* materials, params *model, scale *scaling, double *Txx, double *Tzz, double *Txz, double* etaVE, double* VEcoeff, double* Eii_el, double* Eii_pl, double* Eii_pwl, double* Eii_exp , double* Eii_lin, double* Eii_gbs, double* Eii_cst, double *d1, double strain_acc, double dil, double fric, double C, double P0, double T0,  double *X1, double *OverS, double *Pcorr, double *rho, double beta, double div, double *div_el, double *div_pl, double *div_r, double *Wtot, double *Wel, double *Wdiss, int post_process, int centroid, int final_update, int index ) {
 
-  printf("P0 in 1 = %.4e\n", P0);
+  // printf("P0 in 1 = %.4e\n", P0);
   // General paramaters
   int    it, nitmax = 20;
   int noisy = 0;
@@ -395,7 +395,7 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
   double Qkin = materials->Qkin[phase], Skin = materials->Skin[phase], kkin = materials->kkin[phase], Vkin, dG = -1.0, rho_eq, rho0;
 
   double eta_vp0 = materials->eta_vp[phase], n_vp = materials->n_vp[phase], eta_vp = materials->eta_vp[phase], T_st = materials->T_st[phase];
-  double dQdP = 0.0, K = 1.0 / beta;
+  double dQdTii = 1.0,  dQdP = 0.0, K = 1.0 / beta;
   double F_trial0 = F_trial;
   double dFdgdot, divp = 0.0, Pc = P;
   double Pmin = 1e5/scaling->S, Tiimin = 1e5/scaling->S;
@@ -503,7 +503,7 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
   double sin_fric = sin(fric);
   double sin_dil  = sin(dil);
 
-      printf("P0 in 2 = %.4e\n", P0);
+      // printf("P0 in 2 = %.4e\n", P0);
   if ( plastic==1 ) {
 
     Tyield     = C*cos_fric + P*sin_fric;
@@ -626,7 +626,6 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
   // if (centroid==0 && index==65) printf("eta_ve = %2.4e Eii_pwl = %2.4e Eii=%2.4e C_pwl=%2.4e\n", eta_ve, *Eii_pwl, Eii, C_pwl);
 
   is_pl = 0;
-  double dQdTii = 1.0;
   dQdP = 0.0;
   //------------------------------------------------------------------------//
   if (plastic == 1) {
@@ -683,6 +682,9 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
     }
   }
 
+      double lam_dot = 0.0;
+
+
   // ----------------- Combined mode-I mode-II formulation of Popov et al. 2025, GMD
   if (tensile == 1)
   {
@@ -702,15 +704,15 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
     double R_hatq   = sqrt(Tii*Tii + (P - pq)* (P - pq));
     int    on_yield = 0, on_flow = 0;
     gdot = 0.0, divp = 0.0;
-    on_yield = (Tii *(py - pd) >= tau_d * (py - P));
+    on_yield = (Tii *(py - pd)  >= tau_d * (py - P));
+
     is_pl = 0;
-    double lam_dot = 0.0;
 
     // Step 2: Evaluate yield function
     if (on_yield)     // On Drucker-Prager yield
     {
       F_trial = Tii - k * P - c;
-    }else                                       // On Cap
+    } else                                       // On Cap
     {
       F_trial = a * (R_haty - Ry);
     }
@@ -730,8 +732,8 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
       {
 
         // Yield and flow conditions
-        on_yield = (Tiic *(py - pd) >= tau_d * (py - Pc));
-        on_flow  = (Tiic *(pq - pd) >= tau_d * (pq - Pc));
+        on_yield = (Tiic *(py - pd) * 1e40) >= (tau_d * (py - Pc));
+        on_flow  = (Tiic *(pq - pd) * 1e40) >= (tau_d * (pq - Pc));
 
         // Regularization viscosity
         double abs_lam_dot = fabs(lam_dot);
@@ -766,12 +768,13 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
           dFdTii_eff = 0.0;
           dFdP_eff   = 0.0;
         }
+
         
         
         // Compute flow potential derivatives
         if (on_flow)
         {
-          dQdTii = 0.5;
+          dQdTii = 0.5       * 2; 
           dQdP   = -kq; // <- This might be -kq depending on the sign convention for pressure
           d2QdTii2 = 0.0;
           d2QdP2   = 0.0;
@@ -779,7 +782,7 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
           d2QdPT   = 0.0;
         }else
         {
-          dQdTii   = 0.5 * b * Tiic / R_hatq;
+          dQdTii   = 0.5 * b * Tiic / R_hatq          *       2;
           dQdP     = -b * (Pc - pq) / R_hatq;
           d2QdTii2 = 0.5 * b * (R_hatq*R_hatq - Tiic*Tiic) / (R_hatq*R_hatq*R_hatq);
           d2QdP2   = -b * (R_hatq*R_hatq - (Pc - pq)*(Pc - pq)) / (R_hatq*R_hatq*R_hatq);
@@ -799,13 +802,16 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
         }
         R_norm = sqrt(R1*R1 + R2*R2 + R3*R3);
 
-        // if (on_yield)
-        // {
-        //   printf("No. iter = %05d; mode = 2; R1 = %.4e; R2 = %.4e; R3 = %.4e; R_norm = %.4e; R/R0 = %.4e\n", it, R1, R2, R3, R_norm, R_norm / R0_norm);
-        // }else
-        // {
-        //   printf("No. iter = %05d; mode = 1; R1 = %.4e; R2 = %.4e; R3 = %.4e; R_norm = %.4e; R/R0 = %.4e\n", it, R1, R2, R3, R_norm, R_norm / R0_norm);
-        // }
+         if (centroid) {
+        if (on_yield)
+        {
+          printf("No. iter = %05d; mode = 2; R1 = %.4e; R2 = %.4e; R3 = %.4e; R_norm = %.4e; R/R0 = %.4e\n", it, R1, R2, R3, R_norm, R_norm / R0_norm);
+        }else
+        {
+          printf("No. iter = %05d; mode = 1; R1 = %.4e; R2 = %.4e; R3 = %.4e; R_norm = %.4e; R/R0 = %.4e\n", it, R1, R2, R3, R_norm, R_norm / R0_norm);
+        }
+      }
+
         
         // printf("R_norm = %.4e; R0_norm = %.4e; R/R0 = %.4e; nitmax = %d; atol = %.4e; rtol = %.4e;\n", R_norm, R0_norm, R_norm / R0_norm, nitmax, atol, rtol);
         if (R_norm < atol || R_norm / R0_norm < rtol) {
@@ -950,10 +956,15 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
       *Pcorr  = Pc;
       eta_vep = Tiic / (2.0*Eii);
       Tii     = Tiic;
-      gdot    = lam_dot * dQdTii;
-      divp    = lam_dot * dQdP;
+      gdot    = 2*lam_dot * dQdTii;
+      divp    = 1*lam_dot * dQdP;
+
+      if (centroid)    printf("Pc = %.4e, Pc = %.4e\n", Pc, (P  - K * dt * lam_dot * dQdP));
+
+
     }
   }
+
 
   // ----------------- Reaction volume changes, computation of updated density only on centroid nodes
   if ( centroid > 0 ) {
@@ -1021,18 +1032,20 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
       const double Eyy_el = ( Tyy - Tyy0)/2/eta_el;
       const double Exz_el = (*Txz - Txz0)/2/eta_el;
       *Eii_el   = sqrt(0.5*(Exx_el*Exx_el + Ezz_el*Ezz_el + Eyy_el*Eyy_el) + Exz_el*Exz_el);
-      double Exx_pl = gdot * (*Txx)/2.0/Tii * dQdTii;
-      double Exz_pl = gdot * (*Txz)/2.0/Tii * dQdTii;
+      double Exx_pl = gdot * (*Txx)/2.0/Tii;
+      double Exz_pl = gdot * (*Txz)/2.0/Tii;
       double div_pl = gdot * dQdP;
       double Exx_real = Exx - Txx0 / 2.0 / eta_el;
       double Exz_real = Exz - Txz0 / 2.0 / eta_el;
-      if (centroid == 1)
+      if (centroid == 1 && gdot>0.0)
       {
-        printf("Exxel + Exxpl = %.4e; Exx = %.4e; Exx_diff = %.4e\n", Exx_el + Exx_pl, Exx_real, Exx_real - Exx_el - Exx_pl);
-        printf("Exzel + Exzpl = %.4e; Exz = %.4e; Exz_diff = %.4e\n", Exz_el + Exz_pl, Exz_real, Exz_real - Exz_el - Exz_pl);
+        printf("-------------\n");
+        printf("dQdTii = %.4e\n", dQdTii);
+        printf("Exxel = %.4e, Exxpl = %.4e; Exx = %.4e; Exx_diff = %.4e\n", Exx_el, Exx_pl, Exx_real, Exx_real - Exx_el - Exx_pl);
+        printf("Exzel = %.4e, Exzpl = %.4e; Exz = %.4e; Exz_diff = %.4e\n", Exz_el, Exz_pl, Exz_real, Exz_real - Exz_el - Exz_pl);
         printf("div_e + div_p = %.4e; div = %.4e; divp = %.4e; dive = %.4e; div_diff = %.4e\n", -(Pc - P0) / (K*dt) + gdot * sin_dil, div, gdot * sin_dil, -(Pc - P0) / (K*dt), div + (Pc - P0) / (K*dt) - gdot * sin_dil);
         printf("gdot = %.4e; sin_dil = %.4e\n", gdot, sin_dil);
-        printf("Pc = %.4e; P = %.4e; P0 = %.4e\n", Pc, P, P0);
+        printf("Pc = %.4e; Pc1 = %.4e; P = %.4e; P0 = %.4e\n", Pc, P  - K * dt * lam_dot * dQdP, P , P0);
         printf("Model.step = %05d\n", model->step);
       }
     }
@@ -1243,7 +1256,7 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
         if ( fabs(mesh->phase_perc_n[p][c0])>min_fraction ) is_phase_active = true;
 
         if ( is_phase_active==true ) {
-          printf("P0 before = %.4e\n", mesh->p0_n[c0]);
+          // printf("P0 before centers = %.4e\n", mesh->p0_n[c0]);
           eta =  ViscosityConcise( p, mesh->mu_n[c0], mesh->T[c0], mesh->p_in[c0], mesh->d0_n[c0], mesh->phi0_n[c0], mesh->X0_n[c0], Exx, Ezz, Exz, mesh->sxxd0[c0], mesh->szzd0[c0], mesh->sxz0_n[c0], materials, model, scaling, &txx1, &tzz1, &txz1, &etaVE, &VEcoeff, &eII_el, &eII_pl, &eII_pwl, &eII_exp, &eII_lin, &eII_gbs, &eII_cst, &dnew, mesh->strain_n[c0], mesh->dil_n[c0], mesh->fric_n[c0], mesh->C_n[c0], mesh->p0_n[c0], mesh->T0_n[c0], &Xreac, &OverS, &Pcorr, &rho, mesh->bet_n[c0], mesh->div_u[c0], &div_el, &div_pl, &div_r, &Wtot, &Wel, &Wdiss, 1, 1, final_update, c0 );
           mesh->phase_eta_n[p][c0] = etaVE;
 
@@ -1382,6 +1395,8 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
         if ( fabs(mesh->phase_perc_s[p][c1])>min_fraction ) is_phase_active = true;
 
         if ( is_phase_active==true ) {
+
+          // printf("P0 before vertices = %.4e\n", mesh->p0_s[c1]);
 
           eta =  ViscosityConcise( p, mesh->mu_s[c1], mesh->T_s[c1], mesh->P_s[c1], mesh->d0_s[c1], mesh->phi0_s[c1], mesh->X0_s[c1], Exx, Ezz, Exz, mesh->sxxd0_s[c1], mesh->szzd0_s[c1], mesh->sxz0[c1], materials, model, scaling, &txx1, &tzz1, &txz1, &etaVE, &VEcoeff, &eII_el, &eII_pl, &eII_pwl, &eII_exp, &eII_lin, &eII_gbs, &eII_cst, &dnew, mesh->strain_s[c1], mesh->dil_s[c1], mesh->fric_s[c1], mesh->C_s[c1], mesh->p0_s[c1], 0.0, &Xreac, &OverS, &Pcorr, &rho, mesh->bet_s[c1], mesh->div_u_s[c1], &div_el, &div_pl, &div_r, &Wtot, &Wel, &Wdiss, 1, 0, final_update, c1 );
           mesh->phase_eta_s[p][c1] = etaVE;
