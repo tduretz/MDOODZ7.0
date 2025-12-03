@@ -23,9 +23,11 @@ int SetPhase(MdoodzInput *instance, Coordinates coordinates) {
   const double x = coordinates.x, z = coordinates.z;
   const double Mars_radius = 3390e3/instance->scaling.L;
   const double zMoho = Mars_radius + instance->model.user0/instance->scaling.L;
-  const double zLAB  = Mars_radius + instance->model.user1/instance->scaling.L;
-  const double angle = 35.*M_PI/180;
-  const double a_ell = 2.0*instance->model.user5/instance->scaling.L, b_ell = 0.5*instance->model.user5/instance->scaling.L;
+  double zLAB  = Mars_radius + instance->model.user1/instance->scaling.L;
+  if (x<0) zLAB  = Mars_radius + instance->model.user1/instance->scaling.L/2;
+  if (x>0) zLAB  = Mars_radius + instance->model.user1/instance->scaling.L*2;
+
+
   double x_ell, z_ell, X, Z;
   if ( instance->model.polar==0 ) {
       if (z < zMoho) {
@@ -43,12 +45,16 @@ int SetPhase(MdoodzInput *instance, Coordinates coordinates) {
   }
 
   // Draw ellipse
-  Z = Mars_radius - 55e3/instance->scaling.L;
+  const double angle = 45.*M_PI/180;
+  const double a_ell = 6.0*instance->model.user5/instance->scaling.L, b_ell = 0.5*instance->model.user5/instance->scaling.L;
+  Z = Mars_radius - 45e3/instance->scaling.L;
   X = 20e3/instance->scaling.L;
   x_ell = (x-X)*cos(angle) + (z-Z)*sin(angle);
   z_ell =-(x-X)*sin(angle) + (z-Z)*cos(angle);
-  if (pow(x_ell/a_ell,2.0) + pow(z_ell/b_ell,2.0) < 1.0) phase = 0;
-  
+  if (pow(x_ell/a_ell,2.0) + pow(z_ell/b_ell,2.0) < 1.0) phase = 3;
+  // Weak surface
+  const double Z_weak = Mars_radius - 5e3/instance->scaling.L;
+  if (z>Z_weak) phase = 3;
   return phase;
 }
 

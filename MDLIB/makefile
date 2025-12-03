@@ -2,7 +2,7 @@
 SHELL := /bin/bash
 
 # Compiler
-CC = gcc
+CC = gcc-15
 
 # Path to setup file folder
 SET_PATH = ../SETS

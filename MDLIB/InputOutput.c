@@ -199,7 +199,7 @@ void LoadBreakpointParticles( markers *particles, grid* mesh, markers *topo_chai
     fread( particles->Vz,   s3, particles->Nb_part, file);
     fread( particles->phi,  s3, particles->Nb_part, file);
     fread( particles->X  ,  s3, particles->Nb_part, file);
-    fread( particles->, s3, particles->Nb_part, file);
+    fread( particles->noise, s3, particles->Nb_part, file);
     fread( particles->phase, s1, particles->Nb_part, file);
     fread( particles->dual, s1, particles->Nb_part, file);
 
@@ -709,7 +709,7 @@ void MakeBreakpointParticles( markers *particles,  grid* mesh, markers *topo_cha
     fwrite( particles->Vz,    s3, particles->Nb_part, file);
     fwrite( particles->phi,   s3, particles->Nb_part, file);
     fwrite( particles->X  ,   s3, particles->Nb_part, file);
-    fwrite( particles->, s3, particles->Nb_part, file);
+    fwrite( particles->noise, s3, particles->Nb_part, file);
     fwrite( particles->phase, s1, particles->Nb_part, file);
     fwrite( particles->dual,  s1, particles->Nb_part, file);
 
@@ -1163,7 +1163,7 @@ Input ReadInputFile( char *fileName ) {
     model.chemical_production = ReadInt2( fin, "chemical_production",              0 ); // Activate progressive reactions
     model.smooth_softening    = ReadInt2( fin, "smooth_softening",      1 ); // Activates smooth explicit kinematic softening function
     // Background ambient conditions
-    model.planet_radius      = ReadDou2( fin, "planet_radius",  6370e3)/scaling.L; // Radius of planet for polar coordinates
+    model.planet_radius      = ReadDou2( fin, "planet_radius", 6370e3)/scaling.L; // Radius of planet for polar coordinates
     model.bkg_strain_rate    = ReadDou2( fin, "bkg_strain_rate", 1e-30)/scaling.E; // Background tectonic rate, default is close to zero to avoid any Nans of Infs in rheology
     model.bkg_div_rate       = ReadDou2( fin, "bkg_div_rate",      0.0)/scaling.E; // Background divergence rate
     model.bkg_pressure       = ReadDou2( fin, "bkg_pressure",      0.0)/scaling.S; // Background pressure
