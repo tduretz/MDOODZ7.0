@@ -27,7 +27,7 @@
 #include "string.h"
 #include "math.h"
 #include "mdoodz-private.h"
-#include "hdf5.h"
+#include <hdf5.h>
 #include "zlib.h"
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -258,8 +258,8 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
     char *FileName;
     double A[8];
     int k;
-    double *strain, *strain_el, *strain_pl, *strain_pwl, *strain_exp, *strain_lin, *strain_gbs, *X;
-    float *Crho_s, *Crho_n, *Ceta_s, *Ceta_n, *CVx, *CVz, *CP, *Csxxd, *Cszzd, *Csxz, *Cexxd, *Cezzd, *Cexz, *Cstrain, *Cstrain_el, *Cstrain_pl, *Cstrain_pwl, *Cstrain_exp, *Cstrain_lin, *Cstrain_gbs, *CT, *Cd;
+    double *strain, *strain_el, *strain_pl, *strain_pl_vol, *strain_pwl, *strain_exp, *strain_lin, *strain_gbs, *X;
+    float *Crho_s, *Crho_n, *Ceta_s, *Ceta_n, *CVx, *CVz, *CP, *Csxxd, *Cszzd, *Csxz, *Cexxd, *Cezzd, *Cexz, *Cstrain, *Cstrain_el, *Cstrain_pl, *Cstrain_pl_vol, *Cstrain_pwl, *Cstrain_exp, *Cstrain_lin, *Cstrain_gbs, *CT, *Cd;
     float *Cxg_coord, *Czg_coord, *Cxc_coord, *Czc_coord, *Czvx_coord, *Cxvz_coord;
     float *CeII_el, *CeII_pl, *CeII_pwl, *CeII_exp, *CeII_lin, *CeII_gbs, *CX;
     double *Fxx, *Fxz, *Fzx, *Fzz, *nx, *nz;
@@ -495,11 +495,17 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
     Cstrain_el  = DoodzMalloc( sizeof(float)*(model.Nx-1)*(model.Nz-1));
     DoubleToFloat( strain_el, Cstrain_el, (model.Nx-1)*(model.Nz-1) );
 
-    // Plastic strain
+    // Deviatoric plastic strain
     strain_pl  = DoodzCalloc((model.Nx-1)*(model.Nz-1), sizeof(double));
     P2Mastah( &model, *particles, particles->strain_pl,     mesh, strain_pl,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil);
     Cstrain_pl  = DoodzMalloc( sizeof(float)*(model.Nx-1)*(model.Nz-1));
     DoubleToFloat( strain_pl, Cstrain_pl, (model.Nx-1)*(model.Nz-1) );
+    
+    // Volumetric plastic strain
+    strain_pl_vol  = DoodzCalloc((model.Nx-1)*(model.Nz-1), sizeof(double));
+    P2Mastah( &model, *particles, particles->strain_pl_vol,     mesh, strain_pl_vol,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil);
+    Cstrain_pl_vol  = DoodzMalloc( sizeof(float)*(model.Nx-1)*(model.Nz-1));
+    DoubleToFloat( strain_pl_vol, Cstrain_pl_vol, (model.Nx-1)*(model.Nz-1) );
 
     // Power-law strain
     strain_pwl  = DoodzCalloc((model.Nx-1)*(model.Nz-1), sizeof(double));
@@ -769,6 +775,7 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
     AddFieldToGroup( FileName, "Centers" , "strain",    'f', (model.Nx-1)*(model.Nz-1), Cstrain, 1 );
     AddFieldToGroup( FileName, "Centers" , "strain_el", 'f', (model.Nx-1)*(model.Nz-1), Cstrain_el, 1 );
     AddFieldToGroup( FileName, "Centers" , "strain_pl", 'f', (model.Nx-1)*(model.Nz-1), Cstrain_pl, 1 );
+    AddFieldToGroup( FileName, "Centers" , "strain_pl_vol", 'f', (model.Nx-1)*(model.Nz-1), Cstrain_pl_vol, 1 );
     AddFieldToGroup( FileName, "Centers" , "strain_pwl", 'f', (model.Nx-1)*(model.Nz-1), Cstrain_pwl, 1 );
     AddFieldToGroup( FileName, "Centers" , "strain_exp", 'f', (model.Nx-1)*(model.Nz-1), Cstrain_exp, 1 );
     AddFieldToGroup( FileName, "Centers" , "strain_lin", 'f', (model.Nx-1)*(model.Nz-1), Cstrain_lin, 1 );
@@ -884,6 +891,7 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
     DoodzFree( strain     );
     DoodzFree( strain_el  );
     DoodzFree( strain_pl  );
+    DoodzFree( strain_pl_vol  );
     DoodzFree( strain_pwl );
     DoodzFree( strain_exp );
     DoodzFree( strain_lin );
@@ -891,6 +899,7 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
     DoodzFree( Cstrain     );
     DoodzFree( Cstrain_el  );
     DoodzFree( Cstrain_pl  );
+    DoodzFree( Cstrain_pl_vol  );
     DoodzFree( Cstrain_pwl );
     DoodzFree( Cstrain_exp );
     DoodzFree( Cstrain_lin );

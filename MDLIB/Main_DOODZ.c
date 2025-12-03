@@ -1031,6 +1031,9 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
         //------------------------------------------------------------------------------------------------------------------------------//
 
+        // Update accumulated strain
+        AccumulatedStrainII( &mesh, input.scaling, input.model, &particles,  mesh.xc_coord,  mesh.zc_coord, mesh.Nx-1, mesh.Nz-1, mesh.BCp.type );
+
         int error=0;
 
         if (input.model.advection == 1 ) {
@@ -1087,9 +1090,6 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
                 // Correction for particle inflow 1
                 if (input.model.pure_shear_ALE == -1 && input.model.periodic_x == 0) ParticleInflowCheck( &particles, &mesh,  &input, topo, 1, *setup->SetParticles );
-
-                // Update accumulated strain
-                AccumulatedStrainII( &mesh, input.scaling, input.model, &particles,  mesh.xc_coord,  mesh.zc_coord, mesh.Nx-1, mesh.Nz-1, mesh.BCp.type );
 
                 // Update deformation gradient tensor components
                 if (input.model.finite_strain == 1 ) DeformationGradient( mesh, input.scaling, input.model, &particles );

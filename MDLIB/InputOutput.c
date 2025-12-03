@@ -1163,6 +1163,7 @@ Input ReadInputFile( char *fileName ) {
     model.chemical_diffusion  = ReadInt2( fin, "chemical_diffusion",              0 ); // Activate progressive reactions
     model.chemical_production = ReadInt2( fin, "chemical_production",              0 ); // Activate progressive reactions
     model.smooth_softening    = ReadInt2( fin, "smooth_softening",      1 ); // Activates smooth explicit kinematic softening function
+    model.hardening_modulus   = ReadInt2( fin, "hardening_modulus",     0 ); // Activates linear softening via hardening modulus
     // Background ambient conditions
     model.bkg_strain_rate    = ReadDou2( fin, "bkg_strain_rate", 1e-30)/scaling.E; // Background tectonic rate, default is close to zero to avoid any Nans of Infs in rheology
     model.bkg_div_rate       = ReadDou2( fin, "bkg_div_rate",      0.0)/scaling.E; // Background divergence rate
@@ -1313,6 +1314,7 @@ Input ReadInputFile( char *fileName ) {
         double eps_coh = 1.0 / scaling.S;
         double eps_phi = 0.1  * M_PI / 180.0;
         double eps_psi = 0.1  * M_PI / 180.0;
+        materials.H_c[k]   = ReadMatProps( fin, "Hc",   k, 0.0) / scaling.S;
         printf("%d materials.coh_soft[k]=%d  materials.C[k] = %2.2e  materials.C_end[k] = %2.2e\n", k, materials.coh_soft[k],  materials.C[k]*scaling.S,  materials.C_end[k]*scaling.S);
         if ( materials.coh_soft[k] == 1 && fabs( materials.C_end[k]   - materials.C[k]  ) < eps_coh ) { printf("Please set a difference in cohesion, if not set coh_soft of phase %d to 0.0\n", k); exit(122); };
         if ( materials.phi_soft[k] == 1 && fabs( materials.phi_end[k] - materials.phi[k]) < eps_phi ) { printf("Please set a difference in friction angle, if not set phi_soft of phase %d to 0.0\n", k); exit(122); };
