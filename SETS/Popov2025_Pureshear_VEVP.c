@@ -3,8 +3,7 @@
 
 int SetPhase(MdoodzInput *input, Coordinates coordinates) {
   const double radius = input->model.user1 / input->scaling.L;
-  const double Lx = input->model.xmax - input->model.xmin;
-  if ( (coordinates.x - Lx/2.0) * (coordinates.x - Lx/2.0) + coordinates.z * coordinates.z < radius * radius ) {
+  if (coordinates.x * coordinates.x + coordinates.z * coordinates.z < radius * radius) {
     return 1;
   } else {
     return 0;
@@ -26,7 +25,7 @@ SetBC SetBCVx(MdoodzInput *input, POSITION position, Coordinates coordinates) {
   const double VxW = -input->model.user2 / input->scaling.L * input->scaling.t;
   const double VxE =  input->model.user2 / input->scaling.L * input->scaling.t;
   if (position == N || position == S || position == NW || position == SW || position == NE || position == SE) {
-    bc.value = 0.0;
+    bc.value = 0;
     bc.type  = constant_shear_stress;
   } else if (position == W) {
     bc.value = VxW;
@@ -48,7 +47,7 @@ SetBC SetBCVz(MdoodzInput *input, POSITION position, Coordinates coordinates) {
   const double VzS = -input->model.user3 / input->scaling.L * input->scaling.t;
   const double VzN =  input->model.user3 / input->scaling.L * input->scaling.t;
   if (position == W || position == E || position == SW || position == SE || position == NW || position == NE) {
-    bc.value = 0.0;
+    bc.value = 0;
     bc.type  = constant_shear_stress;
   } else if (position == S) {
     bc.value = VzS;
@@ -75,5 +74,5 @@ int main() {
                   .SetBCVz = SetBCVz,
           },
   };
-  RunMDOODZ("Popov2025_Tensile_VEVP.txt", &setup);
+  RunMDOODZ("Popov2025_Pureshear_VEVP.txt", &setup);
 }

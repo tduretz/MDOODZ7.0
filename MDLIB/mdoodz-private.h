@@ -27,7 +27,7 @@ typedef struct {
 typedef struct {
   int     Nx_part, Nz_part, Nb_part, Nb_part_max, min_part_cell, Nb_part_ini;
   double *x, *z, *Vx, *Vz, *P, *sxxd, *szzd, *sxz, *progress, *T, *d, *phi, *X;
-  double *strain, *strain_el, *strain_pl, *strain_pwl, *strain_exp, *strain_lin,
+  double *strain, *strain_el, *strain_pl, *strain_pl_vol, *strain_pwl, *strain_exp, *strain_lin,
           *strain_gbs;
   int    *phase, *generation, *dual;
   int    *intag;
@@ -366,6 +366,7 @@ void            RotateStresses(grid, markers*, params, scale*);
 void            UpdateParticleStress(grid*, markers*, params*, mat_prop*, scale*);
 void            ShearModCompExpGrid( grid*, mat_prop*, params*, scale);
 void            CohesionFrictionDilationGrid(grid*, markers*, mat_prop, params, scale);
+int             solve_local_3x3(double, double, double, double, double, double, double, double, double, double, double, double, double *, double *, double *);
 
 // Non-Newtonian rheology
 void            UpdateNonLinearity(grid *, markers *, markers *, surface *, mat_prop, params *, Nparams *, scale, int, int);

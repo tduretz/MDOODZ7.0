@@ -1,8 +1,11 @@
 run-tests:
 	cd cmake-build && ctest --extra-verbose --output-on-failure
 
-run:
+run-copy:
 	echo "Copying $(SET).txt from SETS" && cp -r SETS/$(SET).txt ./cmake-exec/$(SET)/ && cd cmake-exec/$(SET) && ./$(SET) $(TXT)
+
+run:
+	cd cmake-exec/$(SET) && ./$(SET) $(TXT)
 
 run-vis:
 	cd visualtests-out && ./visualtests

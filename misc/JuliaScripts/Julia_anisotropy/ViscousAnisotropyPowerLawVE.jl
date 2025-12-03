@@ -3,11 +3,7 @@ import Statistics:mean
 
 function main_simple_ani_vis()
     # Material parameters
-<<<<<<< HEAD
-    ani_fac    = 4.0 
-=======
     ani_fac    = 2.0 
->>>>>>> 58e1ffaf76443fb29fc0b7021e526fb1b839b96a
     # Kinematics
     pure_shear = 1
     ε̇xxd       = pure_shear*5.0
