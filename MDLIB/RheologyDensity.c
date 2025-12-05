@@ -380,7 +380,7 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
   double X   = X0;
 
   // Flow law parameters from input file
-  double Tyield = 0.0, F_trial = 0.0, gdot = 0.0, dQdtxx = 0.0, dQdtzz = 0.0, dQdtxz = 0.0;
+  double Tyield = 0.0, F_trial = 0.0, gdot = 0.0, dQdtxx = 0.0, dQdtzz = 0.0, dQdtxz = 0.0, lam_dot = 0.0;
   int    is_pl  = 0;
   double Ea_pwl = materials->Qpwl[phase], Va_pwl = materials->Vpwl[phase], n_pwl = materials->npwl[phase], m_pwl = materials->mpwl[phase], r_pwl = materials->rpwl[phase], A_pwl = materials->Apwl[phase], f_pwl = materials->fpwl[phase], a_pwl = materials->apwl[phase], F_pwl = materials->Fpwl[phase], pre_factor = materials->pref_pwl[phase], t_pwl = materials->tpwl[phase];
   double Ea_lin = materials->Qlin[phase], Va_lin = materials->Vlin[phase], n_lin = materials->nlin[phase], m_lin = materials->mlin[phase], r_lin = materials->rlin[phase], A_lin = materials->Alin[phase], f_lin = materials->flin[phase], a_lin = materials->alin[phase], F_lin = materials->Flin[phase];
@@ -682,9 +682,6 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
     }
   }
 
-      double lam_dot = 0.0;
-
-
   // ----------------- Combined mode-I mode-II formulation of Popov et al. 2025, GMD
   if (tensile == 1)
   {
@@ -703,7 +700,7 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
     double R_haty   = sqrt(Tii*Tii + (P - py)* (P - py));
     double R_hatq   = sqrt(Tii*Tii + (P - pq)* (P - pq));
     int    on_yield = 0, on_flow = 0;
-    gdot = 0.0, divp = 0.0;
+    divp = 0.0;
     on_yield = (Tii *(py - pd)  >= tau_d * (py - P));
 
     is_pl = 0;
@@ -732,8 +729,8 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
       {
 
         // Yield and flow conditions
-        on_yield = (Tiic *(py - pd) * 1e40) >= (tau_d * (py - Pc));
-        on_flow  = (Tiic *(pq - pd) * 1e40) >= (tau_d * (pq - Pc));
+        on_yield = (Tiic *(py - pd)) >= (tau_d * (py - Pc));
+        on_flow  = (Tiic *(pq - pd)) >= (tau_d * (pq - Pc));
 
         // Regularization viscosity
         double abs_lam_dot = fabs(lam_dot);
@@ -774,25 +771,25 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
         // Compute flow potential derivatives
         if (on_flow)
         {
-          dQdTii = 0.5       * 2; 
-          dQdP   = -kq; // <- This might be -kq depending on the sign convention for pressure
+          dQdTii   = 1.0; 
+          dQdP     = -kq; // <- This might be -kq depending on the sign convention for pressure
           d2QdTii2 = 0.0;
           d2QdP2   = 0.0;
           d2QdTP   = 0.0;
           d2QdPT   = 0.0;
         }else
         {
-          dQdTii   = 0.5 * b * Tiic / R_hatq          *       2;
-          dQdP     = -b * (Pc - pq) / R_hatq;
-          d2QdTii2 = 0.5 * b * (R_hatq*R_hatq - Tiic*Tiic) / (R_hatq*R_hatq*R_hatq);
-          d2QdP2   = -b * (R_hatq*R_hatq - (Pc - pq)*(Pc - pq)) / (R_hatq*R_hatq*R_hatq);
-          d2QdTP   = -0.5 * b * Tiic * (Pc - pq) / (R_hatq*R_hatq*R_hatq);
-          d2QdPT   =  b * Tiic * (Pc - pq) / (R_hatq*R_hatq*R_hatq);
+          dQdTii   =  b * Tiic / R_hatq;
+          dQdP     =  b * (Pc - pq) / R_hatq;
+          d2QdTii2 =  b * (R_hatq*R_hatq - Tiic*Tiic) / (R_hatq*R_hatq*R_hatq);
+          d2QdP2   =  b * (R_hatq*R_hatq - (Pc - pq)*(Pc - pq)) / (R_hatq*R_hatq*R_hatq);
+          d2QdTP   = -b * Tiic * (Pc - pq) / (R_hatq*R_hatq*R_hatq);
+          d2QdPT   = -b * Tiic * (Pc - pq) / (R_hatq*R_hatq*R_hatq);
         }
 
         // Local linear system of equations - Residual form
         R1 = (Tii - Tiic) / 2.0 / eta_ve - lam_dot * dQdTii;
-        R2 = (Pc - P) / (K * dt)         - lam_dot * dQdP;
+        R2 = -(Pc - P) / (K * dt)        - lam_dot * dQdP;
         R3 = Fpos                        - lam_dot * eta_vp;
 
         // Stop if Newton residual did not converge
@@ -802,15 +799,15 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
         }
         R_norm = sqrt(R1*R1 + R2*R2 + R3*R3);
 
-         if (centroid) {
-        if (on_yield)
-        {
-          printf("No. iter = %05d; mode = 2; R1 = %.4e; R2 = %.4e; R3 = %.4e; R_norm = %.4e; R/R0 = %.4e\n", it, R1, R2, R3, R_norm, R_norm / R0_norm);
-        }else
-        {
-          printf("No. iter = %05d; mode = 1; R1 = %.4e; R2 = %.4e; R3 = %.4e; R_norm = %.4e; R/R0 = %.4e\n", it, R1, R2, R3, R_norm, R_norm / R0_norm);
-        }
-      }
+        //  if (centroid) {
+        //   if (on_yield)
+        //   {
+        //     printf("No. iter = %05d; mode = 2; R1 = %.4e; R2 = %.4e; R3 = %.4e; R_norm = %.4e; R/R0 = %.4e\n", it, R1, R2, R3, R_norm, R_norm / R0_norm);
+        //   }else
+        //   {
+        //     printf("No. iter = %05d; mode = 1; R1 = %.4e; R2 = %.4e; R3 = %.4e; R_norm = %.4e; R/R0 = %.4e\n", it, R1, R2, R3, R_norm, R_norm / R0_norm);
+        //   }
+        // }
 
         
         // printf("R_norm = %.4e; R0_norm = %.4e; R/R0 = %.4e; nitmax = %d; atol = %.4e; rtol = %.4e;\n", R_norm, R0_norm, R_norm / R0_norm, nitmax, atol, rtol);
@@ -825,7 +822,7 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
         J13 =                                -dQdTii;
         
         J21 =                  -lam_dot * d2QdPT;
-        J22 =  1.0 / (K * dt) - lam_dot * d2QdP2;
+        J22 =  -1.0 / (K * dt) - lam_dot * d2QdP2;
         J23 =                            -dQdP;
         
         J31 = dFdTii_eff;
@@ -946,7 +943,7 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
         Tiic    += dTii     * alpha;
         Pc      += dP       * alpha;
         lam_dot += dlam_dot * alpha;
-        lam_dot  = fmax(lam_dot, 0.0);
+        // lam_dot  = fmax(lam_dot, 0.0);
 
         // Failure statement
         if ( noisy>0 && it==nitmax-1 && (R_norm > atol || R_norm/R0_norm > rtol)  ) { printf("Visco-Plastic iterations failed!\n"); exit(0);}
@@ -956,11 +953,9 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
       *Pcorr  = Pc;
       eta_vep = Tiic / (2.0*Eii);
       Tii     = Tiic;
-      gdot    = 2*lam_dot * dQdTii;
-      divp    = 1*lam_dot * dQdP;
+      divp    = -lam_dot * dQdP;
 
-      if (centroid)    printf("Pc = %.4e, Pc = %.4e\n", Pc, (P  - K * dt * lam_dot * dQdP));
-
+      // if (centroid) {printf("Pc = %.4e, Pc = %.4e\n", Pc, (P + K * dt * divp));};
 
     }
   }
@@ -968,7 +963,7 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
 
   // ----------------- Reaction volume changes, computation of updated density only on centroid nodes
   if ( centroid > 0 ) {
-    if (final_update==1) P = Pc;
+    if (final_update==1) {P = Pc;};
     // if (model->chemical_production == 1 || Melting == 1) {
     //   *rho = EvaluateDensity( phase, T,  P,  X,  phi1, model, materials );                     
     // }
@@ -999,10 +994,15 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
     (*etaVE)    = eta_ve;
     (*div_pl)   = 0.0;
   }
-  else {
+  else if(is_pl && plastic){
     (*etaVE)    = eta_vep;
     (*div_pl)   = divp;
     eta_pl      = Tii/gdot;
+  }
+  else if(is_pl && tensile){
+    (*etaVE)    = eta_vep;
+    (*div_pl)   = divp;
+    eta_pl      = Tii/(lam_dot*dQdTii);
   }
 
   /*----------------------------------------------------*/
@@ -1034,26 +1034,26 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
       *Eii_el   = sqrt(0.5*(Exx_el*Exx_el + Ezz_el*Ezz_el + Eyy_el*Eyy_el) + Exz_el*Exz_el);
       double Exx_pl = gdot * (*Txx)/2.0/Tii;
       double Exz_pl = gdot * (*Txz)/2.0/Tii;
-      double div_pl = gdot * dQdP;
+      double div_pl = lam_dot * dQdP;
       double Exx_real = Exx - Txx0 / 2.0 / eta_el;
       double Exz_real = Exz - Txz0 / 2.0 / eta_el;
-      if (centroid == 1 && gdot>0.0)
-      {
-        printf("-------------\n");
-        printf("dQdTii = %.4e\n", dQdTii);
-        printf("Exxel = %.4e, Exxpl = %.4e; Exx = %.4e; Exx_diff = %.4e\n", Exx_el, Exx_pl, Exx_real, Exx_real - Exx_el - Exx_pl);
-        printf("Exzel = %.4e, Exzpl = %.4e; Exz = %.4e; Exz_diff = %.4e\n", Exz_el, Exz_pl, Exz_real, Exz_real - Exz_el - Exz_pl);
-        printf("div_e + div_p = %.4e; div = %.4e; divp = %.4e; dive = %.4e; div_diff = %.4e\n", -(Pc - P0) / (K*dt) + gdot * sin_dil, div, gdot * sin_dil, -(Pc - P0) / (K*dt), div + (Pc - P0) / (K*dt) - gdot * sin_dil);
-        printf("gdot = %.4e; sin_dil = %.4e\n", gdot, sin_dil);
-        printf("Pc = %.4e; Pc1 = %.4e; P = %.4e; P0 = %.4e\n", Pc, P  - K * dt * lam_dot * dQdP, P , P0);
-        printf("Model.step = %05d\n", model->step);
-      }
+      // if (centroid == 1)
+      // {
+      //   printf("-------------\n");
+      //   printf("dQdTii = %.4e\n", dQdTii);
+      //   printf("Exxel = %.4e, Exxpl = %.4e; Exx = %.4e; Exx_diff = %.4e\n", Exx_el, Exx_pl, Exx_real, Exx_real - Exx_el - Exx_pl);
+      //   printf("Exzel = %.4e, Exzpl = %.4e; Exz = %.4e; Exz_diff = %.4e\n", Exz_el, Exz_pl, Exz_real, Exz_real - Exz_el - Exz_pl);
+      //   printf("div_e + div_p = %.4e; div = %.4e; divp = %.4e; dive = %.4e; div_diff = %.4e\n", -(Pc - P0) / (K*dt) - lam_dot * dQdP, div, -lam_dot * dQdP, -(Pc - P0) / (K*dt), div + (Pc - P0) / (K*dt) + lam_dot * dQdP);
+      //   printf("gdot = %.4e; sin_dil = %.4e\n", gdot, sin_dil);
+      //   printf("Pc = %.4e; Pc1 = %.4e; P = %.4e; P0 = %.4e\n", Pc, P  + K * dt * lam_dot * dQdP, P , P0);
+      //   printf("Model.step = %05d\n", model->step);
+      // }
     }
     if (is_pl && plastic) {
       *Eii_pl   = gdot/2.0;
     } else if (is_pl && tensile)
     {
-      *Eii_pl   = gdot;
+      *Eii_pl   = lam_dot*dQdTii / 2.0;
     } else
     {
       *Eii_pl   = 0.0;
