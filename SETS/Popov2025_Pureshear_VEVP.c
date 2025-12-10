@@ -70,10 +70,10 @@ int main() {
                   .SetDensity            = SetDensity,
           },
           .SetBCs = &(SetBCs_ff){
-                  .SetBCVx = SetPureOrSimpleShearBCVx,
-                  .SetBCVz = SetPureOrSimpleShearBCVz,
-                  // .SetBCVx = SetBCVx,
-                  // .SetBCVz = SetBCVz,
+                  // .SetBCVx = SetPureOrSimpleShearBCVx,
+                  // .SetBCVz = SetPureOrSimpleShearBCVz,
+                  .SetBCVx = SetBCVx,
+                  .SetBCVz = SetBCVz,
           },
   };
   RunMDOODZ("Popov2025_Pureshear_VEVP.txt", &setup);

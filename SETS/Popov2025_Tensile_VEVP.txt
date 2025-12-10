@@ -4,7 +4,7 @@ irestart = 0
 
 /**** OUTPUT FILES ****/
 writer          = 1
-writer_step     = 1
+writer_step     = 50
 writer_markers  = 0
 writer_debug    = 0
 writer_energies = 0
@@ -19,7 +19,7 @@ T   = 1
 /**** SPACE-TIME ****/
 Nx          = 151
 Nz          = 121
-Nt          = 100
+Nt          = 2000
 xmin        = 0.0
 xmax        = 1.0
 zmin        = 0.0
@@ -32,7 +32,7 @@ Courant     = 0.3
 noisy           = 1
 compressible    = 1
 mechanical    = 1
-advection       = 1
+advection       = 0
 RK              = 4
 periodic_x    = 0
 pure_shear_ALE = 0
@@ -60,10 +60,10 @@ eta_average       = 0
 num_deriv         = 0
 let_res_grow      = 1
 
-lin_abs_mom     = 1e-10
-lin_abs_div     = 1e-10
-lin_rel_mom     = 1e-10
-lin_rel_div     = 1e-10
+lin_abs_mom     = 1e-13
+lin_abs_div     = 1e-13
+lin_rel_mom     = 1e-13
+lin_rel_div     = 1e-13
 
 /**** SETUP DEPENDANT ****/
 bkg_strain_rate = -6.388e-15
@@ -98,7 +98,7 @@ psi     = 0
 eta_vp  = 1e19
 n_vp    = 1.0
 Slim    = 500e9
-T_st    = -1e7          / Tensile strength [Pa]
+T_st    = -1e6          / Tensile strength [Pa]
 Hc      = -1e8
 alp     = 10.0e-6
 bet     = 1.5625e-11
@@ -132,7 +132,7 @@ psi     = 0
 eta_vp  = 1e19
 n_vp    = 1.0
 Slim    = 500e9
-T_st    = -1e7          / Tensile strength [Pa]
+T_st    = -1e6          / Tensile strength [Pa]
 Hc      = -1e8
 alp     = 1.0e-6
 bet     = 1.5625e-11
@@ -166,13 +166,13 @@ min_part_cell = 16
 
 /**** NON-LINEAR ITERATIONS ****/
 Newton        = 1
-nit_max       = 50
+nit_max       = 25
 Picard2Newton = 1
-Picard2Newton_tol  = 5e-2
-rel_tol_KSP   = 5e-4
-nonlin_abs_mom     = 1e-9
-nonlin_abs_div     = 1e-9
-nonlin_rel_mom     = 1e-9
-nonlin_rel_div     = 1e-9
+Picard2Newton_tol  = 5e-3
+rel_tol_KSP   = 5e-6
+nonlin_abs_mom     = 1e-12
+nonlin_abs_div     = 1e-12
+nonlin_rel_mom     = 1e-12
+nonlin_rel_div     = 1e-12
 min_eta        = 1e15
 max_eta        = 1e28

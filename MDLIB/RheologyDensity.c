@@ -699,14 +699,14 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
     // double Rq       = pq - T_st;                      // Radius of potential flow cap circle
     double R_haty   = sqrt(Tii*Tii + (P - py)* (P - py));
     double R_hatq   = sqrt(Tii*Tii + (P - pq)* (P - pq));
-    int    on_yield = 0, on_flow = 0;
+    int    on_DP_yield, on_DP_flow;
     divp = 0.0;
-    on_yield = (Tii *(py - pd)  >= tau_d * (py - P));
+    on_DP_yield = (Tii *(py - pd))  >= (tau_d * (py - P));
 
     is_pl = 0;
 
     // Step 2: Evaluate yield function
-    if (on_yield)     // On Drucker-Prager yield
+    if (on_DP_yield)     // On Drucker-Prager yield
     {
       F_trial = Tii - k * P - c;
     } else                                       // On Cap
@@ -729,8 +729,8 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
       {
 
         // Yield and flow conditions
-        on_yield = (Tiic *(py - pd)) >= (tau_d * (py - Pc));
-        on_flow  = (Tiic *(pq - pd)) >= (tau_d * (pq - Pc));
+        on_DP_yield = (Tiic *(py - pd)) >= (tau_d * (py - Pc));
+        on_DP_flow  = (Tiic *(pq - pd)) >= (tau_d * (pq - Pc));
 
         // Regularization viscosity
         double abs_lam_dot = fabs(lam_dot);
@@ -740,7 +740,7 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
         // Evaluate yield function
         R_haty   = sqrt(Tiic*Tiic + (Pc - py)* (Pc - py));
         R_hatq   = sqrt(Tiic*Tiic + (Pc - pq)* (Pc - pq));
-        if (on_yield)     // On Drucker-Prager yield
+        if (on_DP_yield)     // On Drucker-Prager yield
         {
           F_trial = Tiic - k * Pc - c;
           dFdTii = 1.0;
@@ -752,26 +752,10 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
           dFdP    = a * (Pc - py) / R_haty;
         }
 
-        // Macauly brackets
-        double F = F_trial, Fpos, dFdTii_eff, dFdP_eff;
-        if (F > 1e-17)
-        {
-          Fpos        = F;
-          dFdTii_eff  = dFdTii;
-          dFdP_eff    = dFdP;
-        } else
-        {
-          Fpos       = 0.0;
-          dFdTii_eff = 0.0;
-          dFdP_eff   = 0.0;
-        }
-
-        
-        
         // Compute flow potential derivatives
-        if (on_flow)
+        if (on_DP_flow)
         {
-          dQdTii   = 1.0; 
+          dQdTii   = 0.5; 
           dQdP     = -kq; // <- This might be -kq depending on the sign convention for pressure
           d2QdTii2 = 0.0;
           d2QdP2   = 0.0;
@@ -779,18 +763,20 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
           d2QdPT   = 0.0;
         }else
         {
-          dQdTii   =  b * Tiic / R_hatq;
-          dQdP     =  b * (Pc - pq) / R_hatq;
-          d2QdTii2 =  b * (R_hatq*R_hatq - Tiic*Tiic) / (R_hatq*R_hatq*R_hatq);
-          d2QdP2   =  b * (R_hatq*R_hatq - (Pc - pq)*(Pc - pq)) / (R_hatq*R_hatq*R_hatq);
-          d2QdTP   = -b * Tiic * (Pc - pq) / (R_hatq*R_hatq*R_hatq);
-          d2QdPT   = -b * Tiic * (Pc - pq) / (R_hatq*R_hatq*R_hatq);
+          // printf("onflow = %d; (Tiic *(pq - pd) * 1e40) = %.4e; (tau_d * (pq - Pc)) = %.4e\n", on_DP_flow, (Tiic *(pq - pd) * 1e40), (tau_d * (pq - Pc)));
+          // printf("onflow = %d; Pc = %.4e; pd = %.4e\n", on_DP_flow, Pc, pd);
+          dQdTii   =  0.5 * b * Tiic / R_hatq;
+          dQdP     =        b * (Pc - pq) / R_hatq;
+          d2QdTii2 =  0.5 * b * (R_hatq*R_hatq - Tiic*Tiic) / (R_hatq*R_hatq*R_hatq);
+          d2QdP2   =        b * (R_hatq*R_hatq - (Pc - pq)*(Pc - pq)) / (R_hatq*R_hatq*R_hatq);
+          d2QdTP   = -0.5 * b * Tiic * (Pc - pq) / (R_hatq*R_hatq*R_hatq);
+          d2QdPT   = -0.5 * b * Tiic * (Pc - pq) / (R_hatq*R_hatq*R_hatq);
         }
 
         // Local linear system of equations - Residual form
-        R1 = (Tii - Tiic) / 2.0 / eta_ve - lam_dot * dQdTii;
+        R1 = (Tii - Tiic) / (2.0 * eta_ve) - lam_dot * dQdTii;
         R2 = -(Pc - P) / (K * dt)        - lam_dot * dQdP;
-        R3 = Fpos                        - lam_dot * eta_vp;
+        R3 = F_trial                        - lam_dot * eta_vp;
 
         // Stop if Newton residual did not converge
         if (it == 0)
@@ -800,7 +786,7 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
         R_norm = sqrt(R1*R1 + R2*R2 + R3*R3);
 
         //  if (centroid) {
-        //   if (on_yield)
+        //   if (on_DP_yield)
         //   {
         //     printf("No. iter = %05d; mode = 2; R1 = %.4e; R2 = %.4e; R3 = %.4e; R_norm = %.4e; R/R0 = %.4e\n", it, R1, R2, R3, R_norm, R_norm / R0_norm);
         //   }else
@@ -817,16 +803,16 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
         }
         
         // Assemble Jacobian
-        J11 = -1.0 / 2.0 / eta_ve - lam_dot * d2QdTii2;
-        J12 =                     - lam_dot * d2QdTP;
-        J13 =                                -dQdTii;
+        J11 = -1.0 / (2.0 * eta_ve) - lam_dot * d2QdTii2;
+        J12 =               - lam_dot * d2QdTP;
+        J13 =                          -dQdTii;
         
         J21 =                  -lam_dot * d2QdPT;
         J22 =  -1.0 / (K * dt) - lam_dot * d2QdP2;
         J23 =                            -dQdP;
         
-        J31 = dFdTii_eff;
-        J32 = dFdP_eff;
+        J31 = dFdTii;
+        J32 = dFdP;
         J33 = -eta_vp;
 
         // Solve the linear system J * dx = R
@@ -843,108 +829,104 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
             exit(1);
         }
 
-        // // Apply line search to find suitable Newton steps
-        // double Tiic_ls, Pc_ls, lam_dot_ls, alpha, R0_norm_ls, R_norm_ls, F_trial_ls;
-        // double c_ls = 1e-4;
+        // Apply line search to find suitable Newton steps
+        double Tiic_ls, Pc_ls, lam_dot_ls, R0_norm_ls, R_norm_ls, F_trial_ls;
+        double c_ls = 1e-4;
         double alpha = 1.0;
-        // R0_norm_ls = sqrt(R1*R1 + R2*R2 + R3*R3);
+        R0_norm_ls = sqrt(R1*R1 + R2*R2 + R3*R3);
 
-        // // Find good fraction of a step
-        // for (int it_ls = 0; it_ls < 100; it_ls++)
-        // {
-        //   // Compute trial updates
-        //   Tiic_ls    = Tiic    + dTii     * alpha;
-        //   Pc_ls      = Pc      + dP       * alpha;
-        //   lam_dot_ls = lam_dot + dlam_dot * alpha;
-        //   lam_dot_ls = fmax(lam_dot_ls, 0.0);
+        // Find good fraction of a step
+        for (int it_ls = 0; it_ls < 100; it_ls++)
+        {
+          // Compute trial updates
+          Tiic_ls    = Tiic    + dTii     * alpha;
+          Pc_ls      = Pc      + dP       * alpha;
+          lam_dot_ls = lam_dot + dlam_dot * alpha;
+          lam_dot_ls = fmax(lam_dot_ls, 0.0);
 
-        //   // Yield and flow conditions
-        //   on_yield = (Tiic_ls *(py - pd) >= tau_d * (py - Pc_ls));
-        //   on_flow  = (Tiic_ls *(pq - pd) >= tau_d * (pq - Pc_ls));
+          // Yield and flow conditions
+          on_DP_yield = (Tiic_ls *(py - pd) >= tau_d * (py - Pc_ls));
+          on_DP_flow  = (Tiic_ls *(pq - pd) >= tau_d * (pq - Pc_ls));
 
-        //   // Regularization viscosity
-        //   double abs_lam_dot_ls = fabs(lam_dot_ls);
-        //   if (abs_lam_dot_ls < 1e-30) abs_lam_dot_ls = 1e-30;
-        //   eta_vp  = eta_vp0; // * pow(abs_lam_dot_ls, 1.0/n_vp - 1.0);
+          // Regularization viscosity
+          double abs_lam_dot_ls = fabs(lam_dot_ls);
+          if (abs_lam_dot_ls < 1e-30) abs_lam_dot_ls = 1e-30;
+          eta_vp  = eta_vp0; // * pow(abs_lam_dot_ls, 1.0/n_vp - 1.0);
 
-        //   // Evaluate yield function
-        //   R_haty   = sqrt(Tiic_ls*Tiic_ls + (Pc_ls - py)* (Pc_ls - py));
-        //   R_hatq   = sqrt(Tiic_ls*Tiic_ls + (Pc_ls - pq)* (Pc_ls - pq));
-        //   if (on_yield)     // On Drucker-Prager yield
-        //   {
-        //     F_trial_ls = Tiic_ls - k * Pc_ls - c;
-        //     dFdTii     = 1.0;
-        //     dFdP       = -k;
-        //   }else  // On Cap
-        //   {
-        //     F_trial_ls = a * (R_haty - Ry);
-        //     dFdTii     = a * Tiic_ls      / R_haty;
-        //     dFdP       = a * (Pc_ls - py) / R_haty;
-        //   }
+          // Evaluate yield function
+          R_haty   = sqrt(Tiic_ls*Tiic_ls + (Pc_ls - py)* (Pc_ls - py));
+          R_hatq   = sqrt(Tiic_ls*Tiic_ls + (Pc_ls - pq)* (Pc_ls - pq));
+          if (on_DP_yield)     // On Drucker-Prager yield
+          {
+            F_trial_ls = Tiic_ls - k * Pc_ls - c;
+            dFdTii     = 1.0;
+            dFdP       = -k;
+          }else  // On Cap
+          {
+            F_trial_ls = a * (R_haty - Ry);
+            dFdTii     = a * Tiic_ls      / R_haty;
+            dFdP       = a * (Pc_ls - py) / R_haty;
+          }
 
-        //   // Macauly brackets
-        //   F = F_trial_ls;
-        //   if (F > 1e-17)
-        //   {
-        //     Fpos        = F;
-        //     dFdTii_eff  = dFdTii;
-        //     dFdP_eff    = dFdP;
-        //   } else
-        //   {
-        //     Fpos       = 0.0;
-        //     dFdTii_eff = 0.0;
-        //     dFdP_eff   = 0.0;
-        //   }
+          // Compute flow potential derivatives
+          if (on_DP_flow)
+          {
+            dQdTii   = 0.5; 
+            dQdP     = -kq; // <- This might be -kq depending on the sign convention for pressure
+            d2QdTii2 = 0.0;
+            d2QdP2   = 0.0;
+            d2QdTP   = 0.0;
+            d2QdPT   = 0.0;
+          }else
+          {
+            // printf("onflow = %d; (Tiic *(pq - pd) * 1e40) = %.4e; (tau_d * (pq - Pc)) = %.4e\n", on_DP_flow, (Tiic *(pq - pd) * 1e40), (tau_d * (pq - Pc)));
+            // printf("onflow = %d; Pc = %.4e; pd = %.4e\n", on_DP_flow, Pc, pd);
+            dQdTii   =  0.5 * b * Tiic / R_hatq;
+            dQdP     =        b * (Pc - pq) / R_hatq;
+            d2QdTii2 =  0.5 * b * (R_hatq*R_hatq - Tiic*Tiic) / (R_hatq*R_hatq*R_hatq);
+            d2QdP2   =        b * (R_hatq*R_hatq - (Pc - pq)*(Pc - pq)) / (R_hatq*R_hatq*R_hatq);
+            d2QdTP   = -0.5 * b * Tiic * (Pc - pq) / (R_hatq*R_hatq*R_hatq);
+            d2QdPT   = -0.5 * b * Tiic * (Pc - pq) / (R_hatq*R_hatq*R_hatq);
+          }
 
-        //   // Compute flow potential derivatives
-        //   if (on_flow)
-        //   {
-        //     dQdTii = 0.5;
-        //     dQdP   = -kq; // <- This might be -kq depending on the sign convention for pressure
-        //     d2QdTii2 = 0.0;
-        //     d2QdP2   = 0.0;
-        //     d2QdTP   = 0.0;
-        //     d2QdPT   = 0.0;
-        //   }else
-        //   {
-        //     dQdTii   = 0.5 * b * Tiic_ls / R_hatq;
-        //     dQdP     = -b * (Pc_ls - pq) / R_hatq;
-        //     d2QdTii2 = 0.5 * b * (R_hatq*R_hatq - Tiic_ls*Tiic_ls) / (R_hatq*R_hatq*R_hatq);
-        //     d2QdP2   = -b * (R_hatq*R_hatq - (Pc_ls - pq)*(Pc_ls - pq)) / (R_hatq*R_hatq*R_hatq);
-        //     d2QdTP   = -0.5 * b * Tiic_ls * (Pc_ls - pq) / (R_hatq*R_hatq*R_hatq);
-        //     d2QdPT   =  b * Tiic_ls * (Pc_ls - pq) / (R_hatq*R_hatq*R_hatq);
-        //   }
+          // Local linear system of equations - Residual form
+          R1 = (Tii - Tiic) / (2.0 * eta_ve) - lam_dot * dQdTii;
+          R2 = -(Pc - P) / (K * dt)        - lam_dot * dQdP;
+          R3 = F_trial                        - lam_dot * eta_vp;
 
-        //   // Compute residuals
-        //   R1 = (Tii - Tiic_ls) / 2.0 / eta_ve - lam_dot_ls * dQdTii;
-        //   R2 = (Pc_ls - P) / (K * dt)         - lam_dot_ls * dQdP;
-        //   R3 = Fpos                           - lam_dot_ls * eta_vp;
-        //   R_norm_ls = sqrt(R1*R1 + R2*R2 + R3*R3);
-
-        //   // printf("Line search it. = %02d: R0 = %.8e; R = %.8e; alpha = %.2e\n", it_ls, R0_norm_ls, R_norm_ls, alpha);
-        //   // Accept alpha, if the residual is small enough
-        //   if (R_norm_ls < (1.0 - c_ls * alpha) * R0_norm_ls)
-        //   {
-        //     // printf("Line search converged in %03d. Accepted alpha = %.2e\n", it_ls, alpha);
-        //     break;
-        //   }else
-        //   {
-        //     alpha *= 0.5;
-        //   }
-        //   // Restrict alpha to a minimum value
-        //   if (alpha < 0.1)
-        //   {
-        //     alpha = 0.1;
-        //     break;
-        //   }
-        // }
+          // printf("Line search it. = %02d: R0 = %.8e; R = %.8e; alpha = %.2e\n", it_ls, R0_norm_ls, R_norm_ls, alpha);
+          // Accept alpha, if the residual is small enough
+          if (R_norm_ls < (1.0 - c_ls * alpha) * R0_norm_ls)
+          {
+            // printf("Line search converged in %03d. Accepted alpha = %.2e\n", it_ls, alpha);
+            break;
+          }else
+          {
+            alpha *= 0.5;
+          }
+          // Restrict alpha to a minimum value
+          if (alpha < 0.1)
+          {
+            alpha = 0.1;
+            break;
+          }
+        }
         
         // Correct stress, pressure and multiplier
-        Tiic    += dTii     * alpha;
-        Pc      += dP       * alpha;
-        lam_dot += dlam_dot * alpha;
+        Tiic    = Tiic_ls;
+        Pc      = Pc_ls;
+        lam_dot = lam_dot_ls;
+        // Tiic    += dTii     * alpha;
+        // Pc      += dP       * alpha;
+        // lam_dot += dlam_dot * alpha;
         // lam_dot  = fmax(lam_dot, 0.0);
 
+        if (centroid == 0)
+        {
+          // printf("divp = %.4e; dQdP = %.4e; dQdP_cap = %.4e; sin_dil = %.4e, kq = %.4e\n", divp, dQdP, (b * (Pc - pq) / R_hatq), sin_dil, kq);
+          // printf("onyield = %d; (Tiic *(py - pd) * 1e40) = %.4e; (tau_d * (py - Pc)) = %.4e\n", on_DP_yield, (Tiic *(py - pd) * 1e40), (tau_d * (py - Pc)));
+          // printf("onflow = %d; (Tiic *(pq - pd) * 1e40) = %.4e; (tau_d * (pq - Pc)) = %.4e\n", on_DP_yield, (Tiic *(pq - pd) * 1e40), (tau_d * (pq - Pc)));
+        }
         // Failure statement
         if ( noisy>0 && it==nitmax-1 && (R_norm > atol || R_norm/R0_norm > rtol)  ) { printf("Visco-Plastic iterations failed!\n"); exit(0);}
       }
@@ -989,7 +971,7 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
       }
     }
   }
-
+  
   if (is_pl == 0) {
     (*etaVE)    = eta_ve;
     (*div_pl)   = 0.0;
@@ -1032,11 +1014,11 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
       const double Eyy_el = ( Tyy - Tyy0)/2/eta_el;
       const double Exz_el = (*Txz - Txz0)/2/eta_el;
       *Eii_el   = sqrt(0.5*(Exx_el*Exx_el + Ezz_el*Ezz_el + Eyy_el*Eyy_el) + Exz_el*Exz_el);
-      double Exx_pl = gdot * (*Txx)/2.0/Tii;
-      double Exz_pl = gdot * (*Txz)/2.0/Tii;
-      double div_pl = lam_dot * dQdP;
-      double Exx_real = Exx - Txx0 / 2.0 / eta_el;
-      double Exz_real = Exz - Txz0 / 2.0 / eta_el;
+      // double Exx_pl = gdot * (*Txx)/2.0/Tii;
+      // double Exz_pl = gdot * (*Txz)/2.0/Tii;
+      // double div_pl = lam_dot * dQdP;
+      // double Exx_real = Exx - Txx0 / 2.0 / eta_el;
+      // double Exz_real = Exz - Txz0 / 2.0 / eta_el;
       // if (centroid == 1)
       // {
       //   printf("-------------\n");
@@ -1053,7 +1035,7 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
       *Eii_pl   = gdot/2.0;
     } else if (is_pl && tensile)
     {
-      *Eii_pl   = lam_dot*dQdTii / 2.0;
+      *Eii_pl   = 0.5 * lam_dot*dQdTii;
     } else
     {
       *Eii_pl   = 0.0;
