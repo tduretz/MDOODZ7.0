@@ -16,8 +16,11 @@ build-dev:
 build:
 	cmake -DOPT=ON -DOMP=ON -B ./cmake-build -DSET=$(SET) -DTXT=$(TXT) && cmake --build ./cmake-build
 
-clean:
+clean-all:
 	rm -rf *build*/ && rm -rf *exec*/
+
+clean:
+	rm -rf *build*/ && rm -rf *exec*/$(SET)/
 
 deps:
 	rm -rf deps && git clone https://github.com/kulakovri/MDOODZ-dependencies deps && cd deps && make install-hdf5 && make install-suitesparse
