@@ -7,6 +7,7 @@ istep    	= 500	/ Restart file number
 irestart 	= 1	/ Restart switch
 
 /**** OUTPUT FILES ****/
+writer_subfolder = AnneloreSubduction
 writer         	= 1	/ Write grid data switch
 writer_step    	= 25	/ Write interval 
 writer_markers 	= 0	/ Write marker data switch
@@ -41,7 +42,8 @@ pure_shear_ALE  	= 0  		/ 1: box stretched at constant strain rate; -1 box of co
 elastic            	= 1		/ Elastic rheology switch
 thermal            	= 1		/ Thermal solver switch
 free_surface       	= 1		/ Free evolution of topography switch
-free_surface_stab  	= 1		/ Free surface stabilization switch
+free_surface_stab  	= 0.5		/ Free surface stabilization switch
+topo_update             = 0
 
 initial_cooling    	= 1		/ Initial thermal equilibration switch
 subgrid_diffusion  	= 2		/ Subgrid diffusion algorithm switch
@@ -68,10 +70,10 @@ gz = -9.81				/ Gravitational acceleration in z
 /**** PHASE PROPERTIES ****/
 Nb_phases = 3 
 
-ID     = 0				/ Phase identity used to assign material to phase
-rho    = 3250.00 /asthenosphere		/ Reference density
-G      = 1e10				/ Shear modulus
-Cp     = 1050				/ Heat capacity
+ID     = 0	/mantle			/ Phase identity used to assign material to phase
+rho    = 3250.00         		/ Reference density
+G      = 3e10				/ Shear modulus
+Cv     = 1050				/ Heat capacity
 k      = 3.0				/ Thermal conductivity
 Qr     = 1e-10				/ Amount of radiogenic heat production
 C      = 1e6				/ Cohesion
@@ -87,16 +89,12 @@ gbsv   = 0				/ Choose grain boundary sliding parameters from database. Number c
 expv   = 40				/ Choose Peierls creep parameters from database. Number can be taken from Flow Laws.c
 gsel   = 0				/ Grain size evolution switch
 eta0   = 1e22				/ Constant viscosity value
-npwl   = 1				/ Custom power-law exponent
-Qpwl   = 0				/ Custom power-law activation energy
 gs_ref = 5e-3				/ Reference grain size
 
-ID     = 1
-rho    = 3250.00 /mantle 2
-G      = 1e10
-rho    = 3250.00 /lithosphere
-G      = 1e10
-Cp     = 1050
+ID     = 1   /lithopshere
+rho    = 3250.00
+G      = 3e10
+Cv     = 1050
 k      = 3.0
 Qr     = 1e-10
 C      = 1e7
@@ -112,15 +110,13 @@ gbsv   = 0
 expv   = 40
 gsel   = 0
 eta0   = 1e22
-npwl   = 2
-Qpwl   = 0
 gs_ref = 5e-3
 
-ID     = 2
-rho    = 3250.00 /wet mantle
-G      = 1e10
-Cp     = 1050
-k      = 3.0 / unrealistically high to mimic convecting mantle
+ID     = 2   /weak layer
+rho    = 3250.00 
+G      = 3e10
+Cv     = 1050
+k      = 3.0
 Qr     = 1e-10
 C      = 1e6
 phi    = 0
@@ -134,9 +130,7 @@ linv   = 40
 gbsv   = 0
 expv   = 40
 gsel   = 0
-eta0   = 5e20
-npwl   = 1
-Qpwl   = 0
+eta0   = 1e22
 gs_ref = 5e-3
 
 /**** DEFMAPS ****/
@@ -158,9 +152,11 @@ min_part_cell = 16	/ Minimum no. particles per cell
 
 /**** NON-LINEAR ITERATIONS ****/
 Newton           = 0		/ Newton iteration switch
-nit_max          = 5 		/ No. Nonlinear iterations. At least 5, for high resolution use from 10 to 20
+nit_max          = 15 		/ No. Nonlinear iterations. At least 5, for high resolution use from 10 to 20
 line_search      = 0		/ Activate line search algorithm
 nonlin_abs_mom   = 5.0e-8	/ Residual tolerances
 nonlin_abs_div   = 5.0e-8
 min_eta          = 5.0e18	/ Viscosity cutoffs for numerical stabilisation
 max_eta          = 1.0e25
+
+
