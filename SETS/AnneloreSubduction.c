@@ -4,6 +4,7 @@
 #include "stdlib.h"
 #include "stdio.h"
 
+
 int SetDualPhase(MdoodzInput *input, Coordinates coordinate, int phase) {
     
     // Passive tracer function. Useful for visualisation
@@ -11,20 +12,20 @@ int SetDualPhase(MdoodzInput *input, Coordinates coordinate, int phase) {
     double Lx = input->model.xmax - input->model.xmin;
     double Lz = input->model.zmax - input->model.zmin;
     double Ax, Az;
-    double f = 4.;
+    double f = 8.;
 
     // Set checkerboard for phase 0
-    Ax = cos( f*2.0*M_PI*coordinate.x / Lx  );
+    Ax = cos( 4*f*2.0*M_PI*coordinate.x / Lx  );
     Az = sin( f*2.0*M_PI*coordinate.z / Lz  );
     if ( ( (Az<0.0 && Ax<0.0) || (Az>0.0 && Ax>0.0) ) && dual_phase==0 && phase==0 ) {
         dual_phase = input->model.Nb_phases;
     }
 
-    // Set checkerboard for phase 1
+    // Set checkerboard for phase 2
     Az = sin( 3*f*2.0*M_PI*coordinate.z / Lz  );
-    Ax = cos( 3*f*2.0*M_PI*coordinate.x / Lx  );
+    Ax = cos( 4*3*f*2.0*M_PI*coordinate.x / Lx  );
     if ( ( (Az<0.0 && Ax<0.0) || (Az>0.0 && Ax>0.0) ) && dual_phase==1 && phase==1 ) {
-        dual_phase = input->model.Nb_phases;
+        dual_phase = input->model.Nb_phases+1;
     }
 
   return dual_phase;
@@ -98,7 +99,7 @@ char SetBCPType(MdoodzInput *instance, POSITION position) {
   }
 }
 
-SetBC SetBCT(MdoodzInput *instance, POSITION position, Coordinates coordinates,  double particleTemperature) {
+SetBC SetBCT(MdoodzInput *instance, POSITION position, double particleTemperature) {
   SetBC     bc;
   double surface_temperature = (0.0 + 273.15) / instance->scaling.T ;
   double mantle_temperature  = (instance->model.user0 + 273.15) / instance->scaling.T;
@@ -146,6 +147,7 @@ SetBC SetBCVx(MdoodzInput *instance, POSITION position, Coordinates coordinates)
   const double x = coordinates.x, z = coordinates.z;
 
   // Evaluate velocity of W and E boundaries
+  //  VxW =  -0.25*V_tot;
     VxW =  -0.5*V_tot;
     VxE =  0.5*V_tot;
 
@@ -193,7 +195,8 @@ SetBC SetBCVz(MdoodzInput *instance, POSITION position, Coordinates coordinates)
   const double prim_E_zmin = BoundaryVelocityProfilePrimitive(VxE, z_min, z_LAB, dz_smooth);
   const double intW = prim_W_zmax - prim_W_zmin;
   const double intE = prim_E_zmax - prim_E_zmin;
-  VzS = - ( fabs(intW) + fabs(intE) ) / Lx;
+  //hardcoded
+  VzS = -0.0791425;
 
   // Apply smooth transition with depth
   VzW = -BoundaryVelocityProfile(VzW, z, z_LAB, dz_smooth);
