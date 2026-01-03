@@ -504,7 +504,7 @@ void ThermalSteps( grid *mesh, params model, double *rhs_t, markers *particles, 
     double dt = total_time/10.0;
     int nit = floor(total_time/dt);
 
-    printf( "Total thermal time = %2.2e s\n", total_time*scaling.t );
+    printf( "Total thermal time = %2.2e s with dt =  %2.2e s\n", total_time*scaling.t, dt*scaling.t );
     printf( "Number of thermal steps = %d\n", nit );
 
     // Run thermal diffusion timesteps to generate initial temperature field

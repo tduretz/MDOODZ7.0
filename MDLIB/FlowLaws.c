@@ -352,7 +352,7 @@ void ReadDataPowerLaw( mat_prop* mat, params* model, int k, int number, scale* s
             break;
             
         case 29 :
-            printf("Basalt - Hacker & Chritie (1990):\n" );
+            printf("Basalt - Hacker & Christie (1990):\n" );
             mat->tpwl[k] = 0.0;
             mat->npwl[k] = 3.7;
             mat->mpwl[k] = 0.0;

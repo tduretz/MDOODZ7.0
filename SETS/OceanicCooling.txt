@@ -15,15 +15,15 @@ V   = 1e-9
 T   = 100
  
 /**** SPACE ****/
-Nx      = 300
-Nz      = 200
+Nx      = 100
+Nz      = 50
 xmin    = -5e5
 xmax    =  11.0e5
 zmin    =  5.740e6     / model bottom 
 zmax    =  6.400000e6  / Earth surface
 
 /**** TIME ****/
-Nt      = 700
+Nt      = 200
 dt      = 1.2623e+11
 Courant = 0.45
 
@@ -41,7 +41,7 @@ thermal           = 1
 free_surface      = 1
 free_surface_stab = 1
 topo_update       = 0 / 0: total update of topography (likely diffusive)
-initial_cooling   = 1
+initial_cooling   = 0
 subgrid_diffusion = 2
 shear_heating     = 1
 adiab_heating     = 0
@@ -85,7 +85,7 @@ rho    = 2800.00 / Crust
 G      = 3e10
 Cp     = 1050
 k      = 2.5
-Qr     = 1e-6
+Qr     = 0e-6
 C      = 5e7
 phi    = 30
 eta_vp = 1e21

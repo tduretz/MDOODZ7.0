@@ -3,7 +3,7 @@ Pkg.activate(normpath(joinpath(@__DIR__, ".")))
 using JuliaVisualisation
 using HDF5, Printf, Colors, ColorSchemes, MathTeXEngine, LinearAlgebra, FFMPEG, Statistics
 using CairoMakie, GLMakie
-Mak = GLMakie, #CairoMakie
+Mak = GLMakie #CairoMakie
 Makie.update_theme!( fonts = (regular = texfont(), bold = texfont(:bold), italic = texfont(:italic)))
 # fontsize_theme = Theme(fontsize=200)
 # set_theme!(fontsize_theme)
@@ -18,16 +18,16 @@ const cm_y = y*100.
 
 
     # File numbers
-    file_start = 40
-    file_step  = 1
-    file_end   = 40
+    file_start = 0
+    file_step  = 10
+    file_end   = 00
 
     # Select field to visualise
     field = :Phases
     # field = :Cohesion
     # field = :Density
     # field = :Viscosity  
-    field = :PlasticStrainrate
+    # field = :PlasticStrainrate
     # field = :Stress
     # field = :σxx
     # field = :σzz
@@ -75,7 +75,7 @@ const cm_y = y*100.
     α_heatmap   = 1.0   # transparency of heatmap 
     vel_arrow   = 5
     vel_scale   = 0.00001
-    vel_step    = 10
+    vel_step    = 8
     nap         = 0.1    # pause for animation 
     resol       = 500    # resolution
     ar          = 1.2    # aspect ratio for Makie
