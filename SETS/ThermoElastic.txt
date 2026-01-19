@@ -1,0 +1,112 @@
+/**** RESTART ****/
+istep = 000002
+irestart = 0
+
+/**** OUTPUT FILES ****/
+writer          = 1
+writer_step     = 1
+writer_markers  = 0
+writer_debug    = 0
+writer_energies = 0
+gnuplot_log_res = 0
+
+/**** SCALES ****/
+eta = 1e20
+L   = 1.0
+V   = 1e-8
+T   = 100
+
+/**** SPACE ****/
+Nx      = 41
+Nz      = 41
+Nt      = 10
+xmin    = -5.000000e3
+zmin    = -5.000000e3
+xmax    =  5.000000e3
+zmax    =  5.000000e3
+
+/**** PARTICLES ****/
+Nx_part = 4
+Nz_part = 4
+
+/**** TIME ****/
+constant_dt = 1
+Courant     = 0.3
+dt          = 1e9
+RK          = 4
+
+/**** LINEAR SOLVER ****/
+noisy        = 1
+penalty      = 1e5
+lin_solver   = -1
+diag_scaling = 0
+lin_abs_div  = 1e-9
+lin_rel_div  = 1e-9
+lin_abs_mom  = 1e-11
+lin_rel_mom  = 1e-11
+
+
+/**** NON-LINEAR SOLVER ****/
+Newton      = 1
+line_search = 1
+nit_max     = 10
+rel_tol_KSP = 1e-4
+nonlin_abs_mom   = 1e-9
+nonlin_rel_mom   = 1e-9
+nonlin_abs_div   = 1e-9
+nonlin_rel_div   = 1e-9
+
+/**** VISCOSITY CUT-OFF ****/
+min_eta      = 1e-3
+max_eta      = 1e6
+
+/**** SWITCHES ****/
+anisotropy        = 0
+elastic           = 1
+free_surface      = 0
+free_surface_stab = 0
+finite_strain     = 1
+advection         = 0
+fix_temperature   = 1
+compressible      = 1
+
+/**** SETUP-DEPENDANT ****/
+shear_style     = 0
+periodic_x      = 0
+pure_shear_ALE  = 1
+bkg_strain_rate = 0
+user0           = 1      / activate thermal evolution
+user1           = 0.05   / inclusion radius [m]
+user2           = 0
+user3           = 0
+z
+
+/**** GRAVITY ****/
+gx = 0.0000
+gz = 0.000
+
+/**** MAT PROPERTIES ****/
+Nb_phases = 1
+
+/**** PHASE 1 ****/
+ID           = 0
+rho          = 2700.00 / matrix
+G            = 3e10
+Cp           = 1050
+k            = 2.5
+Qr           = 0
+C            = 1e90
+phi          = 30
+Slim         = 5e90
+alp          = 1e-5
+bet          = 1e-10
+drho         = 0
+cstv         = 1             / constant visc law
+pwlv         = 0             / disloc. creep
+linv         = 0             / diff. creep
+gbsv         = 0             / grain boundary sliding
+expv         = 0             / peierls creep
+gsel         = 0             / grain size evo.
+eta0         = 1e40
+npwl         = 3.0
+Qpwl         = 0

@@ -3,7 +3,7 @@ Pkg.activate(normpath(joinpath(@__DIR__, ".")))
 using JuliaVisualisation
 using HDF5, Printf, Colors, ColorSchemes, MathTeXEngine, LinearAlgebra, FFMPEG, Statistics
 using CairoMakie, GLMakie
-Mak = GLMakie, #CairoMakie
+Mak = GLMakie #CairoMakie
 Makie.update_theme!( fonts = (regular = texfont(), bold = texfont(:bold), italic = texfont(:italic)))
 # fontsize_theme = Theme(fontsize=200)
 # set_theme!(fontsize_theme)
@@ -16,18 +16,17 @@ const cm_y = y*100.
     # Set the path to your files
     path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/"
 
-
     # File numbers
-    file_start = 40
+    file_start = 1
     file_step  = 1
-    file_end   = 40
+    file_end   = 10
 
     # Select field to visualise
-    field = :Phases
+    # field = :Phases
     # field = :Cohesion
     # field = :Density
     # field = :Viscosity  
-    field = :PlasticStrainrate
+    # field = :PlasticStrainrate
     # field = :Stress
     # field = :σxx
     # field = :σzz
@@ -46,14 +45,15 @@ const cm_y = y*100.
     # field = :TimeSeries
     # field = :EffectiveFrictionTime
     # field = :ChristmasTree
-    field = :GPE
+    field = :PTtime
+    # field = :GPE
 
     # Define Tuple for enlargment window
     # zoom = ( 
-    #     xmin = -200e3, 
-    #     xmax = 200e3,
-    #     zmin = -5e3,
-    #     zmax = 1e3,
+    #     xmin = -500, 
+    #     xmax = 500,
+    #     zmin = -300,
+    #     zmax = 5,
     # )
 
     # Switches
@@ -62,8 +62,8 @@ const cm_y = y*100.
     framerate   = 12
     PlotOnTop = (
         ph_contours   = false,  # add phase contours
-        fabric        = false,   # add fabric quiver (normal to director)
-        T_contours    = false,  # add temperature contours
+        fabric        = false,  # add fabric quiver (normal to director)
+        T_contours    = true,   # add temperature contours
         topo          = false,
         quiver_origin = false,
         σ1_axis       = false,
@@ -74,10 +74,10 @@ const cm_y = y*100.
     )
     α_heatmap   = 1.0   # transparency of heatmap 
     vel_arrow   = 5
-    vel_scale   = 0.00001
-    vel_step    = 10
+    vel_scale   = 20
+    vel_step    = 8
     nap         = 0.1    # pause for animation 
-    resol       = 500    # resolution
+    resol       = 300    # resolution
     ar          = 1.2    # aspect ratio for Makie
     mov_name    = "$(path)/_$(field)/$(field)"  # Name of the movie
     Lx, Lz      = 1.0, 1.0
@@ -94,7 +94,7 @@ const cm_y = y*100.
     Vc = 1.0
     τc = 1e6
 
-    probe = (ϕeff = Float64.([]), t  = Float64.([]))
+    probe = (ϕeff = Float64.([]), t  = Float64.([]), T = Float64.([]), P = Float64.([]))
     cm_yr = 100.0*3600.0*24.0*365.25
 
     # Time loop
@@ -245,6 +245,8 @@ const cm_y = y*100.
         # group_phases[ ph_hr.==4 .|| ph_hr.==0 .|| ph_hr.==5  .|| ph_hr.==1  ] .= 0
         # group_phases[ ph_hr.==2 .|| ph_hr.==6   ]                             .= 1
         # group_phases[ ph_hr.==3 ]                                             .= 3
+
+        @show mean(T), mean(P)
 
         #####################################
         empty!(f)
@@ -531,6 +533,21 @@ const cm_y = y*100.
             end
         end
 
+        if field==:PTtime
+            # if istep==0 ϕ_eff = 0. end
+            push!(probe.T, mean(T)) 
+            push!(probe.P, mean(P))
+            push!(probe.t, t) 
+            if istep==file_end
+                ax1 = Axis(f[1, 1], title = L"$$Thermal pressurisation", xlabel = L"$T$ [K]", ylabel = L"$P$ [MPa]")
+                α, β = 1e-5, 1e-10
+                x = 0.0 .+ α/β*Float64.(probe.T .- probe.T[1])
+                lines!(ax1, Float64.(probe.T), x./1e6, label=L"$P_0 + \frac{\alpha}{\beta}(T - T_0)$")
+                scatter!(ax1, Float64.(probe.T), Float64.(probe.P)./1e6, label=L"$$MDood7.0")
+                axislegend(position=:rb, framevisible = false)
+            end
+        end
+
         if field==:ChristmasTree
             ax1 = Axis(f[1, 1], title = L"Stress profile at $t$ = %$(tMy) Ma", xlabel = L"$τII$ [MPa]", ylabel = L"$z$ [km]")
             lines!(ax1, mean(τII, dims=1)[:]/τc, coords.c.z./Lc/1e3, )
@@ -650,7 +667,7 @@ const cm_y = y*100.
             if printfig Print2Disk( f, path, string(field), istep) end
         end
 
-        if field!=:EffectiveFrictionTime || istep!=file_end
+        if field!=:EffectiveFrictionTime || field!=:PTtime || istep!=file_end
             DataInspector(f)
             display(f)
             sleep(nap)
