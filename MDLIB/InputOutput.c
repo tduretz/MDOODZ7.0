@@ -217,14 +217,15 @@ void LoadBreakpointParticles( markers *particles, grid* mesh, markers *topo_chai
         fread( mesh->VE_s, s3, (Nx)*(Nz), file );
     }
 
-    fread( particles->strain,     s3, particles->Nb_part, file);
-    fread( particles->strain_el,  s3, particles->Nb_part, file);
-    fread( particles->strain_pl,  s3, particles->Nb_part, file);
-    fread( particles->strain_pwl, s3, particles->Nb_part, file);
-    fread( particles->strain_exp, s3, particles->Nb_part, file);
-    fread( particles->strain_lin, s3, particles->Nb_part, file);
-    fread( particles->strain_gbs, s3, particles->Nb_part, file);
-    fread( particles->d         , s3, particles->Nb_part, file);
+    fread( particles->strain,        s3, particles->Nb_part, file);
+    fread( particles->strain_el,     s3, particles->Nb_part, file);
+    fread( particles->strain_pl,     s3, particles->Nb_part, file);
+    fread( particles->strain_pl_vol, s3, particles->Nb_part, file);
+    fread( particles->strain_pwl,    s3, particles->Nb_part, file);
+    fread( particles->strain_exp,    s3, particles->Nb_part, file);
+    fread( particles->strain_lin,    s3, particles->Nb_part, file);
+    fread( particles->strain_gbs,    s3, particles->Nb_part, file);
+    fread( particles->d         ,    s3, particles->Nb_part, file);
 
     if (model->finite_strain == 1) {
         fread( particles->Fxx         , s3, particles->Nb_part, file);
@@ -727,14 +728,15 @@ void MakeBreakpointParticles( markers *particles,  grid* mesh, markers *topo_cha
         fwrite( mesh->VE_s, s3, (Nx)*(Nz), file );
     }
 
-    fwrite( particles->strain,     s3, particles->Nb_part, file);
-    fwrite( particles->strain_el,  s3, particles->Nb_part, file);
-    fwrite( particles->strain_pl,  s3, particles->Nb_part, file);
-    fwrite( particles->strain_pwl, s3, particles->Nb_part, file);
-    fwrite( particles->strain_exp, s3, particles->Nb_part, file);
-    fwrite( particles->strain_lin, s3, particles->Nb_part, file);
-    fwrite( particles->strain_gbs, s3, particles->Nb_part, file);
-    fwrite( particles->d         , s3, particles->Nb_part, file);
+    fwrite( particles->strain,        s3, particles->Nb_part, file);
+    fwrite( particles->strain_el,     s3, particles->Nb_part, file);
+    fwrite( particles->strain_pl,     s3, particles->Nb_part, file);
+    fwrite( particles->strain_pl_vol, s3, particles->Nb_part, file);
+    fwrite( particles->strain_pwl,    s3, particles->Nb_part, file);
+    fwrite( particles->strain_exp,    s3, particles->Nb_part, file);
+    fwrite( particles->strain_lin,    s3, particles->Nb_part, file);
+    fwrite( particles->strain_gbs,    s3, particles->Nb_part, file);
+    fwrite( particles->d         ,    s3, particles->Nb_part, file);
 
     if (model.finite_strain == 1) {
         fwrite( particles->Fxx         , s3, particles->Nb_part, file);
@@ -1037,7 +1039,7 @@ Input ReadInputFile( char *fileName ) {
     model.writer_debug       = ReadInt2( fin, "writer_debug",        0 ); // Writes debug files
     model.writer_subfolder   = ReadChar( fin, "writer_subfolder",  "./"); // Writes output in given subfolder
     // printf("%s\n", model.writer_subfolder); exit(1);
-    model.noisy              = ReadInt2( fin, "noisy",               1 ); // Prints a lot of info to standard output
+    model.noisy              = ReadInt2( fin, "noisy",               0 ); // Prints a lot of info to standard output
     model.track_T_P_x_z      = ReadInt2( fin, "track_T_P_x_z",       0 ); // Tracks initial T, P, x and z on particles 
     model.delete_breakpoints = ReadInt2( fin, "delete_breakpoints",  1 ); // Progressively deletes breakpoint files
     model.gnuplot_log_res    = ReadInt2( fin, "gnuplot_log_res",     0 ); // Activates GNU plot residuals visualisation
@@ -1074,7 +1076,7 @@ Input ReadInputFile( char *fileName ) {
     model.Courant            = ReadDou2( fin, "Courant",             0.5 ); // Courant number
     model.RK                 = ReadInt2( fin, "RK",                    4 ); // Order of Runge-Kutta advection solver (1, 2 or 4)
     model.constant_dt        = ReadInt2( fin, "constant_dt",           0 ); // Activates constant time step
-    model.stress_rotation    = ReadInt2( fin, "stress_rotation",       1 ); // 0: no stress rotation, 1: analytic rotation, 2: upper convected rate
+    model.stress_rotation    = ReadInt2( fin, "stress_rotation",       1 ); // 0: no stress rotation, 1: Jaumann, 2: analytical
     model.dt_max             = ReadDou2( fin, "dt_max", 1e20 ) /scaling.t;  // maximum allowed time step, the default value is set to ~infinite, it we become effective only if specificaly set in XXX.txt (see e.g. LithoScale.txt)
     model.dt_min             = ReadDou2( fin, "dt_min",-1e20 ) /scaling.t;  // minimum allowed time step, defaut is negative such that it will never be activated unless specifically set in XXX.txt file
     model.dt_reduction_factor= ReadDou2( fin, "dt_reduction_factor", 1);
@@ -1159,6 +1161,12 @@ Input ReadInputFile( char *fileName ) {
     model.marker_aniso_angle = ReadInt2( fin, "marker_aniso_angle",    0 ); // Enables setting anisotropy angle per particles rather than phases
     model.layering           = ReadInt2( fin, "layering",              0 ); // Activation of Layering (Anais setup)
     model.inject_dikes       = ReadInt2( fin, "inject_dikes",          0 ); // Activation of dike and sill injection
+    // Dike injection
+    model.dike_temperature   = ReadDou2( fin, "dikeT",              1e-30)/scaling.T;
+    model.dike_phase         = ReadInt2( fin, "dikePh",                 0);
+    model.injection_rate     = ReadDou2( fin, "injRate",            1e-30) / pow(scaling.L, 3) * scaling.t;
+    model.injection_period   = ReadDou2( fin, "injPeriod",          1e-30) / scaling.t;
+    model.injection_start    = ReadDou2( fin, "injStart",           1e-30) / scaling.t;
     // Transformations
     model.chemical_diffusion  = ReadInt2( fin, "chemical_diffusion",              0 ); // Activate progressive reactions
     model.chemical_production = ReadInt2( fin, "chemical_production",              0 ); // Activate progressive reactions
@@ -1277,11 +1285,9 @@ Input ReadInputFile( char *fileName ) {
         materials.T0[k]   = (zeroC) / (scaling.T); 
         materials.P0[k]   = 1e5 / (scaling.S);
         // Read melting model
-        materials.melt[k]     = (int)ReadMatProps( fin, "melt",     k,    0.0   );     // 0: No plasticity --- >1: Yes, the type should be selected accordingly 
+        materials.melt[k]     = (int)ReadMatProps( fin, "melt",     k,    0.0   );     // 0: No melt --- >1: Yes, the type should be selected accordingly 
         // Read plasticity switches
-        materials.plast[k]    = (int)ReadMatProps( fin, "plast",    k,    1.0   );     // 0: No plasticity --- 1: Yes 
-        materials.tensile[k]  = (int)ReadMatProps( fin, "tensile",  k,    0.0   );     // 0: No tensile plasticity --- 1: Yes 
-        materials.yield[k]    = (int)ReadMatProps( fin, "yield",    k,    1.0   );     // 1: Drucker-Prager
+        materials.plast[k]    = (int)ReadMatProps( fin, "plast",    k,    0.0   );     // 0: No plasticity --- 1: Drucker-Prager, 2: Tensile Popov et al. 2025 
         // Read plasticity parameters
         materials.sig_tens[k] = ReadMatProps( fin, "sig_tens", k,  1.0e7 ) / scaling.S; // Tension stress for hyperbolic Drucker-Prager
         materials.sig1[k]     = ReadMatProps( fin, "sig1",     k,  1.0e7 ) / scaling.S; // Transition stress to 0 dilatancy for hyperbolic Drucker-Prager
@@ -1333,6 +1339,9 @@ Input ReadInputFile( char *fileName ) {
         materials.eta0[k]     = ReadMatProps( fin,     "eta0", k, 1.0e20  ) / scaling.eta;
         materials.npwl[k]     = ReadMatProps( fin,     "npwl", k,    1.0  );
         materials.Qpwl[k]     = ReadMatProps( fin,     "Qpwl", k,    0.0  );
+        materials.Apwl[k]     = ReadMatProps( fin,     "Apwl", k,    0.0  );
+        materials.apwl[k]     = ReadMatProps( fin,     "apwl", k,    0.0  );
+        materials.tpwl[k]     = ReadMatProps( fin,     "tpwl", k,    0.0  );
         materials.pref_pwl[k] = ReadMatProps( fin, "pref_pwl", k,    1.0  );    // weakening prefactor for power law
         materials.gs[k]       = ReadMatProps( fin,       "gs", k,    0.0  );
         materials.gs_ref[k]   = ReadMatProps( fin,   "gs_ref", k, 2.0e-3  ) / scaling.L;

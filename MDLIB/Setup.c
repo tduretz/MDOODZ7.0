@@ -909,7 +909,7 @@ SetBC SetPureShearBCVx(MdoodzInput *input, POSITION position, Coordinates coordi
     bc.value = 0;
     bc.type  = 13;
   } else if (position == W || position == E) {
-    bc.value = -coordinates.x * input->model.bkg_strain_rate;
+    bc.value = coordinates.x * input->model.bkg_strain_rate;
     bc.type  = 0;
   } else {
     bc.value = 0.0;
@@ -966,7 +966,7 @@ SetBC SetPureShearBCVz(MdoodzInput *input, POSITION position, Coordinates coordi
     bc.value = 0;
     bc.type  = 13;
   } else if (position == S || position == N) {
-    bc.value = coordinates.z * input->model.bkg_strain_rate;
+    bc.value = -coordinates.z * input->model.bkg_strain_rate;
     bc.type  = 0;
   } else {
     bc.value = 0;

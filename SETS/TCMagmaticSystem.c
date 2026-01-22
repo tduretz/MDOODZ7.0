@@ -66,7 +66,7 @@ double SetTemperature(MdoodzInput *instance, Coordinates coordinates) {
 }
 
 double SetHorizontalVelocity(MdoodzInput *instance, Coordinates coordinates) {
-  return -coordinates.x * instance->model.bkg_strain_rate;
+  return coordinates.x * instance->model.bkg_strain_rate;
 }
 
 double SetVerticalVelocity(MdoodzInput *instance, Coordinates coordinates) {
