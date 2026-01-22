@@ -82,6 +82,9 @@ typedef struct {
   double Pn, Tmin, Tmax, Emin, Emax, dmin, dmax, bkg_pressure, bkg_temperature;
   // Surface processes
   double surf_diff, surf_sedirate, surf_baselev, surf_Winc, surf_Vinc;
+  // Dike injection
+  double dike_temperature, injection_rate, injection_period, injection_start;
+  int    dike_phase;
   // Initial thermal perturbation
   double therm_perturb_x0, therm_perturb_z0, therm_perturb_dT, therm_perturb_rad_x, therm_perturb_rad_z,
           cooling_duration;
@@ -150,7 +153,7 @@ typedef struct {
           phase_diagram[20], density_model[20];
   double C_end[20], phi_end[20], psi_end[20], pls_start[20], pls_end[20],
           eta_vp[20], n_vp[20], sig_tens[20], sig1[20], dsig1[20], T_st[20], H_c[20];
-  int    plast[20], tensile[20], phi_soft[20], psi_soft[20], coh_soft[20], yield[20];
+  int    plast[20], phi_soft[20], psi_soft[20], coh_soft[20];
   double Pr[20], tau_kin[20], dPr[20], k_chem[20];
   int    reac_soft[20], reac_phase[20];
   int    phase_mix[20], phase_two[20];

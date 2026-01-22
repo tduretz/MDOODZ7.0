@@ -8,7 +8,7 @@ function AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, F
         Mak.contour!(ax1, coords.c_hr.x./Lc, coords.c_hr.z./Lc, group_phases, levels=-1:1:maximum(group_phases), linewidth = 4, color=:white )  
     end
     if PlotOnTop.T_contours 
-        Mak.contour!(ax1, coords.c.x./Lc, coords.c.z./Lc, T, levels=0:200:1400, linewidth = 4, color=:black )  
+        Mak.contour!(ax1, coords.c.x./Lc, coords.c.z./Lc, T, levels=0:50:1400, linewidth = 2, color=:black )  
     end  
     if PlotOnTop.PT_window 
         Mak.contour!(ax1, coords.c.x./Lc, coords.c.z./Lc, PT, linewidth = 4, color=:red )  

@@ -258,29 +258,28 @@ void MassSourceTerm( grid* mesh, markers* particles, mat_prop *materials, params
 // This is the main function
 void InjectDikesAndSills(markers *particles, MdoodzInput *instance){
     // Initialize and fix the semi-major and minor axis of the dikes, read in the rate and current time step to calcuted the magma budget
-    double semi_maj = 3.0e3 / instance->scaling.L; // This times 2 is the length of the dike
+    double semi_maj = 1.5e3 / instance->scaling.L; // This times 2 is the length of the dike
     double semi_min = 0.2e3 / instance->scaling.L; // This times 2 is the width of the dike
-    double dike_ext = 1.0e0 / instance->scaling.L; // Extend of the dike in the third dimension. Used to calculate the area magma budget below
+    double dike_ext = 1.0e2 / instance->scaling.L; // Extend of the dike in the third dimension. Used to calculate the area magma budget below
     double dt       = instance->model.dt;          // Current time step - ACHTUNG this value is scaled
-    double conv     = pow(1000.0, 3) / (3600.0*24.0*365.25); // Convert km3/yr to m3/s
-    double Vdot     = instance->model.user1 * conv / (pow(instance->scaling.L, 3)) * instance->scaling.t;       // Fixed magma injection rate
+    double Vdot     = instance->model.injection_rate;       // Fixed magma injection rate
     double Abud     = Vdot / dike_ext * instance->model.dt;             // This is the area magma budget we need to get provide at the current time step
     
     // Initialize central coords, angle of the dikes to be injected, and the current area budget - these are not fixed but change during dike injection
     double Lx         = instance->model.xmax - instance->model.xmin;
     double Lz         = instance->model.zmax - instance->model.zmin;
     double Ainj       = 0.0;
-    double xinj_s     = instance->model.xmin + Lx / 5.0; // Vertex coordinates of injection area
-    double xinj_e     = instance->model.xmax - Lx / 5.0;
-    double zinj_s     = instance->model.zmin + Lz / 5.0;
-    double zinj_e     = instance->model.zmax - Lz / 5.0;
+    double xinj_s     = instance->model.xmin + Lx / 3.0; // Vertex coordinates of injection area
+    double xinj_e     = instance->model.xmax - Lx / 3.0;
+    double zinj_s     = instance->model.zmin + Lz / 3.0;
+    double zinj_e     = instance->model.zmax - Lz / 3.0;
     double xc         = 0.0;
     double zc         = 0.0;
-    double dx_dike    = 5.0 * instance->model.dx;
-    double dz_dike    = 5.0 * instance->model.dz;
+    double dx_dike    = 2.5 * instance->model.dx;
+    double dz_dike    = 2.5 * instance->model.dz;
     double angle_dike = 0.0;
-    int    ph_dike    = (int)instance->model.user2;
-    double T_dike     = (instance->model.user3 + zeroC) / instance->scaling.T;
+    int    ph_dike    = (int)instance->model.dike_phase;
+    double T_dike     = (instance->model.dike_temperature);
 
     // Inject dikes until the area magma budget is met
     int iter = 0, max_iter = 1e3;

@@ -82,6 +82,20 @@ void ReadDataPowerLaw( mat_prop* mat, params* model, int k, int number, scale* s
             success      = 1;
             break;
 
+        case 3 :
+            printf("'Homemade' power law flow of the form: eta = A * exp(-Q/n/R/T) * Eii^(1/n - 1):\n" );
+            mat->tpwl[k] = 0.0;
+            mat->npwl[k] = mat->npwl[k];
+            mat->mpwl[k] = 0.0;
+            mat->rpwl[k] = 0.0;
+            mat->Qpwl[k] = mat->Qpwl[k];
+            mat->Vpwl[k] = 0.0;
+            mat->Apwl[k] = mat->Apwl[k]; // rescale eta0 here, as A will be scaled later on
+            mat->fpwl[k] = 0.0;
+            mat->apwl[k] = mat->apwl[k];
+            success      = 1;
+            break;
+
         /******************************** Crust flow laws *********************************/
                 
         case 10:
@@ -587,7 +601,7 @@ void ReadDataLinear( mat_prop* mat, params* model, int k, int number, scale* sca
             
         case 1:
             printf("Siltstone flow law calibrated from file data  at 350 C ():\n" );
-            mat->tpwl[k] = 1;
+            mat->tpwl[k] = 1.0;
             mat->npwl[k] = 3.3;
             mat->mpwl[k] = 0.0;
             mat->rpwl[k] = 0.0;
@@ -645,7 +659,7 @@ void ReadDataLinear( mat_prop* mat, params* model, int k, int number, scale* sca
             
         case 40 :
             printf("Olivine Dry Diffusion creep - Hirth & Kohlstedt (2003):\n");
-            mat->tlin[k] = 1;
+            mat->tlin[k] = 1.0;
             mat->nlin[k] = 1.0;
             mat->mlin[k] = 3.0;
             mat->rlin[k] = 0.0;
