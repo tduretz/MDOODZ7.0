@@ -13,28 +13,37 @@ double SetSurfaceZCoord(MdoodzInput *instance, double x_coord) {
 
 int SetPhase(MdoodzInput *input, Coordinates coordinates) {
   const double a_out = 4.0e3 / input->scaling.L;
-  const double b_out = 2.0e3 / input->scaling.L;
+  const double b_out = 0.5e3 / input->scaling.L;
   const double xc_e  = 0.0 / input->scaling.L;
   const double zc_e  = input->model.user1 / input->scaling.L;
   const double x = coordinates.x, z =  coordinates.z;
   double r = (double)rand() / (double)RAND_MAX;  
   double prob = 0.01;   // (tune from 0–1)
 
-  const double position_out = (x - xc_e) * (x - xc_e) / (a_out * a_out) + (z - zc_e) * (z - zc_e) / (b_out * b_out);
+  const double x0 = x - xc_e;
+  const double z0 = z - zc_e;
+  const double tet = 20*M_PI/180;
+  const double x1 = x0*cos(tet) - z0*sin(tet);
+  const double z1 = x0*sin(tet) + z0*cos(tet);
+  const double position_out = x1*x1 / (a_out * a_out) + z1*z1 / (b_out * b_out);
+
+   const double random_inclusions  = input->model.user1;
+
 
   int phase = 0;
 
-  if (z > zc_e)
-  {
-    if (r < prob) {
-    phase = 1;
+  if (random_inclusions == 1) {
+    if (z > zc_e) {
+      if (r < prob) {
+        phase = 1;
+      }
     }
   }
-  
-
-  // if (position_out <= 1.0) {
-  //   phase = 1;
-  // }
+  else {
+    if (position_out <= 1.0) {
+      phase = 1;
+    }
+  }
 
   //printf("checkvals: %e \n", position_out);
 

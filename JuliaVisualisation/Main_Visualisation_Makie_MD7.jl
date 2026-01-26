@@ -15,14 +15,15 @@ const cm_y = y*100.
 
     # Set the path to your files
     path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/"
+    # path ="/Users/tduretz/REPO/MDOODZ7.0/outputs/test/"
 
     # File numbers
-    file_start = 0
-    file_step  = 10
-    file_end   = 00
+    file_start = 45
+    file_step  = 1
+    file_end   = 45
 
     # Select field to visualise
-    # field = :Phases
+    field = :Phases
     # field = :Cohesion
     # field = :Density
     # field = :Viscosity  
@@ -30,7 +31,7 @@ const cm_y = y*100.
     # field = :Stress
     # field = :σxx
     # field = :σzz
-    # field = :StrainRate
+    field = :StrainRate
     # field = :Pressure 
     # field = :Divergence
     # field = :Temperature
@@ -64,7 +65,7 @@ const cm_y = y*100.
         T_contours    = false,  # add temperature contours
         topo          = false,
         quiver_origin = false,
-        σ1_axis       = false,
+        σ1_axis       = true,
         ε̇1_axis       = false,
         vel_vec       = false,
         ϕ_contours    = false,
@@ -530,11 +531,18 @@ const cm_y = y*100.
         end
 
         if field==:ChristmasTree
-            ax1 = Axis(f[1, 1], title = L"Stress profile at $t$ = %$(tMy) Ma", xlabel = L"$τII$ [MPa]", ylabel = L"$z$ [km]")
-            lines!(ax1, mean(τII, dims=1)[:]/τc, coords.c.z./Lc/1e3, )
-            lines!(ax1, mean(T, dims=1)[:], coords.c.z./Lc/1e3, )
-            ax2 = Axis(f[1, 2], title = L"Temperature profile at $t$ = %$(tMy) Ma", xlabel = L"$T$ [C]", ylabel = L"$h$ [km]")
-            lines!(ax2, mean(T, dims=1)[:], coords.c.z./Lc/1e3, )
+
+            ϕ    = 20.0
+            τ_DP = sind(ϕ)*P .+ cosd(ϕ)*1e7
+
+            ax1 = Axis(f[1, 1], title = L"$\tau_\text{II}$ at $t$ = %$(tMy) Ma", xlabel = L"$τ_\text{II}$ [MPa]", ylabel = L"$z$ [km]")
+            lines!(ax1, mean(τII, dims=1)[:]/τc, coords.c.z./Lc, )
+            lines!(ax1, mean(τ_DP, dims=1)[:]/τc, coords.c.z./Lc, )
+            lines!(ax1, mean(T, dims=1)[:], coords.c.z./Lc, )
+            ax2 = Axis(f[1, 2], title = L"$T$ at $t$ = %$(tMy) Ma", xlabel = L"$T$ [C]", ylabel = L"$z$ [km]")
+            lines!(ax2, mean(T, dims=1)[:], coords.c.z./Lc, )
+            ax3 = Axis(f[1, 3], title = L"$P$ at $t$ = %$(tMy) Ma", xlabel = L"$P$ [GPa]", ylabel = L"$z$ [km]")
+            lines!(ax3, mean(P, dims=1)[:]./1e9, coords.c.z./Lc, )
         end
 
         if field!=:EffectiveFrictionTime || istep!=file_end
