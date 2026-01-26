@@ -7,22 +7,37 @@ double SetSurfaceZCoord(MdoodzInput *instance, double x_coord) {
   const double TopoLevel   = -0.0e3 / instance->scaling.L;
   const double basin_width = 30.0e3 / instance->scaling.L;
   const double h_pert      = instance->model.user3 / instance->scaling.L;
-  const double x           = x_coord - instance->model.user4 / instance->scaling.L;
-  return TopoLevel;
+  const double x           = x_coord - instance->model.user2 / instance->scaling.L;
+  return TopoLevel; //+ h_pert * exp( - (x*x) / (2.0*basin_width*basin_width)   );
 }
 
 int SetPhase(MdoodzInput *input, Coordinates coordinates) {
   const double a_out = 4.0e3 / input->scaling.L;
   const double b_out = 2.0e3 / input->scaling.L;
   const double xc_e  = 0.0 / input->scaling.L;
-  const double zc_e  = -10.0e3 / input->scaling.L;
+  const double zc_e  = input->model.user1 / input->scaling.L;
   const double x = coordinates.x, z =  coordinates.z;
+  double r = (double)rand() / (double)RAND_MAX;  
+  double prob = 0.01;   // (tune from 0–1)
+
   const double position_out = (x - xc_e) * (x - xc_e) / (a_out * a_out) + (z - zc_e) * (z - zc_e) / (b_out * b_out);
+
   int phase = 0;
 
-  if (position_out <= 1.0) {
+  if (z > zc_e)
+  {
+    if (r < prob) {
     phase = 1;
+    }
   }
+  
+
+  // if (position_out <= 1.0) {
+  //   phase = 1;
+  // }
+
+  //printf("checkvals: %e \n", position_out);
+
 
   return phase;
 }
@@ -63,7 +78,7 @@ double SetDensity(MdoodzInput *input, Coordinates coordinates, int phase) {
 
 double SetTemperature(MdoodzInput *instance, Coordinates coordinates) {
   const double surfaceTemperature = (15.0+273.15) / instance->scaling.T;
-  const double mantleTemperature  = (1000.0) / instance->scaling.T;
+  const double mantleTemperature  = (1000.0 + zeroC) / instance->scaling.T;
   const double gradT              = (mantleTemperature - surfaceTemperature) / fabs(instance->model.zmin);
   const double Tamp               = (900.0 + zeroC) / instance->scaling.T;
   const double d                  =  coordinates.z;
@@ -97,14 +112,24 @@ double SetTemperature(MdoodzInput *instance, Coordinates coordinates) {
 
   double particleTemperature = (T_s + Q * z/u + ((T_D-T_s-Q*D/u)/(1-exp(-u*D)))*(exp(u*(z-D))-exp(-u*D)));
 
-  if (particleTemperature>1000)
-  {
-    particleTemperature == 1000/(instance->scaling.T);
-  }
+  // if (particleTemperature>1000)
+  // {
+  //   particleTemperature == 1000/(instance->scaling.T);
+  // }
   
   //printf("checkvals: %e %e %e %e %e %e %e %e %e %e\n", particleTemperature, u, Q, v_z, rho, c_p, H, z, D, t_cond);
 
   return particleTemperature;
+}
+
+double SetPressure(MdoodzInput *input, Coordinates coordinates, int phase) {
+  const double d                  =  coordinates.z;
+  const double g                  = input->model.gz;
+  const double rho                = input->materials.rho[1];
+
+  const double linP = (rho * g * d);
+
+  return linP;
 }
 
 double SetHorizontalVelocity(MdoodzInput *instance, Coordinates coordinates) {
@@ -118,8 +143,20 @@ double SetVerticalVelocity(MdoodzInput *instance, Coordinates coordinates) {
 SetBC SetBCT(MdoodzInput *instance, POSITION position, Coordinates coordinates,  double particleTemperature) {
   SetBC     bc;
   const double surface_temperature =          zeroC  / instance->scaling.T;
-  const double basalTemperature  = (1000.0 + zeroC) / instance->scaling.T;
-  
+  double basalTemperature  = (1000.0 + zeroC) / instance->scaling.T;
+  double coolingrate = instance->model.user5 * instance->scaling.t/instance->scaling.T;
+  double time = instance->model.time; // scale time?
+  double step = instance->model.dt;
+
+  basalTemperature = basalTemperature-(coolingrate*(time));
+
+  // if (time>5e5)
+  // {
+  //   basalTemperature = surface_temperature;//basalTemperature-(coolingrate*time);
+  // }
+ 
+  //printf("checkvals: %e %e %e %e \n", time, coolingrate, step, basalTemperature);
+
   if (position == S) {
     bc.type  = constant_temperature;
     bc.value = basalTemperature;
@@ -153,6 +190,7 @@ int main(int nargs, char *args[]) {
             .SetPhase                 = SetPhase,
             .SetDensity               = SetDensity,
             .SetTemperature           = SetTemperature,
+            .SetPressure              = SetPressure,
             .SetHorizontalVelocity    = SetHorizontalVelocity,
             .SetVerticalVelocity      = SetVerticalVelocity
         },

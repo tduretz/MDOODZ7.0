@@ -496,14 +496,14 @@ void ReadDataPowerLaw( mat_prop* mat, params* model, int k, int number, scale* s
             break;
             
         case 44:
-            printf("Olivine - Chopra and Paterson 1984 :\n" );
+            printf("Olivine - (Anita Bay Dunite) Chopra and Paterson 1984 :\n" );
             mat->tpwl[k] = 1;
-            mat->npwl[k] = 3.0;
+            mat->npwl[k] = 3.35;
             mat->mpwl[k] = 0.0;
             mat->rpwl[k] = 0.0;
-            mat->Qpwl[k] = 520.0e3;
+            mat->Qpwl[k] = 444.0e3;
             mat->Vpwl[k] = 0.0e-6;
-            mat->Apwl[k] = 1.0e-14;
+            mat->Apwl[k] = 7.586e-17;
             mat->fpwl[k] = 0.0;
             mat->apwl[k] = 0.0;
             success      = 1;
@@ -532,6 +532,20 @@ void ReadDataPowerLaw( mat_prop* mat, params* model, int k, int number, scale* s
             mat->Qpwl[k] = 17.6e3;
             mat->Vpwl[k] = 0.0e-6;
             mat->Apwl[k] = 5.3443e-41;
+            mat->fpwl[k] = 0.0;
+            mat->apwl[k] = 0.0;
+            success      = 1;
+            break;
+
+        case 47:
+            printf("Olivine - (Aheim Dunite) Chopra and Paterson 1984 :\n" );
+            mat->tpwl[k] = 1;
+            mat->npwl[k] = 4.48;
+            mat->mpwl[k] = 0.0;
+            mat->rpwl[k] = 0.0;
+            mat->Qpwl[k] = 498.0e3;
+            mat->Vpwl[k] = 0.0e-6;
+            mat->Apwl[k] = 5.495e-25;
             mat->fpwl[k] = 0.0;
             mat->apwl[k] = 0.0;
             success      = 1;
