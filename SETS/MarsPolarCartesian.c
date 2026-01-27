@@ -6,7 +6,7 @@
 
 double SetSurfaceZCoord(MdoodzInput *instance, double x) {
   double h = 0.0;
-  const double Mars_radius = 3390e3/instance->scaling.L;
+  const double Mars_radius = instance->model.planet_radius;
   if (instance->model.polar==0) {
     // Flat topo 
     h     = Mars_radius;
@@ -21,7 +21,7 @@ double SetSurfaceZCoord(MdoodzInput *instance, double x) {
 int SetPhase(MdoodzInput *instance, Coordinates coordinates) {
   int phase = 0; // Default: crust
   const double x = coordinates.x, z = coordinates.z;
-  const double Mars_radius = 3390e3/instance->scaling.L;
+  const double Mars_radius = instance->model.planet_radius;
   const double zMoho = Mars_radius + instance->model.user0/instance->scaling.L;
   const double zLAB  = Mars_radius + instance->model.user1/instance->scaling.L;
   const double angle = 35.*M_PI/180;
@@ -55,7 +55,7 @@ int SetPhase(MdoodzInput *instance, Coordinates coordinates) {
 double SetTemperature(MdoodzInput *instance, Coordinates coordinates) {
   const double x = coordinates.x, z = coordinates.z;
   const double Lz = (double) (instance->model.zmax - instance->model.zmin) ;
-  const double Mars_radius = 3390e3/instance->scaling.L;
+  const double Mars_radius = instance->model.planet_radius;
   const double Ttop  = 293.0/(instance->scaling.T);
   const double Tbot  = (instance->model.user3 + zeroC)/instance->scaling.T;
   double Tgrad = (Ttop-Tbot)/ (Lz - (instance->model.zmax-Mars_radius));
@@ -122,7 +122,7 @@ double BoundaryVelocityProfilePrimitive(double V, double z, double z_LAB, double
 
 SetBC SetBCVx(MdoodzInput *instance, POSITION position, Coordinates coordinates) {
   SetBC bc;
-  const double Mars_radius = 3390e3/instance->scaling.L, dz_smooth = 10e3/instance->scaling.L;
+  const double Mars_radius = instance->model.planet_radius, dz_smooth = 10e3/instance->scaling.L;
   const double Lx = instance->model.xmax - instance->model.xmin;
   double V_tot    =  Lx * instance->model.bkg_strain_rate; // |VxW| + |VxE|
   double maxAngle = asin(Lx/2/Mars_radius);     // Aperture angle
@@ -179,7 +179,7 @@ SetBC SetBCVx(MdoodzInput *instance, POSITION position, Coordinates coordinates)
 
 SetBC SetBCVz(MdoodzInput *instance, POSITION position, Coordinates coordinates) {
   SetBC bc;
-  const double Mars_radius = 3390e3/instance->scaling.L, dz_smooth = 10e3/instance->scaling.L;
+  const double Mars_radius = instance->model.planet_radius, dz_smooth = 10e3/instance->scaling.L;
   const double Lx = instance->model.xmax - instance->model.xmin;
   double V_tot    =  Lx * instance->model.bkg_strain_rate; // |VxW| + |VxE|
   double maxAngle = asin(Lx/2/Mars_radius);     // Aperture angle

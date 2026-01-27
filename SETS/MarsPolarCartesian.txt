@@ -45,7 +45,8 @@ initial_cooling   = 1
 subgrid_diffusion = 2
 shear_heating     = 1
 adiab_heating     = 0
-polar             = 1
+polar             = 0
+planet_radius     = 3390e3
 anisotropy        = 0
 stress_rotation   = 2
 
