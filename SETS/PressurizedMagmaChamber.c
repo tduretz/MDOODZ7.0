@@ -170,10 +170,10 @@ int main(int nargs, char *args[]) {
             .SetTemperature           = SetTemperature,
         },
         .SetBCs = &(SetBCs_ff){
-            // .SetBCVx = SetPureShearBCVx,
-            // .SetBCVz = SetPureShearBCVz,
-            .SetBCVx = SetBCVx,
-            .SetBCVz = SetBCVz,
+            .SetBCVx = SetPureOrSimpleShearBCVx,
+            .SetBCVz = SetPureOrSimpleShearBCVz,
+            // .SetBCVx = SetBCVx,
+            // .SetBCVz = SetBCVz,
             .SetBCT  = SetBCT,
         },
   };
