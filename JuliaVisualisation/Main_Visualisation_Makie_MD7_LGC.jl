@@ -25,12 +25,12 @@ const cm_y = y*100.
     # File numbers
     file_start = 0
     file_step  = 5
-    file_end   = 205
+    file_end   = 100
 
     # Select field to visualise
     # field = :Phases
     # field = :Cohesion
-    #  field = :FrictionAngle
+    # field = :FrictionAngle
     # field = :Density
     # field = :Viscosity  
     # field = :PlasticStrainrate
@@ -502,7 +502,7 @@ const cm_y = y*100.
 
         if field==:AccPlasticStrain
             κpl_min = 0.0
-            κpl_max = 1e-3
+            κpl_max = 5e-3
             κpl_clipped = clamp.(κpl, κpl_min, κpl_max)
             ax1 = Axis(f[1, 1], title = L"$\kappa^\textrm{pl}$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]", aspect = DataAspect())
             hm = heatmap!(ax1, xc./Lc, zc./Lc, κpl_clipped, colormap = (Reverse(:bilbao), α_heatmap), colorrange = (κpl_min, κpl_max + 1e-30))
@@ -517,7 +517,7 @@ const cm_y = y*100.
 
         if field==:AccVolPlasticStrain
             Χpl_min = 0.0
-            Χpl_max = 5e-3
+            Χpl_max = 1e-3
             Χpl_clipped = clamp.(Χpl, Χpl_min, Χpl_max)
             ax1 = Axis(f[1, 1], title = L"$\Chi^\textrm{pl}$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]", aspect = DataAspect())
             hm = heatmap!(ax1, xc./Lc, zc./Lc, Χpl_clipped, colormap = (Reverse(:bilbao), α_heatmap), colorrange = (Χpl_min, Χpl_max + 1e-30))

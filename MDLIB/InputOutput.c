@@ -1125,6 +1125,7 @@ Input ReadInputFile( char *fileName ) {
     model.safe_dt_div        = ReadDou2( fin, "safe_dt_div",         5.0 ); // Reduction factor for time step reduction
     model.max_num_stag       = ReadInt2( fin, "max_num_stag",          3 ); // maximum number of stagnation (safe mode)
     model.line_search        = ReadInt2( fin, "line_search",           0 ); // Activates line search
+    model.tensile_line_search = ReadInt2( fin, "tensile_line_search",  0 ); // Activates line search for combined mode-I/mode-II plasticity
     model.line_search_min    = ReadDou2( fin, "line_search_min",     0.0 ); // Minimum alpha value for line search 
     model.residual_form      = ReadInt2( fin, "residual_form",         1 ); // Form of residual - TODO: delete if our models work with new default value (1)
     Nmodel.stagnated         = 0;

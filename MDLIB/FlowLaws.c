@@ -593,26 +593,15 @@ void ReadDataLinear( mat_prop* mat, params* model, int k, int number, scale* sca
     switch ( abs(number) ) {
             
         case 0 :
-            printf ("should not be here\n");
+            printf("should not be here\n");
             success      = 0;
             break;
 
         /****************** SPECIAL CASE: user-defined power law flow law ******************/
-            
-        case 1:
-            printf("Siltstone flow law calibrated from file data  at 350 C ():\n" );
-            mat->tpwl[k] = 1.0;
-            mat->npwl[k] = 3.3;
-            mat->mpwl[k] = 0.0;
-            mat->rpwl[k] = 0.0;
-            mat->Qpwl[k] = 186.5e3;
-            mat->Vpwl[k] = 0.0e-6;
-            mat->Apwl[k] = 3.1623e-26;
-            mat->fpwl[k] = 0.0;
-            mat->apwl[k] = 0.0;
-            success      = 1;
+        case 1 :
+            printf("Please, set the parameters for this user-defined flow law in MDLIB/FlowLaws.c\n");
+            success      = 0;
             break;
-        
         /******************************** Crust flow laws *********************************/
                
         case 15 :
