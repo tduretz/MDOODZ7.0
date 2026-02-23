@@ -80,8 +80,10 @@ int SetPhase(MdoodzInput *instance, Coordinates coordinates) {
   X = 20e3/instance->scaling.L;
   x_ell = (x-X)*cos(angle) + (z-Z)*sin(angle);
   z_ell =-(x-X)*sin(angle) + (z-Z)*cos(angle);
-  if (pow(x_ell/a_ell,2.0) + pow(z_ell/b_ell,2.0) < 1.0) phase = 0;
-  
+  if (pow(x_ell/a_ell,2.0) + pow(z_ell/b_ell,2.0) < 1.0) phase = 3;
+  // Weak surface
+  const double Z_weak = Mars_radius - 5e3/instance->scaling.L;
+  if (z>Z_weak) phase = 3;
   return phase;
 }
 
