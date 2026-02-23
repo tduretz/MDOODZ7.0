@@ -5,44 +5,77 @@
 #include "stdio.h"
 
 double SetSurfaceZCoord(MdoodzInput *instance, double x) {
-  double h = 0.0;
-  const double Mars_radius = 3390e3/instance->scaling.L;
-  if (instance->model.polar==0) {
-    // Flat topo 
-    h     = Mars_radius;
-  } 
+  double h = 0.0, dh = 4e3/instance->scaling.L;
+  const double Mars_radius = instance->model.planet_radius;
+
+  // Default flat topo 
+  h     = Mars_radius;
+
+  if (x>0) h += dh;
+
   if (instance->model.polar==1) {
     // Curved topography (see PolarCoordinatesStuff.py)
-    h     =  sqrt((Mars_radius - x)*(Mars_radius + x));
+    h     =  sqrt((h - x)*(h + x));
   }                   
   return h;
 }
 
 int SetPhase(MdoodzInput *instance, Coordinates coordinates) {
   int phase = 0; // Default: crust
+  const double Lc = instance->scaling.L;
   const double x = coordinates.x, z = coordinates.z;
-  const double Mars_radius = 3390e3/instance->scaling.L;
-  const double zMoho = Mars_radius + instance->model.user0/instance->scaling.L;
-  const double zLAB  = Mars_radius + instance->model.user1/instance->scaling.L;
-  const double angle = 35.*M_PI/180;
-  const double a_ell = 2.0*instance->model.user5/instance->scaling.L, b_ell = 0.5*instance->model.user5/instance->scaling.L;
-  double x_ell, z_ell, X, Z;
+  double X, Z;
+  const double Mars_radius = instance->model.planet_radius;
+  double zMoho = Mars_radius + instance->model.user0/Lc;
+  double zLAB  = Mars_radius + instance->model.user1/Lc;
+  
+  double w = 100e3/Lc, x1, x2, z1, z2, m;
+  x1 = -w/2, x2 = w/2;
+  z1 = Mars_radius + 1*instance->model.user0/Lc, z2 = Mars_radius + 2*instance->model.user0/Lc;
+  m = (z2 - z1) / (x2 - x1);
+  if (x<x1) zMoho = z1;
+  if (x>x2) zMoho = z2;
+  if (x>x1 && x<x2) zMoho = m * (x-x1) + z1;
+
+  // LAB
+  x1 = -w/2, x2 = w/2;
+  z1 = Mars_radius + 1*instance->model.user1/Lc, z2 = Mars_radius + 1.5*instance->model.user1/Lc;
+  m = (z2 - z1) / (x2 - x1);
+  if (x<x1) zLAB = z1;
+  if (x>x2) zLAB = z2;
+  if (x>x1 && x<x2) zLAB = m * (x-x1) + z1;
+
+  // Weak
+  double zweak = Mars_radius - 4e3/Lc;
+  z1 = zweak, z2 = Mars_radius + 10e3/Lc;
+  m = (z2 - z1) / (x2 - x1);
+
+  if (x<x1) zweak = z1;
+  if (x>x2) zweak = z2;
+  if (x>x1 && x<x2) zweak = m * (x-x1) + z1;
+
   if ( instance->model.polar==0 ) {
       if (z < zMoho) {
           phase = 1;                     // Lithospheric mantle
       }
       if (z < zLAB) {
-          phase = 2;                     // Astenospheric mantle
+          phase = 2;                     // Asthenospheric mantle
+      }
+      if (z > zweak) {
+          phase = 3;                     // Asthenospheric mantle
       }
   }
   if ( instance->model.polar==1 ) {
       Z = sqrt((zMoho - x)*(zMoho + x)); // Lithospheric mantle
       if ( z <  Z  ) phase = 1;
-      Z = sqrt((zLAB  - x)*(zLAB  + x)); // Astenospheric mantle
+      Z = sqrt((zLAB  - x)*(zLAB  + x)); // Asthenospheric mantle
       if ( z <  Z  ) phase = 2;
   }
 
   // Draw ellipse
+  const double angle = -35.*M_PI/180;
+  const double a_ell = 2.0*instance->model.user5/Lc, b_ell = 0.5*instance->model.user5/Lc;
+  double x_ell, z_ell;
   Z = Mars_radius - 55e3/instance->scaling.L;
   X = 20e3/instance->scaling.L;
   x_ell = (x-X)*cos(angle) + (z-Z)*sin(angle);
@@ -55,7 +88,7 @@ int SetPhase(MdoodzInput *instance, Coordinates coordinates) {
 double SetTemperature(MdoodzInput *instance, Coordinates coordinates) {
   const double x = coordinates.x, z = coordinates.z;
   const double Lz = (double) (instance->model.zmax - instance->model.zmin) ;
-  const double Mars_radius = 3390e3/instance->scaling.L;
+  const double Mars_radius = instance->model.planet_radius;
   const double Ttop  = 293.0/(instance->scaling.T);
   const double Tbot  = (instance->model.user3 + zeroC)/instance->scaling.T;
   double Tgrad = (Ttop-Tbot)/ (Lz - (instance->model.zmax-Mars_radius));
@@ -122,7 +155,7 @@ double BoundaryVelocityProfilePrimitive(double V, double z, double z_LAB, double
 
 SetBC SetBCVx(MdoodzInput *instance, POSITION position, Coordinates coordinates) {
   SetBC bc;
-  const double Mars_radius = 3390e3/instance->scaling.L, dz_smooth = 10e3/instance->scaling.L;
+  const double Mars_radius = instance->model.planet_radius, dz_smooth = 10e3/instance->scaling.L;
   const double Lx = instance->model.xmax - instance->model.xmin;
   double V_tot    =  Lx * instance->model.bkg_strain_rate; // |VxW| + |VxE|
   double maxAngle = asin(Lx/2/Mars_radius);     // Aperture angle
@@ -179,7 +212,7 @@ SetBC SetBCVx(MdoodzInput *instance, POSITION position, Coordinates coordinates)
 
 SetBC SetBCVz(MdoodzInput *instance, POSITION position, Coordinates coordinates) {
   SetBC bc;
-  const double Mars_radius = 3390e3/instance->scaling.L, dz_smooth = 10e3/instance->scaling.L;
+  const double Mars_radius = instance->model.planet_radius, dz_smooth = 10e3/instance->scaling.L;
   const double Lx = instance->model.xmax - instance->model.xmin;
   double V_tot    =  Lx * instance->model.bkg_strain_rate; // |VxW| + |VxE|
   double maxAngle = asin(Lx/2/Mars_radius);     // Aperture angle

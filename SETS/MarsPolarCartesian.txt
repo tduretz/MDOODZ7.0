@@ -1,6 +1,6 @@
 /**** RESTART ****/
-istep = 00000010
-irestart = 0
+istep = 0000100
+irestart = 1
 
 /**** OUTPUT FILES ****/
 writer = 1
@@ -19,11 +19,11 @@ Nx      = 200
 Nz      = 150
 xmin    = -5e5
 xmax    =  5e5
-zmin    =  3.21e6       / model bottom 
+zmin    =  3.11e6       / model bottom 
 zmax    =  3.4100000e6  / Earth surface
 
 /**** TIME ****/
-Nt      = 000
+Nt      = 200
 dt      = 1.2623e+11
 Courant = 0.45
 
@@ -45,7 +45,8 @@ initial_cooling   = 1
 subgrid_diffusion = 2
 shear_heating     = 1
 adiab_heating     = 0
-polar             = 1
+polar             = 0
+planet_radius     = 3390e3
 anisotropy        = 0
 stress_rotation   = 2
 
@@ -62,8 +63,8 @@ max_eta        = 1e25
 
 /**** SETUP DEPENDANT ****/
 bkg_strain_rate =  1e-15
-user0           = -35e3   / Moho depth [m]
-user1           = -150e3  / LAB depth [m]
+user0           = -25e3   / Moho depth [m]
+user1           = -80e3  / LAB depth [m]
 user2           = -200e3  / depth of compression [m] 
 user3           =  1400   / Mantle temperature [C]
 user4           =  0      / 0:Bottom outflow / 1:Lateral outflow 
@@ -74,7 +75,7 @@ gx = 0.0000
 gz = -3.71
 
 /**** MAT PROPERTIES ****/
-Nb_phases = 3
+Nb_phases = 4
 
 /**** PHASE 0 ****/
 ID   = 0
@@ -126,13 +127,37 @@ Qpwl = 0
 
 /**** PHASE 2 ****/
 ID   = 2
-rho  = 3300.00 / Astehenosphere
+rho  = 3300.00 / Asthenosphere
 G    = 3e10
 Cp   = 1050
 k    = 2.5
 Qr   = 0
 C    = 5e7
 phi  = 30
+eta_vp = 1e21
+Slim = 500e9
+alp  = 10.0e-6
+bet  = 1e-11
+drho = 0
+cstv = 0             / constant visc law
+pwlv = 40            / disloc. creep
+linv = 0             / diff. creep
+gbsv = 0             / grain boundary sliding
+expv = 0             / peierls creep
+gsel = 0             / grain size evo.
+eta0 = 5e21
+npwl = 1
+Qpwl = 0
+
+/**** PHASE 2 ****/
+ID   = 3
+rho  = 3300.00 / weak
+G    = 3e10
+Cp   = 1050
+k    = 2.5
+Qr   = 0
+C    = 1e6
+phi  = 5
 eta_vp = 1e21
 Slim = 500e9
 alp  = 10.0e-6
