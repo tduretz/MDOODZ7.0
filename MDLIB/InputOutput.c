@@ -1288,7 +1288,7 @@ Input ReadInputFile( char *fileName ) {
         // Read melting model
         materials.melt[k]     = (int)ReadMatProps( fin, "melt",     k,    0.0   );     // 0: No melt --- >1: Yes, the type should be selected accordingly 
         // Read plasticity switches
-        materials.plast[k]    = (int)ReadMatProps( fin, "plast",    k,    0.0   );     // 0: No plasticity --- 1: Drucker-Prager, 2: Tensile Popov et al. 2025 
+        materials.plast[k]    = (int)ReadMatProps( fin, "plast",    k,    1.0   );     // 0: No plasticity --- 1: Drucker-Prager, 2: Tensile Popov et al. 2025 
         // Read plasticity parameters
         materials.sig_tens[k] = ReadMatProps( fin, "sig_tens", k,  1.0e7 ) / scaling.S; // Tension stress for hyperbolic Drucker-Prager
         materials.sig1[k]     = ReadMatProps( fin, "sig1",     k,  1.0e7 ) / scaling.S; // Transition stress to 0 dilatancy for hyperbolic Drucker-Prager
