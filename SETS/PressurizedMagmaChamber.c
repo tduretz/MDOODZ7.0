@@ -13,22 +13,23 @@ double SetSurfaceZCoord(MdoodzInput *instance, double x_coord) {
 }
 
 int SetPhase(MdoodzInput *input, Coordinates coordinates) {
-  const double a_out = 4.0e3 / input->scaling.L;
-  const double b_out = 2.0e3 / input->scaling.L;
-  const double a_inn = 2.0e3 / input->scaling.L;
-  const double b_inn = 1.0e3 / input->scaling.L;
-  const double xc_e  = 0.0 / input->scaling.L;
-  const double zc_e  = -10.0e3 / input->scaling.L;
+  // Intrusion
+  const double a_intr  = input->model.therm_perturb_rad_x;
+  const double b_intr  = input->model.therm_perturb_rad_z;
+  const double xc_intr = input->model.therm_perturb_x0;
+  const double zc_intr = input->model.therm_perturb_z0;
   const double x = coordinates.x, z =  coordinates.z;
-  const double position_out = (x - xc_e) * (x - xc_e) / (a_out * a_out) + (z - zc_e) * (z - zc_e) / (b_out * b_out);
-  const double position_inn = (x - xc_e) * (x - xc_e) / (a_inn * a_inn) + (z - zc_e) * (z - zc_e) / (b_inn * b_inn);
+  const double position_intr = (x - xc_intr) * (x - xc_intr) / (a_intr * a_intr) + (z - zc_intr) * (z - zc_intr) / (b_intr * b_intr);
+  
+  // Initialize phase for current marker
   int phase = 0;
-  if (position_out <= 1.0) {
-    phase = 1;
-  }
-  if (position_inn <= 1.0) {
-    phase = 2;
-  }
+
+  // Set second phase if needed
+  // if (position_intr <= 1.0)
+  // {
+  //   phase = 1;
+  // }
+  
   return phase;
 }
 
@@ -56,38 +57,25 @@ int SetDualPhase(MdoodzInput *input, Coordinates coordinate, int phase) {
   return dual_phase;
 }
 
-double SetDensity(MdoodzInput *input, Coordinates coordinates, int phase) {
-  const double T_init = (input->model.user0 + zeroC) / input->scaling.T;
-  const double P_init = (input->model.bkg_pressure         ) / input->scaling.S;
-  if (0 == 0) {
-    return input->materials.rho[phase] * exp(input->materials.bet[phase]*P_init -  input->materials.alp[phase] * T_init);
-  } else {
-    return input->materials.rho[phase];
-  }
-}
+double SetTemperature(MdoodzInput *input, Coordinates coordinates) {
+  const double surfaceTemperature = ( 20.0 + zeroC) / input->scaling.T;
+  const double mohoTemperature    = (450.0 + zeroC) / input->scaling.T;
+  const double gradT              = (mohoTemperature - surfaceTemperature) / fabs(input->model.zmin);
+  const double Tamp               = (750.0 + zeroC) / input->scaling.T;
 
-double SetTemperature(MdoodzInput *instance, Coordinates coordinates) {
-  const double surfaceTemperature = (15.0+273.15) / instance->scaling.T;
-  const double mohoTemperature    = (600.0 + zeroC) / instance->scaling.T;
-  const double gradT              = (mohoTemperature - surfaceTemperature) / fabs(instance->model.zmin);
-  const double Tamp               = (900.0 + zeroC) / instance->scaling.T;
-
-  // Ellipse
-  const double a_out = 4.0e3 / instance->scaling.L;
-  const double b_out = 2.0e3 / instance->scaling.L;
-  const double a_inn = 2.0e3 / instance->scaling.L;
-  const double b_inn = 1.0e3 / instance->scaling.L;
-  const double xc_e  = 0.0 / instance->scaling.L;
-  const double zc_e  = -10.0e3 / instance->scaling.L;
+  // Intrusion
+  const double a_intr  = input->model.therm_perturb_rad_x;
+  const double b_intr  = input->model.therm_perturb_rad_z;
+  const double xc_intr = input->model.therm_perturb_x0;
+  const double zc_intr = input->model.therm_perturb_z0;
   const double x = coordinates.x, z =  coordinates.z;
-  const double position_out = (x - xc_e) * (x - xc_e) / (a_out * a_out) + (z - zc_e) * (z - zc_e) / (b_out * b_out);
-  const double position_inn = (x - xc_e) * (x - xc_e) / (a_inn * a_inn) + (z - zc_e) * (z - zc_e) / (b_inn * b_inn);
-  
+  const double position_intr = (x - xc_intr) * (x - xc_intr) / (a_intr * a_intr) + (z - zc_intr) * (z - zc_intr) / (b_intr * b_intr);
+
   double particleTemperature = gradT * (-z) + surfaceTemperature;
 
-  if (position_out <= 1.0) {
-    particleTemperature = Tamp;
-  }
+  // if (position_intr <= 1.0) {
+  //   particleTemperature = Tamp;
+  // }
   
   return particleTemperature;
 }
@@ -103,7 +91,7 @@ double SetVerticalVelocity(MdoodzInput *instance, Coordinates coordinates) {
 SetBC SetBCT(MdoodzInput *instance, POSITION position, Coordinates coordinates,  double particleTemperature) {
   SetBC     bc;
   double surface_temperature =          zeroC  / instance->scaling.T;
-  double moho_temperature    = (600.0 + zeroC) / instance ->scaling.T;
+  double moho_temperature    = (450.0 + zeroC) / instance ->scaling.T;
   if (position == S) {
     bc.type  = constant_temperature;
     bc.value = moho_temperature;
@@ -114,7 +102,51 @@ SetBC SetBCT(MdoodzInput *instance, POSITION position, Coordinates coordinates, 
   } 
   if (position == W || position == E) {
     bc.type  = constant_heatflux;
-    bc.value = 0.;
+    bc.value = 0.0;
+  }
+  return bc;
+}
+
+SetBC SetBCVx(MdoodzInput *input, POSITION position, Coordinates coordinates) {
+  SetBC bc;
+  const double Lx  = input->model.xmax - input->model.xmin;
+  const double VxW = -input->model.user2 / input->scaling.L * input->scaling.t;
+  const double VxE =  input->model.user2 / input->scaling.L * input->scaling.t;
+  if (position == N || position == S || position == NW || position == SW || position == NE || position == SE) {
+    bc.value = 0.0;
+    bc.type  = constant_shear_stress;
+  } else if (position == W) {
+    bc.value = VxW;
+    bc.type  = constant_velocity;
+  } else if (position == E)
+  {
+    bc.value = VxE;
+    bc.type  = constant_velocity;
+  } else {
+    bc.value = 0.0;
+    bc.type  = inside;
+  }
+  return bc;
+}
+
+SetBC SetBCVz(MdoodzInput *input, POSITION position, Coordinates coordinates) {
+  SetBC bc;
+  const double Lz = input->model.zmax - input->model.zmin;
+  const double VzS = -input->model.user3 / input->scaling.L * input->scaling.t;
+  const double VzN =  input->model.user3 / input->scaling.L * input->scaling.t;
+  if (position == W || position == E || position == SW || position == SE || position == NW || position == NE) {
+    bc.value = 0.0;
+    bc.type  = constant_shear_stress;
+  } else if (position == S) {
+    bc.value = VzS;
+    bc.type  = constant_velocity;
+  } else if (position == N)
+  {
+    bc.value = VzN;
+    bc.type  = constant_velocity;
+  } else {
+    bc.value = 0;
+    bc.type  = inside;
   }
   return bc;
 }
@@ -135,14 +167,13 @@ int main(int nargs, char *args[]) {
         },
         .SetParticles  = &(SetParticles_ff){
             .SetPhase                 = SetPhase,
-            .SetDensity               = SetDensity,
             .SetTemperature           = SetTemperature,
-            .SetHorizontalVelocity    = SetHorizontalVelocity,
-            .SetVerticalVelocity      = SetVerticalVelocity
         },
         .SetBCs = &(SetBCs_ff){
-            .SetBCVx = SetPureShearBCVx,
-            .SetBCVz = SetPureShearBCVz,
+            .SetBCVx = SetPureOrSimpleShearBCVx,
+            .SetBCVz = SetPureOrSimpleShearBCVz,
+            // .SetBCVx = SetBCVx,
+            // .SetBCVz = SetBCVz,
             .SetBCT  = SetBCT,
         },
   };

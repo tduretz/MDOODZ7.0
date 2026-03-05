@@ -219,6 +219,7 @@ markers PartAlloc(ParticlesInput particlesInput, params *model) {
   particles.strain     = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
   particles.strain_el  = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
   particles.strain_pl  = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
+  particles.strain_pl_vol = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
   particles.strain_pwl = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
   particles.strain_exp = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
   particles.strain_lin = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
@@ -292,6 +293,7 @@ void PartFree( markers *particles, params* model ) {
     DoodzFree(particles->strain);
     DoodzFree(particles->strain_el);
     DoodzFree(particles->strain_pl);
+    DoodzFree(particles->strain_pl_vol);
     DoodzFree(particles->strain_pwl);
     DoodzFree(particles->strain_exp);
     DoodzFree(particles->strain_lin);
