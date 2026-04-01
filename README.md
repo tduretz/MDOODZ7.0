@@ -167,6 +167,56 @@ make all SET=YourSetName OPT=yes OMP=yes
 ```
 Will update the build (compiles only modified files) with optmisation level 3 and including OpenMP parallelism.
 
+### Troubleshooting the installation via make.
+
+Tested on a fedora system.
+
+#### Installation of CHOLMOD from SuiteSparse 
+
+If the instalation via the package manager fails.
+
+From the github of SuiteSparse : [link](https://github.com/DrTimothyAldenDavis/SuiteSparse/tree/stable). /!\ Use a stable version.
+
+Clone the repository. Then build and install CHOLMOD :
+``` 
+    mkdir -p build && cd build
+    cmake -DSUITESPARSE_ENABLE_PROJECTS="cholmod;cxsparse" ..
+    cmake --build .
+    sudo cmake --install .
+```
+
+Some libraries need to be installed in the development version :
+- liblapack-devel
+- libblas-devel
+- amd-devel
+
+
+#### Add SuiteSparse to the C_INCLUDE_PATH
+
+For the following type of error message : *include "cholmod.h" : cannot find cholmod.h"* .
+
+The C_INCLUDE_PATH has to be updated with SuiteSparse directories :
+
+```
+for dir in ~/librairies/SuiteSparse/*/; do
+    if [ -d "$dir" ]; then
+        
+        export C_INCLUDE_PATH="$dir:$C_INCLUDE_PATH"
+        
+        if [ -d "$include_dir" ]; then
+            export C_INCLUDE_PATH="$include_dir:$C_INCLUDE_PATH"
+        fi
+    fi
+done
+``` 
+
+#### Other errors with the makefile in MDLIB :
+
+- It might be required to add ``` LIBS = -lblas -llapack -lmetis``` 
+- *error : implicit definition of fprint* --> ``` CFLAGS += -D_GNU_SOURCE ```
+- *error : undefined reference to cos@GLIBC...* --> ``` LIBS = -lm``` (the math library)
+- If on a 64-bits system, replace LIBS += -L /usr/lib/ by ``` LIBS += -L /usr/lib64/```
+
 # Library usage
 
 MDOODZ Source Code stored in `MDLIB` directory and compiled as a separate library `libmdoodz` 
