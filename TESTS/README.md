@@ -164,7 +164,7 @@ $$\dot{\varepsilon}_{diff} = A_{diff} \cdot \sigma^{n_{diff}} \cdot d^{-m_{diff}
 
 | Parameter | Value |
 |---|---|
-| $A_{diff}$ | $1.5 \times 10^{-15}$ Pa$^{-n}$ m$^{m}$ s$^{-1}$ |
+| $A_{diff}$ | $1.5 \times 10^{-15}$ Pa^(-n) m^m s^(-1) |
 | $n_{diff}$ | 1.0 (linear) |
 | $m_{diff}$ | 3.0 (grain-size exponent) |
 | $Q_{diff}$ | 375 kJ/mol |
@@ -225,7 +225,7 @@ $$\dot{\varepsilon}_{GBS} = A_{GBS} \cdot \sigma^{n_{GBS}} \cdot d^{-m_{GBS}} \c
 
 | Parameter | Value |
 |---|---|
-| $A_{GBS}$ | $6.5 \times 10^{-30}$ Pa$^{-n}$ m$^{m}$ s$^{-1}$ |
+| $A_{GBS}$ | $6.5 \times 10^{-30}$ Pa^(-n) m^m s^(-1) |
 | $n_{GBS}$ | 3.5 |
 | $m_{GBS}$ | 2.0 |
 | $Q_{GBS}$ | 400 kJ/mol |
@@ -268,7 +268,7 @@ $$\dot{\varepsilon}_{pwl} = A_{pwl} \cdot \sigma^{n_{pwl}} \cdot \exp\left(-\fra
 
 | Parameter | Value |
 |---|---|
-| $A_{pwl}$ | $1.1 \times 10^{-16}$ Pa$^{-n}$ s$^{-1}$ |
+| $A_{pwl}$ | $1.1 \times 10^{-16}$ Pa^(-n) s^(-1) |
 | $n_{pwl}$ | 3.5 |
 | $Q_{pwl}$ | 530 kJ/mol |
 | $V_{pwl}$ | $18 \times 10^{-6}$ m³/mol |
