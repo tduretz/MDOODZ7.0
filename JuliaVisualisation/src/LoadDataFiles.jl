@@ -9,6 +9,7 @@ function ExtractField(filename, field, size, mask_air, mask)
     field = try (Float64.(reshape(ExtractData( filename, field), size...)))
     catch 
         @warn "$field not found"
+        field = zero(mask)
     end
     mask_air ? field[mask] .= NaN : nothing
     return field

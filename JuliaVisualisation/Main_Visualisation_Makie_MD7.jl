@@ -11,23 +11,25 @@ const y    = 365*24*3600
 const My   = 1e6*y
 const cm_y = y*100.
 
+GLMakie.activate!(inline=true)
+
 @views function main()
 
     # Set the path to your files
     path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/"
 
     # File numbers
-    file_start = 00
+    file_start = 0
     file_step  = 10
-    file_end   = 00
+    file_end   = 500
 
     # Select field to visualise
-    # field = :Phases
+    field = :Phases
     # field = :Cohesion
     # field = :Density
     # field = :Viscosity  
     # field = :PlasticStrainrate
-    field = :Stress
+    # field = :Stress
     # field = :σxx
     # field = :σzz
     # field = :StrainRate
@@ -61,7 +63,7 @@ const cm_y = y*100.
     PlotOnTop = (
         ph_contours   = false,  # add phase contours
         fabric        = false,   # add fabric quiver (normal to director)
-        T_contours    = false,  # add temperature contours
+        T_contours    =  false,  # add temperature contours
         topo          = false,
         quiver_origin = false,
         σ1_axis       = false,

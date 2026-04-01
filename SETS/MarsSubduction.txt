@@ -62,10 +62,11 @@ user0              = 1450   		/ Mantle temperature [oC]
 user1              = 80e3   		/ Lithospheric thickness [m]
 user2              = -3.17e-9  		/ Plate velocity [m/s] (compression -> negative)
 user3              = 0.5    		/ Amount of push from left side
-
+user4              = -5e3    		/ Moho depth
+\
 /**** GRAVITY ****/
 gx = 0.0000				/ Gravitational acceleration in x
-gz = -9.81				/ Gravitational acceleration in z
+gz = -3.71				/ Gravitational acceleration in z
 
 /**** PHASE PROPERTIES ****/
 Nb_phases = 3 
