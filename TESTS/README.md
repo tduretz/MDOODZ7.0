@@ -6,26 +6,51 @@ All tests use [Google Test](https://github.com/google/googletest) (GTest) and ru
 
 ---
 
+## How to read Google Test assertions
+
+MDOODZ tests use two main assertion families:
+
+- `ASSERT_*`: **fatal** for the current test function. If it fails, that test stops immediately.
+- `EXPECT_*`: **non-fatal** for the current test function. If it fails, the test keeps running and reports additional failures.
+
+Common comparison macros:
+
+| Macro | Meaning |
+|---|---|
+| `ASSERT_GE(a, b)` / `EXPECT_GE(a, b)` | Check `a >= b` |
+| `ASSERT_GT(a, b)` / `EXPECT_GT(a, b)` | Check `a > b` |
+| `ASSERT_LE(a, b)` / `EXPECT_LE(a, b)` | Check `a <= b` |
+| `ASSERT_LT(a, b)` / `EXPECT_LT(a, b)` | Check `a < b` |
+| `ASSERT_EQ(a, b)` / `EXPECT_EQ(a, b)` | Check exact equality |
+| `ASSERT_NEAR(a, b, tol)` / `EXPECT_NEAR(a, b, tol)` | Check `|a-b| <= tol` (useful for floating-point values) |
+
+Quick rule of thumb:
+- Use `ASSERT_*` when the rest of the test depends on that condition (e.g. output file exists, solver returned steps).
+- Use `EXPECT_*` for physics bounds and secondary checks where collecting multiple failures is useful.
+
+---
+
 ## Table of Contents
 
-1. [Common Model Setup](#common-model-setup)
-2. [Test Infrastructure](#test-infrastructure)
-3. [Suite 1 — ShearTemplate (Newton Convergence)](#suite-1--sheartemplate-newton-convergence)
-4. [Suite 2 — RheologyCreep (Viscous Flow Laws)](#suite-2--rheologycreep-viscous-flow-laws)
-5. [Suite 3 — Plasticity (Yield & Failure)](#suite-3--plasticity-yield--failure)
-6. [Suite 4 — Thermal (Heat Equation)](#suite-4--thermal-heat-equation)
-7. [Suite 5 — BoundaryCondition (Velocity BCs)](#suite-5--boundarycondition-velocity-bcs)
-8. [Suite 6 — SolverMode (Iteration & Time Stepping)](#suite-6--solvermode-iteration--time-stepping)
-9. [Suite 7 — ViscoElastic (Maxwell Stress Accumulation)](#suite-7--viscoelastic-maxwell-stress-accumulation)
-10. [Suite 8 — Density (Thermal Expansion & Hydrostatics)](#suite-8--density-thermal-expansion--hydrostatics)
-11. [Suite 9 — ShearHeating (Viscous Dissipation)](#suite-9--shearheating-viscous-dissipation)
-12. [Suite 10 — FreeSurface (Topography & Sinking)](#suite-10--freesurface-topography--sinking)
-13. [Suite 11 — VelocityField (Kinematic Symmetry)](#suite-11--velocityfield-kinematic-symmetry)
-14. [Suite 12 — Compressibility (Elastic Bulk Response)](#suite-12--compressibility-elastic-bulk-response)
-15. [Suite 13 — FiniteStrain (Deformation Gradient)](#suite-13--finitestrain-deformation-gradient)
-16. [Suite 14 — NeumannBC (Stress Boundary Conditions)](#suite-14--neumannbc-stress-boundary-conditions)
-17. [Suite 15 — ConvergenceRate (Newton vs Picard)](#suite-15--convergencerate-newton-vs-picard)
-18. [Running the Tests](#running-the-tests)
+1. [How to read Google Test assertions](#how-to-read-google-test-assertions)
+2. [Common Model Setup](#common-model-setup)
+3. [Test Infrastructure](#test-infrastructure)
+4. [Suite 1 — ShearTemplate (Newton Convergence)](#suite-1--sheartemplate-newton-convergence)
+5. [Suite 2 — RheologyCreep (Viscous Flow Laws)](#suite-2--rheologycreep-viscous-flow-laws)
+6. [Suite 3 — Plasticity (Yield & Failure)](#suite-3--plasticity-yield--failure)
+7. [Suite 4 — Thermal (Heat Equation)](#suite-4--thermal-heat-equation)
+8. [Suite 5 — BoundaryCondition (Velocity BCs)](#suite-5--boundarycondition-velocity-bcs)
+9. [Suite 6 — SolverMode (Iteration & Time Stepping)](#suite-6--solvermode-iteration--time-stepping)
+10. [Suite 7 — ViscoElastic (Maxwell Stress Accumulation)](#suite-7--viscoelastic-maxwell-stress-accumulation)
+11. [Suite 8 — Density (Thermal Expansion & Hydrostatics)](#suite-8--density-thermal-expansion--hydrostatics)
+12. [Suite 9 — ShearHeating (Viscous Dissipation)](#suite-9--shearheating-viscous-dissipation)
+13. [Suite 10 — FreeSurface (Topography & Sinking)](#suite-10--freesurface-topography--sinking)
+14. [Suite 11 — VelocityField (Kinematic Symmetry)](#suite-11--velocityfield-kinematic-symmetry)
+15. [Suite 12 — Compressibility (Elastic Bulk Response)](#suite-12--compressibility-elastic-bulk-response)
+16. [Suite 13 — FiniteStrain (Deformation Gradient)](#suite-13--finitestrain-deformation-gradient)
+17. [Suite 14 — NeumannBC (Stress Boundary Conditions)](#suite-14--neumannbc-stress-boundary-conditions)
+18. [Suite 15 — ConvergenceRate (Newton vs Picard)](#suite-15--convergencerate-newton-vs-picard)
+19. [Running the Tests](#running-the-tests)
 
 ---
 
