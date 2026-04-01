@@ -1,6 +1,8 @@
 #include "complex.h"
 #include "mdoodz.h"
 #include "math.h"
+#include "stdlib.h"
+#include "stdio.h"
 
 //---------------------------------------------//
 void eval_anal_Dani(double *vx, double *vz, double *p, double *eta, double *sxx, double *syy, double x, double z, int ps, double rc, double mm, double mc) {
