@@ -1,6 +1,6 @@
 ## Why
 
-MDOODZ targets publication in JOSS (Journal of Open Source Software), which requires adequate automated test coverage. Currently only 1 GTest unit test (8 cases) runs in CI, all exercising variations of the same ShearTemplate scenario. Major subsystems — diffusion creep, Peierls creep, grain-boundary sliding, isolated plasticity, pure thermal diffusion, phase transitions, and periodic boundary conditions — have zero test coverage. The 7 visual regression tests exist but are not integrated into CI and lack pass/fail assertions. Expanding the test suite is both a JOSS requirement and essential for long-term code quality.
+Currently only 1 GTest unit test (8 cases) runs in CI, all exercising variations of the same ShearTemplate scenario. Major subsystems — diffusion creep, Peierls creep, grain-boundary sliding, isolated plasticity, pure thermal diffusion, phase transitions, and periodic boundary conditions — have zero test coverage. The 7 visual regression tests exist but are not integrated into CI and lack pass/fail assertions. Expanding the test suite is essential for long-term code quality.
 
 ## What Changes
 
