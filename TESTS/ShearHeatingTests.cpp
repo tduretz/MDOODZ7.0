@@ -76,6 +76,20 @@ TEST_F(ShearHeating, ViscousDissipation) {
   // Temperature should increase (or at least not decrease)
   EXPECT_GE(maxT_final, maxT_init);
 
+  // L2: compare temperature change against analytical
+  // dT = 2*eta*eps_dot^2*t / (rho*Cp)
+  double meanT_init = getMeanFieldValue(fileInit, "Centers", "T");
+  double meanT_final_val = getMeanFieldValue(fileFinal, "Centers", "T");
+  double dT_num = meanT_final_val - meanT_init;
+  double t_final = getModelParam(fileFinal, 0);
+  double eta_val = 1e22;
+  double eps_d = 1e-14;
+  double rho_val = 3300.0;
+  double Cp_val = 1050.0;
+  double dT_ana = 2.0 * eta_val * eps_d * eps_d * t_final / (rho_val * Cp_val);
+  printf("ViscousDissipation: dT_num=%e, dT_ana=%e\n", dT_num, dT_ana);
+  EXPECT_NEAR(dT_num, dT_ana, fabs(dT_ana) * 2.0);  // within factor 3
+
   free(inputName);
   free(fileInit);
   free(fileFinal);

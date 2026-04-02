@@ -105,6 +105,30 @@ TEST_F(Thermal, SteadyStateGeotherm) {
   // Mean temperature should be between min and max (linear geotherm)
   EXPECT_GT(meanT, minT);
   EXPECT_LT(meanT, maxT);
+
+  // L2 error against analytical geotherm T(z) = T_top + (T_bot - T_top)*(z_top - z)/H
+  // Note: simulation may not be fully converged to steady state; use loose threshold
+  auto T_field = readFieldAsArray(fileName, "Centers", "T");
+  auto zc = readCoordArray(fileName, "zc_coord");
+  int Nx_grid = (int)getModelParam(fileName, 3);
+  int Nz_grid = (int)getModelParam(fileName, 4);
+  int ncx = Nx_grid - 1;
+  int ncz = Nz_grid - 1;
+  double Lz = getModelParam(fileName, 2);
+  double z_top_SI = Lz / 2.0;
+  double T_top_SI = 273.15;   // user0 = 0 C
+  double T_bot_SI = 1600.0;   // user1 = 1600 K
+  std::vector<double> T_ana(T_field.size());
+  for (int iz = 0; iz < ncz; iz++) {
+    double T_z = T_top_SI + (T_bot_SI - T_top_SI) * (z_top_SI - zc[iz]) / Lz;
+    for (int ix = 0; ix < ncx; ix++) {
+      T_ana[ix + ncx * iz] = T_z;
+    }
+  }
+  double L2_T = computeL2Error(T_field, T_ana);
+  printf("Geotherm L2 error: %e\n", L2_T);
+  EXPECT_LT(L2_T, 1.0);  // loose: simulation may not fully reach steady state
+
   free(inputName);
   free(fileName);
 }
@@ -128,6 +152,17 @@ TEST_F(Thermal, RadiogenicHeat) {
   EXPECT_GT(meanT_final, meanT_init);
   // Peak temperature should also increase
   EXPECT_GT(maxT_final, maxT_init);
+
+  // Analytical: T_mean(t) ≈ T0 + Qr*t/(rho*Cp)
+  double Qr = 1e-6;
+  double rho_mat = 3300.0;
+  double Cp_mat = 1050.0;
+  double time_SI = getModelParam(fileFinal, 0);
+  double T0_SI = 773.15;  // (500 + 273.15) K
+  double T_ana_mean = T0_SI + Qr * time_SI / (rho_mat * Cp_mat);
+  printf("RadiogenicHeat: meanT_final=%e, T_ana=%e\n", meanT_final, T_ana_mean);
+  EXPECT_NEAR(meanT_final, T_ana_mean, fabs(T_ana_mean - T0_SI) * 0.5);
+
   free(inputName);
   free(fileInit);
   free(fileFinal);

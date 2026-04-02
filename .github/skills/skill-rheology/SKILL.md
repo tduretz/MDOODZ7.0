@@ -155,6 +155,18 @@ Holds per-phase material properties (up to 20 phases), populated from the `PHASE
 
 The `density_model` switch allows alternative formulations including phase-diagram-based density.
 
+## Marker-to-Node Viscosity Averaging (`eta_average`)
+
+When multiple material phases share a grid cell, their marker viscosities are averaged to the node. The `eta_average` .txt parameter selects the method:
+
+| Value | Method | Best for |
+|-------|--------|----------|
+| 0 | Arithmetic (default) | Best convergence orders in grid-refinement studies |
+| 1 | Harmonic | Low-viscosity inclusions (but worst P convergence in SolVi) |
+| 2 | Geometric | Best absolute P error at fixed resolution |
+
+This averaging operates on the phase mixture **within** each cell. It is distinct from cell-face viscosity interpolation in the FD stencil (which is not currently implemented as harmonic).
+
 ## Key Source Files
 
 - Flow law database: `MDLIB/FlowLaws.c`

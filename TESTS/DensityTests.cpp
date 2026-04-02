@@ -106,6 +106,15 @@ TEST_F(Density, ThermalExpansion) {
   // Both densities should be positive and physically reasonable
   EXPECT_GT(minRho, 0.0);
 
+  // Verify density ratio is consistent with thermal expansion: rho_hot/rho_cold = (1-alpha*T_hot)/(1-alpha*T_cold)
+  double alpha = 3e-5;
+  double T_cold_SI = 873.15;   // (600+273.15) K
+  double T_hot_SI  = 2473.15;  // (600+1600+273.15) K
+  double rho_ratio_ana = (1.0 - alpha * T_hot_SI) / (1.0 - alpha * T_cold_SI);
+  double rho_ratio_num = minRho / maxRho;
+  printf("ThermalExpansion: rho_ratio num=%e, ana=%e\n", rho_ratio_num, rho_ratio_ana);
+  EXPECT_NEAR(rho_ratio_num, rho_ratio_ana, 0.1);
+
   free(inputName);
   free(fileName);
 }
@@ -131,6 +140,28 @@ TEST_F(Density, HydrostaticPressure) {
   EXPECT_GT(maxP, minP);
   // Max pressure should be positive (downward gravity, increasing with depth)
   EXPECT_GT(maxP, 0.0);
+
+  // L2 error against analytical P(z) = rho * |g| * (z_top - z)
+  auto P_field = readFieldAsArray(fileName, "Centers", "P");
+  auto zc = readCoordArray(fileName, "zc_coord");
+  int Nx_grid = (int)getModelParam(fileName, 3);
+  int Nz_grid = (int)getModelParam(fileName, 4);
+  int ncx = Nx_grid - 1;
+  int ncz = Nz_grid - 1;
+  double Lz = getModelParam(fileName, 2);
+  double z_top_SI = Lz / 2.0;
+  double rho_hyd = 2700.0;
+  double gz_abs = 10.0;
+  std::vector<double> P_ana(P_field.size());
+  for (int iz = 0; iz < ncz; iz++) {
+    double P_z = rho_hyd * gz_abs * (z_top_SI - zc[iz]);
+    for (int ix = 0; ix < ncx; ix++) {
+      P_ana[ix + ncx * iz] = P_z;
+    }
+  }
+  double L2_P = computeL2Error(P_field, P_ana);
+  printf("Hydrostatic P L2 error: %e\n", L2_P);
+  EXPECT_LT(L2_P, 2e-1);
 
   free(inputName);
   free(fileName);

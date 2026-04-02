@@ -1108,4 +1108,14 @@ rm -rf cmake-build && cmake -S . -B cmake-build -DTEST=ON && cmake --build cmake
 | 13. FiniteStrain | `FiniteStrainTests.cpp` | 1 | Deformation gradient $\mathbf{F}$, area conservation |
 | 14. NeumannBC | `NeumannBCTests.cpp` | 1 | Stress BC (type=13), free-slip shear stress |
 | 15. ConvergenceRate | `ConvergenceRateTests.cpp` | 3 | Newton vs Picard rate comparison |
-| **Total** | **15 executables** | **39** | |
+| 16. SolViBenchmark | `SolViBenchmarkTests.cpp` | 2 | L2 error norms, grid-convergence order (Schmid & Podladchikov 2003) |
+| 17. AnisotropyBenchmark | `AnisotropyBenchmarkTests.cpp` | 2 | Director evolution, anisotropic stress invariant |
+| **Total** | **17 executables** | **43** | |
+
+---
+
+## Analytical Benchmarks
+
+Suites 16–17 and L2 assertions in suites 4, 7–9, 11, 14 verify numerical solutions against known analytical formulas. These provide quantitative error metrics (L2 norms) rather than just qualitative bounds checks.
+
+See [AnalyticalSolutions.md](AnalyticalSolutions.md) for the full mathematical derivations, measured error values, and threshold calibration methodology.

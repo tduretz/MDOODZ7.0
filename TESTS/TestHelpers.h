@@ -6,6 +6,8 @@
 #include <cstdlib>
 #include <cmath>
 #include <cfloat>
+#include <cstring>
+#include <vector>
 
 // Read the Newton iteration count from the HDF5 output
 static int getStepsCount(const char *hdf5FileName) {
@@ -168,6 +170,67 @@ static double getMaxAbsFieldValue(const char *hdf5FileName, const char *groupNam
   H5Gclose(group);
   H5Fclose(file);
   return maxAbsVal;
+}
+
+// Read a float field from HDF5 into a vector of doubles
+static std::vector<double> readFieldAsArray(const char *hdf5FileName, const char *groupName, const char *datasetName) {
+  hid_t file  = H5Fopen(hdf5FileName, H5F_ACC_RDONLY, H5P_DEFAULT);
+  hid_t group = H5Gopen(file, groupName, H5P_DEFAULT);
+  hid_t dset  = H5Dopen(group, datasetName, H5P_DEFAULT);
+  hid_t space = H5Dget_space(dset);
+  hsize_t dims[1];
+  H5Sget_simple_extent_dims(space, dims, NULL);
+  float *buf = (float *)malloc(dims[0] * sizeof(float));
+  H5Dread(dset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, buf);
+  std::vector<double> result(dims[0]);
+  for (hsize_t i = 0; i < dims[0]; i++) {
+    result[i] = (double)buf[i];
+  }
+  free(buf);
+  H5Sclose(space);
+  H5Dclose(dset);
+  H5Gclose(group);
+  H5Fclose(file);
+  return result;
+}
+
+// Read a 1D float coordinate array from HDF5 Model/ group into vector of doubles
+static std::vector<double> readCoordArray(const char *hdf5FileName, const char *datasetName) {
+  hid_t file  = H5Fopen(hdf5FileName, H5F_ACC_RDONLY, H5P_DEFAULT);
+  hid_t group = H5Gopen(file, "Model", H5P_DEFAULT);
+  hid_t dset  = H5Dopen(group, datasetName, H5P_DEFAULT);
+  hid_t space = H5Dget_space(dset);
+  hsize_t dims[1];
+  H5Sget_simple_extent_dims(space, dims, NULL);
+  float *buf = (float *)malloc(dims[0] * sizeof(float));
+  H5Dread(dset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, buf);
+  std::vector<double> result(dims[0]);
+  for (hsize_t i = 0; i < dims[0]; i++) {
+    result[i] = (double)buf[i];
+  }
+  free(buf);
+  H5Sclose(space);
+  H5Dclose(dset);
+  H5Gclose(group);
+  H5Fclose(file);
+  return result;
+}
+
+// Compute relative L2 error norm between numerical and analytical arrays
+// Falls back to absolute L2 (RMS) when analytical solution is near zero
+static double computeL2Error(const std::vector<double> &numerical, const std::vector<double> &analytical) {
+  double sumDiff2 = 0.0, sumAna2 = 0.0;
+  size_t n = numerical.size();
+  for (size_t i = 0; i < n; i++) {
+    double diff = numerical[i] - analytical[i];
+    sumDiff2 += diff * diff;
+    sumAna2 += analytical[i] * analytical[i];
+  }
+  if (sumAna2 > 1e-30) {
+    return sqrt(sumDiff2 / sumAna2);
+  } else {
+    return sqrt(sumDiff2 / (double)n);
+  }
 }
 
 #endif

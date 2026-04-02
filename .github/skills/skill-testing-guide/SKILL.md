@@ -236,3 +236,84 @@ make run-vis
 # Generate reference HDF5 files
 make generate-refs
 ```
+
+---
+
+## Analytical Benchmark Authoring
+
+### L2 Error Framework
+
+`TestHelpers.h` provides helpers for quantitative error measurement:
+
+| Function | Purpose |
+|----------|---------|
+| `readFieldAsArray()` | Read HDF5 float field → `std::vector<double>` |
+| `readCoordArray()` | Read 1D coordinate array from `Model/` group |
+| `computeL2Error()` | Relative L2 norm with fallback to absolute when analytical ≈ 0 |
+
+### Writing an L2 Benchmark Test
+
+1. Run the simulation with `RunMDOODZ()`
+2. Read numerical field from HDF5 with `readFieldAsArray()`
+3. Construct analytical solution at grid coordinates
+4. Call `computeL2Error(numerical, analytical)` and assert `EXPECT_LT(L2, threshold)`
+
+### Grid-Convergence Order Testing
+
+Run the same scenario at 3+ resolutions, compute L2 at each, then:
+```cpp
+double order = log(L2_coarse / L2_fine) / log(h_coarse / h_fine);
+EXPECT_GE(order, expected_order);
+```
+
+### Threshold Calibration
+
+1. Measure the actual L2 error by running the test
+2. Set threshold to 2–5× above measured value
+3. For convergence order: set threshold ~30–50% below measured order
+
+### Common Pitfalls
+
+- **Staggered grid sizes**: Vx is Nx×(Nz-1), Vz is (Nx-1)×Nz, P/T/σ are (Nx-1)×(Nz-1)
+- **HDF5 scaling**: All fields are written in SI units (re-scaled from non-dimensional)
+- **Marker-in-cell noise**: Reduces effective convergence order near material boundaries
+- **ALE mode**: `pure_shear_ALE=1` deforms the mesh; avoid with large strain rates in tests
+- **Heterogeneous domains**: Mean-field comparisons cancel out in domains with inclusions; use L2 or max
+
+### Marker Density vs Accuracy (Experimental Finding)
+
+Tested on SolVi benchmark (51×51 grid, inclusion η_c=1000, matrix η_m=1):
+
+| Nx_part × Nz_part | Markers/cell | L2(Vx) | L2(P) | Runtime vs baseline |
+|--------------------|-------------|--------|-------|-------------------|
+| 4×4 (default) | 16 | 4.5e-2 | 7.5e-1 | 1.0× |
+| 8×8 | 64 | 4.6e-2 | 6.6e-1 | 2.1× |
+| 16×16 | 256 | 4.6e-2 | 6.6e-1 | 6.8× |
+
+**Key finding: increasing markers per cell gives negligible accuracy improvement** (<12% for P, 0% for Vx) at massive runtime cost (up to 6.8×). The P convergence order actually worsens with more markers (0.75 → 0.59), meaning the small L2 reduction at fixed resolution does not carry over to finer grids.
+
+The L2 error is dominated by the FD truncation error at the viscosity discontinuity, not by marker interpolation noise. More markers produce a better statistical average of the same inaccurate stencil at boundary cells.
+
+**Recommendation**: Keep `Nx_part=4, Nz_part=4` for all tests. To improve accuracy, use cell-face harmonic viscosity averaging in the FD stencil (not yet implemented) rather than increasing marker count.
+
+See `TESTS/SolViMarkerComparison.cpp` for the full experimental code and data.
+
+### Viscosity Averaging — `eta_average` (Experimental Finding)
+
+The `eta_average` parameter controls how marker viscosities are averaged to grid nodes **within each cell**: `0` = arithmetic (default), `1` = harmonic, `2` = geometric. This is phase-mixture averaging, **not** cell-face averaging in the FD stencil.
+
+Tested on SolVi benchmark (4×4 markers/cell, 51×51 grid):
+
+| `eta_average` | Method | L2(Vx) | L2(P) | Vx order (41→81) | P order (41→81) |
+|--------------|--------|--------|-------|-------------------|------------------|
+| 0 | Arithmetic | 4.5e-2 | 7.5e-1 | **0.97** | **0.75** |
+| 1 | Harmonic | 3.9e-2 | 9.2e-1 | 0.93 | 0.44 |
+| 2 | Geometric | 4.1e-2 | **6.1e-1** | 0.94 | 0.72 |
+
+**Key findings**:
+- **Geometric** gives the best absolute P error (18% lower than arithmetic) but slightly lower Vx convergence order
+- **Harmonic** is worst for P (both absolute error and convergence order)
+- **Arithmetic** gives the best convergence orders overall
+- The `eta_average` parameter operates on marker-to-node interpolation within cells. True cell-face harmonic averaging in the stencil (which literature suggests adds ~0.3 convergence order for P) would require modifying `StokesAssemblyDecoupled.c`
+
+**Recommendation**: Keep `eta_average=0` (arithmetic) for CI tests — it delivers the best convergence rates. Use `eta_average=2` (geometric) when absolute accuracy at a fixed resolution matters more than asymptotic convergence.

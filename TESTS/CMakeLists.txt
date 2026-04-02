@@ -100,3 +100,21 @@ file(COPY ${PROJECT_SOURCE_DIR}/TESTS/ConvergenceRate DESTINATION ${PROJECT_BINA
 add_executable(ConvergenceRateTests ConvergenceRateTests.cpp)
 target_link_libraries(ConvergenceRateTests LINK_PUBLIC mdoodz GTest::gtest_main)
 add_test(ConvergenceRateTests ConvergenceRateTests)
+
+# SolVi Benchmark Tests
+file(COPY ${PROJECT_SOURCE_DIR}/TESTS/SolViBenchmark DESTINATION ${PROJECT_BINARY_DIR}/TESTS)
+add_executable(SolViBenchmarkTests SolViBenchmarkTests.cpp)
+target_link_libraries(SolViBenchmarkTests LINK_PUBLIC mdoodz GTest::gtest_main)
+add_test(SolViBenchmarkTests SolViBenchmarkTests)
+
+# Anisotropy Benchmark Tests
+file(COPY ${PROJECT_SOURCE_DIR}/TESTS/AnisotropyBenchmark DESTINATION ${PROJECT_BINARY_DIR}/TESTS)
+add_executable(AnisotropyBenchmarkTests AnisotropyBenchmarkTests.cpp)
+target_link_libraries(AnisotropyBenchmarkTests LINK_PUBLIC mdoodz GTest::gtest_main)
+add_test(AnisotropyBenchmarkTests AnisotropyBenchmarkTests)
+
+# SolVi Marker Comparison (experimental — not in CI, run manually)
+add_executable(SolViMarkerComparison SolViMarkerComparison.cpp)
+target_link_libraries(SolViMarkerComparison LINK_PUBLIC mdoodz GTest::gtest_main)
+add_test(NAME SolViMarkerComparison COMMAND SolViMarkerComparison)
+set_tests_properties(SolViMarkerComparison PROPERTIES LABELS "experimental" TIMEOUT 300)
