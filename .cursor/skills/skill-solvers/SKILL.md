@@ -175,6 +175,23 @@ Solves the energy equation (in `ThermalSolver.c` and `ThermalRoutines.c`):
 | Oscillating residuals | Elastic step too large | Reduce `dt` relative to Maxwell time (η/G) |
 | Newton diverges | Bad initial guess | Increase Picard iterations before Newton |
 
+## Numerical Accuracy & Convergence Orders
+
+Expected convergence orders for the staggered-grid marker-in-cell scheme (SolVi benchmark, circular inclusion η_c/η_m = 1000):
+
+| Field | Observed order | Theoretical (smooth) | Limiting factor |
+|-------|---------------|---------------------|------------------|
+| Vx, Vz | ~1.0 | 2.0 | Viscosity discontinuity at inclusion boundary |
+| P | ~0.75 | 1.0–2.0 | FD truncation error at material interface |
+
+The error is dominated by the FD stencil at cells straddling the viscosity discontinuity, **not** by marker interpolation noise. Increasing markers per cell (from 4×4 to 16×16) gives negligible improvement (<12% for P, 0% for Vx) at 7× runtime cost.
+
+### Viscosity averaging (`eta_average`)
+
+The `eta_average` .txt parameter controls how marker viscosities are mixed to grid nodes within each cell (0 = arithmetic, 1 = harmonic, 2 = geometric). Arithmetic gives the best convergence orders; geometric gives the best absolute P error at fixed resolution. This is **not** cell-face averaging — the Stokes stencil in `StokesAssemblyDecoupled.c` uses pre-computed constitutive tensor components (`D11_n`, `D33_s`) without cell-face interpolation.
+
+See `TESTS/SolViMarkerComparison.cpp` for full experimental data.
+
 ## Key Source Files
 
 - Main loop: `MDLIB/Main_DOODZ.c` (`RunMDOODZ`)
