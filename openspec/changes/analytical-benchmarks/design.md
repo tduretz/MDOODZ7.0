@@ -1,6 +1,6 @@
 ## Context
 
-MDOODZ 7.0 has 15 test suites (39 cases) that verify the solver runs correctly and produces qualitatively sensible output, but none measure quantitative error against known analytical solutions. For JOSS submission, reviewers expect **L2 error norms** and **grid-convergence order** to demonstrate the code is mathematically verified, not just regression-tested.
+MDOODZ 7.0 has 15 test suites (39 cases) that verify the solver runs correctly and produces qualitatively sensible output, but none measure quantitative error against known analytical solutions. Reviewers expect **L2 error norms** and **grid-convergence order** to demonstrate the code is mathematically verified, not just regression-tested.
 
 The codebase already contains analytical solution code that has never been wired into the CI test suite:
 - `eval_anal_Dani()` in `SETS/AnisotropyDabrowski.c` — full 2D Stokes analytical solution (Schmid & Podladchikov, 2003)
