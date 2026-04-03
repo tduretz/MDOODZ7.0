@@ -179,16 +179,22 @@ Solves the energy equation (in `ThermalSolver.c` and `ThermalRoutines.c`):
 
 Expected convergence orders for the staggered-grid marker-in-cell scheme (SolVi benchmark, circular inclusion η_c/η_m = 1000):
 
-| Field | Observed order | Theoretical (smooth) | Limiting factor |
-|-------|---------------|---------------------|------------------|
-| Vx, Vz | ~1.0 | 2.0 | Viscosity discontinuity at inclusion boundary |
-| P | ~0.75 | 1.0–2.0 | FD truncation error at material interface |
+| Field | L2 order (41→81) | L1 order (101→201) | Theoretical (smooth) | Limiting factor |
+|-------|------------------|---------------------|---------------------|------------------|
+| Vx, Vz | ~1.0 | ~0.90 | 2.0 | Viscosity discontinuity at inclusion boundary |
+| P | ~0.75 | ~0.85 | 1.0–2.0 | FD truncation error at material interface |
+
+The L1 norm (`mean(|num - ana|)`) gives a cleaner convergence signal for pressure than relative L2, which is ill-conditioned near zero-crossings. At resolutions >80 cells the inclusion is well-resolved and L1 P order reaches ~0.85 — significantly better than L2 (~0.65). L2(P) order oscillates wildly between resolution pairs (including negative values) due to the relative norm amplifying errors where the analytical P is near zero.
 
 The error is dominated by the FD stencil at cells straddling the viscosity discontinuity, **not** by marker interpolation noise. Increasing markers per cell (from 4×4 to 16×16) gives negligible improvement (<12% for P, 0% for Vx) at 7× runtime cost.
 
 ### Viscosity averaging (`eta_average`)
 
-The `eta_average` .txt parameter controls how marker viscosities are mixed to grid nodes within each cell (0 = arithmetic, 1 = harmonic, 2 = geometric). Arithmetic gives the best convergence orders; geometric gives the best absolute P error at fixed resolution. This is **not** cell-face averaging — the Stokes stencil in `StokesAssemblyDecoupled.c` uses pre-computed constitutive tensor components (`D11_n`, `D33_s`) without cell-face interpolation.
+The `eta_average` .txt parameter controls how marker viscosities are mixed to grid nodes within each cell (0 = arithmetic, 1 = harmonic, 2 = geometric). Arithmetic gives the best convergence orders (Vx 1.02, P 0.75); harmonic gives the lowest absolute Vx error but worst convergence (0.45); geometric gives the best absolute P error but lower convergence. This is **not** cell-face averaging — the Stokes stencil in `StokesAssemblyDecoupled.c` uses pre-computed constitutive tensor components (`D11_n`, `D33_s`) without cell-face interpolation.
+
+### Cell-face D-tensor averaging: tested and ruled out
+
+Replacing D11E/D11W (etc.) in the stencil with their harmonic mean was attempted and **failed** — it produces a non-SPD stiffness matrix (CHOLMOD failure). In this staggered grid, D values at cell centres already represent the natural face values for the differencing scheme. Setting D11E = D11W = harmonic_mean destroys the viscosity contrast information and breaks the operator structure. This is fundamentally different from the "harmonic face averaging" in Deubelbeiss & Kaus (2008), which refers to marker-to-node interpolation (what `eta_average` already controls). Improving P convergence order beyond ~0.85 (L1) would require immersed-boundary or ghost-fluid methods.
 
 See `TESTS/SolViMarkerComparison.cpp` for full experimental data.
 

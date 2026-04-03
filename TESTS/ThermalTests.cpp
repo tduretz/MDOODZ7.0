@@ -126,8 +126,9 @@ TEST_F(Thermal, SteadyStateGeotherm) {
     }
   }
   double L2_T = computeL2Error(T_field, T_ana);
-  printf("Geotherm L2 error: %e\n", L2_T);
-  EXPECT_LT(L2_T, 1.0);  // loose: simulation may not fully reach steady state
+  double L1_T = computeL1Error(T_field, T_ana);
+  printf("Geotherm L2 error: %e, L1 error: %e\n", L2_T, L1_T);
+  EXPECT_LT(L2_T, 1e-4);  // dt=1e15 achieves steady state: L2 ≈ 2.4e-6
 
   free(inputName);
   free(fileName);
@@ -161,7 +162,7 @@ TEST_F(Thermal, RadiogenicHeat) {
   double T0_SI = 773.15;  // (500 + 273.15) K
   double T_ana_mean = T0_SI + Qr * time_SI / (rho_mat * Cp_mat);
   printf("RadiogenicHeat: meanT_final=%e, T_ana=%e\n", meanT_final, T_ana_mean);
-  EXPECT_NEAR(meanT_final, T_ana_mean, fabs(T_ana_mean - T0_SI) * 0.5);
+  EXPECT_NEAR(meanT_final, T_ana_mean, fabs(T_ana_mean - T0_SI) * 0.02);  // ±2% of ΔT; measured 0.4%
 
   free(inputName);
   free(fileInit);

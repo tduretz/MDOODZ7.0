@@ -274,11 +274,25 @@ EXPECT_GE(order, expected_order);
 
 ### Common Pitfalls
 
-- **Staggered grid sizes**: Vx is Nx×(Nz-1), Vz is (Nx-1)×Nz, P/T/σ are (Nx-1)×(Nz-1)
-- **HDF5 scaling**: All fields are written in SI units (re-scaled from non-dimensional)
-- **Marker-in-cell noise**: Reduces effective convergence order near material boundaries
-- **ALE mode**: `pure_shear_ALE=1` deforms the mesh; avoid with large strain rates in tests
-- **Heterogeneous domains**: Mean-field comparisons cancel out in domains with inclusions; use L2 or max
+- **Staggered grid sizes**: Vx is Nx×(Nz+1), Vz is (Nx+1)×Nz, P/T/σ are (Nx-1)×(Nz-1)
+- **HDF5 scaling**: Coordinates and velocities may be non-dimensional; temperatures are in Kelvin (SI); times in SI seconds
+- **Pure shear sign convention**: positive `bkg_strain_rate` with `pure_shear_ALE=1` = shortening in x. Vx = -ε̇·x, Vz = +ε̇·z
+- **Shear heating formula**: MDOODZ Wdiss = τ_II²/η = 4ηε̇_II² (not 2ηε̇_II²)
+- **Thermal time stepping**: For steady-state tests, ensure total simulated time ≫ τ = H²ρCp/k
+
+### Staggered Grid Coordinate Mapping (Critical Bug Fix)
+
+A coordinate-mapping bug was found in the SolVi and PureShearVelocity test code (April 2026). The original test code assumed **wrong array dimensions** for velocity fields:
+
+| Field | Wrong assumption | Correct size | Correct coordinate formula |
+|-------|-----------------|--------------|---------------------------|
+| Vx | `Nx × (Nz-1)` | `Nx × (Nz+1)` | `x = xmin + ix*dx`, `z = zmin + (iz-0.5)*dz` |
+| Vz | `(Nx-1) × Nz` | `(Nx+1) × Nz` | `x = xmin + (ix-0.5)*dx`, `z = zmin + iz*dz` |
+| P, T, σ | `(Nx-1) × (Nz-1)` | `(Nx-1) × (Nz-1)` | `x = xmin + (ix+0.5)*dx`, `z = zmin + (iz+0.5)*dz` |
+
+The `+1` dimensions include ghost/boundary nodes at each end. Interior nodes (ix=1..N-2 or iz=1..N-2) sit at cell-center positions; boundary nodes (ix=0, ix=N) sit half a cell outside the domain. The old code using `(iz+0.5)*dz` for Vx z-coordinates was shifted by exactly one cell width, and the wrong Vz stride (`Nx-1` instead of `Nx+1`) completely scrambled the 2D coordinate mapping.
+
+**Impact on SolVi:** L2(Vx) improved 2× (0.045→0.022), L2(Vz) improved **20×** (0.44→0.022), and L2(Vx)=L2(Vz) by symmetry as expected. Convergence orders improved from ~0.7 to **1.02** for Vx and from ~0.5 to **0.75** for P.
 
 ### Marker Density vs Accuracy (Experimental Finding)
 
@@ -286,15 +300,15 @@ Tested on SolVi benchmark (51×51 grid, inclusion η_c=1000, matrix η_m=1):
 
 | Nx_part × Nz_part | Markers/cell | L2(Vx) | L2(P) | Runtime vs baseline |
 |--------------------|-------------|--------|-------|-------------------|
-| 4×4 (default) | 16 | 4.5e-2 | 7.5e-1 | 1.0× |
-| 8×8 | 64 | 4.6e-2 | 6.6e-1 | 2.1× |
-| 16×16 | 256 | 4.6e-2 | 6.6e-1 | 6.8× |
+| 4×4 (default) | 16 | 2.2e-2 | 7.5e-1 | 1.0× |
+| 8×8 | 64 | 2.4e-2 | 6.6e-1 | 2.2× |
+| 16×16 | 256 | 2.3e-2 | 6.6e-1 | 7.0× |
 
-**Key finding: increasing markers per cell gives negligible accuracy improvement** (<12% for P, 0% for Vx) at massive runtime cost (up to 6.8×). The P convergence order actually worsens with more markers (0.75 → 0.59), meaning the small L2 reduction at fixed resolution does not carry over to finer grids.
+**Key finding: increasing markers per cell gives negligible accuracy improvement** (<12% for P, 0% for Vx) at massive runtime cost (up to 7×). The P convergence order actually worsens with more markers (0.75 → 0.59), meaning the small L2 reduction at fixed resolution does not carry over to finer grids.
 
 The L2 error is dominated by the FD truncation error at the viscosity discontinuity, not by marker interpolation noise. More markers produce a better statistical average of the same inaccurate stencil at boundary cells.
 
-**Recommendation**: Keep `Nx_part=4, Nz_part=4` for all tests. To improve accuracy, use cell-face harmonic viscosity averaging in the FD stencil (not yet implemented) rather than increasing marker count.
+**Recommendation**: Keep `Nx_part=4, Nz_part=4` for all tests. Improving beyond the current accuracy would require immersed-boundary or ghost-fluid methods.
 
 See `TESTS/SolViMarkerComparison.cpp` for the full experimental code and data.
 
@@ -306,14 +320,65 @@ Tested on SolVi benchmark (4×4 markers/cell, 51×51 grid):
 
 | `eta_average` | Method | L2(Vx) | L2(P) | Vx order (41→81) | P order (41→81) |
 |--------------|--------|--------|-------|-------------------|------------------|
-| 0 | Arithmetic | 4.5e-2 | 7.5e-1 | **0.97** | **0.75** |
-| 1 | Harmonic | 3.9e-2 | 9.2e-1 | 0.93 | 0.44 |
-| 2 | Geometric | 4.1e-2 | **6.1e-1** | 0.94 | 0.72 |
+| 0 | Arithmetic | 2.2e-2 | 7.5e-1 | **1.02** | **0.75** |
+| 1 | Harmonic | 1.0e-3 | 9.2e-1 | 0.45 | 0.44 |
+| 2 | Geometric | 1.3e-2 | **6.1e-1** | 0.87 | 0.72 |
 
 **Key findings**:
-- **Geometric** gives the best absolute P error (18% lower than arithmetic) but slightly lower Vx convergence order
-- **Harmonic** is worst for P (both absolute error and convergence order)
-- **Arithmetic** gives the best convergence orders overall
-- The `eta_average` parameter operates on marker-to-node interpolation within cells. True cell-face harmonic averaging in the stencil (which literature suggests adds ~0.3 convergence order for P) would require modifying `StokesAssemblyDecoupled.c`
+- **Arithmetic** gives the best convergence orders overall (Vx 1.02, P 0.75)
+- **Harmonic** gives the lowest absolute Vx error (1.0e-3) but worst convergence orders (0.45) — the accuracy at fixed resolution does not scale with refinement
+- **Geometric** gives the best absolute P error (18% lower than arithmetic) but slightly lower Vx convergence order (0.87)
+- The `eta_average` parameter operates on marker-to-node interpolation within cells. Cell-face D-tensor harmonic averaging in the stencil was attempted and **failed** — it produces a non-SPD matrix (see below)
 
 **Recommendation**: Keep `eta_average=0` (arithmetic) for CI tests — it delivers the best convergence rates. Use `eta_average=2` (geometric) when absolute accuracy at a fixed resolution matters more than asymptotic convergence.
+
+### Cell-Face D-Tensor Averaging — Tested and Ruled Out
+
+Replacing `D11E`/`D11W` (and `D33N`/`D33S`, `D22S`/`D22N`, `D33E`/`D33W`) in `StokesAssemblyDecoupled.c` with their harmonic mean was implemented and tested on SolVi (April 2026). **Result: CHOLMOD fails — "matrix not positive definite".**
+
+In this staggered grid, the Vx node sits on the face between cells `iPrW` and `iPrE`. Setting `D11E = D11W = harmonic_mean` makes the operator locally constant, which destroys the viscosity contrast and breaks SPD structure. This is not equivalent to the "harmonic face averaging" in Deubelbeiss & Kaus (2008), which refers to marker-to-node interpolation (already controlled by `eta_average`).
+
+**All three approaches to improving P convergence order have been ruled out:**
+1. More markers per cell → negligible improvement, 7× cost
+2. `eta_average` variations → no convergence order gain
+3. D-tensor harmonic averaging → breaks the matrix
+
+However, **switching from relative L2 to absolute L1 norm** (`mean(|num - ana|)`) and using higher resolutions (>80 cells) shows measurably better P convergence: L1 order ~0.85 at 101→201 vs L2 order ~0.65. The L1 norm avoids the ill-conditioning of relative L2 near the zero-crossings of the analytical pressure field. The `HighResL1Convergence` CI test in `SolViBenchmarkTests.cpp` asserts `P_L1 order ≥ 0.8` and `Vx_L1 order ≥ 0.8` on the 101→201 pair.
+
+Improving beyond the current ~0.85 L1 P convergence order would require fundamentally different methods (immersed-boundary, ghost-fluid, embedded discontinuity).
+
+### Non-SolVi Benchmark Accuracy (Audited)
+
+| Test | Before (L2/error) | After | Key Fix | Threshold |
+|------|-------------------|-------|---------|-----------|
+| SteadyStateGeotherm | L2=0.68 | L2=2.4e-6 | dt 1e12→1e15 (reach steady state) | L2 < 1e-4 |
+| RadiogenicHeat | 0.008% | 0.4% | — (already good) | ±2% of ΔT |
+| HydrostaticPressure | L2=0.086 | L2=0.043 | Nx 21→41 (first-order in h) | L2 < 0.06 |
+| PureShearVelocity | L2=2.0 | L2=0.024 | Sign bug: Vx=-ε̇x not +ε̇x | L2 < 0.05 |
+| ViscousDissipation | 85% error | 0.8% | Factor 2→4 + Neumann BCs | ±5% |
+
+**Lessons learned:**
+- Always verify analytical formula against the code's actual implementation (sign, invariant definition)
+- Check that time stepping covers the relevant physical timescale
+- Use Neumann (zero-flux) BCs for uniform source/heating tests to avoid boundary leakage
+- Penalty and solver tolerance have negligible effect on thermal and hydrostatic tests
+
+### Anisotropy Benchmark Accuracy
+
+| Test | Metric | Measured | Threshold |
+|------|--------|----------|-----------|
+| DirectorEvolution | L2(θ) | 2.34e-3 rad | < 5e-3 |
+| DirectorDtConvergence | order (finest pair) | 0.99 | ≥ 0.8 |
+| DirectorDtConvergence | order (coarsest pair) | 0.93 | — |
+| StressAnisotropy | relErr(τ_II) | 1.1e-8 | < 0.01% |
+| StressAnisotropy | relErr(sxxd) | 4.4e-16 | < 0.01% |
+
+**Analytical solutions:**
+- Director evolution ODE: θ(t) = arctan(tan(θ₀) − γ̇·t) under simple shear (γ̇ = 2 × bkg_strain_rate)
+- Stress: rotation formula from ViscosityConciseAniso — rotate ε to anisotropy frame, apply σ_ns/δ, rotate back
+- Forward Euler dt-convergence order ~1.0 (5 dt values: 0.25, 0.1, 0.05, 0.025, 0.0125 for total time t=0.5)
+- Coarsest pair order is 0.93 due to nonlinear curvature of θ(t) at large dt
+- Per-step errors extracted from real MDOODZ HDF5 output (writer_step=1): error halves with each dt halving (error ratio → 2.0 for fine dt, 2.36 for coarsest pair due to curvature)
+- Final angular errors: dt=0.25 → +2.46°, dt=0.1 → +1.04°, dt=0.05 → +0.53°, dt=0.025 → +0.27°, dt=0.0125 → +0.13°
+
+**Visualization:** `gnuplot AnisotropyBenchmark/plot_director_convergence.gp` generates a 2-panel chart (trajectory from real HDF5 data + convergence) after running the DtConvergence test. The test writes `director_trajectory_dt*.dat` and `director_convergence.dat`.

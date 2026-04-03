@@ -47,14 +47,23 @@ where ε̇_ij is the deviatoric strain rate tensor.
 
 τ_ij + (η/G) · Dτ_ij/Dt = 2η · ε̇_ij
 
-Discretised using a Jaumann objective stress rate:
+Discretised using an objective stress rate:
 
 τ^new_ij = 2η_ve · (ε̇_ij + τ⁰_ij,rotated / (2·G·Δt))
 
 where:
 - η_ve = η·G·Δt / (η + G·Δt) is the effective visco-elastic viscosity
-- τ⁰_ij,rotated is the old deviatoric stress rotated by the Jaumann rate
+- τ⁰_ij,rotated is the old deviatoric stress rotated according to `stress_rotation`
 - G is the shear modulus, Δt is the time step
+
+**Stress rotation modes** (`stress_rotation` in `.txt`):
+- `0`: No rotation — valid only for irrotational (pure shear) flows
+- `1` (default): Jaumann rate — uses vorticity tensor ω_xz
+- `2`: Analytical rotation — full rotation matrix applied
+
+**Conservative interpolation** (`conserv_interp` in `.txt`):
+- `0` (default): Standard grid-to-particle velocity interpolation
+- `1`: Taras conservative interpolation scheme — improves mass/momentum conservation during particle advection
 
 ### Visco-Elasto-Plastic
 
@@ -64,6 +73,11 @@ Above visco-elastic model with Drucker-Prager yield criterion:
 
 When yield is exceeded, viscosity is reduced:
 η_pl = τ_yield / (2·ε̇_II)
+
+With viscoplastic regularisation (`eta_vp > 0`), the yield surface gains a rate-dependent overstress:
+τ_II = C·cos(φ) + P·sin(φ) + η_vp · λ̇
+
+This controls shear band width and prevents singular localisation.
 
 ### Anisotropic
 

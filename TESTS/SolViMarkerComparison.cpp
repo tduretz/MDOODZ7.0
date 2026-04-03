@@ -4,22 +4,32 @@
 //
 // ===== FINDINGS (April 2026, WSL2 Ubuntu 22.04, gcc 11.4) =====
 //
+// NOTE: A coordinate-mapping bug was found and fixed in April 2026.
+// The original code used wrong array dimensions (Nx*(Nz-1) and (Nx-1)*Nz)
+// and z/x offsets for VxNodes/VzNodes. Correct dimensions are Nx*(Nz+1)
+// and (Nx+1)*Nz, with half-cell offsets (iz-0.5)*dz and (ix-0.5)*dx.
+// All numbers below reflect the CORRECTED mapping.
+//
 // 1. L2 errors at 51×51 (fixed grid, varying Nx_part × Nz_part):
 //
 //    markers/cell |   L2(Vx)   |   L2(Vz)   |   L2(P)    |  L2(sxxd)  |  time(ms)
 //    -------------|------------|------------|------------|------------|----------
-//    4×4  = 16    | 4.53e-02   | 4.38e-01   | 7.50e-01   | 4.33e-01   |      262
-//    8×8  = 64    | 4.61e-02   | 4.39e-01   | 6.58e-01   | 4.27e-01   |      544
-//    16×16= 256   | 4.57e-02   | 4.38e-01   | 6.59e-01   | 4.26e-01   |     1779
+//    4×4  = 16    | 2.24e-02   | 2.24e-02   | 7.50e-01   | 4.33e-01   |      254
+//    8×8  = 64    | 2.38e-02   | 2.38e-02   | 6.58e-01   | 4.27e-01   |      570
+//    16×16= 256   | 2.31e-02   | 2.31e-02   | 6.59e-01   | 4.26e-01   |     1781
 //
-//    Improvement 4×4 → 8×8:    Vx=1.0×  P=1.1×  time=2.1× slower
-//    Improvement 4×4 → 16×16:  Vx=1.0×  P=1.1×  time=6.8× slower
+//    Improvement 4×4 → 8×8:    Vx=0.9×  P=1.1×  time=2.2× slower
+//    Improvement 4×4 → 16×16:  Vx=1.0×  P=1.1×  time=7.0× slower
+//
+//    Note: L2(Vx) = L2(Vz) by symmetry of the pure-shear SolVi problem.
+//    Before the coordinate fix, L2(Vz) was inflated ~20× due to the
+//    wrong stride in the flat-array decomposition.
 //
 // 2. Convergence orders (41→81):
 //
 //    Field |  4×4 markers  |  8×8 markers
 //    ------|---------------|-------------
-//    Vx    |  0.97         |  0.96
+//    Vx    |  1.02         |  0.98
 //    P     |  0.75         |  0.59
 //
 // 3. Conclusion:
@@ -36,9 +46,8 @@
 //    More markers only give a better average of the same wrong stencil.
 //
 //    To improve convergence order, one would need:
-//    - Cell-face harmonic viscosity averaging in the FD stencil (not yet
-//      implemented — requires modifying StokesAssemblyDecoupled.c)
 //    - Immersed-boundary / ghost-fluid corrections (expensive, up to 2nd order)
+//    - Cell-face D-tensor harmonic averaging was attempted and FAILED (see below)
 //
 //    Bottom line: keep Nx_part=4, Nz_part=4 for CI tests. The default 16
 //    markers/cell is sufficient for the accuracy this scheme can deliver.
@@ -53,25 +62,57 @@
 //
 //    eta_average |   L2(Vx)   |   L2(Vz)   |   L2(P)    |  L2(sxxd)
 //    ------------|------------|------------|------------|----------
-//    0 arithmetic| 4.53e-02   | 4.38e-01   | 7.50e-01   | 4.33e-01
-//    1 harmonic  | 3.89e-02   | 4.40e-01   | 9.19e-01   | 3.43e-01
-//    2 geometric | 4.14e-02   | 4.39e-01   | 6.12e-01   | 3.81e-01
+//    0 arithmetic| 2.24e-02   | 2.24e-02   | 7.50e-01   | 4.33e-01
+//    1 harmonic  | 1.02e-03   | 1.02e-03   | 9.19e-01   | 4.43e-01
+//    2 geometric | 1.27e-02   | 1.27e-02   | 6.12e-01   | 4.11e-01
 //
 // 2. Convergence orders (41→81):
 //
 //    Field | arithmetic(0) | harmonic(1) | geometric(2)
 //    ------|---------------|-------------|-------------
-//    Vx    |  0.972        |  0.930      |  0.940
+//    Vx    |  1.022        |  0.454      |  0.874
 //    P     |  0.753        |  0.441      |  0.717
 //
 // 3. Conclusion:
 //    - Geometric (2): best absolute P error (6.12e-1, 18% better than arith),
-//      Vx convergence order slightly lower (0.94 vs 0.97)
-//    - Harmonic (1): worst P (both absolute and convergence order 0.44)
+//      Vx convergence order slightly lower (0.87 vs 1.02)
+//    - Harmonic (1): lowest absolute Vx error (1.0e-3!) but worst P and
+//      worst convergence orders (0.45 for both Vx and P)
 //    - Arithmetic (0): best convergence orders overall
 //    - Key insight: eta_average controls marker-to-node phase mixing, NOT
 //      cell-face interpolation in the stencil.  True cell-face harmonic
 //      averaging would require modifying StokesAssemblyDecoupled.c.
+//
+// ===== CELL-FACE D-TENSOR HARMONIC AVERAGING: FAILED =====
+//
+// Attempted (April 2026): Replace D11E/D11W (and D33N/D33S, D22S/D22N,
+// D33E/D33W) in StokesAssemblyDecoupled.c with their harmonic mean,
+// gated on a new `cell_avg` parameter.
+//
+// Implementation: In Xmomentum_InnerNodesDecoupled, set
+//   D11E = D11W = 2*D11E*D11W / (D11E + D11W)
+// and similarly for D33N/D33S. Same pattern for Zmomentum.
+//
+// Result: CHOLMOD fails with "matrix not positive definite".
+//
+// Root cause: In this staggered-grid stencil, the Vx node sits ON the
+// face between cells iPrW and iPrE. D11E and D11W are values at the
+// cell CENTRES on each side. The stencil computes:
+//   (D11E * eps_dot_E  -  D11W * eps_dot_W) / dx
+// Setting D11E = D11W = harmonic_mean makes the operator locally
+// constant across the two cells, which:
+//   (a) loses the viscosity contrast information entirely
+//   (b) breaks the SPD structure of the stiffness matrix (CHOLMOD fails)
+//
+// This is NOT the same as "harmonic face averaging" from Deubelbeiss &
+// Kaus (2008), which averages viscosity during the marker-to-node
+// interpolation (i.e., what eta_average=1 already does).
+//
+// Conclusion: In MDOODZ's stencil, D values at centres ARE the
+// natural face representation. There is no separate face viscosity to
+// average. Improving P convergence order beyond ~0.75 would require
+// fundamentally different stencil modifications (e.g., immersed boundary,
+// ghost-fluid, or embedded discontinuity methods).
 //
 // =================================================================
 
@@ -213,12 +254,12 @@ protected:
       if (fieldType == 0) {
         int ncx = Nx - 1; ix = k % ncx; iz = k / ncx;
         x = xmin + (ix + 0.5) * dx; z = zmin + (iz + 0.5) * dz;
-      } else if (fieldType == 1) {
+      } else if (fieldType == 1) { // VxNodes: Nx*(Nz+1)
         ix = k % Nx; iz = k / Nx;
-        x = xmin + ix * dx; z = zmin + (iz + 0.5) * dz;
-      } else {
-        int ncx = Nx - 1; ix = k % ncx; iz = k / ncx;
-        x = xmin + (ix + 0.5) * dx; z = zmin + iz * dz;
+        x = xmin + ix * dx; z = zmin + (iz - 0.5) * dz;
+      } else { // VzNodes: (Nx+1)*Nz
+        int nxVz = Nx + 1; ix = k % nxVz; iz = k / nxVz;
+        x = xmin + (ix - 0.5) * dx; z = zmin + iz * dz;
       }
       eval_anal_Dani(&aVx, &aVz, &aP, &aEta, &aSxx, &aSyy, x, z, 1, RC, MM, MC);
       if (fieldType == 1) analytical[k] = aVx;

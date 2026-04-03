@@ -233,4 +233,14 @@ static double computeL2Error(const std::vector<double> &numerical, const std::ve
   }
 }
 
+// Compute absolute L1 (mean absolute) error between numerical and analytical arrays
+static double computeL1Error(const std::vector<double> &numerical, const std::vector<double> &analytical) {
+  double sumAbsDiff = 0.0;
+  size_t n = numerical.size();
+  for (size_t i = 0; i < n; i++) {
+    sumAbsDiff += fabs(numerical[i] - analytical[i]);
+  }
+  return sumAbsDiff / (double)n;
+}
+
 #endif

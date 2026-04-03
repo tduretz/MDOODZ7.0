@@ -83,15 +83,18 @@ When `cstv > 0`, uses a constant viscosity η = η₀ (set via `eta0[phase]` in 
 
 η_ve = η · G · Δt / (η + G · Δt)
 
-Stress update (Jaumann objective rate):
+Stress update (objective rate):
 τ_new = 2·η_ve · (ε̇ + τ⁰_rotated / (2·G·Δt))
 
-where τ⁰_rotated is the old stress rotated by the Jaumann rate.
+where τ⁰_rotated is the old stress rotated according to `stress_rotation` mode.
 
 | `.txt` parameter | Description |
 |-------------------|-------------|
 | `elastic = 1` | Enable elasticity globally |
 | `G` (per phase) | Shear modulus [Pa], typically ~1e10 |
+| `stress_rotation` | Stress objectivity: `0`=none, `1`=Jaumann (default), `2`=analytical rotation |
+
+The `stress_rotation` parameter controls how old deviatoric stresses are rotated before the visco-elastic update (`RheologyParticles.c`). Mode 0 disables rotation (valid only for irrotational flow). Mode 1 (Jaumann) uses the vorticity tensor. Mode 2 uses an analytical rotation matrix.
 
 ## Plasticity
 
@@ -116,7 +119,30 @@ If yield is exceeded, viscosity is reduced to enforce the yield stress:
 | `pls_end` | Accumulated plastic strain at which softening is complete |
 | `Slim` | Stress limiter [Pa] — maximum deviatoric stress |
 | `sig_tens` | Tensile strength [Pa] |
-| `eta_vp` | Viscoplastic regularisation parameter |
+| `eta_vp` | Viscoplastic regularisation viscosity [Pa·s] (see below) |
+| `n_vp` | Viscoplastic stress exponent (must be 1.0 in MD7) |
+
+### Viscoplastic Regularisation (`eta_vp`)
+
+**Purpose**: `eta_vp` adds a rate-dependent (viscous) overstress to the plastic yield surface, preventing the stress from dropping to exactly the yield stress. This controls shear band width and improves numerical convergence.
+
+**Modified yield condition**:
+
+τ_II = C·cos(φ) + P·sin(φ) + η_vp · λ̇
+
+where λ̇ is the plastic multiplier rate (related to the magnitude of plastic strain rate).
+
+**Return mapping** (`RheologyDensity.c`, line ~630): A local Newton iteration finds λ̇ such that:
+
+F = τ_trial - η_ve·λ̇ - τ_yield - η_vp·λ̇ = 0
+
+The viscoplastic overstress is then `OverS = η_vp · λ̇`.
+
+**Physical effect**: Higher `eta_vp` → wider shear bands, smoother localisation. Lower → thinner bands, more mesh-sensitive. Setting `eta_vp = 0` recovers ideal (rate-independent) plasticity.
+
+**Typical values**: 1e18–1e22 Pa·s for lithospheric-scale models. The LaTeX documentation suggests `eta_vp = 1e-1` (non-dimensional) to `2e20` Pa·s depending on the application.
+
+**Note**: `n_vp` (viscoplastic exponent) must be 1.0 in MD7 — power-law viscoplasticity (`n_vp > 1`) is not implemented and will `exit(1)`.
 
 ## The mat_prop Structure
 
@@ -161,9 +187,9 @@ When multiple material phases share a grid cell, their marker viscosities are av
 
 | Value | Method | Best for |
 |-------|--------|----------|
-| 0 | Arithmetic (default) | Best convergence orders in grid-refinement studies |
-| 1 | Harmonic | Low-viscosity inclusions (but worst P convergence in SolVi) |
-| 2 | Geometric | Best absolute P error at fixed resolution |
+| 0 | Arithmetic (default) | Best convergence orders (Vx 1.02, P 0.75 in SolVi 41→81) |
+| 1 | Harmonic | Lowest absolute Vx error (1.0e-3 at 51×51) but worst convergence orders (0.45) |
+| 2 | Geometric | Best absolute P error at fixed resolution (18% lower than arithmetic) |
 
 This averaging operates on the phase mixture **within** each cell. It is distinct from cell-face viscosity interpolation in the FD stencil (which is not currently implemented as harmonic).
 

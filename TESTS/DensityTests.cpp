@@ -160,8 +160,9 @@ TEST_F(Density, HydrostaticPressure) {
     }
   }
   double L2_P = computeL2Error(P_field, P_ana);
-  printf("Hydrostatic P L2 error: %e\n", L2_P);
-  EXPECT_LT(L2_P, 2e-1);
+  double L1_P = computeL1Error(P_field, P_ana);
+  printf("Hydrostatic P L2 error: %e, L1 error: %e\n", L2_P, L1_P);
+  EXPECT_LT(L2_P, 6e-2);  // Nx=41 gives L2 ≈ 0.043; first-order spatial convergence
 
   free(inputName);
   free(fileName);

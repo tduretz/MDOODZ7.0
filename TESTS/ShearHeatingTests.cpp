@@ -41,15 +41,9 @@ protected:
 
   static SetBC SetBCT(MdoodzInput *instance, POSITION position, Coordinates coordinates, double gridTemperature) {
     SetBC bc;
-    double Ttop = (instance->model.user0 + zeroC) / instance->scaling.T;
-    if (position == N || position == NE || position == NW ||
-        position == S || position == SE || position == SW) {
-      bc.value = Ttop;
-      bc.type  = 1;
-    } else {
-      bc.value = 0.0;
-      bc.type  = 0;
-    }
+    // Neumann (zero flux) on all boundaries — no heat loss for uniform shear heating test
+    bc.value = 0.0;
+    bc.type  = 0;
     return bc;
   }
 };
@@ -86,9 +80,10 @@ TEST_F(ShearHeating, ViscousDissipation) {
   double eps_d = 1e-14;
   double rho_val = 3300.0;
   double Cp_val = 1050.0;
-  double dT_ana = 2.0 * eta_val * eps_d * eps_d * t_final / (rho_val * Cp_val);
+  // dT = Wdiss*t/(rho*Cp), MDOODZ: Wdiss = Tii^2/eta = 4*eta*eps_II^2
+  double dT_ana = 4.0 * eta_val * eps_d * eps_d * t_final / (rho_val * Cp_val);
   printf("ViscousDissipation: dT_num=%e, dT_ana=%e\n", dT_num, dT_ana);
-  EXPECT_NEAR(dT_num, dT_ana, fabs(dT_ana) * 2.0);  // within factor 3
+  EXPECT_NEAR(dT_num, dT_ana, fabs(dT_ana) * 0.05);  // Neumann BCs: ~0.8% error
 
   free(inputName);
   free(fileInit);

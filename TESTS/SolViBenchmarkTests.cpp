@@ -160,11 +160,12 @@ protected:
     return bc;
   }
 
-  // Compute L2 error for a SolVi field
+  // Build analytical solution array for a SolVi field
   // fieldType: 0=Centers, 1=VxNodes, 2=VzNodes
-  static double computeSolViL2(const char *hdf5File, const char *group,
-                                const char *dataset, int fieldType) {
-    auto field = readFieldAsArray(hdf5File, group, dataset);
+  static std::vector<double> buildSolViAnalytical(const char *hdf5File, const char *group,
+                                                   const char *dataset, int fieldType,
+                                                   std::vector<double> &field) {
+    field = readFieldAsArray(hdf5File, group, dataset);
     int    Nx   = (int)getModelParam(hdf5File, 3);
     int    Nz   = (int)getModelParam(hdf5File, 4);
     double dx   = getModelParam(hdf5File, 5);
@@ -186,16 +187,16 @@ protected:
         iz = k / ncx;
         x  = xmin + (ix + 0.5) * dx;
         z  = zmin + (iz + 0.5) * dz;
-      } else if (fieldType == 1) { // VxNodes: Nx*(Nz-1)
+      } else if (fieldType == 1) { // VxNodes: Nx*(Nz+1)
         ix = k % Nx;
         iz = k / Nx;
         x  = xmin + ix * dx;
-        z  = zmin + (iz + 0.5) * dz;
-      } else {                      // VzNodes: (Nx-1)*Nz
-        int ncx = Nx - 1;
-        ix = k % ncx;
-        iz = k / ncx;
-        x  = xmin + (ix + 0.5) * dx;
+        z  = zmin + (iz - 0.5) * dz;
+      } else {                      // VzNodes: (Nx+1)*Nz
+        int nxVz = Nx + 1;
+        ix = k % nxVz;
+        iz = k / nxVz;
+        x  = xmin + (ix - 0.5) * dx;
         z  = zmin + iz * dz;
       }
 
@@ -211,7 +212,24 @@ protected:
         analytical[k] = aSxx; // sxxd
       }
     }
+    return analytical;
+  }
+
+  // Compute L2 error for a SolVi field
+  // fieldType: 0=Centers, 1=VxNodes, 2=VzNodes
+  static double computeSolViL2(const char *hdf5File, const char *group,
+                                const char *dataset, int fieldType) {
+    std::vector<double> field;
+    auto analytical = buildSolViAnalytical(hdf5File, group, dataset, fieldType, field);
     return computeL2Error(field, analytical);
+  }
+
+  // Compute L1 error for a SolVi field
+  static double computeSolViL1(const char *hdf5File, const char *group,
+                                const char *dataset, int fieldType) {
+    std::vector<double> field;
+    auto analytical = buildSolViAnalytical(hdf5File, group, dataset, fieldType, field);
+    return computeL1Error(field, analytical);
   }
 };
 
@@ -229,10 +247,10 @@ TEST_F(SolViBenchmark, L2Error) {
   printf("SolVi 51x51 L2 errors: Vx=%e, Vz=%e, P=%e, sxxd=%e\n",
          L2_Vx, L2_Vz, L2_P, L2_sxxd);
 
-  EXPECT_LT(L2_Vx,   5e-1);  // marker-in-cell gives ~1e-2 at 51x51
-  EXPECT_LT(L2_Vz,   5e-1);
-  EXPECT_LT(L2_P,    2.0);   // pressure less accurate near inclusion
-  EXPECT_LT(L2_sxxd, 2.0);
+  EXPECT_LT(L2_Vx,   5e-2);  // marker-in-cell gives ~2e-2 at 51x51
+  EXPECT_LT(L2_Vz,   5e-2);
+  EXPECT_LT(L2_P,    1.0);   // pressure less accurate near inclusion
+  EXPECT_LT(L2_sxxd, 1.0);
 }
 
 TEST_F(SolViBenchmark, GridConvergence) {
@@ -241,7 +259,7 @@ TEST_F(SolViBenchmark, GridConvergence) {
   char txtFile81[] = "SolViBenchmark/SolViRes81.txt";
   char *txtFiles[] = {txtFile21, txtFile41, txtFile81};
   const char *subfolders[] = {"SolViRes21", "SolViRes41", "SolViRes81"};
-  double L2_Vx[3], L2_P[3], h[3];
+  double L2_Vx[3], L2_P[3], L1_Vx[3], L1_P[3], h[3];
 
   for (int i = 0; i < 3; i++) {
     RunMDOODZ(txtFiles[i], &setup);
@@ -249,8 +267,11 @@ TEST_F(SolViBenchmark, GridConvergence) {
     snprintf(outputFile, sizeof(outputFile), "%s/Output00001.gzip.h5", subfolders[i]);
     L2_Vx[i] = computeSolViL2(outputFile, "VxNodes", "Vx", 1);
     L2_P[i]  = computeSolViL2(outputFile, "Centers", "P",  0);
+    L1_Vx[i] = computeSolViL1(outputFile, "VxNodes", "Vx", 1);
+    L1_P[i]  = computeSolViL1(outputFile, "Centers", "P",  0);
     h[i]     = getModelParam(outputFile, 5);
-    printf("Resolution h=%e: L2(Vx)=%e, L2(P)=%e\n", h[i], L2_Vx[i], L2_P[i]);
+    printf("Resolution h=%e: L2(Vx)=%e, L2(P)=%e, L1(Vx)=%e, L1(P)=%e\n",
+           h[i], L2_Vx[i], L2_P[i], L1_Vx[i], L1_P[i]);
   }
 
   // Convergence order between finest pair (41→81)
@@ -259,6 +280,73 @@ TEST_F(SolViBenchmark, GridConvergence) {
 
   printf("Convergence orders (41->81): Vx=%.2f, P=%.2f\n", order_Vx, order_P);
 
-  EXPECT_GE(order_Vx, 0.7);  // marker-in-cell: ~first order near inclusion
-  EXPECT_GE(order_P,  0.4);   // pressure converges slower
+  EXPECT_GE(order_Vx, 0.9);  // first-order convergence for velocity
+  EXPECT_GE(order_P,  0.6);   // sub-first-order for pressure near inclusion
+}
+
+TEST_F(SolViBenchmark, HighResL1Convergence) {
+  const int    nRes = 5;
+  const int    resolutions[] = {41, 81, 101, 151, 201};
+  const char  *txtPaths[] = {
+    "SolViBenchmark/SolViRes41.txt",
+    "SolViBenchmark/SolViRes81.txt",
+    "SolViBenchmark/SolViRes101.txt",
+    "SolViBenchmark/SolViRes151.txt",
+    "SolViBenchmark/SolViRes201.txt",
+  };
+  const char  *subfolders[] = {
+    "SolViRes41", "SolViRes81", "SolViRes101", "SolViRes151", "SolViRes201",
+  };
+
+  double L2_Vx[nRes], L1_Vx[nRes], L2_P[nRes], L1_P[nRes], h[nRes];
+
+  // Run all resolutions
+  for (int i = 0; i < nRes; i++) {
+    char txtFile[256];
+    snprintf(txtFile, sizeof(txtFile), "%s", txtPaths[i]);
+    RunMDOODZ(txtFile, &setup);
+
+    char outputFile[256];
+    snprintf(outputFile, sizeof(outputFile), "%s/Output00001.gzip.h5", subfolders[i]);
+    L2_Vx[i] = computeSolViL2(outputFile, "VxNodes", "Vx", 1);
+    L1_Vx[i] = computeSolViL1(outputFile, "VxNodes", "Vx", 1);
+    L2_P[i]  = computeSolViL2(outputFile, "Centers", "P",  0);
+    L1_P[i]  = computeSolViL1(outputFile, "Centers", "P",  0);
+    h[i]     = getModelParam(outputFile, 5);
+  }
+
+  // Print error table
+  printf("\n%-6s  %-12s  %-12s  %-12s  %-12s  %-12s\n",
+         "Res", "h", "L2(Vx)", "L1(Vx)", "L2(P)", "L1(P)");
+  printf("------  ------------  ------------  ------------  ------------  ------------\n");
+  for (int i = 0; i < nRes; i++) {
+    printf("%-6d  %12.6e  %12.6e  %12.6e  %12.6e  %12.6e\n",
+           resolutions[i], h[i], L2_Vx[i], L1_Vx[i], L2_P[i], L1_P[i]);
+  }
+
+  // Print convergence orders for consecutive pairs
+  printf("\n%-12s  %-10s  %-10s  %-10s  %-10s\n",
+         "Pair", "L2(Vx)", "L1(Vx)", "L2(P)", "L1(P)");
+  printf("------------  ----------  ----------  ----------  ----------\n");
+  for (int i = 0; i < nRes - 1; i++) {
+    double oL2Vx = log(L2_Vx[i] / L2_Vx[i+1]) / log(h[i] / h[i+1]);
+    double oL1Vx = log(L1_Vx[i] / L1_Vx[i+1]) / log(h[i] / h[i+1]);
+    double oL2P  = log(L2_P[i]  / L2_P[i+1])  / log(h[i] / h[i+1]);
+    double oL1P  = log(L1_P[i]  / L1_P[i+1])  / log(h[i] / h[i+1]);
+    printf("%3d->%-3d      %10.4f  %10.4f  %10.4f  %10.4f\n",
+           resolutions[i], resolutions[i+1], oL2Vx, oL1Vx, oL2P, oL1P);
+  }
+
+  // Also print 101->201 pair explicitly
+  // indices: 101 is [2], 201 is [4]
+  double order_Vx_L2_101_201 = log(L2_Vx[2] / L2_Vx[4]) / log(h[2] / h[4]);
+  double order_Vx_L1_101_201 = log(L1_Vx[2] / L1_Vx[4]) / log(h[2] / h[4]);
+  double order_P_L2_101_201  = log(L2_P[2]  / L2_P[4])  / log(h[2] / h[4]);
+  double order_P_L1_101_201  = log(L1_P[2]  / L1_P[4])  / log(h[2] / h[4]);
+  printf("\n101->201:     L2(Vx)=%.4f  L1(Vx)=%.4f  L2(P)=%.4f  L1(P)=%.4f\n",
+         order_Vx_L2_101_201, order_Vx_L1_101_201, order_P_L2_101_201, order_P_L1_101_201);
+
+  // Assertions on 101->201 pair (both well-resolved)
+  EXPECT_GE(order_P_L1_101_201,  0.8);  // L1 pressure: measured ~0.85, better than L2 (~0.65)
+  EXPECT_GE(order_Vx_L1_101_201, 0.8);  // L1 velocity at least ~first order
 }

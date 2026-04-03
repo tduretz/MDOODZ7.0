@@ -11,6 +11,15 @@ The test suite SHALL verify that velocity fields Vx and Vz match the imposed pur
 - **WHEN** a pure-shear simulation runs with known ε̇
 - **THEN** `min(Vz)` SHALL be approximately -ε̇ × 0.5 (within 20%)
 
+#### Scenario: Pure shear Vx L2 error
+- **WHEN** a pure-shear simulation runs with known ε̇ and domain coordinates
+- **THEN** the relative L2 error of the Vx field against Vx_ana(x) = −ε̇·x SHALL be less than 5e-2 (with 10:1 viscosity inclusion)
+- **NOTE** positive bkg_strain_rate = shortening in x, so Vx = −ε̇·x, Vz = +ε̇·z
+
+#### Scenario: Pure shear Vz L2 error
+- **WHEN** a pure-shear simulation runs with known ε̇ and domain coordinates
+- **THEN** the relative L2 error of the Vz field against Vz_ana(z) = +ε̇·z SHALL be less than 5e-2 (with 10:1 viscosity inclusion)
+
 ### Requirement: No-slip velocity verification
 The test suite SHALL verify that velocity is approximately zero at the boundaries when no-slip conditions are applied.
 

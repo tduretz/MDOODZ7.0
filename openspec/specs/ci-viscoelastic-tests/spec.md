@@ -17,3 +17,7 @@ The test suite SHALL verify that when elasticity is enabled, the elastic strain 
 #### Scenario: Elastic fraction is bounded
 - **WHEN** a simulation runs with `elastic=1` and constant viscosity
 - **THEN** `max(eII_el)` SHALL be greater than 0 and less than or equal to the total strain rate
+
+#### Scenario: Maxwell stress accumulation L2 error
+- **WHEN** a pure-shear simulation runs for Nt steps with `elastic=1`, constant viscosity η, shear modulus G, and strain rate ε̇
+- **THEN** the relative L2 error of the sxxd field at the final step against the analytical Maxwell solution σ(t) = 2η·ε̇·(1 − exp(−G·t/η)) SHALL be less than 5e-2

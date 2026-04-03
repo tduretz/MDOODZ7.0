@@ -18,6 +18,14 @@ The CI test suite SHALL include a GTest case verifying that nonzero `Qr` increas
 - **WHEN** a simulation runs with `thermal=1`, `Qr=1e-6` W/m³ for all phases, insulating (Neumann) side BCs and fixed top/bottom BCs, for multiple time steps
 - **THEN** the mean temperature in the domain SHALL increase between the first and last time step
 
+#### Scenario: Radiogenic heat L2 error
+- **WHEN** a simulation runs with uniform `Qr`, for Nt time steps
+- **THEN** the relative error of the mean temperature against the analytical T̄(t) = T₀ + Qr·t/(ρ·Cp) SHALL be less than 2% of ΔT
+
+#### Scenario: Steady state geotherm L2 error
+- **WHEN** a simulation reaches steady state (dt=1e15, total time ≫ τ_diffusion) with Dirichlet BCs T_top and T_bot
+- **THEN** the relative L2 error of the full 2D temperature field against T(z) = T_top + (T_bot − T_top)(z_top − z)/H SHALL be less than 1e-4
+
 ### Requirement: Thermal boundary condition types test
 The CI test suite SHALL include a GTest case exercising Dirichlet thermal BCs on top and bottom boundaries.
 

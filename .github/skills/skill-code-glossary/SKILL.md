@@ -48,6 +48,9 @@ description: Code-to-physics glossary for MDOODZ — variable names, struct fiel
 | `C` / `C_n` / `C_s` | Cohesion | C | Pa | 1e6–5e7 |
 | `phi` / `fric_n` / `fric_s` | Friction angle | φ | deg (.txt) / rad (internal) | 15–35 |
 | `psi` / `dil_n` / `dil_s` | Dilation angle | ψ | deg (.txt) / rad (internal) | 0–15 |
+| `eta_vp` | Viscoplastic regularisation viscosity | η_vp | Pa·s | 0–1e22 |
+| `n_vp` | Viscoplastic stress exponent | n_vp | - | 1.0 (only value in MD7) |
+| `OverS` | Viscoplastic overstress | η_vp·λ̇ | Pa | 0+ |
 | `d` / `d_n` / `d_s` | Grain size | d | m | 1e-4–1e-2 |
 | `phi_n` (grid) | Porosity | φ | - | 0–0.3 |
 | `X` | Chemical composition / melt fraction | X | - | 0–1 |

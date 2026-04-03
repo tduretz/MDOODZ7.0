@@ -75,6 +75,8 @@ All HDF5 datasets are stored as **flat 1D arrays**. You must reshape them to 2D 
 | Topography | `(Nx,)` 1D | `xg_coord` | z_grid, Vx_grid |
 | BC flags | same as their grid | — | tag_n, tag_s, tag_u, tag_v |
 
+> **Warning — coordinate mapping**: For Vx nodes, the z-coordinates include ghost rows at iz=0 and iz=Nz with half-cell positions *outside* the domain. Interior nodes (iz=1..Nz-1) sit at cell-center z positions. If you reconstruct coordinates from `xmin`/`zmin` instead of reading the HDF5 coordinate arrays, the correct formulas are: `z = zmin + (iz - 0.5)*dz` for Vx, `x = xmin + (ix - 0.5)*dx` for Vz. Using `(iz + 0.5)*dz` is a common error — it shifts by one full cell width. Always prefer reading the dedicated coordinate arrays (`zvx_coord`, `xvz_coord`) from HDF5 when available.
+
 ### Extraction Pattern (Julia)
 
 ```julia

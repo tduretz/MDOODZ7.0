@@ -158,3 +158,19 @@ See the anisotropic rifting paper for detailed analysis of how anisotropy contro
 - Grid anisotropy fields: `MDLIB/mdoodz-private.h` (grid struct)
 - Marker anisotropy: `MDLIB/mdoodz-private.h` (markers struct)
 - Anisotropy tests: `AnistropyUnitTests/`
+- CI benchmark tests: `TESTS/AnisotropyBenchmarkTests.cpp`
+
+## Quantitative CI Benchmarks
+
+The anisotropy module has 3 CI benchmark tests in `TESTS/AnisotropyBenchmarkTests.cpp`:
+
+| Test | Analytical Solution | Measured | Threshold |
+|------|---------------------|----------|-----------|
+| `DirectorEvolution` | θ(t) = arctan(tan(θ₀) − γ̇·t) | L2(θ) = 2.34e-3 rad | < 5e-3 |
+| `DirectorDtConvergence` | Forward Euler order ~1.0 | order = 0.93–0.99 (5 dt values) | ≥ 0.8 |
+| `StressAnisotropy` | Rotation+scaling formula | relErr(τ_II) = 1.1e-8 | < 0.01% |
+
+The `DtConvergence` test extracts real MDOODZ θ(t) trajectories from HDF5 at every step (writer_step=1) and writes `director_trajectory_dt*.dat` files for gnuplot. Per-step error grows monotonically due to forward Euler overshoot — from +0.003°/step to +0.004°/step at dt=0.0125, and final errors halve with each dt halving (first order).
+
+The director evolution ODE dθ/dt = −γ̇·cos²(θ) is documented in `TESTS/AnalyticalSolutions.md` §3.
+The stress comparison uses the same rotation formula as `ViscosityConciseAniso` (AnisotropyRoutines.c line 80).

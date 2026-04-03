@@ -33,7 +33,7 @@ Nz_part = 4
 Nt          = 20
 constant_dt = 1
 Courant     = 0.3
-dt          = 1e12
+dt          = 1e15
 RK          = 4
 
 /**** LINEAR SOLVER ****/

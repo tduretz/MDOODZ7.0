@@ -76,9 +76,8 @@ TEST_F(VelocityField, PureShearVelocity) {
   EXPECT_NEAR(fabs(maxVx), fabs(minVx), fabs(maxVx) * 0.2);
   EXPECT_NEAR(fabs(maxVz), fabs(minVz), fabs(maxVz) * 0.2);
 
-  // L2 error against analytical pure shear: Vx = eps_dot * x
-  // Note: this test has a viscosity inclusion that perturbs the velocity field.
-  // We verify the overall field is close to pure shear despite the inclusion.
+  // L2 error against analytical pure shear: Vx = -eps_dot * x
+  // (positive bkg_strain_rate = shortening in x, extension in z)
   auto Vx_field = readFieldAsArray(fileName, "VxNodes", "Vx");
   int Nx_grid = (int)getModelParam(fileName, 3);
   int Nz_grid = (int)getModelParam(fileName, 4);
@@ -89,30 +88,34 @@ TEST_F(VelocityField, PureShearVelocity) {
   double xmin_grid = -Lx_grid / 2.0;
   double zmin_grid = -Lz_grid / 2.0;
   double eps_dot = 1.0;  // bkg_strain_rate (non-dimensional: scaling V=1, L=1)
-  int ncz = Nz_grid - 1;
+  // Vx staggered grid: Nx × (Nz+1) entries
+  int nVx_z = (int)(Vx_field.size() / Nx_grid);
   std::vector<double> Vx_ana(Vx_field.size());
-  for (int iz = 0; iz < ncz; iz++) {
+  for (int iz = 0; iz < nVx_z; iz++) {
     for (int ix = 0; ix < Nx_grid; ix++) {
       double x = xmin_grid + ix * dx_grid;
-      Vx_ana[ix + Nx_grid * iz] = eps_dot * x;
+      Vx_ana[ix + Nx_grid * iz] = -eps_dot * x;
     }
   }
   double L2_Vx = computeL2Error(Vx_field, Vx_ana);
-  printf("PureShear Vx L2 error: %e\n", L2_Vx);
-  EXPECT_LT(L2_Vx, 3.0);  // loose: inclusion perturbs the field
+  double L1_Vx = computeL1Error(Vx_field, Vx_ana);
+  printf("PureShear Vx L2 error: %e, L1 error: %e\n", L2_Vx, L1_Vx);
+  EXPECT_LT(L2_Vx, 5e-2);  // with 10:1 inclusion: L2 ≈ 0.024
 
   auto Vz_field = readFieldAsArray(fileName, "VzNodes", "Vz");
-  int ncx = Nx_grid - 1;
+  // Vz staggered grid: (Nx+1) × Nz entries
+  int nVz_x = (int)(Vz_field.size() / Nz_grid);
   std::vector<double> Vz_ana(Vz_field.size());
   for (int iz = 0; iz < Nz_grid; iz++) {
     double z = zmin_grid + iz * dz_grid;
-    for (int ix = 0; ix < ncx; ix++) {
-      Vz_ana[ix + ncx * iz] = -eps_dot * z;
+    for (int ix = 0; ix < nVz_x; ix++) {
+      Vz_ana[ix + nVz_x * iz] = eps_dot * z;
     }
   }
   double L2_Vz = computeL2Error(Vz_field, Vz_ana);
-  printf("PureShear Vz L2 error: %e\n", L2_Vz);
-  EXPECT_LT(L2_Vz, 3.0);  // loose: inclusion perturbs the field
+  double L1_Vz = computeL1Error(Vz_field, Vz_ana);
+  printf("PureShear Vz L2 error: %e, L1 error: %e\n", L2_Vz, L1_Vz);
+  EXPECT_LT(L2_Vz, 5e-2);  // with 10:1 inclusion: L2 ≈ 0.024
 
   free(inputName);
   free(fileName);

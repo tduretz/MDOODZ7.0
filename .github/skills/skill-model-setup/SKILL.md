@@ -272,7 +272,8 @@ int SetPhase(MdoodzInput *input, Coordinates coordinates) {
 | `elastic` | 0/1 | Enable elasticity |
 | `free_surface` | 0/1 | Enable free surface |
 | `pure_shear_ALE` | -1/0/1 | ALE mode: 1=stretch, -1=fixed box |
-| `periodic_x` | 0/1 | Periodic boundaries in x |
+| `shear_style` | 0/1 | 0=pure shear, 1=periodic simple shear (auto-sets `periodic_x=1`) |
+| `periodic_x` | 0/1 | Periodic boundaries in x (set automatically by `shear_style`) |
 | `shear_heating` | 0/1 | Shear heating source term |
 | `adiab_heating` | 0/1 | Adiabatic heating |
 | `subgrid_diffusion` | 0/1/2 | Particle subgrid thermal diffusion mode |
@@ -280,6 +281,8 @@ int SetPhase(MdoodzInput *input, Coordinates coordinates) {
 | `anisotropy` | 0/1 | Enable mechanical anisotropy |
 | `constant_dt` | 0/1 | 0=adaptive, 1=fixed time step |
 | `RK` | 1/2/4 | Runge-Kutta order for advection |
+| `stress_rotation` | 0/1/2 | Stress objectivity: 0=none, 1=Jaumann, 2=analytical |
+| `conserv_interp` | 0/1 | Conservative velocity interpolation (Taras scheme) |
 
 #### SETUP DEPENDANT
 | Parameter | Description |
