@@ -113,6 +113,23 @@ add_executable(AnisotropyBenchmarkTests AnisotropyBenchmarkTests.cpp)
 target_link_libraries(AnisotropyBenchmarkTests LINK_PUBLIC mdoodz GTest::gtest_main)
 add_test(AnisotropyBenchmarkTests AnisotropyBenchmarkTests)
 
+# TopoBench Tests
+file(COPY ${PROJECT_SOURCE_DIR}/TESTS/TopoBench DESTINATION ${PROJECT_BINARY_DIR}/TESTS)
+add_executable(TopoBenchTests TopoBenchTests.cpp)
+target_link_libraries(TopoBenchTests LINK_PUBLIC mdoodz GTest::gtest_main)
+add_test(TopoBenchTests TopoBenchTests)
+
+# Blankenbach Thermal Convection Tests
+file(COPY ${PROJECT_SOURCE_DIR}/TESTS/BlankenBench DESTINATION ${PROJECT_BINARY_DIR}/TESTS)
+add_executable(BlankenBenchTests BlankenBenchTests.cpp)
+target_link_libraries(BlankenBenchTests LINK_PUBLIC mdoodz GTest::gtest_main)
+add_test(BlankenBenchTests BlankenBenchTests)
+
+# Blankenbach HDF5-to-gnuplot extraction utility (no GTest, just HDF5)
+add_executable(extract_blankenbach BlankenBench/extract_fields.cpp)
+target_link_libraries(extract_blankenbach LINK_PUBLIC ${HDF5_C_LIBRARIES})
+target_include_directories(extract_blankenbach PRIVATE ${HDF5_INCLUDE_DIRS})
+
 # SolVi Marker Comparison (experimental — not in CI, run manually)
 add_executable(SolViMarkerComparison SolViMarkerComparison.cpp)
 target_link_libraries(SolViMarkerComparison LINK_PUBLIC mdoodz GTest::gtest_main)

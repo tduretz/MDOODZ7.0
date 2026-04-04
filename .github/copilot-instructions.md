@@ -30,6 +30,7 @@ Before answering questions about MDOODZ, check whether a relevant skill exists. 
 | Anisotropy, fabric, director field, foliation | skill-anisotropy |
 | Solver convergence, Newton, Picard, time stepping, penalty | skill-solvers |
 | Governing equations, Stokes, energy, scaling, advection, free surface | skill-physics-theory |
+| Thermal solver, energy equation, thermal BCs, conductivity, heating, Boussinesq | skill-thermal |
 | Variable names, struct fields, what a code symbol means | skill-code-glossary |
 | Which scenario to use, example setups, benchmarks | skill-scenario-gallery |
 | Plotting, HDF5 output, Julia visualisation, extracting data | skill-visualisation |

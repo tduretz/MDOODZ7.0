@@ -387,3 +387,58 @@ TEST_F(AnisotropyBenchmark, StressAnisotropy) {
   EXPECT_LT(relErr_tauII, 1e-4) << "τ_II relative error exceeds 0.01%";
   EXPECT_LT(relErr_sxxd, 1e-4)  << "sxxd relative error exceeds 0.01%";
 }
+
+// ---------------------------------------------------------------------------
+// Test 4: Spatial L2 error norm for anisotropic stress components
+//
+// Same setup as Test 3 (StressAngle.txt: 11×11, θ=30°, δ=6, η=1, Exx=−1).
+// Computes L2 error of sxxd, szzd, sxz against the spatially constant
+// analytical values (homogeneous problem → same value at every grid point).
+// ---------------------------------------------------------------------------
+TEST_F(AnisotropyBenchmark, StressAnisotropyL2) {
+  setup.SetBCs->SetBCVx = SetPureShearBCVx;
+  setup.SetBCs->SetBCVz = SetPureShearBCVz;
+
+  char inputFile[] = "AnisotropyBenchmark/StressAngle.txt";
+  RunMDOODZ(inputFile, &setup);
+
+  const char *outFile = "StressAngle/Output00001.gzip.h5";
+
+  // Analytical values
+  const double theta_rad = 30.0 * M_PI / 180.0;
+  const double delta     = 6.0;
+  const double eta       = 1.0;
+  const double Exx       = -1.0;
+
+  double sxxd_ana = analyticalStressSxxd(theta_rad, delta, eta, Exx);
+  double sxz_ana  = analyticalStressSxz(theta_rad, delta, eta, Exx);
+  double szzd_ana = -sxxd_ana;  // incompressibility: szzd = -sxxd
+
+  // Read numerical fields
+  auto sxxd_field = readFieldAsArray(outFile, "Centers", "sxxd");
+  auto szzd_field = readFieldAsArray(outFile, "Centers", "szzd");
+  auto sxz_field  = readFieldAsArray(outFile, "Vertices", "sxz");
+  ASSERT_GT(sxxd_field.size(), 0u);
+  ASSERT_GT(szzd_field.size(), 0u);
+  ASSERT_GT(sxz_field.size(), 0u);
+
+  // Build constant analytical vectors at matching grid sizes
+  std::vector<double> sxxd_ana_vec(sxxd_field.size(), sxxd_ana);
+  std::vector<double> szzd_ana_vec(szzd_field.size(), szzd_ana);
+  std::vector<double> sxz_ana_vec(sxz_field.size(), sxz_ana);
+
+  double l2_sxxd = computeL2Error(sxxd_field, sxxd_ana_vec);
+  double l2_szzd = computeL2Error(szzd_field, szzd_ana_vec);
+  double l2_sxz  = computeL2Error(sxz_field, sxz_ana_vec);
+
+  printf("StressAnisotropyL2: sxxd L2=%.4e (ana=%.6e, N=%zu)\n",
+         l2_sxxd, sxxd_ana, sxxd_field.size());
+  printf("StressAnisotropyL2: szzd L2=%.4e (ana=%.6e, N=%zu)\n",
+         l2_szzd, szzd_ana, szzd_field.size());
+  printf("StressAnisotropyL2: sxz  L2=%.4e (ana=%.6e, N=%zu)\n",
+         l2_sxz, sxz_ana, sxz_field.size());
+
+  EXPECT_LT(l2_sxxd, 1e-6) << "sxxd spatial L2 error exceeds threshold";
+  EXPECT_LT(l2_szzd, 1e-6) << "szzd spatial L2 error exceeds threshold";
+  EXPECT_LT(l2_sxz, 1e-6)  << "sxz spatial L2 error exceeds threshold";
+}

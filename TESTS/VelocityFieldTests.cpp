@@ -100,7 +100,7 @@ TEST_F(VelocityField, PureShearVelocity) {
   double L2_Vx = computeL2Error(Vx_field, Vx_ana);
   double L1_Vx = computeL1Error(Vx_field, Vx_ana);
   printf("PureShear Vx L2 error: %e, L1 error: %e\n", L2_Vx, L1_Vx);
-  EXPECT_LT(L2_Vx, 5e-2);  // with 10:1 inclusion: L2 ≈ 0.024
+  EXPECT_LT(L2_Vx, 3e-2);  // with 10:1 inclusion: L2 ≈ 0.024
 
   auto Vz_field = readFieldAsArray(fileName, "VzNodes", "Vz");
   // Vz staggered grid: (Nx+1) × Nz entries
@@ -115,7 +115,69 @@ TEST_F(VelocityField, PureShearVelocity) {
   double L2_Vz = computeL2Error(Vz_field, Vz_ana);
   double L1_Vz = computeL1Error(Vz_field, Vz_ana);
   printf("PureShear Vz L2 error: %e, L1 error: %e\n", L2_Vz, L1_Vz);
-  EXPECT_LT(L2_Vz, 5e-2);  // with 10:1 inclusion: L2 ≈ 0.024
+  EXPECT_LT(L2_Vz, 3e-2);  // with 10:1 inclusion: L2 ≈ 0.024
+
+  free(inputName);
+  free(fileName);
+}
+
+TEST_F(VelocityField, SimpleShearVelocity) {
+  const char *testName = testing::UnitTest::GetInstance()->current_test_info()->name();
+  char *inputName;
+  asprintf(&inputName, "VelocityField/%s.txt", testName);
+  RunMDOODZ(inputName, &setup);
+
+  char *fileName;
+  asprintf(&fileName, "%s/%s", testName, "Output00001.gzip.h5");
+  int stepsCount = getStepsCount(fileName);
+  ASSERT_GE(stepsCount, 0);
+
+  // Simple shear: Vx(z) = 2 * bkg_strain_rate * z, Vz = 0
+  // BCs impose Vx = ±bkg_strain_rate*Lz at top/bottom,
+  // so dVx/dz = 2*bkg_strain_rate (bkg_strain_rate = strain rate ε̇_xz = ½ dVx/dz)
+  double maxVx = getMaxFieldValue(fileName, "VxNodes", "Vx");
+  double minVx = getMinFieldValue(fileName, "VxNodes", "Vx");
+  double maxVz = getMaxFieldValue(fileName, "VzNodes", "Vz");
+  double minVz = getMinFieldValue(fileName, "VzNodes", "Vz");
+  printf("Vx range: [%e, %e], Vz range: [%e, %e]\n", minVx, maxVx, minVz, maxVz);
+
+  // Boundary Vx: bottom ≈ -1.0, top ≈ +1.0 (bkg_strain_rate * Lz = 1)
+  EXPECT_NEAR(maxVx, 1.0, 0.1);
+  EXPECT_NEAR(minVx, -1.0, 0.1);
+
+  // Vz should be ~0 everywhere
+  EXPECT_LT(fabs(maxVz), 1e-6);
+  EXPECT_LT(fabs(minVz), 1e-6);
+
+  // L2 error: Vx against analytical Vx(z) = bkg_strain_rate * z
+  auto Vx_field = readFieldAsArray(fileName, "VxNodes", "Vx");
+  int Nx_grid = (int)getModelParam(fileName, 3);
+  int Nz_grid = (int)getModelParam(fileName, 4);
+  double Lz_grid = getModelParam(fileName, 2);
+  double dz_grid = getModelParam(fileName, 6);
+  double zmin_grid = -Lz_grid / 2.0;
+  double gamma_dot = 1.0;  // bkg_strain_rate; actual dVx/dz = 2*gamma_dot
+
+  // Vx staggered grid: Nx × (Nz+1) entries
+  // z-coordinates of Vx nodes: zmin - dz/2, zmin + dz/2, ..., zmax + dz/2
+  int nVx_z = (int)(Vx_field.size() / Nx_grid);
+  std::vector<double> Vx_ana(Vx_field.size());
+  for (int iz = 0; iz < nVx_z; iz++) {
+    double z = zmin_grid + iz * dz_grid - dz_grid / 2.0;
+    for (int ix = 0; ix < Nx_grid; ix++) {
+      Vx_ana[ix + Nx_grid * iz] = 2.0 * gamma_dot * z;
+    }
+  }
+  double L2_Vx = computeL2Error(Vx_field, Vx_ana);
+  printf("SimpleShear Vx L2 error: %e\n", L2_Vx);
+  EXPECT_LT(L2_Vx, 1e-6);
+
+  // Vz should be zero everywhere
+  auto Vz_field = readFieldAsArray(fileName, "VzNodes", "Vz");
+  std::vector<double> Vz_ana(Vz_field.size(), 0.0);
+  double L2_Vz = computeL2Error(Vz_field, Vz_ana);
+  printf("SimpleShear Vz L2 error: %e\n", L2_Vz);
+  EXPECT_LT(L2_Vz, 1e-6);
 
   free(inputName);
   free(fileName);

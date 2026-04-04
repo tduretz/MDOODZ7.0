@@ -174,6 +174,33 @@ Solves the energy equation (in `ThermalSolver.c` and `ThermalRoutines.c`):
 | Very slow convergence | Poor penalty value | Adjust `penalty` (try 1e1–1e4) |
 | Oscillating residuals | Elastic step too large | Reduce `dt` relative to Maxwell time (η/G) |
 | Newton diverges | Bad initial guess | Increase Picard iterations before Newton |
+| Segfault in `cs_di_compress` or CHOLMOD | Memory corruption from buffer overflow | Build with ASAN (see skill-build-and-run) |
+
+## Known Solver Bugs (Fixed)
+
+### BCp.type guard in pressure-block setup
+
+**Affected functions**: `DirectStokesDecoupledComp`, `KillerSolver`, `KSPStokesDecoupled` in `Solvers.c`.
+
+The penalty/compressibility loop over pressure cells originally used `BCp.type[k] != 30 && != 31` as the guard condition. This is **incorrect** — `NumberStokes()` (in `StokesRoutines.c`) only assigns valid equation numbers (`eqn_p[k] >= 0`) for cells with `BCp.type[k] == -1`. All other types (0, 1, 30, 31) get `eqn_p[k] = -1`. The old guard let type=0 cells through, producing `i = -1 - matA->neq` (a wild pointer into `D1cm0->x` / `Dcm0->x`), causing heap-buffer-overflow → segfault.
+
+**Fix**: Changed guard to `BCp.type[k] == -1`.
+
+Additionally, the compressible branch `((double*)D1cm0->x)[k]` used cell index `k` instead of equation index `i`. Fixed to `D1cm0->x[i]`.
+
+### Thermal loop bounds in EvaluateCourantCriterion
+
+**Affected function**: `EvaluateCourantCriterion` in `AdvectionRoutines.c`.
+
+The thermal CFL sub-loop used Vz-vertex-grid bounds `(k < Nx+1, l < Nz)` to iterate over centre-grid arrays `mesh->T` and `mesh->T0_n` of size `(Nx-1)*(Nz-1)`. This reads past the end of the array. **Fix**: bounds changed to `(k < Nx-1, l < Nz-1)`.
+
+## Thermal Steady-State Timing
+
+For convection benchmarks (e.g., Blankenbach), MDOODZ advects temperature via markers (not on the grid). This means **dt is CFL-limited by velocity**, not by the diffusion timescale. With adaptive dt (`constant_dt=0`), reaching thermal steady state (~2 diffusion times, td = H²/κ) can require 100k+ time steps. For a 41×41 grid this takes ~17 hours. Plan accordingly — either use long CI timeouts, coarser grids, or restructure such tests as smoke tests (verify physics start correctly, not final converged values).
+
+## free_surface and Boundary Conditions
+
+`free_surface=1` imposes **zero traction** (σ·n = 0) at the top boundary, not free-slip (v·n = 0). For closed-box benchmarks (Blankenbach, Rayleigh-Bénard) that require free-slip on all walls, use `free_surface=0`. Using `free_surface=1` for such benchmarks gives ~35% error in Vrms because material can flow through the top surface.
 
 ## Numerical Accuracy & Convergence Orders
 

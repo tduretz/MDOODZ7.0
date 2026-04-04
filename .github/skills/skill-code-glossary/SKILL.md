@@ -67,6 +67,19 @@ description: Code-to-physics glossary for MDOODZ — variable names, struct fiel
 | `p` | Pressure | Cell centres | `mesh.p` |
 | `ru` / `rv` / `rp` | Residuals | Same as u/v/p | Force balance error |
 
+### Staggered Grid Array Dimensions
+
+For a grid with `Nx` columns and `Nz` rows (as set in the `.txt` file):
+
+| Array | Size | Stride | Variables |
+|-------|------|--------|-----------|
+| Centre grid | `(Nx-1) × (Nz-1)` | `Ncx = Nx-1` | `T`, `P`, `eta_n`, `rho_n`, `sxxd`, `BCp.type` |
+| Vertex grid | `Nx × Nz` | `Nx` | `eta_s`, `rho_s`, `sxz`, `BCg.type` |
+| Vx grid | `Nx × (Nz+1)` | `Nx` | `mesh.u_in`, `BCu.type` |
+| Vz grid | `(Nx+1) × Nz` | `Nx+1` | `mesh.v_in`, `BCv.type` |
+
+**Common bug pattern**: Using Vx/Vz loop bounds to iterate over centre-grid arrays. For example, iterating `k < Nx+1, l < Nz` (Vz bounds) over `mesh->T` of size `(Nx-1)*(Nz-1)` causes a heap-buffer-overflow. Always match loop bounds to the array being accessed.
+
 ### Boundary Condition Prefixes
 
 | Prefix | Meaning |
@@ -76,6 +89,17 @@ description: Code-to-physics glossary for MDOODZ — variable names, struct fiel
 | `BCp` | BC for pressure |
 | `BCt` | BC for temperature |
 | `BCg` | BC for vertices |
+
+### BCp.type Values and Equation Numbering
+
+| `BCp.type` | Meaning | `eqn_p` assigned? |
+|------------|---------|-------------------|
+| `-1` | Active (interior) cell | **Yes** — gets a valid equation number |
+| `0` | Boundary cell (unused) | **No** — `eqn_p = -1` |
+| `30` | Dirichlet pressure (fixed) | **No** — `eqn_p = -1` |
+| `31` | Periodic boundary | **No** — `eqn_p = -1` |
+
+`NumberStokes()` in `StokesRoutines.c` assigns `eqn_p[k]` only for `BCp.type[k] == -1`. Any solver loop that accesses `Dcm0->x[eqn_p[k] - matA->neq]` **must** guard with `BCp.type[k] == -1`, not `!= 30 && != 31`.
 
 ## Creep Mechanism Abbreviations
 

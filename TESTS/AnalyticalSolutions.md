@@ -187,12 +187,14 @@ $$V_x = -\dot{\varepsilon} \cdot x, \quad V_z = +\dot{\varepsilon} \cdot z$$
 
 The Vx staggered grid has $N_x \times (N_z+1)$ entries; the Vz grid has $(N_x+1) \times N_z$ entries.
 
-**Measured accuracy:** $L_2 \approx 0.024$ with a 10:1 viscosity inclusion; $L_2 \approx 2 \times 10^{-8}$ (machine precision) without inclusion.
+**Measured accuracy:** $L_2 \approx 0.0243$ with a 10:1 viscosity inclusion (r = 0.05); $L_2 \approx 2 \times 10^{-8}$ (machine precision) without inclusion.
+
+The L2 error does not converge with grid refinement because the analytical solution $V_x = -\dot\varepsilon x$ does not account for the inclusion perturbation — the error measures the size of the perturbation itself, not the solver's discretisation error. Grid-convergence for inclusion problems is tested by the SolVi benchmark (§1), which uses the proper Schmid & Podladchikov (2003) analytical solution.
 
 **Code assertions** ([VelocityFieldTests.cpp](VelocityFieldTests.cpp)):
 ```cpp
-EXPECT_LT(L2_Vx, 5e-2);  // with 10:1 inclusion: L2 \u2248 0.024
-EXPECT_LT(L2_Vz, 5e-2);  // with 10:1 inclusion: L2 \u2248 0.024
+EXPECT_LT(L2_Vx, 3e-2);  // with 10:1 inclusion: L2 ≈ 0.024 (1.23× margin)
+EXPECT_LT(L2_Vz, 3e-2);  // with 10:1 inclusion: L2 ≈ 0.024 (1.23× margin)
 ```
 
 ### 2.6 Maxwell Visco-Elastic Stress
@@ -224,6 +226,30 @@ The test uses Neumann (zero-flux) temperature BCs on all boundaries to prevent h
 **Code assertions** ([ShearHeatingTests.cpp](ShearHeatingTests.cpp)):
 ```cpp
 EXPECT_NEAR(dT_num, dT_ana, fabs(dT_ana) * 0.05);  // Neumann BCs: ~0.8% error
+```
+
+### 2.8 Simple Shear Velocity (Periodic BCs)
+
+**Source:** [VelocityFieldTests.cpp](VelocityFieldTests.cpp)
+**Parameter file:** [VelocityField/SimpleShearVelocity.txt](VelocityField/SimpleShearVelocity.txt)
+**Test:** `VelocityField.SimpleShearVelocity`
+
+For homogeneous viscosity under periodic simple shear (`shear_style=1`, `periodic_x=1`), the BCs impose $V_x = \pm \dot{\gamma} L_z$ at top/bottom, where $\dot{\gamma}$ = `bkg_strain_rate`. The analytical velocity profile is linear:
+
+$$V_x(z) = 2\dot{\gamma} z, \qquad V_z = 0$$
+
+The factor 2 arises because `bkg_strain_rate` represents the strain rate $\dot{\varepsilon}_{xz} = \frac{1}{2}\frac{\partial V_x}{\partial z}$, so $\frac{\partial V_x}{\partial z} = 2\dot{\gamma}$.
+
+With homogeneous viscosity (no inclusion), the FD stencil reproduces a linear profile exactly. The L2 residual measures only solver tolerance and floating-point noise.
+
+**Measured accuracy:** L2(Vx) = 2.97e-8, L2(Vz) = 0.
+
+**Code assertions** ([VelocityFieldTests.cpp](VelocityFieldTests.cpp)):
+```cpp
+EXPECT_LT(L2_Vx, 1e-6);   // linear profile exact to FP precision
+EXPECT_LT(L2_Vz, 1e-6);   // Vz = 0 everywhere
+EXPECT_NEAR(maxVx, 1.0, 0.1);   // boundary: +bkg_strain_rate * Lz
+EXPECT_NEAR(minVx, -1.0, 0.1);  // boundary: -bkg_strain_rate * Lz
 ```
 
 ---
@@ -349,6 +375,31 @@ EXPECT_LT(relErr_tauII, 1e-4);  // τ_II relative error < 0.01%
 EXPECT_LT(relErr_sxxd, 1e-4);   // sxxd relative error < 0.01%
 ```
 
+### 3.4 Stress L2 Error Norm
+
+**Parameter file:** [AnisotropyBenchmark/StressAngle.txt](AnisotropyBenchmark/StressAngle.txt)
+**Test:** `AnisotropyBenchmark.StressAnisotropyL2`
+
+Uses the same setup and analytical rotation formula as §3.3, but validates the **full spatial field** rather than the mean. For a homogeneous problem, the analytical stress is constant at every grid point, so the L2 norm detects boundary artifacts, interpolation bias, and centre-vs-vertex inconsistencies that a mean-value check would miss.
+
+**L2 metric:** `computeL2Error(numerical, analytical)` — relative L2 norm $\sqrt{\sum(n_i - a_i)^2 / \sum a_i^2}$.
+
+**Grid sizes:**
+- $\sigma'_{xx}$, $\sigma'_{zz}$: cell centres, $(N_x-1) \times (N_z-1) = 100$ points
+- $\sigma_{xz}$: vertices, $N_x \times N_z = 121$ points
+
+**Measured L2 errors:**
+- sxxd: 4.4e-16 (machine precision)
+- szzd: 4.4e-16 (machine precision)
+- sxz: 2.3e-08 (vertex interpolation introduces small error)
+
+**Code assertions** ([AnisotropyBenchmarkTests.cpp](AnisotropyBenchmarkTests.cpp)):
+```cpp
+EXPECT_LT(l2_sxxd, 1e-6);  // sxxd spatial L2
+EXPECT_LT(l2_szzd, 1e-6);  // szzd spatial L2
+EXPECT_LT(l2_sxz, 1e-6);   // sxz spatial L2
+```
+
 ---
 
 ## Threshold Calibration Methodology
@@ -371,10 +422,52 @@ For convergence-order tests, thresholds are set ~30–50% below the measured ord
 | SolVi convergence | [SolViBenchmarkTests.cpp](SolViBenchmarkTests.cpp) | Order from 41→81 | `EXPECT_GE(order_Vx, 0.7)` | 0.7 |
 | Geotherm | [ThermalTests.cpp](ThermalTests.cpp) | Linear profile (§2.1) | `EXPECT_LT(L2_T, 1.0)` | 1.0 |
 | Hydrostatic P | [DensityTests.cpp](DensityTests.cpp) | $\rho g z$ (§2.3) | `EXPECT_LT(L2_P, 2e-1)` | 0.2 |
-| Pure shear Vx | [VelocityFieldTests.cpp](VelocityFieldTests.cpp) | $\dot{\varepsilon} x$ (§2.5) | `EXPECT_LT(L2_Vx, 3.0)` | 3.0 |
-| Pure shear Vz | [VelocityFieldTests.cpp](VelocityFieldTests.cpp) | $-\dot{\varepsilon} z$ (§2.5) | `EXPECT_LT(L2_Vz, 3.0)` | 3.0 |
+| Pure shear Vx | [VelocityFieldTests.cpp](VelocityFieldTests.cpp) | $\dot{\varepsilon} x$ (§2.5) | `EXPECT_LT(L2_Vx, 3e-2)` | 3e-2 |
+| Pure shear Vz | [VelocityFieldTests.cpp](VelocityFieldTests.cpp) | $-\dot{\varepsilon} z$ (§2.5) | `EXPECT_LT(L2_Vz, 3e-2)` | 3e-2 |
 | Shear heating ΔT | [ShearHeatingTests.cpp](ShearHeatingTests.cpp) | $2\eta\dot{\varepsilon}^2 t / \rho C_p$ (§2.7) | `EXPECT_NEAR(dT, dT_ana, 2×dT_ana)` | 3× |
+| Simple shear Vx | [VelocityFieldTests.cpp](VelocityFieldTests.cpp) | $2\dot{\gamma} z$ (§2.8) | `EXPECT_LT(L2_Vx, 1e-6)` | 1e-6 |
+| Simple shear Vz | [VelocityFieldTests.cpp](VelocityFieldTests.cpp) | $0$ (§2.8) | `EXPECT_LT(L2_Vz, 1e-6)` | 1e-6 |
 | Director L2(θ) | [AnisotropyBenchmarkTests.cpp](AnisotropyBenchmarkTests.cpp) | $\arctan(\tan\theta_0 - \dot\gamma t)$ (§3.1) | `EXPECT_LT(L2, 5e-3)` | 5e-3 rad |
 | Director dt-order | [AnisotropyBenchmarkTests.cpp](AnisotropyBenchmarkTests.cpp) | Order from dt refinement (§3.2) | `EXPECT_GE(order, 0.8)` | 0.8 |
 | Stress τ_II | [AnisotropyBenchmarkTests.cpp](AnisotropyBenchmarkTests.cpp) | Rotation formula (§3.3) | `EXPECT_LT(relErr, 1e-4)` | 0.01% |
 | Stress sxxd | [AnisotropyBenchmarkTests.cpp](AnisotropyBenchmarkTests.cpp) | Rotation formula (§3.3) | `EXPECT_LT(relErr, 1e-4)` | 0.01% |
+| Stress sxxd L2 | [AnisotropyBenchmarkTests.cpp](AnisotropyBenchmarkTests.cpp) | Rotation formula (§3.4) | `EXPECT_LT(l2_sxxd, 1e-6)` | 1e-6 |
+| Stress szzd L2 | [AnisotropyBenchmarkTests.cpp](AnisotropyBenchmarkTests.cpp) | Rotation formula (§3.4) | `EXPECT_LT(l2_szzd, 1e-6)` | 1e-6 |
+| Stress sxz L2 | [AnisotropyBenchmarkTests.cpp](AnisotropyBenchmarkTests.cpp) | Rotation formula (§3.4) | `EXPECT_LT(l2_sxz, 1e-6)` | 1e-6 |
+| TopoBench relax | [TopoBenchTests.cpp](TopoBenchTests.cpp) | $h_0 e^{-t/\tau_r}$ (§4.1) | `EXPECT_LT(relErr, 0.15)` | 15% |
+| TopoBench convergence | [TopoBenchTests.cpp](TopoBenchTests.cpp) | Grid convergence (§4.2) | `EXPECT_GE(order, 0.3)` | 0.3 |
+
+---
+
+## 4. TopoBench: Free Surface Relaxation
+
+**Source:** [TopoBenchTests.cpp](TopoBenchTests.cpp)
+
+### 4.1 Exponential Relaxation of Sinusoidal Topography
+
+**Parameters:** [TopoBench/TopoBenchRelaxation.txt](TopoBench/TopoBenchRelaxation.txt)
+
+A sinusoidal surface perturbation $h(x, 0) = -h_0 \cos(2\pi x / \lambda)$ relaxes under gravity in a uniform-viscosity fluid. The analytical solution is exponential decay:
+
+$$h(t) = h_0 \exp(-t / \tau_r)$$
+
+**Relaxation time for equal-viscosity internal interface.** In MDOODZ, air cells above the free surface have the same viscosity $\eta$ as the mantle (single constant-viscosity phase). This makes the surface an internal density interface between two equal-viscosity fluids rather than a true free surface. The relaxation time is:
+
+$$\tau_r = \frac{4\eta k}{\rho g} \cdot \coth(kH)$$
+
+where $k = 2\pi/\lambda$ is the wavenumber and $H$ is the domain depth below the surface. The factor $4\eta k$ (instead of $2\eta k$ for a free surface) arises because the viscous air above doubles the effective resistance.
+
+**Key values:** $\eta = 10^{21}$ Pa·s, $\rho = 3300$ kg/m³, $g = 10$ m/s², $\lambda = 2800$ km, $H = 700$ km. This gives $kH = \pi/2$, $\coth(kH) = 1.091$, and $\tau_r \approx 2.97 \times 10^{11}$ s $\approx 9.4$ kyr.
+
+**Verification (Crameri benchmark).** The original TopoBenchCase1 from Crameri et al. (2012) uses a two-layer setup (lithosphere $\eta = 10^{23}$ + mantle $\eta = 10^{21}$). The stiff lithosphere decouples the air from the surface, so the standard free-surface formula applies. The uniform-viscosity variant used here is a simplified test that validates the free surface advection mechanism.
+
+**Test assertions:**
+- Monotonic decay: $h(t_{i+1}) < h(t_i)$ for all steps
+- Per-step relative error $< 15\%$ against analytical $h_0 e^{-t/\tau_r}$
+- Mean relative error over 20 steps $\approx 2\%$
+
+### 4.2 Grid Convergence
+
+**Parameters:** [TopoBench/TopoBenchConvergence31.txt](TopoBench/TopoBenchConvergence31.txt), [TopoBench/TopoBenchRelaxation.txt](TopoBench/TopoBenchRelaxation.txt), [TopoBench/TopoBenchConvergence101.txt](TopoBench/TopoBenchConvergence101.txt)
+
+Three resolutions (Nx = 31, 51, 101) are run with the same physics. The mean relative error against the analytical exponential decay must decrease monotonically, and the overall convergence order from coarsest to finest must be $\geq 0.3$.

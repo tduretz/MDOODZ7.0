@@ -123,6 +123,33 @@ Key parallelised operations: particle interpolation, rheology evaluation, matrix
 | Compilation warnings | Debug mode is verbose | Normal with `-Wall`; use `-DOPT=ON` for clean optimised build |
 | Slow execution | No OpenMP or optimisation | Rebuild with `OMP=ON OPT=ON` |
 
+## Debugging with AddressSanitizer (ASAN)
+
+When a simulation segfaults or produces corrupted results, **always try ASAN first** before GDB. ASAN detects heap-buffer-overflows, use-after-free, and stack overflows that cause silent memory corruption in Release mode — often crashing many steps later in unrelated code (e.g., inside `cs_di_compress` or CHOLMOD).
+
+### Building with ASAN
+
+```bash
+cmake -DCMAKE_C_FLAGS='-fsanitize=address -fno-omit-frame-pointer -g' \
+      -DCMAKE_CXX_FLAGS='-fsanitize=address -fno-omit-frame-pointer -g' \
+      -DCMAKE_BUILD_TYPE=Debug ..
+cmake --build . -j4
+```
+
+### Running with ASAN
+
+```bash
+ASAN_OPTIONS='detect_leaks=0' ./MyTest    # disable leak check for faster runs
+```
+
+### Known bugs found by ASAN
+
+| Location | Bug | Fix |
+|----------|-----|-----|
+| `AdvectionRoutines.c` `EvaluateCourantCriterion` | Thermal loop used Vz-grid bounds `(Nx+1, Nz)` to iterate centre-grid arrays `mesh->T` of size `(Nx-1)*(Nz-1)` | Changed bounds to `(Nx-1, Nz-1)` |
+| `Solvers.c` `DirectStokesDecoupledComp` | `BCp.type[k] != 30 && != 31` let type=0 cells through with `eqn_p=-1` → wild pointer `i = -1 - neq` | Changed guard to `BCp.type[k] == -1` |
+| `Solvers.c` `KillerSolver`, `KSPStokesDecoupled` | Same guard bug as above; also `D1cm0->x[k]` used cell index `k` instead of equation index `i` | Same fix + `[k]` → `[i]` |
+
 ## Key Source Files
 
 - Build configuration: `CMakeLists.txt`, `Deps.cmake`, `FindSuiteSparse.cmake`

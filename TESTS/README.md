@@ -50,7 +50,8 @@ Quick rule of thumb:
 16. [Suite 13 — FiniteStrain (Deformation Gradient)](#suite-13--finitestrain-deformation-gradient)
 17. [Suite 14 — NeumannBC (Stress Boundary Conditions)](#suite-14--neumannbc-stress-boundary-conditions)
 18. [Suite 15 — ConvergenceRate (Newton vs Picard)](#suite-15--convergencerate-newton-vs-picard)
-19. [Running the Tests](#running-the-tests)
+19. [Suite 18 — BlankenBench (Thermal Convection)](#suite-18--blankenbench-thermal-convection)
+20. [Running the Tests](#running-the-tests)
 
 ---
 
@@ -1036,6 +1037,46 @@ Comparing Newton vs Picard convergence on the same problem is a rigorous verific
 
 ---
 
+## Suite 18 — BlankenBench (Thermal Convection)
+
+**Source:** [BlankenBenchTests.cpp](BlankenBenchTests.cpp) | **Parameters:** [BlankenBench/BlankenBench.txt](BlankenBench/BlankenBench.txt) | **Tests:** 2
+
+### Physical Setup
+
+Isoviscous thermal convection in a square box (Blankenbach et al. 1989, Case 1a). The domain is heated from below ($T_{\text{bot}} = 1273.15$ K) and cooled from above ($T_{\text{top}} = 273.15$ K), with insulating (zero-flux) sidewalls and free-slip velocity BCs on all walls. Temperature is initialised as a linear geotherm with a small cosine perturbation to break symmetry and seed a single convection cell.
+
+The Rayleigh number $\text{Ra} = \alpha \Delta T \rho g H^3 / (\eta \kappa) = 10^4$ controls the vigour of convection. Physical parameters: $H = 10^5$ m, $\eta = 10^{20}$ Pa·s, $\rho = 3300$ kg/m³, $\alpha = 2.42 \times 10^{-5}$ K⁻¹, $k = 3.3$ W/m/K, $C_p = 1250$ J/kg/K.
+
+**Steady-state limitation.** Reaching thermal equilibrium requires $\sim 2$ diffusion times ($\sim 10^{16}$ s), which is $\sim 100$k+ steps at 41×41 ($\sim 17$ hours). The test runs only 500 steps ($\sim 78$ s) as a smoke test.
+
+### Test: `ConvectionDevelops`
+
+Runs the 500-step simulation and verifies:
+
+1. Temperature stays within $[T_{\text{top}} - 50, T_{\text{bot}} + 50]$ K
+2. Convection starts: $\sum (V_x^2 + V_z^2) > 0$
+
+### Test: `TemperatureProfile`
+
+Checks the temperature field quality:
+
+1. No NaN values
+2. Mid-depth maximum temperature (non-dimensionalised) is in $[0.1, 0.9]$
+
+### Visualisation
+
+```bash
+cd build/TESTS
+./BlankenBenchTests
+./extract_blankenbach BlankenBench/Output00500.gzip.h5
+gnuplot BlankenBench/plot_convection.gp
+# → blankenbach_convection.png
+```
+
+The `extract_blankenbach` tool (C++, built alongside the tests) reads the HDF5 output and writes `temperature.dat` and `velocity.dat` for gnuplot.
+
+---
+
 ## Running the Tests
 
 ### Build and run
@@ -1110,7 +1151,8 @@ rm -rf cmake-build && cmake -S . -B cmake-build -DTEST=ON && cmake --build cmake
 | 15. ConvergenceRate | `ConvergenceRateTests.cpp` | 3 | Newton vs Picard rate comparison |
 | 16. SolViBenchmark | `SolViBenchmarkTests.cpp` | 2 | L2 error norms, grid-convergence order (Schmid & Podladchikov 2003) |
 | 17. AnisotropyBenchmark | `AnisotropyBenchmarkTests.cpp` | 2 | Director evolution, anisotropic stress invariant |
-| **Total** | **17 executables** | **43** | |
+| 18. BlankenBench | `BlankenBenchTests.cpp` | 2 | Thermal convection smoke test (Blankenbach Ra=10⁴) |
+| **Total** | **18 executables** | **45** | |
 
 ---
 

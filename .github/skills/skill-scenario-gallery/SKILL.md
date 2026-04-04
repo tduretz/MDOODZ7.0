@@ -133,8 +133,9 @@ The `.c` file contains setup callbacks; the `.txt` file contains model parameter
 | `CoolingChamber.c` | Lithospheric cooling chamber | Magma chamber analogue |
 | `TCMagmaticSystem.c` | Thermo-chemical magmatic evolution | Multi-process |
 | `MeltingOverpressure.c` | Melting-induced overpressure | Magma chamber pressurisation |
+| `BlankenBench.c` | Blankenbach Case 1a convection | Ra=10⁴, isoviscous, free-slip, thermal benchmark |
 
-**When to use**: `ThermalDiffusion` to verify thermal solver. `TCMagmaticSystem` for coupled magmatic studies.
+**When to use**: `ThermalDiffusion` to verify thermal solver. `BlankenBench` for thermal convection benchmark (Boussinesq coupling). `TCMagmaticSystem` for coupled magmatic studies.
 
 ---
 
@@ -211,4 +212,5 @@ The `.c` file contains setup callbacks; the `.txt` file contains model parameter
 | Subduction | `SubductionBenchmarkCase2.c` |
 | Solver verification | `ViscousSinker.c` or `TopoBenchCase1.c` |
 | Thermal solver only | `ThermalDiffusion.c` |
+| Thermal convection benchmark | `BlankenBench.c` |
 | VEP rheology testing | `VEP_Duretz18.c` |

@@ -183,6 +183,15 @@ Pre-built boundary conditions you can use directly:
 
 Usage: `.SetBCVx = SetPureShearBCVx` in the `SetBCs_ff` struct.
 
+### free_surface and Top Boundary Behaviour
+
+| `free_surface` | Top boundary condition | Use for |
+|----------------|----------------------|---------|
+| `0` | Free-slip (v·n = 0) — impenetrable wall | Closed-box benchmarks (Blankenbach, Rayleigh-Bénard) |
+| `1` | Zero traction (σ·n = 0) — material can flow through | Geodynamic models with topography evolution |
+
+**Warning**: Using `free_surface=1` for closed-box convection benchmarks produces ~35% error in Vrms because the top boundary is not impenetrable. When `free_surface=1` is enabled, extra air cells are added above the domain, and `BuildInitialTopography` must be provided in the setup struct.
+
 ## Geometry Helpers
 
 ### Ellipse
@@ -271,6 +280,7 @@ int SetPhase(MdoodzInput *input, Coordinates coordinates) {
 | `thermal` | 0/1 | Enable thermal solver |
 | `elastic` | 0/1 | Enable elasticity |
 | `free_surface` | 0/1 | Enable free surface |
+| `free_surface_stab` | 0/1 | Free surface stabilisation (FSSA) |
 | `pure_shear_ALE` | -1/0/1 | ALE mode: 1=stretch, -1=fixed box |
 | `shear_style` | 0/1 | 0=pure shear, 1=periodic simple shear (auto-sets `periodic_x=1`) |
 | `periodic_x` | 0/1 | Periodic boundaries in x (set automatically by `shear_style`) |

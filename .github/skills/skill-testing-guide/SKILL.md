@@ -111,6 +111,10 @@ Every test `.txt` file **must** include:
 - **Finite strain F stays at identity in ALE mode**: In `pure_shear_ALE=1`, the grid deforms with the material, so markers don't move relative to grid → F accumulates slowly. Don't expect analytical F values; check `F > 0` and `det(F) ≈ 1` instead.
 - **type=13 is shear stress BC, not normal stress**: The `constant_shear_stress` BC (type=13) on E/W boundaries controls the tangential (shear) component, not the normal traction. You cannot apply normal stress BCs this way. Use `SetPureShearBCVx` which correctly uses type=13 on N/S (free-slip) and type=0 on E/W (velocity Dirichlet).
 - **Thermal tests require SetBCT callback**: Tests with `thermal=1` and shear heating need explicit thermal boundary conditions via `SetBCT` in the `SetBCs_ff` struct. Without it, temperature may not evolve as expected.
+- **`free_surface=1` changes top BC semantics**: `free_surface=1` imposes zero traction (σ·n = 0), not free-slip (v·n = 0). For closed-box convection benchmarks (Blankenbach, Rayleigh-Bénard), use `free_surface=0`. Using the wrong mode gives ~35% error in Vrms.
+- **Thermal steady state needs ~100k steps**: MDOODZ advects temperature via markers (CFL-limited by velocity). Reaching thermal steady state (~2 diffusion times) at 41×41 takes ~17 hours. Either use long timeouts, coarse grids, or restructure as smoke tests.
+- **Segfault in CHOLMOD / cs_di_compress**: Often caused by buffer overflows in solver setup, not CHOLMOD itself. Build with ASAN first (see skill-build-and-run). Known bugs: BCp.type guard condition in Solvers.c, thermal loop bounds in AdvectionRoutines.c.
+- **WSL source sync**: Windows edits do NOT auto-propagate to WSL build trees. After editing on Windows, manually `cp /mnt/c/.../file ~/build/.../file` before rebuild.
 
 ### Valid Flow Law Indices
 
@@ -150,11 +154,16 @@ Every test `.txt` file **must** include:
 | `DensityTests.cpp` | ThermalExpansion, HydrostaticPressure | Density EoS, hydrostatics |
 | `ShearHeatingTests.cpp` | ViscousDissipation | Shear heating H=2ηε̇² |
 | `FreeSurfaceTests.cpp` | SinkingBlock | Free surface, topography |
-| `VelocityFieldTests.cpp` | PureShearVelocity | Velocity symmetry check |
+| `VelocityFieldTests.cpp` | PureShearVelocity | Velocity L2 < 3e-2 (with 10:1 inclusion, r=0.05) |
+| `VelocityFieldTests.cpp` | SimpleShearVelocity | Periodic simple shear Vx L2 < 1e-6 (homogeneous, exact linear profile) |
+| `TopoBenchTests.cpp` | TopoBenchRelaxation | Free surface exponential decay, mean error < 15% vs analytical τᵣ = 4ηk/(ρg)·coth(kH) |
+| `TopoBenchTests.cpp` | TopoBenchConvergence | Grid convergence across Nx=31/51/101, order ≥ 0.3 |
 | `CompressibilityTests.cpp` | DilatantFlow | Elastic compressibility |
 | `FiniteStrainTests.cpp` | PureShearStrain | F tensor, det(F)≈1 |
 | `NeumannBCTests.cpp` | StressBCPureShear | Stress BC type=13 |
 | `ConvergenceRateTests.cpp` | NewtonPwl, PicardPwl, NewtonFasterThanPicard | Newton vs Picard comparison |
+| `BlankenBenchTests.cpp` | ConvectionDevelops | Blankenbach Case 1a smoke test: T range, V > 0, no NaN (500 steps) |
+| `BlankenBenchTests.cpp` | TemperatureProfile | Mid-depth T_max in [0.1, 0.9], no NaN in T field |
 
 ---
 
@@ -372,6 +381,9 @@ Improving beyond the current ~0.85 L1 P convergence order would require fundamen
 | DirectorDtConvergence | order (coarsest pair) | 0.93 | — |
 | StressAnisotropy | relErr(τ_II) | 1.1e-8 | < 0.01% |
 | StressAnisotropy | relErr(sxxd) | 4.4e-16 | < 0.01% |
+| StressAnisotropyL2 | L2(sxxd) | 4.4e-16 | < 1e-6 |
+| StressAnisotropyL2 | L2(szzd) | 4.4e-16 | < 1e-6 |
+| StressAnisotropyL2 | L2(sxz) | 2.3e-8 | < 1e-6 |
 
 **Analytical solutions:**
 - Director evolution ODE: θ(t) = arctan(tan(θ₀) − γ̇·t) under simple shear (γ̇ = 2 × bkg_strain_rate)
