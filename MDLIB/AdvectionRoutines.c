@@ -589,9 +589,8 @@ void EvaluateCourantCriterion( double* Vx, double* Vz, params *model, scale scal
 
     if (model->thermal==1) {
         // BUG FIX: mesh->T and mesh->T0_n are centre-grid arrays of size (Nx-1)*(Nz-1).
-        // The original loop bounds (Nx+1, Nz) were taken from the Vz vertex-grid loop above,
-        // causing a heap-buffer-overflow: max index = (Nx)+(Nz-1)*Ncx which exceeds (Nx-1)*(Nz-1).
-        // Confirmed by AddressSanitizer. Correct bounds are (Nx-1, Nz-1) to match the centre grid.
+        // The original loop bounds (Nx+1, Nz) were copied from the Vz vertex-grid loop above,
+        // causing a heap-buffer-overflow. Correct bounds are (Nx-1, Nz-1).
         for (k=0; k<model->Nx-1; k++) {
             for (l=0; l<model->Nz-1; l++) {
                 c  = k   + l*Ncx;
