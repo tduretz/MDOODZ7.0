@@ -394,3 +394,28 @@ Improving beyond the current ~0.85 L1 P convergence order would require fundamen
 - Final angular errors: dt=0.25 → +2.46°, dt=0.1 → +1.04°, dt=0.05 → +0.53°, dt=0.025 → +0.27°, dt=0.0125 → +0.13°
 
 **Visualization:** `gnuplot AnisotropyBenchmark/plot_director_convergence.gp` generates a 2-panel chart (trajectory from real HDF5 data + convergence) after running the DtConvergence test. The test writes `director_trajectory_dt*.dat` and `director_convergence.dat`.
+
+### Long-Running Simulations — Lessons Learned (Blankenbach Steady-State)
+
+Attempted: 100k-step Blankenbach Case 1a convection benchmark (Ra=10⁴, 41×41, Courant=0.25) to reach thermal steady state and compare Nu/Vrms against published values. The simulation never completed. Key findings:
+
+**Do not wrap long-running simulations in GTest.**
+A multi-hour simulation inside a test binary is fragile. The process can be killed by the OS, WSL, or CI timeout before completion. Use a standalone run script + post-hoc validation instead. Guard such tests with an environment variable (`GTEST_SKIP()` without it) so they never run in CI.
+
+**WSL2 silently kills long-running processes.**
+Neither `setsid`, `nohup`, nor `tmux` prevented silent death at step 2000–3000 with no OOM, no segfault, no kernel message. This is a WSL platform limitation. Native Linux or checkpoint/restart would be needed.
+
+**Particle reseeding only adds, never removes.**
+Both `reseed_mode=0` and `reseed_mode=1` grow the particle count unboundedly. `CountPartCell2` in `ParticleReseeding.c` has culling code but is never called from `Main_DOODZ.c` and contains out-of-bounds array access bugs. For convection, markers concentrate in corners/downwellings, causing `Nb_part_max` overflow (exit code 190) after ~600–2600 steps depending on settings.
+
+**Courant=0.5 is unstable for long marker-in-cell runs.**
+Causes advection overshoot → particles in wrong cells → garbage interpolation → negative temperatures (e.g. −45 K on markers) → segfault. Courant=0.25 is the safe value for extended convection simulations.
+
+**Do not modify MDLIB to accommodate a test.**
+Changing `Nb_part_max` multiplier, adding `max_part_cell`, or wiring up dead code (`reseed_mode=2`) are library changes that should go through their own design/review process, not be driven by test needs.
+
+**Validate incrementally.**
+Run 500-step, then 1000-step, then 5000-step tests first. This catches particle overflow and advection stability issues before committing to a 100k-step run.
+
+**The smoke tests work and are valuable.**
+The existing 500-step BlankenBench tests (`ConvectionDevelops`, `TemperatureProfile`) pass reliably in CI. A steady-state benchmark is a validation exercise, not a unit test.

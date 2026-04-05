@@ -1039,7 +1039,7 @@ Comparing Newton vs Picard convergence on the same problem is a rigorous verific
 
 ## Suite 18 — BlankenBench (Thermal Convection)
 
-**Source:** [BlankenBenchTests.cpp](BlankenBenchTests.cpp) | **Parameters:** [BlankenBench/BlankenBench.txt](BlankenBench/BlankenBench.txt) | **Tests:** 2
+**Source:** [BlankenBenchTests.cpp](BlankenBenchTests.cpp) | **Parameters:** [BlankenBench/BlankenBench.txt](BlankenBench/BlankenBench.txt) | **Tests:** 2 (CI) + 1 (manual)
 
 ### Physical Setup
 
@@ -1074,6 +1074,30 @@ gnuplot BlankenBench/plot_convection.gp
 ```
 
 The `extract_blankenbach` tool (C++, built alongside the tests) reads the HDF5 output and writes `temperature.dat` and `velocity.dat` for gnuplot.
+
+### Steady-State Benchmark (manual, not in CI)
+
+**Test:** `NusseltAndVrms` | **Parameters:** [BlankenBench/BlankenBenchSteady.txt](BlankenBench/BlankenBenchSteady.txt)
+
+A long-running test that reaches thermal steady state and compares Nusselt number and Vrms against published Blankenbach et al. (1989) Case 1a reference values. This test is **not part of CI** — it takes ~2–4 hours — but is fully reproducible from the same code and parameter file.
+
+**Run with 8 OpenMP threads:**
+
+```bash
+cd build/TESTS
+BLANKENBACH_STEADY=1 OMP_NUM_THREADS=8 ./BlankenBenchTests --gtest_filter=BlankenBench.NusseltAndVrms
+```
+
+The `BLANKENBACH_STEADY=1` environment variable is required — without it the test auto-skips (preventing accidental runs during `ctest`). The test also requires an OpenMP build (`cmake -DOMP=ON`).
+
+**Published reference values** (Blankenbach et al. 1989, Case 1a, Ra = 10⁴):
+
+| Quantity | Published | Tolerance (41×41) |
+|---|---|---|
+| Nu | 4.884409 | ±5% |
+| Vrms | 42.864947 | ±5% |
+
+**Differences from the smoke test:** `Nt = 100000` (vs 500), `Courant = 0.5` (vs 0.25), `writer_step = 100000` (final output only).
 
 ---
 

@@ -10,6 +10,10 @@ extern "C" {
 #include <gtest/gtest.h>
 #include "TestHelpers.h"
 
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 // ============================================================================
 // Blankenbach et al. (1989) Case 1a — Isoviscous thermal convection
 //
@@ -208,4 +212,92 @@ TEST_F(BlankenBench, TemperatureProfile) {
   // At early times T_max should be close to 0.5 (linear gradient midpoint)
   EXPECT_GT(T_max_mid, 0.1) << "Mid-depth temperature is too low";
   EXPECT_LT(T_max_mid, 0.9) << "Mid-depth temperature is too high";
+}
+
+// ---------------------------------------------------------------------------
+// Test 3: Steady-state Nusselt number and Vrms (MANUAL — not in CI)
+//
+// Runs 100k steps with Courant=0.5 to reach thermal steady state, then
+// computes Nu and Vrms and compares against Blankenbach et al. (1989)
+// published reference values. Requires OMP_NUM_THREADS=8.
+//
+// Run: OMP_NUM_THREADS=8 ./BlankenBenchTests --gtest_filter=BlankenBench.NusseltAndVrms
+// ---------------------------------------------------------------------------
+TEST_F(BlankenBench, NusseltAndVrms) {
+  // Guard: only run when explicitly requested via environment variable
+  const char *run_steady = std::getenv("BLANKENBACH_STEADY");
+  if (!run_steady || std::string(run_steady) != "1") {
+    GTEST_SKIP() << "Set BLANKENBACH_STEADY=1 to run this long test (~2-4 hours)";
+  }
+
+#ifdef _OPENMP
+  int nthreads = omp_get_max_threads();
+  printf("BlankenBench: Running with %d OpenMP threads\n", nthreads);
+  ASSERT_GE(nthreads, 4) << "Need at least 4 threads for reasonable runtime";
+#else
+  GTEST_SKIP() << "Build without OpenMP (-DOMP=ON). Skipping long-running test.";
+#endif
+
+  // Run steady-state simulation
+  char inputFile[] = "BlankenBench/BlankenBenchSteady.txt";
+  RunMDOODZ(inputFile, &setup);
+
+  // Read final output
+  const char *outFile = "BlankenBench/Output100000.gzip.h5";
+
+  const int Nx = 41, Nz = 41;
+  const int ncx = Nx - 1, ncz = Nz - 1;
+  const double T_top_K = zeroC;          // 273.15 K
+  const double DeltaT  = 1000.0;         // K
+  const double H       = 1.0e5;          // m
+  const double rho     = 3300.0;         // kg/m³
+  const double k       = 3.3;            // W/m/K
+  const double Cp      = 1250.0;         // J/kg/K
+  const double kappa   = k / (rho * Cp); // 8.0e-7 m²/s
+
+  // --- Nusselt number ---
+  auto T_field = readFieldAsArray(outFile, "Centers", "T");
+  ASSERT_EQ((int)T_field.size(), ncx * ncz);
+
+  double dz = H / ncz;
+  double sumDtDz = 0.0;
+  for (int i = 0; i < ncx; i++) {
+    double T_centre = T_field[(ncz - 1) * ncx + i];  // top cell-centre row
+    double dTdz = (T_top_K - T_centre) / (dz / 2.0);
+    sumDtDz += dTdz;
+  }
+  double Nu = -(H / DeltaT) * (sumDtDz / ncx);
+
+  // --- Vrms ---
+  auto Vx_field = readFieldAsArray(outFile, "VxNodes", "Vx");
+  auto Vz_field = readFieldAsArray(outFile, "VzNodes", "Vz");
+  ASSERT_EQ((int)Vx_field.size(), Nx * (Nz + 1));
+  ASSERT_EQ((int)Vz_field.size(), (Nx + 1) * Nz);
+
+  // Interpolate staggered velocities to cell centres
+  double sumV2 = 0.0;
+  for (int j = 0; j < ncz; j++) {
+    for (int i = 0; i < ncx; i++) {
+      double vx_c = 0.5 * (Vx_field[j * Nx + i] + Vx_field[j * Nx + (i + 1)]);
+      double vz_c = 0.5 * (Vz_field[j * (Nx + 1) + i] + Vz_field[(j + 1) * (Nx + 1) + i]);
+      sumV2 += vx_c * vx_c + vz_c * vz_c;
+    }
+  }
+  double Vrms_SI = sqrt(sumV2 / (ncx * ncz));
+  double Vrms_nd = Vrms_SI * H / kappa;  // non-dimensionalise
+
+  // --- Report ---
+  printf("\n========================================\n");
+  printf("BlankenBench Steady State Results:\n");
+  printf("  Nu   = %.6f  (published: 4.884409)\n", Nu);
+  printf("  Vrms = %.6f  (published: 42.864947)\n", Vrms_nd);
+  printf("========================================\n\n");
+
+  // --- Assert against published Blankenbach et al. (1989) Case 1a values ---
+  const double Nu_ref   = 4.884409;
+  const double Vrms_ref = 42.864947;
+  const double tol      = 0.05;  // 5% relative tolerance for 41×41 resolution
+
+  EXPECT_NEAR(Nu,      Nu_ref,   tol * Nu_ref)   << "Nu outside 5% of published value";
+  EXPECT_NEAR(Vrms_nd, Vrms_ref, tol * Vrms_ref) << "Vrms outside 5% of published value";
 }

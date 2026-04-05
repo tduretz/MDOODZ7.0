@@ -721,9 +721,12 @@ void DirectStokesDecoupledComp( SparseMat *matA,  SparseMat *matB,  SparseMat *m
         printf("Penalty factor = %2.2e\n", penalty);
     }
     
-    // BUG FIX (DirectStokesDecoupledComp): guard must be BCp.type[k] == -1 (active cell).
-    // NumberStokes() assigns eqn_p only for active cells; boundary cells keep eqn_p=-1.
-    // Old condition allowed boundary cells through, which could produce invalid indices.
+    // BUG FIX (DirectStokesDecoupledComp): Guard must be BCp.type[k]==-1 (active cell) not
+    // !=30 && !=31. NumberStokes() in StokesRoutines.c only assigns eqn_p[k] for type==-1 cells;
+    // all others get eqn_p[k]=-1. The old check let through type==0 (boundary) cells, producing
+    // i = -1 - matA->neq (wild pointer) → heap-buffer-overflow in D1cm0/Dcm0 arrays.
+    // Also fixed: compressible branch used D1cm0->x[k] (cell index) instead of D1cm0->x[i]
+    // (equation index). Both confirmed by AddressSanitizer.
 #pragma omp parallel for shared(D1cm0, Dcm0, mesh, Stokes, matA, matD ) private( i ) firstprivate( model, celvol )
     for( k=0; k<(mesh->Nx-1)*(mesh->Nz-1); k++) {
         if ( mesh->BCp.type[k] == -1 ) {
@@ -1085,7 +1088,7 @@ void KillerSolver( SparseMat *matA,  SparseMat *matB,  SparseMat *matC,  SparseM
     penalty = gamma / celvol;
     printf("Penalty factor = %2.2e\n", penalty);
 
-    // BUG FIX (KillerSolver): same active-cell guard as in DirectStokesDecoupledComp.
+    // BUG FIX (KillerSolver): Same guard fix as DirectStokesDecoupledComp — see comment there.
 #pragma omp parallel for shared( whos_incompressible, D1cm0, Dcm0, mesh, Stokes, matA, matD ) private( i ) firstprivate( model, celvol, vol_change )
     for( k=0; k<(mesh->Nx-1)*(mesh->Nz-1); k++) {
         if ( mesh->BCp.type[k] == -1 ) {
@@ -1483,7 +1486,8 @@ void KSPStokesDecoupled( SparseMat *matA,  SparseMat *matB,  SparseMat *matC,  S
     //    printf("-gamma*celvol = %2.2e %2.2e %2.2e %d %d\n", -gamma*celvol, model.dx*scaling.L, model.dz*scaling.L, model.Nx, model.Nz);
     
     
-    // BUG FIX (KSPStokesDecoupled): same active-cell guard and D1cm0 index fix as above.
+    // BUG FIX (KSPStokesDecoupled): Same guard fix as DirectStokesDecoupledComp — see comment there.
+    // Also fixed: compressible branch used D1cm0->x[k] instead of D1cm0->x[i].
 #pragma omp parallel for shared(D1cm0, Dcm0, mesh, Stokes, matA, matD ) private( i ) firstprivate( model, celvol, vol_change )
     for( k=0; k<(mesh->Nx-1)*(mesh->Nz-1); k++) {
         if ( mesh->BCp.type[k] == -1 ) {
