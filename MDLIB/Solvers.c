@@ -721,16 +721,22 @@ void DirectStokesDecoupledComp( SparseMat *matA,  SparseMat *matB,  SparseMat *m
         printf("Penalty factor = %2.2e\n", penalty);
     }
     
+    // BUG FIX (DirectStokesDecoupledComp): Guard must be BCp.type[k]==-1 (active cell) not
+    // !=30 && !=31. NumberStokes() in StokesRoutines.c only assigns eqn_p[k] for type==-1 cells;
+    // all others get eqn_p[k]=-1. The old check let through type==0 (boundary) cells, producing
+    // i = -1 - matA->neq (wild pointer) → heap-buffer-overflow in D1cm0/Dcm0 arrays.
+    // Also fixed: compressible branch used D1cm0->x[k] (cell index) instead of D1cm0->x[i]
+    // (equation index). Both confirmed by AddressSanitizer.
 #pragma omp parallel for shared(D1cm0, Dcm0, mesh, Stokes, matA, matD ) private( i ) firstprivate( model, celvol )
     for( k=0; k<(mesh->Nx-1)*(mesh->Nz-1); k++) {
-        if ( mesh->BCp.type[k] != 30 && mesh->BCp.type[k] != 31 ) {
+        if ( mesh->BCp.type[k] == -1 ) {
             i = Stokes->eqn_p[k] - matA->neq;
             // Here Dcm0 is the pressure block
             if (mesh->comp_cells[k]==0) ((double*)D1cm0->x)[i] *= 0.0;
             if (mesh->comp_cells[k]==1) ((double*)D1cm0->x)[i]  = mesh->bet_n[k] / model.dt * celvol * matD->d[k]*matD->d[k];
             // Here Dcm0 is the inverse of the pressure block
             if (mesh->comp_cells[k]==0) ((double*)Dcm0->x)[i] *= penalty; // Should be /celvol
-            if (mesh->comp_cells[k]==1) ((double*)Dcm0->x)[i]  = 1.0 /  ((double*)D1cm0->x)[k]; // Should be /celvol
+            if (mesh->comp_cells[k]==1) ((double*)Dcm0->x)[i]  = 1.0 /  ((double*)D1cm0->x)[i]; // Should be /celvol
         }
     }
     
@@ -1082,9 +1088,10 @@ void KillerSolver( SparseMat *matA,  SparseMat *matB,  SparseMat *matC,  SparseM
     penalty = gamma / celvol;
     printf("Penalty factor = %2.2e\n", penalty);
 
+    // BUG FIX (KillerSolver): Same guard fix as DirectStokesDecoupledComp — see comment there.
 #pragma omp parallel for shared( whos_incompressible, D1cm0, Dcm0, mesh, Stokes, matA, matD ) private( i ) firstprivate( model, celvol, vol_change )
     for( k=0; k<(mesh->Nx-1)*(mesh->Nz-1); k++) {
-        if ( mesh->BCp.type[k] != 30 && mesh->BCp.type[k] != 31 ) {
+        if ( mesh->BCp.type[k] == -1 ) {
             i = Stokes->eqn_p[k] - matA->neq;
             // Here Dcm0 is the pressure block - This relates to physics (0 is incompressible, Beta/dt is compressible)
             if (mesh->comp_cells[k]==0) ((double*)D1cm0->x)[i] *= 0.0;
@@ -1479,9 +1486,11 @@ void KSPStokesDecoupled( SparseMat *matA,  SparseMat *matB,  SparseMat *matC,  S
     //    printf("-gamma*celvol = %2.2e %2.2e %2.2e %d %d\n", -gamma*celvol, model.dx*scaling.L, model.dz*scaling.L, model.Nx, model.Nz);
     
     
+    // BUG FIX (KSPStokesDecoupled): Same guard fix as DirectStokesDecoupledComp — see comment there.
+    // Also fixed: compressible branch used D1cm0->x[k] instead of D1cm0->x[i].
 #pragma omp parallel for shared(D1cm0, Dcm0, mesh, Stokes, matA, matD ) private( i ) firstprivate( model, celvol, vol_change )
     for( k=0; k<(mesh->Nx-1)*(mesh->Nz-1); k++) {
-        if ( mesh->BCp.type[k] != 30 && mesh->BCp.type[k] != 31 ) {
+        if ( mesh->BCp.type[k] == -1 ) {
             i = Stokes->eqn_p[k] - matA->neq;
             
             //            cPC    = drhodPc ./ (rhoc.*dt); %% new diagonal coefficient (= 1/(K*dt) for standard EOS)
@@ -1494,7 +1503,7 @@ void KSPStokesDecoupled( SparseMat *matA,  SparseMat *matB,  SparseMat *matC,  S
 
             // Here Dcm0 is the inverse of the pressure block
             if (mesh->comp_cells[k]==0) ((double*)Dcm0->x)[i] *= penalty; // Should be /celvol
-            if (mesh->comp_cells[k]==1) ((double*)Dcm0->x)[i]  = 1.0 /  ((double*)D1cm0->x)[k]; // Should be /celvol
+            if (mesh->comp_cells[k]==1) ((double*)Dcm0->x)[i]  = 1.0 /  ((double*)D1cm0->x)[i]; // Should be /celvol
             //          printf("%2.2e %2.2e %2.2e %2.2e\n", mesh->bet[k]/model.dt, penalty, mesh->bet[k]*(1/scaling.S), model.dt*scaling.t);
         }
     }

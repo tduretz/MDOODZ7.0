@@ -1,0 +1,119 @@
+/**** RESTART ****/
+istep = 200000
+irestart = 0
+
+/**** OUTPUT FILES ****/
+writer            = 1
+writer_step       = 100000
+writer_markers    = 0
+writer_debug      = 0
+writer_energies   = 0
+gnuplot_log_res   = 0
+writer_subfolder  = BlankenBench
+
+/**** SCALES ****/
+eta = 1e20
+L   = 1e4
+V   = 1e-9
+T   = 1000
+
+/**** SPACE ****/
+Nx      = 41
+Nz      = 41
+xmin    = -5.000000e4
+zmin    = -5.000000e4
+xmax    =  5.000000e4
+zmax    =  5.000000e4
+
+/**** PARTICLES ****/
+Nx_part = 4
+Nz_part = 4
+min_part_cell = 16
+max_part_cell = 40
+
+/**** TIME ****/
+Nt          = 100000
+constant_dt = 0
+Courant     = 0.25
+dt          = 1e11
+RK          = 4
+
+/**** LINEAR SOLVER ****/
+noisy        = 1
+penalty      = 1e3
+lin_solver   = -1
+diag_scaling = 0
+lin_abs_div  = 1e-9
+lin_rel_div  = 1e-9
+lin_abs_mom  = 1e-9
+lin_rel_mom  = 1e-9
+
+/**** NON-LINEAR SOLVER ****/
+Newton          = 0
+line_search     = 1
+nit_max         = 10
+rel_tol_KSP     = 1e-4
+nonlin_abs_mom  = 1e-9
+nonlin_rel_mom  = 1e-9
+nonlin_abs_div  = 1e-9
+nonlin_rel_div  = 1e-9
+
+/**** VISCOSITY CUT-OFF ****/
+min_eta      = 1e18
+max_eta      = 1e25
+
+/**** SWITCHES ****/
+mechanical    = 1
+thermal       = 1
+reseed_markers = 1
+reseed_mode    = 1
+anisotropy    = 0
+elastic       = 0
+free_surface  = 0
+free_surface_stab = 0
+finite_strain = 0
+advection     = 1
+shear_heating = 0
+adiab_heating = 0
+subgrid_diffusion = 0
+
+/**** SETUP-DEPENDANT ****/
+shear_style     = 0
+periodic_x      = 0
+pure_shear_ALE  = 0
+bkg_strain_rate = 0
+user0           = 0.0        / top temperature [C] -> T_top = 273.15 K
+user1           = 1273.15    / bottom temperature [K] -> T_bot = 1273.15 K (DeltaT = 1000 K)
+user2           = 5.0e4      / surface z position [m]
+user3           = 0
+
+/**** GRAVITY ****/
+gx = 0.0000
+gz = -10.0
+
+/**** MAT PROPERTIES ****/
+Nb_phases = 1
+
+/**** PHASE 1 ****/
+ID   = 0
+rho  = 3300.0
+G    = 1e10
+Cp   = 1250.0
+k    = 3.3
+Qr   = 0
+C    = 1e90
+phi  = 30
+Slim = 1e91
+alp  = 2.4242e-5
+bet  = 0
+drho = 0
+density_model = 1
+cstv = 1             / constant visc law
+pwlv = 0             / disloc. creep
+linv = 0             / diff. creep
+gbsv = 0             / grain boundary sliding
+expv = 0             / peierls creep
+gsel = 0             / grain size evo.
+eta0 = 1e20
+npwl = 1
+Qpwl = 0
