@@ -335,3 +335,54 @@ aniso_angle  = 45   // Initial anisotropy angle [degrees]
 - Problem initialisation: `MDLIB/Setup.c`
 - Example scenario: `SETS/RiftingChenin.c` + `SETS/RiftingChenin.txt`
 - Configuration parsing: `MDLIB/InputOutput.c`
+
+## Verification Workflow
+
+Before running a production simulation, create coarse-resolution verification `.txt` files to catch divergence or instability early.
+
+### Two-Tier Verification Pattern
+
+1. **Copy the production `.txt` to create verification variants**:
+   ```bash
+   cp SETS/MyModel.txt SETS/MyModel_quick.txt
+   cp SETS/MyModel.txt SETS/MyModel_medium.txt
+   ```
+
+2. **Edit the verification files** — reduce resolution and time steps, keep all physics identical:
+
+   | Parameter | Production | Quick | Medium |
+   |-----------|-----------|-------|--------|
+   | `Nx` | 200+ | 101 | 101 |
+   | `Nz` | 160+ | 81 | 81 |
+   | `Nt` | 1000+ | 10 | 100 |
+
+3. **Run quick verification** (10 steps) — catches immediate crashes, NaN, bad parameters:
+   ```bash
+   make build SET=MyModel TXT=MyModel_quick.txt
+   make run SET=MyModel > logs_quick.txt 2>&1
+   ```
+
+4. **Check the log** for problems:
+   ```bash
+   grep -i 'nan\|diverge\|error\|exit' logs_quick.txt
+   grep 'Ending' logs_quick.txt          # verify it reached the end
+   grep 'T (°C)' logs_quick.txt           # check temperature range is physical
+   ```
+
+5. **Run medium verification** (100 steps) — catches slower instabilities (e.g., `eta_vp` too low with melting):
+   ```bash
+   make build SET=MyModel TXT=MyModel_medium.txt
+   make run SET=MyModel > logs_medium.txt 2>&1
+   ```
+
+6. **If both pass**, proceed to production resolution.
+
+### What To Watch For
+
+| Symptom | Likely cause | Fix |
+|---------|-------------|-----|
+| NaN in output | Unstable rheology or strain rate | Check `eta_vp`, `min_eta`/`max_eta`, flow law indices |
+| Negative viscosity | `eta_vp` too low with melting | Increase `eta_vp` (try 2.5e20 for lithospheric scale) |
+| Values ~1e60 | Numerical blow-up | Same as above; also check `dt`, `Courant` |
+| Temperature out of range | Bad thermal BCs or initial T | Verify `SetBCT` callback and `SetTemperature` |
+| Solver does not converge | Viscosity contrast too high | Reduce `max_eta`/`min_eta` ratio, try `Picard2Newton` |

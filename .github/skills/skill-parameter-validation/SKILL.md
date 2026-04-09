@@ -129,7 +129,9 @@ These combinations must be consistent:
 | `surface_processes > 0` | `free_surface = 1` | Surface processes need free surface |
 | No-slip velocity BCs (type 0 everywhere) | `pure_shear_ALE = 0` | Conflicts with kinematic ALE BCs → singular matrix |
 | `plast = 1` + `elastic = 1` | `bkg_strain_rate` large enough that `2·G·dt·ε̇ > C·cos(φ)` | Otherwise plasticity never activates |
-| `coh_soft = 1` | `plast = 1` + sufficient trial stress | Softening requires plastic strain accumulation |
+| `plast = 2` (combined yield) | `T_st` set per phase (negative, e.g. -10e6) | Tensile cap requires tensile strength |
+| `plast = 2` (combined yield) | `eta_vp > 0` per phase | Numerical stability; use ≥ 2.5e20 at lithospheric scale with melting |
+| `coh_soft = 1` | `plast = 1` or `plast = 2` + sufficient trial stress | Softening requires plastic strain accumulation |
 
 ---
 
@@ -180,6 +182,7 @@ Run through these numbered checks before launching a simulation:
 9. **Strength hierarchy**: Slim ≥ C, psi ≤ phi, softened ≤ initial
 9b. **Cohesion softening**: If `coh_soft=1` (or omitted!), verify `Ce < C`. Otherwise set `coh_soft = 0`
 10. **Switch compatibility**: anisotropy→finite_strain, Newton→line_search, shear_style↔periodic_x
+10b. **Combined yield (`plast=2`)**: Verify `T_st` is set (negative) and `eta_vp > 0` per phase. With `melting=1`, use `eta_vp ≥ 2.5e20` at lithospheric scale
 11. **Viscosity bounds**: min_eta < max_eta, ratio ≤ 1e10
 12. **Thermal consistency**: If thermal = 1, check Cp > 0, k > 0 for all phases
 13. **Anisotropy consistency**: If anisotropy = 1, check ani_fac_max ≥ aniso_factor per phase
