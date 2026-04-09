@@ -1,4 +1,4 @@
-## ADDED Requirements
+## MODIFIED Requirements
 
 ### Requirement: Stress boundary condition enforcement
 The test suite SHALL verify that Neumann (stress/traction) boundary conditions (BC type 13) produce a stress field consistent with the applied traction.

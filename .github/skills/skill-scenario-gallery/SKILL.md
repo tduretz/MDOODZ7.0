@@ -20,8 +20,9 @@ The `.c` file contains setup callbacks; the `.txt` file contains model parameter
 | `RiftingMelting.c` | Extension with partial melting | Lower-crust and decompression mantle melting |
 | `RiftingAnisotropy.c` | Rifting with crystal anisotropy | Olivine/OPX fabric evolution during extension |
 | `RiftingCheninAniso.c` | Combined topography perturbation + anisotropy | Full aniso rifting workflow |
+| `RiftingCombinedYield.c` | Rifting with combined mode-I/mode-II yield + melting | `plast=2`, 9 phases, VEP + melt weakening (Popov 2025) |
 
-**When to use**: Start with `RiftingBasic` for a first lithospheric extension run. Use `RiftingChenin` for multi-layer setups. Add `RiftingAnisotropy` or `RiftingCheninAniso` to study fabric effects on rifting.
+**When to use**: Start with `RiftingBasic` for a first lithospheric extension run. Use `RiftingChenin` for multi-layer setups. Add `RiftingAnisotropy` or `RiftingCheninAniso` to study fabric effects on rifting. Use `RiftingCombinedYield` for combined tensile+shear failure with melting.
 
 ---
 
@@ -131,7 +132,7 @@ The `.c` file contains setup callbacks; the `.txt` file contains model parameter
 | `ThermalDiffusion.c` | Pure heat diffusion | Homogeneous medium |
 | `ThermoElastic.c` | Thermo-elastic coupling | Temperature-dependent stiffness |
 | `CoolingChamber.c` | Lithospheric cooling chamber | Magma chamber analogue |
-| `TCMagmaticSystem.c` | Thermo-chemical magmatic evolution | Multi-process |
+| `TCMagmaticSystem.c` | Thermo-chemical magmatic evolution | Multi-process, `plast=2`, melting, dike injection |
 | `MeltingOverpressure.c` | Melting-induced overpressure | Magma chamber pressurisation |
 | `BlankenBench.c` | Blankenbach Case 1a convection | Ra=10⁴, isoviscous, free-slip, thermal benchmark |
 
@@ -143,7 +144,7 @@ The `.c` file contains setup callbacks; the `.txt` file contains model parameter
 
 | File | Description | Key features |
 |------|------------|--------------|
-| `PressurizedMagmaChamber.c` | Pressurised circular chamber | Deformation around intrusion |
+| `PressurizedMagmaChamber.c` | Pressurised circular chamber | Deformation around intrusion, `plast=2`, `T_st` |
 | `ChristmasTree.c` | Complex dike geometry | Multi-branch intrusion |
 | `ChemicalDiffusion.c` | Chemical element transport | Diffusion-driven |
 | `ChemicalProduction.c` | In-situ phase production | Metamorphic reaction tracking |
@@ -183,12 +184,12 @@ The `.c` file contains setup callbacks; the `.txt` file contains model parameter
 | File | Description | Key features |
 |------|------------|--------------|
 | `VEP_Duretz18.c` | Visco-elasto-plastic benchmark | Duretz et al. (2018) |
-| `Popov2025_Pureshear_VEVP.c` | Pure shear VEVP test | 2025 benchmark |
-| `Popov2025_Tensile_VEVP.c` | Tensile/necking VEVP test | 2025 benchmark |
+| `Popov2025_Pureshear_VEVP.c` | Pure shear VEVP test | Combined mode-I/mode-II yield benchmark (`plast=2`) |
+| `Popov2025_Tensile_VEVP.c` | Tensile/necking VEVP test | Tensile failure with `plast=2`, `T_st` |
 | `PlasticityLayers.c` | Plasticity in layered systems | Layer-controlled localisation |
 | `StressBC_ShearTemplate.c` | Shear with stress BCs | Non-velocity-driven loading |
 
-**When to use**: `VEP_Duretz18` and `Popov2025_*` for rigorous solver and rheology benchmarking.
+**When to use**: `VEP_Duretz18` for standard VEP benchmarking. `Popov2025_Pureshear_VEVP` and `Popov2025_Tensile_VEVP` for testing/validating the combined mode-I/mode-II yield function (`plast=2`).
 
 ---
 
@@ -214,3 +215,6 @@ The `.c` file contains setup callbacks; the `.txt` file contains model parameter
 | Thermal solver only | `ThermalDiffusion.c` |
 | Thermal convection benchmark | `BlankenBench.c` |
 | VEP rheology testing | `VEP_Duretz18.c` |
+| Combined yield (plast=2) | `Popov2025_Pureshear_VEVP.c` or `Popov2025_Tensile_VEVP.c` |
+| Rifting + melting + combined yield | `RiftingCombinedYield.c` |
+| Melting + melt weakening | `RiftingMelting.c` |
