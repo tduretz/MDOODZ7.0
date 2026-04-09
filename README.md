@@ -9,7 +9,7 @@ In addition to Continuous Integration (CI), MDOODZ7.0 also includes a series of 
 
 # How to visualise MDOODZ7.0 results?
 
-Check out [Julia visualisation based on Makie](./JuliaVisualisation).
+Check out [Julia visualisation based on Makie](./JuliaVisualisation). Alternatively basic matplotlib and MATLAB routines are provided.
 
 # How to build and run MDOODZ7.0?
 
