@@ -10,6 +10,13 @@ run:
 run-vis:
 	cd visualtests-out && ./visualtests
 
+generate-refs:
+	cd visualtests-out && ./visualtests && \
+	cp PeirlsCreep.gzip.h5 ../VISUAL_TESTS/PeirlsCreepReference.h5 && \
+	cp AnisoVEP.gzip.h5 ../VISUAL_TESTS/AnisoVEPReference.h5 && \
+	cp ThermalDiffusion.gzip.h5 ../VISUAL_TESTS/ThermalDiffusionReference.h5 && \
+	cp QuartzCoesite.gzip.h5 ../VISUAL_TESTS/QuartzCoesiteReference.h5
+
 build-dev:
 	cmake -B ./cmake-build -DOPT=$(OPT) -DOMP=$(OMP) -DVIS=$(VIS) -DSET=$(SET) -DTXT=$(TXT) -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ && cmake --build ./cmake-build
 
