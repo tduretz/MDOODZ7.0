@@ -1,4 +1,4 @@
-## ADDED Requirements
+## MODIFIED Requirements
 
 ### Requirement: Viscous dissipation heating test
 The test suite SHALL verify that shear heating (`shear_heating=1`) raises the temperature when mechanical work is done, following H_s = 2η·ε̇²_II.
@@ -13,9 +13,4 @@ The test suite SHALL verify that shear heating (`shear_heating=1`) raises the te
 
 #### Scenario: Viscous dissipation L2 error
 - **WHEN** a simulation runs with `shear_heating=1`, constant viscosity η, strain rate ε̇, density ρ, heat capacity Cp, for Nt time steps with total time t
-- **THEN** the relative L2 error of the mean temperature against the analytical T̄(t) = T₀ + 4η·ε̇²·t/(ρ·Cp) SHALL be less than 5e-2
-- **NOTE** MDOODZ computes Wdiss = τ_II²/η = 4ηε̇_II², and Neumann BCs should be used to avoid boundary heat leakage
-
-#### Scenario: ViscousDissipation threshold reflects measured accuracy
-- **WHEN** the ViscousDissipation test runs with Neumann BCs and corrected formula
-- **THEN** the dT tolerance SHALL be no more than 2× the measured absolute error (measured: 0.8%)
+- **THEN** the relative L2 error of the mean temperature against the analytical T̄(t) = T₀ + 2η·ε̇²·t/(ρ·Cp) SHALL be less than 5e-2

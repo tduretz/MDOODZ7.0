@@ -157,3 +157,37 @@ ASAN_OPTIONS='detect_leaks=0' ./MyTest    # disable leak check for faster runs
 - Environment template: `env.cmake.example`
 - Library build: `MDLIB/CMakeLists.txt`
 - Scenario build: `SETS/AddSet.cmake`
+
+## Windows (WSL) Build
+
+MDOODZ does not build natively on Windows (MSVC/MINGW64). Use WSL (Windows Subsystem for Linux).
+
+### Setup
+
+1. Install WSL with Ubuntu: `wsl --install -d Ubuntu`
+2. Install dependencies in WSL:
+   ```bash
+   wsl bash -c "sudo apt install build-essential cmake libsuitesparse-dev libhdf5-dev libblas-dev liblapack-dev zlib1g-dev"
+   ```
+
+### Building and Running
+
+From a Windows terminal (PowerShell, CMD, or Git Bash), prefix all commands with `wsl bash -c`:
+
+```bash
+# Build
+wsl bash -c "cd /mnt/c/Users/<user>/MDOODZ7.0 && make build SET=MyModel"
+
+# Run (with log capture)
+wsl bash -c "cd /mnt/c/Users/<user>/MDOODZ7.0 && make run SET=MyModel > logs.txt 2>&1"
+
+# Check logs
+wsl bash -c "cd /mnt/c/Users/<user>/MDOODZ7.0 && grep -i 'nan\|diverge\|Ending' logs.txt"
+```
+
+### Important Notes
+
+- The `/mnt/c/` path accesses the Windows filesystem from WSL. Performance is slower than WSL-native paths (`~/`).
+- Windows file edits are visible in WSL immediately via `/mnt/c/` — no manual sync needed.
+- If using a WSL-native clone (e.g., `~/mdoodz/`), edits on Windows are **not** auto-synced. Manually copy changed files before rebuilding.
+- CMake copies source files to the build directory at **configure time**. After editing a source file, rebuild (CMake will re-copy automatically via the makefile wrapper).

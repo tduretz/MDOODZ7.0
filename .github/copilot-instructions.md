@@ -27,6 +27,7 @@ Before answering questions about MDOODZ, check whether a relevant skill exists. 
 | Building, compiling, dependencies, CMake | skill-build-and-run |
 | Creating a new simulation, .c/.txt files, callbacks, boundary conditions | skill-model-setup |
 | Viscosity, creep laws, flow laws, plasticity, elasticity, material properties | skill-rheology |
+| Partial melting, melt fraction, solidus/liquidus, melt weakening | skill-melting |
 | Anisotropy, fabric, director field, foliation | skill-anisotropy |
 | Solver convergence, Newton, Picard, time stepping, penalty | skill-solvers |
 | Governing equations, Stokes, energy, scaling, advection, free surface | skill-physics-theory |
