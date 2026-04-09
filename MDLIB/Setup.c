@@ -184,7 +184,7 @@ void SetParticles(SetParticles_ff setParticles, MdoodzInput *instance, markers *
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-void ValidateInternalPoint(POSITION position, char bcType, Coordinates coordinates, char *setupFunctionName) {
+void ValidateInternalPoint(POSITION position, signed char bcType, Coordinates coordinates, char *setupFunctionName) {
   if (position == INTERNAL && bcType != -1) {
     printf("Internal point MUST be set as -1 but attempted to be set as %d. Please double check your SetBCs.%s setup\n", bcType, setupFunctionName);
     printf("Particle coordinates: X: %f, Z: %f \n", coordinates.x, coordinates.z);

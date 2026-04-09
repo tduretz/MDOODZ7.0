@@ -264,7 +264,7 @@ typedef enum {
 
 typedef struct {
   double value;
-  char   type;
+  signed char type;
 } SetBC;
 
 typedef SetBC (*SetBCVx_f)(MdoodzInput *input, POSITION position, Coordinates coordinates);
