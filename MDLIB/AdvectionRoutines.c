@@ -26,6 +26,8 @@
 #include "time.h"
 #include "mdoodz-private.h"
 
+#include "mdoodz-log.h"
+
 #ifdef _OMP_
 #include "omp.h"
 #else
@@ -35,7 +37,7 @@
 #endif
 
 #ifdef _VG_
-#define printf(...) printf("")
+#define LOG_INFO(...) LOG_INFO("")
 #endif
 
 /*--------------------------------------------------------------------------------------------------------------------*/
@@ -261,7 +263,7 @@ firstprivate( Nb_part, model ) //schedule ( static )
         DoodzFree(OmD);
     }
 
-    printf("** Time for Roger Gunther = %lf sec\n",  (double)((double)omp_get_wtime() - t_omp) );
+    LOG_TIME("Roger Gunther = %lf sec",  (double)((double)omp_get_wtime() - t_omp));
 
 }
 
@@ -398,7 +400,7 @@ for (k=0;k<Nb_part;k++) {
     }
     isoutPart( particles, &model, k );
 }
-    printf("** Time for Roger Gunther = %lf sec --- using conservative interpolation: %0d\n",  (double)((double)omp_get_wtime() - t_omp), model.conserv_interp );
+    LOG_TIME("Roger Gunther = %lf sec --- using conservative interpolation: %0d",  (double)((double)omp_get_wtime() - t_omp), model.conserv_interp);
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
@@ -495,15 +497,15 @@ void PureShearALE( params *model, grid *mesh, markers *topo_chain, scale scaling
     //    else                              model->zmax +=  dzmax;
 
 
-    printf("Adjusting the mesh: Epsilon_xx = %2.2e, Volume = %2.2e\n", model->bkg_strain_rate * model->dt, (model->xmax - model->xmin) *(model->zmax - model->zmin) * scaling.L*scaling.L);
-    printf("xmin = %lf, xmax = %lf\n", model->xmin*scaling.L, model->xmax*scaling.L);
-    printf("zmin = %lf, zmax = %lf\n", model->zmin*scaling.L, model->zmax*scaling.L);
+    LOG_INFO("Adjusting the mesh: Epsilon_xx = %2.2e, Volume = %2.2e", model->bkg_strain_rate * model->dt, (model->xmax - model->xmin) *(model->zmax - model->zmin) * scaling.L*scaling.L);
+    LOG_INFO("xmin = %lf, xmax = %lf", model->xmin*scaling.L, model->xmax*scaling.L);
+    LOG_INFO("zmin = %lf, zmax = %lf", model->zmin*scaling.L, model->zmax*scaling.L);
 
     // Remesh
     SetGridCoordinates( mesh, model, model->Nx, model->Nz);
 
     // Re-generate homogeneous pure shear fields
-    printf("Re-generate homogeneous pure shear fields\n");
+    LOG_INFO("Re-generate homogeneous pure shear fields");
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
@@ -537,7 +539,7 @@ if ( model->elastic == 1 && model->constant_dt != 1 ) {
     if (dt_maxwell < model->dt) {
         model->dt = dt_maxwell;
         model->dt0 = model->dt;
-        printf("Setting initial dt to minimum Maxwell time: %2.2e\n", dt_maxwell*scaling.t);
+        LOG_INFO("Setting initial dt to minimum Maxwell time: %2.2e", dt_maxwell*scaling.t);
     }
 }
 
@@ -550,9 +552,9 @@ if ( model->elastic == 1 && model->constant_dt != 1 ) {
 //    printf("new dt = %2.2e s\n", model->dt*scaling.t);
 //}
 
-if (model->elastic == 1) printf("min. Maxwell = %2.2e s, max. Maxwell = %2.2e s\n", minMaxwell*scaling.t, maxMaxwell*scaling.t);
-if (model->elastic == 1) printf("Suggested dt = %2.2e s, VE dt = %2.2e s\n", model->dt*scaling.t, exp((log(minMaxwell)+log(maxMaxwell))/2.0)*scaling.t );
-printf("Initial timestep = %2.2e s\n", model->dt*scaling.t);
+if (model->elastic == 1) LOG_INFO("min. Maxwell = %2.2e s, max. Maxwell = %2.2e s", minMaxwell*scaling.t, maxMaxwell*scaling.t);
+if (model->elastic == 1) LOG_INFO("Suggested dt = %2.2e s, VE dt = %2.2e s", model->dt*scaling.t, exp((log(minMaxwell)+log(maxMaxwell))/2.0)*scaling.t);
+LOG_INFO("Initial timestep = %2.2e s", model->dt*scaling.t);
 
 }
 
@@ -602,8 +604,8 @@ void EvaluateCourantCriterion( double* Vx, double* Vz, params *model, scale scal
         dt_therm = max_dT_allowed/dTmax*model->dt;
     }
 
-    if (quiet==0) printf("Min Vxm = %2.2e m/s / Max Vxm = %2.2e m/s\n", minVx * scaling.V, maxVx * scaling.V);
-    if (quiet==0) printf("Min Vzm = %2.2e m/s / Max Vzm = %2.2e m/s\n", minVz * scaling.V, maxVz * scaling.V);
+    if (quiet==0) LOG_INFO("Min Vxm = %2.2e m/s / Max Vxm = %2.2e m/s", minVx * scaling.V, maxVx * scaling.V);
+    if (quiet==0) LOG_INFO("Min Vzm = %2.2e m/s / Max Vzm = %2.2e m/s", minVz * scaling.V, maxVz * scaling.V);
 
     dmin = MINV(model->dx, model->dz);
     vmax = MAXV(fabs(maxVx), fabs(maxVz));
@@ -624,51 +626,51 @@ void EvaluateCourantCriterion( double* Vx, double* Vz, params *model, scale scal
 
         // Courant dt
         dtc = C * dmin / fabs(vmax);
-        printf("Courant number = %2.2e --- dtc     = %2.2e\n", C, dtc*scaling.t);
+        LOG_INFO("Courant number = %2.2e --- dtc     = %2.2e", C, dtc*scaling.t);
         
         // Surface dt
         if ( model->surface_processes>0 ) {
             dt_surf = C * dmin / fabs(Vinc) ;
-            printf("Courant number = %2.2e --- dt_surf = %2.2e\n", C, dt_surf*scaling.t);
+            LOG_INFO("Courant number = %2.2e --- dt_surf = %2.2e", C, dt_surf*scaling.t);
         }
 
         // Timestep cutoff : Do not allow for very large timestep increase
         if (dtc > fact*model->dt0 ) {
             dtc = fact*model->dt0;
-            printf("Do not allow for large time step increase: dt0 = %2.2e \n", model->dt0*scaling.t);
+            LOG_INFO("Do not allow for large time step increase: dt0 = %2.2e ", model->dt0*scaling.t);
         }
 
         // If timestep is adaptive
         if ( model->constant_dt != 1 ) {
-            printf("Timestep limited by advection\n");
+            LOG_INFO("Timestep limited by advection");
             model->dt = dtc;
             if ( model->surface_processes>0 && dt_surf<model->dt) {
-                printf("Timestep limited by surface processes\n");
+                LOG_INFO("Timestep limited by surface processes");
                 model->dt = dt_surf;
             }
         }
         
         // If timestep is adaptive: Chemical limitation
         if ( model->constant_dt != 1 && model->chemical_diffusion == 1 && dt_reac<model->dt ) {
-                printf("EvaluateCourantCriterion: --> min_tau_kin = %2.2e s \n", min_tau_kin*scaling.t);
-                printf("Timestep limited by Chemical Reaction\n");
+                LOG_INFO("EvaluateCourantCriterion: --> min_tau_kin = %2.2e s ", min_tau_kin*scaling.t);
+                LOG_INFO("Timestep limited by Chemical Reaction");
                 model->dt = dt_reac;
         }
 
         // If there is no motion, then the timestep becomes huge: cut off the motion.
         if ( model->dt>1.0e30 || vmax<1.0e-30) {
-            printf("Cutting off dt because of negligible motion\n");
+            LOG_INFO("Cutting off dt because of negligible motion");
             dtc = 0.0;
             model->dt = model->dt_start;
         }
 
         // THESE LINES ARE MORE DANGEROUS THAN USEFUL
          if ( model->dt>model->dt_max ) {
-             printf("Setting dt to dt_max\n");
+             LOG_INFO("Setting dt to dt_max");
              model->dt = model->dt_max;
          }
          if ( model->dt<model->dt_min ) {
-             printf("Setting dt to dt_min\n");
+             LOG_INFO("Setting dt to dt_min");
              model->dt = model->dt_min;
          }
 
@@ -677,11 +679,11 @@ void EvaluateCourantCriterion( double* Vx, double* Vz, params *model, scale scal
         //      model->dt = dt_therm;
         // }
 
-        if (quiet==0) printf("Current dt = %2.2e s / Courant dt = %2.2e s, dt_therm = %2.2e\n", model->dt * scaling.t, dtc * scaling.t, dt_therm * scaling.t );
+        if (quiet==0) LOG_INFO("Current dt = %2.2e s / Courant dt = %2.2e s, dt_therm = %2.2e", model->dt * scaling.t, dtc * scaling.t, dt_therm * scaling.t);
     }
     else {
         model->dt = model->dt_start;
-        if (quiet==0) printf("Fixed timestep dt = %2.2e s\n", model->dt * scaling.t );
+        if (quiet==0) LOG_INFO("Fixed timestep dt = %2.2e s", model->dt * scaling.t);
     }
 
 }
@@ -717,8 +719,8 @@ void Check_dt_for_advection( double* Vx, double* Vz, params *model, scale scalin
             minVz = MINV(minVz, (Vz[c]));
         }
     }
-    if (quiet==0) printf("Min Vxm = %2.2e m/s / Max Vxm = %2.2e m/s\n", minVx * scaling.V, maxVx * scaling.V);
-    if (quiet==0) printf("Min Vzm = %2.2e m/s / Max Vzm = %2.2e m/s\n", minVz * scaling.V, maxVz * scaling.V);
+    if (quiet==0) LOG_INFO("Min Vxm = %2.2e m/s / Max Vxm = %2.2e m/s", minVx * scaling.V, maxVx * scaling.V);
+    if (quiet==0) LOG_INFO("Min Vzm = %2.2e m/s / Max Vzm = %2.2e m/s", minVz * scaling.V, maxVz * scaling.V);
 
     dmin = MINV(model->dx, model->dz);
     vmax = MAXV(fabs(maxVx), fabs(maxVz));
@@ -729,12 +731,12 @@ void Check_dt_for_advection( double* Vx, double* Vz, params *model, scale scalin
     dtc = C * dmin / fabs(vmax);
 
     // If timestep is adaptive
-        printf("dt_Courant = %2.2e\n", dtc*scaling.t);
-        printf("dt_Solve   = %2.2e\n", dt_solve*scaling.t);
+        LOG_INFO("dt_Courant = %2.2e", dtc*scaling.t);
+        LOG_INFO("dt_Solve   = %2.2e", dt_solve*scaling.t);
 
     model->dt = MINV(dtc,dt_solve);
 
-        printf("dt selected for advection = %2.2e\n",  model->dt*scaling.t);
+        LOG_INFO("dt selected for advection = %2.2e",  model->dt*scaling.t);
 
         // If there is no motion, then the timestep becomes huge: cut off the motion.
         if( model->dt>1.0e30 || vmax<1.0e-30) {
@@ -746,7 +748,7 @@ void Check_dt_for_advection( double* Vx, double* Vz, params *model, scale scalin
     }
     else {
         model->dt = model->dt_start;
-        if (quiet==0) printf("Fixed timestep dt = %2.2e s\n", model->dt * scaling.t );
+        if (quiet==0) LOG_INFO("Fixed timestep dt = %2.2e s", model->dt * scaling.t);
     }
 }
 
@@ -920,9 +922,9 @@ void PureShearALE_X( params *model,  grid *mesh, markers *topo_chain, scale scal
        model->zmax +=  dzmax;
     }
 
-    printf("Adjusting the mesh: Epsilon_xx = %2.2e, Volume = %2.2e\n", model->bkg_strain_rate * model->dt, (model->xmax - model->xmin) *(model->zmax - model->zmin) * scaling.L*scaling.L);
-    printf("xmin = %lf, xmax = %lf\n", model->xmin*scaling.L, model->xmax*scaling.L);
-    printf("zmin = %lf, zmax = %lf\n", model->zmin*scaling.L, model->zmax*scaling.L);
+    LOG_INFO("Adjusting the mesh: Epsilon_xx = %2.2e, Volume = %2.2e", model->bkg_strain_rate * model->dt, (model->xmax - model->xmin) *(model->zmax - model->zmin) * scaling.L*scaling.L);
+    LOG_INFO("xmin = %lf, xmax = %lf", model->xmin*scaling.L, model->xmax*scaling.L);
+    LOG_INFO("zmin = %lf, zmax = %lf", model->zmin*scaling.L, model->zmax*scaling.L);
 
     // Remesh
     SetGridCoordinates( mesh, model, model->Nx, model->Nz);
@@ -1011,9 +1013,9 @@ void PureShearALE_Z( params *model,  grid *mesh, markers *topo_chain, scale scal
     if (model->pure_shear_ALE == 2)  model->zmax = MaxFreeSurfaceAltitude + 10.0e3/scaling.L;
     else                              model->zmax +=  dzmax;
 
-    printf("Adjusting the mesh: Epsilon_xx = %2.2e, Volume = %2.2e\n", model->bkg_strain_rate * model->dt, (model->xmax - model->xmin) *(model->zmax - model->zmin) * scaling.L*scaling.L);
-    printf("xmin = %lf, xmax = %lf\n", model->xmin*scaling.L, model->xmax*scaling.L);
-    printf("zmin = %lf, zmax = %lf\n", model->zmin*scaling.L, model->zmax*scaling.L);
+    LOG_INFO("Adjusting the mesh: Epsilon_xx = %2.2e, Volume = %2.2e", model->bkg_strain_rate * model->dt, (model->xmax - model->xmin) *(model->zmax - model->zmin) * scaling.L*scaling.L);
+    LOG_INFO("xmin = %lf, xmax = %lf", model->xmin*scaling.L, model->xmax*scaling.L);
+    LOG_INFO("zmin = %lf, zmax = %lf", model->zmin*scaling.L, model->zmax*scaling.L);
 
     // Remesh
     SetGridCoordinates( mesh, model, model->Nx, model->Nz);

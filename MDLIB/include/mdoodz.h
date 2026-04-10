@@ -10,6 +10,8 @@
     #define M_PI 3.14159265358979323846
 #endif
 
+#include "mdoodz-log.h"
+
 #define RESET   "\033[0m"
 #define BLACK   "\033[30m"      /* Black */
 #define RED     "\033[31m"      /* Red */
@@ -124,6 +126,8 @@ typedef struct {
   int      save_initial_markers, load_initial_markers;
   char    *initial_markers_file;
   int     marker_aniso_angle;
+  // Logging configuration
+  MdoodzLogConfig log;
 } params;
 
 // Stucture scale contains scaling parameters

@@ -29,6 +29,8 @@
 #include "time.h"
 #include "mdoodz-private.h"
 
+#include "mdoodz-log.h"
+
 #ifdef _OMP_
 #include "omp.h"
 #else
@@ -210,8 +212,8 @@ void AccumulatedStrainII( grid* mesh, scale scaling, params model, markers* part
         strain_inc[c1]     = model.dt*(mesh->eII_pl[c1]+mesh->eII_pwl[c1]+mesh->eII_exp[c1]+mesh->eII_lin[c1]+mesh->eII_gbs[c1]+mesh->eII_el[c1]+mesh->eII_cst[c1]);
 
         if (strain_inc[c1]<0) {
-            printf("negative strain increment\n");
-            printf("pl = %2.2e pwl = %2.2e exp = %2.2e lin = %2.2e gbs = %2.2e el = %2.2e\n" ,mesh->eII_pl[c1],mesh->eII_pwl[c1],mesh->eII_exp[c1],mesh->eII_lin[c1],mesh->eII_gbs[c1],mesh->eII_el[c1]);
+            LOG_INFO("negative strain increment");
+            LOG_INFO("pl = %2.2e pwl = %2.2e exp = %2.2e lin = %2.2e gbs = %2.2e el = %2.2e" ,mesh->eII_pl[c1],mesh->eII_pwl[c1],mesh->eII_exp[c1],mesh->eII_lin[c1],mesh->eII_gbs[c1],mesh->eII_el[c1]);
             exit(0);
         }
         
@@ -622,7 +624,7 @@ void DeformationGradient ( grid mesh, scale scaling, params model, markers *part
     DoodzFree( pdvdx );
     DoodzFree( pdvdz );
     
-    printf("-----> Deformation gradient tensor Updated\n");
+    LOG_INFO("-----> Deformation gradient tensor Updated");
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
@@ -672,7 +674,7 @@ void FiniteStrainAspectRatio ( grid *mesh, scale scaling, params model, markers 
     
     DoodzFree(FS_AR);
     
-    printf("-----> Finite strain aspect ratio updated\n");
+    LOG_INFO("-----> Finite strain aspect ratio updated");
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
@@ -706,8 +708,8 @@ void AccumulatedStrain( grid* mesh, scale scaling, params model, markers* partic
             
             strain_inc[c1]     = model.dt*(mesh->eII_pl[c1]+mesh->eII_pwl[c1]+mesh->eII_exp[c1]+mesh->eII_lin[c1]+mesh->eII_gbs[c1]+mesh->eII_el[c1]+mesh->eII_cst[c1]);
             if (strain_inc[c1]<0) {
-                printf("negative strain increment\n");
-                printf("%2.2e %2.2e %2.2e %2.2e %2.2e %2.2e\n" ,mesh->eII_pl[c1],mesh->eII_pwl[c1],mesh->eII_exp[c1],mesh->eII_lin[c1],mesh->eII_gbs[c1],mesh->eII_el[c1]);
+                LOG_INFO("negative strain increment");
+                LOG_INFO("%2.2e %2.2e %2.2e %2.2e %2.2e %2.2e" ,mesh->eII_pl[c1],mesh->eII_pwl[c1],mesh->eII_exp[c1],mesh->eII_lin[c1],mesh->eII_gbs[c1],mesh->eII_el[c1]);
                 exit(0);
             }
             
@@ -753,7 +755,7 @@ void AccumulatedStrain( grid* mesh, scale scaling, params model, markers* partic
     DoodzFree(strain_inc_gbs);
     DoodzFree(strain_inc_mark);
     
-    printf("-----> Accumulated strain updated\n");
+    LOG_INFO("-----> Accumulated strain updated");
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
@@ -962,7 +964,7 @@ void UpdateParticleXpips( grid* mesh, scale scaling, params model, markers* part
         if (materials->k_chem[k]<min_kc) min_kc = materials->k_chem[k];
         if (materials->k_chem[k]>max_kc) max_kc = materials->k_chem[k];
     }
-    printf("--> min kc = %2.2e m2.s-1 - max kc = %2.2e m2.s-1 \n", min_kc*scaling.L*scaling.L/scaling.t, max_kc*scaling.L*scaling.L/scaling.t );
+    LOG_INFO("--> min kc = %2.2e m2.s-1 - max kc = %2.2e m2.s-1 ", min_kc*scaling.L*scaling.L/scaling.t, max_kc*scaling.L*scaling.L/scaling.t);
     
     
     double *knodes,*newkx,*newkz;
@@ -1024,9 +1026,9 @@ void UpdateParticleXpips( grid* mesh, scale scaling, params model, markers* part
     double dt_special = 0.0;
     
     
-    printf("\n--------\n");
-    printf("--> model time  = %f \n", model.dt );
-    printf("--> dt_explicit = %f \n", dt );
+    LOG_INFO("\n--------");
+    LOG_INFO("--> model time  = %f ", model.dt);
+    LOG_INFO("--> dt_explicit = %f ", dt);
     
     if (dt>=diff_time) dt = diff_time;
     
@@ -1039,9 +1041,9 @@ void UpdateParticleXpips( grid* mesh, scale scaling, params model, markers* part
     temp  = DoodzCalloc(Ncx*Ncz, sizeof(DoodzFP));
     
     //    printf("\n--------\n");
-    printf("--> dt_chosen   = %f \n", dt );
+    LOG_INFO("--> dt_chosen   = %f ", dt);
     //    printf("--> K           = %f \n", diff );
-    printf("--> nstep       = %d \n", nstep );
+    LOG_INFO("--> nstep       = %d ", nstep);
     //    printf("--> K           = %2.2e m2.s-1 \n", diff*scaling.L*scaling.L/scaling.t );
     
     
@@ -1105,9 +1107,9 @@ void UpdateParticleXpips( grid* mesh, scale scaling, params model, markers* part
         }
     }
     
-    printf("--> end of loops, time = %2.2e s \n", time*scaling.t );
-    printf("--> model time  = %2.2e s \n", model.dt*scaling.t );
-    printf("\n--------\n");
+    LOG_INFO("--> end of loops, time = %2.2e s ", time*scaling.t);
+    LOG_INFO("--> model time  = %2.2e s ", model.dt*scaling.t);
+    LOG_INFO("\n--------");
     MinMaxArrayTag( mesh->X_n,             1.0, Ncx*Ncz, "Xreac_n ", mesh->BCp.type );
     
     free(temp);
@@ -1221,7 +1223,7 @@ void UpdateParticleEnergy( grid* mesh, scale scaling, params model, markers* par
     // SUBGRID
     if ( model.subgrid_diffusion >= 1 ) { /* CASE WITH SUBGRID DIFFUSION */
         
-        printf("Subgrid diffusion for temperature update\n");
+        LOG_INFO("Subgrid diffusion for temperature update");
         dTgs = DoodzCalloc(Ncx*Ncz, sizeof(DoodzFP));
         dTgr = DoodzCalloc(Ncx*Ncz, sizeof(DoodzFP));
         dTms = DoodzCalloc(particles->Nb_part, sizeof(DoodzFP));
@@ -1304,7 +1306,7 @@ void UpdateParticlePressure( grid* mesh, scale scaling, params model, markers* p
     
     if ( model.subgrid_diffusion >= 2 ) {
         
-        printf("Subgrid diffusion for pressure update\n");
+        LOG_INFO("Subgrid diffusion for pressure update");
         double *Pg0  = DoodzCalloc(Ncx*Ncz, sizeof(DoodzFP));
         double *dPgs = DoodzCalloc(Ncx*Ncz, sizeof(DoodzFP));
         double *dPgr = DoodzCalloc(Ncx*Ncz, sizeof(DoodzFP));
@@ -1510,7 +1512,7 @@ firstprivate( model )
             
             if ( model->subgrid_diffusion == 2 ) {
                 
-                printf("Subgrid diffusion for stress tensor component update\n");
+                LOG_INFO("Subgrid diffusion for stress tensor component update");
                 
                 // Compute subgrid stress increments on markers
     #pragma omp parallel for shared(particles,txxm0,tzzm0,txzm0,dtxxms,dtzzms,dtxzms,etam) private(k,p,dtaum) firstprivate(materials,model,d)
@@ -1522,12 +1524,12 @@ firstprivate( model )
                         dtzzms[k] = -( particles->szzd[k] - tzzm0[k]) * (1.0 - exp(-d*dt/dtaum));
                         dtxzms[k] = -( particles->sxz[k]  - txzm0[k]) * (1.0 - exp(-d*dt/dtaum));
                         if (isinf(dtxxms[k])) {
-                            printf("Inf dtxxms[k]: sxxd=%2.2e txxm0=%2.2e exp(-d*dt/dtaum)=%2.2e d=%2.2e dt=%2.2e dtaum=%2.2e etam=%2.2e G=%2.2e\n", particles->sxxd[k], txxm0[k], exp(-d*dt/dtaum), d, dt, dtaum, etam[k]*scaling->eta, materials->G[p]*scaling->S);
-                            printf("%2.2e %2.2e %2.2e %2.2e %2.2e", d, dt, dtaum, etam[k]*scaling->eta, materials->G[p]*scaling->S );
+                            LOG_INFO("Inf dtxxms[k]: sxxd=%2.2e txxm0=%2.2e exp(-d*dt/dtaum)=%2.2e d=%2.2e dt=%2.2e dtaum=%2.2e etam=%2.2e G=%2.2e", particles->sxxd[k], txxm0[k], exp(-d*dt/dtaum), d, dt, dtaum, etam[k]*scaling->eta, materials->G[p]*scaling->S);
+                            LOG_INFO("%2.2e %2.2e %2.2e %2.2e %2.2e", d, dt, dtaum, etam[k]*scaling->eta, materials->G[p]*scaling->S);
                             exit(1);
                         }
                         if (isnan(dtxxms[k])) {
-                            printf("NaN dtxxms[k]: sxxd=%2.2e txxm0=%2.2e exp(-d*dt/dtaum)=%2.2e d=%2.2e dt=%2.2e dtaum=%2.2e etam=%2.2e G=%2.2e\n", particles->sxxd[k], txxm0[k], exp(-d*dt/dtaum), d, dt, dtaum, etam[k]*scaling->eta, materials->G[p]*scaling->S);
+                            LOG_INFO("NaN dtxxms[k]: sxxd=%2.2e txxm0=%2.2e exp(-d*dt/dtaum)=%2.2e d=%2.2e dt=%2.2e dtaum=%2.2e etam=%2.2e G=%2.2e", particles->sxxd[k], txxm0[k], exp(-d*dt/dtaum), d, dt, dtaum, etam[k]*scaling->eta, materials->G[p]*scaling->S);
                             exit(1);
                         }
                     }
@@ -1584,7 +1586,7 @@ firstprivate( model )
 
         if (model->subgrid_diffusion==0 || model->subgrid_diffusion==1){
             
-            printf("No subgrid diffusion for stress tensor component update\n");
+            LOG_INFO("No subgrid diffusion for stress tensor component update");
             
             // Alloc
             dsxxd  = DoodzCalloc((Nx-1)*(Nz-1), sizeof(double));
@@ -1707,17 +1709,17 @@ void UpdateAdvectionMode( scale scaling, params* model ) {
     double real_time = model->time;
     double t_wanted = model->time_advection_start;
 
-    printf("real_time = %2.2e and t_wanted = %2.2e\n", real_time * scaling.t, t_wanted * scaling.t);
+    LOG_INFO("real_time = %2.2e and t_wanted = %2.2e", real_time * scaling.t, t_wanted * scaling.t);
 
     if (real_time>t_wanted){
-        printf("real_time > t_wanted => model advection set to 1!\n");
+        LOG_INFO("real_time > t_wanted => model advection set to 1!");
         model->advection = 1;
-        printf("model.advection = %d\n", model->advection);
+        LOG_INFO("model.advection = %d", model->advection);
     }
     else {
-        printf("real_time < t_wanted => model advection set to 0!\n");
+        LOG_INFO("real_time < t_wanted => model advection set to 0!");
         model->advection = 0;
-        printf("model.advection = %d\n", model->advection);    
+        LOG_INFO("model.advection = %d", model->advection);    
     }    
 }
 
@@ -1732,10 +1734,10 @@ void UpdateParticlePhase( grid* mesh, scale scaling, params* model, markers* par
     double real_time = model->time;
     double t_wanted = model->time_switch_phase;
 
-    printf("real_time = %2.2e and t_wanted = %2.2e\n", real_time * scaling.t, t_wanted * scaling.t);
+    LOG_INFO("real_time = %2.2e and t_wanted = %2.2e", real_time * scaling.t, t_wanted * scaling.t);
 
     if (real_time>t_wanted){
-    printf("real_time > t_wanted => Phase switch!\n");
+    LOG_INFO("real_time > t_wanted => Phase switch!");
 
     // Change phase if t > t_wanted
 #pragma omp parallel for shared ( particles ) private( k )

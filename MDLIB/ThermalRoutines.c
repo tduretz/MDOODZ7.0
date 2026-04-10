@@ -28,6 +28,8 @@
 #include "math.h"
 #include "mdoodz-private.h"
 
+#include "mdoodz-log.h"
+
 #ifdef _OMP_
 #include "omp.h"
 #endif
@@ -177,7 +179,7 @@ void EnergyDirectSolve( grid *mesh, params model, double *rhs_t, markers *partic
         //----------------------------------------------------//
         if ( it == 0 ) {
 
-            printf("Assembling Energy matrix... with %d discrete equations\n", neq);
+            LOG_INFO("Assembling Energy matrix... with %d discrete equations", neq);
 
             // LOOP ON THE GRID TO CALCULATE FD COEFFICIENTS
             for( l=0; l<ncz; l++) {
@@ -228,7 +230,7 @@ void EnergyDirectSolve( grid *mesh, params model, double *rhs_t, markers *partic
                         // Average conductivity for surface values (avoid zero conductivity)
                         ks = 0.25*(AE+AW+AN+AS);
                         if ( ks < mink ) {
-                            printf("ACHTUNG: interloplated surface conductivity is set lower cutoff value!!\n");
+                            LOG_INFO("ACHTUNG: interloplated surface conductivity is set lower cutoff value!!");
                             ks = mink;
                         }
 
@@ -386,7 +388,7 @@ void EnergyDirectSolve( grid *mesh, params model, double *rhs_t, markers *partic
             bufd = DoodzRealloc(A, nnzc*sizeof(double));
             J    = bufi;
             A    = bufd;
-            printf("Energy balance --> System size: ndof = %d, nnz = %d\n", neq, nnzc);
+            LOG_INFO("Energy balance --> System size: ndof = %d, nnz = %d", neq, nnzc);
         }
 
         // ------------------------------------------- SOLVER ------------------------------------------- //
@@ -421,7 +423,7 @@ void EnergyDirectSolve( grid *mesh, params model, double *rhs_t, markers *partic
                     if (mesh->T[c2] < 0.0) {
                         // printf("%2.2f %1.2f\n", mesh->T[c2]*scaling.T, mesh->zc_coord[l]*scaling.L);
                         // printf("%1.2e %1.2e %1.2e\n", mesh->alp[c2]/scaling.T, mesh->p0_n[c2]*scaling.S, mesh->p_in[c2]*scaling.S);
-                        printf("Negative temperature --- Are you crazy! (EnergyDirectSolve)\n");
+                        LOG_INFO("Negative temperature --- Are you crazy! (EnergyDirectSolve)");
                         exit(1);
                     }
                 }
@@ -504,8 +506,8 @@ void ThermalSteps( grid *mesh, params model, double *rhs_t, markers *particles, 
     double dt = total_time/10.0;
     int nit = floor(total_time/dt);
 
-    printf( "Total thermal time = %2.2e s\n", total_time*scaling.t );
-    printf( "Number of thermal steps = %d\n", nit );
+    LOG_INFO("Total thermal time = %2.2e s", total_time*scaling.t);
+    LOG_INFO("Number of thermal steps = %d", nit);
 
     // Run thermal diffusion timesteps to generate initial temperature field
     EnergyDirectSolve( mesh, model, rhs_t, particles, dt, 0, 0, scaling, nit );
@@ -528,7 +530,7 @@ void SetThermalPert( grid* mesh, params model, scale scaling ) {
     ncx  = nx-1;
     ncz  = nz-1;
 
-    printf("Setting thermal perturbation of %3.1lf C...\n", pert*scaling.T);
+    LOG_INFO("Setting thermal perturbation of %3.1lf C...", pert*scaling.T);
 
     //#pragma omp parallel for shared( mesh ) private( x, z, l, k, c2 ) firstprivate( rad, pert, x0, z0, ncx)
     for( l=0; l<ncz; l++) {

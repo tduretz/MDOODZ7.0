@@ -26,6 +26,8 @@
 #include "cs.h"
 #include "cholmod.h"
 
+#include "mdoodz-log.h"
+
 #ifdef _OMP_
 #include "omp.h"
 #else
@@ -262,7 +264,7 @@ cholmod_factor* FactorEnergyCHOLMOD( cholmod_common *c, cs_di *At, double *a, in
     Afact = cholmod_analyze( Acml, c ) ;
     t_omp = (double)omp_get_wtime();
     cholmod_factorize( Acml, Afact, c) ;
-    printf("** Time for Cholesky factorization = %lf sec\n", (double)((double)omp_get_wtime() - t_omp));
+    LOG_TIME("Cholesky factorization = %lf sec", (double)((double)omp_get_wtime() - t_omp));
 
     if ( Afact->is_super == 0 ) cholmod_change_factor( 1, 1, Afact->is_super, 0, 0, Afact, c );
 

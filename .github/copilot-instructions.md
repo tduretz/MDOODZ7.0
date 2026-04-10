@@ -36,6 +36,8 @@ Before answering questions about MDOODZ, check whether a relevant skill exists. 
 | Plotting, HDF5 output, Julia visualisation, extracting data | skill-visualisation |
 | Validating .txt parameters, checking physical ranges | skill-parameter-validation |
 | Writing tests, running tests, CI tests, visual regression tests, GTest | skill-testing-guide |
+| Logging, LOG_INFO/WARN/ERR macros, log configuration, timestamps, log file | skill-logging |
+| Performance benchmarking, perf.csv, grid scaling, thread scaling, comparing machines | skill-benchmarking |
 
 ## Code Style
 

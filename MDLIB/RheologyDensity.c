@@ -31,6 +31,8 @@
 #include "mdoodz-private.h"
 #include "RheologyDensity.h"
 
+#include "mdoodz-log.h"
+
 #ifdef _OMP_
 #include "omp.h"
 #else
@@ -85,7 +87,7 @@ void LocalIterationViscoElastic(LocalIterationMutables mutables, LocalIterationP
   double eta_ve  = *mutables.eta;
   double Tii     = *mutables.Tii;
   double Eii_cst = 0., Eii_pwl = 0., Eii_gbs = 0., Eii_exp = 0., Eii_lin = 0.;
-  if (params.noisy==2) printf("Start local iteration cycle VE for phase %d:\n", params.phase); 
+  if (params.noisy==2) LOG_INFO("Start local iteration cycle VE for phase %d:", params.phase); 
   for (int it = 0; it < nitmax; it++) {
     // Function evaluation at current effective viscosity
     Tii     = 2.0 * eta_ve * params.Eii;
@@ -98,12 +100,12 @@ void LocalIterationViscoElastic(LocalIterationMutables mutables, LocalIterationP
     // Residual check
     const double r_eta_ve = params.Eii - params.elastic * Tii  / (2.0 * params.eta_el) - Eii_vis;
     const double res_eta  = fabs(r_eta_ve / params.Eii);
-    if (params.noisy==2) printf("%d %2.4e %2.4e %2.4e\n", params.phase, r_eta_ve, Eii_pwl, Tii); // REMOVE
+    if (params.noisy==2) LOG_INFO("%d %2.4e %2.4e %2.4e", params.phase, r_eta_ve, Eii_pwl, Tii); // REMOVE
     if (res_eta < tol / 100) {
-      if (it > 10) printf("L.I. Warnung: more that 10 local iterations, there might be a problem...\n");
+      if (it > 10) LOG_INFO("L.I. Warnung: more that 10 local iterations, there might be a problem...");
       break;
     } else if (it == nitmax - 1 && res_eta > tol) {
-      printf("Visco-Elastic iterations failed!\n");
+      LOG_INFO("Visco-Elastic iterations failed!");
       exit(0);
     }
     // Analytical derivative of function
@@ -254,7 +256,7 @@ void LocalIterationViscoElasticGrainSize(LocalIterationMutables mutables, LocalI
   // }
 
   // 1 residual formulations --- full Newton (see LocalIterationGrainSize.ipynb)
-  if (params.noisy==2) printf("Start local iteration cycle GSE for phase %d:\n", params.phase);
+  if (params.noisy==2) LOG_INFO("Start local iteration cycle GSE for phase %d:", params.phase);
   for (int it = 0; it < nitmax; it++) {
     // Function evaluation at current effective viscosity
     Tii     = 2.0 * eta_ve * params.Eii;
@@ -269,13 +271,13 @@ void LocalIterationViscoElasticGrainSize(LocalIterationMutables mutables, LocalI
     // Residual check
     const double r_eta_ve = params.Eii - params.elastic * Tii  / (2.0 * params.eta_el) - Eii_vis;
     const double res_eta  = fabs(r_eta_ve / params.Eii);
-    if (params.noisy==2) printf("%d %2.4e %2.4e %2.4e\n", params.phase, r_eta_ve, Eii_pwl, Tii); // REMOVE
+    if (params.noisy==2) LOG_INFO("%d %2.4e %2.4e %2.4e", params.phase, r_eta_ve, Eii_pwl, Tii); // REMOVE
     if (res_eta < tol / 100) {
-      if (it > 15) printf("L.I. Warnung: more that 10 local iterations, there might be a problem...\n");
+      if (it > 15) LOG_INFO("L.I. Warnung: more that 10 local iterations, there might be a problem...");
       // if (it > 15) exit(1);
       break;
     } else if (it == nitmax - 1 && res_eta > tol) {
-      printf("Visco-Elastic iterations failed!\n");
+      LOG_INFO("Visco-Elastic iterations failed!");
       exit(0);
     }
     // Analytical derivative of function
@@ -340,7 +342,7 @@ void LocalIterationViscoElasticGrainSize(LocalIterationMutables mutables, LocalI
   // }
 
   if (isnan(eta_ve)) {
-    printf("Local iterations from grain size and viscoisity exploded -  guess is probably incorrect");
+    LOG_INFO("Local iterations from grain size and viscoisity exploded -  guess is probably incorrect");
   }
 
   *mutables.eta     = eta_ve;
@@ -479,7 +481,7 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
   }
   if ( diffusion == 1 ) {
     if (m_lin>0.0 && d<1e-13/scaling->L) {
-      printf("Cannot run with grain size dependent viscosity if grain size is set to 0 --> d = %2.2e!!!\n", d*scaling->L);
+      LOG_WARN("Cannot run with grain size dependent viscosity if grain size is set to 0 --> d = %2.2e!!!", d*scaling->L);
       exit(1);
     }
     B_lin = F_lin * pow(A_lin,-1.0/n_lin) * exp( (Ea_lin + P*Va_lin)/R/n_lin/T ) * pow(f_lin, -r_lin/n_lin) * exp(-a_lin*phi/n_lin); // * pow(d, m_lin/n_lin) !!!!!!!!!!!!!!!!!!!!!!!!
@@ -582,7 +584,7 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
     const double Eii_pwl     = Tii/2.0/eta_pwl;
     const double d_it        = exp(log(Ag * gam / (lam * (1.0 / cg) * Tii * (Eii_pwl) *pg)) / (1.0 + pg));
     *d1 = d;
-    if (noisy) printf("d guess = %2.2e, Tii = %2.2e Eiipwl=%2.2e\n", d_it*scaling->L, Tii*scaling->S, Eii_pwl*scaling->E);
+    if (noisy) LOG_INFO("d guess = %2.2e, Tii = %2.2e Eiipwl=%2.2e", d_it*scaling->L, Tii*scaling->S, Eii_pwl*scaling->E);
   }
   
   LocalIterationParams params = {
@@ -619,7 +621,7 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
   } else {
     LocalIterationViscoElastic((LocalIterationMutables){.eta = &eta_ve, .Tii = &Tii, .Eii_cst=Eii_cst, .Eii_lin=Eii_lin, .Eii_gbs=Eii_gbs, .Eii_pwl=Eii_pwl, .Eii_exp=Eii_exp}, params);
   }
-  if (noisy) printf("d  = %2.2e, Tii = %2.2e \n", *d1*scaling->L, Tii*scaling->S);  //------------------------------------------------------------------------//
+  if (noisy) LOG_INFO("d  = %2.2e, Tii = %2.2e ", *d1*scaling->L, Tii*scaling->S);  //------------------------------------------------------------------------//
 
   // if (centroid==0 && index==65) printf("eta_ve = %2.4e Eii_pwl = %2.4e Eii=%2.4e C_pwl=%2.4e\n", eta_ve, *Eii_pwl, Eii, C_pwl);
 
@@ -656,13 +658,13 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
         
         // Residual check
         res_pl = fabs(F_trial);
-        if ( noisy>0 ) printf("%02d Viscoplastic iterations It., F = %2.2e Frel = %2.2e --- n_vp = %2.2e, eta_vp = %2.2e\n", it, res_pl, res_pl/F_trial0, n_vp, eta_vp*scaling->eta);
+        if ( noisy>0 ) LOG_INFO("%02d Viscoplastic iterations It., F = %2.2e Frel = %2.2e --- n_vp = %2.2e, eta_vp = %2.2e", it, res_pl, res_pl/F_trial0, n_vp, eta_vp*scaling->eta);
         if ( res_pl < tol || res_pl/F_trial0 < tol ) break;
         dFdgdot  = - eta_ve - eta_vp/n_vp - K*dt*sin_fric*sin_dil;
         gdot    -= F_trial / dFdgdot;
 
       }
-      if ( noisy>0 && it==nitmax-1 && (res_pl > tol || res_pl/F_trial0 > tol)  ) { printf("Visco-Plastic iterations failed!\n"); exit(0);}
+      if ( noisy>0 && it==nitmax-1 && (res_pl > tol || res_pl/F_trial0 > tol)  ) { LOG_ERR("Visco-Plastic iterations failed!"); exit(0);}
 
       // In case return mapping has failed (because of tension), return to a von Mises minimum stress 
       if (Tiic<0.0) {
@@ -781,7 +783,7 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
         R_norm = sqrt(R1*R1 + R2*R2 + R3*R3);
 
         if (R_norm < atol || R_norm / R0_norm < rtol) {
-            if (noisy > 0) {printf("Visco-Plastic Newton converged in %d iters\n", it+1);};
+            if (noisy > 0) {LOG_INFO("Visco-Plastic Newton converged in %d iters", it+1);};
             break;
         }else
         {
@@ -811,7 +813,7 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
         );
         // Sanity check
         if (!ok) {
-            fprintf(stderr, "ERROR: Singular Jacobian in Newton local solve.\n");
+            LOG_ERR("ERROR: Singular Jacobian in Newton local solve.");
             exit(1);
         }
 
@@ -880,7 +882,7 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
             // Break if update becomes to small
             if (alpha < 1e-2)
             {
-              printf("Line tensile plasticity line search failed to converge due to alpha < 0.01. Check what you want to do.\n");
+              LOG_WARN("Line tensile plasticity line search failed to converge due to alpha < 0.01. Check what you want to do.");
               exit(0);
             }
           }
@@ -892,7 +894,7 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
         lam_dot += alpha * dlam_dot;
 
         // Failure statement
-        if ( noisy>0 && it==nitmax-1 && (R_norm > atol || R_norm/R0_norm > rtol)  ) { printf("Visco-Plastic iterations failed!\n"); exit(0);}
+        if ( noisy>0 && it==nitmax-1 && (R_norm > atol || R_norm/R0_norm > rtol)  ) { LOG_ERR("Visco-Plastic iterations failed!"); exit(0);}
       }
 
       // Otherwise store values
@@ -1017,10 +1019,10 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
       *Wel   = Tii*Tii/eta_el;
       *Wdiss = Tii*Tii/eta;
       if (*Wdiss<0.0) {
-       printf("Wtot = %2.6e Wdiss = %2.6e Wel = %2.6e\n", *Wtot, *Wdiss, *Wel);
-       printf("Wtot - (Wdiss + Wel) = %2.6e\n", *Wtot - (*Wdiss + *Wel));
-       printf("eta = %2.6e --- eta_ve = %2.6e --- eta_ve1 = %2.6e\n", eta, eta_ve, 1.0/(1./eta+1./eta_el));
-       printf("constant = %d %2.2e %2.2e %2.2e %2.2e, Tii=%2.2e P=%2.2e gdot=%2.2e\n", constant, eta*scaling->eta, eta_pwl*scaling->eta, eta_pl*scaling->eta, eta_cst*scaling->eta, Tii*scaling->S, Pc*scaling->S, gdot*scaling->E);
+       LOG_INFO("Wtot = %2.6e Wdiss = %2.6e Wel = %2.6e", *Wtot, *Wdiss, *Wel);
+       LOG_INFO("Wtot - (Wdiss + Wel) = %2.6e", *Wtot - (*Wdiss + *Wel));
+       LOG_INFO("eta = %2.6e --- eta_ve = %2.6e --- eta_ve1 = %2.6e", eta, eta_ve, 1.0/(1./eta+1./eta_el));
+       LOG_INFO("constant = %d %2.2e %2.2e %2.2e %2.2e, Tii=%2.2e P=%2.2e gdot=%2.2e", constant, eta*scaling->eta, eta_pwl*scaling->eta, eta_pl*scaling->eta, eta_cst*scaling->eta, Tii*scaling->S, Pc*scaling->S, gdot*scaling->E);
        exit(1);
       }
     }
@@ -1069,8 +1071,7 @@ int solve_local_3x3(
     // --- Singularity / robustness check
     const double det_tol = 1e-30;  // you can tune this based on your scaling
     if (fabs(detJ) < det_tol) {
-        fprintf(stderr,
-                "Warning: local 3x3 Jacobian nearly singular in plastic corrector, detJ = %.3e\n",
+        LOG_ERR("Warning: local 3x3 Jacobian nearly singular in plastic corrector, detJ = %.3e",
                 detJ);
         // Option 1: return failure so caller can handle it (e.g. cut timestep, bail out, etc.)
         return 0;
@@ -1228,7 +1229,7 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
           mesh->Wdiss[c0]      += mesh->phase_perc_n[p][c0] * Wdiss;
           mesh->Wel[c0]        += mesh->phase_perc_n[p][c0] * Wel;
 
-          if (mesh->Wdiss[c0]<0.0) {printf("negative dissipation: you crazy! --> Wdiss = %2.2e Wdiss = %2.2e\n", mesh->Wdiss[c0]*scaling->S*scaling->E, Wdiss*scaling->S*scaling->E); }
+          if (mesh->Wdiss[c0]<0.0) {LOG_INFO("negative dissipation: you crazy! --> Wdiss = %2.2e Wdiss = %2.2e", mesh->Wdiss[c0]*scaling->S*scaling->E, Wdiss*scaling->S*scaling->E); }
 
           mesh->p_corr[c0]      += mesh->phase_perc_n[p][c0] * Pcorr;
           mesh->div_u_el[c0]    += mesh->phase_perc_n[p][c0] * div_el;
@@ -1248,8 +1249,8 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
 
       mesh->d_n[c0]          = 1.0/mesh->d_n[c0];
       if (isinf(mesh->d_n[c0]) || isnan(mesh->d_n[c0]) ) {
-        for ( p=0; p<model->Nb_phases; p++) printf("mesh->phase_perc_n[%d][%d] = %lf\n", p, c0, mesh->phase_perc_n[p][c0]);
-        printf("Cell went empty!!! Exiting..."); exit(345);
+        for ( p=0; p<model->Nb_phases; p++) LOG_INFO("mesh->phase_perc_n[%d][%d] = %lf", p, c0, mesh->phase_perc_n[p][c0]);
+        LOG_ERR("Cell went empty!!! Exiting..."); exit(345);
       }
       // if ( model->density_variations == 1 ) mesh->rho_n[c0]        = 1.0/mesh->rho_n[c0];
 
@@ -1259,20 +1260,20 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
         mesh->eta_phys_n[c0] = 1.0/mesh->eta_phys_n[c0];
 
         if (isinf (mesh->eta_phys_n[c0]) ) {
-          printf("Inf: Problem on cell centers:\n");
-          for ( p=0; p<model->Nb_phases; p++) printf("phase %d vol=%2.2e\n", p, mesh->phase_perc_n[p][c0]);
-          printf("%2.2e %2.2e %2.2e %2.2e %2.2e %2.2e %2.2e %2.2e %2.2e %2.2e\n", eta, mesh->mu_n[c0], mesh->T[c0], mesh->p_in[c0], mesh->d0_n[c0], mesh->phi_n[c0], mesh->exxd[c0], mesh->exz_n[c0], mesh->sxxd0[c0], mesh->sxz0_n[c0]);
-          printf("flag %d nb part cell = %d cell index = %d\n", mesh->BCp.type[c0],mesh->nb_part_cell[c0], c0);
-          printf("x=%2.2e z=%2.2e\n", mesh->xc_coord[k]*scaling->L/1000.0, mesh->zc_coord[l]*scaling->L/1000.0);
+          LOG_ERR("Inf: Problem on cell centers:");
+          for ( p=0; p<model->Nb_phases; p++) LOG_ERR("phase %d vol=%2.2e", p, mesh->phase_perc_n[p][c0]);
+          LOG_ERR("%2.2e %2.2e %2.2e %2.2e %2.2e %2.2e %2.2e %2.2e %2.2e %2.2e", eta, mesh->mu_n[c0], mesh->T[c0], mesh->p_in[c0], mesh->d0_n[c0], mesh->phi_n[c0], mesh->exxd[c0], mesh->exz_n[c0], mesh->sxxd0[c0], mesh->sxz0_n[c0]);
+          LOG_ERR("flag %d nb part cell = %d cell index = %d", mesh->BCp.type[c0],mesh->nb_part_cell[c0], c0);
+          LOG_ERR("x=%2.2e z=%2.2e", mesh->xc_coord[k]*scaling->L/1000.0, mesh->zc_coord[l]*scaling->L/1000.0);
           exit(1);
         }
         if (isnan (mesh->eta_phys_n[c0]) ) {
-          printf("NaN: Problem on cell centers:\n");
-          printf("chemical_diffusion %d\n", model->chemical_diffusion);
-          for ( p=0; p<model->Nb_phases; p++) printf("phase %d vol=%2.2e\n", p, mesh->phase_perc_n[p][c0]);
-          printf("eta=%2.2e G=%2.2e T=%2.2e P=%2.2e d=%2.2e phi=%2.2e %2.2e %2.2e %2.2e %2.2e\n", eta*scaling->eta, mesh->mu_n[c0]*scaling->S, mesh->T[c0]*scaling->T, mesh->p_in[c0]*scaling->S, mesh->d0_n[c0]*scaling->L, mesh->phi_n[c0], mesh->exxd[c0], mesh->exz_n[c0], mesh->sxxd0[c0], mesh->sxz0_n[c0]);
-          printf("flag %d nb part cell = %d cell index = %d\n", mesh->BCp.type[c0],mesh->nb_part_cell[c0], c0);
-          printf("x=%2.2e z=%2.2e\n", mesh->xc_coord[k]*scaling->L/1000.0, mesh->zc_coord[l]*scaling->L/1000.0);
+          LOG_ERR("NaN: Problem on cell centers:");
+          LOG_ERR("chemical_diffusion %d", model->chemical_diffusion);
+          for ( p=0; p<model->Nb_phases; p++) LOG_ERR("phase %d vol=%2.2e", p, mesh->phase_perc_n[p][c0]);
+          LOG_ERR("eta=%2.2e G=%2.2e T=%2.2e P=%2.2e d=%2.2e phi=%2.2e %2.2e %2.2e %2.2e %2.2e", eta*scaling->eta, mesh->mu_n[c0]*scaling->S, mesh->T[c0]*scaling->T, mesh->p_in[c0]*scaling->S, mesh->d0_n[c0]*scaling->L, mesh->phi_n[c0], mesh->exxd[c0], mesh->exz_n[c0], mesh->sxxd0[c0], mesh->sxz0_n[c0]);
+          LOG_ERR("flag %d nb part cell = %d cell index = %d", mesh->BCp.type[c0],mesh->nb_part_cell[c0], c0);
+          LOG_ERR("x=%2.2e z=%2.2e", mesh->xc_coord[k]*scaling->L/1000.0, mesh->zc_coord[l]*scaling->L/1000.0);
           exit(1);
         }
       }
@@ -1354,17 +1355,17 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
         mesh->eta_s[c1]      = 1.0/mesh->eta_s[c1];
         mesh->eta_phys_s[c1] = 1.0/mesh->eta_phys_s[c1];
         if (isinf (mesh->eta_phys_s[c1]) ) {
-          printf("Inf: Problem on cell vertices:\n");
-          for ( p=0; p<model->Nb_phases; p++) printf("phase %d vol=%2.2e\n", p, mesh->phase_perc_s[p][c1]);
-          printf("%2.2e %2.2e %2.2e %2.2e %2.2e \n", mesh->mu_s[c1], mesh->exxd_s[c1], mesh->exz[c1], mesh->sxxd0_s[c1], mesh->sxz0[c1]);
-          printf("x=%2.2e z=%2.2e\n", mesh->xg_coord[k]*scaling->L/1000, mesh->zg_coord[l]*scaling->L/1000);
+          LOG_INFO("Inf: Problem on cell vertices:");
+          for ( p=0; p<model->Nb_phases; p++) LOG_INFO("phase %d vol=%2.2e", p, mesh->phase_perc_s[p][c1]);
+          LOG_INFO("%2.2e %2.2e %2.2e %2.2e %2.2e ", mesh->mu_s[c1], mesh->exxd_s[c1], mesh->exz[c1], mesh->sxxd0_s[c1], mesh->sxz0[c1]);
+          LOG_INFO("x=%2.2e z=%2.2e", mesh->xg_coord[k]*scaling->L/1000, mesh->zg_coord[l]*scaling->L/1000);
           exit(1);
         }
         if (isnan (mesh->eta_phys_s[c1]) ) {
-          printf("Nan: Problem on cell vertices:\n");
-          for ( p=0; p<model->Nb_phases; p++) printf("phase %d vol=%2.2e\n", p, mesh->phase_perc_s[p][c1]);
-          printf("%2.2e %2.2e %2.2e %2.2e %2.2e \n", mesh->mu_s[c1],  mesh->exxd_s[c1], mesh->exz[c1], mesh->sxxd0_s[c1], mesh->sxz0[c1]);
-          printf("x=%2.2e z=%2.2e\n", mesh->xg_coord[k]*scaling->L/1000, mesh->zg_coord[l]*scaling->L/1000);
+          LOG_INFO("Nan: Problem on cell vertices:");
+          for ( p=0; p<model->Nb_phases; p++) LOG_INFO("phase %d vol=%2.2e", p, mesh->phase_perc_s[p][c1]);
+          LOG_INFO("%2.2e %2.2e %2.2e %2.2e %2.2e ", mesh->mu_s[c1],  mesh->exxd_s[c1], mesh->exz[c1], mesh->sxxd0_s[c1], mesh->sxz0[c1]);
+          LOG_INFO("x=%2.2e z=%2.2e", mesh->xg_coord[k]*scaling->L/1000, mesh->zg_coord[l]*scaling->L/1000);
           exit(1);
         }
       }
@@ -1656,7 +1657,7 @@ void ShearModCompExpGrid( grid* mesh, mat_prop *materials, params *model, scale 
         if ( average==2 ) mesh->bet_n[c0] = exp(mesh->bet_n[c0]);
       }
       if (isinf( mesh->mu_n[c0])) {
-        printf("%f x = %2.6e z = %2.6e - BCp %d BCt %d\n", mesh->mu_n[c0], mesh->xc_coord[k]*scaling.L, mesh->zc_coord[l]*scaling.L, mesh->BCp.type[c0], mesh->BCt.type[c0]); exit(32);
+        LOG_ERR("%f x = %2.6e z = %2.6e - BCp %d BCt %d", mesh->mu_n[c0], mesh->xc_coord[k]*scaling.L, mesh->zc_coord[l]*scaling.L, mesh->BCp.type[c0], mesh->BCt.type[c0]); exit(32);
       }
     }
   }
@@ -1698,7 +1699,7 @@ void ShearModCompExpGrid( grid* mesh, mat_prop *materials, params *model, scale 
         }
 
         if ( isinf(1.0/mesh->mu_s[c1]) ) {
-          printf("Aaaaargh...!! %2.2e %2.2e ----> ShearModulusCompressibilityExpansivityGrid\n", mesh->phase_perc_s[0][c1], mesh->phase_perc_s[1][c1]);
+          LOG_INFO("Aaaaargh...!! %2.2e %2.2e ----> ShearModulusCompressibilityExpansivityGrid", mesh->phase_perc_s[0][c1], mesh->phase_perc_s[1][c1]);
         }
 
         // Post-process for geometric/harmonic averages
@@ -2123,7 +2124,7 @@ void GenerateDeformationMaps( grid* mesh, mat_prop *materials, params *model, Np
   // Loop on all phases
   for (k=0;k<model->Nb_phases; k++) {
 
-    printf("Generating deformation map of phase %2d\n", k);
+    LOG_INFO("Generating deformation map of phase %2d", k);
 
     // Save real values
     Flin   = materials->Flin[k];
@@ -2176,29 +2177,29 @@ void GenerateDeformationMaps( grid* mesh, mat_prop *materials, params *model, Np
       }
     }
 
-    printf("** Deformation map %2d ---> %lf sec\n", k, (double)((double)omp_get_wtime() - t_omp));
+    LOG_INFO("** Deformation map %2d ---> %lf sec", k, (double)((double)omp_get_wtime() - t_omp));
 
 
     // Print deformation maps to screen
     if (loud ==1) {
       for ( iz=0; iz<nd; iz++) {
-        printf("GS = %2.2e\n", d[iz]*scaling->L);
+        LOG_INFO("GS = %2.2e", d[iz]*scaling->L);
         for ( ix=0; ix<nT; ix++) {
-          if (ix==0) printf("           ");
-          printf("%2.2lf ", T[ix]*scaling->T);
+          if (ix==0) LOG_INFO("           ");
+          LOG_INFO("%2.2lf ", T[ix]*scaling->T);
         }
-        printf("\n");
+        LOG_INFO("");
         for ( iy=0; iy<nE; iy++) {
-          printf("%2.2e   ", E[iy]*scaling->E);
+          LOG_INFO("%2.2e   ", E[iy]*scaling->E);
           for ( ix=0; ix<nT; ix++) {
             ind = ix + iy*nT + iz*nd*nT;
 
-            printf("%6d ", dom_mech[ind] );
+            LOG_INFO("%6d ", dom_mech[ind]);
 
           }
-          printf("\n");
+          LOG_INFO("");
         }
-        printf("\n");
+        LOG_INFO("");
       }
     }
 

@@ -33,6 +33,8 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include "mdoodz-log.h"
+
 #ifdef _OMP_
 #include "omp.h"
 #else
@@ -182,9 +184,9 @@ void AddFieldToGroup( const char filename[], const char group[], const char fiel
 	if(compress==_TRUE_) {
 		SET_CREATION_PLIST = plist;
         if ( quiet == 0 ) {
-            printf("*** Compression info *** \n");
-            printf("  chunk_size = %f \n", chunk_size );
-            printf("  deflation level = %d \n", deflation_level );
+            LOG_INFO("*** Compression info *** ");
+            LOG_INFO("  chunk_size = %f ", chunk_size);
+            LOG_INFO("  deflation level = %d ", deflation_level);
         }
 	}
 	else {
@@ -217,7 +219,7 @@ void AddFieldToGroup( const char filename[], const char group[], const char fiel
 	}
 
 	else {
-		printf("ERROR: Only know how to write doubles (d), ints (i), or chars (c) \n");
+		LOG_ERR("ERROR: Only know how to write doubles (d), ints (i), or chars (c) ");
 		exit(1);
 	}
 

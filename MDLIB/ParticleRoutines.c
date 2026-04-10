@@ -25,6 +25,8 @@
 #include "mdoodz-private.h"
 #include "time.h"
 
+#include "mdoodz-log.h"
+
 #ifdef _OMP_
 #include "omp.h"
 #else
@@ -34,7 +36,7 @@
 #endif
 
 #ifdef _VG_
-#define printf(...) printf("")
+#define LOG_INFO(...) LOG_INFO("")
 #endif
 
 /*--------------------------------------------------------------------------------------------------------------------*/
@@ -477,7 +479,7 @@ double Vertices2Particle( markers* particles, double* NodeField, double* X_vect,
             j_part = 0;
         }
         if (j_part>Nx-2) {
-            printf("Should never be here II! (Vertices2Particle)\n"); exit(1);
+            LOG_ERR("Should never be here II! (Vertices2Particle)"); exit(1);
             j_part = Nx-2;
         }
         
@@ -537,7 +539,7 @@ double Vertices2Particle( markers* particles, double* NodeField, double* X_vect,
         
     }
     else {
-        printf("Should never be here VI ! (Vertices2Particle)\n"); exit(1);
+        LOG_ERR("Should never be here VI ! (Vertices2Particle)"); exit(1);
     }
     return val;
 }
@@ -560,7 +562,7 @@ void ParticleInflowCheck ( markers* particles, grid *mesh, MdoodzInput *input, s
     for (k=0; k<Nb_part; k++) {
         if ( particles->phase[k] == -1 ) np_reuse++;
     }
-    printf( GREEN "Particles available for recycling: %04d\n" RESET, np_reuse);
+    LOG_INFO(GREEN "Particles available for recycling: %04d" RESET, np_reuse);
 
     // Stores indices of particles to recycle
     int *ip_reuse = DoodzCalloc( np_reuse, sizeof(int));
@@ -600,8 +602,8 @@ reduction(+:npW,npE )
                 }
             }
         }
-        printf("Number of particles west boundary: %d\n", npW);
-        printf("Number of particles east boundary: %d\n", npE);
+        LOG_INFO("Number of particles west boundary: %d", npW);
+        LOG_INFO("Number of particles east boundary: %d", npE);
     }
     
     if (flag == 1) {
@@ -632,7 +634,7 @@ reduction(+:npW,npE )
                         Nb_part++;
                     }
                     else {
-                        printf("Too many particles in my mind %d, maximum %d\n", Nb_part, particles->Nb_part_max);
+                        LOG_WARN("Too many particles in my mind %d, maximum %d", Nb_part, particles->Nb_part_max);
                     }
 
                     // Add particles
@@ -659,7 +661,7 @@ reduction(+:npW,npE )
                         Nb_part++;
                     }
                     else {
-                        printf("Too many particles in my mind %d, maximum %d\n", Nb_part, particles->Nb_part_max);
+                        LOG_WARN("Too many particles in my mind %d, maximum %d", Nb_part, particles->Nb_part_max);
                     }
                     
                     // Add particles
@@ -670,12 +672,12 @@ reduction(+:npW,npE )
                 }
             }
         }
-        printf("Number of particles west boundary: %d\n", npW);
-        printf("Number of particles east boundary: %d\n", npE);
+        LOG_INFO("Number of particles west boundary: %d", npW);
+        LOG_INFO("Number of particles east boundary: %d", npE);
         particles->Nb_part = Nb_part;
     }
     
-    printf("** Time for particles inflow check = %lf sec\n",  (double)((double)omp_get_wtime() - t_omp) );
+    LOG_TIME("particles inflow check = %lf sec",  (double)((double)omp_get_wtime() - t_omp));
     
     DoodzFree(ip_reuse);
 
@@ -689,7 +691,7 @@ void AssignMarkerProperties (markers* particles, int new_ind, int min_index, par
     
     particles->phase[new_ind]         = particles->phase[min_index];
     particles->dual[new_ind]          = particles->dual[min_index];
-    if (particles->phase[min_index]==-1) {printf("New particle is has phase -1, error! (AssignMarkerProperties)\n" ); exit(99);}
+    if (particles->phase[min_index]==-1) {LOG_ERR("New particle is has phase -1, error! (AssignMarkerProperties)"); exit(99);}
     particles->Vx[new_ind]            = particles->Vx[min_index];
     particles->Vz[new_ind]            = particles->Vz[min_index];
     particles->strain[new_ind]        = particles->strain[min_index];
@@ -760,7 +762,7 @@ void AssignMarkerPropertiesInflow (markers* particles, int new_ind, int min_inde
     params *model = &(input->model);  
     particles->phase[new_ind]         = particles->phase[min_index];
     particles->dual[new_ind]          = particles->dual[min_index];
-    if (particles->phase[min_index]==-1) {printf("New particle is has phase -1, error! (AssignMarkerProperties)\n" ); exit(99);}
+    if (particles->phase[min_index]==-1) {LOG_ERR("New particle is has phase -1, error! (AssignMarkerProperties)"); exit(99);}
     particles->Vx[new_ind]            = particles->Vx[min_index];
     particles->Vz[new_ind]            = particles->Vz[min_index];
     particles->strain[new_ind]        = particles->strain[min_index];
@@ -1017,7 +1019,7 @@ void FindClosestPhaseVertex( markers* particles, int ic, int jc, grid mesh, int 
     }
 
     if (particles->phase[min_index] <-1 || particles->phase[min_index]>50 ) {
-        printf("Could not find matching phase for newly created particle, this is a bug (attribute phase id : %d)\n Error at node ic = %d jc = %d \nExiting...", particles->phase[min_index], ic, jc);
+        LOG_ERR("Could not find matching phase for newly created particle, this is a bug (attribute phase id : %d)\n Error at node ic = %d jc = %d \nExiting...", particles->phase[min_index], ic, jc);
         exit(50);
     }
 
@@ -1042,8 +1044,8 @@ void AddPartCell( markers *particles, grid mesh, int ic, int jc, int* ind_list, 
 
     // Reallocate particle arrays if no more space in arrays (TO BE IMPLEMENTED)
     if (particles->Nb_part + Nb_add > particles->Nb_part_max && Nb_add > nb_part_reuse) {
-        printf("You have reached the maximum number of particles currently available (%d), please increase it...\n", particles->Nb_part_max );
-        printf("Exiting...\n");
+        LOG_INFO("You have reached the maximum number of particles currently available (%d), please increase it...", particles->Nb_part_max);
+        LOG_INFO("Exiting...");
         exit(1);
     }
 
@@ -1147,8 +1149,8 @@ void AddPartVert( markers *particles, grid mesh, int ic, int jc, int* ind_list, 
 
     // Reallocate particle arrays if no more space in arrays (TO BE IMPLEMENTED)
     if (particles->Nb_part + Nb_add > particles->Nb_part_max && Nb_add > nb_part_reuse ) {
-        printf("You have reached the maximum number of particles currently available (%d), please increase it...\n", particles->Nb_part_max );
-        printf("Exiting...\n");
+        LOG_INFO("You have reached the maximum number of particles currently available (%d), please increase it...", particles->Nb_part_max);
+        LOG_INFO("Exiting...");
         exit(1);
     }
 
@@ -1270,7 +1272,7 @@ void PutPartInBox( markers *particles, grid *mesh, params model, surface topo, s
     // Compute the spacing between particles:
     dx_particles = mesh->dx/(double)(particles->Nx_part); // new
     dz_particles = mesh->dz/(double)(particles->Nz_part); // new
-    printf("Initial particle spacing : dxm = %lf dzm = %lf m\n", dx_particles*scaling.L, dz_particles*scaling.L);
+    LOG_INFO("Initial particle spacing : dxm = %lf dzm = %lf m", dx_particles*scaling.L, dz_particles*scaling.L);
     
     // Loop over loop over loop over loop (on s'en branle, c'est du C)
     np = 0;
@@ -1349,7 +1351,7 @@ void PutPartInBox( markers *particles, grid *mesh, params model, surface topo, s
         }
     }
     particles->Nb_part = np;
-    printf("Initial number of particles = %d\n", particles->Nb_part);
+    LOG_INFO("Initial number of particles = %d", particles->Nb_part);
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
@@ -1419,8 +1421,8 @@ private ( k, dxm, dzm, j_part, i_part, distance, iSW, iNW, iSE, iNE, sumW, Xp ) 
                 j_part = Nx-2;
 
                 if (abs(Nx - (Nxg-1))>0) {
-                    printf("j_part = %d --- Nx = %03d Nxc = %d --- px = %2.2e xg = %2.2e\n", j_part, Nx, Nxg-1, particles.x[k], X_vect[j_part]);
-                    printf("i_part = %d --- Nz = %03d Nzc = %d --- pi = %2.2e ig = %2.2e\n", i_part, Nz, Nz-1, particles.z[k], Z_vect[i_part]);
+                    LOG_INFO("j_part = %d --- Nx = %03d Nxc = %d --- px = %2.2e xg = %2.2e", j_part, Nx, Nxg-1, particles.x[k], X_vect[j_part]);
+                    LOG_INFO("i_part = %d --- Nz = %03d Nzc = %d --- pi = %2.2e ig = %2.2e", i_part, Nz, Nz-1, particles.z[k], Z_vect[i_part]);
                     exit(89);
                 }
             }
@@ -1731,8 +1733,8 @@ private ( k, dxm, dzm, j_part, i_part, distance, iSW, iNW, iSE, iNE, sumW, Xp, i
 
             if (sumW>1e-13) PartField[k] /= sumW;
             if (isinf(PartField[k])) {
-                printf("%2.2e %2.2e %2.2e %2.2e \n", NodeField[iSW],NodeField[iSE], NodeField[iNW],NodeField[iNE]);
-                printf("%2.2e\n", sumW);
+                LOG_INFO("%2.2e %2.2e %2.2e %2.2e ", NodeField[iSW],NodeField[iSE], NodeField[iNW],NodeField[iNE]);
+                LOG_INFO("%2.2e", sumW);
                 exit(1);
             }
         }
@@ -2488,13 +2490,13 @@ void CountPartCell( markers* particles, grid *mesh, params model, surface topo, 
                         }
                     }
                     if (nb_neigh==0) {
-                        printf("Cell i=%d j=%d,flag=%d has 0 neighouring particles... Exiting\nimin=%d imax=%d jmin=%d jmax=%d\n", ic, jc, mesh->BCt_fine.type[kc], imin, imax, jmin, jmax);
+                        LOG_INFO("Cell i=%d j=%d,flag=%d has 0 neighouring particles... Exiting\nimin=%d imax=%d jmin=%d jmax=%d", ic, jc, mesh->BCt_fine.type[kc], imin, imax, jmin, jmax);
                         for (int i=imin; i<=imax; i++) {
                             for (int j=jmin; j<=jmax; j++) {
-                                printf("(%d,%d): %d", i, j, nb_part_cell[i+j*ncx]);
+                                LOG_INFO("(%d,%d): %d", i, j, nb_part_cell[i+j*ncx]);
                             }
                         }
-                        printf("xmin = %lf - xmax = %lf --- zmin = %lf - zmax = %lf\n", xmin-dx/2.0 + imin*dx, xmin-dx/2.0 + imax*dx, xmin-dz/2.0 + jmin*dz, xmin-dz/2.0 + jmax*dz );
+                        LOG_INFO("xmin = %lf - xmax = %lf --- zmin = %lf - zmax = %lf", xmin-dx/2.0 + imin*dx, xmin-dx/2.0 + imax*dx, xmin-dz/2.0 + jmin*dz, xmin-dz/2.0 + jmax*dz);
                         exit(122);
                     }
                     // Collect particle indices in an array
@@ -2524,7 +2526,7 @@ void CountPartCell( markers* particles, grid *mesh, params model, surface topo, 
                             // printf("create\n");
                             new_ind = particles->Nb_part;
                             if (particles->Nb_part+1>=particles->Nb_part_max) {
-                                printf("Max number of particles reached, Exiting...");
+                                LOG_INFO("Max number of particles reached, Exiting...");
                                 exit(190);
                             }
                             particles->Nb_part++;
@@ -2559,7 +2561,7 @@ void CountPartCell( markers* particles, grid *mesh, params model, surface topo, 
                 }
             }
         }
-        printf("%d markers reused, %d markers created, out of %d new markers\n", count_part_reuse, count_created, nb_new_parts);
+        LOG_INFO("%d markers reused, %d markers created, out of %d new markers", count_part_reuse, count_created, nb_new_parts);
 
         // // TBD
         // for (int k=0; k<Nb_part; k++) {
@@ -2643,8 +2645,8 @@ void CountPartCell_OLD( markers* particles, grid *mesh, params model, surface to
     if ( time_My % 2 > 0 ) sed_phase = model.surf_ised1;
     else                   sed_phase = model.surf_ised2;
 
-    printf("USING NEW PART IN CELL\n");
-    if (reseed_markers==1) printf("OLD NUMBER OF MARKERS = %02d\n", particles->Nb_part);
+    LOG_INFO("USING NEW PART IN CELL");
+    if (reseed_markers==1) LOG_INFO("OLD NUMBER OF MARKERS = %02d", particles->Nb_part);
     
     // First operation - compute phase proportions on centroids and vertices
     int cent=1, vert=0, prop=1, interp=0;
@@ -3208,9 +3210,9 @@ void CountPartCell_OLD( markers* particles, grid *mesh, params model, surface to
                             neighs += mpc[ith][kd+2 +1*nxl];
 
                             if (neighs == 0) {
-                                printf("All the neighbouring CELLS of ix = %d iz = %d are empty, simulation will stop\n", k, l);
-                                printf("fine   cell: xc = %2.2e zc = %2.2e flag = %d thread #%d nthreads=%d\n",(xg[ith][0]+dx/4.0+(k)*dx/2.0)*scaling.L, (mesh->zg_coord[0]+dz/4.0+(l)*dz/2.0)*scaling.L, flag1, ith, nthreads);
-                                printf("coarse cell: xc = %2.2e zc = %2.2e flag = %d\n", mesh->xc_coord[ic]*scaling.L, mesh->zc_coord[jc]*scaling.L, mesh->BCt.type[ip]);
+                                LOG_INFO("All the neighbouring CELLS of ix = %d iz = %d are empty, simulation will stop", k, l);
+                                LOG_INFO("fine   cell: xc = %2.2e zc = %2.2e flag = %d thread #%d nthreads=%d",(xg[ith][0]+dx/4.0+(k)*dx/2.0)*scaling.L, (mesh->zg_coord[0]+dz/4.0+(l)*dz/2.0)*scaling.L, flag1, ith, nthreads);
+                                LOG_INFO("coarse cell: xc = %2.2e zc = %2.2e flag = %d", mesh->xc_coord[ic]*scaling.L, mesh->zc_coord[jc]*scaling.L, mesh->BCt.type[ip]);
                                 exit(333);
                             }
 
@@ -3412,7 +3414,7 @@ void CountPartCell_OLD( markers* particles, grid *mesh, params model, surface to
                 }
                 // Security check
                 if (k>particles->Nb_part_max) {
-                    printf ("Maximum number of particles exceeded!\n Exiting!\n");
+                    LOG_ERR("Maximum number of particles exceeded!\n Exiting!");
                     exit(1);
                 }
                 else {
@@ -3443,7 +3445,7 @@ void CountPartCell_OLD( markers* particles, grid *mesh, params model, surface to
 //    printf("dum1 = %d\n", dum1);
 //    //________________________________________
     
-    if (reseed_markers==1) printf("NEW NUMBER OF MARKERS = %02d\n", particles->Nb_part);
+    if (reseed_markers==1) LOG_INFO("NEW NUMBER OF MARKERS = %02d", particles->Nb_part);
 
     IsNanArray2DFP(mesh->phase_perc_s[0], Nx*Nz);
     IsInfArray2DFP(mesh->phase_perc_s[0], Nx*Nz);
@@ -3583,7 +3585,7 @@ void TransmutateMarkers(markers *particles, mat_prop *materials, double scaling_
     }
   }
 
-  printf("Transmutated particles = %03d\n", transmutated_particles);
+  LOG_INFO("Transmutated particles = %03d", transmutated_particles);
 }
 
 

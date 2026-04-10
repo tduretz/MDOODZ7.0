@@ -25,3 +25,4 @@ runs/
 RUNS/
 *.mov
 *.bin
+benchmark-results/

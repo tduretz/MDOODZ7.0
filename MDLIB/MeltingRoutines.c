@@ -36,6 +36,7 @@
 
 //---- M-Doodz header file
 #include "mdoodz-private.h"
+#include "mdoodz-log.h"
 
 /*--------------------------------------------------------------------------------------------------------------------*/
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
@@ -337,8 +338,8 @@ void InjectDikesAndSills(markers *particles, MdoodzInput *instance){
         // Break criterion
         if (iter > max_iter)
         {
-            printf(RED "WARNING: Maximum iteration reached befor the entire magma budget has been used\n");
-            printf(RED "Area budget: \t %.2f m2 \t Area injected: \t %.2f m2\n", Abud * pow(instance->scaling.L, 2), Ainj * pow(instance->scaling.L, 2));
+            LOG_WARN(RED "WARNING: Maximum iteration reached befor the entire magma budget has been used");
+            LOG_INFO(RED "Area budget: \t %.2f m2 \t Area injected: \t %.2f m2", Abud * pow(instance->scaling.L, 2), Ainj * pow(instance->scaling.L, 2));
             break;
         }
     }
@@ -367,7 +368,7 @@ double rand_between_float_asep(double min, double max, double sep, double prev){
         // Break condition
         if (count > max_iter)
         {
-            printf(RED "WARNING: Maximum iterations for rejection sampling reached. Previous value: \t %.4f | Current value: \t %.4f\n", prev, curr);
+            LOG_WARN(RED "WARNING: Maximum iterations for rejection sampling reached. Previous value: \t %.4f | Current value: \t %.4f", prev, curr);
             break;
         }
     }
