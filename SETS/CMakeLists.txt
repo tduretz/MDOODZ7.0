@@ -27,5 +27,6 @@ else()
     add_set(AnneloreSubduction)
     add_set(ThanushikaSubduction)
     add_set(SubductionMelting)
+    add_set(RiftingCombinedYield)
 endif()
 
