@@ -229,6 +229,36 @@ ls benchmark-results/
 ### Cost Guidance
 
 - `c5ad.4xlarge`: ~$0.69/hr (eu-central-1, on-demand)
-- Full sweep (4 resolutions × 7 threads × 10 steps): typically 2-4 hours ≈ $1.50-3.00
+- Full sweep (4 resolutions × 7 threads × 10 steps): typically 30–60 minutes ≈ $0.35–0.70
 - Instance is stopped automatically — no ongoing charges after benchmark completes
 - The attached nvme storage on c5ad instances is ephemeral — results are uploaded to S3
+
+## Troubleshooting and Lessons Learned
+
+### env.cmake breaks EC2 builds
+
+The macOS `env.cmake` (pointing at `/opt/homebrew`) gets synced to EC2 and causes build failures (`No rule to make target libomp.dylib`). **Fix**: `benchmark-aws.sh` excludes `env.cmake` from rsync. The `benchmark-ec2-setup.sh` script creates its own minimal `env.cmake` on EC2. If building manually on EC2, remove or rename the macOS `env.cmake` first.
+
+### SSH drops kill the benchmark
+
+Long-running SSH sessions to EC2 can drop (exit 255), which triggers the EXIT trap and stops the instance mid-benchmark. **Fix**: `benchmark-aws.sh` uses `nohup` to launch the remote benchmark as a detached process, then polls via short SSH connections every 60 seconds. The EXIT trap only stops the instance when `STOP_ON_EXIT=1` (set explicitly after successful download, not automatically on disconnect).
+
+### AWS CLI not installed on EC2
+
+Fresh Ubuntu instances don't have `aws` CLI. The `benchmark-ec2-setup.sh` S3 upload will fail silently if `awscli` is not installed. **Fix**: Either install `awscli` in the EC2 setup, or download results locally and upload from the local machine (which has AWS CLI).
+
+### Scenario .c files hardcode the .txt filename
+
+`RiftingComprehensive.c` calls `RunMDOODZ("RiftingComprehensive.txt", ...)` — it ignores any CLI arguments. **Fix**: `benchmark.sh` copies the bench `.txt` file to `${EXEC_DIR}/${SCENARIO}.txt` so the exe finds it. The `.txt` is cleaned up after validation to prevent stale parameters from leaking into benchmark runs.
+
+### Empirical Performance Characteristics (c5ad.4xlarge, RiftingComprehensive)
+
+Based on the 28-run sweep (4 resolutions × 7 thread counts × 10 steps):
+
+- **Optimal thread count: 6–8** on 16-vCPU machines. Beyond 8 threads, OpenMP overhead and serial bottlenecks degrade performance.
+- **Thermal solver is the primary bottleneck** at medium-to-high resolution. CHOLMOD direct solve takes ~6.4s/step at 1000×800, regardless of thread count (~38% of wall time at 8 threads). This is inherently serial.
+- **Rheology and advection scale well** with threads (near-linear to 4–6 threads).
+- **Assembly does not scale** well — stays near-constant or increases with threads.
+- **Memory scales linearly** at ~15.5 MB per 1000 grid cells, independent of thread count.
+- **Grid scaling is linear** $O(n)$: doubling resolution in each dimension (4× cells) costs ~4× wall time.
+- **10 steps is sufficient** for benchmarking — per-step cost is stable across steps.

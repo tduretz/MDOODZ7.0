@@ -71,14 +71,19 @@ echo "Timeout:  ${TIMEOUT_HOURS}h"
 echo "S3:       s3://${BENCH_S3_BUCKET}/"
 echo "========================================"
 
-# ---------- Trap: always stop instance on exit ----------
+# ---------- Trap: stop instance only on explicit request ----------
+STOP_ON_EXIT=0
 cleanup() {
-  if [[ $INSTANCE_STARTED -eq 1 ]]; then
+  if [[ $STOP_ON_EXIT -eq 1 && $INSTANCE_STARTED -eq 1 ]]; then
     echo ""
     echo ">>> Stopping instance ${BENCH_EC2_INSTANCE}..."
     aws ec2 stop-instances --region "$BENCH_REGION" --instance-ids "$BENCH_EC2_INSTANCE" \
       --output text 2>/dev/null || echo "WARNING: Failed to stop instance"
     echo "    Instance stop requested."
+  elif [[ $INSTANCE_STARTED -eq 1 ]]; then
+    echo ""
+    echo ">>> Instance ${BENCH_EC2_INSTANCE} left running (benchmark may still be active)."
+    echo "    Stop manually: aws ec2 stop-instances --region ${BENCH_REGION} --instance-ids ${BENCH_EC2_INSTANCE}"
   fi
 }
 trap cleanup EXIT INT TERM
@@ -153,6 +158,7 @@ rsync -az --delete \
   --exclude 'cmake-exec' \
   --exclude 'benchmark-results' \
   --exclude 'visualtests-out' \
+  --exclude 'env.cmake' \
   --exclude '*.h5' \
   --exclude '*.dat' \
   -e "ssh ${SSH_OPTS}" \
@@ -165,16 +171,55 @@ echo ">>> Starting remote benchmark..."
 echo "    This may take several hours. Instance will be stopped automatically on completion."
 echo ""
 
+# ---------- Run remote benchmark (detached — survives SSH drops) ----------
+echo ""
+echo ">>> Starting remote benchmark (detached)..."
+echo "    Benchmark will continue even if this terminal disconnects."
+echo ""
+
+REMOTE_LOG="/tmp/mdoodz-bench-remote.log"
+REMOTE_PID_FILE="/tmp/mdoodz-bench.pid"
+
 ssh $SSH_OPTS "${BENCH_SSH_USER}@${PUB_IP}" \
   "export BENCH_S3_BUCKET='${BENCH_S3_BUCKET}' BENCH_REGION='${BENCH_REGION}'; \
    cd ~/MDOODZ7.0 && chmod +x misc/*.sh && \
-   ./misc/benchmark-ec2-setup.sh \
+   nohup ./misc/benchmark-ec2-setup.sh \
      --scenario '${SCENARIO}' \
      --resolutions '${RESOLUTIONS}' \
      --threads '${THREADS}' \
      --steps '${STEPS}' \
-     --timeout '${TIMEOUT_HOURS}'"
-REMOTE_EXIT=$?
+     --timeout '${TIMEOUT_HOURS}' \
+     > ${REMOTE_LOG} 2>&1 & echo \$! > ${REMOTE_PID_FILE}"
+
+echo "    Remote benchmark launched. Polling for completion..."
+
+# ---------- Poll for completion ----------
+POLL_INTERVAL=60
+POLL_MAX=$((TIMEOUT_HOURS * 3600 / POLL_INTERVAL + 10))
+for ((p=1; p<=POLL_MAX; p++)); do
+  sleep "$POLL_INTERVAL"
+
+  # Check if remote process is still running
+  STILL_RUNNING=$(ssh $SSH_OPTS -o ConnectTimeout=10 "${BENCH_SSH_USER}@${PUB_IP}" \
+    "cat ${REMOTE_PID_FILE} 2>/dev/null | xargs -I{} kill -0 {} 2>/dev/null && echo yes || echo no" 2>/dev/null) || {
+    echo "    [poll $p] SSH failed — retrying next cycle (benchmark continues on EC2)"
+    continue
+  }
+
+  # Show progress
+  PROGRESS=$(ssh $SSH_OPTS -o ConnectTimeout=10 "${BENCH_SSH_USER}@${PUB_IP}" \
+    "wc -l ~/MDOODZ7.0/benchmark-results/*/summary.csv 2>/dev/null | tail -1 | awk '{print \$1}'" 2>/dev/null) || PROGRESS="?"
+  echo "    [poll $p] running=${STILL_RUNNING} summary_rows=${PROGRESS}"
+
+  if [[ "$STILL_RUNNING" == "no" ]]; then
+    echo "    Remote benchmark finished."
+    # Grab exit code
+    REMOTE_EXIT=$(ssh $SSH_OPTS "${BENCH_SSH_USER}@${PUB_IP}" \
+      "wait \$(cat ${REMOTE_PID_FILE}) 2>/dev/null; echo \$?" 2>/dev/null) || REMOTE_EXIT=1
+    break
+  fi
+done
+REMOTE_EXIT=${REMOTE_EXIT:-1}
 
 # ---------- Download results ----------
 echo ""
@@ -197,7 +242,7 @@ else
   echo "    No results to download — check S3 for partial results."
 fi
 
-# ---------- Done (cleanup trap will stop instance) ----------
+# ---------- Done — stop instance now ----------
 echo ""
 echo "========================================"
 echo "  AWS Benchmark Complete"
@@ -207,3 +252,4 @@ echo "Local results: ${LOCAL_DIR:-none}"
 echo "S3: s3://${BENCH_S3_BUCKET}/mdoodz-benchmarks/"
 echo "Instance will be stopped automatically."
 echo "========================================"
+STOP_ON_EXIT=1

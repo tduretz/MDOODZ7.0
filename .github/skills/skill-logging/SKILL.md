@@ -105,27 +105,44 @@ Key simulation phases are instrumented with `LOG_TIME` in the main loop:
 - Stokes assembly
 - Direct solve (CHOLMOD factorization + back-substitution)
 - Thermal solver
-- Advection
+- Advection (marker transport, free surface, reseeding)
+- Melting, anisotropy, grain size evolution
 - HDF5 output
 
-Per-timestep breakdown summaries are emitted at the end of each step.
+Per-timestep breakdown summaries are emitted at the end of each step, including model time in Ma:
+
+```
+[   36.192] TIME  | Total timestep calculation time = 36.192000 sec
+[   36.192] TIME  |   Model time: 0.000003 Ma | wall=36.192 sec
+[   36.192] TIME  |   Breakdown: rheology=2.073 assembly=1.709 solve=0.000 sec (0 iterations)
+[   36.192] INFO  | Model time = 1.04e+08 sec (0.000003 Ma)
+```
 
 ## Performance CSV (`perf.csv`)
 
 Every simulation automatically writes a `perf.csv` file in the execution directory with one row per timestep:
 
 ```csv
-step,wall_s,rheology_s,assembly_s,solve_s,nit,n_particles,neq_mom,neq_cont,peak_rss_mb,user_cpu_s,sys_cpu_s
-1,2.1240,0.0024,0.0229,0.0000,0,224692,27918,14006,220.8,40.9,2.4
+step,wall_s,time_ma,rheology_s,assembly_s,solve_s,thermal_s,advection_s,free_surface_s,reseeding_s,melting_s,anisotropy_s,gse_s,output_s,nit,n_particles,neq_mom,neq_cont,peak_rss_mb,user_cpu_s,sys_cpu_s
+1,36.1920,3.283357e-06,2.0733,1.7093,0.0000,6.2693,3.7450,0.1034,1.8562,0.2974,0.0830,0.4955,0.0000,0,11812176,1475783,738261,12353.7,63.4,8.3
 ```
 
 | Column | Description |
 |--------|-------------|
 | `step` | Timestep number |
 | `wall_s` | Wall-clock time for the timestep (seconds) |
-| `rheology_s` | Cumulative rheology update time |
+| `time_ma` | Model time in Ma (million years) |
+| `rheology_s` | Cumulative rheology update time (NonNewtonianViscosityGrid) |
 | `assembly_s` | Cumulative Stokes assembly time |
-| `solve_s` | Cumulative direct solve time |
+| `solve_s` | Cumulative direct solve time (CHOLMOD) |
+| `thermal_s` | Thermal solver time (energy equation) |
+| `advection_s` | Advection time (particle transport + interpolation) |
+| `free_surface_s` | Free surface operations time |
+| `reseeding_s` | Particle reseeding time (CountPartCell) |
+| `melting_s` | Melting computation time (MeltFractionGrid + UpdateAlphaCp) |
+| `anisotropy_s` | Anisotropy update time (UpdateAnisoFactor) |
+| `gse_s` | Grain size evolution time (UpdateParticleGrainSize) |
+| `output_s` | HDF5 output write time |
 | `nit` | Number of nonlinear iterations |
 | `n_particles` | Particle count |
 | `neq_mom` | Momentum equation count |
@@ -134,7 +151,7 @@ step,wall_s,rheology_s,assembly_s,solve_s,nit,n_particles,neq_mom,neq_cont,peak_
 | `user_cpu_s` | Cumulative user CPU time (seconds) |
 | `sys_cpu_s` | Cumulative system CPU time (seconds) |
 
-This file is always written (no config parameter needed). Use it for scaling studies, regression checks, and capacity planning.
+Subsystem columns (`thermal_s` through `output_s`) read 0.0 when that subsystem is disabled for the run. This file is always written (no config parameter needed). Use it for scaling studies, regression checks, and capacity planning.
 
 ## Memory and CPU Monitoring
 

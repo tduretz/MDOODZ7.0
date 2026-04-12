@@ -1312,6 +1312,10 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         }
 
         LOG_TIME("Total timestep calculation time = %lf sec", (double)((double)omp_get_wtime() - t_omp_step) );
+        {
+            double time_ma_log = input.model.time * input.scaling.t / (1e6 * 365.25 * 24 * 3600);
+            LOG_TIME("  Model time: %.6f Ma | wall=%.3f sec", time_ma_log, (double)(omp_get_wtime() - t_omp_step));
+        }
         if (input.model.mechanical == 1) {
             LOG_TIME("  Breakdown: rheology=%.3f assembly=%.3f solve=%.3f sec (%d iterations)", dt_rheology_total, dt_assembly_total, dt_solve_total, Nmodel.nit);
         }
@@ -1342,8 +1346,14 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                 fflush(perf_csv);
             }
         }
-        LOG_INFO("Model time = %2.2e sec", input.model.time* input.scaling.t );
-        LOG_INFO("Current dt = %2.2e sec, Old dt = %2.2e sec", input.model.dt* input.scaling.t, input.model.dt0* input.scaling.t );
+        {
+            double model_time_s  = input.model.time * input.scaling.t;
+            double model_time_ma = model_time_s / (1e6 * 365.25 * 24 * 3600);
+            double dt_s          = input.model.dt  * input.scaling.t;
+            double dt0_s         = input.model.dt0 * input.scaling.t;
+            LOG_INFO("Model time = %2.2e sec (%.6f Ma)", model_time_s, model_time_ma);
+            LOG_INFO("Current dt = %2.2e sec, Old dt = %2.2e sec", dt_s, dt0_s);
+        }
 
         mdoodz_log_flush();
 

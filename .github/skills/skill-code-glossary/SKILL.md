@@ -222,3 +222,23 @@ For each mechanism `X` = {pwl, lin, exp, gbs}:
 | `ARITHMETIC` | 0 | Arithmetic mean |
 | `HARMONIC` | 1 | Harmonic mean |
 | `GEOMETRIC` | 2 | Geometric mean |
+
+## Per-Subsystem Timing Variables (Main_DOODZ.c)
+
+These `double` variables in the main timestep loop measure wall-clock time for each subsystem:
+
+| Variable | What it times | Function(s) |
+|----------|--------------|-------------|
+| `dt_rheology_total` | Rheology update (accumulated over nonlinear iterations) | `NonNewtonianViscosityGrid` |
+| `dt_assembly_total` | Stokes assembly (accumulated) | `BuildStokesOperator` |
+| `dt_solve_total` | Direct solve (accumulated) | `SolveStokes` |
+| `dt_thermal` | Thermal solver (energy equation) | `ThermalSolver` |
+| `dt_advection` | All advection (markers + interpolation + free surface) | `RogerGunther`, `Interp_Grid2P`, etc. |
+| `dt_free_surface` | Free surface operations (subset of advection) | `AdvectFreeSurface`, `MarkerChainPolyFit` |
+| `dt_reseeding` | Particle reseeding/counting | `CountPartCell`, `ParticleReseeding` |
+| `dt_melting` | Melt fraction computation | `MeltFractionGrid`, `UpdateAlphaCp` |
+| `dt_anisotropy` | Anisotropy factor update | `UpdateAnisoFactor` |
+| `dt_gse` | Grain size evolution | `UpdateParticleGrainSize` |
+| `dt_output` | HDF5 output writing | `WriteOutputHDF5` |
+
+All are written to `perf.csv` each timestep. Subsystems that are disabled for a run report 0.0.

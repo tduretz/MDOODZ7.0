@@ -21,8 +21,9 @@ The `.c` file contains setup callbacks; the `.txt` file contains model parameter
 | `RiftingAnisotropy.c` | Rifting with crystal anisotropy | Olivine/OPX fabric evolution during extension |
 | `RiftingCheninAniso.c` | Combined topography perturbation + anisotropy | Full aniso rifting workflow |
 | `RiftingCombinedYield.c` | Rifting with combined mode-I/mode-II yield + melting | `plast=2`, 9 phases, VEP + melt weakening (Popov 2025) |
+| `RiftingComprehensive.c` | All-physics rifting for benchmarking | Combined yield + melting + anisotropy + GSE, 9 phases, 4 resolution tiers (lowres/default/medres/highres) |
 
-**When to use**: Start with `RiftingBasic` for a first lithospheric extension run. Use `RiftingChenin` for multi-layer setups. Add `RiftingAnisotropy` or `RiftingCheninAniso` to study fabric effects on rifting. Use `RiftingCombinedYield` for combined tensile+shear failure with melting.
+**When to use**: Start with `RiftingBasic` for a first lithospheric extension run. Use `RiftingChenin` for multi-layer setups. Add `RiftingAnisotropy` or `RiftingCheninAniso` to study fabric effects on rifting. Use `RiftingCombinedYield` for combined tensile+shear failure with melting. Use `RiftingComprehensive` for performance benchmarking — it exercises all subsystems (thermal, advection, melting, anisotropy, GSE) and has pre-defined resolution tiers.
 
 ---
 

@@ -184,6 +184,9 @@ if [[ $VALIDATE -eq 1 ]]; then
   echo ""
   echo "  All validations passed!"
   echo ""
+
+  # Clean up: remove validation's patched .txt so it doesn't interfere with benchmark runs
+  rm -f "${EXEC_DIR}/${SCENARIO}.txt"
 fi
 
 # ---------- Create results directory ----------
@@ -305,7 +308,7 @@ for ((i=0; i<TOTAL; i++)); do
   echo ""
   echo ">>> [$((i+1))/${TOTAL}] Grid ${NX}x${NZ}, ${THR} threads..."
 
-  # Prepare .txt
+  # Prepare .txt — copy directly into exec dir (MDOODZ reads hardcoded ${SCENARIO}.txt)
   BENCH_TXT="${RUN_DIR}/bench.txt"
   if [[ -n "$RES" ]]; then
     make_res_txt "$RES" "$STEPS" "$BENCH_TXT"
@@ -313,13 +316,14 @@ for ((i=0; i<TOTAL; i++)); do
     make_bench_txt "$NX" "$NZ" "$STEPS" "$BENCH_TXT"
   fi
 
-  # Run
+  # Run — place bench.txt as ${SCENARIO}.txt in exec dir (exe ignores CLI args)
   cd "$EXEC_DIR"
+  cp "$BENCH_TXT" "${SCENARIO}.txt"
   rm -f perf.csv
   export OMP_NUM_THREADS="$THR"
 
   T0=$(date +%s)
-  "./${SCENARIO}" "${RUN_DIR}/bench.txt" > "${RUN_DIR}/stdout.log" 2>&1 || true
+  "./${SCENARIO}" > "${RUN_DIR}/stdout.log" 2>&1 || true
   T1=$(date +%s)
   ELAPSED=$((T1 - T0))
 
