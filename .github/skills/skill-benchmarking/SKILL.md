@@ -15,28 +15,42 @@ misc/benchmark.sh
 # Quick mode (small grids, few steps)
 misc/benchmark.sh --quick
 
-# Custom configuration
+# Custom grid-based configuration
 misc/benchmark.sh --grids "301x201 501x501" --threads "1 4 8" --steps 5
+
+# Resolution-based with a specific scenario
+misc/benchmark.sh --scenario RiftingComprehensive --resolutions "lowres default medres" --threads "1 4 8"
+
+# Validate first (3 steps per resolution), then benchmark
+misc/benchmark.sh --scenario RiftingComprehensive --resolutions "lowres default" --validate
 ```
 
 ## Benchmark Script (`misc/benchmark.sh`)
 
 The script automates grid-scaling and thread-scaling benchmarks:
 
-1. Builds `RiftingBasic` with `-O3` and OpenMP
-2. For each grid size × thread count combination:
-   - Patches the `.txt` file (Nx, Nz, Nt, disables HDF5 output)
+1. Builds the scenario with `-O3` and OpenMP
+2. Optionally validates each resolution (3 steps, 1 thread, bail on failure)
+3. For each grid/resolution × thread count combination:
+   - Patches or copies the `.txt` file (Nx, Nz, Nt, disables HDF5 output)
    - Runs with `OMP_NUM_THREADS` set
    - Collects `perf.csv` per run
-3. Produces `summary.csv` with per-run averages
+4. Produces `summary.csv` with per-run averages
+
+Two modes:
+- **Grid-based** (default): Uses `--grids` to patch Nx/Nz into a single .txt file
+- **Resolution-based**: Uses `--resolutions` to select pre-defined `<Scenario>_<res>.txt` files from `SETS/`
 
 ### Flags
 
 | Flag | Default | Description |
 |------|---------|-------------|
-| `--grids "NxA×NzA NxB×NzB"` | `150x100 301x201 501x501` | Grid sizes to test |
-| `--threads "1 2 4 8"` | `1 2 4 8` | Thread counts |
+| `--scenario NAME` | `RiftingBasic` | Scenario name (builds with `-DSET=NAME`) |
+| `--grids "NxAxNzA ..."` | `150x100 301x201 501x501` | Grid sizes (grid mode) |
+| `--resolutions "res1 res2"` | — | Resolution names (resolution mode). Use `default` for base .txt |
+| `--threads "1 2 4 8"` | `1 2 4 8 12 16` | Thread counts |
 | `--steps N` | `10` | Timesteps per run |
+| `--validate` | — | Run 3-step validation before full benchmark |
 | `--quick` | — | Shorthand: small grids, 3 steps, 1 and 4 threads |
 | `--skip-build` | — | Skip the build step |
 
@@ -59,7 +73,11 @@ benchmark-results/
 
 ### summary.csv Columns
 
-`host,os,arch,grid,nx,nz,threads,steps,avg_wall_s,total_wall_s,avg_rheology_s,avg_assembly_s,avg_solve_s,avg_nit,peak_rss_mb`
+```
+host,os,arch,grid,nx,nz,threads,steps,avg_wall_s,total_wall_s,
+avg_rheology_s,avg_assembly_s,avg_solve_s,avg_thermal_s,avg_advection_s,
+avg_melting_s,avg_anisotropy_s,avg_gse_s,avg_output_s,avg_nit,peak_rss_mb
+```
 
 ## perf.csv (Per-Timestep Metrics)
 
@@ -135,3 +153,82 @@ A healthy benchmark should show:
 - `avg_wall_s` decreasing roughly linearly as threads increase (up to memory bandwidth limit)
 - `avg_solve_s` dominating `avg_wall_s` for large grids (CHOLMOD is the bottleneck)
 - `avg_rheology_s` small relative to solve (particle interpolation is cheap)
+- Subsystem columns (`thermal_s`, `advection_s`, `melting_s`, `anisotropy_s`, `gse_s`) reveal where time is spent beyond the Stokes solver
+
+## AWS Benchmarking
+
+Run full benchmark sweeps on a dedicated EC2 instance for reproducible results.
+
+### Prerequisites
+
+1. **AWS CLI** installed and configured (`aws configure`)
+2. **EC2 instance** — `c5ad.4xlarge` (16 vCPUs, 32 GB RAM) or similar compute-optimised instance
+3. **SSH key** — `.pem` file for the instance (e.g. `~/.ssh/key-mdoodz.pem`, permissions `600`)
+4. **S3 bucket** — for result uploads
+
+### Required IAM Permissions
+
+```json
+{
+  "Effect": "Allow",
+  "Action": [
+    "ec2:StartInstances",
+    "ec2:StopInstances",
+    "ec2:DescribeInstances",
+    "s3:PutObject",
+    "s3:GetObject",
+    "s3:ListBucket",
+    "s3:DeleteObject",
+    "sts:GetCallerIdentity"
+  ],
+  "Resource": "*"
+}
+```
+
+### Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `BENCH_EC2_INSTANCE` | `i-0df5754e400cb3ec1` | EC2 instance ID |
+| `BENCH_SSH_KEY` | `~/.ssh/key-mdoodz.pem` | Path to SSH private key |
+| `BENCH_S3_BUCKET` | `mdoodz-bench-s3-bucket` | S3 bucket name |
+| `BENCH_SSH_USER` | `ubuntu` | SSH username |
+| `BENCH_REGION` | `eu-central-1` | AWS region |
+
+### Quick Start (AWS)
+
+```bash
+# 1. Run preflight to verify connectivity
+./misc/benchmark-preflight.sh
+
+# 2. Launch full benchmark (starts instance, syncs, builds, benchmarks, stops)
+./misc/benchmark-aws.sh --scenario RiftingComprehensive --resolutions "lowres default medres highres"
+
+# 3. Results are downloaded locally and uploaded to S3
+ls benchmark-results/
+```
+
+### Scripts
+
+| Script | Runs where | Purpose |
+|--------|-----------|--------|
+| `misc/benchmark-preflight.sh` | Local | Check AWS CLI, EC2, SSH, S3 |
+| `misc/benchmark-aws.sh` | Local | Orchestrate: start → rsync → benchmark → download → stop |
+| `misc/benchmark-ec2-setup.sh` | EC2 | Install deps, build, run benchmark, upload to S3 |
+| `misc/benchmark.sh` | Either | Core benchmark runner |
+| `misc/benchmark-report.sh` | Either | Generate Markdown report from results |
+
+### Safety
+
+- `benchmark-aws.sh` has a **trap handler** that stops the instance on exit/interrupt/error
+- Remote benchmark runs with a **6-hour timeout** (configurable via `--timeout`)
+- Partial results are uploaded to S3 even on timeout
+- Instance is **stopped** (not terminated) — preserves disk for reuse
+- `*.pem` files are in `.gitignore`
+
+### Cost Guidance
+
+- `c5ad.4xlarge`: ~$0.69/hr (eu-central-1, on-demand)
+- Full sweep (4 resolutions × 7 threads × 10 steps): typically 2-4 hours ≈ $1.50-3.00
+- Instance is stopped automatically — no ongoing charges after benchmark completes
+- The attached nvme storage on c5ad instances is ephemeral — results are uploaded to S3

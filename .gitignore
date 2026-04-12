@@ -25,4 +25,5 @@ runs/
 RUNS/
 *.mov
 *.bin
+*.pem
 benchmark-results/
