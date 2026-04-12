@@ -34,6 +34,8 @@ static struct {
     double              t0;
     int                 step;
     int                 iteration;
+    double              model_time;     // model time in SI seconds
+    int                 time_unit;      // 0=Ma, 1=Ka, 2=yr
     int                 initialized;
 } g_logger = {
     .log_file       = NULL,
@@ -45,6 +47,8 @@ static struct {
     .t0             = 0.0,
     .step           = -1,
     .iteration      = -1,
+    .model_time     = -1.0,
+    .time_unit      = 0,
     .initialized    = 0,
 };
 
@@ -206,7 +210,7 @@ void mdoodz_log_emit(MdoodzLogLevel level, const char *file, int line, const cha
     int  poff = 0;
 
     int has_ts   = g_logger.show_timestamp;
-    int has_meta = g_logger.show_metadata && (g_logger.step >= 0 || g_logger.iteration >= 0);
+    int has_meta = g_logger.show_metadata && (g_logger.step >= 0 || g_logger.iteration >= 0 || g_logger.model_time >= 0);
 
     if (has_ts || has_meta) {
         prefix[poff++] = '[';
@@ -237,6 +241,14 @@ void mdoodz_log_emit(MdoodzLogLevel level, const char *file, int line, const cha
         if (has_meta) {
             if (g_logger.step >= 0)
                 poff += snprintf(prefix + poff, sizeof(prefix) - poff, "|S%04d", g_logger.step);
+            if (g_logger.model_time >= 0) {
+                double t = g_logger.model_time;
+                const char *unit = "Ma";
+                if (g_logger.time_unit == 0)      { t /= (1e6 * 365.25 * 24 * 3600); unit = "Ma"; }
+                else if (g_logger.time_unit == 1) { t /= (1e3 * 365.25 * 24 * 3600); unit = "Ka"; }
+                else                              { t /= (365.25 * 24 * 3600);       unit = "yr"; }
+                poff += snprintf(prefix + poff, sizeof(prefix) - poff, "|T%.2f%s", t, unit);
+            }
             if (g_logger.iteration >= 0)
                 poff += snprintf(prefix + poff, sizeof(prefix) - poff, "|N%02d", g_logger.iteration);
         }
@@ -278,6 +290,11 @@ void mdoodz_log_emit(MdoodzLogLevel level, const char *file, int line, const cha
 
 void mdoodz_log_set_step(int step) {
     g_logger.step = step;
+}
+
+void mdoodz_log_set_model_time(double time_s, int time_unit) {
+    g_logger.model_time = time_s;
+    g_logger.time_unit  = time_unit;
 }
 
 void mdoodz_log_set_iteration(int nit) {

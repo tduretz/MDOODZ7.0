@@ -1059,6 +1059,7 @@ Input ReadInputFile( char *fileName ) {
     model.log.ts_mode        = ReadInt2( fin, "log_ts_mode",    0 ); // 0=relative, 1=absolute, 2=both
     model.log.show_metadata  = ReadInt2( fin, "log_metadata",   0 ); // 0=off, 1=show step/iteration
     model.log.log_path       = NULL; // default: "mdoodz.log" in cwd
+    model.time_unit          = ReadInt2( fin, "time_unit",      0 ); // 0=Ma, 1=Ka, 2=yr
 
     // Read scales for non-dimensionalisation
     scale scaling            = (scale){
@@ -1082,6 +1083,7 @@ Input ReadInputFile( char *fileName ) {
     // Time domain
     model.Nt                 = ReadInt2( fin, "Nt",         1 );            // Number of time steps    
     model.dt                 = ReadDou2( fin, "dt",       0.0 ) /scaling.t; // Time step
+    model.t_end              = ReadDou2( fin, "t_end",    0.0 ) /scaling.t; // End time (0 = use Nt instead)
     model.Courant            = ReadDou2( fin, "Courant",             0.5 ); // Courant number
     model.RK                 = ReadInt2( fin, "RK",                    4 ); // Order of Runge-Kutta advection solver (1, 2 or 4)
     model.constant_dt        = ReadInt2( fin, "constant_dt",           0 ); // Activates constant time step

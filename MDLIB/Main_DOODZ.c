@@ -62,7 +62,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
     // Open performance CSV
     FILE *perf_csv = fopen("perf.csv", "w");
     if (perf_csv) {
-        fprintf(perf_csv, "step,wall_s,rheology_s,assembly_s,solve_s,nit,n_particles,neq_mom,neq_cont,peak_rss_mb,user_cpu_s,sys_cpu_s\n");
+        fprintf(perf_csv, "step,wall_s,time_ma,rheology_s,assembly_s,solve_s,thermal_s,advection_s,free_surface_s,reseeding_s,melting_s,anisotropy_s,gse_s,output_s,nit,n_particles,neq_mom,neq_cont,peak_rss_mb,user_cpu_s,sys_cpu_s\n");
     }
 
     MdoodzInput input = (MdoodzInput){
@@ -445,9 +445,14 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
     SparseMat    StokesA, StokesB, StokesC, StokesD;
     SparseMat    JacobA,  JacobB,  JacobC,  JacobD;
     DirectSolver CholmodSolver;
-    for (; input.model.step<= input.model.Nt; input.model.step++) {
+    for (; (input.model.t_end > 0 ? input.model.time < input.model.t_end : input.model.step <= input.model.Nt); input.model.step++) {
 
         mdoodz_log_set_step(input.model.step);
+        mdoodz_log_set_model_time(input.model.time * input.scaling.t, input.model.time_unit);
+
+        // Per-subsystem timing accumulators (reset each timestep)
+        double dt_thermal = 0, dt_advection = 0, dt_free_surface = 0, dt_reseeding = 0;
+        double dt_melting = 0, dt_anisotropy = 0, dt_gse = 0, dt_output = 0;
 
         LOG_INFO("*****************************************************");
         LOG_INFO("****************** Time step %05d ******************", input.model.step);
@@ -598,7 +603,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         ComputeLithostaticPressure( &mesh, &input.model, input.materials.rho[0], input.scaling, 1 );
 
         // Update anisotropy factor (function of accumulated strain and phase)
-        if ( input.model.anisotropy == 1 ) UpdateAnisoFactor( &mesh, &input.materials, &input.model, &input.scaling);
+        if ( input.model.anisotropy == 1 ) { double t_aniso0 = omp_get_wtime(); UpdateAnisoFactor( &mesh, &input.materials, &input.model, &input.scaling); dt_anisotropy += omp_get_wtime() - t_aniso0; }
 
         // Min/Max interpolated fields
         if (input.model.noisy == 1 ) {
@@ -973,7 +978,9 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         UpdateParticlePressure( &mesh, input.scaling, input.model, &particles, &input.materials );
 
         // Grain size evolution
+        { double t_gse0 = omp_get_wtime();
         UpdateParticleGrainSize( &mesh, input.scaling, input.model, &particles, &input.materials );
+        dt_gse += omp_get_wtime() - t_gse0; }
 
         if (input.model.noisy == 1 ) {
             MinMaxArrayTag( mesh.d0_n   , input.scaling.L, (mesh.Nx-1)*(mesh.Nz-1), "d0", mesh.BCp.type );
@@ -982,8 +989,10 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         }
 
         if (input.model.melting == 1 ) {
+            double t_melt0 = omp_get_wtime();
             MeltFractionGrid( &mesh, &particles, &input.materials, &input.model, &input.scaling );
             UpdateAlphaCp( &mesh, &particles, &input.materials, &input.model, &input.scaling );
+            dt_melting += omp_get_wtime() - t_melt0;
             MinMaxArrayTag( mesh.Cp,         input.scaling.Cp,             (mesh.Nx-1)*(mesh.Nz-1), "Cp     ", mesh.BCp.type );
             MinMaxArrayTag( mesh.alp,    1.0/input.scaling.T,              (mesh.Nx-1)*(mesh.Nz-1), "alp     ", mesh.BCp.type );
         }
@@ -1007,14 +1016,17 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             // Matrix assembly and direct solve
             EnergyDirectSolve( &mesh, input.model,  mesh.rhs_t, &particles, input.model.dt, input.model.shear_heating, input.model.adiab_heating, input.scaling, 1 );
             MinMaxArray(particles.T, input.scaling.T, particles.Nb_part, "T part. before UpdateParticleEnergy");
-            LOG_TIME("Thermal solver: %lf sec", (omp_get_wtime() - t_omp));
+            dt_thermal = omp_get_wtime() - t_omp;
+            LOG_TIME("Thermal solver: %lf sec", dt_thermal);
         }
 
         // Update energy on particles
         UpdateParticleEnergy( &mesh, input.scaling, input.model, &particles, &input.materials );
 
         // Grain size evolution
+        { double t_gse0 = omp_get_wtime();
         UpdateParticleGrainSize( &mesh, input.scaling, input.model, &particles, &input.materials );
+        dt_gse += omp_get_wtime() - t_gse0; }
 
         if (input.model.noisy == 1 ) {
             MinMaxArrayTag( mesh.d0_n   , input.scaling.L, (mesh.Nx-1)*(mesh.Nz-1), "d0", mesh.BCp.type );
@@ -1023,8 +1035,10 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         }
 
         if (input.model.melting == 1 ) {
+            double t_melt0 = omp_get_wtime();
             MeltFractionGrid( &mesh, &particles, &input.materials, &input.model, &input.scaling );
             UpdateDensity( &mesh, &particles, &input.materials, &input.model, &input.scaling );
+            dt_melting += omp_get_wtime() - t_melt0;
         }
 
         //--------------------------------------------------------------------------------------------------------------------------------//
@@ -1037,7 +1051,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
         if (input.model.chemical_production == 1)  {
             if (input.model.anisotropy==0) NonNewtonianViscosityGrid(      &mesh, &input.materials, &input.model, Nmodel, &input.scaling, 0 );
-            if (input.model.anisotropy==1) NonNewtonianViscosityGridAniso( &mesh, &input.materials, &input.model, Nmodel, &input.scaling, 0 );
+            if (input.model.anisotropy==1) { double t_aniso0 = omp_get_wtime(); NonNewtonianViscosityGridAniso( &mesh, &input.materials, &input.model, Nmodel, &input.scaling, 0 ); dt_anisotropy += omp_get_wtime() - t_aniso0; }
             MinMaxArrayTag( mesh.X_s, 1.0, (mesh.Nx)*(mesh.Nz),     "X_s     ", mesh.BCg.type );
             MinMaxArrayTag( mesh.X_n, 1.0, (mesh.Nx-1)*(mesh.Nz-1), "X_n     ", mesh.BCp.type );
         }
@@ -1116,9 +1130,11 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                 }
 
                 if (input.model.free_surface == 1 ) {
+                    double t_fs0 = omp_get_wtime();
                     // Advect free surface with RK2
                     RogerGuntherII( &topo_chain, input.model, mesh, 1, input.scaling );
                     RogerGuntherII( &topo_chain_ini, input.model, mesh, 1, input.scaling );
+                    dt_free_surface += omp_get_wtime() - t_fs0;
                 }
 
                 // Correction for particle inflow 0
@@ -1142,6 +1158,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                 }
 
                 if (input.model.free_surface == 1 ) {
+                    double t_fs0 = omp_get_wtime();
 
                     // Get current topography
                     InterpTopoPart2Grid(  &topo,     &topo_chain,     input.model, mesh, input.scaling, mesh.xg_coord, 0 );
@@ -1195,9 +1212,11 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
                     // Call cell flagging routine for free surface calculations
                     CellFlagging( &mesh, input.model, topo, input.scaling );
+                    dt_free_surface += omp_get_wtime() - t_fs0;
                 }
 
                 LOG_TIME("Advection solver: %lf sec", (omp_get_wtime() - t_omp) );
+                dt_advection += omp_get_wtime() - t_omp;
 
 #ifdef _HDF5_
                 if ( input.model.writer_debug == 1 ) {
@@ -1231,6 +1250,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                 LOG_INFO(GREEN "New number of particles     = %d" RESET, particles.Nb_part    );
 
                 LOG_TIME("CountPartCell: %lf sec", (omp_get_wtime() - t_omp) );
+                dt_reseeding += omp_get_wtime() - t_omp;
 
                 // Remove particles that would be above the surface
                 if (input.model.free_surface == 1 ) {
@@ -1272,6 +1292,8 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             LOG_INFO("********* Write output files ********");
             LOG_INFO("*************************************");
 
+            double t_out0 = omp_get_wtime();
+
             // Breakpoint file
             t_omp = (double)omp_get_wtime();
             if (input.model.delete_breakpoints == 1 ) DeletePreviousBreakpoint(input.model.step, input.model.writer_step  );
@@ -1286,6 +1308,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             if (input.model.writer_markers == 1 ) WriteOutputHDF5Particles( &mesh, &particles, &topo, &topo_chain, &topo_ini, &topo_chain_ini, input.model, BaseParticleFileName, input.materials, input.scaling );
             LOG_TIME("Output file write: %lf sec", (omp_get_wtime() - t_omp));
 #endif
+            dt_output += omp_get_wtime() - t_out0;
         }
 
         LOG_TIME("Total timestep calculation time = %lf sec", (double)((double)omp_get_wtime() - t_omp_step) );
@@ -1307,9 +1330,12 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             }
             if (perf_csv) {
                 double wall_s = (double)(omp_get_wtime() - t_omp_step);
-                fprintf(perf_csv, "%d,%.4f,%.4f,%.4f,%.4f,%d,%d,%d,%d,%.1f,%.1f,%.1f\n",
-                        input.model.step, wall_s,
+                double time_ma = input.model.time * input.scaling.t / (1e6 * 365.25 * 24 * 3600);
+                fprintf(perf_csv, "%d,%.4f,%.6e,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%d,%d,%d,%d,%.1f,%.1f,%.1f\n",
+                        input.model.step, wall_s, time_ma,
                         dt_rheology_total, dt_assembly_total, dt_solve_total,
+                        dt_thermal, dt_advection, dt_free_surface, dt_reseeding,
+                        dt_melting, dt_anisotropy, dt_gse, dt_output,
                         Nmodel.nit, particles.Nb_part,
                         Stokes.neq_mom, Stokes.neq_cont,
                         peak_mb, user_s, sys_s);

@@ -58,6 +58,7 @@ void mdoodz_log_flush(void);
 void mdoodz_log_emit(MdoodzLogLevel level, const char *file, int line, const char *fmt, ...);
 
 void mdoodz_log_set_step(int step);
+void mdoodz_log_set_model_time(double time_s, int time_unit);
 void mdoodz_log_set_iteration(int nit);
 void mdoodz_log_clear_iteration(void);
 
