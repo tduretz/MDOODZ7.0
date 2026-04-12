@@ -63,6 +63,8 @@ done
     echo "| OS | $(read_field "$f" os) $(read_field "$f" arch) |"
     echo "| CPUs | $(read_field "$f" cpus) |"
     echo "| RAM | $(read_field "$f" ram_mb) MB |"
+    echo "| Scenario | $(read_field "$f" scenario) |"
+    echo "| Mode | $(read_field "$f" mode) |"
     echo "| Compiler | $(read_field "$f" compiler) |"
     echo "| Date | $(read_field "$f" date) |"
     # Test results if available
@@ -98,16 +100,19 @@ done
   # --- Summary table ---
   echo "## Results Summary"
   echo ""
-  echo "| Host | Grid | Threads | Steps | Avg Wall (s) | Avg Rheology (s) | Avg Assembly (s) | Avg Solve (s) | Avg Nit | Peak RSS (MB) |"
-  echo "|------|------|---------|-------|-------------|-----------------|-----------------|--------------|---------|--------------|"
+  # summary.csv: host,os,arch,grid,nx,nz,threads,steps,avg_wall_s,total_wall_s,
+  #   avg_rheology_s,avg_assembly_s,avg_solve_s,avg_thermal_s,avg_advection_s,
+  #   avg_melting_s,avg_anisotropy_s,avg_gse_s,avg_output_s,avg_nit,peak_rss_mb
+  echo "| Host | Grid | Threads | Steps | Avg Wall (s) | Rheology | Assembly | Solve | Thermal | Advect | Melt | Aniso | GSE | Output | Nit | RSS (MB) |"
+  echo "|------|------|---------|-------|-------------|----------|----------|-------|---------|--------|------|-------|-----|--------|-----|---------|"
 
   for dir in "${DIRS[@]}"; do
     dir="${dir%/}"
     csv="${dir}/summary.csv"
     [[ -f "$csv" ]] || continue
-    tail -n+2 "$csv" | while IFS=',' read -r host os arch grid nx nz threads steps avg_wall total_wall avg_rheo avg_asm avg_sol avg_nit peak_rss; do
-      printf "| %s | %s | %s | %s | %s | %s | %s | %s | %s | %s |\n" \
-        "$host" "$grid" "$threads" "$steps" "$avg_wall" "$avg_rheo" "$avg_asm" "$avg_sol" "$avg_nit" "$peak_rss"
+    tail -n+2 "$csv" | while IFS=',' read -r host os arch grid nx nz threads steps avg_wall total_wall avg_rheo avg_asm avg_sol avg_therm avg_adv avg_melt avg_aniso avg_gse avg_outp avg_nit peak_rss; do
+      printf "| %s | %s | %s | %s | %s | %s | %s | %s | %s | %s | %s | %s | %s | %s | %s | %s |\n" \
+        "$host" "$grid" "$threads" "$steps" "$avg_wall" "$avg_rheo" "$avg_asm" "$avg_sol" "$avg_therm" "$avg_adv" "$avg_melt" "$avg_aniso" "$avg_gse" "$avg_outp" "$avg_nit" "$peak_rss"
     done
   done
   echo ""
@@ -181,7 +186,7 @@ done
     [[ -f "$csv" ]] || continue
 
     max_thr=$(tail -n+2 "$csv" | cut -d',' -f7 | sort -rn | head -1)
-    tail -n+2 "$csv" | grep ",${max_thr}," | sort -t',' -k5 -n | while IFS=',' read -r host os arch grid nx nz threads steps avg_wall total_wall avg_rheo avg_asm avg_sol avg_nit peak_rss; do
+    tail -n+2 "$csv" | grep ",${max_thr}," | sort -t',' -k5 -n | while IFS=',' read -r host os arch grid nx nz threads steps avg_wall total_wall avg_rheo avg_asm avg_sol avg_therm avg_adv avg_melt avg_aniso avg_gse avg_outp avg_nit peak_rss; do
       cells=$((nx * nz))
       rss_per_cell=$(awk "BEGIN { printf \"%.1f\", ${peak_rss}/${cells}*1024 }")
       printf "| %s | %s | %s | %s | %s |\n" "$host" "$grid" "$threads" "$peak_rss" "$rss_per_cell"
@@ -198,11 +203,15 @@ done
     tag="$(basename "$(dirname "$first_perf")")"
     echo "_Run: ${tag}_"
     echo ""
-    echo "| Step | Wall (s) | Rheology (s) | Assembly (s) | Solve (s) | Nit | Particles | RSS (MB) |"
-    echo "|------|---------|-------------|-------------|----------|-----|-----------|---------|"
-    tail -n+2 "$first_perf" | while IFS=',' read -r step wall rheo asm sol nit npart neq_m neq_c rss ucpu scpu; do
-      printf "| %s | %s | %s | %s | %s | %s | %s | %s |\n" \
-        "$step" "$wall" "$rheo" "$asm" "$sol" "$nit" "$npart" "$rss"
+    # 21-column perf.csv:
+    # step,wall,time_ma,rheology,assembly,solve,thermal,advection,free_surface,
+    # reseeding,melting,anisotropy,gse,output,nit,n_particles,neq_mom,neq_cont,
+    # peak_rss,user_cpu,sys_cpu
+    echo "| Step | Wall (s) | Time (Ma) | Rheol | Assem | Solve | Therm | Advect | Melt | Nit | Particles | RSS (MB) |"
+    echo "|------|---------|----------|-------|-------|-------|-------|--------|------|-----|-----------|---------|"
+    tail -n+2 "$first_perf" | while IFS=',' read -r step wall time_ma rheo asm sol therm adv fs reseed melt aniso gse outp nit npart neq_m neq_c rss ucpu scpu; do
+      printf "| %s | %s | %s | %s | %s | %s | %s | %s | %s | %s | %s | %s |\n" \
+        "$step" "$wall" "$time_ma" "$rheo" "$asm" "$sol" "$therm" "$adv" "$melt" "$nit" "$npart" "$rss"
     done
   fi
   echo ""
