@@ -32,12 +32,12 @@
 
 ## 3. Model Stability Validation
 
-- [ ] 3.1 Run lowres (100×80) for 3 timesteps — verify exit code 0, no NaN
-- [ ] 3.2 Run default (200×160) for 3 timesteps — verify exit code 0, no NaN
-- [ ] 3.3 Run medres (501×401) for 3 timesteps — verify exit code 0, no NaN
-- [ ] 3.4 Run highres (1000×800) for 3 timesteps — verify exit code 0, no NaN
-- [ ] 3.5 If any resolution crashes: diagnose, adjust parameters (eta_vp, min_eta, nit_max, anisotropy factors, dt), and re-validate all resolutions
-- [ ] 3.6 Verify perf.csv has non-zero values for thermal_s, advection_s, melting_s, anisotropy_s, gse_s columns
+- [x] 3.1 Run lowres (100×80) for 3 timesteps — verify exit code 0, no NaN
+- [x] 3.2 Run default (200×160) for 3 timesteps — verify exit code 0, no NaN
+- [x] 3.3 Run medres (501×401) for 3 timesteps — verify exit code 0, no NaN
+- [x] 3.4 Run highres (1000×800) for 3 timesteps — verify exit code 0, no NaN
+- [x] 3.5 If any resolution crashes: diagnose, adjust parameters (eta_vp, min_eta, nit_max, anisotropy factors, dt), and re-validate all resolutions
+- [x] 3.6 Verify perf.csv has non-zero values for thermal_s, advection_s, melting_s, anisotropy_s, gse_s columns
 
 ## 4. Benchmark Pipeline — --scenario, --resolutions, --validate
 
