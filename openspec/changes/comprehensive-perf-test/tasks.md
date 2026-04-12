@@ -19,16 +19,16 @@
 
 ## 2. Scenario — RiftingComprehensive
 
-- [ ] 2.1 Merge `origin/add-meltin-vp-model` into current branch (or rebase onto it)
-- [ ] 2.2 Copy `SETS/RiftingCombinedYield.c` → `SETS/RiftingComprehensive.c`, update `RunMDOODZ()` call to use `"RiftingComprehensive.txt"`
-- [ ] 2.3 Copy `SETS/RiftingCombinedYield.txt` → `SETS/RiftingComprehensive.txt` (200×160 default), set `t_end = 4.73e14`, `Nt = 99999`
-- [ ] 2.4 Add anisotropy parameters to mantle phases (IDs 1, 2, 3, 5): `aniso = 1`, `aniso_fstrain = 1`, per-phase anisotropy factors
-- [ ] 2.5 Add GSE to phase 1 (dry olivine): `gsel = 1` with grain-size parameters
-- [ ] 2.6 Create `RiftingComprehensive_lowres.txt` — 100×80, same physics, tuned dt
-- [ ] 2.7 Create `RiftingComprehensive_medres.txt` — 501×401, same physics, tuned dt
-- [ ] 2.8 Create `RiftingComprehensive_highres.txt` — 1000×800, same physics, tuned dt
-- [ ] 2.9 Register `RiftingComprehensive` in `SETS/CMakeLists.txt` via `add_set(RiftingComprehensive)`
-- [ ] 2.10 Build the scenario: `cmake -DSET=RiftingComprehensive -DOPT=ON -DOMP=ON`
+- [x] 2.1 Merge `origin/add-meltin-vp-model` into current branch (or rebase onto it)
+- [x] 2.2 Copy `SETS/RiftingCombinedYield.c` → `SETS/RiftingComprehensive.c`, update `RunMDOODZ()` call to use `"RiftingComprehensive.txt"`
+- [x] 2.3 Copy `SETS/RiftingCombinedYield.txt` → `SETS/RiftingComprehensive.txt` (200×160 default), set `t_end = 4.73e14`, `Nt = 99999`
+- [x] 2.4 Add anisotropy parameters to mantle phases (IDs 1, 2, 3, 5): `aniso = 1`, `aniso_fstrain = 1`, per-phase anisotropy factors
+- [x] 2.5 Add GSE to phase 1 (dry olivine): `gsel = 1` with grain-size parameters
+- [x] 2.6 Create `RiftingComprehensive_lowres.txt` — 100×80, same physics, tuned dt
+- [x] 2.7 Create `RiftingComprehensive_medres.txt` — 501×401, same physics, tuned dt
+- [x] 2.8 Create `RiftingComprehensive_highres.txt` — 1000×800, same physics, tuned dt
+- [x] 2.9 Register `RiftingComprehensive` in `SETS/CMakeLists.txt` via `add_set(RiftingComprehensive)`
+- [x] 2.10 Build the scenario: `cmake -DSET=RiftingComprehensive -DOPT=ON -DOMP=ON`
 
 ## 3. Model Stability Validation
 
