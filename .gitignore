@@ -27,3 +27,5 @@ RUNS/
 *.bin
 *.pem
 benchmark-results/
+*.zip
+*.ZIP
