@@ -413,3 +413,28 @@ The optimal thread count shifts from 8 (Experiment 4) to **16** (Experiment 5 mo
 
 **Data**: Mode 2 `benchmark-results/20260413-200104/`, Mode 1 `benchmark-results/20260413-204024/`, Experiment 4 baseline `benchmark-results/20260413-182325/`
 **Code**: Committed as `46445ea` on `add-performance-metrics` branch. Kept. Default is `interp_mode = 0` (backward compatible).
+
+### Experiment 6: AccumulatedStrainII OMP Parallelization (2026-04-13) — MODERATE GAIN
+
+**Hypothesis**: The `AccumulatedStrainII` particle loop (~4M particles) had a commented-out `#pragma omp parallel for` with an incomplete variable clause. Uncommenting and fixing the pragma would parallelize the grid-to-particle strain accumulation, reducing `post_solve_s` at multi-threaded counts.
+
+**Implementation**: Uncommented the `#pragma omp parallel for` on the particle loop in `AccumulatedStrainII` (`MDLIB/RheologyParticles.c`). Fixed the variable clauses: added `k`, `l`, `dE_pl_vol`, `dE_el` to `private`; added `strain_inc_pl_vol` to `shared`. Also replaced `exit(0)` with `LOG_ERR` + `exit(1)` in the grid loop negative-strain check, and guarded BlankenBench `OpenMP::OpenMP_CXX` link with `TARGET` check to fix a pre-existing CMake build failure.
+
+**Results** (c5ad.4xlarge, 1000×800, 10 steps, thermal_solver=1, interp_mode=2, comparison vs Experiment 5 mode 2):
+
+| Threads | Exp5 wall | Exp6 wall | Wall Δ | Exp5 post_solve | Exp6 post_solve | PS Δ |
+|---------|-----------|-----------|--------|-----------------|-----------------|------|
+| 1 | 32.27s | 32.17s | −0.3% | 11.73s | 11.76s | +0.3% |
+| 2 | 19.94s | 19.32s | −3.1% | 6.95s | 6.62s | −4.7% |
+| 4 | 12.96s | 12.43s | −4.1% | 4.34s | 3.87s | −10.8% |
+| 6 | 10.73s | 10.09s | −5.9% | 3.55s | 2.99s | −15.8% |
+| 8 | 9.69s | 9.14s | −5.7% | 3.23s | 2.67s | −17.5% |
+| 12 | 10.00s | 9.52s | −4.7% | 3.52s | 2.93s | −16.8% |
+| 16 | 9.23s | **8.71s** | −5.6% | 3.21s | 2.62s | −18.3% |
+
+**Conclusion**: `post_solve` improves 15–18% at 4+ threads. Overall wall time improves ~5–6% at the optimum (16t). Single-thread is unchanged (expected — no parallelism benefit). The particle loop is embarrassingly parallel (each particle reads shared grid arrays, writes only to its own `particles->strain*[k]`), making it bit-identical to serial execution. Best wall time moves from 9.23s to **8.71s** at 16 threads.
+
+**Key insight**: The original pragma was likely commented out because the `private` clause was missing `dE_pl_vol` (added later as a new strain increment) and `k`/`l` (loop indices). This caused data races that produced incorrect results, leading the developer to disable parallelism rather than fix the clause. Always audit variable clauses when adding fields to existing parallel regions.
+
+**Data**: `benchmark-results/20260413-213139/`, Experiment 5 baseline `benchmark-results/20260413-200104/`
+**Code**: Committed as `df95e74` on `add-performance-metrics` branch. Kept.
