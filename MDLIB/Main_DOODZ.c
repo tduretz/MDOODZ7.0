@@ -138,6 +138,14 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
     // Set new particle distribution
     int cent=1, vert=0, prop=1, interp=0, vxnodes=-1, vznodes=-2;
+
+    // Initialize persistent thermal CHOLMOD solver (before irestart branch, used by both paths)
+    DirectSolver ThermalSolver;
+    cholmod_start( &ThermalSolver.c );
+    ThermalSolver.c.nthreads_max = cholmod_nthreads;
+    ThermalSolver.Analyze = 1;
+    ThermalSolver.Lfact = NULL;
+
     if ( input.model.irestart == 0 ) {
 
       input.model.step = 0;
@@ -251,7 +259,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
         SetBCs(*setup->SetBCs, &input, &mesh, &topo);
         UpdateDensity( &mesh, &particles, &input.materials, &input.model, &input.scaling );
-        if (input.model.initial_cooling == 1 ) ThermalSteps(   &mesh, input.model, mesh.rhs_t, &particles, input.model.cooling_duration, input.scaling );
+        if (input.model.initial_cooling == 1 ) ThermalSteps(   &mesh, input.model, mesh.rhs_t, &particles, input.model.cooling_duration, input.scaling, &ThermalSolver );
         if (input.model.therm_perturb   == 1 ) SetThermalPert( &mesh, input.model, input.scaling );
         Interp_Grid2P_centroids2( particles, particles.T,    &mesh, mesh.T, mesh.xvz_coord,  mesh.zvx_coord,  mesh.Nx-1, mesh.Nz-1, mesh.BCt.type, &input.model );
         ArrayEqualArray( mesh.T0_n, mesh.T, (mesh.Nx-1)*(mesh.Nz-1) );
@@ -1034,7 +1042,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             t_omp = (double)omp_get_wtime();
 
             // Matrix assembly and direct solve
-            EnergyDirectSolve( &mesh, input.model,  mesh.rhs_t, &particles, input.model.dt, input.model.shear_heating, input.model.adiab_heating, input.scaling, 1 );
+            EnergyDirectSolve( &mesh, input.model,  mesh.rhs_t, &particles, input.model.dt, input.model.shear_heating, input.model.adiab_heating, input.scaling, 1, &ThermalSolver );
             MinMaxArray(particles.T, input.scaling.T, particles.Nb_part, "T part. before UpdateParticleEnergy");
             dt_thermal = omp_get_wtime() - t_omp;
             LOG_TIME("Thermal solver: %lf sec", dt_thermal);
@@ -1395,6 +1403,10 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
     //------------------------------------------------------------------------------------------------------------------------------//
 
     if (input.model.gnuplot_log_res == 1) pclose(GNUplotPipe);
+
+    // Free thermal solver
+    if ( ThermalSolver.Lfact != NULL ) cholmod_free_factor( &ThermalSolver.Lfact, &ThermalSolver.c );
+    cholmod_finish( &ThermalSolver.c );
 
     //    // Free markers chains
     if (input.model.free_surface == 1 ) FreeMarkerChain( &topo,     &topo_chain     );

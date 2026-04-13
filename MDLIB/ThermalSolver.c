@@ -219,7 +219,7 @@ return At;
 }
 
 
-cholmod_factor* FactorEnergyCHOLMOD( cholmod_common *c, cs_di *At, double *a, int *ia, int *ja, int n, int nnz, int polar_mode ) {
+cholmod_factor* FactorEnergyCHOLMOD( cholmod_common *c, cs_di *At, double *a, int *ia, int *ja, int n, int nnz, int polar_mode, int analyze, cholmod_factor *Lfact_in ) {
 
     cs_di  A, *Ac, *AAt;
     clock_t t_omp;
@@ -260,8 +260,16 @@ cholmod_factor* FactorEnergyCHOLMOD( cholmod_common *c, cs_di *At, double *a, in
     c->nmethods  = 1;
     c->method[0].ordering=CHOLMOD_AMD;
     c->postorder = 1;
-//    cholmod_check_sparse ( Acml, c ) ;
-    Afact = cholmod_analyze( Acml, c ) ;
+
+    if ( analyze == 1 ) {
+        // First call: symbolic analysis + numeric factorization
+        Afact = cholmod_analyze( Acml, c ) ;
+    }
+    else {
+        // Subsequent calls: reuse cached symbolic factorization
+        Afact = Lfact_in;
+    }
+
     t_omp = (double)omp_get_wtime();
     cholmod_factorize( Acml, Afact, c) ;
     LOG_TIME("Cholesky factorization = %lf sec", (double)((double)omp_get_wtime() - t_omp));
@@ -278,8 +286,15 @@ cholmod_factor* FactorEnergyCHOLMOD( cholmod_common *c, cs_di *At, double *a, in
     cs_spfree(Ac);
     if ( polar_mode == 1 ) cs_spfree(AAt);
 
-    Lfact = cholmod_copy_factor( Afact, c );
-    cholmod_free_factor ( &Afact, c) ;
+    if ( analyze == 1 ) {
+        // First call: copy factor for persistent storage
+        Lfact = cholmod_copy_factor( Afact, c );
+        cholmod_free_factor ( &Afact, c) ;
+    }
+    else {
+        // Subsequent calls: factor was modified in-place, return it
+        Lfact = Afact;
+    }
 
     return Lfact;
 }

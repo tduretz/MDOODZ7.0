@@ -407,11 +407,11 @@ void            DeformationGradient(grid, scale, params, markers *);
 
 // Energy
 void            UpdateParticleEnergy(grid *, scale, params, markers *, mat_prop *);
-void            EnergyDirectSolve(grid *, params, double *, markers *, double, int, int, scale, int);
-cholmod_factor *FactorEnergyCHOLMOD(cholmod_common *, cs_di *, double *, int *, int *, int, int, int);
+void            EnergyDirectSolve(grid *, params, double *, markers *, double, int, int, scale, int, DirectSolver *);
+cholmod_factor *FactorEnergyCHOLMOD(cholmod_common *, cs_di *, double *, int *, int *, int, int, int, int, cholmod_factor *);
 cs_di          *TransposeA(cholmod_common *, double *, int *, int *, int, int);
 void            SolveEnergyCHOLMOD(cholmod_common *, cs_di *, cholmod_factor *, double *, double *, int, int, int);
-void            ThermalSteps(grid *, params, double *, markers *, double, scale);
+void            ThermalSteps(grid *, params, double *, markers *, double, scale, DirectSolver *);
 void            SetThermalPert(grid *, params, scale);
 void            UpdateMaxPT(scale, params, markers *);
 

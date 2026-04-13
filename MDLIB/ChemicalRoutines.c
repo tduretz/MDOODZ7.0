@@ -369,7 +369,7 @@ void ChemicalDirectSolve( grid *mesh, params model, markers *particles, mat_prop
     At = TransposeA( &c, A, Ic, J, neq, nnzc );
     
     // Factor matrix only at the first step
-    Afact = FactorEnergyCHOLMOD( &c, At, A, Ic, J, neq, nnzc, model.polar );
+    Afact = FactorEnergyCHOLMOD( &c, At, A, Ic, J, neq, nnzc, model.polar, 1, NULL );
     
     // Solve
     ArrayPlusScalarArray( b, 1.0, bbc, neq );
