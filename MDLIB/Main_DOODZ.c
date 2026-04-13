@@ -122,6 +122,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
     LOG_INFO("Num threads = %03d", omp_get_num_threads());
     int cholmod_nthreads = (input.model.cholmod_threads == -1) ? num_threads : input.model.cholmod_threads;
     LOG_INFO("CHOLMOD threads: %d", cholmod_nthreads);
+    LOG_INFO("OpenMP schedule mode: %d", input.model.omp_schedule);
 
     LOG_INFO("*************************************");
     LOG_INFO("******* Initialize particles ********");

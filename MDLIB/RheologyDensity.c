@@ -1129,7 +1129,9 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
   InterpCentroidsToVerticesDouble( mesh->phi0_n,  mesh->phi0_s,  mesh, model ); // ACHTUNG NOT FRICTION ANGLE
 
   // Evaluate cell center viscosities
-#pragma omp parallel for shared( mesh ) private( k, l, k1, p, eta, c1, c0, txx1, tzz1, txz1, etaVE, VEcoeff, eII_el, eII_pl, eII_pwl, eII_exp, eII_lin, eII_gbs, eII_cst, dnew, Xreac,OverS, Pcorr, rho, div_el, div_pl, div_r, Exx, Ezz, Exz, eta_e, Wtot, Wel, Wdiss ) firstprivate( el, materials, scaling, average, model, Ncx, Ncz )
+#pragma omp parallel
+  {
+#pragma omp for private( k, l, k1, p, eta, c1, c0, txx1, tzz1, txz1, etaVE, VEcoeff, eII_el, eII_pl, eII_pwl, eII_exp, eII_lin, eII_gbs, eII_cst, dnew, Xreac,OverS, Pcorr, rho, div_el, div_pl, div_r, Exx, Ezz, Exz, eta_e, Wtot, Wel, Wdiss ) firstprivate( el, materials, scaling, average, model, Ncx, Ncz )
   for ( k1=0; k1<Ncx*Ncz; k1++ ) {
 
     //    for ( l=0; l<Ncz; l++ ) {
@@ -1292,7 +1294,7 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
   }
 
 // Calculate vertices viscosity
-#pragma omp parallel for shared( mesh ) private( k, l, k1, p, eta, c1, c0, txx1, tzz1, txz1, etaVE, VEcoeff, eII_el, eII_pl, eII_pwl, eII_exp, eII_lin, eII_gbs, eII_cst, dnew, Wtot, Wel, Wdiss, Xreac, OverS, Pcorr, rho, div_el, div_pl, div_r, Exx, Ezz, Exz, eta_e ) firstprivate( el, materials, scaling, average, model, Nx, Nz )
+#pragma omp for private( k, l, k1, p, eta, c1, c0, txx1, tzz1, txz1, etaVE, VEcoeff, eII_el, eII_pl, eII_pwl, eII_exp, eII_lin, eII_gbs, eII_cst, dnew, Wtot, Wel, Wdiss, Xreac, OverS, Pcorr, rho, div_el, div_pl, div_r, Exx, Ezz, Exz, eta_e ) firstprivate( el, materials, scaling, average, model, Nx, Nz )
   for ( k1=0; k1<Nx*Nz; k1++ ) {
 
     k  = mesh->kn[k1];
@@ -1381,6 +1383,7 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
       mesh->sxz[c1]    = 2.0*mesh->eta_s[c1]*Exz;
     }
   }
+  } // end omp parallel
   // printf("Txz:\n");
   //  Print2DArrayDouble( mesh->sxz,  mesh->Nx, mesh->Nz, scaling->S );
   //    printf("eta_s:\n");

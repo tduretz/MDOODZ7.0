@@ -34,6 +34,7 @@ penalty = 1e2
 eta_average = 0
 interp_stencil = 1
 cholmod_threads = 1
+omp_schedule = 0
 
 /**** SWITCHES ****/
 mechanical    = 1

@@ -1111,6 +1111,7 @@ Input ReadInputFile( char *fileName ) {
     model.diag_scaling       = ReadInt2( fin, "diag_scaling",          1 ); // Activates diagonal scaling
     model.preconditioner     = ReadInt2( fin, "preconditioner",        0 ); // Preconditoner type for Linear solver, 0: Picard preconditionner, -1: symmetrised Picard, 1: symmetrised Newton
     model.cholmod_threads    = ReadInt2( fin, "cholmod_threads",       1 ); // CHOLMOD thread count: 1=single (default), -1=all OMP threads, N=explicit
+    model.omp_schedule       = ReadInt2( fin, "omp_schedule",          0 ); // 0=legacy fork-join (default), 1=persistent OMP parallel regions
     model.lin_abs_div        = ReadDou2( fin, "lin_abs_div",      1.0e-9 ); // Tolerance for linear mechanical solver
     model.lin_rel_div        = ReadDou2( fin, "lin_rel_div",      1.0e-5 ); // Tolerance for linear mechanical solver
     model.lin_abs_mom        = ReadDou2( fin, "lin_abs_mom",      1.0e-9 ); // Tolerance for linear mechanical solver
