@@ -265,3 +265,52 @@ Based on the 28-run sweep (4 resolutions × 7 thread counts × 10 steps):
 - **Memory scales linearly** at ~15.5 MB per 1000 grid cells, independent of thread count.
 - **Grid scaling is linear** $O(n)$: doubling resolution in each dimension (4× cells) costs ~4× wall time.
 - **10 steps is sufficient** for benchmarking — per-step cost is stable across steps.
+
+## Optimization Experiments Log
+
+### Experiment 1: CHOLMOD Multi-Threading (2026-04-13) — NO EFFECT
+
+**Hypothesis**: Setting `cholmod_common.nthreads_max` to match OMP thread count would parallelize the thermal solver's CHOLMOD factorization, reducing `thermal_s`.
+
+**Implementation**: Added `cholmod_threads` parameter to `.txt` config (default 1). Values: `1` = single-thread, `-1` = all OMP threads, `N` = explicit count. Applied to all 3 `cholmod_start` sites (Main_DOODZ.c, ChemicalRoutines.c, ThermalRoutines.c).
+
+**Results** (c5ad.4xlarge, 1001×801, 10 steps, writer=0):
+
+| Threads | thermal_s (threads=1) | thermal_s (threads=auto) | Delta |
+|---------|----------------------|--------------------------|-------|
+| 1 | 6.97s | 6.97s | 0.0% |
+| 4 | 6.96s | 6.96s | 0.0% |
+| 8 | 6.95s | 6.95s | 0.0% |
+| 16 | 6.95s | 6.96s | 0.0% |
+
+**Conclusion**: Zero measurable speedup. `nthreads_max` only controls CHOLMOD's internal sparse BLAS calls, which are negligible for the 5-point stencil sparsity pattern. The dominant cost is serial symbolic analysis + numeric factorization. Parallelizing thermal solve requires either (a) caching `cholmod_analyze` across timesteps (sparsity pattern is constant), (b) a parallel direct solver (MUMPS/PaStiX), or (c) an iterative solver (CG+ICC).
+
+**Data**: `benchmark-results/cholmod-sweep1-threads1/`, `benchmark-results/cholmod-sweep2-threads-auto/`
+
+### Experiment 2: Internal Persistent OMP Regions (2026-04-13) — NO EFFECT / SLIGHT REGRESSION
+
+**Hypothesis**: Consolidating multiple `#pragma omp parallel for` (fork-join) loops into single `#pragma omp parallel` regions within P2Mastah and NonNewtonianViscosityGrid would reduce thread pool fork-join overhead, improving `interp_s` and `rheology_s` at high thread counts.
+
+**Implementation**:
+- P2Mastah: Merged 5 separate fork-join loops (init, scatter, reduction, node values) into 1 persistent `#pragma omp parallel` region using `#pragma omp for` worksharing. Changed `omp_get_num_threads()` to `omp_get_max_threads()` for pre-allocation.
+- NonNewtonianViscosityGrid: Merged 2 fork-join loops (centroid + vertex viscosity) into 1 persistent region.
+- Added `omp_schedule` parameter (placeholder, default 0).
+
+**Results** (c5ad.4xlarge, 1001×801, 10 steps, writer=0):
+
+| Threads | Baseline wall | New wall | Delta | Baseline interp | New interp | Delta |
+|---------|--------------|----------|-------|-----------------|------------|-------|
+| 1 | 36.44s | 36.75s | +0.8% | 7.45s | 7.49s | +0.5% |
+| 2 | 25.56s | 25.74s | +0.7% | 4.63s | 4.37s | -5.6% |
+| 4 | 18.38s | 19.68s | +7.1% | 3.16s | 3.17s | +0.3% |
+| 6 | 16.98s | 18.24s | +7.4% | 3.08s | 3.24s | +5.2% |
+| 8 | 17.24s | 18.41s | +6.8% | 3.62s | 4.09s | +13.0% |
+| 12 | 20.68s | 20.53s | -0.7% | 6.25s | 5.75s | -8.0% |
+| 16 | 20.48s | 20.88s | +2.0% | 6.50s | 6.47s | -0.5% |
+
+**Conclusion**: No improvement; 4–8 threads show a consistent ~7% regression in wall time. The fork-join overhead at 1001×801 is negligible compared to actual computation — the OS thread pool reuses threads efficiently. The regression at 4–8 threads may be due to `omp_get_max_threads()` over-allocating thread-local buffers (16 instead of actual 4–8), causing cache pressure. Internal persistent regions are not worthwhile for this codebase at production grid sizes.
+
+**Key lesson**: OpenMP fork-join overhead is only significant for very small loops or very high thread counts. At 1001×801 with ~12M particles, each loop body does enough work that fork-join cost is in the noise. Future optimization should focus on algorithmic improvements (thermal solver caching, assembly parallelism) rather than reducing fork-join overhead.
+
+**Data**: Baseline `benchmark-results/20260413-105848/`, Persistent OMP `benchmark-results/20260413-151213/`
+**Code**: Reverted — these changes were not kept.
