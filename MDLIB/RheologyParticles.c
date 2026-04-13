@@ -212,9 +212,9 @@ void AccumulatedStrainII( grid* mesh, scale scaling, params model, markers* part
         strain_inc[c1]     = model.dt*(mesh->eII_pl[c1]+mesh->eII_pwl[c1]+mesh->eII_exp[c1]+mesh->eII_lin[c1]+mesh->eII_gbs[c1]+mesh->eII_el[c1]+mesh->eII_cst[c1]);
 
         if (strain_inc[c1]<0) {
-            LOG_INFO("negative strain increment");
-            LOG_INFO("pl = %2.2e pwl = %2.2e exp = %2.2e lin = %2.2e gbs = %2.2e el = %2.2e" ,mesh->eII_pl[c1],mesh->eII_pwl[c1],mesh->eII_exp[c1],mesh->eII_lin[c1],mesh->eII_gbs[c1],mesh->eII_el[c1]);
-            exit(0);
+            LOG_ERR("negative strain increment at cell %d", c1);
+            LOG_ERR("pl = %2.2e pwl = %2.2e exp = %2.2e lin = %2.2e gbs = %2.2e el = %2.2e" ,mesh->eII_pl[c1],mesh->eII_pwl[c1],mesh->eII_exp[c1],mesh->eII_lin[c1],mesh->eII_gbs[c1],mesh->eII_el[c1]);
+            exit(1);
         }
         
         strain_inc_el[c1]      = model.dt*mesh->eII_el[c1];
@@ -234,7 +234,7 @@ void AccumulatedStrainII( grid* mesh, scale scaling, params model, markers* part
     dx=mesh->dx;
     dz=mesh->dz;
     
-    //#pragma omp parallel for shared( particles , strain_inc, strain_inc_el, strain_inc_pl, strain_inc_pwl, strain_inc_exp, strain_inc_lin, strain_inc_gbs, tag  ) private( dE_tot, dE_el, dE_pl, dE_pwl, dE_exp, dE_lin, dE_gbs, sumW, dst, dxm, dzm, iSW, iSE, iNW, iNE, i_part, j_part  ) firstprivate (dx, dz, Nx, Nz)
+#pragma omp parallel for shared( particles, strain_inc, strain_inc_el, strain_inc_pl, strain_inc_pl_vol, strain_inc_pwl, strain_inc_exp, strain_inc_lin, strain_inc_gbs, tag ) private( k, l, dE_tot, dE_el, dE_pl, dE_pl_vol, dE_pwl, dE_exp, dE_lin, dE_gbs, sumW, dst, dxm, dzm, iSW, iSE, iNW, iNE, i_part, j_part ) firstprivate( dx, dz, Nx, Nz )
     for (k=0;k<particles->Nb_part;k++) {
         
         dE_tot     = 0.0;
