@@ -364,3 +364,52 @@ Based on the 28-run sweep (4 resolutions × 7 thread counts × 10 steps):
 
 **Data**: CHOLMOD baseline `benchmark-results/20260413-170125/`, PCG `benchmark-results/20260413-182325/`
 **Code**: Committed on `add-performance-metrics` branch. Kept.
+
+### Experiment 5: Persistent Interpolation Buffers (2026-04-13) — MAJOR GAIN
+
+**Hypothesis**: P2Mastah's per-call `DoodzCalloc`/`DoodzFree` of large scatter buffers (`WM`, `BMWM`, thread-local `Wm`, `BmWm`) causes malloc contention at high thread counts, producing the `interp_s` anti-scaling observed in Experiment 4 (3.5s at 4t → 7.1s at 16t). Pre-allocating these buffers once and reusing them across calls should eliminate the contention and extend scaling beyond 8 threads.
+
+**Implementation**: Added `interp_mode` parameter (0/1/2) and `InterpBufPool` struct that pre-allocates `WM[4]`/`BMWM[4]` for the 4 centroid grid sizes at simulation start.
+
+- **Mode 0** (default): Legacy behaviour — per-call malloc/free, identical to original code.
+- **Mode 1** (thread-local scatter + reduction): Persistent `WM`/`BMWM` + persistent thread-local `Wm[c][nthreads][size]`/`BmWm[c][nthreads][size]`. Each thread scatters to its own buffer, then a serial reduction merges into `WM`/`BMWM`. Eliminates malloc but keeps reduction overhead proportional to `nthreads × grid_size`.
+- **Mode 2** (atomic scatter): Persistent `WM`/`BMWM` only — no thread-local buffers. Threads scatter directly to shared `WM`/`BMWM` using `#pragma omp atomic`. Eliminates both malloc and reduction. Per-phase arrays (`phase_perc_n`/`phase_perc_s`) also use atomic scatter. Requires `_Pragma("omp atomic")` for C11 compatibility.
+
+All ~30 P2Mastah call sites updated. `InterpBufPool` lifecycle: init after grid setup, free at simulation cleanup. Validated bit-identical (mode 0/1) and machine-epsilon (mode 2, due to floating-point reordering) against baseline. 36 new CI test fixtures (18 mode 1 + 18 mode 2), all 19/19 base tests still pass.
+
+**Results** (c5ad.4xlarge, 1000×800, 10 steps, thermal_solver=1 PCG, comparison vs Experiment 4 PCG baseline):
+
+**Mode 2 (atomic scatter) — recommended:**
+
+| Threads | Exp4 wall | Mode 2 wall | Wall Δ | Exp4 interp | Mode 2 interp | Interp Δ |
+|---------|----------|------------|--------|-------------|---------------|----------|
+| 1 | 30.24s | 32.27s | +6.7% | 2.83s | 9.14s | +223% |
+| 2 | 18.98s | 19.94s | +5.1% | 2.47s | 5.12s | +107% |
+| 4 | 13.31s | 12.96s | −2.6% | 3.16s | 3.36s | +6.3% |
+| 6 | 13.24s | 10.73s | −19.0% | 3.47s | 2.82s | −18.7% |
+| 8 | **12.83s** | 9.69s | −24.5% | 3.62s | 2.54s | −29.8% |
+| 12 | 14.36s | 10.00s | −30.4% | 6.25s | 2.60s | −58.4% |
+| 16 | 14.67s | **9.23s** | −37.1% | 6.50s | 2.45s | −62.3% |
+
+**Mode 1 (thread-local + reduction):**
+
+| Threads | Exp4 wall | Mode 1 wall | Wall Δ | Exp4 interp | Mode 1 interp | Interp Δ |
+|---------|----------|------------|--------|-------------|---------------|----------|
+| 1 | 30.24s | 31.35s | +3.7% | 2.83s | 8.13s | +187% |
+| 2 | 18.98s | 19.89s | +4.8% | 2.47s | 4.97s | +101% |
+| 4 | 13.31s | 13.63s | +2.4% | 3.16s | 3.62s | +14.6% |
+| 6 | 13.24s | 12.85s | −2.9% | 3.47s | 4.36s | +25.6% |
+| 8 | **12.83s** | 11.90s | −7.2% | 3.62s | 4.10s | +13.3% |
+| 12 | 14.36s | 12.94s | −9.9% | 6.25s | 4.67s | −25.3% |
+| 16 | 14.67s | 12.39s | −15.5% | 6.50s | 4.81s | −26.0% |
+
+**Conclusion**: Mode 2 (atomic scatter) is the clear winner. At 16 threads: wall time 9.23s vs baseline 14.67s (37% faster), interp 2.45s vs 6.50s (62% faster). The interp anti-scaling is **completely eliminated** — `interp_s` stays flat at ~2.5s from 8 to 16 threads, down from 3.6→7.1s in Experiment 4. Mode 1 provides partial improvement (~15% wall at 16t) but its reduction overhead still causes interp to anti-scale past 4 threads.
+
+At low thread counts (1–2t), both modes are slightly slower than baseline due to the persistent buffer memset overhead replacing the OS's zero-page optimisation on `calloc`. This is irrelevant for production use (always ≥4 threads).
+
+The optimal thread count shifts from 8 (Experiment 4) to **16** (Experiment 5 mode 2), with the best-case wall time improving from 12.83s to 9.23s — a **28% reduction** at the new optimum. The remaining bottlenecks are now `post_solve` (3.21s, 35% of wall) and `advection` (0.47s), not interpolation.
+
+**Memory**: Constant ~12730 MB for mode 2 across all thread counts (no thread-local buffer growth). Mode 1 grows slightly with threads (12785→13639 MB) due to thread-local arrays.
+
+**Data**: Mode 2 `benchmark-results/20260413-200104/`, Mode 1 `benchmark-results/20260413-204024/`, Experiment 4 baseline `benchmark-results/20260413-182325/`
+**Code**: Committed as `46445ea` on `add-performance-metrics` branch. Kept. Default is `interp_mode = 0` (backward compatible).

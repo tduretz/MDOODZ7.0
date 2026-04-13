@@ -56,6 +56,6 @@
 
 ## 9. EC2 Benchmarking
 
-- [ ] 9.1 Run EC2 benchmark: RiftingComprehensive 1001×801, 10 steps, threads 1/2/4/6/8/12/16 with `interp_mode = 2` (atomic scatter — expect largest gains)
-- [ ] 9.2 Run EC2 benchmark: same config with `interp_mode = 1` (persistent buffers only — isolate allocation benefit)
-- [ ] 9.3 Download results, compare against baseline (Experiment 4 CHOLMOD+PCG data), document as Experiment 5 in skill-benchmarking SKILL.md
+- [x] 9.1 Run EC2 benchmark: RiftingComprehensive 1001×801, 10 steps, threads 1/2/4/6/8/12/16 with `interp_mode = 2` (atomic scatter — expect largest gains)
+- [x] 9.2 Run EC2 benchmark: same config with `interp_mode = 1` (persistent buffers only — isolate allocation benefit)
+- [x] 9.3 Download results, compare against baseline (Experiment 4 CHOLMOD+PCG data), document as Experiment 5 in skill-benchmarking SKILL.md
