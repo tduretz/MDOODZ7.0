@@ -2032,8 +2032,22 @@ void P2Mastah ( params *model, markers particles, DoodzFP* mat_prop, grid *mesh,
     if (interp_stencil==9) dx_itp = 3.0*dx/2.0; // 9-cell
     if (interp_stencil==9) dz_itp = 3.0*dz/2.0; // 9-cell
     
-    nthreads = omp_get_max_threads();
-
+    // Initialisation
+    if ( prop == 1 ) {
+#pragma omp parallel for shared ( mesh ) private( i, k, p ) firstprivate( Nx, Nz, nthreads, model, centroid ) schedule( static )
+        for ( i=0; i<Nx*Nz; i++ ) {
+            for (p=0; p<model->Nb_phases; p++) {
+                if (centroid==0) mesh->phase_perc_s[p][i] = 0.0;
+                if (centroid==1) mesh->phase_perc_n[p][i] = 0.0;
+            }
+        }
+    }
+    
+#pragma omp parallel
+    {
+        nthreads = omp_get_num_threads();
+    }
+    
     //--------------------------------------------------------------
     // Initialize Wm and BmWm
     //--------------------------------------------------------------
@@ -2050,26 +2064,12 @@ void P2Mastah ( params *model, markers particles, DoodzFP* mat_prop, grid *mesh,
     
     WM   = DoodzCalloc ( Nx*Nz, sizeof(double));
     BMWM = DoodzCalloc ( Nx*Nz, sizeof(double));
-
-#pragma omp parallel
-    {
-
-    // Initialisation
-    if ( prop == 1 ) {
-#pragma omp for private( i, k, p ) schedule( static )
-        for ( i=0; i<Nx*Nz; i++ ) {
-            for (p=0; p<model->Nb_phases; p++) {
-                if (centroid==0) mesh->phase_perc_s[p][i] = 0.0;
-                if (centroid==1) mesh->phase_perc_n[p][i] = 0.0;
-            }
-        }
-    }
     
     //--------------------------------------------------------------
     // Compute Wm and BmWm
     //--------------------------------------------------------------
     
-    #pragma omp for                                                                        \
+    #pragma omp parallel for shared ( particles, BmWm, Wm, Wm_ph, X_vect, Z_vect )       \
     private ( k, kp, dxm, dzm, ip, jp, distance, mark_val, thread_num, p, peri   )       \
     firstprivate ( mat_prop, dx, dz, Np, Nx, Nz, mesh, flag, avg, dx_itp, dz_itp, prop)  schedule( static )
         
@@ -2255,7 +2255,7 @@ void P2Mastah ( params *model, markers particles, DoodzFP* mat_prop, grid *mesh,
         }
 
     // Final reduction
-#pragma omp for private( i, k, p ) firstprivate( Nx, Nz, nthreads, model, centroid, prop) schedule( static )
+#pragma omp parallel for shared ( BmWm, Wm, BMWM, WM, Wm_ph, mesh ) private( i, k, p ) firstprivate( Nx, Nz, nthreads, model, centroid, prop) schedule( static )
     for ( i=0; i<Nx*Nz; i++ ) {
         for ( k=0; k<nthreads; k++ ) {
             WM[i]   += Wm[k][i];
@@ -2278,7 +2278,7 @@ void P2Mastah ( params *model, markers particles, DoodzFP* mat_prop, grid *mesh,
     //--------------------------------------------------------------
     
     
-#pragma omp for private( i, p ) firstprivate ( avg ) schedule( static )
+#pragma omp parallel for shared ( NodeField, BMWM, WM, Nx, Nz, mesh, NodeType ) private( i, p ) firstprivate ( avg ) schedule( static )
     for (i=0;i<Nx*Nz;i++) {
         
         if ( fabs(WM[i])<1e-30  || (NodeType[i]==30 || NodeType[i]==31) ) {
@@ -2303,8 +2303,6 @@ void P2Mastah ( params *model, markers particles, DoodzFP* mat_prop, grid *mesh,
             }
         }
     }
-
-    } // end omp parallel
 
     // Make periodic
     if (centroid==0 && prop==0 && model->periodic_x==1) {
