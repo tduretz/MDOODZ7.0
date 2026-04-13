@@ -21,6 +21,7 @@
 
 #include "stdio.h"
 #include "mdoodz-private.h"
+#include "math.h"
 
 #include "time.h"
 #include "cs.h"
@@ -328,6 +329,147 @@ void SolveEnergyCHOLMOD( cholmod_common *c, cs_di *At, cholmod_factor *Afact, do
     cholmod_free_dense( &xcm, c );
     cholmod_free_dense( &bcm, c );
     DoodzFree( y );
+}
+
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
+
+int SolveThermalPCG( double *A, int *Ic, int *J, double *b, double *x, int neq, int max_its, double rel_tol ) {
+
+    // Allocate work vectors
+    double *r     = DoodzCalloc( neq, sizeof(double) );
+    double *z     = DoodzCalloc( neq, sizeof(double) );
+    double *p     = DoodzCalloc( neq, sizeof(double) );
+    double *Ap    = DoodzCalloc( neq, sizeof(double) );
+    double *M_inv = DoodzCalloc( neq, sizeof(double) );
+
+    // Extract diagonal for Jacobi preconditioner: M_inv[i] = 1 / A[diag(i)]
+    for ( int i = 0; i < neq; i++ ) {
+        double diag_val = 0.0;
+        for ( int k = Ic[i]; k < Ic[i+1]; k++ ) {
+            if ( J[k] == i ) { diag_val = A[k]; break; }
+        }
+        M_inv[i] = ( fabs(diag_val) > 1e-30 ) ? 1.0 / diag_val : 1.0;
+    }
+
+    // Compute initial residual r = b - A*x  (CSR SpMV)
+#pragma omp parallel for schedule(static)
+    for ( int i = 0; i < neq; i++ ) {
+        double sum = 0.0;
+        for ( int k = Ic[i]; k < Ic[i+1]; k++ ) {
+            sum += A[k] * x[J[k]];
+        }
+        r[i] = b[i] - sum;
+    }
+
+    // z = M_inv .* r
+#pragma omp parallel for schedule(static)
+    for ( int i = 0; i < neq; i++ ) {
+        z[i] = M_inv[i] * r[i];
+    }
+
+    // p = z
+#pragma omp parallel for schedule(static)
+    for ( int i = 0; i < neq; i++ ) {
+        p[i] = z[i];
+    }
+
+    // rz = r . z
+    double rz = 0.0;
+#pragma omp parallel for schedule(static) reduction(+:rz)
+    for ( int i = 0; i < neq; i++ ) {
+        rz += r[i] * z[i];
+    }
+
+    // Compute initial residual norm for convergence check
+    double r_norm0 = 0.0;
+#pragma omp parallel for schedule(static) reduction(+:r_norm0)
+    for ( int i = 0; i < neq; i++ ) {
+        r_norm0 += r[i] * r[i];
+    }
+    r_norm0 = sqrt( r_norm0 );
+    if ( r_norm0 < 1e-30 ) { // already converged (zero residual)
+        DoodzFree( r ); DoodzFree( z ); DoodzFree( p ); DoodzFree( Ap ); DoodzFree( M_inv );
+        return 0;
+    }
+
+    int its = -1; // will be set to positive on convergence
+
+    for ( int iter = 0; iter < max_its; iter++ ) {
+
+        // Ap = A * p  (CSR SpMV)
+#pragma omp parallel for schedule(static)
+        for ( int i = 0; i < neq; i++ ) {
+            double sum = 0.0;
+            for ( int k = Ic[i]; k < Ic[i+1]; k++ ) {
+                sum += A[k] * p[J[k]];
+            }
+            Ap[i] = sum;
+        }
+
+        // pAp = p . Ap
+        double pAp = 0.0;
+#pragma omp parallel for schedule(static) reduction(+:pAp)
+        for ( int i = 0; i < neq; i++ ) {
+            pAp += p[i] * Ap[i];
+        }
+
+        if ( fabs(pAp) < 1e-30 ) { its = -2; break; } // breakdown
+        double alpha = rz / pAp;
+
+        // x = x + alpha * p;  r = r - alpha * Ap
+#pragma omp parallel for schedule(static)
+        for ( int i = 0; i < neq; i++ ) {
+            x[i] += alpha * p[i];
+            r[i] -= alpha * Ap[i];
+        }
+
+        // Check convergence: ||r|| / ||r0||
+        double r_norm = 0.0;
+#pragma omp parallel for schedule(static) reduction(+:r_norm)
+        for ( int i = 0; i < neq; i++ ) {
+            r_norm += r[i] * r[i];
+        }
+        r_norm = sqrt( r_norm );
+
+        if ( r_norm / r_norm0 < rel_tol ) {
+            its = iter + 1;
+            break;
+        }
+
+        // z = M_inv .* r
+#pragma omp parallel for schedule(static)
+        for ( int i = 0; i < neq; i++ ) {
+            z[i] = M_inv[i] * r[i];
+        }
+
+        // rz_new = r . z
+        double rz_new = 0.0;
+#pragma omp parallel for schedule(static) reduction(+:rz_new)
+        for ( int i = 0; i < neq; i++ ) {
+            rz_new += r[i] * z[i];
+        }
+
+        if ( fabs(rz) < 1e-30 ) { its = -3; break; } // breakdown
+        double beta = rz_new / rz;
+        rz = rz_new;
+
+        // p = z + beta * p
+#pragma omp parallel for schedule(static)
+        for ( int i = 0; i < neq; i++ ) {
+            p[i] = z[i] + beta * p[i];
+        }
+    }
+
+    // Free work vectors
+    DoodzFree( r );
+    DoodzFree( z );
+    DoodzFree( p );
+    DoodzFree( Ap );
+    DoodzFree( M_inv );
+
+    return its; // positive = converged iteration count, negative = failure
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/

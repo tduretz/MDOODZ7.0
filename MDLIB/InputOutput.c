@@ -1117,6 +1117,10 @@ Input ReadInputFile( char *fileName ) {
     model.lin_rel_mom        = ReadDou2( fin, "lin_rel_mom",      1.0e-5 ); // Tolerance for linear mechanical solver
     model.lin_solver         = ReadInt2( fin, "lin_solver",            2 ); // 1: Powell-Hestenes, 2: Powell-Hestenes augmented (killer solver) 
     model.max_its_PH         = ReadInt2( fin, "max_its_PH",           10 ); // Max number of Powell-Hestenes iterations
+    // Thermal solver
+    model.thermal_solver     = ReadInt2( fin, "thermal_solver",        0 ); // 0: CHOLMOD direct (default), 1: PCG iterative
+    model.max_its_thermal    = ReadInt2( fin, "max_its_thermal",    1000 ); // Max PCG iterations
+    model.rel_tol_thermal    = ReadDou2( fin, "rel_tol_thermal",   1e-8 ); // Relative tolerance for PCG thermal solver
     // Numerics: non-linear solver
     Nmodel.nit_max           = ReadInt2( fin, "nit_max",               1 ); // Maximum number of iterations
     model.Newton             = ReadInt2( fin, "Newton",                0 ); // Activates Newton iterations

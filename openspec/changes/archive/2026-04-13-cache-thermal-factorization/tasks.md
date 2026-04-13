@@ -35,5 +35,5 @@
 ## 6. Verify and benchmark
 
 - [x] 6.1 Build and run locally at low resolution (201×161) — confirm no crashes, no warnings, correct temperature output
-- [ ] 6.2 Compare output against a baseline run to verify bit-for-bit identical results
-- [ ] 6.3 Run EC2 benchmark at 1001×801 with threads 1/2/4/6/8/12/16 and compare `thermal_s` against baseline
+- [x] 6.2 Compare output against a baseline run to verify bit-for-bit identical results
+- [x] 6.3 Run EC2 benchmark at 1001×801 with threads 1/2/4/6/8/12/16 and compare `thermal_s` against baseline

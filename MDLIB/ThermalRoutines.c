@@ -106,7 +106,7 @@ void EnergyDirectSolve( grid *mesh, params model, double *rhs_t, markers *partic
 
     // Use persistent CHOLMOD context from thermal_solver
     cholmod_common *c = &thermal_solver->c;
-    cs_di *At;
+    cs_di *At = NULL;
 
     double *Hs, *Ha, dexz_th, dexz_el, dexz_tot, dexx_th, dexx_el, dexx_tot, diss_limit=1.0e-8/(scaling.S*scaling.E);
     double dezz_el, dezz_th, dezz_tot, deyy_el, deyy_th, deyy_tot;
@@ -398,16 +398,39 @@ void EnergyDirectSolve( grid *mesh, params model, double *rhs_t, markers *partic
 
         // ------------------------------------------- SOLVER ------------------------------------------- //
 
-        // Compute transpose of A matrix (used in polar mode only)
-        if ( it == 0 ) At = TransposeA( c, A, Ic, J, neq, nnzc );
-
-        // Factor matrix: analyze only on first call, then just refactorize
-        if ( it == 0 ) thermal_solver->Lfact = FactorEnergyCHOLMOD( c, At, A, Ic, J, neq, nnzc, model.polar, thermal_solver->Analyze, thermal_solver->Lfact );
-        if ( thermal_solver->Analyze == 1 ) thermal_solver->Analyze = 0;
-
-        // Solve
+        // Add boundary condition RHS contribution
         ArrayPlusScalarArray( b, 1.0, bbc, neq );
-        SolveEnergyCHOLMOD( c, At, thermal_solver->Lfact, x, b, neq, nnzc, model.polar );
+
+        if ( model.thermal_solver == 1 && model.polar == 0 && it == 0 ) {
+            // PCG iterative solver with warm-start from current T field (only on it=0 when matrix is available)
+            for ( int ii = 0; ii < ncx*ncz; ii++ ) {
+                if ( eqn_t[ii] >= 0 ) x[eqn_t[ii]] = mesh->T[ii];
+            }
+            int pcg_its = SolveThermalPCG( A, Ic, J, b, x, neq, model.max_its_thermal, model.rel_tol_thermal );
+            if ( pcg_its > 0 ) {
+                LOG_INFO("Thermal PCG converged in %d iterations", pcg_its);
+            } else if ( pcg_its == 0 ) {
+                LOG_INFO("Thermal PCG: initial residual already below tolerance");
+            } else {
+                LOG_WARN("Thermal PCG failed (code %d) — falling back to CHOLMOD direct solver", pcg_its);
+                At = TransposeA( c, A, Ic, J, neq, nnzc );
+                thermal_solver->Lfact = FactorEnergyCHOLMOD( c, At, A, Ic, J, neq, nnzc, model.polar, 1, thermal_solver->Lfact );
+                if ( thermal_solver->Analyze == 1 ) thermal_solver->Analyze = 0;
+                SolveEnergyCHOLMOD( c, At, thermal_solver->Lfact, x, b, neq, nnzc, model.polar );
+            }
+            // Prepare CHOLMOD factorization for potential it>=1 iterations (matrix not re-assembled)
+            if ( nit > 1 ) {
+                if ( At == NULL ) At = TransposeA( c, A, Ic, J, neq, nnzc );
+                thermal_solver->Lfact = FactorEnergyCHOLMOD( c, At, A, Ic, J, neq, nnzc, model.polar, thermal_solver->Analyze, thermal_solver->Lfact );
+                if ( thermal_solver->Analyze == 1 ) thermal_solver->Analyze = 0;
+            }
+        } else {
+            // CHOLMOD direct solver (default, or it>=1 in PCG mode when matrix is stale)
+            if ( it == 0 ) At = TransposeA( c, A, Ic, J, neq, nnzc );
+            if ( it == 0 ) thermal_solver->Lfact = FactorEnergyCHOLMOD( c, At, A, Ic, J, neq, nnzc, model.polar, thermal_solver->Analyze, thermal_solver->Lfact );
+            if ( thermal_solver->Analyze == 1 ) thermal_solver->Analyze = 0;
+            SolveEnergyCHOLMOD( c, At, thermal_solver->Lfact, x, b, neq, nnzc, model.polar );
+        }
 
         // ------------------------------------------- SOLVER ------------------------------------------- //
 
@@ -496,7 +519,7 @@ void EnergyDirectSolve( grid *mesh, params model, double *rhs_t, markers *partic
         DoodzFree(Ha);
     }
     // Free transpose (factor lifetime managed by caller via thermal_solver->Lfact)
-    cs_spfree(At);
+    if ( At != NULL ) cs_spfree(At);
     DoodzFree(bbc);
     DoodzFree(eqn_t);
 }

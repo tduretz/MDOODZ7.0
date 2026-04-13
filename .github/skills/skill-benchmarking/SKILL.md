@@ -314,3 +314,26 @@ Based on the 28-run sweep (4 resolutions × 7 thread counts × 10 steps):
 
 **Data**: Baseline `benchmark-results/20260413-105848/`, Persistent OMP `benchmark-results/20260413-151213/`
 **Code**: Reverted — these changes were not kept.
+
+### Experiment 3: Cache Thermal Factorization (2026-04-13) — MODEST GAIN
+
+**Hypothesis**: Caching the `cholmod_factor` across timesteps (skip `cholmod_analyze` on steps 2+) would reduce `thermal_s` by eliminating repeated symbolic analysis. The sparsity pattern is constant when the free-surface topology doesn't change.
+
+**Implementation**: Added persistent `DirectSolver ThermalSolver` to `Main_DOODZ.c`. Split `FactorEnergyCHOLMOD` into analyze+factorize paths: first call does `cholmod_analyze` + `cholmod_factorize`, subsequent calls reuse cached `cholmod_factor` with only `cholmod_factorize`. Added dimension invalidation check — when `neq` changes (free surface), cached factor is freed and re-analyzed.
+
+**Results** (c5ad.4xlarge, 1001×801, 10 steps):
+
+| Threads | Baseline thermal_s | Cached thermal_s | Delta | Wall baseline | Wall cached |
+|---------|-------------------|-----------------|-------|--------------|-------------|
+| 1 | 6.557s | 6.192s | −5.6% | 36.67s | 36.27s |
+| 2 | 6.562s | 6.178s | −5.9% | 25.64s | 25.04s |
+| 4 | 6.387s | 6.184s | −3.2% | 18.49s | 19.35s |
+| 6 | 6.396s | 6.174s | −3.5% | 17.00s | 19.21s |
+| 8 | 6.439s | 6.166s | −4.2% | 16.97s | 18.93s |
+| 12 | 6.277s | 6.168s | −1.7% | 17.88s | 20.56s |
+| 16 | 6.499s | 6.154s | −5.3% | 20.33s | 20.82s |
+
+**Conclusion**: Caching saves ~0.2–0.4s/step (3–6%) on thermal_s by eliminating `cholmod_analyze`. The numeric factorization (`cholmod_factorize`) at ~6.2s/step remains the dominant serial cost. Overall wall time shows run-to-run variance in `interp_s` that masks the thermal gain at higher thread counts. The change is correct and low-risk but insufficient alone — an iterative solver (PCG) is needed for order-of-magnitude thermal speedup.
+
+**Data**: Baseline `benchmark-results/20260413-105848/`, Cached `benchmark-results/20260413-170125/`
+**Code**: Committed as `6285d3d` on `add-performance-metrics` branch. Kept.
