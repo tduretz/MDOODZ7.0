@@ -76,7 +76,9 @@ benchmark-results/
 ```
 host,os,arch,grid,nx,nz,threads,steps,avg_wall_s,total_wall_s,
 avg_rheology_s,avg_assembly_s,avg_solve_s,avg_thermal_s,avg_advection_s,
-avg_melting_s,avg_anisotropy_s,avg_gse_s,avg_output_s,avg_nit,peak_rss_mb
+avg_melting_s,avg_anisotropy_s,avg_gse_s,avg_output_s,
+avg_interp_s,avg_stokes_setup_s,avg_nl_overhead_s,avg_post_solve_s,
+avg_nit,peak_rss_mb
 ```
 
 ## perf.csv (Per-Timestep Metrics)
@@ -154,6 +156,7 @@ A healthy benchmark should show:
 - `avg_solve_s` dominating `avg_wall_s` for large grids (CHOLMOD is the bottleneck)
 - `avg_rheology_s` small relative to solve (particle interpolation is cheap)
 - Subsystem columns (`thermal_s`, `advection_s`, `melting_s`, `anisotropy_s`, `gse_s`) reveal where time is spent beyond the Stokes solver
+- Aggregate timers (`interp_s`, `stokes_setup_s`, `nl_overhead_s`, `post_solve_s`) close the instrumentation gap — coverage typically exceeds 99%
 
 ## AWS Benchmarking
 

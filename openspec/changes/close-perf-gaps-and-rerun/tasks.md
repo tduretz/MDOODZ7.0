@@ -23,7 +23,7 @@
 - [x] 4.1 Build locally with `make build`
 - [x] 4.2 Run RiftingComprehensive lowres for 3 steps, verify perf.csv has 25 columns
 - [x] 4.3 Verify coverage: `sum(tracked) / wall_s >= 0.95` for each step
-- [ ] 4.4 Run RiftingComprehensive default for 3 steps, verify coverage >= 95%
+- [x] 4.4 Run RiftingComprehensive default for 3 steps, verify coverage >= 95%
 
 ## 5. Update benchmark scripts
 
@@ -34,25 +34,25 @@
 
 ## 6. Commit and push
 
-- [ ] 6.1 Commit all changes with message "feat: close perf.csv instrumentation gap — 25-column format with 4 new timers"
-- [ ] 6.2 Push to `add-performance-metrics` branch
+- [x] 6.1 Commit all changes with message "feat: close perf.csv instrumentation gap — 25-column format with 4 new timers"
+- [x] 6.2 Push to `add-performance-metrics` branch
 
 ## 7. Re-run AWS benchmark
 
-- [ ] 7.1 Start the c5ad.4xlarge instance (i-0df5754e400cb3ec1)
-- [ ] 7.2 Sync code to EC2 and rebuild
-- [ ] 7.3 Run the full 28-run sweep: `--resolutions "lowres default medres highres" --threads "1 2 4 6 8 12 16" --steps 10`
-- [ ] 7.4 Download results to local `benchmark-results/<timestamp>/`
-- [ ] 7.5 Verify coverage >= 95% across all 28 runs
-- [ ] 7.6 Stop the EC2 instance
+- [x] 7.1 Start the c5ad.4xlarge instance (i-0df5754e400cb3ec1)
+- [x] 7.2 Sync code to EC2 and rebuild
+- [x] 7.3 Run the full 28-run sweep: `--resolutions "lowres default medres highres" --threads "1 2 4 6 8 12 16" --steps 10`
+- [x] 7.4 Download results to local `benchmark-results/<timestamp>/`
+- [x] 7.5 Verify coverage >= 95% across all 28 runs
+- [x] 7.6 Stop the EC2 instance
 
 ## 8. Updated benchmark report
 
-- [ ] 8.1 Generate the updated benchmark report with `benchmark-report.sh`
-- [ ] 8.2 Review the report: confirm "Other/overhead" is replaced by explicit coverage percentage
-- [ ] 8.3 Save the report to `TESTS/benchmark_results/REPORT-<timestamp>.md`
+- [x] 8.1 Generate the updated benchmark report with `benchmark-report.sh`
+- [x] 8.2 Review the report: confirm "Other/overhead" is replaced by explicit coverage percentage
+- [x] 8.3 Save the report to `benchmark-results/20260413-105848/REPORT-20260413-113812.md`
 
 ## 9. Update skills
 
-- [ ] 9.1 Update `skill-logging` SKILL.md: perf.csv column table expanded from 21 to 25
-- [ ] 9.2 Update `skill-code-glossary` SKILL.md: add `dt_interp`, `dt_stokes_setup`, `dt_nl_overhead`, `dt_post_solve` to timing variables table
+- [x] 9.1 Update `skill-logging` SKILL.md: perf.csv column table expanded from 21 to 25
+- [x] 9.2 Update `skill-code-glossary` SKILL.md: add `dt_interp`, `dt_stokes_setup`, `dt_nl_overhead`, `dt_post_solve` to timing variables table

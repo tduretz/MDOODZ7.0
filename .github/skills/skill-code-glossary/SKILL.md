@@ -240,5 +240,9 @@ These `double` variables in the main timestep loop measure wall-clock time for e
 | `dt_anisotropy` | Anisotropy factor update | `UpdateAnisoFactor` |
 | `dt_gse` | Grain size evolution | `UpdateParticleGrainSize` |
 | `dt_output` | HDF5 output writing | `WriteOutputHDF5` |
+| `dt_interp` | Particle-to-grid interpolation + timestep setup (from `t_omp_step`) | `P2Mastah`, Courant eval, free surface prep |
+| `dt_stokes_setup` | Stokes pre-loop initialization | BCs, `SAlloc`, `cholmod_start`, `InitialiseSolutionVector` |
+| `dt_nl_overhead` | Per-iteration overhead (iter_total − rheology − assembly − solve) | Accumulated across all NL iterations |
+| `dt_post_solve` | Post-solve particle updates (by subtraction from total) | Everything after NL loop until end of timestep |
 
-All are written to `perf.csv` each timestep. Subsystems that are disabled for a run report 0.0.
+All are written to `perf.csv` each timestep (25 columns). Subsystems that are disabled for a run report 0.0.
