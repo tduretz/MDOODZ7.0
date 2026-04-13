@@ -350,3 +350,30 @@ TEST_F(SolViBenchmark, HighResL1Convergence) {
   EXPECT_GE(order_P_L1_101_201,  0.8);  // L1 pressure: measured ~0.85, better than L2 (~0.65)
   EXPECT_GE(order_Vx_L1_101_201, 0.8);  // L1 velocity at least ~first order
 }
+
+
+// --- Interpolation mode tests ---
+
+TEST_F(SolViBenchmark, SolViRes51InterpMode1) {
+  char *inputName;
+  asprintf(&inputName, "SolViBenchmark/SolViRes51InterpMode1.txt");
+  RunMDOODZ(inputName, &setup);
+  char *fileName;
+  asprintf(&fileName, "SolViRes51InterpMode1/Output%05d.gzip.h5", 1);
+  int steps = getStepsCount(fileName);
+  EXPECT_GE(steps, 0);
+  free(inputName);
+  free(fileName);
+}
+
+TEST_F(SolViBenchmark, SolViRes51InterpMode2) {
+  char *inputName;
+  asprintf(&inputName, "SolViBenchmark/SolViRes51InterpMode2.txt");
+  RunMDOODZ(inputName, &setup);
+  char *fileName;
+  asprintf(&fileName, "SolViRes51InterpMode2/Output%05d.gzip.h5", 1);
+  int steps = getStepsCount(fileName);
+  EXPECT_GE(steps, 0);
+  free(inputName);
+  free(fileName);
+}

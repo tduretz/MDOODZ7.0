@@ -22,6 +22,7 @@
 #include "stdio.h"
 #include "math.h"
 #include "stdlib.h"
+#include "string.h"
 #include "mdoodz-private.h"
 #include "time.h"
 
@@ -1980,8 +1981,56 @@ void Interp_Phase2VizGrid ( markers particles, int* PartField, grid *mesh, char*
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
+InterpBufPool *InterpBufPoolInit(grid *mesh, int interp_mode, int nthreads) {
+    InterpBufPool *pool = (InterpBufPool *)DoodzCalloc(1, sizeof(InterpBufPool));
+    pool->interp_mode = interp_mode;
+    pool->nthreads    = nthreads;
+    // Centroid sizes: 0=cent, 1=vert, 2=vx, 3=vz
+    pool->sizes[0] = (mesh->Nx - 1) * (mesh->Nz - 1);  // cell centres
+    pool->sizes[1] = mesh->Nx * mesh->Nz;               // vertices
+    pool->sizes[2] = mesh->Nx * (mesh->Nz + 1);         // Vx nodes
+    pool->sizes[3] = (mesh->Nx + 1) * mesh->Nz;         // Vz nodes
+    for (int c = 0; c < 4; c++) {
+        pool->WM[c]   = (double *)DoodzCalloc(pool->sizes[c], sizeof(double));
+        pool->BMWM[c] = (double *)DoodzCalloc(pool->sizes[c], sizeof(double));
+        if (interp_mode == 1) {
+            pool->Wm[c]   = (double **)DoodzCalloc(nthreads, sizeof(double *));
+            pool->BmWm[c] = (double **)DoodzCalloc(nthreads, sizeof(double *));
+            for (int t = 0; t < nthreads; t++) {
+                pool->Wm[c][t]   = (double *)DoodzCalloc(pool->sizes[c], sizeof(double));
+                pool->BmWm[c][t] = (double *)DoodzCalloc(pool->sizes[c], sizeof(double));
+            }
+        } else {
+            pool->Wm[c]   = NULL;
+            pool->BmWm[c] = NULL;
+        }
+    }
+    return pool;
+}
+
+void InterpBufPoolFree(InterpBufPool *pool) {
+    if (pool == NULL) return;
+    for (int c = 0; c < 4; c++) {
+        if (pool->interp_mode == 1 && pool->Wm[c] != NULL) {
+            for (int t = 0; t < pool->nthreads; t++) {
+                DoodzFree(pool->Wm[c][t]);
+                DoodzFree(pool->BmWm[c][t]);
+            }
+            DoodzFree(pool->Wm[c]);
+            DoodzFree(pool->BmWm[c]);
+        }
+        DoodzFree(pool->WM[c]);
+        DoodzFree(pool->BMWM[c]);
+    }
+    DoodzFree(pool);
+}
+
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
+
 // Particles to reference nodes
-void P2Mastah ( params *model, markers particles, DoodzFP* mat_prop, grid *mesh, double* NodeField, char* NodeType, int flag, int avg, int prop, int centroid, int interp_stencil) {
+void P2Mastah ( params *model, markers particles, DoodzFP* mat_prop, grid *mesh, double* NodeField, char* NodeType, int flag, int avg, int prop, int centroid, int interp_stencil, InterpBufPool *pool) {
     
     // flag == 0 --> interpolate from material properties structure
     // flag == 1 --> interpolate straight from the particle arrays
@@ -1998,6 +2047,8 @@ void P2Mastah ( params *model, markers particles, DoodzFP* mat_prop, grid *mesh,
     double **Wm, **BmWm, ***Wm_ph;
     double *X_vect, *Z_vect;
     int peri;
+    int imode = (pool != NULL) ? pool->interp_mode : 0;
+    int pool_idx = -1;
     
     if (centroid==1) {
         Nx = mesh->Nx-1;
@@ -2051,27 +2102,55 @@ void P2Mastah ( params *model, markers particles, DoodzFP* mat_prop, grid *mesh,
     //--------------------------------------------------------------
     // Initialize Wm and BmWm
     //--------------------------------------------------------------
-    Wm    = DoodzCalloc ( nthreads, sizeof(double*));    // allocate storage for the array
-    BmWm  = DoodzCalloc ( nthreads, sizeof(double*));    // allocate storage for the array
-    Wm_ph = DoodzCalloc ( nthreads, sizeof(double**));
-    
-    for ( k=0; k<nthreads; k++ ) {
-        Wm[k]    = DoodzCalloc ( Nx*Nz, sizeof(double));
-        BmWm[k]  = DoodzCalloc ( Nx*Nz, sizeof(double));
-        Wm_ph[k] = DoodzCalloc ( model->Nb_phases, sizeof(double*));
-        for (p=0; p<model->Nb_phases; p++) Wm_ph[k][p] = DoodzCalloc ( Nx*Nz, sizeof(double));
+    if (imode >= 1) {
+        switch (centroid) {
+            case  1: pool_idx = 0; break;
+            case  0: pool_idx = 1; break;
+            case -1: pool_idx = 2; break;
+            case -2: pool_idx = 3; break;
+        }
+        WM   = pool->WM[pool_idx];
+        BMWM = pool->BMWM[pool_idx];
+        memset(WM,   0, Nx*Nz*sizeof(double));
+        memset(BMWM, 0, Nx*Nz*sizeof(double));
     }
-    
-    WM   = DoodzCalloc ( Nx*Nz, sizeof(double));
-    BMWM = DoodzCalloc ( Nx*Nz, sizeof(double));
+    if (imode == 0) {
+        Wm    = DoodzCalloc ( nthreads, sizeof(double*));
+        BmWm  = DoodzCalloc ( nthreads, sizeof(double*));
+        Wm_ph = DoodzCalloc ( nthreads, sizeof(double**));
+        for ( k=0; k<nthreads; k++ ) {
+            Wm[k]    = DoodzCalloc ( Nx*Nz, sizeof(double));
+            BmWm[k]  = DoodzCalloc ( Nx*Nz, sizeof(double));
+            Wm_ph[k] = DoodzCalloc ( model->Nb_phases, sizeof(double*));
+            for (p=0; p<model->Nb_phases; p++) Wm_ph[k][p] = DoodzCalloc ( Nx*Nz, sizeof(double));
+        }
+        WM   = DoodzCalloc ( Nx*Nz, sizeof(double));
+        BMWM = DoodzCalloc ( Nx*Nz, sizeof(double));
+    } else if (imode == 1) {
+        Wm   = pool->Wm[pool_idx];
+        BmWm = pool->BmWm[pool_idx];
+        for ( k=0; k<nthreads; k++ ) {
+            memset(Wm[k],   0, Nx*Nz*sizeof(double));
+            memset(BmWm[k], 0, Nx*Nz*sizeof(double));
+        }
+        Wm_ph = DoodzCalloc ( nthreads, sizeof(double**));
+        for ( k=0; k<nthreads; k++ ) {
+            Wm_ph[k] = DoodzCalloc ( model->Nb_phases, sizeof(double*));
+            for (p=0; p<model->Nb_phases; p++) Wm_ph[k][p] = DoodzCalloc ( Nx*Nz, sizeof(double));
+        }
+    } else { // imode == 2
+        Wm    = NULL;
+        BmWm  = NULL;
+        Wm_ph = NULL;
+    }
     
     //--------------------------------------------------------------
     // Compute Wm and BmWm
     //--------------------------------------------------------------
     
-    #pragma omp parallel for shared ( particles, BmWm, Wm, Wm_ph, X_vect, Z_vect )       \
+    #pragma omp parallel for shared ( particles, BmWm, Wm, Wm_ph, WM, BMWM, X_vect, Z_vect )       \
     private ( k, kp, dxm, dzm, ip, jp, distance, mark_val, thread_num, p, peri   )       \
-    firstprivate ( mat_prop, dx, dz, Np, Nx, Nz, mesh, flag, avg, dx_itp, dz_itp, prop)  schedule( static )
+    firstprivate ( mat_prop, dx, dz, Np, Nx, Nz, mesh, flag, avg, dx_itp, dz_itp, prop, imode, centroid)  schedule( static )
         
         for (k=0; k<Np; k++) {
             
@@ -2140,9 +2219,21 @@ void P2Mastah ( params *model, markers particles, DoodzFP* mat_prop, grid *mesh,
             
                 // Center
                 kp = ip + jp*Nx;
-                Wm_ph[thread_num][p][kp]  +=          (1.0-dxm/dx_itp)*(1.0-dzm/dz_itp);
-                Wm[thread_num][kp]        +=          (1.0-dxm/dx_itp)*(1.0-dzm/dz_itp);
-                BmWm[thread_num][kp]      += mark_val*(1.0-dxm/dx_itp)*(1.0-dzm/dz_itp);
+                {
+                    double w_ = (1.0-dxm/dx_itp)*(1.0-dzm/dz_itp);
+                    if (imode <= 1) {
+                        Wm_ph[thread_num][p][kp] += w_;
+                        Wm[thread_num][kp]       += w_;
+                        BmWm[thread_num][kp]     += mark_val*w_;
+                    } else {
+                        _Pragma("omp atomic") WM[kp]   += w_;
+                        _Pragma("omp atomic") BMWM[kp] += mark_val*w_;
+                        if (prop == 1) {
+                            if (centroid==0) { _Pragma("omp atomic") mesh->phase_perc_s[p][kp] += w_; }
+                            if (centroid==1) { _Pragma("omp atomic") mesh->phase_perc_n[p][kp] += w_; }
+                        }
+                    }
+                }
                 
                 // --------------------------
                 
@@ -2154,9 +2245,21 @@ void P2Mastah ( params *model, markers particles, DoodzFP* mat_prop, grid *mesh,
                         kp  = ip + (jp+1)*Nx;
                         dxm = fabs( X_vect[ip]      - particles.x[k]);
                         dzm = fabs( Z_vect[jp] + dz - particles.z[k]);
-                        Wm_ph[thread_num][p][kp]  +=          (1.0-dxm/dx_itp)*(1.0-dzm/dz_itp);
-                        Wm[thread_num][kp]        +=          (1.0-dxm/dx_itp)*(1.0-dzm/dz_itp);
-                        BmWm[thread_num][kp]      += mark_val*(1.0-dxm/dx_itp)*(1.0-dzm/dz_itp);
+                        {
+                            double w_ = (1.0-dxm/dx_itp)*(1.0-dzm/dz_itp);
+                            if (imode <= 1) {
+                                Wm_ph[thread_num][p][kp] += w_;
+                                Wm[thread_num][kp]       += w_;
+                                BmWm[thread_num][kp]     += mark_val*w_;
+                            } else {
+                                _Pragma("omp atomic") WM[kp]   += w_;
+                                _Pragma("omp atomic") BMWM[kp] += mark_val*w_;
+                                if (prop == 1) {
+                                    if (centroid==0) { _Pragma("omp atomic") mesh->phase_perc_s[p][kp] += w_; }
+                                    if (centroid==1) { _Pragma("omp atomic") mesh->phase_perc_n[p][kp] += w_; }
+                                }
+                            }
+                        }
                     }
 
                     // S
@@ -2164,9 +2267,21 @@ void P2Mastah ( params *model, markers particles, DoodzFP* mat_prop, grid *mesh,
                         kp  = ip + (jp-1)*Nx;
                         dxm = fabs( X_vect[ip]      - particles.x[k]);
                         dzm = fabs( Z_vect[jp] - dz - particles.z[k]);
-                        Wm_ph[thread_num][p][kp]  +=          (1.0-dxm/dx_itp)*(1.0-dzm/dz_itp);
-                        Wm[thread_num][kp]        +=          (1.0-dxm/dx_itp)*(1.0-dzm/dz_itp);
-                        BmWm[thread_num][kp]      += mark_val*(1.0-dxm/dx_itp)*(1.0-dzm/dz_itp);
+                        {
+                            double w_ = (1.0-dxm/dx_itp)*(1.0-dzm/dz_itp);
+                            if (imode <= 1) {
+                                Wm_ph[thread_num][p][kp] += w_;
+                                Wm[thread_num][kp]       += w_;
+                                BmWm[thread_num][kp]     += mark_val*w_;
+                            } else {
+                                _Pragma("omp atomic") WM[kp]   += w_;
+                                _Pragma("omp atomic") BMWM[kp] += mark_val*w_;
+                                if (prop == 1) {
+                                    if (centroid==0) { _Pragma("omp atomic") mesh->phase_perc_s[p][kp] += w_; }
+                                    if (centroid==1) { _Pragma("omp atomic") mesh->phase_perc_n[p][kp] += w_; }
+                                }
+                            }
+                        }
                     }
 
                     // E
@@ -2177,9 +2292,21 @@ void P2Mastah ( params *model, markers particles, DoodzFP* mat_prop, grid *mesh,
                         kp  = ip + jp*Nx + (1.0-peri)*1 - peri*(Nx-1);
                         dxm = fabs( X_vect[ip] + dx - particles.x[k]);
                         dzm = fabs( Z_vect[jp]      - particles.z[k]);
-                        Wm_ph[thread_num][p][kp]  +=          (1.0-dxm/dx_itp)*(1.0-dzm/dz_itp);
-                        Wm[thread_num][kp]        +=          (1.0-dxm/dx_itp)*(1.0-dzm/dz_itp);
-                        BmWm[thread_num][kp]      += mark_val*(1.0-dxm/dx_itp)*(1.0-dzm/dz_itp);
+                        {
+                            double w_ = (1.0-dxm/dx_itp)*(1.0-dzm/dz_itp);
+                            if (imode <= 1) {
+                                Wm_ph[thread_num][p][kp] += w_;
+                                Wm[thread_num][kp]       += w_;
+                                BmWm[thread_num][kp]     += mark_val*w_;
+                            } else {
+                                _Pragma("omp atomic") WM[kp]   += w_;
+                                _Pragma("omp atomic") BMWM[kp] += mark_val*w_;
+                                if (prop == 1) {
+                                    if (centroid==0) { _Pragma("omp atomic") mesh->phase_perc_s[p][kp] += w_; }
+                                    if (centroid==1) { _Pragma("omp atomic") mesh->phase_perc_n[p][kp] += w_; }
+                                }
+                            }
+                        }
                     }
 
                     // W
@@ -2190,9 +2317,21 @@ void P2Mastah ( params *model, markers particles, DoodzFP* mat_prop, grid *mesh,
                         kp  = ip + jp*Nx - (1.0-peri)*1 + peri*(Nx-1);
                         dxm = fabs( X_vect[ip] - dx - particles.x[k]);
                         dzm = fabs( Z_vect[jp]      - particles.z[k]);
-                        Wm_ph[thread_num][p][kp]  +=          (1.0-dxm/dx_itp)*(1.0-dzm/dz_itp);
-                        Wm[thread_num][kp]        +=          (1.0-dxm/dx_itp)*(1.0-dzm/dz_itp);
-                        BmWm[thread_num][kp]      += mark_val*(1.0-dxm/dx_itp)*(1.0-dzm/dz_itp);
+                        {
+                            double w_ = (1.0-dxm/dx_itp)*(1.0-dzm/dz_itp);
+                            if (imode <= 1) {
+                                Wm_ph[thread_num][p][kp] += w_;
+                                Wm[thread_num][kp]       += w_;
+                                BmWm[thread_num][kp]     += mark_val*w_;
+                            } else {
+                                _Pragma("omp atomic") WM[kp]   += w_;
+                                _Pragma("omp atomic") BMWM[kp] += mark_val*w_;
+                                if (prop == 1) {
+                                    if (centroid==0) { _Pragma("omp atomic") mesh->phase_perc_s[p][kp] += w_; }
+                                    if (centroid==1) { _Pragma("omp atomic") mesh->phase_perc_n[p][kp] += w_; }
+                                }
+                            }
+                        }
                     }
                     
                     // --------------------------
@@ -2205,9 +2344,21 @@ void P2Mastah ( params *model, markers particles, DoodzFP* mat_prop, grid *mesh,
                         kp = ip + (jp-1)*Nx - (1.0-peri)*1 + peri*(Nx-1);
                         dxm = fabs( X_vect[ip] - dx - particles.x[k]);
                         dzm = fabs( Z_vect[jp] - dz - particles.z[k]);
-                        Wm_ph[thread_num][p][kp]  +=          (1.0-dxm/dx_itp)*(1.0-dzm/dz_itp);
-                        Wm[thread_num][kp]        +=          (1.0-dxm/dx_itp)*(1.0-dzm/dz_itp);
-                        BmWm[thread_num][kp]      += mark_val*(1.0-dxm/dx_itp)*(1.0-dzm/dz_itp);
+                        {
+                            double w_ = (1.0-dxm/dx_itp)*(1.0-dzm/dz_itp);
+                            if (imode <= 1) {
+                                Wm_ph[thread_num][p][kp] += w_;
+                                Wm[thread_num][kp]       += w_;
+                                BmWm[thread_num][kp]     += mark_val*w_;
+                            } else {
+                                _Pragma("omp atomic") WM[kp]   += w_;
+                                _Pragma("omp atomic") BMWM[kp] += mark_val*w_;
+                                if (prop == 1) {
+                                    if (centroid==0) { _Pragma("omp atomic") mesh->phase_perc_s[p][kp] += w_; }
+                                    if (centroid==1) { _Pragma("omp atomic") mesh->phase_perc_n[p][kp] += w_; }
+                                }
+                            }
+                        }
                     }
 
                     // NW
@@ -2218,9 +2369,21 @@ void P2Mastah ( params *model, markers particles, DoodzFP* mat_prop, grid *mesh,
                         kp = ip + (jp+1)*Nx - (1.0-peri)*1 + peri*(Nx-1);
                         dxm = fabs( X_vect[ip] - dx - particles.x[k]);
                         dzm = fabs( Z_vect[jp] + dz - particles.z[k]);
-                        Wm_ph[thread_num][p][kp]  +=          (1.0-dxm/dx_itp)*(1.0-dzm/dz_itp);
-                        Wm[thread_num][kp]        +=          (1.0-dxm/dx_itp)*(1.0-dzm/dz_itp);
-                        BmWm[thread_num][kp]      += mark_val*(1.0-dxm/dx_itp)*(1.0-dzm/dz_itp);
+                        {
+                            double w_ = (1.0-dxm/dx_itp)*(1.0-dzm/dz_itp);
+                            if (imode <= 1) {
+                                Wm_ph[thread_num][p][kp] += w_;
+                                Wm[thread_num][kp]       += w_;
+                                BmWm[thread_num][kp]     += mark_val*w_;
+                            } else {
+                                _Pragma("omp atomic") WM[kp]   += w_;
+                                _Pragma("omp atomic") BMWM[kp] += mark_val*w_;
+                                if (prop == 1) {
+                                    if (centroid==0) { _Pragma("omp atomic") mesh->phase_perc_s[p][kp] += w_; }
+                                    if (centroid==1) { _Pragma("omp atomic") mesh->phase_perc_n[p][kp] += w_; }
+                                }
+                            }
+                        }
                     }
 
                     // NE
@@ -2231,9 +2394,21 @@ void P2Mastah ( params *model, markers particles, DoodzFP* mat_prop, grid *mesh,
                         kp = ip + (jp+1)*Nx + (1.0-peri)*1 - peri*(Nx-1);
                         dxm = fabs( X_vect[ip] + dx - particles.x[k]);
                         dzm = fabs( Z_vect[jp] + dz - particles.z[k]);
-                        Wm_ph[thread_num][p][kp]  +=          (1.0-dxm/dx_itp)*(1.0-dzm/dz_itp);
-                        Wm[thread_num][kp]        +=          (1.0-dxm/dx_itp)*(1.0-dzm/dz_itp);
-                        BmWm[thread_num][kp]      += mark_val*(1.0-dxm/dx_itp)*(1.0-dzm/dz_itp);
+                        {
+                            double w_ = (1.0-dxm/dx_itp)*(1.0-dzm/dz_itp);
+                            if (imode <= 1) {
+                                Wm_ph[thread_num][p][kp] += w_;
+                                Wm[thread_num][kp]       += w_;
+                                BmWm[thread_num][kp]     += mark_val*w_;
+                            } else {
+                                _Pragma("omp atomic") WM[kp]   += w_;
+                                _Pragma("omp atomic") BMWM[kp] += mark_val*w_;
+                                if (prop == 1) {
+                                    if (centroid==0) { _Pragma("omp atomic") mesh->phase_perc_s[p][kp] += w_; }
+                                    if (centroid==1) { _Pragma("omp atomic") mesh->phase_perc_n[p][kp] += w_; }
+                                }
+                            }
+                        }
                     }
 
                     // SE
@@ -2244,9 +2419,21 @@ void P2Mastah ( params *model, markers particles, DoodzFP* mat_prop, grid *mesh,
                         kp = ip + (jp-1)*Nx + (1.0-peri)*1 - peri*(Nx-1);
                         dxm = fabs( X_vect[ip] + dx - particles.x[k]);
                         dzm = fabs( Z_vect[jp] - dz - particles.z[k]);
-                        Wm_ph[thread_num][p][kp]  +=          (1.0-dxm/dx_itp)*(1.0-dzm/dz_itp);
-                        Wm[thread_num][kp]        +=          (1.0-dxm/dx_itp)*(1.0-dzm/dz_itp);
-                        BmWm[thread_num][kp]      += mark_val*(1.0-dxm/dx_itp)*(1.0-dzm/dz_itp);
+                        {
+                            double w_ = (1.0-dxm/dx_itp)*(1.0-dzm/dz_itp);
+                            if (imode <= 1) {
+                                Wm_ph[thread_num][p][kp] += w_;
+                                Wm[thread_num][kp]       += w_;
+                                BmWm[thread_num][kp]     += mark_val*w_;
+                            } else {
+                                _Pragma("omp atomic") WM[kp]   += w_;
+                                _Pragma("omp atomic") BMWM[kp] += mark_val*w_;
+                                if (prop == 1) {
+                                    if (centroid==0) { _Pragma("omp atomic") mesh->phase_perc_s[p][kp] += w_; }
+                                    if (centroid==1) { _Pragma("omp atomic") mesh->phase_perc_n[p][kp] += w_; }
+                                }
+                            }
+                        }
                     }
            
                 }
@@ -2254,7 +2441,8 @@ void P2Mastah ( params *model, markers particles, DoodzFP* mat_prop, grid *mesh,
             }
         }
 
-    // Final reduction
+    // Final reduction (skip for mode 2 — atomics already accumulated into WM/BMWM)
+    if (imode <= 1) {
 #pragma omp parallel for shared ( BmWm, Wm, BMWM, WM, Wm_ph, mesh ) private( i, k, p ) firstprivate( Nx, Nz, nthreads, model, centroid, prop) schedule( static )
     for ( i=0; i<Nx*Nz; i++ ) {
         for ( k=0; k<nthreads; k++ ) {
@@ -2267,6 +2455,7 @@ void P2Mastah ( params *model, markers particles, DoodzFP* mat_prop, grid *mesh,
                 }
             }
         }
+    }
     }
     
 //    for ( i=0; i<Nx*Nz; i++ ) {
@@ -2315,30 +2504,39 @@ void P2Mastah ( params *model, markers particles, DoodzFP* mat_prop, grid *mesh,
     }
     
     // Clean up
-    DoodzFree(WM);
-    DoodzFree(BMWM);
-    
-    for ( k=0; k<nthreads; k++ ) {
-        for (p=0; p<model->Nb_phases; p++) DoodzFree(Wm_ph[k][p]);
-        DoodzFree(Wm[k]);
-        DoodzFree(BmWm[k]);
-        DoodzFree(Wm_ph[k]);
+    if (imode == 0) {
+        DoodzFree(WM);
+        DoodzFree(BMWM);
+        for ( k=0; k<nthreads; k++ ) {
+            for (p=0; p<model->Nb_phases; p++) DoodzFree(Wm_ph[k][p]);
+            DoodzFree(Wm[k]);
+            DoodzFree(BmWm[k]);
+            DoodzFree(Wm_ph[k]);
+        }
+        DoodzFree(Wm_ph);
+        DoodzFree(Wm);
+        DoodzFree(BmWm);
+    } else if (imode == 1) {
+        // WM, BMWM, Wm, BmWm are pool-owned — only free per-call Wm_ph
+        for ( k=0; k<nthreads; k++ ) {
+            for (p=0; p<model->Nb_phases; p++) DoodzFree(Wm_ph[k][p]);
+            DoodzFree(Wm_ph[k]);
+        }
+        DoodzFree(Wm_ph);
     }
-    DoodzFree(Wm_ph);
-    DoodzFree(Wm);
-    DoodzFree(BmWm);
+    // Mode 2: nothing to free (all pool-owned, no Wm_ph allocated)
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-void CountPartCell( markers* particles, grid *mesh, params model, surface topo, surface topo_ini, int reseed_markers, scale scaling ) {
+void CountPartCell( markers* particles, grid *mesh, params model, surface topo, surface topo_ini, int reseed_markers, scale scaling, InterpBufPool *pool ) {
 
     // First operation - compute phase proportions on centroids and vertices
     int cent=1, vert=0, prop=1, interp=0;
-    P2Mastah ( &model, *particles, NULL, mesh, NULL, mesh->BCp.type,  0, 0, prop, cent, model.interp_stencil);
-    P2Mastah ( &model, *particles, NULL, mesh, NULL, mesh->BCg.type,  0, 0, prop, vert, model.interp_stencil);
+    P2Mastah ( &model, *particles, NULL, mesh, NULL, mesh->BCp.type,  0, 0, prop, cent, model.interp_stencil, pool);
+    P2Mastah ( &model, *particles, NULL, mesh, NULL, mesh->BCg.type,  0, 0, prop, vert, model.interp_stencil, pool);
 
     // Let's consider a finer mesh of double resolution shifted by -dx/4 and -dz/4, this way both centroids and vertices are coverer
     const int nvx = 2*mesh->Nx-1, ncx = 2*mesh->Nx-2;  
@@ -2627,7 +2825,7 @@ void CountPartCell( markers* particles, grid *mesh, params model, surface topo, 
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-void CountPartCell_OLD( markers* particles, grid *mesh, params model, surface topo, surface topo_ini, int reseed_markers, scale scaling ) {
+void CountPartCell_OLD( markers* particles, grid *mesh, params model, surface topo, surface topo_ini, int reseed_markers, scale scaling, InterpBufPool *pool ) {
 
     // This function counts the number of particle that are currently in each cell of the domain.
     // The function detects cells that are lacking of particle and call the particle re-seeding routine.
@@ -2650,8 +2848,8 @@ void CountPartCell_OLD( markers* particles, grid *mesh, params model, surface to
     
     // First operation - compute phase proportions on centroids and vertices
     int cent=1, vert=0, prop=1, interp=0;
-    P2Mastah ( &model, *particles, NULL, mesh, NULL, mesh->BCp.type,  0, 0, prop, cent, model.interp_stencil);
-    P2Mastah ( &model, *particles, NULL, mesh, NULL, mesh->BCg.type,  0, 0, prop, vert, model.interp_stencil);
+    P2Mastah ( &model, *particles, NULL, mesh, NULL, mesh->BCp.type,  0, 0, prop, cent, model.interp_stencil, pool);
+    P2Mastah ( &model, *particles, NULL, mesh, NULL, mesh->BCg.type,  0, 0, prop, vert, model.interp_stencil, pool);
     
     // Split the domain in N threads in x direction
 // #pragma omp parallel

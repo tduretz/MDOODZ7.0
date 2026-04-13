@@ -167,3 +167,30 @@ TEST_F(Density, HydrostaticPressure) {
   free(inputName);
   free(fileName);
 }
+
+
+// --- Interpolation mode tests ---
+
+TEST_F(Density, HydrostaticPressureInterpMode1) {
+  char *inputName;
+  asprintf(&inputName, "Density/HydrostaticPressureInterpMode1.txt");
+  RunMDOODZ(inputName, &setup);
+  char *fileName;
+  asprintf(&fileName, "HydrostaticPressureInterpMode1/Output%05d.gzip.h5", 1);
+  int steps = getStepsCount(fileName);
+  EXPECT_GE(steps, 0);
+  free(inputName);
+  free(fileName);
+}
+
+TEST_F(Density, HydrostaticPressureInterpMode2) {
+  char *inputName;
+  asprintf(&inputName, "Density/HydrostaticPressureInterpMode2.txt");
+  RunMDOODZ(inputName, &setup);
+  char *fileName;
+  asprintf(&fileName, "HydrostaticPressureInterpMode2/Output%05d.gzip.h5", 1);
+  int steps = getStepsCount(fileName);
+  EXPECT_GE(steps, 0);
+  free(inputName);
+  free(fileName);
+}

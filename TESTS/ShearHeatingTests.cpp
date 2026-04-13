@@ -105,3 +105,30 @@ TEST_F(ShearHeating, ViscousDissipationPCG) {
   printf("PCG ViscousDissipation: dT_num=%e, dT_ana=%e\n", dT_num, dT_ana);
   EXPECT_NEAR(dT_num, dT_ana, fabs(dT_ana) * 0.05);
 }
+
+
+// --- Interpolation mode tests ---
+
+TEST_F(ShearHeating, ViscousDissipationInterpMode1) {
+  char *inputName;
+  asprintf(&inputName, "ShearHeating/ViscousDissipationInterpMode1.txt");
+  RunMDOODZ(inputName, &setup);
+  char *fileName;
+  asprintf(&fileName, "ViscousDissipationInterpMode1/Output%05d.gzip.h5", 1);
+  int steps = getStepsCount(fileName);
+  EXPECT_GE(steps, 0);
+  free(inputName);
+  free(fileName);
+}
+
+TEST_F(ShearHeating, ViscousDissipationInterpMode2) {
+  char *inputName;
+  asprintf(&inputName, "ShearHeating/ViscousDissipationInterpMode2.txt");
+  RunMDOODZ(inputName, &setup);
+  char *fileName;
+  asprintf(&fileName, "ViscousDissipationInterpMode2/Output%05d.gzip.h5", 1);
+  int steps = getStepsCount(fileName);
+  EXPECT_GE(steps, 0);
+  free(inputName);
+  free(fileName);
+}

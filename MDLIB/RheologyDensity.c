@@ -1526,7 +1526,7 @@ void CohesionFrictionDilationGrid( grid* mesh, markers* particles, mat_prop mate
 
   // Plastic strain
   strain_pl  = DoodzCalloc((model.Nx-1)*(model.Nz-1), sizeof(double));
-  P2Mastah( &model, *particles,  particles->strain_pl,     mesh, strain_pl,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil);
+  P2Mastah( &model, *particles,  particles->strain_pl,     mesh, strain_pl,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil, NULL);
 
   // Calculate cell centers cohesion and friction
 #pragma omp parallel for shared( mesh, strain_pl ) private( p, c0 ) firstprivate( model, materials, average, style, Ncx, Ncz )
@@ -1563,7 +1563,7 @@ void CohesionFrictionDilationGrid( grid* mesh, markers* particles, mat_prop mate
   // Plastic strain
   strain_pl  = DoodzCalloc((model.Nx-0)*(model.Nz-0), sizeof(double));
   // Interp_P2N ( *particles,  particles->strain_pl, mesh, strain_pl, mesh->xg_coord, mesh->zg_coord, 1, 0, &model );
-  P2Mastah( &model, *particles, particles->strain_pl, mesh, strain_pl, mesh->BCg.type,  1, 0, interp, vert, (&model)->interp_stencil);
+  P2Mastah( &model, *particles, particles->strain_pl, mesh, strain_pl, mesh->BCg.type,  1, 0, interp, vert, (&model)->interp_stencil, NULL);
 
 #pragma omp parallel for shared( mesh, strain_pl ) private( p, c1 ) firstprivate( model, materials, average, style, Nx, Nz )
   // Calculate vertices cohesion and friction

@@ -182,3 +182,30 @@ TEST_F(VelocityField, SimpleShearVelocity) {
   free(inputName);
   free(fileName);
 }
+
+
+// --- Interpolation mode tests ---
+
+TEST_F(VelocityField, PureShearVelocityInterpMode1) {
+  char *inputName;
+  asprintf(&inputName, "VelocityField/PureShearVelocityInterpMode1.txt");
+  RunMDOODZ(inputName, &setup);
+  char *fileName;
+  asprintf(&fileName, "PureShearVelocityInterpMode1/Output%05d.gzip.h5", 1);
+  int steps = getStepsCount(fileName);
+  EXPECT_GE(steps, 0);
+  free(inputName);
+  free(fileName);
+}
+
+TEST_F(VelocityField, PureShearVelocityInterpMode2) {
+  char *inputName;
+  asprintf(&inputName, "VelocityField/PureShearVelocityInterpMode2.txt");
+  RunMDOODZ(inputName, &setup);
+  char *fileName;
+  asprintf(&fileName, "PureShearVelocityInterpMode2/Output%05d.gzip.h5", 1);
+  int steps = getStepsCount(fileName);
+  EXPECT_GE(steps, 0);
+  free(inputName);
+  free(fileName);
+}

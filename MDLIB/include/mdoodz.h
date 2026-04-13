@@ -56,6 +56,7 @@ typedef struct {
   int     Nx, Nz, Nt, step, nit, Newton, noisy;
   average eta_average, ani_average;
   int     interp_stencil;
+  int     interp_mode;        // 0: legacy (default), 1: persistent buffers, 2: persistent + atomic scatter
   double  nexp_radial_basis;
   int     mechanical, periodic_x, elastic,
           thermal, pure_shear_ALE, free_surface, writer_markers, writer_debug, topo_update, melting, inject_dikes;

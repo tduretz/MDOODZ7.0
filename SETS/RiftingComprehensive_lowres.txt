@@ -33,6 +33,7 @@ Courant = 0.5
 penalty = 1e2
 eta_average = 0
 interp_stencil = 1
+interp_mode = 0
 
 /**** SWITCHES ****/
 mechanical    = 1

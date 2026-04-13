@@ -255,3 +255,30 @@ TEST_F(Thermal, DirichletBCPCG) {
   EXPECT_GT(minT, 0.0);
   EXPECT_GT(maxT, minT);
 }
+
+
+// --- Interpolation mode tests ---
+
+TEST_F(Thermal, GaussianDiffusionInterpMode1) {
+  char *inputName;
+  asprintf(&inputName, "Thermal/GaussianDiffusionInterpMode1.txt");
+  RunMDOODZ(inputName, &setup);
+  char *fileName;
+  asprintf(&fileName, "GaussianDiffusionInterpMode1/Output%05d.gzip.h5", 5);
+  int steps = getStepsCount(fileName);
+  EXPECT_GE(steps, 0);
+  free(inputName);
+  free(fileName);
+}
+
+TEST_F(Thermal, GaussianDiffusionInterpMode2) {
+  char *inputName;
+  asprintf(&inputName, "Thermal/GaussianDiffusionInterpMode2.txt");
+  RunMDOODZ(inputName, &setup);
+  char *fileName;
+  asprintf(&fileName, "GaussianDiffusionInterpMode2/Output%05d.gzip.h5", 5);
+  int steps = getStepsCount(fileName);
+  EXPECT_GE(steps, 0);
+  free(inputName);
+  free(fileName);
+}

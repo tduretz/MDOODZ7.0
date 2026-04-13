@@ -112,3 +112,30 @@ TEST_F(ConvergenceRate, NewtonFasterThanPicard) {
   free(newtonFile);
   free(picardFile);
 }
+
+
+// --- Interpolation mode tests ---
+
+TEST_F(ConvergenceRate, NewtonPwlInterpMode1) {
+  char *inputName;
+  asprintf(&inputName, "ConvergenceRate/NewtonPwlInterpMode1.txt");
+  RunMDOODZ(inputName, &setup);
+  char *fileName;
+  asprintf(&fileName, "NewtonPwlInterpMode1/Output%05d.gzip.h5", 1);
+  int steps = getStepsCount(fileName);
+  EXPECT_GE(steps, 0);
+  free(inputName);
+  free(fileName);
+}
+
+TEST_F(ConvergenceRate, NewtonPwlInterpMode2) {
+  char *inputName;
+  asprintf(&inputName, "ConvergenceRate/NewtonPwlInterpMode2.txt");
+  RunMDOODZ(inputName, &setup);
+  char *fileName;
+  asprintf(&fileName, "NewtonPwlInterpMode2/Output%05d.gzip.h5", 1);
+  int steps = getStepsCount(fileName);
+  EXPECT_GE(steps, 0);
+  free(inputName);
+  free(fileName);
+}

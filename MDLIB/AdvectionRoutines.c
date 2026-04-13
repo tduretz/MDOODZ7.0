@@ -520,8 +520,8 @@ void DefineInitialTimestep( params *model, grid *mesh, markers particles, mat_pr
 // Define initial timestep is elasticity is turned on
 if ( model->elastic == 1 && model->constant_dt != 1 ) {
 
-    P2Mastah( model, particles, materials.G,     mesh, mesh->mu_n,   mesh->BCp.type,  0, 0, interp, cent, model->interp_stencil );
-    P2Mastah( model, particles, materials.G,     mesh, mesh->mu_s,   mesh->BCg.type,  0, 0, interp, vert, model->interp_stencil );
+    P2Mastah( model, particles, materials.G,     mesh, mesh->mu_n,   mesh->BCp.type,  0, 0, interp, cent, model->interp_stencil, NULL );
+    P2Mastah( model, particles, materials.G,     mesh, mesh->mu_s,   mesh->BCg.type,  0, 0, interp, vert, model->interp_stencil, NULL );
 
     for ( k=0; k<mesh->Nx*mesh->Nz; k++) {
 

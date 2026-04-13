@@ -1150,6 +1150,7 @@ Input ReadInputFile( char *fileName ) {
     model.ani_average        = ReadInt2( fin, "ani_average",           1 ); // 0: arithmetic mean - 1: harmonic mean - 2: geometric mean
     model.eta_average        = ReadInt2( fin, "eta_average",           0 ); // 0: arithmetic mean - 1: harmonic mean - 2: geometric mean
     model.interp_stencil     = ReadInt2( fin, "interp_stencil",        1 ); // 1: 1-Cell          - 9: 9-Cell
+    model.interp_mode        = ReadInt2( fin, "interp_mode",           0 ); // 0: legacy - 1: persistent buffers - 2: persistent + atomic scatter
     model.subgrid_diffusion  = ReadInt2( fin, "subgrid_diffusion",     0 ); // 0: No subgrid diffusion, 1: temperature, 2: temperature + stress
     model.conserv_interp     = ReadInt2( fin, "conserv_interp",        0 ); // Activates Taras conservative interpolation
     model.direct_neighbour   = ReadInt2( fin, "direct_neighbour",      0 ); // Direct neighbour interpolation
@@ -1256,6 +1257,7 @@ Input ReadInputFile( char *fileName ) {
     model.gz                 = ReadDou2( fin, "gz",  0.0 ) / scaling.a;
     // Consequential behaviour
     if (model.interp_stencil!=1 && model.interp_stencil!=9) { LOG_ERR("Wrong value of interp_stencil: should be 1 or 9."); exit(1); }
+    if (model.interp_mode < 0 || model.interp_mode > 2) { LOG_WARN("Invalid interp_mode %d, clamping to 0 (legacy).", model.interp_mode); model.interp_mode = 0; }
     if ( model.shear_style == 1 ) model.periodic_x     = 1; // If simple shear, it must  be periodic in x
     if ( model.shear_style == 0 ) model.periodic_x     = 0; // If simple shear, it can't be periodic in x
     if ( model.anisotropy  == 1 ) model.finite_strain  = 1; // If anisotropy, then also track finite strain
@@ -1754,7 +1756,7 @@ double* ReadBin(char importDir[], char A_name[], int nx, int ny, double scale ){
 /*--------------------------------------------------------------------------------------------------------------------*/
 
 char* ReadChar( FILE *fin, char FieldName[], char Default[] ) {
-    int h, find=0, bufmax=50, length;
+    int h, find=0, bufmax=200, length;
     char *string1, *string2;
     char line[bufmax];
 
@@ -1814,8 +1816,8 @@ char* ReadChar( FILE *fin, char FieldName[], char Default[] ) {
             for (h=0;h<bufmax;h++) {
                 if(strlen(line)> 0 && line[h]=='=') {
 
-                    for (h1=0; h1<30; h1++) {
-                        if ( isspace(line[h+2+h1]) ) {
+                    for (h1=0; h1<bufmax-3; h1++) {
+                        if ( isspace(line[h+2+h1]) || line[h+2+h1] == '\0' ) {
                             string1[h1] = '\0';
                             str_size++;
                             break;

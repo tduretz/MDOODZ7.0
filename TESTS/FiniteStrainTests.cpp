@@ -74,3 +74,30 @@ TEST_F(FiniteStrain, PureShearStrain) {
   free(inputName);
   free(fileName);
 }
+
+
+// --- Interpolation mode tests ---
+
+TEST_F(FiniteStrain, PureShearStrainInterpMode1) {
+  char *inputName;
+  asprintf(&inputName, "FiniteStrain/PureShearStrainInterpMode1.txt");
+  RunMDOODZ(inputName, &setup);
+  char *fileName;
+  asprintf(&fileName, "PureShearStrainInterpMode1/Output%05d.gzip.h5", 1);
+  int steps = getStepsCount(fileName);
+  EXPECT_GE(steps, 0);
+  free(inputName);
+  free(fileName);
+}
+
+TEST_F(FiniteStrain, PureShearStrainInterpMode2) {
+  char *inputName;
+  asprintf(&inputName, "FiniteStrain/PureShearStrainInterpMode2.txt");
+  RunMDOODZ(inputName, &setup);
+  char *fileName;
+  asprintf(&fileName, "PureShearStrainInterpMode2/Output%05d.gzip.h5", 1);
+  int steps = getStepsCount(fileName);
+  EXPECT_GE(steps, 0);
+  free(inputName);
+  free(fileName);
+}

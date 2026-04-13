@@ -442,3 +442,30 @@ TEST_F(AnisotropyBenchmark, StressAnisotropyL2) {
   EXPECT_LT(l2_szzd, 1e-6) << "szzd spatial L2 error exceeds threshold";
   EXPECT_LT(l2_sxz, 1e-6)  << "sxz spatial L2 error exceeds threshold";
 }
+
+
+// --- Interpolation mode tests ---
+
+TEST_F(AnisotropyBenchmark, DirectorEvolutionInterpMode1) {
+  char *inputName;
+  asprintf(&inputName, "AnisotropyBenchmark/DirectorEvolutionInterpMode1.txt");
+  RunMDOODZ(inputName, &setup);
+  char *fileName;
+  asprintf(&fileName, "DirectorEvolutionInterpMode1/Output%05d.gzip.h5", 5);
+  int steps = getStepsCount(fileName);
+  EXPECT_GE(steps, 0);
+  free(inputName);
+  free(fileName);
+}
+
+TEST_F(AnisotropyBenchmark, DirectorEvolutionInterpMode2) {
+  char *inputName;
+  asprintf(&inputName, "AnisotropyBenchmark/DirectorEvolutionInterpMode2.txt");
+  RunMDOODZ(inputName, &setup);
+  char *fileName;
+  asprintf(&fileName, "DirectorEvolutionInterpMode2/Output%05d.gzip.h5", 5);
+  int steps = getStepsCount(fileName);
+  EXPECT_GE(steps, 0);
+  free(inputName);
+  free(fileName);
+}

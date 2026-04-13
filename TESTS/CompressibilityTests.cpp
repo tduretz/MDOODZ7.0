@@ -67,3 +67,30 @@ TEST_F(Compressibility, DilatantFlow) {
   free(inputName);
   free(fileName);
 }
+
+
+// --- Interpolation mode tests ---
+
+TEST_F(Compressibility, DilatantFlowInterpMode1) {
+  char *inputName;
+  asprintf(&inputName, "Compressibility/DilatantFlowInterpMode1.txt");
+  RunMDOODZ(inputName, &setup);
+  char *fileName;
+  asprintf(&fileName, "DilatantFlowInterpMode1/Output%05d.gzip.h5", 1);
+  int steps = getStepsCount(fileName);
+  EXPECT_GE(steps, 0);
+  free(inputName);
+  free(fileName);
+}
+
+TEST_F(Compressibility, DilatantFlowInterpMode2) {
+  char *inputName;
+  asprintf(&inputName, "Compressibility/DilatantFlowInterpMode2.txt");
+  RunMDOODZ(inputName, &setup);
+  char *fileName;
+  asprintf(&fileName, "DilatantFlowInterpMode2/Output%05d.gzip.h5", 1);
+  int steps = getStepsCount(fileName);
+  EXPECT_GE(steps, 0);
+  free(inputName);
+  free(fileName);
+}
