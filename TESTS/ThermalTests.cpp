@@ -185,3 +185,73 @@ TEST_F(Thermal, DirichletBC) {
   free(inputName);
   free(fileName);
 }
+
+// ===================== PCG Thermal Solver Variants ===================== //
+
+TEST_F(Thermal, GaussianDiffusionPCG) {
+  RunMDOODZ("Thermal/GaussianDiffusionPCG.txt", &setup);
+  double maxT_init  = getMaxFieldValue("GaussianDiffusionPCG/Output00000.gzip.h5", "Centers", "T");
+  double maxT_final = getMaxFieldValue("GaussianDiffusionPCG/Output00005.gzip.h5", "Centers", "T");
+  printf("PCG Peak T init: %e, Peak T final: %e\n", maxT_init, maxT_final);
+  EXPECT_LT(maxT_final, maxT_init);
+}
+
+TEST_F(Thermal, SteadyStateGeothermPCG) {
+  RunMDOODZ("Thermal/SteadyStateGeothermPCG.txt", &setup);
+  char *fileName;
+  asprintf(&fileName, "SteadyStateGeothermPCG/Output00020.gzip.h5");
+  double maxT = getMaxFieldValue(fileName, "Centers", "T");
+  double minT = getMinFieldValue(fileName, "Centers", "T");
+  double meanT = getMeanFieldValue(fileName, "Centers", "T");
+  EXPECT_GT(maxT, minT);
+  EXPECT_GT(meanT, minT);
+  EXPECT_LT(meanT, maxT);
+
+  auto T_field = readFieldAsArray(fileName, "Centers", "T");
+  auto zc = readCoordArray(fileName, "zc_coord");
+  int Nx_grid = (int)getModelParam(fileName, 3);
+  int Nz_grid = (int)getModelParam(fileName, 4);
+  int ncx = Nx_grid - 1;
+  int ncz = Nz_grid - 1;
+  double Lz = getModelParam(fileName, 2);
+  double z_top_SI = Lz / 2.0;
+  double T_top_SI = 273.15;
+  double T_bot_SI = 1600.0;
+  std::vector<double> T_ana(T_field.size());
+  for (int iz = 0; iz < ncz; iz++) {
+    double T_z = T_top_SI + (T_bot_SI - T_top_SI) * (z_top_SI - zc[iz]) / Lz;
+    for (int ix = 0; ix < ncx; ix++) {
+      T_ana[ix + ncx * iz] = T_z;
+    }
+  }
+  double L2_T = computeL2Error(T_field, T_ana);
+  printf("PCG Geotherm L2 error: %e\n", L2_T);
+  EXPECT_LT(L2_T, 1e-4);
+  free(fileName);
+}
+
+TEST_F(Thermal, RadiogenicHeatPCG) {
+  RunMDOODZ("Thermal/RadiogenicHeatPCG.txt", &setup);
+  double meanT_init  = getMeanFieldValue("RadiogenicHeatPCG/Output00000.gzip.h5", "Centers", "T");
+  double meanT_final = getMeanFieldValue("RadiogenicHeatPCG/Output00005.gzip.h5", "Centers", "T");
+  double maxT_init   = getMaxFieldValue("RadiogenicHeatPCG/Output00000.gzip.h5", "Centers", "T");
+  double maxT_final  = getMaxFieldValue("RadiogenicHeatPCG/Output00005.gzip.h5", "Centers", "T");
+  EXPECT_GT(meanT_final, meanT_init);
+  EXPECT_GT(maxT_final, maxT_init);
+
+  double Qr = 1e-6, rho_mat = 3300.0, Cp_mat = 1050.0;
+  double time_SI = getModelParam("RadiogenicHeatPCG/Output00005.gzip.h5", 0);
+  double T0_SI = 773.15;
+  double T_ana_mean = T0_SI + Qr * time_SI / (rho_mat * Cp_mat);
+  printf("PCG RadiogenicHeat: meanT_final=%e, T_ana=%e\n", meanT_final, T_ana_mean);
+  EXPECT_NEAR(meanT_final, T_ana_mean, fabs(T_ana_mean - T0_SI) * 0.02);
+}
+
+TEST_F(Thermal, DirichletBCPCG) {
+  RunMDOODZ("Thermal/DirichletBCPCG.txt", &setup);
+  double minT = getMinFieldValue("DirichletBCPCG/Output00001.gzip.h5", "Centers", "T");
+  double maxT = getMaxFieldValue("DirichletBCPCG/Output00001.gzip.h5", "Centers", "T");
+  printf("PCG T range: min=%e, max=%e\n", minT, maxT);
+  EXPECT_GT(minT, 0.0);
+  EXPECT_GT(maxT, minT);
+}

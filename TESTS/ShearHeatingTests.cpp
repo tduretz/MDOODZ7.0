@@ -89,3 +89,19 @@ TEST_F(ShearHeating, ViscousDissipation) {
   free(fileInit);
   free(fileFinal);
 }
+
+TEST_F(ShearHeating, ViscousDissipationPCG) {
+  RunMDOODZ("ShearHeating/ViscousDissipationPCG.txt", &setup);
+  double maxT_init  = getMaxFieldValue("ViscousDissipationPCG/Output00000.gzip.h5", "Centers", "T");
+  double maxT_final = getMaxFieldValue("ViscousDissipationPCG/Output00003.gzip.h5", "Centers", "T");
+  EXPECT_GE(maxT_final, maxT_init);
+
+  double meanT_init = getMeanFieldValue("ViscousDissipationPCG/Output00000.gzip.h5", "Centers", "T");
+  double meanT_final_val = getMeanFieldValue("ViscousDissipationPCG/Output00003.gzip.h5", "Centers", "T");
+  double dT_num = meanT_final_val - meanT_init;
+  double t_final = getModelParam("ViscousDissipationPCG/Output00003.gzip.h5", 0);
+  double eta_val = 1e22, eps_d = 1e-14, rho_val = 3300.0, Cp_val = 1050.0;
+  double dT_ana = 4.0 * eta_val * eps_d * eps_d * t_final / (rho_val * Cp_val);
+  printf("PCG ViscousDissipation: dT_num=%e, dT_ana=%e\n", dT_num, dT_ana);
+  EXPECT_NEAR(dT_num, dT_ana, fabs(dT_ana) * 0.05);
+}
