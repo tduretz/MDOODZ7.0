@@ -285,7 +285,7 @@ TOTAL=${#RUNS_TAG[@]}
 
 # ---------- Summary CSV header ----------
 SUMMARY_CSV="${RESULTS_DIR}/summary.csv"
-echo "host,os,arch,grid,nx,nz,threads,steps,avg_wall_s,total_wall_s,avg_rheology_s,avg_assembly_s,avg_solve_s,avg_thermal_s,avg_advection_s,avg_melting_s,avg_anisotropy_s,avg_gse_s,avg_output_s,avg_nit,peak_rss_mb" > "$SUMMARY_CSV"
+echo "host,os,arch,grid,nx,nz,threads,steps,avg_wall_s,total_wall_s,avg_rheology_s,avg_assembly_s,avg_solve_s,avg_thermal_s,avg_advection_s,avg_melting_s,avg_anisotropy_s,avg_gse_s,avg_output_s,avg_interp_s,avg_stokes_setup_s,avg_nl_overhead_s,avg_post_solve_s,avg_nit,peak_rss_mb" > "$SUMMARY_CSV"
 
 # ---------- Run benchmarks ----------
 for ((i=0; i<TOTAL; i++)); do
@@ -333,25 +333,27 @@ for ((i=0; i<TOTAL; i++)); do
   if [[ -f perf.csv ]]; then
     cp perf.csv "${RUN_DIR}/perf.csv"
 
-    # Compute averages for summary (21-column perf.csv)
+    # Compute averages for summary (25-column perf.csv)
     # Columns: 1=step 2=wall 3=time_ma 4=rheology 5=assembly 6=solve
     #          7=thermal 8=advection 9=free_surface 10=reseeding
     #          11=melting 12=anisotropy 13=gse 14=output
-    #          15=nit 16=n_particles 17=neq_mom 18=neq_cont
-    #          19=peak_rss 20=user_cpu 21=sys_cpu
+    #          15=interp 16=stokes_setup 17=nl_overhead 18=post_solve
+    #          19=nit 20=n_particles 21=neq_mom 22=neq_cont
+    #          23=peak_rss 24=user_cpu 25=sys_cpu
     AVG=$(awk -F',' 'NR>1 {
       n++; wall+=$2; rheo+=$4; asm+=$5; sol+=$6;
       therm+=$7; adv+=$8; melt+=$11; aniso+=$12; gse+=$13; outp+=$14;
-      nit+=$15; rss=$19
+      interp+=$15; stokes_setup+=$16; nl_overhead+=$17; post_solve+=$18;
+      nit+=$19; rss=$23
     } END {
-      if(n>0) printf "%d,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.1f,%.1f",
-        n, wall/n, wall, rheo/n, asm/n, sol/n, therm/n, adv/n, melt/n, aniso/n, gse/n, outp/n, nit/n, rss
-      else print "0,0,0,0,0,0,0,0,0,0,0,0,0,0"
+      if(n>0) printf "%d,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.1f,%.1f",
+        n, wall/n, wall, rheo/n, asm/n, sol/n, therm/n, adv/n, melt/n, aniso/n, gse/n, outp/n, interp/n, stokes_setup/n, nl_overhead/n, post_solve/n, nit/n, rss
+      else print "0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0"
     }' perf.csv)
 
     echo "${HOSTNAME_SHORT},${OS},${ARCH},${GRID},${NX},${NZ},${THR},${AVG}" >> "$SUMMARY_CSV"
     echo "    $(head -1 perf.csv)"
-    tail -1 perf.csv | awk -F',' '{printf "    Last step: wall=%.3fs, RSS=%.0fMB, nit=%s\n", $2, $19, $15}'
+    tail -1 perf.csv | awk -F',' '{printf "    Last step: wall=%.3fs, RSS=%.0fMB, nit=%s\n", $2, $23, $19}'
   else
     echo "    WARNING: No perf.csv produced"
   fi

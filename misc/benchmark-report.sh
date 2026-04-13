@@ -102,17 +102,19 @@ done
   echo ""
   # summary.csv: host,os,arch,grid,nx,nz,threads,steps,avg_wall_s,total_wall_s,
   #   avg_rheology_s,avg_assembly_s,avg_solve_s,avg_thermal_s,avg_advection_s,
-  #   avg_melting_s,avg_anisotropy_s,avg_gse_s,avg_output_s,avg_nit,peak_rss_mb
-  echo "| Host | Grid | Threads | Steps | Avg Wall (s) | Rheology | Assembly | Solve | Thermal | Advect | Melt | Aniso | GSE | Output | Nit | RSS (MB) |"
-  echo "|------|------|---------|-------|-------------|----------|----------|-------|---------|--------|------|-------|-----|--------|-----|---------|"
+  #   avg_melting_s,avg_anisotropy_s,avg_gse_s,avg_output_s,
+  #   avg_interp_s,avg_stokes_setup_s,avg_nl_overhead_s,avg_post_solve_s,avg_nit,peak_rss_mb
+  echo "| Host | Grid | Threads | Steps | Avg Wall (s) | Interp | Setup | Rheol | Assem | Solve | NL Ovhd | Thermal | Advect | Post-Solve | Output | Nit | RSS (MB) | Coverage |"
+  echo "|------|------|---------|-------|-------------|--------|-------|-------|-------|-------|---------|---------|--------|------------|--------|-----|---------|----------|" 
 
   for dir in "${DIRS[@]}"; do
     dir="${dir%/}"
     csv="${dir}/summary.csv"
     [[ -f "$csv" ]] || continue
-    tail -n+2 "$csv" | while IFS=',' read -r host os arch grid nx nz threads steps avg_wall total_wall avg_rheo avg_asm avg_sol avg_therm avg_adv avg_melt avg_aniso avg_gse avg_outp avg_nit peak_rss; do
-      printf "| %s | %s | %s | %s | %s | %s | %s | %s | %s | %s | %s | %s | %s | %s | %s | %s |\n" \
-        "$host" "$grid" "$threads" "$steps" "$avg_wall" "$avg_rheo" "$avg_asm" "$avg_sol" "$avg_therm" "$avg_adv" "$avg_melt" "$avg_aniso" "$avg_gse" "$avg_outp" "$avg_nit" "$peak_rss"
+    tail -n+2 "$csv" | while IFS=',' read -r host os arch grid nx nz threads steps avg_wall total_wall avg_rheo avg_asm avg_sol avg_therm avg_adv avg_melt avg_aniso avg_gse avg_outp avg_interp avg_setup avg_nlovhd avg_post avg_nit peak_rss; do
+      coverage=$(awk "BEGIN { t=${avg_rheo}+${avg_asm}+${avg_sol}+${avg_therm}+${avg_adv}+${avg_melt}+${avg_aniso}+${avg_gse}+${avg_outp}+${avg_interp}+${avg_setup}+${avg_nlovhd}+${avg_post}; printf \"%.0f%%\", 100*t/${avg_wall} }")
+      printf "| %s | %s | %s | %s | %s | %s | %s | %s | %s | %s | %s | %s | %s | %s | %s | %s | %s | %s |\n" \
+        "$host" "$grid" "$threads" "$steps" "$avg_wall" "$avg_interp" "$avg_setup" "$avg_rheo" "$avg_asm" "$avg_sol" "$avg_nlovhd" "$avg_therm" "$avg_adv" "$avg_post" "$avg_outp" "$avg_nit" "$peak_rss" "$coverage"
     done
   done
   echo ""
@@ -186,7 +188,7 @@ done
     [[ -f "$csv" ]] || continue
 
     max_thr=$(tail -n+2 "$csv" | cut -d',' -f7 | sort -rn | head -1)
-    tail -n+2 "$csv" | grep ",${max_thr}," | sort -t',' -k5 -n | while IFS=',' read -r host os arch grid nx nz threads steps avg_wall total_wall avg_rheo avg_asm avg_sol avg_therm avg_adv avg_melt avg_aniso avg_gse avg_outp avg_nit peak_rss; do
+    tail -n+2 "$csv" | grep ",${max_thr}," | sort -t',' -k5 -n | while IFS=',' read -r host os arch grid nx nz threads steps avg_wall total_wall avg_rheo avg_asm avg_sol avg_therm avg_adv avg_melt avg_aniso avg_gse avg_outp avg_interp avg_setup avg_nlovhd avg_post avg_nit peak_rss; do
       cells=$((nx * nz))
       rss_per_cell=$(awk "BEGIN { printf \"%.1f\", ${peak_rss}/${cells}*1024 }")
       printf "| %s | %s | %s | %s | %s |\n" "$host" "$grid" "$threads" "$peak_rss" "$rss_per_cell"
@@ -203,15 +205,17 @@ done
     tag="$(basename "$(dirname "$first_perf")")"
     echo "_Run: ${tag}_"
     echo ""
-    # 21-column perf.csv:
+    # 25-column perf.csv:
     # step,wall,time_ma,rheology,assembly,solve,thermal,advection,free_surface,
-    # reseeding,melting,anisotropy,gse,output,nit,n_particles,neq_mom,neq_cont,
-    # peak_rss,user_cpu,sys_cpu
-    echo "| Step | Wall (s) | Time (Ma) | Rheol | Assem | Solve | Therm | Advect | Melt | Nit | Particles | RSS (MB) |"
-    echo "|------|---------|----------|-------|-------|-------|-------|--------|------|-----|-----------|---------|"
-    tail -n+2 "$first_perf" | while IFS=',' read -r step wall time_ma rheo asm sol therm adv fs reseed melt aniso gse outp nit npart neq_m neq_c rss ucpu scpu; do
-      printf "| %s | %s | %s | %s | %s | %s | %s | %s | %s | %s | %s | %s |\n" \
-        "$step" "$wall" "$time_ma" "$rheo" "$asm" "$sol" "$therm" "$adv" "$melt" "$nit" "$npart" "$rss"
+    # reseeding,melting,anisotropy,gse,output,interp,stokes_setup,nl_overhead,
+    # post_solve,nit,n_particles,neq_mom,neq_cont,peak_rss,user_cpu,sys_cpu
+    echo "| Step | Wall (s) | Time (Ma) | Interp | Rheol | Assem | Solve | NL Ovhd | Therm | Advect | Post-Solve | Output | Nit | Coverage |"
+    echo "|------|---------|----------|--------|-------|-------|-------|---------|-------|--------|------------|--------|-----|----------|" 
+    tail -n+2 "$first_perf" | while IFS=',' read -r step wall time_ma rheo asm sol therm adv fs reseed melt aniso gse outp interp setup nlovhd post nit npart neq_m neq_c rss ucpu scpu; do
+      tracked=$(awk "BEGIN { printf \"%.4f\", ${rheo}+${asm}+${sol}+${therm}+${adv}+${fs}+${reseed}+${melt}+${aniso}+${gse}+${outp}+${interp}+${setup}+${nlovhd}+${post} }")
+      coverage=$(awk "BEGIN { printf \"%.0f%%\", 100*${tracked}/${wall} }")
+      printf "| %s | %s | %s | %s | %s | %s | %s | %s | %s | %s | %s | %s | %s | %s |\n" \
+        "$step" "$wall" "$time_ma" "$interp" "$rheo" "$asm" "$sol" "$nlovhd" "$therm" "$adv" "$post" "$outp" "$nit" "$coverage"
     done
   fi
   echo ""

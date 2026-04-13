@@ -62,7 +62,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
     // Open performance CSV
     FILE *perf_csv = fopen("perf.csv", "w");
     if (perf_csv) {
-        fprintf(perf_csv, "step,wall_s,time_ma,rheology_s,assembly_s,solve_s,thermal_s,advection_s,free_surface_s,reseeding_s,melting_s,anisotropy_s,gse_s,output_s,nit,n_particles,neq_mom,neq_cont,peak_rss_mb,user_cpu_s,sys_cpu_s\n");
+        fprintf(perf_csv, "step,wall_s,time_ma,rheology_s,assembly_s,solve_s,thermal_s,advection_s,free_surface_s,reseeding_s,melting_s,anisotropy_s,gse_s,output_s,interp_s,stokes_setup_s,nl_overhead_s,post_solve_s,nit,n_particles,neq_mom,neq_cont,peak_rss_mb,user_cpu_s,sys_cpu_s\n");
     }
 
     MdoodzInput input = (MdoodzInput){
@@ -453,6 +453,8 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         // Per-subsystem timing accumulators (reset each timestep)
         double dt_thermal = 0, dt_advection = 0, dt_free_surface = 0, dt_reseeding = 0;
         double dt_melting = 0, dt_anisotropy = 0, dt_gse = 0, dt_output = 0;
+        double dt_interp = 0, dt_stokes_setup = 0, dt_nl_overhead = 0, dt_post_solve = 0;
+        double t_post_solve0 = 0;
 
         LOG_INFO("*****************************************************");
         LOG_INFO("****************** Time step %05d ******************", input.model.step);
@@ -657,10 +659,13 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         }
 
         LOG_TIME("Particle interpolations I: %lf sec",  (omp_get_wtime() - t_omp) );
+        dt_interp = omp_get_wtime() - t_omp_step;
 
         double dt_rheology_total = 0, dt_assembly_total = 0, dt_solve_total = 0;
 
         if (input.model.mechanical == 1 ) {
+
+            double t_stokes_setup0 = omp_get_wtime();
 
             if (input.crazyConductivity) {
                 for (int n = 0; n < input.crazyConductivity->nPhases; n++) {
@@ -721,6 +726,9 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             // Set vector x = [u;p]
             InitialiseSolutionVector( &mesh, &Stokes, &input.model );
 
+            dt_stokes_setup = omp_get_wtime() - t_stokes_setup0;
+            LOG_TIME("Stokes setup: %.3f sec", dt_stokes_setup);
+
             //------------------------------------------------------------------------------------------------------------------------------//
 
 
@@ -728,6 +736,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
                 mdoodz_log_set_iteration(Nmodel.nit);
                 double t_phase, dt_rheology = 0, dt_assembly = 0, dt_solve_iter = 0;
+                double t_iter_start = omp_get_wtime();
 
                 if ( Nmodel.nit > 0 && Nmodel.Picard2Newton == 1 ) {
                     LOG_DBG("input.model.Newton = %d --- %d", input.model.Newton, Nmodel.rp_rel[Nmodel.nit-1] < Nmodel.Picard2Newton_tol);
@@ -850,9 +859,11 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                 // if pass --> clear matrix break
                 if ( (Nmodel.resx < Nmodel.nonlin_abs_mom || Nmodel.resx/Nmodel.resx0 < Nmodel.nonlin_rel_mom) && (Nmodel.resz < Nmodel.nonlin_abs_mom || Nmodel.resz/Nmodel.resz0 < Nmodel.nonlin_rel_mom) && (Nmodel.resp < Nmodel.nonlin_abs_div || Nmodel.resp/Nmodel.resp0 < Nmodel.nonlin_rel_div) ) {
                     LOG_INFO("Non-linear solver converged to nonlin_abs_mom = %2.2e nonlin_abs_div = %2.2e nonlin_rel_mom = %2.2e nonlin_rel_div = %2.2e", Nmodel.nonlin_abs_mom, Nmodel.nonlin_abs_div, Nmodel.nonlin_rel_mom, Nmodel.nonlin_rel_div);
-                    LOG_TIME("Iteration %02d: rheology=%.3f assembly=%.3f (converged, no solve)", Nmodel.nit, dt_rheology, dt_assembly);
+                    LOG_TIME("Iteration %02d: rheology=%.3f assembly=%.3f overhead=%.3f (converged, no solve)", Nmodel.nit, dt_rheology, dt_assembly, (omp_get_wtime() - t_iter_start) - dt_rheology - dt_assembly);
                     dt_rheology_total += dt_rheology;
                     dt_assembly_total += dt_assembly;
+                    { double dt_iter_total = omp_get_wtime() - t_iter_start;
+                    dt_nl_overhead += dt_iter_total - dt_rheology - dt_assembly; }
                     FreeSparseSystems( IsJacobianUsed, 1, &Stokes, &StokesA, &StokesB, &StokesC, &StokesD, &JacobA, &JacobB, &JacobC, &JacobD );
                     break;
                 }
@@ -897,7 +908,9 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                     }
                 }
                 FreeSparseSystems( IsJacobianUsed, 1, &Stokes, &StokesA, &StokesB, &StokesC, &StokesD, &JacobA, &JacobB, &JacobC, &JacobD );
-                LOG_TIME("Iteration %02d: rheology=%.3f assembly=%.3f solve=%.3f sec", Nmodel.nit, dt_rheology, dt_assembly, dt_solve_iter);
+                { double dt_iter_total = omp_get_wtime() - t_iter_start;
+                dt_nl_overhead += dt_iter_total - dt_rheology - dt_assembly - dt_solve_iter; }
+                LOG_TIME("Iteration %02d: rheology=%.3f assembly=%.3f solve=%.3f overhead=%.3f sec", Nmodel.nit, dt_rheology, dt_assembly, dt_solve_iter, (omp_get_wtime() - t_iter_start) - dt_rheology - dt_assembly - dt_solve_iter);
                 dt_rheology_total += dt_rheology;
                 dt_assembly_total += dt_assembly;
                 dt_solve_total += dt_solve_iter;
@@ -906,6 +919,8 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             }
 
             mdoodz_log_clear_iteration();
+
+            t_post_solve0 = omp_get_wtime();
 
             // Clean solver context
             if ( Nmodel.nit>0 ) {
@@ -958,6 +973,8 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             }
 
         }
+
+        if (t_post_solve0 == 0) t_post_solve0 = omp_get_wtime();
 
         //------------------------------------------------------------------------------------------------------------------------------//
 
@@ -1283,6 +1300,9 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             DoodzFree( Jacob.eqn_p );
         }
 
+        dt_post_solve = (omp_get_wtime() - t_post_solve0) - dt_thermal - dt_advection - dt_free_surface - dt_reseeding - dt_melting - dt_gse - dt_anisotropy;
+        LOG_TIME("Post-solve updates: %.3f sec", dt_post_solve);
+
         //------------------------------------------------------------------------------------------------------------------------------//
 
         // Write output data
@@ -1317,7 +1337,10 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             LOG_TIME("  Model time: %.6f Ma | wall=%.3f sec", time_ma_log, (double)(omp_get_wtime() - t_omp_step));
         }
         if (input.model.mechanical == 1) {
-            LOG_TIME("  Breakdown: rheology=%.3f assembly=%.3f solve=%.3f sec (%d iterations)", dt_rheology_total, dt_assembly_total, dt_solve_total, Nmodel.nit);
+            double wall_total = (double)(omp_get_wtime() - t_omp_step);
+            double tracked = dt_interp + dt_stokes_setup + dt_rheology_total + dt_assembly_total + dt_solve_total + dt_nl_overhead + dt_thermal + dt_advection + dt_free_surface + dt_reseeding + dt_melting + dt_anisotropy + dt_gse + dt_post_solve + dt_output;
+            double coverage = (wall_total > 0) ? 100.0 * tracked / wall_total : 0.0;
+            LOG_TIME("  Breakdown: interp=%.3f stokes_setup=%.3f rheology=%.3f assembly=%.3f solve=%.3f nl_overhead=%.3f post_solve=%.3f sec (%d iterations, %.1f%% coverage)", dt_interp, dt_stokes_setup, dt_rheology_total, dt_assembly_total, dt_solve_total, dt_nl_overhead, dt_post_solve, Nmodel.nit, coverage);
         }
         {
             struct rusage ru;
@@ -1335,11 +1358,12 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             if (perf_csv) {
                 double wall_s = (double)(omp_get_wtime() - t_omp_step);
                 double time_ma = input.model.time * input.scaling.t / (1e6 * 365.25 * 24 * 3600);
-                fprintf(perf_csv, "%d,%.4f,%.6e,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%d,%d,%d,%d,%.1f,%.1f,%.1f\n",
+                fprintf(perf_csv, "%d,%.4f,%.6e,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%d,%d,%d,%d,%.1f,%.1f,%.1f\n",
                         input.model.step, wall_s, time_ma,
                         dt_rheology_total, dt_assembly_total, dt_solve_total,
                         dt_thermal, dt_advection, dt_free_surface, dt_reseeding,
                         dt_melting, dt_anisotropy, dt_gse, dt_output,
+                        dt_interp, dt_stokes_setup, dt_nl_overhead, dt_post_solve,
                         Nmodel.nit, particles.Nb_part,
                         Stokes.neq_mom, Stokes.neq_cont,
                         peak_mb, user_s, sys_s);
