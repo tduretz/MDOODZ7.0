@@ -25,10 +25,10 @@
 
 - [x] 5.1 Build and run locally with `thermal_solver = 0` — verify identical results (backward compat)
 - [x] 5.2 Build and run locally with `thermal_solver = 1` — PCG converges (310 its cold start, 13 its warm-start) on RiftingChenin 150×100
-- [ ] 5.3 Run existing `ci-thermal-tests` with both solver modes — verify agreement to 1e-6 relative
+- [x] 5.3 Run existing `ci-thermal-tests` with both solver modes — verify agreement to 1e-6 relative
 - [x] 5.4 Test fallback: set `max_its_thermal = 1` and verify CHOLMOD fallback triggers with `LOG_WARN`
 
 ## 6. Benchmarking
 
-- [ ] 6.1 Run RiftingComprehensive at 1001×801 with `thermal_solver = 1`, threads 1/2/4/6/8 — compare `thermal_s` against CHOLMOD baseline
-- [ ] 6.2 Verify PCG iteration count is stable across timesteps (log or print per-step count)
+- [x] 6.1 Run RiftingComprehensive at 1000×800 with `thermal_solver = 1`, threads 1/2/4/6/8/12/16 — thermal_s dropped from ~6.2s to ~0.1s (−98%), wall time −17–32%
+- [x] 6.2 Verify PCG iteration count is stable across timesteps — step 1 falls back to CHOLMOD (cold start), steps 2+ converge in 6–7 iterations consistently

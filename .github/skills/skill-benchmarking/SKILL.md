@@ -337,3 +337,30 @@ Based on the 28-run sweep (4 resolutions × 7 thread counts × 10 steps):
 
 **Data**: Baseline `benchmark-results/20260413-105848/`, Cached `benchmark-results/20260413-170125/`
 **Code**: Committed as `6285d3d` on `add-performance-metrics` branch. Kept.
+
+### Experiment 4: PCG Thermal Solver (2026-04-13) — MAJOR GAIN
+
+**Hypothesis**: Replacing serial CHOLMOD direct solve with a Preconditioned Conjugate Gradient (PCG) iterative solver using Jacobi preconditioner and warm-start from the previous timestep's temperature would dramatically reduce `thermal_s`. The thermal matrix is SPD with a 5-point stencil — ideal for CG. Warm-start should converge in very few iterations since temperature changes slowly between steps.
+
+**Implementation**: Added `SolveThermalPCG()` in `ThermalSolver.c` — full CG with Jacobi (diagonal) preconditioner, OpenMP-parallel SpMV/dot/axpy. Dispatch in `EnergyDirectSolve()`: PCG on `it==0` (first non-linear iteration), CHOLMOD fallback on PCG failure or `it>=1`. Warm-start x from `mesh->T` via equation numbering. New params: `thermal_solver` (0=CHOLMOD, 1=PCG), `max_its_thermal` (default 1000), `rel_tol_thermal` (default 1e-8).
+
+**Convergence pattern**: Step 1 (cold start, no warm-start) → PCG fails at 1000 iterations, CHOLMOD fallback. Steps 2+: PCG converges in **6–7 iterations** with warm-start.
+
+**Results** (c5ad.4xlarge, 1000×800, 10 steps, comparison vs cached-factorization CHOLMOD baseline):
+
+| Threads | CHOLMOD wall | PCG wall | Wall Δ | CHOLMOD thermal | PCG thermal | Thermal Δ |
+|---------|-------------|---------|--------|----------------|------------|-----------|
+| 1 | 36.27s | 30.24s | −16.6% | 6.192s | 0.159s | −97.4% |
+| 2 | 25.04s | 18.98s | −24.2% | 6.178s | 0.115s | −98.1% |
+| 4 | 19.35s | 13.31s | −31.2% | 6.184s | 0.101s | −98.4% |
+| 6 | 19.21s | 13.24s | −31.1% | 6.174s | 0.098s | −98.4% |
+| 8 | 18.93s | 12.83s | −32.2% | 6.166s | 0.096s | −98.4% |
+| 12 | 20.56s | 14.36s | −30.2% | 6.168s | 0.099s | −98.4% |
+| 16 | 20.82s | 14.67s | −29.5% | 6.154s | 0.099s | −98.4% |
+
+**Conclusion**: PCG reduces thermal solver time by **~98%** (from ~6.2s to ~0.1s per step). Overall wall time drops 17–32% depending on thread count, with optimal improvement at 8 threads. Thermal went from **33% of wall time to under 1%**. The remaining bottleneck is now `interp_s` (P2Mastah particle interpolation), which anti-scales above 4 threads: 3.5s at 4 threads → 7.1s at 16 threads. The optimal thread count remains 6–8 due to `interp` anti-scaling.
+
+**Key observation**: Wall time no longer scales beyond 8 threads — the `interp` anti-scaling dominates. Next optimization target should be P2Mastah (persistent buffers to eliminate malloc/free churn, and/or atomic scatter to eliminate thread-local buffer memory explosion).
+
+**Data**: CHOLMOD baseline `benchmark-results/20260413-170125/`, PCG `benchmark-results/20260413-182325/`
+**Code**: Committed on `add-performance-metrics` branch. Kept.
