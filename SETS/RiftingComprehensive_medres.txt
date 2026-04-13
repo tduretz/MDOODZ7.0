@@ -43,6 +43,7 @@ pure_shear_ALE = 1  /1: box stretched at constant strain rate; -1 box of constan
 
 elastic       = 1
 thermal       = 1
+thermal_solver = 0
 anisotropy     = 1
 isPl_soft       = 0
 line_search     = 1

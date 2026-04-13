@@ -22,6 +22,7 @@ BENCH_S3_BUCKET="${BENCH_S3_BUCKET:-mdoodz-bench-s3-bucket}"
 BENCH_REGION="${BENCH_REGION:-eu-central-1}"
 REPO_DIR="$HOME/MDOODZ7.0"
 TIMEOUT_HOURS=6
+EXTRA_SED=()
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -30,6 +31,7 @@ while [[ $# -gt 0 ]]; do
     --threads)     THREADS="$2"; shift 2 ;;
     --steps)       STEPS="$2"; shift 2 ;;
     --timeout)     TIMEOUT_HOURS="$2"; shift 2 ;;
+    --sed)         EXTRA_SED+=("$2"); shift 2 ;;
     *) echo "Unknown: $1"; exit 1 ;;
   esac
 done
@@ -94,13 +96,19 @@ TIMEOUT_SECS=$((TIMEOUT_HOURS * 3600))
 RESULTS_DIR=""
 
 # Use a wrapper that captures the results dir path
+SED_ARGS=""
+for cmd in "${EXTRA_SED[@]+"${EXTRA_SED[@]}"}"; do
+  SED_ARGS+=" --sed '${cmd}'"
+done
+
 BENCH_CMD="./misc/benchmark.sh \
   --scenario ${SCENARIO} \
   --resolutions \"${RESOLUTIONS}\" \
   --threads \"${THREADS}\" \
   --steps ${STEPS} \
   --skip-build \
-  --validate"
+  --validate \
+  ${SED_ARGS}"
 
 # Run with timeout; capture output to find results dir
 BENCH_LOG="/tmp/benchmark-run.log"

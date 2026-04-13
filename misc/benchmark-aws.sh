@@ -29,6 +29,7 @@ THREADS="1 2 4 6 8 12 16"
 STEPS="10"
 TIMEOUT_HOURS="6"
 SKIP_PREFLIGHT=0
+EXTRA_SED=()
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 
@@ -44,6 +45,7 @@ while [[ $# -gt 0 ]]; do
     --threads)        THREADS="$2"; shift 2 ;;
     --steps)          STEPS="$2"; shift 2 ;;
     --timeout)        TIMEOUT_HOURS="$2"; shift 2 ;;
+    --sed)            EXTRA_SED+=("$2"); shift 2 ;;
     --skip-preflight) SKIP_PREFLIGHT=1; shift ;;
     --help|-h)
       head -16 "$0" | grep '^#' | sed 's/^# *//'
@@ -180,6 +182,12 @@ echo ""
 REMOTE_LOG="/tmp/mdoodz-bench-remote.log"
 REMOTE_PID_FILE="/tmp/mdoodz-bench.pid"
 
+# Build --sed arguments for forwarding
+SED_ARGS=""
+for cmd in "${EXTRA_SED[@]+"${EXTRA_SED[@]}"}"; do
+  SED_ARGS+=" --sed '${cmd}'"
+done
+
 ssh $SSH_OPTS "${BENCH_SSH_USER}@${PUB_IP}" \
   "export BENCH_S3_BUCKET='${BENCH_S3_BUCKET}' BENCH_REGION='${BENCH_REGION}'; \
    cd ~/MDOODZ7.0 && chmod +x misc/*.sh && \
@@ -189,6 +197,7 @@ ssh $SSH_OPTS "${BENCH_SSH_USER}@${PUB_IP}" \
      --threads '${THREADS}' \
      --steps '${STEPS}' \
      --timeout '${TIMEOUT_HOURS}' \
+     ${SED_ARGS} \
      > ${REMOTE_LOG} 2>&1 & echo \$! > ${REMOTE_PID_FILE}"
 
 echo "    Remote benchmark launched. Polling for completion..."
