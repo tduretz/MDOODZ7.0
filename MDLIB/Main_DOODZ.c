@@ -120,6 +120,8 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         num_threads = omp_get_num_threads();
     }
     LOG_INFO("Num threads = %03d", omp_get_num_threads());
+    int cholmod_nthreads = (input.model.cholmod_threads == -1) ? num_threads : input.model.cholmod_threads;
+    LOG_INFO("CHOLMOD threads: %d", cholmod_nthreads);
 
     LOG_INFO("*************************************");
     LOG_INFO("******* Initialize particles ********");
@@ -712,6 +714,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
             // Set up solver context
             cholmod_start( &CholmodSolver.c );
+            CholmodSolver.c.nthreads_max = cholmod_nthreads;
             if ( Nmodel.nit==0 ) CholmodSolver.Analyze = 1;
             LOG_INFO("Run CHOLMOD analysis yes/no: %d", CholmodSolver.Analyze);
             int Nmax_picard = Nmodel.nit_max;

@@ -75,6 +75,7 @@ typedef struct {
   int    initial_noise, reseed_mode;
   // Linear solver
   int    lin_solver, diag_scaling, preconditioner, max_its_KSP, max_its_PH;
+  int    cholmod_threads; // CHOLMOD thread count: 1=single (default), -1=all OMP threads, N=explicit
   double penalty, lin_abs_div, lin_rel_div, lin_abs_mom, lin_rel_mom, auto_penalty, compressible, rel_tol_KSP; 
   // Non-linear solver
   double line_search_min, safe_dt_div;

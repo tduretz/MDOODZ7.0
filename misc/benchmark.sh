@@ -31,6 +31,8 @@ RESULTS_DIR="${ROOT}/benchmark-results/$(date +%Y%m%d-%H%M%S)"
 QUICK=0
 SKIP_BUILD=0
 RUN_TESTS=0
+WRITER=0
+EXTRA_SED=()
 
 # ---------- Parse arguments ----------
 while [[ $# -gt 0 ]]; do
@@ -44,6 +46,8 @@ while [[ $# -gt 0 ]]; do
     --quick)       QUICK=1; shift ;;
     --skip-build)  SKIP_BUILD=1; shift ;;
     --run-tests)   RUN_TESTS=1; shift ;;
+    --writer)      WRITER=1; shift ;;
+    --sed)         EXTRA_SED+=("$2"); shift 2 ;;
     --help|-h)
       head -17 "$0" | grep '^#' | sed 's/^# *//'
       exit 0 ;;
@@ -216,10 +220,19 @@ make_bench_txt() {
   # Patch timesteps
   sed -i.bak -E "s/^Nt[[:space:]]*=.*/Nt      = ${steps}/" "$dst"
   sed -i.bak -E "s/^t_end[[:space:]]*=.*/t_end   = 0/" "$dst"
-  # Disable HDF5 output (pure compute benchmark)
-  sed -i.bak -E "s/^writer[[:space:]]*=.*/writer = 0/" "$dst"
+  # Disable HDF5 output (pure compute benchmark) unless --writer is set
+  if [[ $WRITER -eq 1 ]]; then
+    sed -i.bak -E "s/^writer[[:space:]]*=.*/writer = 1/" "$dst"
+    sed -i.bak -E "s/^writer_step[[:space:]]*=.*/writer_step = 1/" "$dst"
+  else
+    sed -i.bak -E "s/^writer[[:space:]]*=.*/writer = 0/" "$dst"
+  fi
   # Ensure logging is minimal
   sed -i.bak -E "s/^log_timestamp[[:space:]]*=.*/log_timestamp = 0/" "$dst"
+  # Apply extra sed commands (e.g., --sed 's/^cholmod_threads.*/cholmod_threads = -1/')
+  for cmd in "${EXTRA_SED[@]+"${EXTRA_SED[@]}"}"; do
+    sed -i.bak -E "$cmd" "$dst"
+  done
   rm -f "${dst}.bak"
 }
 
@@ -234,9 +247,18 @@ make_res_txt() {
   # Patch timesteps
   sed -i.bak -E "s/^Nt[[:space:]]*=.*/Nt      = ${steps}/" "$dst"
   sed -i.bak -E "s/^t_end[[:space:]]*=.*/t_end   = 0/" "$dst"
-  # Disable HDF5 output
-  sed -i.bak -E "s/^writer[[:space:]]*=.*/writer = 0/" "$dst"
+  # Disable HDF5 output unless --writer is set
+  if [[ $WRITER -eq 1 ]]; then
+    sed -i.bak -E "s/^writer[[:space:]]*=.*/writer = 1/" "$dst"
+    sed -i.bak -E "s/^writer_step[[:space:]]*=.*/writer_step = 1/" "$dst"
+  else
+    sed -i.bak -E "s/^writer[[:space:]]*=.*/writer = 0/" "$dst"
+  fi
   sed -i.bak -E "s/^log_timestamp[[:space:]]*=.*/log_timestamp = 0/" "$dst"
+  # Apply extra sed commands
+  for cmd in "${EXTRA_SED[@]+"${EXTRA_SED[@]}"}"; do
+    sed -i.bak -E "$cmd" "$dst"
+  done
   rm -f "${dst}.bak"
 }
 
