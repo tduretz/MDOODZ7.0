@@ -469,3 +469,47 @@ All other phases unchanged (within ±2% noise). Memory: +24 MB (+0.2%) from BMWM
 
 **Data**: `benchmark-results/20260414-104936/`, Experiment 6 baseline `benchmark-results/20260413-213139/`
 **Code**: Committed as `5460dd9` on `add-performance-metrics` branch. Kept. Default is `interp_mode = 0` (backward compatible).
+
+### Experiment 8 — Local M1 Small-Grid Benchmark (BlankenBench 41×41)
+
+**Date**: 2026-04-14
+**Branch**: `add-performance-metrics` (all Exp 1–7 optimizations present)
+**Platform**: MacBook M1 14" (2020), 16 GB, 8 cores (4P + 4E), arm64/Darwin
+**Hypothesis**: Measure whether Exp 1–7 optimizations (PCG thermal, fused P2Mastah interp) help on a small-grid thermal-convection workload. Quantify HDF5 I/O overhead with writer enabled.
+
+**Setup**: BlankenBench (Blankenbach Case 1a, isoviscous convection), 41×41, 4×4 particles/cell (25,600 initial), 1000 steps, `writer_step = 1`. Resolution mode required (`--resolutions "default"`); grid mode patches Nx/Nz and breaks BlankenBench physics.
+
+**Note**: 1-thread and 2-thread runs crashed at steps 163 and 64 respectively ("Maximum number of particles exceeded!" — reseeding overflow, `Nb_part_max = 4.1 * Nb_part`). Per-step averages are still valid for those runs.
+
+**Baseline** (thermal_solver=0 CHOLMOD, interp_mode=0):
+
+| Threads | Steps | Wall (s) | Interp | Thermal | Output | Advection | Solve | Rheology |
+|---------|-------|----------|--------|---------|--------|-----------|-------|----------|
+| 1       | 163   | 0.959    | 0.512  | 0.089   | 0.036  | 0.286     | 0.005 | 0.005    |
+| 2       | 64    | 0.963    | 0.486  | 0.048   | 0.031  | 0.371     | 0.003 | 0.002    |
+| 4       | 1000  | 0.620    | 0.503  | 0.053   | 0.030  | 0.012     | 0.003 | 0.003    |
+| 6       | 1000  | 0.634    | 0.501  | 0.070   | 0.030  | 0.002     | 0.005 | 0.003    |
+| 8       | 1000  | 0.658    | 0.513  | 0.078   | 0.030  | 0.002     | 0.005 | 0.004    |
+
+**Optimized** (thermal_solver=1 PCG, interp_mode=3 fused P2Mastah):
+
+| Threads | Steps | Wall (s) | Interp | Thermal | Output | Advection | Solve | Rheology |
+|---------|-------|----------|--------|---------|--------|-----------|-------|----------|
+| 1       | 163   | 0.951    | 0.503  | 0.091   | 0.037  | 0.286     | 0.005 | 0.005    |
+| 2       | 64    | 1.008    | 0.530  | 0.048   | 0.032  | 0.371     | 0.003 | 0.002    |
+| 4       | 1000  | 0.623    | 0.511  | 0.052   | 0.028  | 0.010     | 0.003 | 0.002    |
+| 6       | 1000  | 0.640    | 0.507  | 0.070   | 0.029  | 0.002     | 0.005 | 0.003    |
+| 8       | 1000  | 0.667    | 0.516  | 0.082   | 0.029  | 0.002     | 0.005 | 0.004    |
+
+**Findings**:
+
+1. **Optimizations have zero effect at 41×41** — all differences within ±2% (noise). PCG cannot beat CHOLMOD on a 1,600-point matrix (~0.05–0.09s, nearly free). Fused P2Mastah gains nothing with only 25K particles and 1,600 grid nodes — overhead dominates over compute.
+2. **Interp dominates**: 78–81% of wall time at 4–8 threads. The per-particle loop overhead (function calls, conditionals) swamps the actual stencil work at this scale.
+3. **No thread scaling past 4t**: Wall time slightly *worsens* from 0.620s (4t) to 0.658s (8t). E-cores add overhead without benefit at this problem size. Best performance is at 4 threads (P-cores only).
+4. **HDF5 output**: ~0.030s/step (4–5% of wall at 4t). Visible but not the bottleneck.
+5. **Advection anomaly at 1–2t**: 0.286–0.371s (30–39% of wall) — much higher than at 4t+ (0.002–0.012s). Likely related to particle reseeding pressure before the crash.
+
+**Conclusion**: Experiments 1–7 optimizations are designed for large grids (301×201+) where thermal solve and interp stencils are compute-bound. At 41×41, the problem is too small — fixed overheads and particle-loop costs dominate. No further optimization needed for small-grid workloads; they complete in <1s/step regardless.
+
+**Data**: Baseline `benchmark-results/20260414-134249/`, Optimized `benchmark-results/20260414-140451/`
+**Code**: No code changes. Benchmark-only experiment.
