@@ -438,3 +438,34 @@ The optimal thread count shifts from 8 (Experiment 4) to **16** (Experiment 5 mo
 
 **Data**: `benchmark-results/20260413-213139/`, Experiment 5 baseline `benchmark-results/20260413-200104/`
 **Code**: Committed as `df95e74` on `add-performance-metrics` branch. Kept.
+
+### Experiment 7: Fused P2Mastah (interp_mode=3) (2026-04-14) — MODERATE GAIN
+
+**Hypothesis**: Fusing multiple P2Mastah calls into a single `P2Mastah_Fused` pass over the particle array would reduce memory bandwidth by computing grid weights (WM) once per particle and scattering N fields simultaneously, instead of repeating the full stencil computation for each field independently. The pre-solve hot path has ~20 P2Mastah calls that can be grouped into 7 batches by (centroid, stencil) pair, separated by dependency barriers.
+
+**Implementation**: Added `P2MastahField` descriptor struct (src, dst, BCtype, flag, avg, prop, stencil) and `P2Mastah_Fused` function in `ParticleRoutines.c`. Extended `InterpBufPool` with 16 `BMWM_fused` arrays for mode 3. The fused function: (1) computes grid indices and weights once per particle, (2) computes `mark_val` for all fields, (3) atomically scatters to shared WM (once) and BMWM_fused[f] (per field) for centre + 8 stencil neighbors. Call sites in `Main_DOODZ.c` refactored into 7 fused batches with `if (pool && pool->interp_mode == 3)` dispatch and mode 2 fallback in `else`. New `interp_mode = 3` opt-in parameter. CI test added (BlankenBench FusedP2Mastah).
+
+**Bug found during benchmarking**: The `InputOutput.c` validation range check clamped `interp_mode > 2` to 0, silently disabling mode 3. First benchmark run was actually mode 0. Fixed by extending range to `> 3`.
+
+**Results** (c5ad.4xlarge, 1000×800, 10 steps, thermal_solver=1, interp_mode=3, comparison vs Experiment 6 interp_mode=2):
+
+| Threads | Exp6 wall | Exp7 wall | Wall Δ | Exp6 interp | Exp7 interp | Interp Δ |
+|---------|-----------|-----------|--------|-------------|-------------|----------|
+| 1 | 32.17s | 29.63s | −7.9% | 8.99s | 6.37s | −29.1% |
+| 2 | 19.32s | 18.29s | −5.3% | 4.88s | 3.76s | −23.0% |
+| 4 | 12.43s | 11.78s | −5.3% | 3.30s | 2.62s | −20.7% |
+| 6 | 10.09s | 9.62s | −4.7% | 2.77s | 2.28s | −17.7% |
+| 8 | 9.14s | 8.73s | −4.5% | 2.56s | 2.11s | −17.5% |
+| 12 | 9.52s | 9.29s | −2.5% | 2.75s | 2.44s | −11.4% |
+| 16 | **8.71s** | **8.42s** | −3.4% | 2.56s | 2.22s | −13.3% |
+
+All other phases unchanged (within ±2% noise). Memory: +24 MB (+0.2%) from BMWM_fused arrays.
+
+**Conclusion**: Fused P2Mastah reduces interp time by 13–29% across all thread counts, with largest gains at low threads (29% at 1t) where redundant stencil work dominates. Wall time improves 3–8%. Best wall time moves from 8.71s to **8.42s** at 16 threads. The fused approach amortizes the stencil weight computation across N fields, which matters most when the per-field work (mark_val + atomic write) is small relative to the shared stencil setup.
+
+**Scaling**: Mild anti-scaling bump at 12t (2.44s vs 2.11s at 8t) but recovers at 16t (2.22s). This is far better than mode 0's catastrophic 5.1→7.1s anti-scaling (6→16t). The fused loop has more atomic writes per stencil node (N+1 vs 2 in mode 2), which increases cache line contention at high thread counts, explaining the slightly worse scaling compared to mode 2 at 12t.
+
+**Cumulative improvement** (Experiments 1–7, 16 threads): wall time from ~20.5s (original) to **8.42s** (59% reduction). Interp from ~6.5s to 2.22s (66% reduction). Thermal from ~6.2s to ~0.1s (98% reduction). Post-solve from ~3.2s to ~2.65s (17% reduction).
+
+**Data**: `benchmark-results/20260414-104936/`, Experiment 6 baseline `benchmark-results/20260413-213139/`
+**Code**: Committed as `5460dd9` on `add-performance-metrics` branch. Kept. Default is `interp_mode = 0` (backward compatible).
