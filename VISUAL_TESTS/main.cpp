@@ -79,7 +79,7 @@ class RiftingChenin {
     }
   }
 
-  static SetBC RPSetBCT(MdoodzInput *instance, POSITION position, double particleTemperature) {
+  static SetBC RPSetBCT(MdoodzInput *instance, POSITION position, Coordinates coordinates, double particleTemperature) {
     SetBC  bc;
     double surfaceTemperature = zeroC / instance->scaling.T;
     if (position == free_surface) {
@@ -92,7 +92,7 @@ class RiftingChenin {
     return bc;
   }
 
-  static SetBC RPSetBCTNew(MdoodzInput *instance, POSITION position, double particleTemperature) {
+  static SetBC RPSetBCTNew(MdoodzInput *instance, POSITION position, Coordinates coordinates, double particleTemperature) {
     SetBC  bc;
     double surfaceTemperature = zeroC / instance->scaling.T;
     double mantleTemperature  = (1330. + zeroC) / instance->scaling.T;
@@ -112,7 +112,7 @@ class RiftingChenin {
     return bc;
   }
 
-  static void RPMutateInput(MdoodzInput *instance, MutateInputParams *params) {
+  static void RPMutateInput(MdoodzInput *instance) {
     int *astenospherePhases     = (int *) malloc(sizeof(int));
     astenospherePhases[0]       = {3};
     instance->crazyConductivity = new CrazyConductivity{
@@ -350,7 +350,7 @@ class ShearHeatingDuretz14 {
     }
   }
 
-  static SetBC SHD14SetBCT(MdoodzInput *instance, POSITION position, double particleTemperature) {
+  static SetBC SHD14SetBCT(MdoodzInput *instance, POSITION position, Coordinates coordinates, double particleTemperature) {
     SetBC bc;
     if (position == W || position == E || position == S || position == N || position == SE || position == SW || position == NE || position == NW) {
       bc.type  = 0;
@@ -363,7 +363,7 @@ class ShearHeatingDuretz14 {
   }
 
 
-  static SetBC SHD14SetBCTNew(MdoodzInput *instance, POSITION position, double particleTemperature) {
+  static SetBC SHD14SetBCTNew(MdoodzInput *instance, POSITION position, Coordinates coordinates, double particleTemperature) {
     SetBC bc;
     if (position == W || position == E || position == S || position == N || position == SE || position == SW || position == NE || position == NW) {
       bc.type  = 0;
@@ -423,14 +423,14 @@ class GSE {
   //----------------------------- THERMAL SetBC -----------------------------//
 
 
-  static SetBC GSESetBCT(MdoodzInput *instance, POSITION position, double gridTemperature) {
+  static SetBC GSESetBCT(MdoodzInput *instance, POSITION position, Coordinates coordinates, double gridTemperature) {
     return {
             .value = gridTemperature,
             .type  = 0,
     };
   }
 
-  static SetBC GSESetBCTNew(MdoodzInput *instance, POSITION position, double gridTemperature) {
+  static SetBC GSESetBCTNew(MdoodzInput *instance, POSITION position, Coordinates coordinates, double gridTemperature) {
     return {
             .value = gridTemperature,
             .type  = 0,
@@ -474,14 +474,14 @@ class VEP_Duretz18 {
     }
   }
 
-  static SetBC GSESetBCT(MdoodzInput *instance, POSITION position, double gridTemperature) {
+  static SetBC GSESetBCT(MdoodzInput *instance, POSITION position, Coordinates coordinates, double gridTemperature) {
     return {
             .value = gridTemperature,
             .type  = 0,
     };
   }
 
-  static SetBC GSESetBCTNew(MdoodzInput *instance, POSITION position, double gridTemperature) {
+  static SetBC GSESetBCTNew(MdoodzInput *instance, POSITION position, Coordinates coordinates, double gridTemperature) {
     return {
             .value = gridTemperature,
             .type  = 0,
@@ -564,6 +564,91 @@ class Shrinking {
   }
 };
 
+class Validation {
+  static int SetPhase(MdoodzInput *instance, Coordinates coordinates) {
+    return 0;
+  }
+
+  static double SetTemperature(MdoodzInput *instance, Coordinates coordinates) {
+    const double Tbkg = (instance->model.user0 + zeroC) / instance->scaling.T;
+    const double dT   = instance->model.user2 / instance->scaling.T;
+    const double rad  = instance->model.user3 / instance->scaling.L;
+    const double r2   = coordinates.x * coordinates.x + coordinates.z * coordinates.z;
+    if (rad > 0.0 && r2 < rad * rad) {
+      return Tbkg + dT;
+    }
+    return Tbkg;
+  }
+
+  static double SetDensity(MdoodzInput *instance, Coordinates coordinates, int phase) {
+    return instance->materials.rho[phase];
+  }
+
+  static SetBC SetBCT(MdoodzInput *instance, POSITION position, Coordinates coordinates, double gridTemperature) {
+    SetBC bc;
+    double Ttop = (instance->model.user0 + zeroC) / instance->scaling.T;
+    double Tbot = instance->model.user1 / instance->scaling.T;
+    if (position == N || position == NE || position == NW) {
+      bc.value = Ttop;
+      bc.type  = 1;
+    } else if (position == S || position == SE || position == SW) {
+      if (Tbot > 0.0) {
+        bc.value = Tbot;
+        bc.type  = 1;
+      } else {
+        bc.value = 0.0;
+        bc.type  = 0;
+      }
+    } else {
+      bc.value = 0.0;
+      bc.type  = 0;
+    }
+    return bc;
+  }
+
+public:
+  void runAll() {
+    MdoodzSetup setup = {
+            .SetParticles = new SetParticles_ff{
+                    .SetPhase       = SetPhase,
+                    .SetTemperature = SetTemperature,
+                    .SetDensity     = SetDensity,
+            },
+            .SetBCs = new SetBCs_ff{
+                    .SetBCVx  = SetPureShearBCVx,
+                    .SetBCVz  = SetPureShearBCVz,
+                    .SetBCT   = SetBCT,
+            },
+    };
+
+    // Gaussian diffusion CHOLMOD
+    RunMDOODZ("GaussianDiffusionL2.txt", &setup);
+    rename("GaussianDiffusionL2/Output00005.gzip.h5", "GaussianDiffusionL2_CHOLMOD.gzip.h5");
+
+    // Gaussian diffusion PCG
+    RunMDOODZ("GaussianDiffusionL2PCG.txt", &setup);
+    rename("GaussianDiffusionL2PCG/Output00005.gzip.h5", "GaussianDiffusionL2_PCG.gzip.h5");
+
+    // Steady-state geotherm CHOLMOD
+    RunMDOODZ("SteadyStateGeotherm.txt", &setup);
+    rename("SteadyStateGeotherm/Output00020.gzip.h5", "SteadyStateGeotherm_CHOLMOD.gzip.h5");
+
+    // Steady-state geotherm PCG
+    RunMDOODZ("SteadyStateGeothermPCG.txt", &setup);
+    rename("SteadyStateGeothermPCG/Output00020.gzip.h5", "SteadyStateGeotherm_PCG.gzip.h5");
+
+    // Interp mode 0 and mode 3
+    RunMDOODZ("InterpEquiv_Mode0.txt", &setup);
+    rename("InterpEquiv_Mode0/Output00005.gzip.h5", "InterpEquiv_Mode0.gzip.h5");
+
+    RunMDOODZ("InterpEquiv_Mode3.txt", &setup);
+    rename("InterpEquiv_Mode3/Output00005.gzip.h5", "InterpEquiv_Mode3.gzip.h5");
+
+    // PCG convergence with residual export
+    RunMDOODZ("PCGConvergence.txt", &setup);
+  }
+};
+
 void RunTestCases() {
   (*new VEP_Duretz18).run();
   RenameVEPFiles();
@@ -582,6 +667,7 @@ void RunTestCases() {
   (*new TopoBenchCase1).run();
   RenameTopoBenchCaseFiles();
   (*new Shrinking).run();
+  (*new Validation).runAll();
 }
 
 string currentDateTime() {
@@ -628,5 +714,8 @@ int main() {
   PlotShearHeatingDuretz14();
   PlotShearHeatingDuretz14Reference();
   PlotTopoBenchCase1();
+  PlotThermalAccuracy();
+  PlotPCGConvergence();
+  PlotInterpEquivalence();
   UpdateReadmeTimestamp();
 }

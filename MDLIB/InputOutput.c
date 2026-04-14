@@ -28,6 +28,7 @@
 #include "math.h"
 #include "ctype.h"
 #include "mdoodz-private.h"
+#include "mdoodz-log.h"
 
 #ifdef _OMP_
 #include "omp.h"
@@ -37,7 +38,7 @@
 #endif
 
 #ifdef _VG_
-#define printf(...) printf("")
+#define LOG_INFO(...) LOG_INFO("")
 #endif
 
 /*--------------------------------------------------------------------------------------------------------------------*/
@@ -69,7 +70,7 @@ void LoadIniParticles( char* name, markers* particles, grid* mesh, markers *topo
     FILE *file;
     file = fopen(name, "rb");
     if ( file == NULL ) {
-        printf("Error opening %s, this file is probably corrupted or non-existant\nExiting...\n", name);
+        LOG_ERR("Error opening %s, this file is probably corrupted or non-existant\nExiting...", name);
         fclose(file);
         free(name);
         exit(1);
@@ -129,9 +130,9 @@ void DeletePreviousBreakpoint( int step, int writer_step ) {
         asprintf(&name,     "Breakpoint%05d.dat", step- 2*writer_step);
         asprintf(&command, "mv %s %s", name, new_name );
         success = system( command );
-        printf("File %s replaced by %s\n", name, new_name);
-        if ( success!=-1 ) printf("File %s was successfully renamed\n", name);
-        else printf("File %s was not successfully renamed\n", name);
+        LOG_INFO("File %s replaced by %s", name, new_name);
+        if ( success!=-1 ) LOG_INFO("File %s was successfully renamed", name);
+        else LOG_INFO("File %s was not successfully renamed", name);
         free(name);
         free(new_name);
         free(command);
@@ -158,7 +159,7 @@ void LoadBreakpointParticles( markers *particles, grid* mesh, markers *topo_chai
     else asprintf(&name, "Breakpoint%05d.dat", model->step);
     file = fopen(name, "rb");
     if ( file == NULL ) {
-       printf("Error opening %s, this file is probably corrupted or non-existant\nExiting...\n", name);
+       LOG_ERR("Error opening %s, this file is probably corrupted or non-existant\nExiting...", name);
        fclose(file);
        free(name);
        exit(1);
@@ -310,7 +311,7 @@ void LoadBreakpointParticles( markers *particles, grid* mesh, markers *topo_chai
         fread( mesh->BCg.val,      s3,  Nx *Nz ,   file );
 
         // Phase proportions
-        printf("Loading phase proportions - Nb_phases = %d:\n", model->Nb_phases);
+        LOG_INFO("Loading phase proportions - Nb_phases = %d:", model->Nb_phases);
         for ( k=0; k<  model->Nb_phases; k++ ) { //model->Nb_phases
             fread( mesh->phase_perc_n[k], s3,  Ncx*Ncz,   file );
             fread( mesh->phase_perc_s[k], s3,  Nx *Nz ,   file );
@@ -670,7 +671,7 @@ void MakeBreakpointParticles( markers *particles,  grid* mesh, markers *topo_cha
 
     file = fopen(name, "wb");
     if ( file == NULL ) {
-        printf("Error opening %s, this file is probably corrupted or non-existant\nExiting...\n", name);
+        LOG_ERR("Error opening %s, this file is probably corrupted or non-existant\nExiting...", name);
         free(name);
         fclose(file);
         exit(1);
@@ -819,7 +820,7 @@ void MakeBreakpointParticles( markers *particles,  grid* mesh, markers *topo_cha
     fwrite( mesh->BCg.val,      s3,  Nx *Nz ,   file );
 
     // Phase proportions
-    printf("Loading phase proportions - Nb_phases = %d:\n", model.Nb_phases);
+    LOG_INFO("Loading phase proportions - Nb_phases = %d:", model.Nb_phases);
 //    fwrite( &model.Nb_phases, s1,        1,   file );
     for ( k=0; k< model.Nb_phases; k++ ) {
         fwrite( mesh->phase_perc_n[k], s3,  Ncx*Ncz,   file );
@@ -1022,7 +1023,7 @@ Input ReadInputFile( char *fileName ) {
 
     fin = fopen(fileName,"rt");
     if (fin == NULL) {
-        printf("Setup file '%s' does not exist\nExiting...\n", fileName);
+        LOG_INFO("Setup file '%s' does not exist\nExiting...", fileName);
         fclose(fin);
         exit(1);
     }
@@ -1051,6 +1052,15 @@ Input ReadInputFile( char *fileName ) {
     model.load_initial_markers = ReadInt2( fin, "load_initial_markers",            0 );
     model.initial_markers_file = ReadChar( fin, "initial_markers_file", "markers.bin");
 
+    // Logging
+    model.log.dest           = ReadInt2( fin, "log_dest",       2 ); // 0=console, 1=file, 2=both
+    model.log.min_level      = ReadInt2( fin, "log_level",      2 ); // 0=error, 1=warn, 2=info, 3=debug, 4=timing
+    model.log.show_timestamp = ReadInt2( fin, "log_timestamp",  1 ); // 0=off, 1=on
+    model.log.ts_mode        = ReadInt2( fin, "log_ts_mode",    0 ); // 0=relative, 1=absolute, 2=both
+    model.log.show_metadata  = ReadInt2( fin, "log_metadata",   0 ); // 0=off, 1=show step/iteration
+    model.log.log_path       = NULL; // default: "mdoodz.log" in cwd
+    model.time_unit          = ReadInt2( fin, "time_unit",      0 ); // 0=Ma, 1=Ka, 2=yr
+
     // Read scales for non-dimensionalisation
     scale scaling            = (scale){
                         .eta = ReadDou2(fin, "eta", 1.0),
@@ -1073,6 +1083,7 @@ Input ReadInputFile( char *fileName ) {
     // Time domain
     model.Nt                 = ReadInt2( fin, "Nt",         1 );            // Number of time steps    
     model.dt                 = ReadDou2( fin, "dt",       0.0 ) /scaling.t; // Time step
+    model.t_end              = ReadDou2( fin, "t_end",    0.0 ) /scaling.t; // End time (0 = use Nt instead)
     model.Courant            = ReadDou2( fin, "Courant",             0.5 ); // Courant number
     model.RK                 = ReadInt2( fin, "RK",                    4 ); // Order of Runge-Kutta advection solver (1, 2 or 4)
     model.constant_dt        = ReadInt2( fin, "constant_dt",           0 ); // Activates constant time step
@@ -1099,12 +1110,18 @@ Input ReadInputFile( char *fileName ) {
     model.auto_penalty       = ReadDou2( fin, "auto_penalty",        0.0 ); // Activates automatic penalty factor computation
     model.diag_scaling       = ReadInt2( fin, "diag_scaling",          1 ); // Activates diagonal scaling
     model.preconditioner     = ReadInt2( fin, "preconditioner",        0 ); // Preconditoner type for Linear solver, 0: Picard preconditionner, -1: symmetrised Picard, 1: symmetrised Newton
+    model.cholmod_threads    = ReadInt2( fin, "cholmod_threads",       1 ); // CHOLMOD thread count: 1=single (default), -1=all OMP threads, N=explicit
     model.lin_abs_div        = ReadDou2( fin, "lin_abs_div",      1.0e-9 ); // Tolerance for linear mechanical solver
     model.lin_rel_div        = ReadDou2( fin, "lin_rel_div",      1.0e-5 ); // Tolerance for linear mechanical solver
     model.lin_abs_mom        = ReadDou2( fin, "lin_abs_mom",      1.0e-9 ); // Tolerance for linear mechanical solver
     model.lin_rel_mom        = ReadDou2( fin, "lin_rel_mom",      1.0e-5 ); // Tolerance for linear mechanical solver
     model.lin_solver         = ReadInt2( fin, "lin_solver",            2 ); // 1: Powell-Hestenes, 2: Powell-Hestenes augmented (killer solver) 
     model.max_its_PH         = ReadInt2( fin, "max_its_PH",           10 ); // Max number of Powell-Hestenes iterations
+    // Thermal solver
+    model.thermal_solver     = ReadInt2( fin, "thermal_solver",        0 ); // 0: CHOLMOD direct (default), 1: PCG iterative
+    model.max_its_thermal    = ReadInt2( fin, "max_its_thermal",    1000 ); // Max PCG iterations
+    model.rel_tol_thermal    = ReadDou2( fin, "rel_tol_thermal",   1e-8 ); // Relative tolerance for PCG thermal solver
+    model.export_pcg_residuals = ReadInt2( fin, "export_pcg_residuals",  0 ); // Export PCG residuals: 0=no (default), 1=yes
     // Numerics: non-linear solver
     Nmodel.nit_max           = ReadInt2( fin, "nit_max",               1 ); // Maximum number of iterations
     model.Newton             = ReadInt2( fin, "Newton",                0 ); // Activates Newton iterations
@@ -1134,6 +1151,7 @@ Input ReadInputFile( char *fileName ) {
     model.ani_average        = ReadInt2( fin, "ani_average",           1 ); // 0: arithmetic mean - 1: harmonic mean - 2: geometric mean
     model.eta_average        = ReadInt2( fin, "eta_average",           0 ); // 0: arithmetic mean - 1: harmonic mean - 2: geometric mean
     model.interp_stencil     = ReadInt2( fin, "interp_stencil",        1 ); // 1: 1-Cell          - 9: 9-Cell
+    model.interp_mode        = ReadInt2( fin, "interp_mode",           0 ); // 0: legacy - 1: persistent buffers - 2: persistent + atomic scatter
     model.subgrid_diffusion  = ReadInt2( fin, "subgrid_diffusion",     0 ); // 0: No subgrid diffusion, 1: temperature, 2: temperature + stress
     model.conserv_interp     = ReadInt2( fin, "conserv_interp",        0 ); // Activates Taras conservative interpolation
     model.direct_neighbour   = ReadInt2( fin, "direct_neighbour",      0 ); // Direct neighbour interpolation
@@ -1239,7 +1257,8 @@ Input ReadInputFile( char *fileName ) {
     model.gx                 = ReadDou2( fin, "gx",  0.0 ) / scaling.a;
     model.gz                 = ReadDou2( fin, "gz",  0.0 ) / scaling.a;
     // Consequential behaviour
-    if (model.interp_stencil!=1 && model.interp_stencil!=9) { printf("Wrong value of interp_stencil: should be 1 or 9.\n"); exit(1); }
+    if (model.interp_stencil!=1 && model.interp_stencil!=9) { LOG_ERR("Wrong value of interp_stencil: should be 1 or 9."); exit(1); }
+    if (model.interp_mode < 0 || model.interp_mode > 3) { LOG_WARN("Invalid interp_mode %d, clamping to 0 (legacy).", model.interp_mode); model.interp_mode = 0; }
     if ( model.shear_style == 1 ) model.periodic_x     = 1; // If simple shear, it must  be periodic in x
     if ( model.shear_style == 0 ) model.periodic_x     = 0; // If simple shear, it can't be periodic in x
     if ( model.anisotropy  == 1 ) model.finite_strain  = 1; // If anisotropy, then also track finite strain
@@ -1248,7 +1267,7 @@ Input ReadInputFile( char *fileName ) {
     if (model.Newton==0) Nmodel.Picard2Newton = 0; // If Picard is activated, do not switch to Newton
     if (model.Newton==1) model.line_search    = 1; // If Newton is activated, switch to line search
     if ( model.lin_solver == 0 || model.Newton == 1 || model.anisotropy == 1) {
-        printf("WARNING!! Changing from solver type 0 to solver type 2!!! That's the new standard in MDOODZ 6.0.\n");
+        LOG_WARN("WARNING!! Changing from solver type 0 to solver type 2!!! That's the new standard in MDOODZ 6.0.");
         model.lin_solver = 2;
     }
     //------------------------------------------------------------------------------------------------------------------------------//
@@ -1297,24 +1316,24 @@ Input ReadInputFile( char *fileName ) {
         materials.T_st[k]     = ReadMatProps( fin, "T_st",     k, -10.0e6) / scaling.S; // Tensile strength for Popov 2025 combined mode-I, mode-II plasticity
         materials.phi[k]      = ReadMatProps( fin, "phi",      k,   30.0 )  * M_PI/ 180.0;
         materials.psi[k]      = ReadMatProps( fin, "psi",      k,    0.0 )  * M_PI/ 180.0;
-        if (materials.psi[k]>0.0 && model.compressible==0) { printf("Set compressible=1 to activate dilation\n"); exit(1); }
+        if (materials.psi[k]>0.0 && model.compressible==0) { LOG_ERR("Set compressible=1 to activate dilation"); exit(1); }
         materials.Slim[k] = ReadMatProps( fin, "Slim" ,k,  1.0e90 )  / scaling.S;
         if (materials.Slim[k]<materials.C[k]) {
-            printf("Upper stress limiter of phase %d is lower than cohesion: it makes no sense, please correct!\n", k);
+            LOG_ERR("Upper stress limiter of phase %d is lower than cohesion: it makes no sense, please correct!", k);
             exit(1);
         }
         // Viscoplasticity
         materials.n_vp[k]      = ReadMatProps( fin, "n_vp",   k,       1.0 ) ;
         materials.eta_vp[k]    = ReadMatProps( fin, "eta_vp", k,       0.0 ) / scaling.S / pow(scaling.t, 1.0/materials.n_vp[k]);
         if ( materials.n_vp[k]>1.0001 ) {
-            printf("Power-law viscoplasticity is not implemented in MD7, please complain!\n");
+            LOG_ERR("Power-law viscoplasticity is not implemented in MD7, please complain!");
             exit(1);
         }
         // Strain softening
         materials.coh_soft[k]   = (int)ReadMatProps( fin, "coh_soft",   k,    0.0   );
         materials.phi_soft[k]   = (int)ReadMatProps( fin, "phi_soft",   k,    0.0   );
         materials.psi_soft[k]   = (int)ReadMatProps( fin, "psi_soft",   k,    0.0   );
-        if (materials.psi_soft[k]>0 && model.compressible==0) { printf("Set compressible=1 to activate dilation softening\n"); exit(1); }
+        if (materials.psi_soft[k]>0 && model.compressible==0) { LOG_ERR("Set compressible=1 to activate dilation softening"); exit(1); }
         materials.C_end[k]     = ReadMatProps( fin, "Ce",     k,    materials.C[k]*scaling.S    ) / scaling.S;      // TODO: rename Ce --> C_end
         materials.phi_end[k]   = ReadMatProps( fin, "phie",   k,    materials.phi[k]*180.0/M_PI  ) * M_PI / 180.0;  // TODO: rename phie --> phi_end
         materials.psi_end[k]   = ReadMatProps( fin, "psie",   k,    materials.psi[k]*180.0/M_PI  ) * M_PI / 180.0;  // TODO: rename psie --> psi_end
@@ -1322,10 +1341,10 @@ Input ReadInputFile( char *fileName ) {
         double eps_phi = 0.1  * M_PI / 180.0;
         double eps_psi = 0.1  * M_PI / 180.0;
         materials.H_c[k]   = ReadMatProps( fin, "Hc",   k, 0.0) / scaling.S;
-        printf("%d materials.coh_soft[k]=%d  materials.C[k] = %2.2e  materials.C_end[k] = %2.2e\n", k, materials.coh_soft[k],  materials.C[k]*scaling.S,  materials.C_end[k]*scaling.S);
-        if ( materials.coh_soft[k] == 1 && fabs( materials.C_end[k]   - materials.C[k]  ) < eps_coh ) { printf("Please set a difference in cohesion, if not set coh_soft of phase %d to 0.0\n", k); exit(122); };
-        if ( materials.phi_soft[k] == 1 && fabs( materials.phi_end[k] - materials.phi[k]) < eps_phi ) { printf("Please set a difference in friction angle, if not set phi_soft of phase %d to 0.0\n", k); exit(122); };
-        if ( materials.psi_soft[k] == 1 && fabs( materials.psi_end[k] - materials.psi[k]) < eps_psi ) { printf("Please set a difference in dilation angle, if not set psi_soft of phase %d to 0.0\n", k); exit(122); };
+        LOG_INFO("%d materials.coh_soft[k]=%d  materials.C[k] = %2.2e  materials.C_end[k] = %2.2e", k, materials.coh_soft[k],  materials.C[k]*scaling.S,  materials.C_end[k]*scaling.S);
+        if ( materials.coh_soft[k] == 1 && fabs( materials.C_end[k]   - materials.C[k]  ) < eps_coh ) { LOG_ERR("Please set a difference in cohesion, if not set coh_soft of phase %d to 0.0", k); exit(122); };
+        if ( materials.phi_soft[k] == 1 && fabs( materials.phi_end[k] - materials.phi[k]) < eps_phi ) { LOG_ERR("Please set a difference in friction angle, if not set phi_soft of phase %d to 0.0", k); exit(122); };
+        if ( materials.psi_soft[k] == 1 && fabs( materials.psi_end[k] - materials.psi[k]) < eps_psi ) { LOG_ERR("Please set a difference in dilation angle, if not set psi_soft of phase %d to 0.0", k); exit(122); };
         materials.pls_start[k] = ReadMatProps( fin, "plss",   k,    1.0    );
         materials.pls_end[k]   = ReadMatProps( fin, "plse",   k,    2.0    );
         // Read flow law parameters
@@ -1350,7 +1369,7 @@ Input ReadInputFile( char *fileName ) {
         // Reaction stuff
         materials.reac_soft[k]  = (int)ReadMatProps( fin, "reac_soft",   k,    0.0  );
         materials.reac_phase[k] = (int)ReadMatProps( fin, "reac_phase",   k,    0.0  );
-        if (materials.reac_phase[k]>=model.Nb_phases && materials.reac_soft[k]==1) {printf("The target phase for reaction softening of phase %d is not set up. Edit the .txt file!\n", k  ); exit(13);}
+        if (materials.reac_phase[k]>=model.Nb_phases && materials.reac_soft[k]==1) {LOG_ERR("The target phase for reaction softening of phase %d is not set up. Edit the .txt file!", k); exit(13);}
         materials.Pr[k]         = ReadMatProps( fin, "Pr",      k,    0.0  ) / scaling.S;
         materials.dPr[k]        = ReadMatProps( fin, "dPr",     k,    0.0  ) / scaling.S;
         materials.tau_kin[k]    = ReadMatProps( fin, "tau_kin", k,    0.0  ) / scaling.t;
@@ -1379,30 +1398,30 @@ Input ReadInputFile( char *fileName ) {
         // Check if any flow law is active
         int sum = abs(materials.cstv[k]) + abs(materials.pwlv[k]) + abs(materials.linv[k]) + abs(materials.gbsv[k]) + abs(materials.expv[k]);
         if ( sum == 0 ) {
-            printf ("Phase %0d has no determined flow mechanism\n Simulation will end now!\n", k);
+            LOG_INFO("Phase %0d has no determined flow mechanism\n Simulation will end now!", k);
             exit(12);
         }
         // Print material parameters
-        printf("----------------------------------------- MODEL DOMAIN ------------------------------------------\n");
-        printf("Xmin   = %2.1lf  km         Xmax   = %2.1lf  km     Nx   = %3d    dx   = %.2lf m\n", (model.xmin*scaling.L)/1e3, (model.xmax*scaling.L)/1e3, model.Nx, model.dx*scaling.L);
-        printf("Zmin   = %2.1lf  km         Zmax   = %2.1lf  km      Nz   = %3d    dz   = %.2lf m\n", (model.zmin*scaling.L)/1e3, (model.zmax*scaling.L)/1e3, model.Nz, model.dz*scaling.L );
-        printf("-------------------------------------------- PHASE: %d -------------------------------------------\n", k);
-        printf("rho    = %2.2e kg/m^3     G = %2.2e Pa\n", materials.rho[k]*scaling.rho, materials.G[k]*scaling.S );
-        printf("Cp     = %2.2e J/kg/K      k = %2.2e W/m/K      Qr = %2.2e W/m3\n", materials.Cp[k]*scaling.Cp, materials.k[k]*scaling.k, materials.Qr[k]*(scaling.W / pow(scaling.L,3)) );
-        printf("C      = %2.2e Pa        phi = %2.2e deg      Slim = %2.2e Pa\n",  materials.C[k]*scaling.S, materials.phi[k]*180/M_PI, materials.Slim[k]*scaling.S );
-        printf("alp    = %2.2e 1/T        T0 = %2.2e K         bet = %2.2e 1/Pa       P0 = %2.2e Pa       drho = %2.2e kg/m^3 \n", materials.alp[k]*(1/scaling.T), materials.T0[k]*(scaling.T), materials.bet[k]*(1/scaling.S), materials.P0[k]*(scaling.S), materials.drho[k]*scaling.rho );
-        printf("prefactor for power-law: %2.2e\n", materials.pref_pwl[k]);
-                 printf("C_end    = %2.2e Pa        Phi_end = %2.2e deg         pls_start = %2.2e        pls_end = %2.2e \n", materials.C_end[k]*scaling.S, materials.phi_end[k]*180/M_PI, materials.pls_start[k],  materials.pls_end[k] );
-        printf("eta0_vp   = %2.2e  Pa.s^(1/n)         n_vp   = %2.2e\n", materials.eta_vp[k]* (scaling.S*pow(scaling.t,1.0/materials.n_vp[k])) , materials.n_vp[k]);
-        printf("aniso_factor = %2.2e []        aniso_angle = %2.2e deg         ani_fac_max = %2.2e []        ani_fstrain = %d\n", materials.aniso_factor[k], materials.aniso_angle[k]/(M_PI/180.0), materials.ani_fac_max[k], materials.ani_fstrain[k]);
+        LOG_INFO("----------------------------------------- MODEL DOMAIN ------------------------------------------");
+        LOG_INFO("Xmin   = %2.1lf  km         Xmax   = %2.1lf  km     Nx   = %3d    dx   = %.2lf m", (model.xmin*scaling.L)/1e3, (model.xmax*scaling.L)/1e3, model.Nx, model.dx*scaling.L);
+        LOG_INFO("Zmin   = %2.1lf  km         Zmax   = %2.1lf  km      Nz   = %3d    dz   = %.2lf m", (model.zmin*scaling.L)/1e3, (model.zmax*scaling.L)/1e3, model.Nz, model.dz*scaling.L);
+        LOG_INFO("-------------------------------------------- PHASE: %d -------------------------------------------", k);
+        LOG_INFO("rho    = %2.2e kg/m^3     G = %2.2e Pa", materials.rho[k]*scaling.rho, materials.G[k]*scaling.S);
+        LOG_INFO("Cp     = %2.2e J/kg/K      k = %2.2e W/m/K      Qr = %2.2e W/m3", materials.Cp[k]*scaling.Cp, materials.k[k]*scaling.k, materials.Qr[k]*(scaling.W / pow(scaling.L,3)));
+        LOG_INFO("C      = %2.2e Pa        phi = %2.2e deg      Slim = %2.2e Pa",  materials.C[k]*scaling.S, materials.phi[k]*180/M_PI, materials.Slim[k]*scaling.S);
+        LOG_INFO("alp    = %2.2e 1/T        T0 = %2.2e K         bet = %2.2e 1/Pa       P0 = %2.2e Pa       drho = %2.2e kg/m^3 ", materials.alp[k]*(1/scaling.T), materials.T0[k]*(scaling.T), materials.bet[k]*(1/scaling.S), materials.P0[k]*(scaling.S), materials.drho[k]*scaling.rho);
+        LOG_INFO("prefactor for power-law: %2.2e", materials.pref_pwl[k]);
+                 LOG_INFO("C_end    = %2.2e Pa        Phi_end = %2.2e deg         pls_start = %2.2e        pls_end = %2.2e ", materials.C_end[k]*scaling.S, materials.phi_end[k]*180/M_PI, materials.pls_start[k],  materials.pls_end[k]);
+        LOG_INFO("eta0_vp   = %2.2e  Pa.s^(1/n)         n_vp   = %2.2e", materials.eta_vp[k]* (scaling.S*pow(scaling.t,1.0/materials.n_vp[k])) , materials.n_vp[k]);
+        LOG_INFO("aniso_factor = %2.2e []        aniso_angle = %2.2e deg         ani_fac_max = %2.2e []        ani_fstrain = %d", materials.aniso_factor[k], materials.aniso_angle[k]/(M_PI/180.0), materials.ani_fac_max[k], materials.ani_fstrain[k]);
 
-        printf("Flow law settings:\n");
-        if ( abs(materials.cstv[k])>0 ) printf("--->    Constant viscosity activated \n");
-        if ( abs(materials.pwlv[k])>0 ) printf("--->   Power law viscosity activated \n");
-        if ( abs(materials.linv[k])>0 ) printf("--->      Linear viscosity activated \n");
-        if ( abs(materials.gbsv[k])>0 ) printf("--->         GBS viscosity activated \n");
-        if ( abs(materials.expv[k])>0 ) printf("---> Exponential viscosity activated \n");
-        if ( abs(gsel)              >0 ) printf("--->  Grain size evolution activated \n");
+        LOG_INFO("Flow law settings:");
+        if ( abs(materials.cstv[k])>0 ) LOG_INFO("--->    Constant viscosity activated ");
+        if ( abs(materials.pwlv[k])>0 ) LOG_INFO("--->   Power law viscosity activated ");
+        if ( abs(materials.linv[k])>0 ) LOG_INFO("--->      Linear viscosity activated ");
+        if ( abs(materials.gbsv[k])>0 ) LOG_INFO("--->         GBS viscosity activated ");
+        if ( abs(materials.expv[k])>0 ) LOG_INFO("---> Exponential viscosity activated ");
+        if ( abs(gsel)              >0 ) LOG_INFO("--->  Grain size evolution activated ");
 
         // Call flow law data base
         if ( abs(materials.pwlv[k])>0 ) ReadDataPowerLaw   ( &materials, &model, k, materials.pwlv[k], &scaling );
@@ -1428,8 +1447,8 @@ Input ReadInputFile( char *fileName ) {
 
         if ( materials.density_model[k] == 4 ) {
 
-            printf("Phase #%d has density_model %d, so:\n", k, materials.density_model[k]);
-            printf("Loading 1D diagram for coesite quartz only baby...\n");
+            LOG_INFO("Phase #%d has density_model %d, so:", k, materials.density_model[k]);
+            LOG_INFO("Loading 1D diagram for coesite quartz only baby...");
 
             model.PD1DnP[k]         = 10000;
             model.PD1Dmin[k]        = 1e5/scaling.S;
@@ -1489,7 +1508,7 @@ Input ReadInputFile( char *fileName ) {
 //                 //-------- In situ VISU for debugging: do not delete ------------------------//
             }
             else {
-                printf("Cannot open file %s, check if the file exists in the current location !\n Exiting", fname);
+                LOG_ERR("Cannot open file %s, check if the file exists in the current location !\n Exiting", fname);
                 exit(1);
             }
         }
@@ -1501,14 +1520,14 @@ Input ReadInputFile( char *fileName ) {
     model.isPD = 0;
 
     for ( k=0; k<materials.Nb_phases; k++) {
-        printf("Phase %d ---  density model %d \n",k, materials.density_model[k]);
+        LOG_INFO("Phase %d ---  density model %d ",k, materials.density_model[k]);
         if ( materials.density_model[k] == 2 ) {
-            printf("The density model of phase %0d relies on phase diagrams\n", k);
+            LOG_INFO("The density model of phase %0d relies on phase diagrams", k);
             model.isPD = 1;
         }
         if ( materials.density_model[k] == 2 && materials.phase_diagram[k] == -1 ) {
-            printf("However the phase diagram index was not set (default -1)\n");
-            printf("Therefore the simulation will not run, go fix 'phase_diagram' of phase %02d\n", k);
+            LOG_INFO("However the phase diagram index was not set (default -1)");
+            LOG_INFO("Therefore the simulation will not run, go fix 'phase_diagram' of phase %02d", k);
             exit(5);
         }
     }
@@ -1516,7 +1535,7 @@ Input ReadInputFile( char *fileName ) {
     // Phase diagrams
     if ( model.isPD == 1 ) {
 
-        printf("Loading phase diagrams...\n");
+        LOG_INFO("Loading phase diagrams...");
         int pid;
         model.num_PD = 10;
 
@@ -1526,7 +1545,7 @@ Input ReadInputFile( char *fileName ) {
         /**** PHASE DIAGRAMS #00 - Mantle (Jenadi_stx.dat)  ****/
         pid                       = 0;         // Kaus & Connolly, 2005: Effect of mineral phase transitions on sedimentary basin subsidence and uplift
         if (pid > (model.num_PD-1) ) {
-            printf ("One should increment 'model.num_PD' to allocate enough memory and store the database\n");
+            LOG_INFO("One should increment 'model.num_PD' to allocate enough memory and store the database");
             exit(5);
         }
         model.PDMnT[pid]         = 1000;                    // Resolution for temperature (MANTLE) []
@@ -1540,7 +1559,7 @@ Input ReadInputFile( char *fileName ) {
         /**** PHASE DIAGRAMS #01 - Mantle (Jenadi_stx_HR.dat)  ****/
         pid                       = 1;         // Kaus & Connolly, 2005: Effect of mineral phase transitions on sedimentary basin subsidence and uplift
         if (pid > (model.num_PD-1) ) {
-            printf ("One should increment 'model.num_PD' to allocate enough memory and store the database\n");
+            LOG_INFO("One should increment 'model.num_PD' to allocate enough memory and store the database");
             exit(5);
         }
         model.PDMnT[pid]         = 1500;                    // Resolution for temperature (MANTLE) []
@@ -1554,7 +1573,7 @@ Input ReadInputFile( char *fileName ) {
         /**** PHASE DIAGRAMS #02 - Basalt (MORB_L.dat)  ****/
         pid                       = 2;  // Water saturated MORB - Bulk composition taken from Schmidt & Poli 1998 EPSL (Table 1)
         if (pid > (model.num_PD-1) ) {
-            printf ("One should increment 'model.num_PD' to allocate enough memory and store the database\n");
+            LOG_INFO("One should increment 'model.num_PD' to allocate enough memory and store the database");
             exit(5);
         }
         model.PDMnT[pid]         = 1000;                    // Resolution for temperature (MANTLE) []
@@ -1568,7 +1587,7 @@ Input ReadInputFile( char *fileName ) {
         /**** PHASE DIAGRAMS #03 - Andesite (Andesite.dat)  ****/
         pid                       = 3;  // Andesite
         if (pid > (model.num_PD-1) ) {
-            printf ("One should increment 'model.num_PD' to allocate enough memory and store the database\n");
+            LOG_INFO("One should increment 'model.num_PD' to allocate enough memory and store the database");
             exit(5);
         }
         model.PDMnT[pid]         = 1249;                    // Resolution for temperature (MANTLE) []
@@ -1582,7 +1601,7 @@ Input ReadInputFile( char *fileName ) {
         /**** PHASE DIAGRAMS #04 - Hydrated Peridotite (Hydrated_Pdt.dat)  ****/
         pid                      = 4;  // Hydrated peridotite
         if (pid > (model.num_PD-1) ) {
-            printf ("One should increment 'model.num_PD' to allocate enough memory and store the database\n");
+            LOG_INFO("One should increment 'model.num_PD' to allocate enough memory and store the database");
             exit(5);
         }
         model.PDMnT[pid]         = 793;                     // Resolution for temperature (MANTLE) []
@@ -1596,7 +1615,7 @@ Input ReadInputFile( char *fileName ) {
         /**** PHASE DIAGRAMS #05 - MORB (MORB.dat)  ****/
         pid                       = 5;  // MORB
         if (pid > (model.num_PD-1) ) {
-            printf ("One should increment 'model.num_PD' to allocate enough memory and store the database\n");
+            LOG_INFO("One should increment 'model.num_PD' to allocate enough memory and store the database");
             exit(5);
         }
         model.PDMnT[pid]         = 1249;                    // Resolution for temperature (MANTLE) []
@@ -1610,7 +1629,7 @@ Input ReadInputFile( char *fileName ) {
         /**** PHASE DIAGRAMS #06 - Pelite (Pelite.dat)  ****/
         pid                      = 6;  // Pelite
         if (pid > (model.num_PD-1) ) {
-            printf ("One should increment 'model.num_PD' to allocate enough memory and store the database\n");
+            LOG_INFO("One should increment 'model.num_PD' to allocate enough memory and store the database");
             exit(5);
         }
         model.PDMnT[pid]         = 1249;                    // Resolution for temperature (MANTLE) []
@@ -1624,7 +1643,7 @@ Input ReadInputFile( char *fileName ) {
         /**** PHASE DIAGRAMS #07 - Rhyolite (Rhyolite.dat)  ****/
         pid                       = 7;  // Rhyolite
         if (pid > (model.num_PD-1) ) {
-            printf ("One should increment 'model.num_PD' to allocate enough memory and store the database\n");
+            LOG_INFO("One should increment 'model.num_PD' to allocate enough memory and store the database");
             exit(5);
         }
         model.PDMnT[pid]         = 1249;                    // Resolution for temperature (MANTLE) []
@@ -1638,7 +1657,7 @@ Input ReadInputFile( char *fileName ) {
         /**** PHASE DIAGRAMS #08 - Serpentinite (Serpentinite.dat)  ****/
         pid                       = 8;  // Serpentinite
         if (pid > (model.num_PD-1) ) {
-            printf ("One should increment 'model.num_PD' to allocate enough memory and store the database\n");
+            LOG_INFO("One should increment 'model.num_PD' to allocate enough memory and store the database");
             exit(5);
         }
         model.PDMnT[pid]         = 793;                     // Resolution for temperature (MANTLE) []
@@ -1652,7 +1671,7 @@ Input ReadInputFile( char *fileName ) {
         /**** PHASE DIAGRAMS #09 - Si02 (Si02.dat)  ****/
         pid                       = 9;  // Si02
         if (pid > (model.num_PD-1) ) {
-            printf ("One should increment 'model.num_PD' to allocate enough memory and store the database\n");
+            LOG_INFO("One should increment 'model.num_PD' to allocate enough memory and store the database");
             exit(5);
         }
         model.PDMnT[pid]         = 675;                          // Resolution for temperature (MANTLE) []
@@ -1671,7 +1690,7 @@ Input ReadInputFile( char *fileName ) {
 
     if ( model.kinetics == 1 ) {
 
-        printf("Loading kinetic data...\n");
+        LOG_INFO("Loading kinetic data...");
 
         /**** Quartz Coesite (dG_QuartzCoesite.dat)  ****/
         model.kin_nT        = 675;                         // Resolution for temperature (MANTLE) []
@@ -1726,7 +1745,7 @@ double* ReadBin(char importDir[], char A_name[], int nx, int ny, double scale ){
     A = malloc((nb_elems)*sizeof(double));
     fid=fopen(bname, "rb"); // Open file
     if (!fid){
-        fprintf(stderr, "\nUnable to open file %s. I will exit here ... \n", bname); exit(2);
+        LOG_ERR("\nUnable to open file %s. I will exit here ... ", bname); exit(2);
     }
     fread(A, sizeof(double), nb_elems, fid); fclose(fid); free(bname);
     ArrayTimesScalar( A, 1.0/scale, nb_elems );
@@ -1738,7 +1757,7 @@ double* ReadBin(char importDir[], char A_name[], int nx, int ny, double scale ){
 /*--------------------------------------------------------------------------------------------------------------------*/
 
 char* ReadChar( FILE *fin, char FieldName[], char Default[] ) {
-    int h, find=0, bufmax=50, length;
+    int h, find=0, bufmax=200, length;
     char *string1, *string2;
     char line[bufmax];
 
@@ -1764,7 +1783,7 @@ char* ReadChar( FILE *fin, char FieldName[], char Default[] ) {
         fgets ( line, sizeof(line), fin );
 
         if (feof(fin)) {
-            printf("Warning : Parameter '%s' not found in the setup file, running with default value %s\n", FieldName, Default);
+            LOG_WARN("Warning : Parameter '%s' not found in the setup file, running with default value %s", FieldName, Default);
             rewind(fin);
             free(string1);
             free(param1);
@@ -1798,8 +1817,8 @@ char* ReadChar( FILE *fin, char FieldName[], char Default[] ) {
             for (h=0;h<bufmax;h++) {
                 if(strlen(line)> 0 && line[h]=='=') {
 
-                    for (h1=0; h1<30; h1++) {
-                        if ( isspace(line[h+2+h1]) ) {
+                    for (h1=0; h1<bufmax-3; h1++) {
+                        if ( isspace(line[h+2+h1]) || line[h+2+h1] == '\0' ) {
                             string1[h1] = '\0';
                             str_size++;
                             break;
@@ -1859,7 +1878,7 @@ char* ReadPhaseDiagram( FILE *fin, char FieldName[] ) {
         fgets ( line, sizeof(line), fin );
 
         if (feof(fin)) {
-            printf("Error: The phase diagram '%s' could not be found in the setup file. I will exit here.\n", FieldName);
+            LOG_ERR("Error: The phase diagram '%s' could not be found in the setup file. I will exit here.", FieldName);
             rewind (fin    );
             free   (param1 );
             free   (param2 );
@@ -1936,9 +1955,8 @@ int ReadInt2( FILE *fin, char FieldName[], int Default )
     while(value == 0)
     {
         // Read new line
-        fgets ( line, sizeof(line), fin );
-        if (feof(fin)) {
-            printf("Warning : Parameter '%s' not found in the setup file, running with default value %d\n", FieldName, Default);
+        if (fgets ( line, sizeof(line), fin ) == NULL) {
+            LOG_WARN("Warning : Parameter '%s' not found in the setup file, running with default value %d", FieldName, Default);
             rewind (fin);
             free(param1);
             return Default;
@@ -1946,10 +1964,15 @@ int ReadInt2( FILE *fin, char FieldName[], int Default )
 
         // Determine the length of the parameter string in the current line.
         int InPar_length = 0;
+        int line_len = (int)strlen(line);
 
-        while(line[InPar_length] != ' ')
+        // Find first space — skip lines that have no space (blank lines, etc.)
+        while(InPar_length < line_len && line[InPar_length] != ' ')
         {
             InPar_length = InPar_length + 1;
+        }
+        if (InPar_length == 0 || InPar_length >= line_len) {
+            continue;  // skip blank lines or lines with no space
         }
 
         // Allocate memory to save the current parameter string.
@@ -2009,8 +2032,7 @@ double ReadDou2( FILE *fin, char FieldName[], double Default )
     while(value == 0.0)
     {
         // Read new line
-        fgets ( line, sizeof(line), fin );
-        if (feof(fin)) {
+        if (fgets ( line, sizeof(line), fin ) == NULL) {
             // printf("Warning : Parameter '%s' not found in the setup file, running with default value %2.2e\n", FieldName, Default);
             rewind (fin);
             free(param1);
@@ -2019,9 +2041,15 @@ double ReadDou2( FILE *fin, char FieldName[], double Default )
 
         // Determine the length of the parameter string in the current line.
         int InPar_length = 0;
-        while(line[InPar_length] != ' ')
+        int line_len = (int)strlen(line);
+
+        // Find first space — skip lines that have no space (blank lines, etc.)
+        while(InPar_length < line_len && line[InPar_length] != ' ')
         {
             InPar_length = InPar_length + 1;
+        }
+        if (InPar_length == 0 || InPar_length >= line_len) {
+            continue;
         }
 
         // Allocate memory to save the current parameter string.
@@ -2084,7 +2112,7 @@ double ReadMatProps( FILE *fin, char FieldName[], int PhaseID, double Default )
         fgets ( line, sizeof(line), fin );
         if (feof(fin))
         {
-            printf("Warning : No phase ID found! I will exit here.");
+            LOG_WARN("Warning : No phase ID found! I will exit here.");
             free(param1);
             rewind (fin);
             exit(0);
@@ -2092,10 +2120,15 @@ double ReadMatProps( FILE *fin, char FieldName[], int PhaseID, double Default )
 
         // Determine the length of the parameter string in the current line.
         int InPar_length = 0;
+        int line_len = (int)strlen(line);
 
-        while(line[InPar_length] != ' ')
+        // Find first space — skip lines that have no space (blank lines, etc.)
+        while(InPar_length < line_len && line[InPar_length] != ' ')
         {
             InPar_length = InPar_length + 1;
+        }
+        if (InPar_length == 0 || InPar_length >= line_len) {
+            continue;
         }
 
         // Allocate memory to save the current parameter string.
@@ -2150,8 +2183,8 @@ double ReadMatProps( FILE *fin, char FieldName[], int PhaseID, double Default )
 
                     // Break in case the parameter has not been defined before the next phase starts.
                     if ( strcmp(param3,"ID") == 0) {
-                        if ( fabs(Default) <  100.0 ) printf("Warning : Parameter '%s' not found in the setup file, running with default value %.2lf\n", FieldName, Default);
-                        if ( fabs(Default) >= 100.0 ) printf("Warning : Parameter '%s' not found in the setup file, running with default value %2.2e\n", FieldName, Default);
+                        if ( fabs(Default) <  100.0 ) LOG_WARN("Warning : Parameter '%s' not found in the setup file, running with default value %.2lf", FieldName, Default);
+                        if ( fabs(Default) >= 100.0 ) LOG_WARN("Warning : Parameter '%s' not found in the setup file, running with default value %2.2e", FieldName, Default);
                         rewind (fin);
                         free(param1);
                         free(param2);
@@ -2181,8 +2214,8 @@ double ReadMatProps( FILE *fin, char FieldName[], int PhaseID, double Default )
                     // Break in case the parameter has not been defined until the end of the file.
                     if (feof(fin))
                     {
-                        if ( fabs(Default) <  100.0 ) printf("Warning : Parameter '%s' not found in the setup file, running with default value %.2lf\n", FieldName, Default);
-                        if ( fabs(Default) >= 100.0 ) printf("Warning : Parameter '%s' not found in the setup file, running with default value %2.2e\n", FieldName, Default);
+                        if ( fabs(Default) <  100.0 ) LOG_WARN("Warning : Parameter '%s' not found in the setup file, running with default value %.2lf", FieldName, Default);
+                        if ( fabs(Default) >= 100.0 ) LOG_WARN("Warning : Parameter '%s' not found in the setup file, running with default value %2.2e", FieldName, Default);
                         rewind (fin);
                         free(param1);
                         free(param2);
@@ -2223,7 +2256,7 @@ void UpdateInputFile( char fin_name[], int NewNumber ) {
     // Open File
     fin = fopen(fin_name,"r+");
 	if ( fin == NULL) {
-		printf("Setup file '%s' does not exist\nExiting...\n", fin_name);
+		LOG_INFO("Setup file '%s' does not exist\nExiting...", fin_name);
         fclose(fin);
 		exit(1);
 	}
@@ -2233,7 +2266,7 @@ void UpdateInputFile( char fin_name[], int NewNumber ) {
         // Read new line
         fgets ( line, sizeof(line), fin );
         if (feof(fin)) {
-            printf("Warning : Parameter '%s' not found in the setup file\n", FieldName);
+            LOG_WARN("Warning : Parameter '%s' not found in the setup file", FieldName);
         }
 
         // Get the first 'length' characters of the line

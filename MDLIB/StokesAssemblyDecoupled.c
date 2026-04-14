@@ -29,6 +29,8 @@
 #include "time.h"
 #include "mdoodz-private.h"
 
+#include "mdoodz-log.h"
+
 #ifdef _OMP_
 #include "omp.h"
 #else
@@ -1335,7 +1337,7 @@ void BuildStokesOperatorDecoupled( grid *mesh, params model, int lev, double *p_
     }
 #pragma omp barrier
 
-    if (Assemble==1) printf("Assemble Picard operator on %d threads\n", n_th);
+    if (Assemble==1) LOG_INFO("Assemble Picard operator on %d threads", n_th);
     
     // Matrix initialisation
     if ( Assemble == 1 ) {
@@ -1622,7 +1624,7 @@ void BuildStokesOperatorDecoupled( grid *mesh, params model, int lev, double *p_
         
         //        printf("System size: ndof = %d, nzA = %d nzB = %d nzC = %d nzD = %d\n", Stokes->neq, nnzcA, nnzcB, nnzcC, nnzcD);
         
-        printf("Number of momentum equations: %d\n", StokesA->neq);
+        LOG_INFO("Number of momentum equations: %d", StokesA->neq);
         
         //        // Extract Diagonal of A - Viscous block
         //        int i, j, locNNZ;
@@ -1699,7 +1701,7 @@ void BuildStokesOperatorDecoupled( grid *mesh, params model, int lev, double *p_
             
             char *filename;
             asprintf( &filename, "Stokes_%02dcpu_step%02d_iter%02d.gzip.h5", n_th, model.step, model.nit );
-            printf("Writing Stokes matrix file: %s to disk...\n", filename);
+            LOG_INFO("Writing Stokes matrix file: %s to disk...", filename);
             
             // Fill in DD data structure
             OutputSparseMatrix OutputDDA, OutputDDB, OutputDDC, OutputDDD;
@@ -1845,7 +1847,7 @@ void BuildJacobianOperatorDecoupled( grid *mesh, params model, int lev, double *
     }
 #pragma omp barrier
 
-    if (Assemble==1) printf("Assemble Jacobian on %d threads\n", n_th);
+    if (Assemble==1) LOG_INFO("Assemble Jacobian on %d threads", n_th);
     
     StokesA->neq = Stokes->neq_mom;
     StokesB->neq = Stokes->neq_mom;
@@ -2233,7 +2235,7 @@ void BuildJacobianOperatorDecoupled( grid *mesh, params model, int lev, double *
             
             char *filename;
             asprintf( &filename, "Jacobian_%02dcpu_step%02d_iter%02d.gzip.h5", n_th, model.step, model.nit );
-            printf("Writing Jacobian matrix file: %s to disk...\n", filename);
+            LOG_INFO("Writing Jacobian matrix file: %s to disk...", filename);
             MinMaxArray(StokesA->F, 1, StokesA->neq, "Fu" );
             MinMaxArray(StokesC->F, 1, StokesC->neq, "Fp" );
             

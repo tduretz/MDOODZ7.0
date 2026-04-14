@@ -30,6 +30,8 @@
 #include "cs.h"
 #include "cholmod.h"
 
+#include "mdoodz-log.h"
+
 #ifdef _OMP_
 #include "omp.h"
 #else
@@ -41,7 +43,7 @@
 #define error printf
 
 #ifdef _VG_
-#define printf(...) printf("")
+#define LOG_INFO(...) LOG_INFO("")
 #endif
 
 /*--------------------------------------------------------------------------------------------------------------------*/
@@ -77,7 +79,7 @@ void CheckArrays( cholmod_dense* fu, cholmod_dense* fp, cholmod_dense* bu, cholm
             kk = k + l*mesh->Nx;
             if ( mesh->BCu.type[kk] != 0 && mesh->BCu.type[kk] != 30 && mesh->BCu.type[kk] != 13 && mesh->BCu.type[kk] != 11 && mesh->BCu.type[kk] != -12) {
                 if ( fabs( ((double*)fu->x)[inc]) > 1e5 ) {
-                    printf("CHK X --- %2.2e --- %2.2e\n", ((double*)fu->x)[inc], ((double*)bu->x)[inc]);
+                    LOG_INFO("CHK X --- %2.2e --- %2.2e", ((double*)fu->x)[inc], ((double*)bu->x)[inc]);
                 }
 
 //                x[inc_tot] = ((double*)u->x)[inc];
@@ -93,7 +95,7 @@ void CheckArrays( cholmod_dense* fu, cholmod_dense* fp, cholmod_dense* bu, cholm
             kk = k + l*(mesh->Nx+1);
             if ( mesh->BCv.type[kk] != 0  && mesh->BCv.type[kk] != 30 && mesh->BCv.type[kk] != 13  && mesh->BCv.type[kk] != 11 && mesh->BCv.type[kk] != -12  ) {
                 if ( fabs( ((double*)fu->x)[inc]) > 1e5 ) {
-                    printf("CHK Y --- %2.2e --- %2.2e\n\n", ((double*)fu->x)[inc], ((double*)bu->x)[inc]);
+                    LOG_INFO("CHK Y --- %2.2e --- %2.2e", ((double*)fu->x)[inc], ((double*)bu->x)[inc]);
                 }
 //                x[inc_tot] = ((double*)u->x)[inc];
                 inc++;
@@ -151,7 +153,7 @@ void kspgcr( cholmod_sparse *M, cholmod_dense *b, cholmod_dense *x, cholmod_fact
     
     // Evaluate reference norm
     rnorm0 = norm_r;
-    if (noisy > 1) printf("       %1.4d KSP GCR Residual %1.12e %1.12e\n", 0, norm_r, norm_r/rnorm0);
+    if (noisy > 1) LOG_INFO("       %1.4d KSP GCR Residual %1.12e %1.12e", 0, norm_r, norm_r/rnorm0);
     
     while ( success == 0 && its<max_it ) {
         
@@ -197,7 +199,7 @@ void kspgcr( cholmod_sparse *M, cholmod_dense *b, cholmod_dense *x, cholmod_fact
                 success = 1;
                 break;
             }
-            if (noisy>1) printf("[%1.4d] %1.4d KSP GCR Residual %1.12e %1.12e\n", ncycles, its, norm_r, norm_r/rnorm0);
+            if (noisy>1) LOG_INFO("[%1.4d] %1.4d KSP GCR Residual %1.12e %1.12e", ncycles, its, norm_r, norm_r/rnorm0);
             
             // Store arrays
             ArrayEqualArray( VV[i1], ((double*)v->x), N );
@@ -208,7 +210,7 @@ void kspgcr( cholmod_sparse *M, cholmod_dense *b, cholmod_dense *x, cholmod_fact
         its++;
         ncycles++;
     }
-    if (noisy>1) printf("[%1.4d] %1.4d KSP GCR Residual %1.12e %1.12e\n", ncycles, its, norm_r, norm_r/rnorm0);
+    if (noisy>1) LOG_INFO("[%1.4d] %1.4d KSP GCR Residual %1.12e %1.12e", ncycles, its, norm_r, norm_r/rnorm0);
     
     cholmod_free_dense( &Y,   c );
     cholmod_free_dense( &E,   c );
@@ -243,7 +245,7 @@ void DirectStokes( SparseMat *mat, DirectSolver *pardi, double *rhs, double *sol
     
     t_omp = (double)omp_get_wtime();
     
-    if (msglvl==1) printf ("\nUMFPACK V%d.%d (%s) demo: _di_ version\n",  UMFPACK_MAIN_VERSION, UMFPACK_SUB_VERSION, UMFPACK_DATE) ;
+    if (msglvl==1) LOG_INFO("\nUMFPACK V%d.%d (%s) demo: _di_ version",  UMFPACK_MAIN_VERSION, UMFPACK_SUB_VERSION, UMFPACK_DATE) ;
     
     /* get the default control parameters */
     umfpack_di_defaults (Control) ;
@@ -309,7 +311,7 @@ void DirectStokes( SparseMat *mat, DirectSolver *pardi, double *rhs, double *sol
     }
     umfpack_di_free_numeric(&Numeric);
     
-    printf("** Time for UMFPACK = %lf sec\n", (double)((double)omp_get_wtime() - t_omp));
+    LOG_TIME("UMFPACK = %lf sec", (double)((double)omp_get_wtime() - t_omp));
     
     
 }
@@ -354,7 +356,7 @@ void DirectStokesDecoupled( SparseMat *matA,  SparseMat *matB,  SparseMat *matC,
     //    printf("min eta = %2.2e, max eta = %2.2e, penalty try=%2.2e, penalty =%2.2e, celvol=%2.2e...\n", min_eta, max_eta, penalty, -gamma * celvol, celvol);
     
     if (model.auto_penalty == 1) {
-        printf("Trying AUTO_PENALTY...\n");
+        LOG_INFO("Trying AUTO_PENALTY...");
         MinMaxArrayVal( mesh->eta_s, mesh->Nx*mesh->Nz, &min_eta, &max_eta );
         MinMaxArrayVal( mesh->eta_s, mesh->Nx*mesh->Nz, &min_eta, &max_eta );
         
@@ -365,7 +367,7 @@ void DirectStokesDecoupled( SparseMat *matA,  SparseMat *matB,  SparseMat *matC,
     }
     else {
         penalty = gamma / celvol;
-        printf("Penalty factor = %2.2e\n", penalty);
+        LOG_INFO("Penalty factor = %2.2e", penalty);
     }
     
     // Here Dcm0 is the inverse of the pressure block
@@ -472,7 +474,7 @@ void DirectStokesDecoupled( SparseMat *matA,  SparseMat *matB,  SparseMat *matC,
     
     if (Lcml == NULL || Lcml->stype == 0)
     {
-        printf("Unsymmetric matrix\n");
+        LOG_INFO("Unsymmetric matrix");
         cholmod_free_sparse (&Lcml, &c) ;
         cholmod_finish (&c) ;
     }
@@ -484,13 +486,13 @@ void DirectStokesDecoupled( SparseMat *matA,  SparseMat *matB,  SparseMat *matC,
         t_omp                = (double)omp_get_wtime();
         Lfact                = cholmod_analyze( Lcml, &c ) ;
         pardi->Analyze       = 0;
-        printf("** Time for Cholesky analysis = %lf sec\n", (double)((double)omp_get_wtime() - t_omp));
+        LOG_TIME("Cholesky analysis = %lf sec", (double)((double)omp_get_wtime() - t_omp));
         
     }
     
     t_omp = (double)omp_get_wtime();
     cholmod_factorize( Lcml, Lfact, &c);
-    printf("** Time for Cholesky factorization = %lf sec\n", (double)((double)omp_get_wtime() - t_omp));
+    LOG_TIME("Cholesky factorization = %lf sec", (double)((double)omp_get_wtime() - t_omp));
         
     cholmod_dense *u, *p, *bu, *bp, *pdum, *udum, *fu, *fp, *E, *Y;
     pdum = cholmod_allocate_dense( matC->neq, 1, matC->neq, CHOLMOD_REAL, &c );
@@ -509,7 +511,7 @@ void DirectStokesDecoupled( SparseMat *matA,  SparseMat *matB,  SparseMat *matC,
     copy_vec_to_cholmod_dense( bu, rhs_mom );
     copy_vec_to_cholmod_dense( bp, rhs_cont );
     
-    printf("Initial residual:\n");
+    LOG_INFO("Initial residual:");
     copy_cholmod_dense_to_cholmod_dense( fu, bu );   // fu = bu
     cholmod_sdmult ( Acm, 0, mone, one, u, fu, &c) ; // fu -= A*u
     cholmod_sdmult ( Bcm, 0, mone, one, p, fu, &c) ; // fu -= B*p
@@ -554,7 +556,7 @@ void DirectStokesDecoupled( SparseMat *matA,  SparseMat *matB,  SparseMat *matC,
             cholmod_sdmult ( Bcm, 0, mone, one, p, fu, &c);
             copy_cholmod_dense_to_cholmod_dense( fp, bp );
             cholmod_sdmult ( Ccm, 0, mone, one, u, fp, &c);
-            printf("PH it. %01d. rel. max. div. = %2.2e -- max. abs. div = %2.2e-- max. rel. div = %2.2e  / max. mom. = %2.2e rel. max. mom. = %2.2e\n", k, fabs(maxdiv/maxdiv0), maxdiv, maxdivit, maxru, maxru/maxru0);
+            LOG_INFO("PH it. %01d. rel. max. div. = %2.2e -- max. abs. div = %2.2e-- max. rel. div = %2.2e  / max. mom. = %2.2e rel. max. mom. = %2.2e", k, fabs(maxdiv/maxdiv0), maxdiv, maxdivit, maxru, maxru/maxru0);
             
             //cholmod_sdmult ( Dcm, 0, mone, one, p, fp, &c) ;
             //            NormResidualCholmod( &ru, &rp, fu, fp, matA->neq, matC->neq, model, scaling, 0 );
@@ -568,10 +570,10 @@ void DirectStokesDecoupled( SparseMat *matA,  SparseMat *matB,  SparseMat *matC,
     
     //    if (fabs(maxdiv/maxdiv0)>lin_rel_div || fabs(maxdiv) > lin_rel_div ){
     if (fabs(maxdiv)>model.lin_abs_div && maxdiv/maxdiv0>lin_rel_div) {
-        printf("The code has exited since the incompressibility constrain was not satisfied to abs. tol. = %2.2e and rel. tol. = %2.2e\n Try modifying the PENALTY factor or check MIN/MAX viscosities\n Good luck!\n", model.lin_abs_div, lin_rel_div);
+        LOG_ERR("The code has exited since the incompressibility constrain was not satisfied to abs. tol. = %2.2e and rel. tol. = %2.2e\n Try modifying the PENALTY factor or check MIN/MAX viscosities\n Good luck!", model.lin_abs_div, lin_rel_div);
         exit(1);
     }
-    printf("** PH - iterations = %lf sec\n", (double)((double)omp_get_wtime() - t_omp));
+    LOG_INFO("** PH - iterations = %lf sec", (double)((double)omp_get_wtime() - t_omp));
     
     SumArray(u->x, 1.0, matC->neq, "u");
     SumArray(p->x, 1.0, matC->neq, "p");
@@ -619,9 +621,9 @@ void DirectStokesDecoupled( SparseMat *matA,  SparseMat *matB,  SparseMat *matC,
     resp =  sqrt(resp/ndofp);
     
     if ( noisy == 1 ) {
-        printf("Fu = %2.6e\n", resx ); // Units of momentum
-        printf("Fv = %2.6e\n", resz ); // Units of momentum
-        printf("Fp = %2.6e\n", resp ); // Units of velocity gradient
+        LOG_INFO("Fu = %2.6e", resx); // Units of momentum
+        LOG_INFO("Fv = %2.6e", resz); // Units of momentum
+        LOG_INFO("Fp = %2.6e", resp); // Units of velocity gradient
     }
     
     // --------------- Free --------------- //
@@ -712,13 +714,13 @@ void DirectStokesDecoupledComp( SparseMat *matA,  SparseMat *matB,  SparseMat *m
     penalty = min_G*model.dt *model.dt * celvol;
     
     if (model.auto_penalty == 1) {
-        printf("Trying AUTO_PENALTY...\n");
+        LOG_INFO("Trying AUTO_PENALTY...");
         MinMaxArrayVal( mesh->eta_s, mesh->Nx*mesh->Nz, &min_eta, &max_eta );
         MinMaxArrayVal( mesh->eta_s, mesh->Nx*mesh->Nz, &min_eta, &max_eta );
     }
     else {
         penalty = gamma / celvol;
-        printf("Penalty factor = %2.2e\n", penalty);
+        LOG_INFO("Penalty factor = %2.2e", penalty);
     }
     
     // BUG FIX (DirectStokesDecoupledComp): Guard must be BCp.type[k]==-1 (active cell) not
@@ -840,7 +842,7 @@ void DirectStokesDecoupledComp( SparseMat *matA,  SparseMat *matB,  SparseMat *m
     
     if (Lcml == NULL || Lcml->stype == 0)
     {
-        printf("Unsymmetric matrix\n");
+        LOG_INFO("Unsymmetric matrix");
         cholmod_free_sparse (&Lcml, &c) ;
         cholmod_finish (&c) ;
     }
@@ -852,13 +854,13 @@ void DirectStokesDecoupledComp( SparseMat *matA,  SparseMat *matB,  SparseMat *m
         t_omp                = (double)omp_get_wtime();
         Lfact                = cholmod_analyze( Lcml, &c ) ;
         pardi->Analyze       = 0;
-        printf("** Time for Cholesky analysis = %lf sec\n", (double)((double)omp_get_wtime() - t_omp));
+        LOG_TIME("Cholesky analysis = %lf sec", (double)((double)omp_get_wtime() - t_omp));
         
     }
     
     t_omp = (double)omp_get_wtime();
     cholmod_factorize( Lcml, Lfact, &c);
-    printf("** Time for Cholesky factorization = %lf sec\n", (double)((double)omp_get_wtime() - t_omp));
+    LOG_TIME("Cholesky factorization = %lf sec", (double)((double)omp_get_wtime() - t_omp));
     
     cholmod_dense *u, *p, *du, *dp, *bu, *bp, *pdum, *udum, *fu, *fp, *E, *Y;
     pdum = cholmod_allocate_dense( matC->neq, 1, matC->neq, CHOLMOD_REAL, &c );
@@ -888,7 +890,7 @@ void DirectStokesDecoupledComp( SparseMat *matA,  SparseMat *matB,  SparseMat *m
     cholmod_sdmult( D1cm0, 0, mone, one, p, fp, &c) ; // fp -= D*p
     
     // Check: Initial residuals
-    printf("Initial residual:\n");
+    LOG_INFO("Initial residual:");
     MinMaxArrayVal( fu->x, matA->neq, &minru0, &maxru0 );
     NormResidualCholmod( &ru, &rp, fu, fp, matA->neq, matC->neq, model, scaling, 0 );
     
@@ -906,7 +908,7 @@ void DirectStokesDecoupledComp( SparseMat *matA,  SparseMat *matB,  SparseMat *m
         MinMaxArrayVal( fp->x, matC->neq, &mindiv, &maxdiv );
         MinMaxArrayVal( fu->x, matA->neq, &minru , &maxru  );
         if (k==0) maxdiv0 = maxdiv;
-        if ( noisy == 1 ) printf("PH comp it. %01d. rel. max. div. = %2.2e -- max. abs. div = %2.2e-- max. rel. div = %2.2e  / max. mom. = %2.2e rel. max. mom. = %2.2e\n", k, fabs(maxdiv/maxdiv0), maxdiv, maxdivit, maxru, maxru/maxru0);
+        if ( noisy == 1 ) LOG_INFO("PH comp it. %01d. rel. max. div. = %2.2e -- max. abs. div = %2.2e-- max. rel. div = %2.2e  / max. mom. = %2.2e rel. max. mom. = %2.2e", k, fabs(maxdiv/maxdiv0), maxdiv, maxdivit, maxru, maxru/maxru0);
         if (k>1 && (fabs(maxdiv)<model.lin_abs_div || maxdiv/maxdiv0<lin_rel_div ) ) break;
 
         // Schur complement
@@ -937,10 +939,10 @@ void DirectStokesDecoupledComp( SparseMat *matA,  SparseMat *matB,  SparseMat *m
         // // ----- Original MATLAB version ----- //
     }
     if (fabs(maxdiv)>model.lin_abs_div && maxdiv/maxdiv0>lin_rel_div) {
-        printf("The code has exited since the incompressibility constrain was not satisfied to abs. tol. = %2.2e and rel. tol. = %2.2e\n Try modifying the PENALTY factor or check MIN/MAX viscosities\n Good luck!\n", model.lin_abs_div, lin_rel_div);
+        LOG_ERR("The code has exited since the incompressibility constrain was not satisfied to abs. tol. = %2.2e and rel. tol. = %2.2e\n Try modifying the PENALTY factor or check MIN/MAX viscosities\n Good luck!", model.lin_abs_div, lin_rel_div);
         exit(1);
     }
-    printf("** PH - iterations = %lf sec\n", (double)((double)omp_get_wtime() - t_omp));
+    LOG_INFO("** PH - iterations = %lf sec", (double)((double)omp_get_wtime() - t_omp));
     
     SumArray(u->x, 1.0, matC->neq, "u");
     SumArray(p->x, 1.0, matC->neq, "p");
@@ -1072,8 +1074,8 @@ void KillerSolver( SparseMat *matA,  SparseMat *matB,  SparseMat *matC,  SparseM
     c     = pardi->c;
 
     // --------------- Pre-process--------------- //
-    printf("Killer solver...\n");
-    printf("Preparing Matrices...\n");
+    LOG_INFO("Killer solver...");
+    LOG_INFO("Preparing Matrices...");
 
     // ************** D ************** //
     SuiteSparse_long rsize;
@@ -1086,7 +1088,7 @@ void KillerSolver( SparseMat *matA,  SparseMat *matB,  SparseMat *matC,  SparseM
     whos_incompressible = cholmod_speye( rsize, rsize, CHOLMOD_REAL, &c );
 
     penalty = gamma / celvol;
-    printf("Penalty factor = %2.2e\n", penalty);
+    LOG_INFO("Penalty factor = %2.2e", penalty);
 
     // BUG FIX (KillerSolver): Same guard fix as DirectStokesDecoupledComp — see comment there.
 #pragma omp parallel for shared( whos_incompressible, D1cm0, Dcm0, mesh, Stokes, matA, matD ) private( i ) firstprivate( model, celvol, vol_change )
@@ -1146,19 +1148,19 @@ void KillerSolver( SparseMat *matA,  SparseMat *matB,  SparseMat *matC,  SparseM
 
     // Construct preconditioner:
     if ( preconditioner == -1 ) { // Symmetrised Stokes/Picard operator
-        printf("Construct preconditioner:   PC  = 1/2 * (K'+ K)\n");
+        LOG_INFO("Construct preconditioner:   PC  = 1/2 * (K'+ K)");
         Jt = cs_di_transpose( Ac, 1);
         PC = cs_di_add( Ac, Jt, 0.5, 0.5);
         cs_spfree(Jt);
     }
 
     if ( preconditioner == 0 ) { // Stokes/Picard operator
-        printf("Construct preconditioner:   PC  = K\n");
+        LOG_INFO("Construct preconditioner:   PC  = K");
         PC = cs_di_add( Ac, Ac, 1.0, 0.0 );
     }
 
     if ( preconditioner == 1 ) { // Symmetrised Newton operator
-        printf("Construct preconditioner:   PC  = 1/2 * (J'+ J)\n");
+        LOG_INFO("Construct preconditioner:   PC  = 1/2 * (J'+ J)");
         Jt = cs_di_transpose( AJc, 1);
         PC = cs_di_add( AJc, Jt, 0.5, 0.5);
         cs_spfree(Jt);
@@ -1167,8 +1169,8 @@ void KillerSolver( SparseMat *matA,  SparseMat *matB,  SparseMat *matC,  SparseM
     //------------------------------------------------------------------------------------------------//
 
     // --------------- Schur complements --------------- //
-    printf("Compute Schur complement 1:  Jt  = J  - grad*(PPI*div)\n");
-    printf("Compute Schur complement 2:  Jts = PC - grad*(PPI*div)\n");
+    LOG_INFO("Compute Schur complement 1:  Jt  = J  - grad*(PPI*div)");
+    LOG_INFO("Compute Schur complement 2:  Jts = PC - grad*(PPI*div)");
 
     // Matrix multiplication: D*C
     L =  cs_di_multiply( Dc, Cc );
@@ -1192,7 +1194,7 @@ void KillerSolver( SparseMat *matA,  SparseMat *matB,  SparseMat *matC,  SparseM
 
     //------------------------------------------------------------------------------------------------//
     // Factor Jts
-    printf("Cholesky factors of Jts...\n");
+    LOG_INFO("Cholesky factors of Jts...");
 
     int N = AJc->m;
 
@@ -1222,7 +1224,7 @@ void KillerSolver( SparseMat *matA,  SparseMat *matB,  SparseMat *matC,  SparseM
     Lcml  = cholmod_copy ( Lcm,  -1, 1, &c );
 
     if (Lcml == NULL || Lcml->stype == 0) {
-        printf("Unsymmetric matrix\n");
+        LOG_INFO("Unsymmetric matrix");
         cholmod_free_sparse (&Lcml, &c) ;
         cholmod_finish (&c) ;
     }
@@ -1234,7 +1236,7 @@ void KillerSolver( SparseMat *matA,  SparseMat *matB,  SparseMat *matC,  SparseM
         t_omp                = (double)omp_get_wtime();
         Lfact                = cholmod_analyze( Lcml, &c ) ;
         pardi->Analyze       = 0;
-        printf("** Time for Cholesky analysis = %lf sec\n", (double)((double)omp_get_wtime() - t_omp));
+        LOG_TIME("Cholesky analysis = %lf sec", (double)((double)omp_get_wtime() - t_omp));
     }
 
     t_omp = (double)omp_get_wtime();
@@ -1242,9 +1244,9 @@ void KillerSolver( SparseMat *matA,  SparseMat *matB,  SparseMat *matC,  SparseM
     // printf("** Time for Cholesky factorization = %lf sec\n", (double)((double)omp_get_wtime() - t_omp));
 
     if (c.status==1) { // Here the code should not continue running and start producings Nans!
-        printf("CHOLDMOD failed because the matrix is not positive definite...\n");
-        printf("MDoodz7.0 has to stop...\n");
-        printf("Viscosity or diagonal elements of the tangent matrix are probably negative!\n");
+        LOG_ERR("CHOLDMOD failed because the matrix is not positive definite...");
+        LOG_ERR("MDoodz7.0 has to stop...");
+        LOG_ERR("Viscosity or diagonal elements of the tangent matrix are probably negative!");
         exit(1);
     }
 
@@ -1252,7 +1254,7 @@ void KillerSolver( SparseMat *matA,  SparseMat *matB,  SparseMat *matC,  SparseM
 
     // Powell-Hestenes iterations
     t_omp = (double)omp_get_wtime();
-    printf("Powell-Hestenes iterations, noisy = %d...\n", noisy);
+    LOG_INFO("Powell-Hestenes iterations, noisy = %d...", noisy);
 
     cholmod_dense  *du, *dp, *bu, *bp, *pdum, *udum, *fu, *fp;
     double minru0, maxru0, minru, maxru, ru, rp;
@@ -1279,7 +1281,7 @@ void KillerSolver( SparseMat *matA,  SparseMat *matB,  SparseMat *matC,  SparseM
     cholmod_sdmult( D1cm0, 0, mone, one, dp, fp, &c );      // fp -= D*p
     
     // Check: Initial residuals
-    printf("Initial residual:\n");
+    LOG_INFO("Initial residual:");
     MinMaxArrayVal( fu->x, matA->neq, &minru0, &maxru0 );
     NormResidualCholmod( &ru, &rp, fu, fp, matA->neq, matC->neq, model, scaling, 0 );
     
@@ -1316,16 +1318,16 @@ void KillerSolver( SparseMat *matA,  SparseMat *matB,  SparseMat *matC,  SparseM
         MinMaxArrayVal( fu->x, matA->neq, &minru , &maxru  );
         if (k==0) { maxdiv0 = maxdiv; maxru0 = maxru; }
 
-        if ( noisy > 0 ) printf("PH comp it. %01d. its_KSP = %02d: max. cont. = %2.2e - rel. max. div. = %2.2e / max. mom. = %2.2e - rel. max. mom. = %2.2e\n", k, its_KSP, maxdiv, fabs(maxdiv/maxdiv0), maxru, maxru/maxru0);
+        if ( noisy > 0 ) LOG_INFO("PH comp it. %01d. its_KSP = %02d: max. cont. = %2.2e - rel. max. div. = %2.2e / max. mom. = %2.2e - rel. max. mom. = %2.2e", k, its_KSP, maxdiv, fabs(maxdiv/maxdiv0), maxru, maxru/maxru0);
         if ( k>1 && (fabs(maxdiv)<model.lin_abs_div || maxdiv/maxdiv0<model.lin_rel_div ) && (fabs(maxru)<model.lin_abs_mom || maxru/maxru0<model.lin_rel_mom ) ) break;
     }
 
     // A posteriori checks
     if (fabs(maxdiv)>model.lin_abs_div && maxdiv/maxdiv0>model.lin_rel_div) {
-        printf("The code has exited since the incompressibility constrain was not satisfied to abs. tol. = %2.2e and rel. tol. = %2.2e\n Try modifying the PENALTY factor or check MIN/MAX viscosities\n Good luck!\n", model.lin_abs_div, model.lin_rel_div);
+        LOG_ERR("The code has exited since the incompressibility constrain was not satisfied to abs. tol. = %2.2e and rel. tol. = %2.2e\n Try modifying the PENALTY factor or check MIN/MAX viscosities\n Good luck!", model.lin_abs_div, model.lin_rel_div);
         exit(1);
     }
-    printf("** PH - iterations = %lf sec - its_KSP_tot = %02d\n", (double)((double)omp_get_wtime() - t_omp), its_KSP_tot);
+    LOG_INFO("** PH - iterations = %lf sec - its_KSP_tot = %02d", (double)((double)omp_get_wtime() - t_omp), its_KSP_tot);
 
     // --------------- Solution vector --------------- //
     BackToSolutionVector( du, dp, sol, mesh, Stokes );
@@ -1481,7 +1483,7 @@ void KSPStokesDecoupled( SparseMat *matA,  SparseMat *matB,  SparseMat *matC,  S
     D1cm0  = cholmod_speye (rsize, rsize, CHOLMOD_REAL, &c );
     
     penalty = gamma / celvol;
-    printf("Penalty factor = %2.2e\n", penalty);
+    LOG_INFO("Penalty factor = %2.2e", penalty);
     //    for (k=0;k<Dcm0->nzmax;k++) ((double*)Dcm0->x)[k] *= gamma*celvol;
     //    printf("-gamma*celvol = %2.2e %2.2e %2.2e %d %d\n", -gamma*celvol, model.dx*scaling.L, model.dz*scaling.L, model.Nx, model.Nz);
     
@@ -1667,7 +1669,7 @@ void KSPStokesDecoupled( SparseMat *matA,  SparseMat *matB,  SparseMat *matC,  S
     
     if (Lcml == NULL || Lcml->stype == 0)
     {
-        printf("Unsymmetric matrix\n");
+        LOG_INFO("Unsymmetric matrix");
         cholmod_free_sparse (&Lcml, &c) ;
         cholmod_finish (&c) ;
     }
@@ -1679,12 +1681,12 @@ void KSPStokesDecoupled( SparseMat *matA,  SparseMat *matB,  SparseMat *matC,  S
         t_omp                = (double)omp_get_wtime();
         Lfact                = cholmod_analyze( Lcml, &c ) ;
         pardi->Analyze       = 0;
-        printf("** Time for Cholesky analysis = %lf sec\n", (double)((double)omp_get_wtime() - t_omp));
+        LOG_TIME("Cholesky analysis = %lf sec", (double)((double)omp_get_wtime() - t_omp));
     }
     
     t_omp = (double)omp_get_wtime();
     cholmod_factorize( Lcml, Lfact, &c);
-    printf("** Time for Cholesky factorization = %lf sec\n", (double)((double)omp_get_wtime() - t_omp));
+    LOG_TIME("Cholesky factorization = %lf sec", (double)((double)omp_get_wtime() - t_omp));
     
     cholmod_dense *u, *p, *bu, *bp, *pdum, *udum,  *fu, *fp, *Y, *E;
     pdum = cholmod_allocate_dense( matC->neq, 1, matC->neq, CHOLMOD_REAL, &c );
@@ -1773,7 +1775,7 @@ void KSPStokesDecoupled( SparseMat *matA,  SparseMat *matB,  SparseMat *matC,  S
     
     // Evaluate reference norm
     rnorm0 = norm_r;
-    printf("       %1.4d KSP GCR Residual %1.12e %1.12e\n", 0, norm_r, norm_r/rnorm0);
+    LOG_INFO("       %1.4d KSP GCR Residual %1.12e %1.12e", 0, norm_r, norm_r/rnorm0);
     
     while ( success == 0 && its<max_it ) {
         
@@ -1860,7 +1862,7 @@ void KSPStokesDecoupled( SparseMat *matA,  SparseMat *matB,  SparseMat *matC,  S
         its++;
         ncycles++;
     }
-    printf("[%1.4d] %1.4d KSP GCR Residual %1.12e %1.12e\n", ncycles, its, norm_r, norm_r/rnorm0);
+    LOG_INFO("[%1.4d] %1.4d KSP GCR Residual %1.12e %1.12e", ncycles, its, norm_r, norm_r/rnorm0);
     MinMaxArray(fp->x, scaling.E, matC->neq, "divU" );
     
     // Extract ru from r = [ru; rp]

@@ -83,6 +83,12 @@ add_executable(CompressibilityTests CompressibilityTests.cpp)
 target_link_libraries(CompressibilityTests LINK_PUBLIC mdoodz GTest::gtest_main)
 add_test(CompressibilityTests CompressibilityTests)
 
+# Interp Equivalence Tests
+file(COPY ${PROJECT_SOURCE_DIR}/TESTS/InterpEquiv DESTINATION ${PROJECT_BINARY_DIR}/TESTS)
+add_executable(InterpEquivalenceTests InterpEquivalenceTests.cpp)
+target_link_libraries(InterpEquivalenceTests LINK_PUBLIC mdoodz GTest::gtest_main)
+add_test(InterpEquivalenceTests InterpEquivalenceTests)
+
 # Finite Strain Tests
 file(COPY ${PROJECT_SOURCE_DIR}/TESTS/FiniteStrain DESTINATION ${PROJECT_BINARY_DIR}/TESTS)
 add_executable(FiniteStrainTests FiniteStrainTests.cpp)
@@ -123,7 +129,7 @@ add_test(TopoBenchTests TopoBenchTests)
 file(COPY ${PROJECT_SOURCE_DIR}/TESTS/BlankenBench DESTINATION ${PROJECT_BINARY_DIR}/TESTS)
 add_executable(BlankenBenchTests BlankenBenchTests.cpp)
 target_link_libraries(BlankenBenchTests LINK_PUBLIC mdoodz GTest::gtest_main)
-if (OMP)
+if (OMP AND TARGET OpenMP::OpenMP_CXX)
     target_link_libraries(BlankenBenchTests LINK_PUBLIC OpenMP::OpenMP_CXX)
 endif()
 add_test(BlankenBenchTests BlankenBenchTests)

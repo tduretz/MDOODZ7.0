@@ -25,9 +25,10 @@
 #include "math.h"
 //---- M-Doodz header file
 #include "mdoodz-private.h"
+#include "mdoodz-log.h"
 
 #ifdef _VG_
-#define printf(...) printf("")
+#define LOG_INFO(...) LOG_INFO("")
 #endif
 
 /*--------------------------------------------------------------------------------------------------------------------*/
@@ -62,7 +63,7 @@ void SetTopoChainHorizontalCoords( surface *topo, markers *topo_chain, params mo
         topo_chain->z0[k]    = 0.0/scaling.L;
         topo_chain->phase[k] = 0;
     }
-    printf( "Topographic chain initialised with %d markers\n", topo_chain->Nb_part );
+    LOG_INFO("Topographic chain initialised with %d markers", topo_chain->Nb_part);
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
@@ -194,7 +195,7 @@ void RemeshMarkerChain( markers *topo_chain, surface *topo, params model, scale 
     int    in, minPartCell=4, NewInd, inc = 0;
     int    res = 2;
     
-    printf("Remesh surface markers, step %d \n", mode);
+    LOG_INFO("Remesh surface markers, step %d ", mode);
   
     // Here the marker chain is not remeshed but new marker points are added in deficient locations
     NumMarkCell = DoodzCalloc( res*Ncx, sizeof(int) );
@@ -231,7 +232,7 @@ void RemeshMarkerChain( markers *topo_chain, surface *topo, params model, scale 
         
         ii = 0;
         if (nout>0) recycle = 1;
-        printf("%d surface markers are out, so recycle is %d\n", nout, recycle);
+        LOG_INFO("%d surface markers are out, so recycle is %d", nout, recycle);
         
         for ( k=0; k<res*Ncx; k++ ) {
             
@@ -278,7 +279,7 @@ void RemeshMarkerChain( markers *topo_chain, surface *topo, params model, scale 
                     topo_chain->z0[NewInd] = topo->b0[in] + topo->a0[in] * topo_chain->x[NewInd];
                 }
                 else {
-                    printf("The max. number of topographic particles (currently %d) needs to be increased (number of particles %d)\n", topo_chain->Nb_part_max, topo_chain->Nb_part);
+                    LOG_INFO("The max. number of topographic particles (currently %d) needs to be increased (number of particles %d)", topo_chain->Nb_part_max, topo_chain->Nb_part);
                     exit(45);
                 }
             }
@@ -302,10 +303,10 @@ void RemeshMarkerChain( markers *topo_chain, surface *topo, params model, scale 
                 inc++;
             //}
         }
-        printf("Had to correct %d marker topographies for a mismax of %lf\n", inc, mismax);
+        LOG_INFO("Had to correct %d marker topographies for a mismax of %lf", inc, mismax);
     }
     
-    printf( "Surface remesher 1: old number of marker %d --> New number of markers %d \n", Nb_part0, topo_chain->Nb_part );
+    LOG_INFO("Surface remesher 1: old number of marker %d --> New number of markers %d ", Nb_part0, topo_chain->Nb_part);
     DoodzFree( NumMarkCell );
     
 }
@@ -435,7 +436,7 @@ void AllocateMarkerChain( surface *topo, markers* topo_chain, params model ) {
     topo->a0                = DoodzCalloc( (model.Nx-1),sizeof(DoodzFP) );
     topo->b0                = DoodzCalloc( (model.Nx-1),sizeof(DoodzFP) );
     topo->VertInd           = DoodzCalloc( model.Nx,sizeof(DoodzFP) );
-    printf( "Marker chain for topography was allocated, %d\n", topo_chain->Nb_part_max );
+    LOG_INFO("Marker chain for topography was allocated, %d", topo_chain->Nb_part_max);
     
 }
 
@@ -915,15 +916,15 @@ void DiffuseAlongTopography( grid *mesh, params model, scale scaling, double *ar
     double Wvalley    = model.surf_Winc;
     double Vinc       = -model.surf_Vinc, Vinc_num;
     
-    printf("****** Surface processes ******\n");
-    printf("Going to make %03d substeps for surface processes\n", nstep);
-    printf("Kero       = %2.2e m2.s-1\n", diff*(pow(scaling.L,2.0)/scaling.t));
+    LOG_INFO("****** Surface processes ******");
+    LOG_INFO("Going to make %03d substeps for surface processes", nstep);
+    LOG_INFO("Kero       = %2.2e m2.s-1", diff*(pow(scaling.L,2.0)/scaling.t));
 
     if ( model.surface_processes == 1 || model.surface_processes == 5 ) {
 
         if ( model.surface_processes == 5 ) {
-            printf("W valley   = %2.2e m\n", Wvalley*scaling.L);
-            printf("Vincision  = %2.2e m.s-1\n", Vinc*scaling.V);
+            LOG_INFO("W valley   = %2.2e m", Wvalley*scaling.L);
+            LOG_INFO("Vincision  = %2.2e m.s-1", Vinc*scaling.V);
         
             // Compute volume of cells in the valley region
             int ncell = 0;
@@ -936,10 +937,10 @@ void DiffuseAlongTopography( grid *mesh, params model, scale scaling, double *ar
             // Recompute erosion rate to satisfy mass
             Vinc_num = Wvalley*dt*Vinc / (ncell*dx*dt);
 
-            printf("We currently have %0d cell(s) within the valley region\n", ncell);
-            printf("Real surface of eroded material should be: %2.2e\n", Wvalley*dt*Vinc);
-            printf("Actual surface of eroded material is     : %2.2e\n", ncell*dx*dt*Vinc);
-            printf("Corrected surface of eroded material is  : %2.2e\n", ncell*dx*dt*Vinc_num);
+            LOG_INFO("We currently have %0d cell(s) within the valley region", ncell);
+            LOG_INFO("Real surface of eroded material should be: %2.2e", Wvalley*dt*Vinc);
+            LOG_INFO("Actual surface of eroded material is     : %2.2e", ncell*dx*dt*Vinc);
+            LOG_INFO("Corrected surface of eroded material is  : %2.2e", ncell*dx*dt*Vinc_num);
         }
         
         // Calculate timestep for diffusion sub-steps
@@ -970,12 +971,12 @@ void DiffuseAlongTopography( grid *mesh, params model, scale scaling, double *ar
             }
             time += dtr;
         }
-        printf("Do %d topographic diffusion steps - whole time: %2.2e s - final time: %2.2e s - explicit dt: %2.2e s - diffusivity: %2.2e m^2/s\n", nstep, diff_time*scaling.t, time*scaling.t, dt*scaling.t, diff*pow(scaling.L,2)/scaling.t );
+        LOG_INFO("Do %d topographic diffusion steps - whole time: %2.2e s - final time: %2.2e s - explicit dt: %2.2e s - diffusivity: %2.2e m^2/s", nstep, diff_time*scaling.t, time*scaling.t, dt*scaling.t, diff*pow(scaling.L,2)/scaling.t);
     }
     
     // Instantaneous basin filling
     if (model.surface_processes == 2) {
-         printf("Sed. rate  = %2.2e m/y with base level: %2.2e m\n", model.surf_sedirate*scaling.V*3600.0*365.0*24.0, base_level*scaling.L);
+         LOG_INFO("Sed. rate  = %2.2e m/y with base level: %2.2e m", model.surf_sedirate*scaling.V*3600.0*365.0*24.0, base_level*scaling.L);
         for (i=0; i<size; i++) {
             if (array[i]<base_level)
                 array[i]  = array_ini[i] + sedi_rate*model.dt;
@@ -1067,7 +1068,7 @@ void SurfaceVelocity( grid *mesh, params model, surface *topo, markers* topo_cha
 /*--------------------------------------------------------------------------------------------------------------------*/
 
 void KeepZeroMeanTopo(params *model, surface *topo, markers *topo_chain ) {
-    printf("Make zero mean topo\n");
+    LOG_INFO("Make zero mean topo");
     double mean_z = 0.0;
     for (int i=0; i<model->Nx; i++){
         mean_z += topo->height[i];

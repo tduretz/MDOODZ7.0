@@ -151,3 +151,30 @@ TEST_F(BoundaryCondition, NoSlip) {
   free(inputName);
   free(fileName);
 }
+
+
+// --- Interpolation mode tests ---
+
+TEST_F(BoundaryCondition, PeriodicSimpleShearInterpMode1) {
+  char *inputName;
+  asprintf(&inputName, "BoundaryCondition/PeriodicSimpleShearInterpMode1.txt");
+  RunMDOODZ(inputName, &setup);
+  char *fileName;
+  asprintf(&fileName, "PeriodicSimpleShearInterpMode1/Output%05d.gzip.h5", 1);
+  int steps = getStepsCount(fileName);
+  EXPECT_GE(steps, 0);
+  free(inputName);
+  free(fileName);
+}
+
+TEST_F(BoundaryCondition, PeriodicSimpleShearInterpMode2) {
+  char *inputName;
+  asprintf(&inputName, "BoundaryCondition/PeriodicSimpleShearInterpMode2.txt");
+  RunMDOODZ(inputName, &setup);
+  char *fileName;
+  asprintf(&fileName, "PeriodicSimpleShearInterpMode2/Output%05d.gzip.h5", 1);
+  int steps = getStepsCount(fileName);
+  EXPECT_GE(steps, 0);
+  free(inputName);
+  free(fileName);
+}

@@ -13,7 +13,8 @@ add_executable(visualtests
         ShearHeatingDuretz14.cpp
         Shrinking.cpp
         VEP.cpp
-        GSE.cpp)
+        GSE.cpp
+        Validation.cpp)
 
 target_link_libraries(visualtests LINK_PUBLIC mdoodz Eigen3::Eigen ${HDF5_LIBRARIES})
 
@@ -47,3 +48,15 @@ file(COPY ${PROJECT_SOURCE_DIR}/VISUAL_TESTS/VEP_REF DESTINATION ${PROJECT_SOURC
 configure_file("${PROJECT_SOURCE_DIR}/VISUAL_TESTS/Shrinking.txt" "${PROJECT_SOURCE_DIR}/visualtests-out/Shrinking.txt" COPYONLY)
 configure_file("${PROJECT_SOURCE_DIR}/VISUAL_TESTS/shrinking.gnu" "${PROJECT_SOURCE_DIR}/visualtests-out/shrinking.gnu" COPYONLY)
 file(COPY ${PROJECT_SOURCE_DIR}/VISUAL_TESTS/Shrinking_REF DESTINATION ${PROJECT_SOURCE_DIR}/visualtests-out/)
+
+# Validation visual tests
+configure_file("${PROJECT_SOURCE_DIR}/VISUAL_TESTS/ThermalAccuracy.gnu" "${PROJECT_SOURCE_DIR}/visualtests-out/ThermalAccuracy.gnu" COPYONLY)
+configure_file("${PROJECT_SOURCE_DIR}/VISUAL_TESTS/PCGConvergence.gnu" "${PROJECT_SOURCE_DIR}/visualtests-out/PCGConvergence.gnu" COPYONLY)
+configure_file("${PROJECT_SOURCE_DIR}/VISUAL_TESTS/InterpEquivalence.gnu" "${PROJECT_SOURCE_DIR}/visualtests-out/InterpEquivalence.gnu" COPYONLY)
+file(COPY ${PROJECT_SOURCE_DIR}/TESTS/Thermal/GaussianDiffusionL2.txt DESTINATION ${PROJECT_SOURCE_DIR}/visualtests-out/)
+file(COPY ${PROJECT_SOURCE_DIR}/TESTS/Thermal/GaussianDiffusionL2PCG.txt DESTINATION ${PROJECT_SOURCE_DIR}/visualtests-out/)
+file(COPY ${PROJECT_SOURCE_DIR}/TESTS/Thermal/SteadyStateGeotherm.txt DESTINATION ${PROJECT_SOURCE_DIR}/visualtests-out/)
+file(COPY ${PROJECT_SOURCE_DIR}/TESTS/Thermal/SteadyStateGeothermPCG.txt DESTINATION ${PROJECT_SOURCE_DIR}/visualtests-out/)
+file(COPY ${PROJECT_SOURCE_DIR}/TESTS/InterpEquiv/InterpEquiv_Mode0.txt DESTINATION ${PROJECT_SOURCE_DIR}/visualtests-out/)
+file(COPY ${PROJECT_SOURCE_DIR}/TESTS/InterpEquiv/InterpEquiv_Mode3.txt DESTINATION ${PROJECT_SOURCE_DIR}/visualtests-out/)
+configure_file("${PROJECT_SOURCE_DIR}/VISUAL_TESTS/PCGConvergence.txt" "${PROJECT_SOURCE_DIR}/visualtests-out/PCGConvergence.txt" COPYONLY)

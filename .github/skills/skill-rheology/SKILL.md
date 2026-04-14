@@ -98,12 +98,40 @@ The `stress_rotation` parameter controls how old deviatoric stresses are rotated
 
 ## Plasticity
 
-**Drucker-Prager yield criterion**:
+### Plasticity Mode Switch (`plast`)
+
+| `plast` | Model | Description |
+|---------|-------|-------------|
+| 0 | None | Plasticity disabled |
+| 1 | Drucker-Prager | Standard shear yield (default) |
+| 2 | Combined mode-I/mode-II | Popov et al. (2025) — shear + tensile yield |
+
+### Drucker-Prager Yield (`plast = 1`)
+
+**Yield criterion**:
 
 τ_II ≤ C·cos(φ) + P·sin(φ)
 
 If yield is exceeded, viscosity is reduced to enforce the yield stress:
 η_pl = τ_yield / (2·ε̇_II)
+
+### Combined Mode-I/Mode-II Yield (`plast = 2`)
+
+Introduced in commit 8aecb92 (PR #159, Popov et al. 2025). Combines a standard Drucker-Prager shear yield surface with a tensile (mode-I) cap.
+
+**Additional per-phase parameter**:
+
+| Parameter | Field | Description | Typical value |
+|-----------|-------|-------------|---------------|
+| Tensile strength | `T_st` | Mode-I tensile cutoff [Pa] | -10e6 (must be negative) |
+
+**Requirements**:
+- `eta_vp > 0` for all phases (numerical stability)
+- `T_st` set per phase (code default: -10e6 Pa)
+- Works with both Picard and Picard2Newton solvers
+- Optional: `tensile_line_search = 1` for additional solver stability in tensile-dominated problems
+
+**Example scenarios**: `Popov2025_Pureshear_VEVP`, `Popov2025_Tensile_VEVP`, `RiftingCombinedYield`
 
 ### Strain Softening
 
@@ -140,7 +168,16 @@ The viscoplastic overstress is then `OverS = η_vp · λ̇`.
 
 **Physical effect**: Higher `eta_vp` → wider shear bands, smoother localisation. Lower → thinner bands, more mesh-sensitive. Setting `eta_vp = 0` recovers ideal (rate-independent) plasticity.
 
-**Typical values**: 1e18–1e22 Pa·s for lithospheric-scale models. The LaTeX documentation suggests `eta_vp = 1e-1` (non-dimensional) to `2e20` Pa·s depending on the application.
+**Typical values by model scale**:
+
+| Application scale | Recommended `eta_vp` | Example scenario |
+|-------------------|----------------------|------------------|
+| Lithospheric rifting / collision | 2.5e20 Pa·s | `RiftingMelting`, `RiftingCombinedYield` |
+| Crustal shear zones | 1e19–1e20 Pa·s | `CrustalShearBandingAnisotropy` |
+| Localised magma chambers | 1e19 Pa·s | `PressurizedMagmaChamber`, `TCMagmaticSystem` |
+| General range | 1e18–1e22 Pa·s | — |
+
+> **Stability warning**: Using `eta_vp = 1e19` in lithospheric-scale rifting models (especially with `melting = 1`) can cause instability after ~100 time steps — negative viscosities and values ~1e60 in the output. Use `eta_vp ≥ 2.5e20` for lithospheric-scale models with melting.
 
 **Note**: `n_vp` (viscoplastic exponent) must be 1.0 in MD7 — power-law viscoplasticity (`n_vp > 1`) is not implemented and will `exit(1)`.
 

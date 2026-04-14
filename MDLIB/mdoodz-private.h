@@ -288,6 +288,35 @@ void            SetBCs_user(grid *, params *, scale, markers *, mat_prop *);
 //void eval_anal_Dani( double*, double*, double*, double*, double*, double*, double, double, int, double, double, double );
 void            ComputeLithostaticPressure(grid *, params *, double, scale, int);
 
+// Field descriptor for fused particle-to-grid interpolation (mode 3)
+typedef struct {
+    double *src;       // source: mat_prop array or particles.field (NULL for flag<0)
+    double *dst;       // destination grid array (e.g. mesh.Cp)
+    char   *BCtype;    // boundary condition type array (e.g. mesh.BCp.type)
+    int     flag;      // 0=mat_prop, 1=particle field, -1/-2/-3=anisotropy
+    int     avg;       // 0=arithmetic, 1=harmonic, 2=geometric
+    int     prop;      // 0=field interpolation (always 0 in fused batches)
+    int     stencil;   // 1 or 9 (must match all fields in batch)
+} P2MastahField;
+
+// Persistent interpolation buffer pool (modes 1, 2, 3)
+typedef struct {
+    double *WM[4];     // weight accumulator per centroid type [cent, vert, vx, vz]
+    double *BMWM[4];   // weighted-value accumulator per centroid type
+    int     sizes[4];  // grid size per centroid type (Nx_c * Nz_c)
+    double **Wm[4];    // thread-local weight arrays (mode 1 only; NULL for mode 2+)
+    double **BmWm[4];  // thread-local weighted-value arrays (mode 1 only; NULL for mode 2+)
+    int     nthreads;
+    int     interp_mode;
+    // Mode 3 fused interpolation fields
+    int     max_fused_fields;   // 16 (max fields per fused batch)
+    int     max_centroid_size;  // max(sizes[0..3])
+    double *BMWM_fused[16];    // per-field weighted-value accumulators for fused batches
+} InterpBufPool;
+
+InterpBufPool  *InterpBufPoolInit(grid *mesh, int interp_mode, int nthreads);
+void            InterpBufPoolFree(InterpBufPool *pool);
+
 //// Particles
 void            PutPartInBox(markers *, grid *, params, surface, scale);
 void            PartInit(markers *, params *);
@@ -299,7 +328,8 @@ void            Interp_Grid2P_strain(markers, DoodzFP *, grid *, double *, doubl
 //void FreeP2Mesh( grid* );
 void            Interp_Phase2VizGrid(markers, int *, grid *, char *, double *, double *, int, int, params, surface);
 void            ParticleInflowCheck(markers *, grid *, MdoodzInput*, surface, int, SetParticles_ff); // SetParticles_ff setParticles, MdoodzInput *instance
-void            P2Mastah(params *, markers, DoodzFP *, grid *, double *, char *, int, int, int, int, int);
+void            P2Mastah(params *, markers, DoodzFP *, grid *, double *, char *, int, int, int, int, int, InterpBufPool *);
+void            P2Mastah_Fused(params *, markers, grid *, int, int, P2MastahField *, int, InterpBufPool *);
 //
 //// Stokes
 //void ResidualCalc2( grid*OutputSparseMatrix *, params, int, double*, double*, double*, double*, double*, double*, int, scale );
@@ -393,9 +423,9 @@ void            Check_dt_for_advection(double *, double *, params *, scale, grid
 void            RogerGunther(markers *, params, grid, int, scale);
 void            isout(markers *, params);
 void            isoutPart(markers *, params *, int);
-void            CountPartCell(markers *, grid *, params, surface, surface, int, scale);
+void            CountPartCell(markers *, grid *, params, surface, surface, int, scale, InterpBufPool *);
 void            CountPartCell_Old(markers *, grid *, params, surface, int, scale);
-void            CountPartCell_OLD(markers *, grid *, params, surface, surface, int, scale);
+void            CountPartCell_OLD(markers *, grid *, params, surface, surface, int, scale, InterpBufPool *);
 void            CountPartCell2(markers *, grid *, params, surface, surface, int, scale);
 
 void            AccumulatedStrain(grid *, scale, params, markers *);
@@ -407,11 +437,12 @@ void            DeformationGradient(grid, scale, params, markers *);
 
 // Energy
 void            UpdateParticleEnergy(grid *, scale, params, markers *, mat_prop *);
-void            EnergyDirectSolve(grid *, params, double *, markers *, double, int, int, scale, int);
-cholmod_factor *FactorEnergyCHOLMOD(cholmod_common *, cs_di *, double *, int *, int *, int, int, int);
+void            EnergyDirectSolve(grid *, params, double *, markers *, double, int, int, scale, int, DirectSolver *);
+cholmod_factor *FactorEnergyCHOLMOD(cholmod_common *, cs_di *, double *, int *, int *, int, int, int, int, cholmod_factor *);
 cs_di          *TransposeA(cholmod_common *, double *, int *, int *, int, int);
 void            SolveEnergyCHOLMOD(cholmod_common *, cs_di *, cholmod_factor *, double *, double *, int, int, int);
-void            ThermalSteps(grid *, params, double *, markers *, double, scale);
+int             SolveThermalPCG(double *, int *, int *, double *, double *, int, int, double, int, int, const char *);
+void            ThermalSteps(grid *, params, double *, markers *, double, scale, DirectSolver *);
 void            SetThermalPert(grid *, params, scale);
 void            UpdateMaxPT(scale, params, markers *);
 

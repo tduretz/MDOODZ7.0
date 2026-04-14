@@ -4,6 +4,7 @@
 #include "stdio.h"
 #include "stdlib.h"
 #include "string.h"
+#include "mdoodz-log.h"
 
 /*--------------------------------------------------------------------------------------------------------------------*/
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
@@ -23,7 +24,7 @@ void BuildInitialTopography(BuildInitialTopography_ff buildInitialTopography, Md
       topo_chain->phase[k] = 0;
     }
   }
-  printf("Topographic chain initialised with %d markers\n",
+  LOG_INFO("Topographic chain initialised with %d markers",
          topo_chain->Nb_part);
 }
 
@@ -33,7 +34,7 @@ void BuildInitialTopography(BuildInitialTopography_ff buildInitialTopography, Md
 
 void ValidatePhase(int phaseId, int phasesCount) {
   if (phaseId > phasesCount) {
-    printf("Lazy bastard! Fix your particle phase ID! \n");
+    LOG_INFO("Lazy bastard! Fix your particle phase ID! ");
     exit(144);
   }
 }
@@ -141,13 +142,13 @@ void SetParticles(SetParticles_ff setParticles, MdoodzInput *instance, markers *
 
   FILE *file;
   if (instance->model.save_initial_markers == 1) {
-        printf("Write initial particle distribution\n");
+        LOG_INFO("Write initial particle distribution");
         if (fopen(instance->model.initial_markers_file, "wb")!=NULL){
             file = fopen(instance->model.initial_markers_file, "wb");
-            printf("Writing %d particles from file %s...\n", particles->Nb_part, instance->model.initial_markers_file);
+            LOG_INFO("Writing %d particles from file %s...", particles->Nb_part, instance->model.initial_markers_file);
         }
         else {
-            printf("Cannot open file %s, check if the file exists in the current location !\n Exiting", instance->model.initial_markers_file);
+            LOG_ERR("Cannot open file %s, check if the file exists in the current location !\n Exiting", instance->model.initial_markers_file);
             exit(1);
         }
         fwrite( particles->x,  sizeof(double), particles->Nb_part, file);
@@ -158,13 +159,13 @@ void SetParticles(SetParticles_ff setParticles, MdoodzInput *instance, markers *
 
     if (instance->model.load_initial_markers == 1) {
 
-        printf("Read initial particle distribution\n");
+        LOG_INFO("Read initial particle distribution");
         if (fopen(instance->model.initial_markers_file, "rb")!=NULL){
             file = fopen(instance->model.initial_markers_file, "rb");
-            printf("Loading %d particles from file %s...\n", particles->Nb_part, instance->model.initial_markers_file);
+            LOG_INFO("Loading %d particles from file %s...", particles->Nb_part, instance->model.initial_markers_file);
         }
         else {
-            printf("Cannot open file %s, check if the file exists in the current location !\n Exiting", instance->model.initial_markers_file);
+            LOG_ERR("Cannot open file %s, check if the file exists in the current location !\n Exiting", instance->model.initial_markers_file);
             exit(1);
         }
         fread( particles->x, sizeof(double), particles->Nb_part, file);
@@ -186,14 +187,14 @@ void SetParticles(SetParticles_ff setParticles, MdoodzInput *instance, markers *
 
 void ValidateInternalPoint(POSITION position, signed char bcType, Coordinates coordinates, char *setupFunctionName) {
   if (position == INTERNAL && bcType != -1) {
-    printf("Internal point MUST be set as -1 but attempted to be set as %d. Please double check your SetBCs.%s setup\n", bcType, setupFunctionName);
-    printf("Particle coordinates: X: %f, Z: %f \n", coordinates.x, coordinates.z);
-    printf("Make sure you haven't missed position NE, NW, SE, SW positions");
+    LOG_ERR("Internal point MUST be set as -1 but attempted to be set as %d. Please double check your SetBCs.%s setup", bcType, setupFunctionName);
+    LOG_ERR("Particle coordinates: X: %f, Z: %f ", coordinates.x, coordinates.z);
+    LOG_ERR("Make sure you haven't missed position NE, NW, SE, SW positions");
     exit(144);
   } else if (position != INTERNAL && bcType == -1) {
-    printf("Point is not internal but has a -1 type. Please double check your SetBCs.%s setup\n", setupFunctionName);
-    printf("Particle coordinates: X: %f, Z: %f \n", coordinates.x, coordinates.z);
-    printf("Make sure you haven't missed NE, NW, SE, SW positions");
+    LOG_ERR("Point is not internal but has a -1 type. Please double check your SetBCs.%s setup", setupFunctionName);
+    LOG_ERR("Particle coordinates: X: %f, Z: %f ", coordinates.x, coordinates.z);
+    LOG_ERR("Make sure you haven't missed NE, NW, SE, SW positions");
     exit(144);
   }
 }
@@ -269,7 +270,7 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh, surface *topo) 
     }
   }
 
-  printf("VxWestSum: %f, VxEastSum: %f\n", VxWestSum, VxEastSum);
+  LOG_INFO("VxWestSum: %f, VxEastSum: %f", VxWestSum, VxEastSum);
   const double tolerance = 0.000001;
 
   if (instance->model.balance_boundaries && (VxWestSum > tolerance || VxWestSum < -tolerance)) {
@@ -284,7 +285,7 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh, surface *topo) 
       }
     }
     if (zeroValuesCount == 0) {
-      printf("Western boundary velocity is imbalanced, but no zero velocity points are left for correction\n");
+      LOG_INFO("Western boundary velocity is imbalanced, but no zero velocity points are left for correction");
       exit(144);
     }
     double correctedVxWestSum = 0.0;
@@ -308,7 +309,7 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh, surface *topo) 
         nz++;
       }
     }
-    printf("correctedVxWestSum: %f\n", correctedVxWestSum);
+    LOG_INFO("correctedVxWestSum: %f", correctedVxWestSum);
 
     double *boundary = malloc((nz) * sizeof(double));
     for (int l = 1; l < nz + 1; l++) {
@@ -354,7 +355,7 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh, surface *topo) 
       }
     }
     if (zeroValuesCount == 0) {
-      printf("Eastern boundary velocity is imbalanced, but no zero velocity points are left for correction\n");
+      LOG_INFO("Eastern boundary velocity is imbalanced, but no zero velocity points are left for correction");
       exit(144);
     }
     double correctedVxWestSum = 0.0;
@@ -378,7 +379,7 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh, surface *topo) 
         nz++;
       }
     }
-    printf("correctedVxEastSum: %f\n", correctedVxWestSum);
+    LOG_INFO("correctedVxEastSum: %f", correctedVxWestSum);
 
     double *boundary = malloc((nz) * sizeof(double));
     for (int l = 1; l < nz + 1; l++) {
@@ -489,8 +490,8 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh, surface *topo) 
     }
   }
 
-  printf("VxWestSum*dx: %f, VxEastSum*dx: %f, VzEastSum*dz: %f: \n", VxWestSum*mesh->dz, VxEastSum*mesh->dz, VzSouthSum*mesh->dx);
-  printf("Total West+East+South sum: %f\n", fabs(VxWestSum*mesh->dz) + fabs(VxEastSum*mesh->dz)  - fabs(VzSouthSum*mesh->dx) );
+  LOG_INFO("VxWestSum*dx: %f, VxEastSum*dx: %f, VzEastSum*dz: %f: ", VxWestSum*mesh->dz, VxEastSum*mesh->dz, VzSouthSum*mesh->dx);
+  LOG_INFO("Total West+East+South sum: %f", fabs(VxWestSum*mesh->dz) + fabs(VxEastSum*mesh->dz)  - fabs(VzSouthSum*mesh->dx));
 
   if (instance->model.balance_boundaries && (VzSouthSum > tolerance || VzSouthSum < -tolerance)) {
     int zeroValuesCount = 0;
@@ -504,7 +505,7 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh, surface *topo) 
       }
     }
     if (zeroValuesCount == 0) {
-      printf("Southern boundary velocity is imbalanced, but no zero velocity points are left for correction\n");
+      LOG_INFO("Southern boundary velocity is imbalanced, but no zero velocity points are left for correction");
       exit(144);
     }
     double correctedVzSouthSum = 0.0;
@@ -518,7 +519,7 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh, surface *topo) 
       }
       correctedVzSouthSum += mesh->BCv.val[c];
     }
-    printf("correctedVzSouthSum: %f\n", correctedVzSouthSum);
+    LOG_INFO("correctedVzSouthSum: %f", correctedVzSouthSum);
 
     double *boundary = malloc((mesh->Nx) * sizeof(double));
     for (int k = 1; k < mesh->Nx + 1; k++) {
@@ -773,7 +774,7 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh, surface *topo) 
 
   //--------------- NEW
 
-  printf("SetBCs: Boundary conditions were set up\n");
+  LOG_INFO("SetBCs: Boundary conditions were set up");
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
@@ -880,19 +881,19 @@ void ValidateSetup(MdoodzSetup *setup, MdoodzInput *instance) {
   }
 
   if (warningsCount) {
-    printf("\n\n******************  YOU HAVE %d SETUP WARNINGS  ******************\n", warningsCount);
+    LOG_INFO("\n\n******************  YOU HAVE %d SETUP WARNINGS  ******************", warningsCount);
     for (int i = 0; i < warningsCount; i++) {
-      printf("%d) %s\n", i + 1, warnings[i]);
+      LOG_INFO("%d) %s", i + 1, warnings[i]);
     }
-    printf("******************************************************************\n");
+    LOG_INFO("******************************************************************");
   }
 
   if (errorsCount) {
-    printf("\n\n*******************  YOU HAVE %d SETUP ERRORS  ********************\n", errorsCount);
+    LOG_INFO("\n\n*******************  YOU HAVE %d SETUP ERRORS  ********************", errorsCount);
     for (int i = 0; i < errorsCount; i++) {
-      printf("%d) %s\n", i + 1, errors[i]);
+      LOG_INFO("%d) %s", i + 1, errors[i]);
     }
-    printf("******************************************************************\n");
+    LOG_INFO("******************************************************************");
     exit(144);
   }
 }
@@ -1076,7 +1077,7 @@ char* DefaultTextFilename( char filename[] ) {
   }
 
   strcat(basename, ".txt");
-  printf("%s\n", basename);
+  LOG_INFO("%s", basename);
 
   return basename;
 }

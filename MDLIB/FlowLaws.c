@@ -26,6 +26,8 @@
 #include "mdoodz-private.h"
 #include "ctype.h"
 
+#include "mdoodz-log.h"
+
 #ifdef _OMP_
 #include "omp.h"
 #else
@@ -34,7 +36,7 @@
 #endif
 
 #ifdef _VG_
-#define printf(...) printf("")
+#define LOG_INFO(...) LOG_INFO("")
 #endif
 
 /*--------------------------------------------------------------------------------------------------------------------*/
@@ -48,13 +50,13 @@ void ReadDataPowerLaw( mat_prop* mat, params* model, int k, int number, scale* s
     switch ( abs(number) ) {
             
         case 0 :
-            printf ("should not be here\n");
+            LOG_INFO("should not be here");
             success      = 0;
             break;
             
         /****************** SPECIAL CASE: user-defined power law flow law ******************/
         case 1 :
-            printf("'Homemade' power law flow of the form: eta = eta0 * exp(-Q/n/R/T) * Eii^(1/n - 1):\n" );
+            LOG_INFO("'Homemade' power law flow of the form: eta = eta0 * exp(-Q/n/R/T) * Eii^(1/n - 1):");
             mat->tpwl[k] = 0.0;
             mat->npwl[k] = mat->npwl[k];
             mat->mpwl[k] = 0.0;
@@ -68,7 +70,7 @@ void ReadDataPowerLaw( mat_prop* mat, params* model, int k, int number, scale* s
             break;
 
         case 2 :
-            printf("'Homemade' power law flow with constrained reference stress (tau0)\n" );
+            LOG_INFO("'Homemade' power law flow with constrained reference stress (tau0)");
             mat->tpwl[k] = 0.0;
             mat->npwl[k] = mat->npwl[k];
             mat->mpwl[k] = 0.0;
@@ -76,14 +78,14 @@ void ReadDataPowerLaw( mat_prop* mat, params* model, int k, int number, scale* s
             mat->Qpwl[k] = mat->Qpwl[k];
             mat->Vpwl[k] = 0.0;
             mat->Apwl[k] = pow( pow(2.0, mat->npwl[k]) * mat->eps0[k]/pow(mat->tau0[k], mat->npwl[k]), -mat->npwl[k]);//pow(mat->eta0[k], -mat->npwl[k]);
-            printf("pre exp = %2.2e\n", mat->Apwl[k]);
+            LOG_INFO("pre exp = %2.2e", mat->Apwl[k]);
             mat->fpwl[k] = 0.0;
             mat->apwl[k] = 0.0;
             success      = 1;
             break;
 
         case 3 :
-            printf("'Homemade' power law flow of the form: eta = A * exp(-Q/n/R/T) * Eii^(1/n - 1):\n" );
+            LOG_INFO("'Homemade' power law flow of the form: eta = A * exp(-Q/n/R/T) * Eii^(1/n - 1):");
             mat->tpwl[k] = 0.0;
             mat->npwl[k] = mat->npwl[k];
             mat->mpwl[k] = 0.0;
@@ -99,7 +101,7 @@ void ReadDataPowerLaw( mat_prop* mat, params* model, int k, int number, scale* s
         /******************************** Crust flow laws *********************************/
                 
         case 10:
-            printf("Westerly Granite (dry) - Hansen & Carter (1983):\n" );
+            LOG_INFO("Westerly Granite (dry) - Hansen & Carter (1983):");
             mat->tpwl[k] = 1;
             mat->npwl[k] = 3.3;
             mat->mpwl[k] = 0.0;
@@ -113,7 +115,7 @@ void ReadDataPowerLaw( mat_prop* mat, params* model, int k, int number, scale* s
             break;
             
         case 11:
-            printf("Maryland Diabase - Mackwell et al. (1998):\n" );
+            LOG_INFO("Maryland Diabase - Mackwell et al. (1998):");
             mat->tpwl[k] = 1;
             mat->npwl[k] = 4.7;
             mat->mpwl[k] = 0.0;
@@ -127,7 +129,7 @@ void ReadDataPowerLaw( mat_prop* mat, params* model, int k, int number, scale* s
             break;
 
         case 12:
-            printf("Maryland Diabase - Carter & Tsenn (1987):\n" );
+            LOG_INFO("Maryland Diabase - Carter & Tsenn (1987):");
             mat->tpwl[k] = 1;
             mat->npwl[k] = 3.0;
             mat->mpwl[k] = 0.0;
@@ -141,7 +143,7 @@ void ReadDataPowerLaw( mat_prop* mat, params* model, int k, int number, scale* s
             break;
             
         case 13:
-            printf("Wet Quartzite - Ranalli (1995):\n" );
+            LOG_INFO("Wet Quartzite - Ranalli (1995):");
             mat->tpwl[k] = 1;
             mat->npwl[k] = 2.3;
             mat->mpwl[k] = 0.0;
@@ -155,7 +157,7 @@ void ReadDataPowerLaw( mat_prop* mat, params* model, int k, int number, scale* s
             break;
             
         case 14:
-            printf("Rocksalt - Ranalli (1995):\n" );
+            LOG_INFO("Rocksalt - Ranalli (1995):");
             mat->tpwl[k] = 1;
             mat->npwl[k] = 5.3;
             mat->mpwl[k] = 0.0;
@@ -169,7 +171,7 @@ void ReadDataPowerLaw( mat_prop* mat, params* model, int k, int number, scale* s
             break;
             
         case 15:
-            printf("Calcite - Renner et al. (2002):\n" );
+            LOG_INFO("Calcite - Renner et al. (2002):");
             mat->tpwl[k] = 1;
             mat->npwl[k] = 4.7;
             mat->mpwl[k] = 0.0;
@@ -183,7 +185,7 @@ void ReadDataPowerLaw( mat_prop* mat, params* model, int k, int number, scale* s
             break;
             
         case 16:
-            printf("Felsic granulite - Ranalli (1995):\n" );
+            LOG_INFO("Felsic granulite - Ranalli (1995):");
             mat->tpwl[k] = 1;
             mat->npwl[k] = 3.1;
             mat->mpwl[k] = 0.0;
@@ -197,7 +199,7 @@ void ReadDataPowerLaw( mat_prop* mat, params* model, int k, int number, scale* s
             break;
             
         case 17:
-            printf("Mafic granulite - Ranalli (1995):\n" );
+            LOG_INFO("Mafic granulite - Ranalli (1995):");
             mat->tpwl[k] = 1;
             mat->npwl[k] = 4.2;
             mat->mpwl[k] = 0.0;
@@ -211,7 +213,7 @@ void ReadDataPowerLaw( mat_prop* mat, params* model, int k, int number, scale* s
             break;
             
         case 18:
-            printf("Calcite - Schmid et al. (1977):\n" );
+            LOG_INFO("Calcite - Schmid et al. (1977):");
             mat->tpwl[k] = 1;
             mat->npwl[k] = 4.7;
             mat->mpwl[k] = 0.0;
@@ -225,7 +227,7 @@ void ReadDataPowerLaw( mat_prop* mat, params* model, int k, int number, scale* s
             break;
             
         case 19:
-            printf("Anorthite 100 - 0.007 H20 Wt%% - Rybacki & Dresen (2000, 2004):\n" );
+            LOG_INFO("Anorthite 100 - 0.007 H20 Wt%% - Rybacki & Dresen (2000, 2004):");
             mat->tpwl[k] = 1;
             mat->npwl[k] = 3.0;
             mat->mpwl[k] = 0.0;
@@ -239,7 +241,7 @@ void ReadDataPowerLaw( mat_prop* mat, params* model, int k, int number, scale* s
             break;
          
         case 20:
-            printf("Garnet - Ji and Martignole (1994):\n" );
+            LOG_INFO("Garnet - Ji and Martignole (1994):");
             mat->tpwl[k] = 1;
             mat->npwl[k] = 2.22;
             mat->mpwl[k] = 0.0;
@@ -253,7 +255,7 @@ void ReadDataPowerLaw( mat_prop* mat, params* model, int k, int number, scale* s
             break;
 
         case 21:
-            printf("Omphacite - Zhang et al. (2006):\n" );
+            LOG_INFO("Omphacite - Zhang et al. (2006):");
             mat->tpwl[k] = 1;
             mat->npwl[k] = 3.5;
             mat->mpwl[k] = 0.0;
@@ -267,7 +269,7 @@ void ReadDataPowerLaw( mat_prop* mat, params* model, int k, int number, scale* s
             break;
             
         case 22:
-            printf("Qtz - Koch et al. (1989):\n" );
+            LOG_INFO("Qtz - Koch et al. (1989):");
             mat->tpwl[k] = 1;
             mat->npwl[k] = 2.72;
             mat->mpwl[k] = 0.0;
@@ -281,7 +283,7 @@ void ReadDataPowerLaw( mat_prop* mat, params* model, int k, int number, scale* s
             break;
             
         case 23:
-            printf("Fsp - Shelton and Tullis (1981):\n" );
+            LOG_INFO("Fsp - Shelton and Tullis (1981):");
             mat->tpwl[k] = 1;
             mat->npwl[k] = 3.2;
             mat->mpwl[k] = 0.0;
@@ -295,7 +297,7 @@ void ReadDataPowerLaw( mat_prop* mat, params* model, int k, int number, scale* s
             break;
             
         case 24:
-            printf("Mica - Kronenberg et al. (1990):\n" );
+            LOG_INFO("Mica - Kronenberg et al. (1990):");
             mat->tpwl[k] = 1;
             mat->npwl[k] = 18.0;
             mat->mpwl[k] = 0.0;
@@ -309,7 +311,7 @@ void ReadDataPowerLaw( mat_prop* mat, params* model, int k, int number, scale* s
             break;
             
         case 25:
-            printf("Plagioclase - Shelton (1981) - Ph.D. Thesis:\n" );
+            LOG_INFO("Plagioclase - Shelton (1981) - Ph.D. Thesis:");
             mat->tpwl[k] = 1;
             mat->npwl[k] = 4.0;
             mat->mpwl[k] = 0.0;
@@ -323,7 +325,7 @@ void ReadDataPowerLaw( mat_prop* mat, params* model, int k, int number, scale* s
             break;
         
         case 26:
-            printf("Wet Quartzite - Burov (2011), Brace and Kohlstedt (1980), Kirby and Kronenberg (1987), Kohlstedt et al. (1995):\n" );
+            LOG_INFO("Wet Quartzite - Burov (2011), Brace and Kohlstedt (1980), Kirby and Kronenberg (1987), Kohlstedt et al. (1995):");
             mat->tpwl[k] = 1; //1           // NEED TO CHECKED!!!
             mat->npwl[k] = 2.4;
             mat->mpwl[k] = 0.0;
@@ -337,7 +339,7 @@ void ReadDataPowerLaw( mat_prop* mat, params* model, int k, int number, scale* s
             break;
             
         case 27:
-            printf("Dry Quartz - Ranalli et al. (1995, 1997), Ranalli (2003):\n" );
+            LOG_INFO("Dry Quartz - Ranalli et al. (1995, 1997), Ranalli (2003):");
             mat->tpwl[k] = 1;
             mat->npwl[k] = 2.4;
             mat->mpwl[k] = 0.0;
@@ -352,7 +354,7 @@ void ReadDataPowerLaw( mat_prop* mat, params* model, int k, int number, scale* s
             
             
         case 28:
-            printf("Qtz - Hirth et al. (2001) - uniaxial:\n" );
+            LOG_INFO("Qtz - Hirth et al. (2001) - uniaxial:");
             mat->tpwl[k] = 1;
             mat->npwl[k] = 4.0;
             mat->mpwl[k] = 0.0;
@@ -366,7 +368,7 @@ void ReadDataPowerLaw( mat_prop* mat, params* model, int k, int number, scale* s
             break;
             
         case 29 :
-            printf("Basalt - Hacker & Chritie (1990):\n" );
+            LOG_INFO("Basalt - Hacker & Chritie (1990):");
             mat->tpwl[k] = 0.0;
             mat->npwl[k] = 3.7;
             mat->mpwl[k] = 0.0;
@@ -381,7 +383,7 @@ void ReadDataPowerLaw( mat_prop* mat, params* model, int k, int number, scale* s
             
         // Granulite Eclogite Setups:
         case 30:
-            printf("Anorthite dry - Rybacki and Dresen (2000):\n" );
+            LOG_INFO("Anorthite dry - Rybacki and Dresen (2000):");
             mat->tpwl[k] = 1;
             mat->npwl[k] = 3.0;
             mat->mpwl[k] = 0.0;
@@ -395,7 +397,7 @@ void ReadDataPowerLaw( mat_prop* mat, params* model, int k, int number, scale* s
             break;
             
         case 31:
-            printf("DRY CPX - Bystricky & Mackwell, 2001:\n" );
+            LOG_INFO("DRY CPX - Bystricky & Mackwell, 2001:");
             mat->tpwl[k] = 1;
             mat->npwl[k] = 4.7;
             mat->mpwl[k] = 0.0;
@@ -409,7 +411,7 @@ void ReadDataPowerLaw( mat_prop* mat, params* model, int k, int number, scale* s
             break;
             
         case 32:
-            printf("Anorthite 60 - Rybacki & Dresen (2004):\n" ); // added by Pauline
+            LOG_INFO("Anorthite 60 - Rybacki & Dresen (2004):"); // added by Pauline
             mat->tpwl[k] = 1;
             mat->npwl[k] = 3.0;
             mat->mpwl[k] = 0.0;
@@ -423,7 +425,7 @@ void ReadDataPowerLaw( mat_prop* mat, params* model, int k, int number, scale* s
             break;
         
         case 33:
-            printf("Garnet - Ji and Martignole (1994):\n" ); // Activation volume set to 10 for incompressible (like in Mei 2010)
+            LOG_INFO("Garnet - Ji and Martignole (1994):"); // Activation volume set to 10 for incompressible (like in Mei 2010)
             mat->tpwl[k] = 1;
             mat->npwl[k] = 2.22;
             mat->mpwl[k] = 0.0;
@@ -437,7 +439,7 @@ void ReadDataPowerLaw( mat_prop* mat, params* model, int k, int number, scale* s
             break;
         
 	    case 34:
-            printf("Westerly Granite + melt weakening (dry) - Hansen & Carter (1983):\n" );
+            LOG_INFO("Westerly Granite + melt weakening (dry) - Hansen & Carter (1983):");
             mat->tpwl[k] = 1;
             mat->npwl[k] = 3.3;
             mat->mpwl[k] = 0.0;
@@ -453,7 +455,7 @@ void ReadDataPowerLaw( mat_prop* mat, params* model, int k, int number, scale* s
         /******************************** Mantle flow laws ********************************/
             
         case 40:
-            printf("Olivine Dry Dislocation creep - Hirth & Kohlstedt (2003):\n" );
+            LOG_INFO("Olivine Dry Dislocation creep - Hirth & Kohlstedt (2003):");
             mat->tpwl[k] = 1;
             mat->npwl[k] = 3.5;
             mat->mpwl[k] = 0.0;
@@ -468,7 +470,7 @@ void ReadDataPowerLaw( mat_prop* mat, params* model, int k, int number, scale* s
             break;
             
         case 41:
-            printf("Olivine Wet Dislocation creep - Hirth & Kohlstedt (2003):\n" );
+            LOG_INFO("Olivine Wet Dislocation creep - Hirth & Kohlstedt (2003):");
             mat->tpwl[k] = 1;
             mat->npwl[k] = 3.5;
             mat->mpwl[k] = 0.0;
@@ -482,7 +484,7 @@ void ReadDataPowerLaw( mat_prop* mat, params* model, int k, int number, scale* s
             break;
             
         case 42:
-            printf("Dry Olivine average from Ranalli (1995) - Kirby & Kronenberg (1987):\n" );
+            LOG_INFO("Dry Olivine average from Ranalli (1995) - Kirby & Kronenberg (1987):");
             mat->tpwl[k] = 1;
             mat->npwl[k] = 3.5;
             mat->mpwl[k] = 0.0;
@@ -496,7 +498,7 @@ void ReadDataPowerLaw( mat_prop* mat, params* model, int k, int number, scale* s
             break;
             
         case 43:
-            printf("Wet Olivine average from Ranalli (1995) - Kirby & Kronenberg (1987):\n" );
+            LOG_INFO("Wet Olivine average from Ranalli (1995) - Kirby & Kronenberg (1987):");
             mat->tpwl[k] = 1;
             mat->npwl[k] = 4.0;
             mat->mpwl[k] = 0.0;
@@ -510,7 +512,7 @@ void ReadDataPowerLaw( mat_prop* mat, params* model, int k, int number, scale* s
             break;
             
         case 44:
-            printf("Olivine - Chopra and Paterson 1984 :\n" );
+            LOG_INFO("Olivine - Chopra and Paterson 1984 :");
             mat->tpwl[k] = 1;
             mat->npwl[k] = 3.0;
             mat->mpwl[k] = 0.0;
@@ -524,7 +526,7 @@ void ReadDataPowerLaw( mat_prop* mat, params* model, int k, int number, scale* s
             break;
             
         case 45:
-            printf("Olivine Dry Dislocation creep - Hirth & Kohlstedt (2003):\n" ); // added by Pauline
+            LOG_INFO("Olivine Dry Dislocation creep - Hirth & Kohlstedt (2003):"); // added by Pauline
             mat->tpwl[k] = 1;
             mat->npwl[k] = 3.5;
             mat->mpwl[k] = 0.0;
@@ -538,7 +540,7 @@ void ReadDataPowerLaw( mat_prop* mat, params* model, int k, int number, scale* s
             break;
             
         case 46:
-            printf("Serpentine 1 GPa - Hilairet et al. (2007):\n" ); // added by Pauline
+            LOG_INFO("Serpentine 1 GPa - Hilairet et al. (2007):"); // added by Pauline
             mat->tpwl[k] = 1;
             mat->npwl[k] = 5.8;
             mat->mpwl[k] = 0.0;
@@ -575,10 +577,10 @@ void ReadDataPowerLaw( mat_prop* mat, params* model, int k, int number, scale* s
     // Cancel correction factor
     if (number<0) mat->Fpwl[k]   = 1.0;
     
-    if ( success==0 ) { printf("Error: Non existing Power Law flow law number\n"); exit(12);}
+    if ( success==0 ) { LOG_ERR("Error: Non existing Power Law flow law number"); exit(12);}
     
     // Print to screen 
-    printf("t = %1.0lf  n = %1.1lf  m = %1.1lf  r = %1.1lf  Q = %2.2e J  V = %2.2e m^3  A = %2.2e Pa^-n/s  f = %2.2e Pa  a = %1.1lf  F = %1.2lf\n", mat->tpwl[k], mat->npwl[k], mat->mpwl[k], mat->rpwl[k], mat->Qpwl[k]*scaling->J, mat->Vpwl[k]*pow(scaling->L,3.0), mat->Apwl[k]*(pow(scaling->S, -mat->npwl[k]) * pow(scaling->L, mat->mpwl[k]) / scaling->t), mat->fpwl[k]*scaling->S, mat->apwl[k], mat->Fpwl[k]);
+    LOG_INFO("t = %1.0lf  n = %1.1lf  m = %1.1lf  r = %1.1lf  Q = %2.2e J  V = %2.2e m^3  A = %2.2e Pa^-n/s  f = %2.2e Pa  a = %1.1lf  F = %1.2lf", mat->tpwl[k], mat->npwl[k], mat->mpwl[k], mat->rpwl[k], mat->Qpwl[k]*scaling->J, mat->Vpwl[k]*pow(scaling->L,3.0), mat->Apwl[k]*(pow(scaling->S, -mat->npwl[k]) * pow(scaling->L, mat->mpwl[k]) / scaling->t), mat->fpwl[k]*scaling->S, mat->apwl[k], mat->Fpwl[k]);
     
 }
 
@@ -593,19 +595,19 @@ void ReadDataLinear( mat_prop* mat, params* model, int k, int number, scale* sca
     switch ( abs(number) ) {
             
         case 0 :
-            printf("should not be here\n");
+            LOG_INFO("should not be here");
             success      = 0;
             break;
 
         /****************** SPECIAL CASE: user-defined power law flow law ******************/
         case 1 :
-            printf("Please, set the parameters for this user-defined flow law in MDLIB/FlowLaws.c\n");
+            LOG_INFO("Please, set the parameters for this user-defined flow law in MDLIB/FlowLaws.c");
             success      = 0;
             break;
         /******************************** Crust flow laws *********************************/
                
         case 15 :
-            printf("Calcite Diffusion creep - Herwegh (2003):\n");
+            LOG_INFO("Calcite Diffusion creep - Herwegh (2003):");
             mat->tlin[k] = 1.0;
             mat->nlin[k] = 1.1;
             mat->mlin[k] = 3.3;
@@ -619,7 +621,7 @@ void ReadDataLinear( mat_prop* mat, params* model, int k, int number, scale* sca
             break;
             
         case 19 :
-            printf("Anorthite 100 - 0.007 H20 Wt%% - Rybacki & Dresen (2000, 2004):\n");
+            LOG_INFO("Anorthite 100 - 0.007 H20 Wt%% - Rybacki & Dresen (2000, 2004):");
             mat->tlin[k] = 1.0;
             mat->nlin[k] = 1.0;
             mat->mlin[k] = 3.0;
@@ -633,7 +635,7 @@ void ReadDataLinear( mat_prop* mat, params* model, int k, int number, scale* sca
             break;
             
         case 25 :
-            printf("Plagioclase Diffusion creep - Rybacki and Dresen (2000):\n");
+            LOG_INFO("Plagioclase Diffusion creep - Rybacki and Dresen (2000):");
             mat->tlin[k] = 1.0;
             mat->nlin[k] = 1.0;
             mat->mlin[k] = 3.0;
@@ -647,7 +649,7 @@ void ReadDataLinear( mat_prop* mat, params* model, int k, int number, scale* sca
             break;
             
         case 40 :
-            printf("Olivine Dry Diffusion creep - Hirth & Kohlstedt (2003):\n");
+            LOG_INFO("Olivine Dry Diffusion creep - Hirth & Kohlstedt (2003):");
             mat->tlin[k] = 1.0;
             mat->nlin[k] = 1.0;
             mat->mlin[k] = 3.0;
@@ -662,7 +664,7 @@ void ReadDataLinear( mat_prop* mat, params* model, int k, int number, scale* sca
             break;
             
         case 41 :
-            printf("Olivine Wet Diffusion creep - Hirth & Kohlstedt (2003):\n");
+            LOG_INFO("Olivine Wet Diffusion creep - Hirth & Kohlstedt (2003):");
             mat->tlin[k] = 1;
             mat->nlin[k] = 1.0;
             mat->mlin[k] = 3.0;
@@ -695,10 +697,10 @@ void ReadDataLinear( mat_prop* mat, params* model, int k, int number, scale* sca
     // Cancel correction factor
     if (number<0) mat->Flin[k]   = 1.0;
     
-    if ( success==0 ) { printf("Error: Non existing Linear flow law number\n"); exit(12);}
+    if ( success==0 ) { LOG_ERR("Error: Non existing Linear flow law number"); exit(12);}
     
     // Print to screen
-    printf("t = %1.0lf  n = %1.1lf  m = %1.1lf  r = %1.1lf  Q = %2.2e J  V = %2.2e m^3  A = %2.2e Pa^-n/s  f = %2.2e Pa  a = %1.1lf  F = %1.2lf\n", mat->tlin[k], mat->nlin[k], mat->mlin[k], mat->rlin[k], mat->Qlin[k]*scaling->J, mat->Vlin[k]*pow(scaling->L,3), mat->Alin[k]*(pow(scaling->S, -mat->nlin[k]) * pow(scaling->L, mat->mlin[k]) / scaling->t), mat->flin[k]*scaling->S, mat->alin[k], mat->Flin[k]);
+    LOG_INFO("t = %1.0lf  n = %1.1lf  m = %1.1lf  r = %1.1lf  Q = %2.2e J  V = %2.2e m^3  A = %2.2e Pa^-n/s  f = %2.2e Pa  a = %1.1lf  F = %1.2lf", mat->tlin[k], mat->nlin[k], mat->mlin[k], mat->rlin[k], mat->Qlin[k]*scaling->J, mat->Vlin[k]*pow(scaling->L,3), mat->Alin[k]*(pow(scaling->S, -mat->nlin[k]) * pow(scaling->L, mat->mlin[k]) / scaling->t), mat->flin[k]*scaling->S, mat->alin[k], mat->Flin[k]);
     
 }
 
@@ -713,12 +715,12 @@ void ReadDataGBS( mat_prop* mat, params* model, int k, int number, scale* scalin
     switch ( abs(number) ) {
             
         case 0 :
-            printf ("should not be here\n");
+            LOG_INFO("should not be here");
             success      = 0;
             break;
             
         case 40 :
-            printf("Olivine Low T GBS T<1250°C - Hirth & Kohlstedt (2003):\n");
+            LOG_INFO("Olivine Low T GBS T<1250°C - Hirth & Kohlstedt (2003):");
             mat->tgbs[k] = 1;
             mat->ngbs[k] = 3.5;
             mat->mgbs[k] = 2.0;
@@ -732,7 +734,7 @@ void ReadDataGBS( mat_prop* mat, params* model, int k, int number, scale* scalin
             break;
             
         case 41 :
-            printf("Olivine Low T GBS T>1250°C - Hirth & Kohlstedt (2003):\n");
+            LOG_INFO("Olivine Low T GBS T>1250°C - Hirth & Kohlstedt (2003):");
             mat->tgbs[k] = 1;
             mat->ngbs[k] = 3.5;
             mat->mgbs[k] = 2.0;
@@ -765,10 +767,10 @@ void ReadDataGBS( mat_prop* mat, params* model, int k, int number, scale* scalin
     // Cancel correction factor
     if (number<0) mat->Fgbs[k]   = 1.0;
     
-    if ( success==0 ) { printf("Error: Non existing GBS flow law number\n"); exit(12);}
+    if ( success==0 ) { LOG_ERR("Error: Non existing GBS flow law number"); exit(12);}
     
     // Print to screen
-    printf("t = %1.0lf  n = %1.1lf  m = %1.1lf  r = %1.1lf  Q = %2.2e J  V = %2.2e m^3  A = %2.2e Pa^-n/s  f = %2.2e Pa  a = %1.1lf  F = %1.2f\n", mat->tgbs[k], mat->ngbs[k], mat->mgbs[k], mat->rgbs[k], mat->Qgbs[k]*scaling->J, mat->Vgbs[k]*pow(scaling->L,3.0), mat->Agbs[k]*(pow(scaling->S, -mat->ngbs[k]) * pow(scaling->L, mat->mgbs[k]) / scaling->t), mat->fgbs[k]*scaling->S, mat->agbs[k], mat->Fgbs[k] );
+    LOG_INFO("t = %1.0lf  n = %1.1lf  m = %1.1lf  r = %1.1lf  Q = %2.2e J  V = %2.2e m^3  A = %2.2e Pa^-n/s  f = %2.2e Pa  a = %1.1lf  F = %1.2f", mat->tgbs[k], mat->ngbs[k], mat->mgbs[k], mat->rgbs[k], mat->Qgbs[k]*scaling->J, mat->Vgbs[k]*pow(scaling->L,3.0), mat->Agbs[k]*(pow(scaling->S, -mat->ngbs[k]) * pow(scaling->L, mat->mgbs[k]) / scaling->t), mat->fgbs[k]*scaling->S, mat->agbs[k], mat->Fgbs[k]);
     
 }
 
@@ -784,12 +786,12 @@ void ReadDataExponential( mat_prop* mat, params* model, int k, int number, scale
     switch ( abs(number) ) {
             
         case 0 :
-            printf ("should not be here\n");
+            LOG_INFO("should not be here");
             success      = 0;
             break;
             
         case 25 :
-            printf("Plagioclase Peierls creep - Azuma et al., 2014 / Regularized - Kameyama et al. (1999):\n");
+            LOG_INFO("Plagioclase Peierls creep - Azuma et al., 2014 / Regularized - Kameyama et al. (1999):");
             mat->texp[k] = 1;
             mat->qexp[k] = 2.0;
             mat->Gexp[k] = 0.2;
@@ -803,7 +805,7 @@ void ReadDataExponential( mat_prop* mat, params* model, int k, int number, scale
 
             
         case 40 :
-            printf("Olivine Peierls creep - Evans & Goetze (1979) / Regularized - Kameyama et al. (1999):\n");
+            LOG_INFO("Olivine Peierls creep - Evans & Goetze (1979) / Regularized - Kameyama et al. (1999):");
             mat->texp[k] = 1;
             mat->qexp[k] = 2.0;
             mat->Gexp[k] = 0.1;
@@ -828,10 +830,10 @@ void ReadDataExponential( mat_prop* mat, params* model, int k, int number, scale
     // Cancel correction factor
     if (number<0) mat->texp[k]   = 0;
     
-    if ( success==0 ) { printf("Error: Non existing Exponential flow law number\n"); exit(12);}
+    if ( success==0 ) { LOG_ERR("Error: Non existing Exponential flow law number"); exit(12);}
     
     // Print to screen
-    printf("t = %1.0lf  q = %1.1lf  G = %1.1lf  S = %2.2e Pa  Q = %2.2e J  V = %2.2e m^3  E = %2.2e 1/s\n", mat->texp[k], mat->qexp[k], mat->Gexp[k], mat->Sexp[k]*scaling->S, mat->Qexp[k]*scaling->J, mat->Vexp[k]*pow(scaling->L,3.0), mat->Eexp[k]*scaling->E);
+    LOG_INFO("t = %1.0lf  q = %1.1lf  G = %1.1lf  S = %2.2e Pa  Q = %2.2e J  V = %2.2e m^3  E = %2.2e 1/s", mat->texp[k], mat->qexp[k], mat->Gexp[k], mat->Sexp[k]*scaling->S, mat->Qexp[k]*scaling->J, mat->Vexp[k]*pow(scaling->L,3.0), mat->Eexp[k]*scaling->E);
     
 }
 
@@ -846,12 +848,12 @@ void ReadDataGSE( mat_prop* mat, params* model, int k, int number, scale* scalin
     switch ( abs(number) ) {
             
         case 0 :
-            printf ("should not be here\n");
+            LOG_INFO("should not be here");
             success      = 0;
             break;
             
         case 9 :
-            printf("MODIFIED - Low lambda: Calcite paleowattmeter - Austin & Evans (2002); Covey-Crump (1997):\n");
+            LOG_INFO("MODIFIED - Low lambda: Calcite paleowattmeter - Austin & Evans (2002); Covey-Crump (1997):");
             mat->ppzm[k] = 3.0;
             mat->Kpzm[k] = 2.5e9* pow(10.0,-6.0*mat->ppzm[k]) / (pow(scaling->L, mat->ppzm[k]) / scaling->t);
             mat->Qpzm[k] = 175.0e3                            / scaling->J;
@@ -862,7 +864,7 @@ void ReadDataGSE( mat_prop* mat, params* model, int k, int number, scale* scalin
             break;
 
         case 10 :
-            printf("Calcite paleowattmeter - Austin & Evans (2002); Covey-Crump (1997):\n");
+            LOG_INFO("Calcite paleowattmeter - Austin & Evans (2002); Covey-Crump (1997):");
             mat->ppzm[k] = 3.0;
             mat->Kpzm[k] = 2.5e9* pow(10.0,-6.0*mat->ppzm[k]) / (pow(scaling->L, mat->ppzm[k]) / scaling->t);
             mat->Qpzm[k] = 175.0e3                            / scaling->J;
@@ -873,7 +875,7 @@ void ReadDataGSE( mat_prop* mat, params* model, int k, int number, scale* scalin
             break;
             
         case 11 :
-            printf("Calcite paleopiezometer - Rutter (1995):\n");
+            LOG_INFO("Calcite paleopiezometer - Rutter (1995):");
             mat->ppzm[k] = 1.14;
             mat->Kpzm[k] = pow(10.0,3.31)*1.0e-6*pow(1.0e6,mat->ppzm[k]);
             mat->Kpzm[k]/= (scaling->L*pow(scaling->S,mat->ppzm[k]));
@@ -885,7 +887,7 @@ void ReadDataGSE( mat_prop* mat, params* model, int k, int number, scale* scalin
             break;
             
         case 12 :
-            printf("Calcite paleopiezometer - Schmid (1977):\n");
+            LOG_INFO("Calcite paleopiezometer - Schmid (1977):");
             mat->ppzm[k] = 0.9767;
             mat->Kpzm[k] = pow(10.0,2.63)*1.0e-6*pow(1.0e6,mat->ppzm[k]);
             mat->Kpzm[k]/= (scaling->L*pow(scaling->S,mat->ppzm[k]));
@@ -897,7 +899,7 @@ void ReadDataGSE( mat_prop* mat, params* model, int k, int number, scale* scalin
             break;
             
         case 40 :
-            printf("Olivine  - Thielmann et al., (2015):\n");
+            LOG_INFO("Olivine  - Thielmann et al., (2015):");
             mat->ppzm[k] = 2.0;
             mat->Kpzm[k] = 607.0 * pow(10.0, -6.0*mat->ppzm[k]) / (pow(scaling->L, mat->ppzm[k]) / scaling->t);
             mat->Qpzm[k] = 200.0e3                              / scaling->J;
@@ -908,7 +910,7 @@ void ReadDataGSE( mat_prop* mat, params* model, int k, int number, scale* scalin
             break;
             
         case 41 :
-            printf("Olivine - pyroxene mixture - Thielmann et al., (2015):\n");
+            LOG_INFO("Olivine - pyroxene mixture - Thielmann et al., (2015):");
             mat->ppzm[k] = 4.0;
             mat->Kpzm[k] = 497075.0 * pow(10, -6*mat->ppzm[k]) / (pow(scaling->L, mat->ppzm[k]) / scaling->t);
             mat->Qpzm[k] = 300.0e3                             / scaling->J;
@@ -919,7 +921,7 @@ void ReadDataGSE( mat_prop* mat, params* model, int k, int number, scale* scalin
             break;
             
         case 42 :
-            printf("Olivine - Speciale et al., (2020):\n");
+            LOG_INFO("Olivine - Speciale et al., (2020):");
             mat->ppzm[k] = 3.2;
             mat->Kpzm[k] = 1800.0 * pow(10, -6*mat->ppzm[k]) / (pow(scaling->L, mat->ppzm[k]) / scaling->t);
             mat->Qpzm[k] = 620.0e3                           / scaling->J;
@@ -933,10 +935,10 @@ void ReadDataGSE( mat_prop* mat, params* model, int k, int number, scale* scalin
     
     // Scaling done above
 
-    if ( success==0 ) { printf("Error: Non existing grain size evolution law number\n"); exit(12);}
+    if ( success==0 ) { LOG_ERR("Error: Non existing grain size evolution law number"); exit(12);}
     
     // Print to screen
-    printf("p = %1.0lf  K = %2.2e  Q = %2.2e   G = %2.2e J  c = %2.2e m^3  L = %2.2e 1/s\n", mat->ppzm[k], mat->Kpzm[k]*(pow(scaling->L, mat->ppzm[k]) / scaling->t), mat->Qpzm[k]*scaling->J, mat->Gpzm[k]*(scaling->J * pow(scaling->L, -2.0) ), mat->cpzm[k], mat->Lpzm[k]);
+    LOG_INFO("p = %1.0lf  K = %2.2e  Q = %2.2e   G = %2.2e J  c = %2.2e m^3  L = %2.2e 1/s", mat->ppzm[k], mat->Kpzm[k]*(pow(scaling->L, mat->ppzm[k]) / scaling->t), mat->Qpzm[k]*scaling->J, mat->Gpzm[k]*(scaling->J * pow(scaling->L, -2.0) ), mat->cpzm[k], mat->Lpzm[k]);
     
 }
 
@@ -951,12 +953,12 @@ void ReadDataKinetics( mat_prop* mat, params* model, int k, int number, scale* s
     switch ( abs(number) ) {
 
         case 1 :
-            printf("Directly use tau_kin %d %d\n", model->kinetics, mat->kin[k]);
+            LOG_INFO("Directly use tau_kin %d %d", model->kinetics, mat->kin[k]);
             success      = 1;
             break;
             
         case 9 :
-            printf("Quartz-Coesite - Mosenfelder & Bohlen (1997);");
+            LOG_INFO("Quartz-Coesite - Mosenfelder & Bohlen (1997);");
             mat->Skin[k] = 3.35/1e-4 / (1.0/scaling->L);
             mat->kkin[k] = 0.185     / (scaling->L/scaling->t/scaling->T);
             mat->Qkin[k] = 243e3     / scaling->J;
@@ -964,7 +966,7 @@ void ReadDataKinetics( mat_prop* mat, params* model, int k, int number, scale* s
             break;
     }
     
-    if ( success==0 ) { printf("Error: Non existing kinetic number %d\n", number); exit(12);}
+    if ( success==0 ) { LOG_ERR("Error: Non existing kinetic number %d", number); exit(12);}
     
 }
 

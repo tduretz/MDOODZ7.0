@@ -28,6 +28,8 @@
 #include "math.h"
 #include "mdoodz-private.h"
 
+#include "mdoodz-log.h"
+
 #ifdef _OMP_
 #include "omp.h"
 #endif
@@ -69,7 +71,7 @@ void AddCoeffThermal( int* J, double*A, int neq, int jeq, int *nnzc, double coef
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-void EnergyDirectSolve( grid *mesh, params model, double *rhs_t, markers *particles, double dt, int shear_heating, int adiab_heating, scale scaling, int nit ) {
+void EnergyDirectSolve( grid *mesh, params model, double *rhs_t, markers *particles, double dt, int shear_heating, int adiab_heating, scale scaling, int nit, DirectSolver *thermal_solver ) {
 
     // Energy matrix
     double  *A;
@@ -102,11 +104,9 @@ void EnergyDirectSolve( grid *mesh, params model, double *rhs_t, markers *partic
     // Get minimum value of k - safety: will be used a a lower limit if interpolated surface conductivity is too low
     MinMaxArrayVal( mesh->kx, nx*(nz+1), &mink, &maxk );
 
-    // Solve system using CHOLMOD
-    cholmod_common c;
-    cholmod_start( &c );
-    cholmod_factor *Afact;
-    cs_di *At;
+    // Use persistent CHOLMOD context from thermal_solver
+    cholmod_common *c = &thermal_solver->c;
+    cs_di *At = NULL;
 
     double *Hs, *Ha, dexz_th, dexz_el, dexz_tot, dexx_th, dexx_el, dexx_tot, diss_limit=1.0e-8/(scaling.S*scaling.E);
     double dezz_el, dezz_th, dezz_tot, deyy_el, deyy_th, deyy_tot;
@@ -116,6 +116,13 @@ void EnergyDirectSolve( grid *mesh, params model, double *rhs_t, markers *partic
     eqn_t = DoodzCalloc(ncx*ncz, sizeof(int));
     neq   = EvalNumEqTemp( mesh, eqn_t );
     bbc   = DoodzCalloc(neq     , sizeof(double));
+
+    // Invalidate cached factor if matrix size changed (e.g., free surface moved)
+    if ( thermal_solver->Lfact != NULL && thermal_solver->Lfact->n != (size_t)neq ) {
+        cholmod_free_factor( &thermal_solver->Lfact, c );
+        thermal_solver->Lfact = NULL;
+        thermal_solver->Analyze = 1;
+    }
 
     // Guess number of non-zeros
     nnz   = 5*neq;
@@ -177,7 +184,7 @@ void EnergyDirectSolve( grid *mesh, params model, double *rhs_t, markers *partic
         //----------------------------------------------------//
         if ( it == 0 ) {
 
-            printf("Assembling Energy matrix... with %d discrete equations\n", neq);
+            LOG_INFO("Assembling Energy matrix... with %d discrete equations", neq);
 
             // LOOP ON THE GRID TO CALCULATE FD COEFFICIENTS
             for( l=0; l<ncz; l++) {
@@ -228,7 +235,7 @@ void EnergyDirectSolve( grid *mesh, params model, double *rhs_t, markers *partic
                         // Average conductivity for surface values (avoid zero conductivity)
                         ks = 0.25*(AE+AW+AN+AS);
                         if ( ks < mink ) {
-                            printf("ACHTUNG: interloplated surface conductivity is set lower cutoff value!!\n");
+                            LOG_INFO("ACHTUNG: interloplated surface conductivity is set lower cutoff value!!");
                             ks = mink;
                         }
 
@@ -386,20 +393,44 @@ void EnergyDirectSolve( grid *mesh, params model, double *rhs_t, markers *partic
             bufd = DoodzRealloc(A, nnzc*sizeof(double));
             J    = bufi;
             A    = bufd;
-            printf("Energy balance --> System size: ndof = %d, nnz = %d\n", neq, nnzc);
+            LOG_INFO("Energy balance --> System size: ndof = %d, nnz = %d", neq, nnzc);
         }
 
         // ------------------------------------------- SOLVER ------------------------------------------- //
 
-        // Compute transpose of A matrix (used in polar mode only)
-        if ( it == 0 ) At = TransposeA( &c, A, Ic, J, neq, nnzc );
-
-        // Factor matrix only at the first step
-        if ( it == 0 ) Afact = FactorEnergyCHOLMOD( &c, At, A, Ic, J, neq, nnzc, model.polar );
-
-        // Solve
+        // Add boundary condition RHS contribution
         ArrayPlusScalarArray( b, 1.0, bbc, neq );
-        SolveEnergyCHOLMOD( &c, At, Afact, x, b, neq, nnzc, model.polar );
+
+        if ( model.thermal_solver == 1 && model.polar == 0 && it == 0 ) {
+            // PCG iterative solver with warm-start from current T field (only on it=0 when matrix is available)
+            for ( int ii = 0; ii < ncx*ncz; ii++ ) {
+                if ( eqn_t[ii] >= 0 ) x[eqn_t[ii]] = mesh->T[ii];
+            }
+            int pcg_its = SolveThermalPCG( A, Ic, J, b, x, neq, model.max_its_thermal, model.rel_tol_thermal, model.export_pcg_residuals, model.step, model.writer_subfolder );
+            if ( pcg_its > 0 ) {
+                LOG_INFO("Thermal PCG converged in %d iterations", pcg_its);
+            } else if ( pcg_its == 0 ) {
+                LOG_INFO("Thermal PCG: initial residual already below tolerance");
+            } else {
+                LOG_WARN("Thermal PCG failed (code %d) — falling back to CHOLMOD direct solver", pcg_its);
+                At = TransposeA( c, A, Ic, J, neq, nnzc );
+                thermal_solver->Lfact = FactorEnergyCHOLMOD( c, At, A, Ic, J, neq, nnzc, model.polar, 1, thermal_solver->Lfact );
+                if ( thermal_solver->Analyze == 1 ) thermal_solver->Analyze = 0;
+                SolveEnergyCHOLMOD( c, At, thermal_solver->Lfact, x, b, neq, nnzc, model.polar );
+            }
+            // Prepare CHOLMOD factorization for potential it>=1 iterations (matrix not re-assembled)
+            if ( nit > 1 ) {
+                if ( At == NULL ) At = TransposeA( c, A, Ic, J, neq, nnzc );
+                thermal_solver->Lfact = FactorEnergyCHOLMOD( c, At, A, Ic, J, neq, nnzc, model.polar, thermal_solver->Analyze, thermal_solver->Lfact );
+                if ( thermal_solver->Analyze == 1 ) thermal_solver->Analyze = 0;
+            }
+        } else {
+            // CHOLMOD direct solver (default, or it>=1 in PCG mode when matrix is stale)
+            if ( it == 0 ) At = TransposeA( c, A, Ic, J, neq, nnzc );
+            if ( it == 0 ) thermal_solver->Lfact = FactorEnergyCHOLMOD( c, At, A, Ic, J, neq, nnzc, model.polar, thermal_solver->Analyze, thermal_solver->Lfact );
+            if ( thermal_solver->Analyze == 1 ) thermal_solver->Analyze = 0;
+            SolveEnergyCHOLMOD( c, At, thermal_solver->Lfact, x, b, neq, nnzc, model.polar );
+        }
 
         // ------------------------------------------- SOLVER ------------------------------------------- //
 
@@ -421,7 +452,7 @@ void EnergyDirectSolve( grid *mesh, params model, double *rhs_t, markers *partic
                     if (mesh->T[c2] < 0.0) {
                         // printf("%2.2f %1.2f\n", mesh->T[c2]*scaling.T, mesh->zc_coord[l]*scaling.L);
                         // printf("%1.2e %1.2e %1.2e\n", mesh->alp[c2]/scaling.T, mesh->p0_n[c2]*scaling.S, mesh->p_in[c2]*scaling.S);
-                        printf("Negative temperature --- Are you crazy! (EnergyDirectSolve)\n");
+                        LOG_INFO("Negative temperature --- Are you crazy! (EnergyDirectSolve)");
                         exit(1);
                     }
                 }
@@ -487,10 +518,8 @@ void EnergyDirectSolve( grid *mesh, params model, double *rhs_t, markers *partic
         DoodzFree(Hs);
         DoodzFree(Ha);
     }
-    // Free factors
-    cholmod_free_factor ( &Afact, &c) ;
-    cs_spfree(At);
-    cholmod_finish( &c ) ;
+    // Free transpose (factor lifetime managed by caller via thermal_solver->Lfact)
+    if ( At != NULL ) cs_spfree(At);
     DoodzFree(bbc);
     DoodzFree(eqn_t);
 }
@@ -499,16 +528,16 @@ void EnergyDirectSolve( grid *mesh, params model, double *rhs_t, markers *partic
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-void ThermalSteps( grid *mesh, params model, double *rhs_t, markers *particles, double total_time, scale scaling ) {
+void ThermalSteps( grid *mesh, params model, double *rhs_t, markers *particles, double total_time, scale scaling, DirectSolver *thermal_solver ) {
 
     double dt = total_time/10.0;
     int nit = floor(total_time/dt);
 
-    printf( "Total thermal time = %2.2e s\n", total_time*scaling.t );
-    printf( "Number of thermal steps = %d\n", nit );
+    LOG_INFO("Total thermal time = %2.2e s", total_time*scaling.t);
+    LOG_INFO("Number of thermal steps = %d", nit);
 
     // Run thermal diffusion timesteps to generate initial temperature field
-    EnergyDirectSolve( mesh, model, rhs_t, particles, dt, 0, 0, scaling, nit );
+    EnergyDirectSolve( mesh, model, rhs_t, particles, dt, 0, 0, scaling, nit, thermal_solver );
 
 }
 
@@ -528,7 +557,7 @@ void SetThermalPert( grid* mesh, params model, scale scaling ) {
     ncx  = nx-1;
     ncz  = nz-1;
 
-    printf("Setting thermal perturbation of %3.1lf C...\n", pert*scaling.T);
+    LOG_INFO("Setting thermal perturbation of %3.1lf C...", pert*scaling.T);
 
     //#pragma omp parallel for shared( mesh ) private( x, z, l, k, c2 ) firstprivate( rad, pert, x0, z0, ncx)
     for( l=0; l<ncz; l++) {

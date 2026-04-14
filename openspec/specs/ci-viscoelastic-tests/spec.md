@@ -1,4 +1,4 @@
-## ADDED Requirements
+## MODIFIED Requirements
 
 ### Requirement: Maxwell stress accumulation test
 The test suite SHALL verify that deviatoric stress accumulates over multiple time steps when `elastic=1` (Maxwell visco-elastic model). The elastic strain rate field `eII_el` SHALL be non-zero, and the maximum deviatoric stress `sxxd` SHALL increase between step 1 and step 5.
@@ -10,13 +10,6 @@ The test suite SHALL verify that deviatoric stress accumulates over multiple tim
 #### Scenario: Elastic strain rate is non-zero
 - **WHEN** `elastic=1` is enabled in a deforming simulation
 - **THEN** `max(eII_el)` SHALL be greater than zero
-
-### Requirement: Elastic strain partitioning test
-The test suite SHALL verify that when elasticity is enabled, the elastic strain rate `eII_el` is a non-zero fraction of the total strain rate, confirming that the Maxwell model splits deformation between viscous and elastic components.
-
-#### Scenario: Elastic fraction is bounded
-- **WHEN** a simulation runs with `elastic=1` and constant viscosity
-- **THEN** `max(eII_el)` SHALL be greater than 0 and less than or equal to the total strain rate
 
 #### Scenario: Maxwell stress accumulation L2 error
 - **WHEN** a pure-shear simulation runs for Nt steps with `elastic=1`, constant viscosity η, shear modulus G, and strain rate ε̇

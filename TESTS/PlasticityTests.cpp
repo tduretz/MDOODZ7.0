@@ -136,3 +136,30 @@ TEST_F(Plasticity, StressLimiter) {
   free(inputName);
   free(fileName);
 }
+
+
+// --- Interpolation mode tests ---
+
+TEST_F(Plasticity, DruckerPragerYieldInterpMode1) {
+  char *inputName;
+  asprintf(&inputName, "Plasticity/DruckerPragerYieldInterpMode1.txt");
+  RunMDOODZ(inputName, &setup);
+  char *fileName;
+  asprintf(&fileName, "DruckerPragerYieldInterpMode1/Output%05d.gzip.h5", 1);
+  int steps = getStepsCount(fileName);
+  EXPECT_GE(steps, 0);
+  free(inputName);
+  free(fileName);
+}
+
+TEST_F(Plasticity, DruckerPragerYieldInterpMode2) {
+  char *inputName;
+  asprintf(&inputName, "Plasticity/DruckerPragerYieldInterpMode2.txt");
+  RunMDOODZ(inputName, &setup);
+  char *fileName;
+  asprintf(&fileName, "DruckerPragerYieldInterpMode2/Output%05d.gzip.h5", 1);
+  int steps = getStepsCount(fileName);
+  EXPECT_GE(steps, 0);
+  free(inputName);
+  free(fileName);
+}
