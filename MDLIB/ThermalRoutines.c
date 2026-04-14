@@ -406,7 +406,7 @@ void EnergyDirectSolve( grid *mesh, params model, double *rhs_t, markers *partic
             for ( int ii = 0; ii < ncx*ncz; ii++ ) {
                 if ( eqn_t[ii] >= 0 ) x[eqn_t[ii]] = mesh->T[ii];
             }
-            int pcg_its = SolveThermalPCG( A, Ic, J, b, x, neq, model.max_its_thermal, model.rel_tol_thermal );
+            int pcg_its = SolveThermalPCG( A, Ic, J, b, x, neq, model.max_its_thermal, model.rel_tol_thermal, model.export_pcg_residuals, model.step, model.writer_subfolder );
             if ( pcg_its > 0 ) {
                 LOG_INFO("Thermal PCG converged in %d iterations", pcg_its);
             } else if ( pcg_its == 0 ) {

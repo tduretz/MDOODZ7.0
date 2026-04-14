@@ -82,6 +82,7 @@ typedef struct {
   int    thermal_solver;    // 0: CHOLMOD direct (default), 1: PCG iterative
   int    max_its_thermal;   // Max PCG iterations (default 1000)
   double rel_tol_thermal;   // Relative tolerance for PCG (default 1e-8)
+  int    export_pcg_residuals; // Export per-iteration PCG residuals to CSV (0/1)
   // Non-linear solver
   double line_search_min, safe_dt_div;
   int    safe_mode, max_num_stag;

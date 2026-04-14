@@ -335,7 +335,16 @@ void SolveEnergyCHOLMOD( cholmod_common *c, cs_di *At, cholmod_factor *Afact, do
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-int SolveThermalPCG( double *A, int *Ic, int *J, double *b, double *x, int neq, int max_its, double rel_tol ) {
+int SolveThermalPCG( double *A, int *Ic, int *J, double *b, double *x, int neq, int max_its, double rel_tol, int export_residuals, int step, const char *output_dir ) {
+
+    // Open residual CSV file if export is enabled
+    FILE *res_file = NULL;
+    if ( export_residuals ) {
+        char res_path[512];
+        snprintf( res_path, sizeof(res_path), "%s/pcg_residuals_step%05d.csv", output_dir ? output_dir : ".", step );
+        res_file = fopen( res_path, "w" );
+        if ( res_file ) fprintf( res_file, "iteration,abs_residual,rel_residual\n" );
+    }
 
     // Allocate work vectors
     double *r     = DoodzCalloc( neq, sizeof(double) );
@@ -390,9 +399,11 @@ int SolveThermalPCG( double *A, int *Ic, int *J, double *b, double *x, int neq, 
     }
     r_norm0 = sqrt( r_norm0 );
     if ( r_norm0 < 1e-30 ) { // already converged (zero residual)
+        if ( res_file ) { fprintf( res_file, "0,%e,%e\n", r_norm0, 1.0 ); fclose( res_file ); }
         DoodzFree( r ); DoodzFree( z ); DoodzFree( p ); DoodzFree( Ap ); DoodzFree( M_inv );
         return 0;
     }
+    if ( res_file ) fprintf( res_file, "0,%e,%e\n", r_norm0, 1.0 );
 
     int its = -1; // will be set to positive on convergence
 
@@ -433,6 +444,8 @@ int SolveThermalPCG( double *A, int *Ic, int *J, double *b, double *x, int neq, 
         }
         r_norm = sqrt( r_norm );
 
+        if ( res_file ) fprintf( res_file, "%d,%e,%e\n", iter + 1, r_norm, r_norm / r_norm0 );
+
         if ( r_norm / r_norm0 < rel_tol ) {
             its = iter + 1;
             break;
@@ -461,6 +474,9 @@ int SolveThermalPCG( double *A, int *Ic, int *J, double *b, double *x, int neq, 
             p[i] = z[i] + beta * p[i];
         }
     }
+
+    // Close residual file
+    if ( res_file ) fclose( res_file );
 
     // Free work vectors
     DoodzFree( r );

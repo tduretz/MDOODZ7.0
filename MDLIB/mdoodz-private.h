@@ -441,7 +441,7 @@ void            EnergyDirectSolve(grid *, params, double *, markers *, double, i
 cholmod_factor *FactorEnergyCHOLMOD(cholmod_common *, cs_di *, double *, int *, int *, int, int, int, int, cholmod_factor *);
 cs_di          *TransposeA(cholmod_common *, double *, int *, int *, int, int);
 void            SolveEnergyCHOLMOD(cholmod_common *, cs_di *, cholmod_factor *, double *, double *, int, int, int);
-int             SolveThermalPCG(double *, int *, int *, double *, double *, int, int, double);
+int             SolveThermalPCG(double *, int *, int *, double *, double *, int, int, double, int, int, const char *);
 void            ThermalSteps(grid *, params, double *, markers *, double, scale, DirectSolver *);
 void            SetThermalPert(grid *, params, scale);
 void            UpdateMaxPT(scale, params, markers *);

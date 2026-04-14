@@ -186,6 +186,96 @@ TEST_F(Thermal, DirichletBC) {
   free(fileName);
 }
 
+// ===================== L2 Accuracy Tests ===================== //
+
+TEST_F(Thermal, GaussianDiffusionL2) {
+  RunMDOODZ("Thermal/GaussianDiffusionL2.txt", &setup);
+  char *fileFinal;
+  asprintf(&fileFinal, "GaussianDiffusionL2/Output00005.gzip.h5");
+
+  auto T_field = readFieldAsArray(fileFinal, "Centers", "T");
+  auto xc = readCoordArray(fileFinal, "xc_coord");
+  auto zc = readCoordArray(fileFinal, "zc_coord");
+  int Nx_grid = (int)getModelParam(fileFinal, 3);
+  int Nz_grid = (int)getModelParam(fileFinal, 4);
+  int ncx = Nx_grid - 1;
+  int ncz = Nz_grid - 1;
+  double time_SI = getModelParam(fileFinal, 0);
+
+  // Physical parameters
+  double k_SI   = 3.0;
+  double rho_SI = 3300.0;
+  double Cp_SI  = 1050.0;
+  double kappa  = k_SI / (rho_SI * Cp_SI);  // thermal diffusivity
+  double T_bg   = 500.0 + 273.15;            // background T in K
+  double dT     = 200.0;                     // perturbation in K
+  double R      = 10000.0;                   // perturbation radius in m
+
+  // Compute analytic solution at final time
+  double R2_4kt = R * R + 4.0 * kappa * time_SI;
+  std::vector<double> T_ana(T_field.size());
+  for (int iz = 0; iz < ncz; iz++) {
+    for (int ix = 0; ix < ncx; ix++) {
+      double r2 = xc[ix] * xc[ix] + zc[iz] * zc[iz];
+      T_ana[ix + ncx * iz] = T_bg + dT * (R * R / R2_4kt) * exp(-r2 / R2_4kt);
+    }
+  }
+
+  double L2 = computeL2Error(T_field, T_ana);
+  printf("GaussianDiffusionL2 (CHOLMOD): L2 = %e\n", L2);
+  EXPECT_LT(L2, 2e-2);  // FD discretization error on 51x51 grid is ~1.07e-2
+
+  free(fileFinal);
+}
+
+TEST_F(Thermal, GaussianDiffusionL2PCG) {
+  RunMDOODZ("Thermal/GaussianDiffusionL2PCG.txt", &setup);
+  char *fileFinal;
+  asprintf(&fileFinal, "GaussianDiffusionL2PCG/Output00005.gzip.h5");
+
+  auto T_field = readFieldAsArray(fileFinal, "Centers", "T");
+  auto xc = readCoordArray(fileFinal, "xc_coord");
+  auto zc = readCoordArray(fileFinal, "zc_coord");
+  int Nx_grid = (int)getModelParam(fileFinal, 3);
+  int Nz_grid = (int)getModelParam(fileFinal, 4);
+  int ncx = Nx_grid - 1;
+  int ncz = Nz_grid - 1;
+  double time_SI = getModelParam(fileFinal, 0);
+
+  double k_SI   = 3.0;
+  double rho_SI = 3300.0;
+  double Cp_SI  = 1050.0;
+  double kappa  = k_SI / (rho_SI * Cp_SI);
+  double T_bg   = 500.0 + 273.15;
+  double dT     = 200.0;
+  double R      = 10000.0;
+
+  double R2_4kt = R * R + 4.0 * kappa * time_SI;
+  std::vector<double> T_ana(T_field.size());
+  for (int iz = 0; iz < ncz; iz++) {
+    for (int ix = 0; ix < ncx; ix++) {
+      double r2 = xc[ix] * xc[ix] + zc[iz] * zc[iz];
+      T_ana[ix + ncx * iz] = T_bg + dT * (R * R / R2_4kt) * exp(-r2 / R2_4kt);
+    }
+  }
+
+  double L2_pcg = computeL2Error(T_field, T_ana);
+  printf("GaussianDiffusionL2PCG: L2 = %e\n", L2_pcg);
+  EXPECT_LT(L2_pcg, 2e-2);  // FD discretization error on 51x51 grid is ~1.07e-2
+
+  // Cross-compare: also read CHOLMOD result (assumes GaussianDiffusionL2 ran first in this suite)
+  char *fileCholmod;
+  asprintf(&fileCholmod, "GaussianDiffusionL2/Output00005.gzip.h5");
+  auto T_cholmod = readFieldAsArray(fileCholmod, "Centers", "T");
+  double L2_cholmod = computeL2Error(T_cholmod, T_ana);
+  double L2_diff = fabs(L2_pcg - L2_cholmod);
+  printf("CHOLMOD L2 = %e, PCG L2 = %e, |diff| = %e\n", L2_cholmod, L2_pcg, L2_diff);
+  EXPECT_LT(L2_diff, 1e-6);
+
+  free(fileFinal);
+  free(fileCholmod);
+}
+
 // ===================== PCG Thermal Solver Variants ===================== //
 
 TEST_F(Thermal, GaussianDiffusionPCG) {
@@ -224,10 +314,17 @@ TEST_F(Thermal, SteadyStateGeothermPCG) {
       T_ana[ix + ncx * iz] = T_z;
     }
   }
-  double L2_T = computeL2Error(T_field, T_ana);
-  printf("PCG Geotherm L2 error: %e\n", L2_T);
-  EXPECT_LT(L2_T, 1e-4);
+  double L2_pcg = computeL2Error(T_field, T_ana);
+
+  // Also read CHOLMOD result for side-by-side comparison (assumes SteadyStateGeotherm ran first)
+  char *fileCholmod;
+  asprintf(&fileCholmod, "SteadyStateGeotherm/Output00020.gzip.h5");
+  auto T_cholmod = readFieldAsArray(fileCholmod, "Centers", "T");
+  double L2_cholmod = computeL2Error(T_cholmod, T_ana);
+  printf("Geotherm L2: CHOLMOD = %e, PCG = %e, |diff| = %e\n", L2_cholmod, L2_pcg, fabs(L2_pcg - L2_cholmod));
+  EXPECT_LT(L2_pcg, 1e-4);
   free(fileName);
+  free(fileCholmod);
 }
 
 TEST_F(Thermal, RadiogenicHeatPCG) {
