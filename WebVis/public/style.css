@@ -1,0 +1,160 @@
+/* ── MDOODZ WebVis — Dark Theme ─────────────────────────────────────── */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:       #1e1e2e;
+  --surface:  #2a2a3c;
+  --border:   #3a3a4c;
+  --text:     #cdd6f4;
+  --text-dim: #888;
+  --accent:   #89b4fa;
+}
+
+html, body {
+  height: 100%;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  font-size: 13px;
+  color: var(--text);
+  background: var(--bg);
+}
+
+/* ── Grid layout ─────────────────────────────────────────────────────── */
+#app {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  grid-template-rows: auto 1fr auto;
+  grid-template-areas:
+    "header  header"
+    "sidebar main"
+    "footer  footer";
+  height: 100vh;
+  gap: 0;
+}
+
+#header {
+  grid-area: header;
+  padding: 8px 16px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+#header h1 {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+#controls {
+  grid-area: sidebar;
+  padding: 12px;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+}
+
+#canvas-area {
+  grid-area: main;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px;
+  position: relative;
+  overflow: hidden;
+}
+
+#field-canvas {
+  max-width: calc(100% - 100px);
+  max-height: 100%;
+  image-rendering: pixelated;
+  background: #111;
+}
+
+#colourbar-canvas {
+  flex-shrink: 0;
+  width: 80px;
+  height: 400px;
+}
+
+#status-bar {
+  grid-area: footer;
+  padding: 6px 16px;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+/* ── Controls ────────────────────────────────────────────────────────── */
+.ctrl-group {
+  margin-bottom: 14px;
+}
+
+.ctrl-group label {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-dim);
+}
+
+.ctrl-group select,
+.ctrl-group input[type="text"] {
+  width: 100%;
+  padding: 5px 8px;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.ctrl-group select:focus,
+.ctrl-group input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.ctrl-group input[type="range"] {
+  width: 100%;
+  margin-top: 6px;
+  accent-color: var(--accent);
+}
+
+.ctrl-group input[type="text"] {
+  width: 80px;
+  display: inline-block;
+}
+
+.ctrl-group button {
+  padding: 4px 10px;
+  background: var(--border);
+  color: var(--text);
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 11px;
+  margin-left: 4px;
+}
+.ctrl-group button:hover {
+  background: var(--accent);
+  color: var(--bg);
+}
+
+/* ── Loading overlay ─────────────────────────────────────────────────── */
+#loading-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(30, 30, 46, 0.85);
+  font-size: 16px;
+  color: var(--accent);
+  z-index: 10;
+}
+#loading-overlay.hidden {
+  display: none;
+}

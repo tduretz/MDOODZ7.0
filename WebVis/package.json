@@ -1,0 +1,13 @@
+{
+  "name": "mdoodz-webvis",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Web-based HDF5 visualiser for MDOODZ simulation output",
+  "main": "server.mjs",
+  "scripts": {
+    "start": "node server.mjs"
+  },
+  "dependencies": {
+    "h5wasm": "^0.10.0"
+  }
+}

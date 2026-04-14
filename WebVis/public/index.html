@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MDOODZ WebVis</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+    <header id="header">
+      <h1>MDOODZ WebVis</h1>
+    </header>
+    <aside id="controls"></aside>
+    <main id="canvas-area">
+      <canvas id="field-canvas"></canvas>
+      <canvas id="colourbar-canvas" width="80" height="400"></canvas>
+      <div id="loading-overlay" class="hidden">Loading…</div>
+    </main>
+    <footer id="status-bar"></footer>
+  </div>
+  <script type="module" src="app.mjs"></script>
+</body>
+</html>
