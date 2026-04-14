@@ -535,63 +535,121 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
         // Energy - interpolate thermal parameters and advected energy
 
-        // Get energy and related material parameters from particles
-        P2Mastah( &input.model, particles, input.materials.Cp,     &mesh, mesh.Cp,     mesh.BCp.type,  0, 0, interp, cent, 1, pool);
-        P2Mastah( &input.model, particles, input.materials.Qr,     &mesh, mesh.Qr,     mesh.BCp.type,  0, 0, interp, cent, 1, pool);
+        // Batch 1 (cent, stencil=1): Cp, Qr, T0_n, divth0_n
+        if (pool && pool->interp_mode == 3) {
+            P2MastahField flds[16]; int nf = 0;
+            flds[nf++] = (P2MastahField){ input.materials.Cp,  mesh.Cp,       mesh.BCp.type, 0, 0, 0, 1 };
+            flds[nf++] = (P2MastahField){ input.materials.Qr,  mesh.Qr,       mesh.BCp.type, 0, 0, 0, 1 };
+            flds[nf++] = (P2MastahField){ particles.T,         mesh.T0_n,     mesh.BCp.type, 1, 0, 0, 1 };
+            flds[nf++] = (P2MastahField){ particles.divth,     mesh.divth0_n, mesh.BCp.type, 1, 0, 0, 1 };
+            P2Mastah_Fused(&input.model, particles, &mesh, cent, 1, flds, nf, pool);
+        } else {
+            // Get energy and related material parameters from particles
+            P2Mastah( &input.model, particles, input.materials.Cp,     &mesh, mesh.Cp,     mesh.BCp.type,  0, 0, interp, cent, 1, pool);
+            P2Mastah( &input.model, particles, input.materials.Qr,     &mesh, mesh.Qr,     mesh.BCp.type,  0, 0, interp, cent, 1, pool);
+            // Get T and dTdt from previous step from particles
+            P2Mastah( &input.model, particles, particles.T,     &mesh, mesh.T0_n,     mesh.BCp.type,  1, 0, interp, cent, 1, pool);
+            P2Mastah( &input.model, particles, particles.divth, &mesh, mesh.divth0_n, mesh.BCp.type,  1, 0, interp, cent, 1, pool);
+        }
 
+        // Singletons: kx (vxnodes), kz (vznodes) — not fused
         P2Mastah ( &input.model, particles, input.materials.k_eff, &mesh, mesh.kx, mesh.BCu.type,  0, 0, interp, vxnodes, 1, pool);
         P2Mastah ( &input.model, particles, input.materials.k_eff, &mesh, mesh.kz, mesh.BCv.type,  0, 0, interp, vznodes, 1, pool);
-
-        // Get T and dTdt from previous step from particles
-        P2Mastah( &input.model, particles, particles.T,     &mesh, mesh.T0_n,     mesh.BCp.type,  1, 0, interp, cent, 1, pool);
-        P2Mastah( &input.model, particles, particles.divth, &mesh, mesh.divth0_n, mesh.BCp.type,  1, 0, interp, cent, 1, pool);
 
         // Make sure T is up to date for rheology evaluation
         ArrayEqualArray( mesh.T, mesh.T0_n, (mesh.Nx-1)*(mesh.Nz-1) );
 
         //-----------------------------------------------------------------------------------------------------------
-        // Interp P --> p0_n , p0_s
-        P2Mastah( &input.model, particles, particles.P,   &mesh, mesh.p0_n,  mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil, pool);
-        P2Mastah( &input.model, particles, particles.P,   &mesh, mesh.p0_s,  mesh.BCg.type,  1, 0, interp, vert, input.model.interp_stencil, pool);
+        // Batch 2a (cent, stencil=interp): p0_n, phi0_n, [sxxd0, szzd0 if elastic]
+        // Batch 2b (vert, stencil=interp): p0_s, [sxz0 if elastic]
+        if (pool && pool->interp_mode == 3) {
+            // Centroid batch
+            P2MastahField flds_c[16]; int nfc = 0;
+            flds_c[nfc++] = (P2MastahField){ particles.P,   mesh.p0_n,   mesh.BCp.type, 1, 0, 0, input.model.interp_stencil };
+            flds_c[nfc++] = (P2MastahField){ particles.phi, mesh.phi0_n, mesh.BCp.type, 1, 0, 0, input.model.interp_stencil };
+            if (input.model.elastic == 1) {
+                flds_c[nfc++] = (P2MastahField){ particles.sxxd, mesh.sxxd0, mesh.BCp.type, 1, 0, 0, input.model.interp_stencil };
+                flds_c[nfc++] = (P2MastahField){ particles.szzd, mesh.szzd0, mesh.BCp.type, 1, 0, 0, input.model.interp_stencil };
+            }
+            P2Mastah_Fused(&input.model, particles, &mesh, cent, input.model.interp_stencil, flds_c, nfc, pool);
+            // Vertex batch
+            P2MastahField flds_v[16]; int nfv = 0;
+            flds_v[nfv++] = (P2MastahField){ particles.P, mesh.p0_s, mesh.BCg.type, 1, 0, 0, input.model.interp_stencil };
+            if (input.model.elastic == 1) {
+                flds_v[nfv++] = (P2MastahField){ particles.sxz, mesh.sxz0, mesh.BCg.type, 1, 0, 0, input.model.interp_stencil };
+            }
+            P2Mastah_Fused(&input.model, particles, &mesh, vert, input.model.interp_stencil, flds_v, nfv, pool);
 
-        // Interpolate Melt fraction
-        P2Mastah( &input.model, particles, particles.phi,   &mesh, mesh.phi0_n , mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil, pool);
-
-        // Elasticity - interpolate advected/rotated stresses
-        if  (input.model.elastic == 1 ) {
-
-            // Get old stresses from particles
-            P2Mastah( &input.model, particles, particles.sxxd,    &mesh, mesh.sxxd0, mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil, pool);
-            P2Mastah( &input.model, particles, particles.szzd,    &mesh, mesh.szzd0, mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil, pool);
-            P2Mastah( &input.model, particles, particles.sxz,     &mesh, mesh.sxz0,  mesh.BCg.type,  1, 0, interp, vert, input.model.interp_stencil, pool);
-
-            InterpCentroidsToVerticesDouble( mesh.sxxd0, mesh.sxxd0_s, &mesh, &input.model );
-            InterpCentroidsToVerticesDouble( mesh.szzd0, mesh.szzd0_s, &mesh, &input.model );
-            InterpVerticesToCentroidsDouble( mesh.sxz0_n,  mesh.sxz0,  &mesh, &input.model );
-
-            // Interpolate shear modulus
-            ShearModCompExpGrid( &mesh, &input.materials, &input.model, input.scaling );
+            if (input.model.elastic == 1) {
+                InterpCentroidsToVerticesDouble( mesh.sxxd0, mesh.sxxd0_s, &mesh, &input.model );
+                InterpCentroidsToVerticesDouble( mesh.szzd0, mesh.szzd0_s, &mesh, &input.model );
+                InterpVerticesToCentroidsDouble( mesh.sxz0_n,  mesh.sxz0,  &mesh, &input.model );
+                ShearModCompExpGrid( &mesh, &input.materials, &input.model, input.scaling );
+            }
+        } else {
+            // Interp P --> p0_n , p0_s
+            P2Mastah( &input.model, particles, particles.P,   &mesh, mesh.p0_n,  mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil, pool);
+            P2Mastah( &input.model, particles, particles.P,   &mesh, mesh.p0_s,  mesh.BCg.type,  1, 0, interp, vert, input.model.interp_stencil, pool);
+            // Interpolate Melt fraction
+            P2Mastah( &input.model, particles, particles.phi,   &mesh, mesh.phi0_n , mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil, pool);
+            // Elasticity - interpolate advected/rotated stresses
+            if  (input.model.elastic == 1 ) {
+                P2Mastah( &input.model, particles, particles.sxxd,    &mesh, mesh.sxxd0, mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil, pool);
+                P2Mastah( &input.model, particles, particles.szzd,    &mesh, mesh.szzd0, mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil, pool);
+                P2Mastah( &input.model, particles, particles.sxz,     &mesh, mesh.sxz0,  mesh.BCg.type,  1, 0, interp, vert, input.model.interp_stencil, pool);
+                InterpCentroidsToVerticesDouble( mesh.sxxd0, mesh.sxxd0_s, &mesh, &input.model );
+                InterpCentroidsToVerticesDouble( mesh.szzd0, mesh.szzd0_s, &mesh, &input.model );
+                InterpVerticesToCentroidsDouble( mesh.sxz0_n,  mesh.sxz0,  &mesh, &input.model );
+                ShearModCompExpGrid( &mesh, &input.materials, &input.model, input.scaling );
+            }
         }
 
-        // Director vector
+        // Batch 3a/3b (cent/vert, stencil=interp): director vector (anisotropy only)
         if (input.model.anisotropy == 1 ) {
-            P2Mastah( &input.model, particles, NULL, &mesh, mesh.d1_n,    mesh.BCp.type, -1, 0, interp, cent, input.model.interp_stencil, pool);
-            P2Mastah( &input.model, particles, NULL, &mesh, mesh.d2_n,    mesh.BCp.type, -2, 0, interp, cent, input.model.interp_stencil, pool);
-            P2Mastah( &input.model, particles, NULL, &mesh, mesh.angle_n, mesh.BCp.type, -3, 0, interp, cent, input.model.interp_stencil, pool);
-            P2Mastah( &input.model, particles, NULL, &mesh, mesh.d1_s,    mesh.BCg.type, -1, 0, interp, vert, input.model.interp_stencil, pool);
-            P2Mastah( &input.model, particles, NULL, &mesh, mesh.d2_s,    mesh.BCg.type, -2, 0, interp, vert, input.model.interp_stencil, pool);
-            P2Mastah( &input.model, particles, NULL, &mesh, mesh.angle_s, mesh.BCg.type, -3, 0, interp, vert, input.model.interp_stencil, pool);
+            if (pool && pool->interp_mode == 3) {
+                // Batch 3a: cent
+                P2MastahField flds_c[16]; int nfc = 0;
+                flds_c[nfc++] = (P2MastahField){ NULL, mesh.d1_n,    mesh.BCp.type, -1, 0, 0, input.model.interp_stencil };
+                flds_c[nfc++] = (P2MastahField){ NULL, mesh.d2_n,    mesh.BCp.type, -2, 0, 0, input.model.interp_stencil };
+                flds_c[nfc++] = (P2MastahField){ NULL, mesh.angle_n, mesh.BCp.type, -3, 0, 0, input.model.interp_stencil };
+                P2Mastah_Fused(&input.model, particles, &mesh, cent, input.model.interp_stencil, flds_c, nfc, pool);
+                // Batch 3b: vert
+                P2MastahField flds_v[16]; int nfv = 0;
+                flds_v[nfv++] = (P2MastahField){ NULL, mesh.d1_s,    mesh.BCg.type, -1, 0, 0, input.model.interp_stencil };
+                flds_v[nfv++] = (P2MastahField){ NULL, mesh.d2_s,    mesh.BCg.type, -2, 0, 0, input.model.interp_stencil };
+                flds_v[nfv++] = (P2MastahField){ NULL, mesh.angle_s, mesh.BCg.type, -3, 0, 0, input.model.interp_stencil };
+                P2Mastah_Fused(&input.model, particles, &mesh, vert, input.model.interp_stencil, flds_v, nfv, pool);
+            } else {
+                P2Mastah( &input.model, particles, NULL, &mesh, mesh.d1_n,    mesh.BCp.type, -1, 0, interp, cent, input.model.interp_stencil, pool);
+                P2Mastah( &input.model, particles, NULL, &mesh, mesh.d2_n,    mesh.BCp.type, -2, 0, interp, cent, input.model.interp_stencil, pool);
+                P2Mastah( &input.model, particles, NULL, &mesh, mesh.angle_n, mesh.BCp.type, -3, 0, interp, cent, input.model.interp_stencil, pool);
+                P2Mastah( &input.model, particles, NULL, &mesh, mesh.d1_s,    mesh.BCg.type, -1, 0, interp, vert, input.model.interp_stencil, pool);
+                P2Mastah( &input.model, particles, NULL, &mesh, mesh.d2_s,    mesh.BCg.type, -2, 0, interp, vert, input.model.interp_stencil, pool);
+                P2Mastah( &input.model, particles, NULL, &mesh, mesh.angle_s, mesh.BCg.type, -3, 0, interp, vert, input.model.interp_stencil, pool);
+            }
             FiniteStrainAspectRatio ( &mesh, input.scaling, input.model, &particles );
         }
 
-        P2Mastah( &input.model, particles, particles.X,     &mesh, mesh.X0_n , mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil, pool);
-        P2Mastah( &input.model, particles, particles.X,     &mesh, mesh.X0_s , mesh.BCg.type,  1, 0, interp, vert, input.model.interp_stencil, pool);
-
-        P2Mastah( &input.model, particles, particles.noise, &mesh, mesh.noise_s, mesh.BCg.type,  1, 0, interp, vert, input.model.interp_stencil, pool);
-        P2Mastah( &input.model, particles, particles.noise, &mesh, mesh.noise_n, mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil, pool);
-
+        // Batch 4a (cent, stencil=interp): X0_n, noise_n, d0_n
+        // Batch 4b (vert, stencil=interp): X0_s, noise_s
+        if (pool && pool->interp_mode == 3) {
+            P2MastahField flds_c[16]; int nfc = 0;
+            flds_c[nfc++] = (P2MastahField){ particles.X,     mesh.X0_n,    mesh.BCp.type, 1, 0, 0, input.model.interp_stencil };
+            flds_c[nfc++] = (P2MastahField){ particles.noise, mesh.noise_n, mesh.BCp.type, 1, 0, 0, input.model.interp_stencil };
+            flds_c[nfc++] = (P2MastahField){ particles.d,     mesh.d0_n,    mesh.BCp.type, 1, 0, 0, input.model.interp_stencil };
+            P2Mastah_Fused(&input.model, particles, &mesh, cent, input.model.interp_stencil, flds_c, nfc, pool);
+            P2MastahField flds_v[16]; int nfv = 0;
+            flds_v[nfv++] = (P2MastahField){ particles.X,     mesh.X0_s,    mesh.BCg.type, 1, 0, 0, input.model.interp_stencil };
+            flds_v[nfv++] = (P2MastahField){ particles.noise, mesh.noise_s, mesh.BCg.type, 1, 0, 0, input.model.interp_stencil };
+            P2Mastah_Fused(&input.model, particles, &mesh, vert, input.model.interp_stencil, flds_v, nfv, pool);
+        } else {
+            P2Mastah( &input.model, particles, particles.X,     &mesh, mesh.X0_n , mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil, pool);
+            P2Mastah( &input.model, particles, particles.X,     &mesh, mesh.X0_s , mesh.BCg.type,  1, 0, interp, vert, input.model.interp_stencil, pool);
+            P2Mastah( &input.model, particles, particles.noise, &mesh, mesh.noise_s, mesh.BCg.type,  1, 0, interp, vert, input.model.interp_stencil, pool);
+            P2Mastah( &input.model, particles, particles.noise, &mesh, mesh.noise_n, mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil, pool);
+            P2Mastah( &input.model, particles, particles.d,     &mesh, mesh.d0_n , mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil, pool);
+        }
         // Interpolate Grain size
-        P2Mastah( &input.model, particles, particles.d,     &mesh, mesh.d0_n , mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil, pool);
         ArrayEqualArray(  mesh.d_n,  mesh.d0_n, Ncx*Ncz );
 
         //-------------------------------------------------------------------------------------------------------------

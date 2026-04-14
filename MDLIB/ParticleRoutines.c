@@ -2005,11 +2005,35 @@ InterpBufPool *InterpBufPoolInit(grid *mesh, int interp_mode, int nthreads) {
             pool->BmWm[c] = NULL;
         }
     }
+    // Mode 3: allocate per-field BMWM arrays for fused batches
+    if (interp_mode == 3) {
+        pool->max_fused_fields = 16;
+        pool->max_centroid_size = 0;
+        for (int c = 0; c < 4; c++) {
+            if (pool->sizes[c] > pool->max_centroid_size)
+                pool->max_centroid_size = pool->sizes[c];
+        }
+        for (int f = 0; f < pool->max_fused_fields; f++) {
+            pool->BMWM_fused[f] = (double *)DoodzCalloc(pool->max_centroid_size, sizeof(double));
+        }
+    } else {
+        pool->max_fused_fields  = 0;
+        pool->max_centroid_size = 0;
+        for (int f = 0; f < 16; f++) {
+            pool->BMWM_fused[f] = NULL;
+        }
+    }
     return pool;
 }
 
 void InterpBufPoolFree(InterpBufPool *pool) {
     if (pool == NULL) return;
+    // Free mode 3 fused BMWM arrays
+    if (pool->interp_mode == 3) {
+        for (int f = 0; f < pool->max_fused_fields; f++) {
+            DoodzFree(pool->BMWM_fused[f]);
+        }
+    }
     for (int c = 0; c < 4; c++) {
         if (pool->interp_mode == 1 && pool->Wm[c] != NULL) {
             for (int t = 0; t < pool->nthreads; t++) {
@@ -2023,6 +2047,281 @@ void InterpBufPoolFree(InterpBufPool *pool) {
         DoodzFree(pool->BMWM[c]);
     }
     DoodzFree(pool);
+}
+
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
+
+// Fused particle-to-grid interpolation: scatter N fields in a single particle loop
+void P2Mastah_Fused(params *model, markers particles, grid *mesh, int centroid, int interp_stencil, P2MastahField *fields, int nfields, InterpBufPool *pool) {
+
+    int Nx, Nz, Np, pool_idx;
+    double dx, dz, dx_itp, dz_itp;
+    double *X_vect, *Z_vect;
+    double *WM;
+
+    // Overflow guard: fall back to individual P2Mastah calls
+    if (nfields > pool->max_fused_fields) {
+        LOG_ERR("P2Mastah_Fused: nfields=%d exceeds max_fused_fields=%d, falling back to individual calls", nfields, pool->max_fused_fields);
+        for (int f = 0; f < nfields; f++) {
+            P2Mastah(model, particles, fields[f].src, mesh, fields[f].dst, fields[f].BCtype,
+                     fields[f].flag, fields[f].avg, fields[f].prop, centroid, interp_stencil, pool);
+        }
+        return;
+    }
+
+    // Setup: derive grid dimensions from centroid
+    if (centroid == 1) {
+        Nx = mesh->Nx - 1; Nz = mesh->Nz - 1;
+        X_vect = mesh->xc_coord; Z_vect = mesh->zc_coord;
+    }
+    if (centroid == 0) {
+        Nx = mesh->Nx; Nz = mesh->Nz;
+        X_vect = mesh->xg_coord; Z_vect = mesh->zg_coord;
+    }
+    if (centroid == -1) {
+        Nx = mesh->Nx; Nz = mesh->Nz + 1;
+        X_vect = mesh->xg_coord; Z_vect = mesh->zvx_coord;
+    }
+    if (centroid == -2) {
+        Nx = mesh->Nx + 1; Nz = mesh->Nz;
+        X_vect = mesh->xvz_coord; Z_vect = mesh->zg_coord;
+    }
+
+    Np = particles.Nb_part;
+    dx = mesh->dx;
+    dz = mesh->dz;
+    if (interp_stencil == 1) { dx_itp = dx / 2.0; dz_itp = dz / 2.0; }
+    if (interp_stencil == 9) { dx_itp = 3.0 * dx / 2.0; dz_itp = 3.0 * dz / 2.0; }
+
+    // Resolve pool index
+    switch (centroid) {
+        case  1: pool_idx = 0; break;
+        case  0: pool_idx = 1; break;
+        case -1: pool_idx = 2; break;
+        case -2: pool_idx = 3; break;
+        default: pool_idx = 0; break;
+    }
+
+    // Buffer init: zero shared WM and per-field BMWM
+    WM = pool->WM[pool_idx];
+    memset(WM, 0, Nx * Nz * sizeof(double));
+    for (int f = 0; f < nfields; f++) {
+        memset(pool->BMWM_fused[f], 0, Nx * Nz * sizeof(double));
+    }
+
+    // Scatter loop: single pass over all particles
+    #pragma omp parallel for shared(particles, WM, X_vect, Z_vect, fields, pool) \
+        private(pool_idx) \
+        firstprivate(dx, dz, Np, Nx, Nz, mesh, dx_itp, dz_itp, nfields, centroid) \
+        schedule(static)
+    for (int k = 0; k < Np; k++) {
+
+        if (particles.phase[k] != -1) {
+
+            int ip, jp, kp, p, peri;
+            double dxm, dzm, distance;
+            p = particles.phase[k];
+
+            // Grid column
+            distance = particles.x[k] - X_vect[0];
+            ip = (int)(ceil(distance / dx + 0.5)) - 1;
+            if (ip < 0)      ip = 0;
+            if (ip > Nx - 1) ip = Nx - 1;
+
+            // Grid row
+            distance = particles.z[k] - Z_vect[0];
+            jp = (int)(ceil(distance / dz + 0.5)) - 1;
+            if (jp < 0)      jp = 0;
+            if (jp > Nz - 1) jp = Nz - 1;
+
+            // Compute mark_val for each field
+            double mark_vals[16];
+            for (int f = 0; f < nfields; f++) {
+                double mark_val;
+                double nx, nz;
+                switch (fields[f].flag) {
+                    case 0:
+                        mark_val = fields[f].src[p];
+                        break;
+                    case 1:
+                        mark_val = fields[f].src[k];
+                        break;
+                    case -1:
+                        nx = particles.nx[k]; nz = particles.nz[k];
+                        mark_val = 2.0 * pow(nx, 2.0) * pow(nz, 2.0);
+                        break;
+                    case -2:
+                        nx = particles.nx[k]; nz = particles.nz[k];
+                        mark_val = nx * nz * (-pow(nx, 2.0) + pow(nz, 2.0));
+                        break;
+                    case -3:
+                        mark_val = acos(particles.nx[k]);
+                        break;
+                    default:
+                        mark_val = 0.0;
+                        break;
+                }
+                if (fields[f].avg == 1) mark_val = 1.0 / mark_val;
+                if (fields[f].avg == 2) mark_val = log(mark_val);
+                mark_vals[f] = mark_val;
+            }
+
+            // ---- Centre stencil node ----
+            dxm = fabs(X_vect[ip] - particles.x[k]);
+            dzm = fabs(Z_vect[jp] - particles.z[k]);
+            kp = ip + jp * Nx;
+            {
+                double w_ = (1.0 - dxm / dx_itp) * (1.0 - dzm / dz_itp);
+                _Pragma("omp atomic") WM[kp] += w_;
+                for (int f = 0; f < nfields; f++) {
+                    _Pragma("omp atomic") pool->BMWM_fused[f][kp] += mark_vals[f] * w_;
+                }
+            }
+
+            // ---- 9-cell stencil neighbors ----
+            if (interp_stencil == 9) {
+
+                // N
+                if (jp < Nz - 1) {
+                    kp = ip + (jp + 1) * Nx;
+                    dxm = fabs(X_vect[ip] - particles.x[k]);
+                    dzm = fabs(Z_vect[jp] + dz - particles.z[k]);
+                    double w_ = (1.0 - dxm / dx_itp) * (1.0 - dzm / dz_itp);
+                    _Pragma("omp atomic") WM[kp] += w_;
+                    for (int f = 0; f < nfields; f++) {
+                        _Pragma("omp atomic") pool->BMWM_fused[f][kp] += mark_vals[f] * w_;
+                    }
+                }
+
+                // S
+                if (jp > 0) {
+                    kp = ip + (jp - 1) * Nx;
+                    dxm = fabs(X_vect[ip] - particles.x[k]);
+                    dzm = fabs(Z_vect[jp] - dz - particles.z[k]);
+                    double w_ = (1.0 - dxm / dx_itp) * (1.0 - dzm / dz_itp);
+                    _Pragma("omp atomic") WM[kp] += w_;
+                    for (int f = 0; f < nfields; f++) {
+                        _Pragma("omp atomic") pool->BMWM_fused[f][kp] += mark_vals[f] * w_;
+                    }
+                }
+
+                // E
+                peri = 0;
+                if (ip == Nx - 1 && model->periodic_x == 1) peri = 1;
+                if (ip < Nx - 1 || peri == 1) {
+                    kp = ip + jp * Nx + (1.0 - peri) * 1 - peri * (Nx - 1);
+                    dxm = fabs(X_vect[ip] + dx - particles.x[k]);
+                    dzm = fabs(Z_vect[jp] - particles.z[k]);
+                    double w_ = (1.0 - dxm / dx_itp) * (1.0 - dzm / dz_itp);
+                    _Pragma("omp atomic") WM[kp] += w_;
+                    for (int f = 0; f < nfields; f++) {
+                        _Pragma("omp atomic") pool->BMWM_fused[f][kp] += mark_vals[f] * w_;
+                    }
+                }
+
+                // W
+                peri = 0;
+                if (ip == 0 && model->periodic_x == 1) peri = 1;
+                if (ip > 0 || peri == 1) {
+                    kp = ip + jp * Nx - (1.0 - peri) * 1 + peri * (Nx - 1);
+                    dxm = fabs(X_vect[ip] - dx - particles.x[k]);
+                    dzm = fabs(Z_vect[jp] - particles.z[k]);
+                    double w_ = (1.0 - dxm / dx_itp) * (1.0 - dzm / dz_itp);
+                    _Pragma("omp atomic") WM[kp] += w_;
+                    for (int f = 0; f < nfields; f++) {
+                        _Pragma("omp atomic") pool->BMWM_fused[f][kp] += mark_vals[f] * w_;
+                    }
+                }
+
+                // NE
+                peri = 0;
+                if (ip == Nx - 1 && model->periodic_x == 1) peri = 1;
+                if (jp < Nz - 1 && (ip < Nx - 1 || peri == 1)) {
+                    kp = ip + (jp + 1) * Nx + (1.0 - peri) * 1 - peri * (Nx - 1);
+                    dxm = fabs(X_vect[ip] + dx - particles.x[k]);
+                    dzm = fabs(Z_vect[jp] + dz - particles.z[k]);
+                    double w_ = (1.0 - dxm / dx_itp) * (1.0 - dzm / dz_itp);
+                    _Pragma("omp atomic") WM[kp] += w_;
+                    for (int f = 0; f < nfields; f++) {
+                        _Pragma("omp atomic") pool->BMWM_fused[f][kp] += mark_vals[f] * w_;
+                    }
+                }
+
+                // NW
+                peri = 0;
+                if (ip == 0 && model->periodic_x == 1) peri = 1;
+                if (jp < Nz - 1 && (ip > 0 || peri == 1)) {
+                    kp = ip + (jp + 1) * Nx - (1.0 - peri) * 1 + peri * (Nx - 1);
+                    dxm = fabs(X_vect[ip] - dx - particles.x[k]);
+                    dzm = fabs(Z_vect[jp] + dz - particles.z[k]);
+                    double w_ = (1.0 - dxm / dx_itp) * (1.0 - dzm / dz_itp);
+                    _Pragma("omp atomic") WM[kp] += w_;
+                    for (int f = 0; f < nfields; f++) {
+                        _Pragma("omp atomic") pool->BMWM_fused[f][kp] += mark_vals[f] * w_;
+                    }
+                }
+
+                // SE
+                peri = 0;
+                if (ip == Nx - 1 && model->periodic_x == 1) peri = 1;
+                if (jp > 0 && (ip < Nx - 1 || peri == 1)) {
+                    kp = ip + (jp - 1) * Nx + (1.0 - peri) * 1 - peri * (Nx - 1);
+                    dxm = fabs(X_vect[ip] + dx - particles.x[k]);
+                    dzm = fabs(Z_vect[jp] - dz - particles.z[k]);
+                    double w_ = (1.0 - dxm / dx_itp) * (1.0 - dzm / dz_itp);
+                    _Pragma("omp atomic") WM[kp] += w_;
+                    for (int f = 0; f < nfields; f++) {
+                        _Pragma("omp atomic") pool->BMWM_fused[f][kp] += mark_vals[f] * w_;
+                    }
+                }
+
+                // SW
+                peri = 0;
+                if (ip == 0 && model->periodic_x == 1) peri = 1;
+                if (jp > 0 && (ip > 0 || peri == 1)) {
+                    kp = ip + (jp - 1) * Nx - (1.0 - peri) * 1 + peri * (Nx - 1);
+                    dxm = fabs(X_vect[ip] - dx - particles.x[k]);
+                    dzm = fabs(Z_vect[jp] - dz - particles.z[k]);
+                    double w_ = (1.0 - dxm / dx_itp) * (1.0 - dzm / dz_itp);
+                    _Pragma("omp atomic") WM[kp] += w_;
+                    for (int f = 0; f < nfields; f++) {
+                        _Pragma("omp atomic") pool->BMWM_fused[f][kp] += mark_vals[f] * w_;
+                    }
+                }
+            }
+        }
+    }
+
+    // Normalization: compute final node values per field
+    #pragma omp parallel for shared(WM, fields, pool) \
+        firstprivate(Nx, Nz, nfields) schedule(static)
+    for (int i = 0; i < Nx * Nz; i++) {
+        if (fabs(WM[i]) < 1e-30 || (fields[0].BCtype[i] == 30 || fields[0].BCtype[i] == 31)) {
+            // skip empty or boundary nodes
+        } else {
+            for (int f = 0; f < nfields; f++) {
+                fields[f].dst[i] = pool->BMWM_fused[f][i] / WM[i];
+                if (fields[f].avg == 1) fields[f].dst[i] = 1.0 / fields[f].dst[i];
+                if (fields[f].avg == 2) fields[f].dst[i] = exp(fields[f].dst[i]);
+            }
+        }
+    }
+
+    // Periodic-x boundary fixup for vertex centroid
+    if (centroid == 0 && model->periodic_x == 1) {
+        for (int f = 0; f < nfields; f++) {
+            if (fields[f].prop == 0) {
+                for (int l = 0; l < Nz; l++) {
+                    int c1 = l * Nx + Nx - 1;
+                    double av = 0.5 * (fields[f].dst[c1] + fields[f].dst[l * Nx]);
+                    fields[f].dst[c1] = av;
+                    fields[f].dst[l * Nx] = av;
+                }
+            }
+        }
+    }
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/

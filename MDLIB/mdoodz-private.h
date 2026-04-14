@@ -288,15 +288,30 @@ void            SetBCs_user(grid *, params *, scale, markers *, mat_prop *);
 //void eval_anal_Dani( double*, double*, double*, double*, double*, double*, double, double, int, double, double, double );
 void            ComputeLithostaticPressure(grid *, params *, double, scale, int);
 
-// Persistent interpolation buffer pool (modes 1, 2)
+// Field descriptor for fused particle-to-grid interpolation (mode 3)
+typedef struct {
+    double *src;       // source: mat_prop array or particles.field (NULL for flag<0)
+    double *dst;       // destination grid array (e.g. mesh.Cp)
+    char   *BCtype;    // boundary condition type array (e.g. mesh.BCp.type)
+    int     flag;      // 0=mat_prop, 1=particle field, -1/-2/-3=anisotropy
+    int     avg;       // 0=arithmetic, 1=harmonic, 2=geometric
+    int     prop;      // 0=field interpolation (always 0 in fused batches)
+    int     stencil;   // 1 or 9 (must match all fields in batch)
+} P2MastahField;
+
+// Persistent interpolation buffer pool (modes 1, 2, 3)
 typedef struct {
     double *WM[4];     // weight accumulator per centroid type [cent, vert, vx, vz]
     double *BMWM[4];   // weighted-value accumulator per centroid type
     int     sizes[4];  // grid size per centroid type (Nx_c * Nz_c)
-    double **Wm[4];    // thread-local weight arrays (mode 1 only; NULL for mode 2)
-    double **BmWm[4];  // thread-local weighted-value arrays (mode 1 only; NULL for mode 2)
+    double **Wm[4];    // thread-local weight arrays (mode 1 only; NULL for mode 2+)
+    double **BmWm[4];  // thread-local weighted-value arrays (mode 1 only; NULL for mode 2+)
     int     nthreads;
     int     interp_mode;
+    // Mode 3 fused interpolation fields
+    int     max_fused_fields;   // 16 (max fields per fused batch)
+    int     max_centroid_size;  // max(sizes[0..3])
+    double *BMWM_fused[16];    // per-field weighted-value accumulators for fused batches
 } InterpBufPool;
 
 InterpBufPool  *InterpBufPoolInit(grid *mesh, int interp_mode, int nthreads);
@@ -314,6 +329,7 @@ void            Interp_Grid2P_strain(markers, DoodzFP *, grid *, double *, doubl
 void            Interp_Phase2VizGrid(markers, int *, grid *, char *, double *, double *, int, int, params, surface);
 void            ParticleInflowCheck(markers *, grid *, MdoodzInput*, surface, int, SetParticles_ff); // SetParticles_ff setParticles, MdoodzInput *instance
 void            P2Mastah(params *, markers, DoodzFP *, grid *, double *, char *, int, int, int, int, int, InterpBufPool *);
+void            P2Mastah_Fused(params *, markers, grid *, int, int, P2MastahField *, int, InterpBufPool *);
 //
 //// Stokes
 //void ResidualCalc2( grid*OutputSparseMatrix *, params, int, double*, double*, double*, double*, double*, double*, int, scale );
