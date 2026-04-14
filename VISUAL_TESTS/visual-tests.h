@@ -18,5 +18,8 @@ void PlotVEP();
 void PlotVEPRef();
 void PlotShrinkingGif();
 void PlotShrinkingGifRef();
+void PlotThermalAccuracy();
+void PlotPCGConvergence();
+void PlotInterpEquivalence();
 
 #endif

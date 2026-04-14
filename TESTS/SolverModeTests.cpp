@@ -77,3 +77,30 @@ TEST_F(SolverMode, AdaptiveDt) {
   free(file1);
   free(file3);
 }
+
+
+// --- Interpolation mode tests ---
+
+TEST_F(SolverMode, AdaptiveDtInterpMode1) {
+  char *inputName;
+  asprintf(&inputName, "SolverMode/AdaptiveDtInterpMode1.txt");
+  RunMDOODZ(inputName, &setup);
+  char *fileName;
+  asprintf(&fileName, "AdaptiveDtInterpMode1/Output%05d.gzip.h5", 1);
+  int steps = getStepsCount(fileName);
+  EXPECT_GE(steps, 0);
+  free(inputName);
+  free(fileName);
+}
+
+TEST_F(SolverMode, AdaptiveDtInterpMode2) {
+  char *inputName;
+  asprintf(&inputName, "SolverMode/AdaptiveDtInterpMode2.txt");
+  RunMDOODZ(inputName, &setup);
+  char *fileName;
+  asprintf(&fileName, "AdaptiveDtInterpMode2/Output%05d.gzip.h5", 1);
+  int steps = getStepsCount(fileName);
+  EXPECT_GE(steps, 0);
+  free(inputName);
+  free(fileName);
+}

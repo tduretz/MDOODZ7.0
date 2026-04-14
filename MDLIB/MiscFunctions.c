@@ -29,6 +29,8 @@
 #include "mdoodz.h"
 #include "mdoodz-private.h"
 
+#include "mdoodz-log.h"
+
 #ifdef _OMP_
 #include "omp.h"
 #else
@@ -37,7 +39,7 @@
 #endif
 
 #ifdef _VG_
-#define printf(...) printf("")
+#define LOG_INFO(...) LOG_INFO("")
 #endif
 
 
@@ -59,15 +61,15 @@ void CheckSym( DoodzFP* array, double scale, int nx, int nz, char* text, int mod
     for ( i=0; i<nx; i++ ) {
         if (mode ==0) {
         if (fabs(sump[i] - sump[nx-1-i])>err) err = fabs(sump[i] - sump[nx-1-i]);
-        if (show==1)  printf("%s %2.6e %2.6e %2.6e\n", text, sump[i]*scale, sump[nx-1-i]*scale, (sump[i] - sump[nx-1-i])*scale);
+        if (show==1)  LOG_INFO("%s %2.6e %2.6e %2.6e", text, sump[i]*scale, sump[nx-1-i]*scale, (sump[i] - sump[nx-1-i])*scale);
         }
         else {
             if (fabs(sump[i] + sump[nx-1-i])>err) err = fabs(sump[i] + sump[nx-1-i]);
-            if (show==1)  printf("%s %2.6e %2.6e %2.6e\n", text, sump[i]*scale, sump[nx-1-i]*scale, (sump[i] + sump[nx-1-i])*scale);
+            if (show==1)  LOG_INFO("%s %2.6e %2.6e %2.6e", text, sump[i]*scale, sump[nx-1-i]*scale, (sump[i] + sump[nx-1-i])*scale);
         }
                                
     }
-    if (err>1e-10) {printf("%s\n", text); exit(1);}
+    if (err>1e-10) {LOG_ERR("%s", text); exit(1);}
     
 }
 
@@ -84,7 +86,7 @@ void MinMaxArrayI( int* array, int scale, int size, char* text ) {
         if (array[k]>max) max = array[k];
         if (array[k]<min) min = array[k];
     }
-    printf( "min(%s) = %d max(%s) = %d\n", text, min*scale, text, max*scale);
+    LOG_INFO("min(%s) = %d max(%s) = %d", text, min*scale, text, max*scale);
 }
 
 
@@ -123,7 +125,7 @@ double SumArray( double* array, double scale, int size, char* text ) {
     for (k=0; k<size; k++) {
         sum += (array[k]);
     }
-    printf( "sum(%s) = %2.12e\n", text, sum*scale );
+    LOG_INFO("sum(%s) = %2.12e", text, sum*scale);
     return sum;
 }
 
@@ -193,8 +195,8 @@ void MinMaxArray( double * array, double scale, int size, char* text ) {
         for (k=0; k<size; k++) {
             if (array[k]>pmax) pmax = array[k];
             if (array[k]<pmin) pmin = array[k];
-            if (isnan(array[k])) {printf("Nan %s : exit (MinMaxArray)\n",text); exit(1);}
-            if (isinf(array[k])) {printf("Inf %s : exit (MinMaxArray)\n",text); exit(1);}
+            if (isnan(array[k])) {LOG_ERR("Nan %s : exit (MinMaxArray)",text); exit(1);}
+            if (isinf(array[k])) {LOG_ERR("Inf %s : exit (MinMaxArray)",text); exit(1);}
 
         }
 #pragma omp flush (max)
@@ -213,7 +215,7 @@ void MinMaxArray( double * array, double scale, int size, char* text ) {
             }
         }
     }
-    printf( "min(%s) = %2.10e max(%s) = %2.10e\n", text, min*scale, text, max*scale);
+    LOG_INFO("min(%s) = %2.10e max(%s) = %2.10e", text, min*scale, text, max*scale);
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
@@ -252,7 +254,7 @@ void MinMaxArrayTag( DoodzFP* array, double scale, int size, char* text, char* t
             }
         }
     }
-    printf( "min(%s) = %2.10e max(%s) = %2.10e\n", text, min*scale, text, max*scale);
+    LOG_INFO("min(%s) = %2.10e max(%s) = %2.10e", text, min*scale, text, max*scale);
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
@@ -291,7 +293,7 @@ void MinMaxArrayTagInt( int* array, double scale, int size, char* text, char* ta
             }
         }
     }
-    printf( "min(%s) = %03d max(%s) = %03d\n", text, min, text, max);
+    LOG_INFO("min(%s) = %03d max(%s) = %03d", text, min, text, max);
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
@@ -330,7 +332,7 @@ void MinMaxArrayTagChar( char* array, double scale, int size, char* text, char* 
             }
         }
     }
-    printf( "min(%s) = %03d max(%s) = %03d\n", text, min, text, max);
+    LOG_INFO("min(%s) = %03d max(%s) = %03d", text, min, text, max);
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
@@ -443,7 +445,7 @@ void  IsNanArray2DFP( DoodzFP* arr1, int size1 ) {
     for(k=0;k<size1;k++) {
 
         if ( isnan(arr1[k])!=0 ) {
-            printf("Nan Scheisse!\n");
+            LOG_INFO("Nan Scheisse!");
             break;
         }
     }
@@ -459,7 +461,7 @@ void  IsInfArray2DFP( DoodzFP* arr1, int size1 ) {
     for(k=0;k<size1;k++) {
 
         if ( isinf(arr1[k])!=0 ) {
-            printf("Inf Scheisse!\n");
+            LOG_INFO("Inf Scheisse!");
             break;
         }
     }
@@ -523,7 +525,7 @@ void MinMaxArrayPart( DoodzFP* array, double scale, int size, char* text, int* p
             }
         }
     }
-    printf( "min(%s) = %2.12e max(%s) = %2.12e\n", text, min*scale, text, max*scale);
+    LOG_INFO("min(%s) = %2.12e max(%s) = %2.12e", text, min*scale, text, max*scale);
 }
 /*--------------------------------------------------------------------------------------------------------------------*/
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
@@ -531,16 +533,16 @@ void MinMaxArrayPart( DoodzFP* array, double scale, int size, char* text, int* p
 
 void  Print2DArrayDouble( DoodzFP* arr, int nx, int nz, double scale ) {
     int cx,cz,k;
-    printf("\n");
+    LOG_INFO("");
     for(cz=0;cz<nz;cz++) {
         //    for(cx=0;cx<nx;cx+=nx-1) {
         for(cx=0;cx<nx;cx++) {
             
             k = cx + cz*nx;
-                   printf("%.2lf ", arr[k]*scale);
+                   LOG_INFO("%.2lf ", arr[k]*scale);
             // printf("%.4e ", arr[k]*scale);
         }
-        printf("\n");
+        LOG_INFO("");
     }
 }
 
@@ -550,16 +552,16 @@ void  Print2DArrayDouble( DoodzFP* arr, int nx, int nz, double scale ) {
 
 void Print2DArrayInt( int* arr, int nx, int nz, double scale ) {
     int cx,cz,k;
-    printf("\n");
+    LOG_INFO("");
     for(cz=0;cz<nz;cz++) {
         //    for(cx=0;cx<nx;cx+=nx-1) {
         for(cx=0;cx<nx;cx++) {
             
             k = cx + cz*nx;
             //        printf("%.2lf ", arr[k]*scale);
-            printf("%d ", arr[k]);
+            LOG_INFO("%d ", arr[k]);
         }
-        printf("\n");
+        LOG_INFO("");
     }
 }
 
@@ -569,16 +571,16 @@ void Print2DArrayInt( int* arr, int nx, int nz, double scale ) {
 
 void Print2DArrayChar( char* arr, int nx, int nz, double scale ) {
     int cx,cz,k;
-    printf("\n");
+    LOG_INFO("");
     for(cz=0;cz<nz;cz++) {
         //    for(cx=0;cx<nx;cx+=nx-1) {
         for(cx=0;cx<nx;cx++) {
             
             k = cx + cz*nx;
             //        printf("%.2lf ", arr[k]*scale);
-            printf("%02d ", arr[k]);
+            LOG_INFO("%02d ", arr[k]);
         }
-        printf("\n");
+        LOG_INFO("");
     }
 }
 

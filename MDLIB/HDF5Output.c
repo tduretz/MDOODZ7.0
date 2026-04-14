@@ -33,6 +33,8 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include "mdoodz-log.h"
+
 #ifdef _OMP_
 #include "omp.h"
 #else
@@ -182,9 +184,9 @@ void AddFieldToGroup( const char filename[], const char group[], const char fiel
 	if(compress==_TRUE_) {
 		SET_CREATION_PLIST = plist;
         if ( quiet == 0 ) {
-            printf("*** Compression info *** \n");
-            printf("  chunk_size = %f \n", chunk_size );
-            printf("  deflation level = %d \n", deflation_level );
+            LOG_INFO("*** Compression info *** ");
+            LOG_INFO("  chunk_size = %f ", chunk_size);
+            LOG_INFO("  deflation level = %d ", deflation_level);
         }
 	}
 	else {
@@ -217,7 +219,7 @@ void AddFieldToGroup( const char filename[], const char group[], const char fiel
 	}
 
 	else {
-		printf("ERROR: Only know how to write doubles (d), ints (i), or chars (c) \n");
+		LOG_ERR("ERROR: Only know how to write doubles (d), ints (i), or chars (c) ");
 		exit(1);
 	}
 
@@ -324,7 +326,7 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
 
     // ---------------------------------------------------------
     // Smooth rheological contrasts
-    if (model.diffuse_X) P2Mastah( &model, *particles, particles->X,     mesh, mesh->X_n,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil);
+    if (model.diffuse_X) P2Mastah( &model, *particles, particles->X,     mesh, mesh->X_n,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil, NULL);
     // ---------------------------------------------------------
     // Cast grid arrays
     Crho_s  = DoodzMalloc( sizeof(float)*model.Nx*model.Nz);
@@ -485,74 +487,74 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
 
     // Total strain
     strain  = DoodzCalloc((model.Nx-1)*(model.Nz-1), sizeof(double));
-    P2Mastah( &model, *particles, particles->strain,     mesh, strain,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil);
+    P2Mastah( &model, *particles, particles->strain,     mesh, strain,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil, NULL);
     Cstrain  = DoodzMalloc( sizeof(float)*(model.Nx-1)*(model.Nz-1));
     DoubleToFloat( strain, Cstrain, (model.Nx-1)*(model.Nz-1) );
 
     // Elastic strain
     strain_el  = DoodzCalloc((model.Nx-1)*(model.Nz-1),sizeof(double));
-    P2Mastah( &model, *particles, particles->strain_el,     mesh, strain_el,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil);
+    P2Mastah( &model, *particles, particles->strain_el,     mesh, strain_el,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil, NULL);
     Cstrain_el  = DoodzMalloc( sizeof(float)*(model.Nx-1)*(model.Nz-1));
     DoubleToFloat( strain_el, Cstrain_el, (model.Nx-1)*(model.Nz-1) );
 
     // Deviatoric plastic strain
     strain_pl  = DoodzCalloc((model.Nx-1)*(model.Nz-1), sizeof(double));
-    P2Mastah( &model, *particles, particles->strain_pl,     mesh, strain_pl,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil);
+    P2Mastah( &model, *particles, particles->strain_pl,     mesh, strain_pl,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil, NULL);
     Cstrain_pl  = DoodzMalloc( sizeof(float)*(model.Nx-1)*(model.Nz-1));
     DoubleToFloat( strain_pl, Cstrain_pl, (model.Nx-1)*(model.Nz-1) );
     
     // Volumetric plastic strain
     strain_pl_vol  = DoodzCalloc((model.Nx-1)*(model.Nz-1), sizeof(double));
-    P2Mastah( &model, *particles, particles->strain_pl_vol,     mesh, strain_pl_vol,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil);
+    P2Mastah( &model, *particles, particles->strain_pl_vol,     mesh, strain_pl_vol,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil, NULL);
     Cstrain_pl_vol  = DoodzMalloc( sizeof(float)*(model.Nx-1)*(model.Nz-1));
     DoubleToFloat( strain_pl_vol, Cstrain_pl_vol, (model.Nx-1)*(model.Nz-1) );
 
     // Power-law strain
     strain_pwl  = DoodzCalloc((model.Nx-1)*(model.Nz-1), sizeof(double));
-    P2Mastah( &model, *particles, particles->strain_pwl,     mesh, strain_pwl,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil);
+    P2Mastah( &model, *particles, particles->strain_pwl,     mesh, strain_pwl,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil, NULL);
     Cstrain_pwl  = DoodzMalloc( sizeof(float)*(model.Nx-1)*(model.Nz-1));
     DoubleToFloat( strain_pwl, Cstrain_pwl, (model.Nx-1)*(model.Nz-1) );
 
     // Exponential flow strain
     strain_exp  = DoodzCalloc((model.Nx-1)*(model.Nz-1), sizeof(double));
-    P2Mastah( &model, *particles, particles->strain_exp,     mesh, strain_exp,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil);
+    P2Mastah( &model, *particles, particles->strain_exp,     mesh, strain_exp,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil, NULL);
     Cstrain_exp  = DoodzMalloc( sizeof(float)*(model.Nx-1)*(model.Nz-1));
     DoubleToFloat( strain_exp, Cstrain_exp, (model.Nx-1)*(model.Nz-1) );
 
     // Linear flow strain
     strain_lin  = DoodzCalloc((model.Nx-1)*(model.Nz-1), sizeof(double));
-    P2Mastah( &model, *particles, particles->strain_lin,     mesh, strain_lin,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil);
+    P2Mastah( &model, *particles, particles->strain_lin,     mesh, strain_lin,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil, NULL);
     Cstrain_lin  = DoodzMalloc( sizeof(float)*(model.Nx-1)*(model.Nz-1));
     DoubleToFloat( strain_lin, Cstrain_lin, (model.Nx-1)*(model.Nz-1) );
 
     // GBS flow strain
     strain_gbs  = DoodzCalloc((model.Nx-1)*(model.Nz-1), sizeof(double));
-    P2Mastah( &model, *particles, particles->strain_gbs,     mesh, strain_gbs,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil);
+    P2Mastah( &model, *particles, particles->strain_gbs,     mesh, strain_gbs,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil, NULL);
     Cstrain_gbs  = DoodzMalloc( sizeof(float)*(model.Nx-1)*(model.Nz-1));
     DoubleToFloat( strain_gbs, Cstrain_gbs, (model.Nx-1)*(model.Nz-1) );
 
     if ( model.finite_strain == 1 ) {
         // Fxx
         Fxx  = DoodzCalloc((model.Nx-1)*(model.Nz-1), sizeof(double));
-        P2Mastah( &model, *particles, particles->Fxx,     mesh, Fxx,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil);
+        P2Mastah( &model, *particles, particles->Fxx,     mesh, Fxx,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil, NULL);
         CFxx  = DoodzMalloc( sizeof(float)*(model.Nx-1)*(model.Nz-1));
         DoubleToFloat( Fxx, CFxx, (model.Nx-1)*(model.Nz-1) );
 
         // Fxz
         Fxz  = DoodzCalloc((model.Nx-1)*(model.Nz-1),sizeof(double));
-        P2Mastah( &model, *particles, particles->Fxz,     mesh, Fxz,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil);
+        P2Mastah( &model, *particles, particles->Fxz,     mesh, Fxz,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil, NULL);
         CFxz  = DoodzMalloc( sizeof(float)*(model.Nx-1)*(model.Nz-1));
         DoubleToFloat( Fxz, CFxz, (model.Nx-1)*(model.Nz-1) );
 
         // Fzx
         Fzx  = DoodzCalloc((model.Nx-1)*(model.Nz-1), sizeof(double));
-        P2Mastah( &model, *particles, particles->Fzx,     mesh, Fzx,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil);
+        P2Mastah( &model, *particles, particles->Fzx,     mesh, Fzx,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil, NULL);
         CFzx  = DoodzMalloc( sizeof(float)*(model.Nx-1)*(model.Nz-1));
         DoubleToFloat( Fzx, CFzx, (model.Nx-1)*(model.Nz-1) );
 
         // Fzz
         Fzz  = DoodzCalloc((model.Nx-1)*(model.Nz-1),sizeof(double));
-        P2Mastah( &model, *particles, particles->Fzz,     mesh, Fzz,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil);
+        P2Mastah( &model, *particles, particles->Fzz,     mesh, Fzz,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil, NULL);
         CFzz = DoodzMalloc( sizeof(float)*(model.Nx-1)*(model.Nz-1));
         DoubleToFloat( Fzz, CFzz, (model.Nx-1)*(model.Nz-1) );
     }
@@ -561,13 +563,13 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
 
         // nx
         nx  = DoodzCalloc((model.Nx-1)*(model.Nz-1),sizeof(double));
-        P2Mastah( &model, *particles, particles->nx,     mesh, nx,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil);
+        P2Mastah( &model, *particles, particles->nx,     mesh, nx,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil, NULL);
         Cnx = DoodzMalloc( sizeof(float)*(model.Nx-1)*(model.Nz-1));
         DoubleToFloat( nx, Cnx, (model.Nx-1)*(model.Nz-1) );
 
         // nz
         nz  = DoodzCalloc((model.Nx-1)*(model.Nz-1), sizeof(double));
-        P2Mastah( &model, *particles, particles->nz,     mesh, nz,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil);
+        P2Mastah( &model, *particles, particles->nz,     mesh, nz,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil, NULL);
         Cnz = DoodzMalloc( sizeof(float)*(model.Nx-1)*(model.Nz-1));
         DoubleToFloat( nz, Cnz, (model.Nx-1)*(model.Nz-1) );
 
@@ -584,7 +586,7 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
 
         // T0
         T0  = DoodzCalloc((model.Nx-1)*(model.Nz-1), sizeof(double));
-        P2Mastah( &model, *particles, particles->T0,     mesh, T0,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil);
+        P2Mastah( &model, *particles, particles->T0,     mesh, T0,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil, NULL);
         for (k=0; k<(mesh->Nx-1)*(mesh->Nz-1); k++) {
             if ( mesh->BCt.type[k] == 30 ) T0[k]   = zeroC/scaling.T;
         }
@@ -594,7 +596,7 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
 
         // P0
         P0  = DoodzCalloc((model.Nx-1)*(model.Nz-1), sizeof(double));
-        P2Mastah( &model, *particles, particles->P0,     mesh, P0,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil);
+        P2Mastah( &model, *particles, particles->P0,     mesh, P0,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil, NULL);
         for (k=0; k<(mesh->Nx-1)*(mesh->Nz-1); k++) {
             if ( mesh->BCt.type[k] == 30 ) P0[k]   = 0.0;
         }
@@ -604,7 +606,7 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
 
         // Tmax
         Tmax  = DoodzCalloc((model.Nx-1)*(model.Nz-1), sizeof(double));
-        P2Mastah( &model, *particles, particles->Tmax,     mesh, Tmax,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil);
+        P2Mastah( &model, *particles, particles->Tmax,     mesh, Tmax,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil, NULL);
         for (k=0; k<(mesh->Nx-1)*(mesh->Nz-1); k++) {
             if ( mesh->BCt.type[k] == 30 ) Tmax[k] = zeroC/scaling.T;
         }
@@ -614,7 +616,7 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
 
         // Pmax
         Pmax  = DoodzCalloc((model.Nx-1)*(model.Nz-1),sizeof(double));
-        P2Mastah( &model, *particles, particles->Pmax,     mesh, Pmax,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil);
+        P2Mastah( &model, *particles, particles->Pmax,     mesh, Pmax,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil, NULL);
         for (k=0; k<(mesh->Nx-1)*(mesh->Nz-1); k++) {
             if ( mesh->BCt.type[k] == 30 ) Pmax[k] = 0.0;
         }
@@ -625,14 +627,14 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
 
         // x0
         x0  = DoodzCalloc((model.Nx-1)*(model.Nz-1), sizeof(double));
-        P2Mastah( &model, *particles, particles->x0,     mesh, x0,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil);
+        P2Mastah( &model, *particles, particles->x0,     mesh, x0,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil, NULL);
         Cx0  = DoodzMalloc( sizeof(float)*(model.Nx-1)*(model.Nz-1));
         DoubleToFloat( x0, Cx0, (model.Nx-1)*(model.Nz-1) );
         ScaleBack( Cx0, scaling.L, (model.Nx-1)*(model.Nz-1) );
 
         // z0
         z0  = DoodzCalloc((model.Nx-1)*(model.Nz-1), sizeof(double));
-        P2Mastah( &model, *particles, particles->z0,     mesh, z0,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil);
+        P2Mastah( &model, *particles, particles->z0,     mesh, z0,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil, NULL);
         Cz0 = DoodzMalloc( sizeof(float)*(model.Nx-1)*(model.Nz-1));
         DoubleToFloat( z0, Cz0, (model.Nx-1)*(model.Nz-1) );
         ScaleBack( Cz0, scaling.L, (model.Nx-1)*(model.Nz-1) );

@@ -222,3 +222,27 @@ For each mechanism `X` = {pwl, lin, exp, gbs}:
 | `ARITHMETIC` | 0 | Arithmetic mean |
 | `HARMONIC` | 1 | Harmonic mean |
 | `GEOMETRIC` | 2 | Geometric mean |
+
+## Per-Subsystem Timing Variables (Main_DOODZ.c)
+
+These `double` variables in the main timestep loop measure wall-clock time for each subsystem:
+
+| Variable | What it times | Function(s) |
+|----------|--------------|-------------|
+| `dt_rheology_total` | Rheology update (accumulated over nonlinear iterations) | `NonNewtonianViscosityGrid` |
+| `dt_assembly_total` | Stokes assembly (accumulated) | `BuildStokesOperator` |
+| `dt_solve_total` | Direct solve (accumulated) | `SolveStokes` |
+| `dt_thermal` | Thermal solver (energy equation) | `ThermalSolver` |
+| `dt_advection` | All advection (markers + interpolation + free surface) | `RogerGunther`, `Interp_Grid2P`, etc. |
+| `dt_free_surface` | Free surface operations (subset of advection) | `AdvectFreeSurface`, `MarkerChainPolyFit` |
+| `dt_reseeding` | Particle reseeding/counting | `CountPartCell`, `ParticleReseeding` |
+| `dt_melting` | Melt fraction computation | `MeltFractionGrid`, `UpdateAlphaCp` |
+| `dt_anisotropy` | Anisotropy factor update | `UpdateAnisoFactor` |
+| `dt_gse` | Grain size evolution | `UpdateParticleGrainSize` |
+| `dt_output` | HDF5 output writing | `WriteOutputHDF5` |
+| `dt_interp` | Particle-to-grid interpolation + timestep setup (from `t_omp_step`) | `P2Mastah`, Courant eval, free surface prep |
+| `dt_stokes_setup` | Stokes pre-loop initialization | BCs, `SAlloc`, `cholmod_start`, `InitialiseSolutionVector` |
+| `dt_nl_overhead` | Per-iteration overhead (iter_total − rheology − assembly − solve) | Accumulated across all NL iterations |
+| `dt_post_solve` | Post-solve particle updates (by subtraction from total) | Everything after NL loop until end of timestep |
+
+All are written to `perf.csv` each timestep (25 columns). Subsystems that are disabled for a run report 0.0.

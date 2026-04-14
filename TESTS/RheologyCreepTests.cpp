@@ -160,3 +160,30 @@ TEST_F(RheologyCreep, PowerLawCreep) {
   free(inputName);
   free(fileName);
 }
+
+
+// --- Interpolation mode tests ---
+
+TEST_F(RheologyCreep, PowerLawCreepInterpMode1) {
+  char *inputName;
+  asprintf(&inputName, "RheologyCreep/PowerLawCreepInterpMode1.txt");
+  RunMDOODZ(inputName, &setup);
+  char *fileName;
+  asprintf(&fileName, "PowerLawCreepInterpMode1/Output%05d.gzip.h5", 1);
+  int steps = getStepsCount(fileName);
+  EXPECT_GE(steps, 0);
+  free(inputName);
+  free(fileName);
+}
+
+TEST_F(RheologyCreep, PowerLawCreepInterpMode2) {
+  char *inputName;
+  asprintf(&inputName, "RheologyCreep/PowerLawCreepInterpMode2.txt");
+  RunMDOODZ(inputName, &setup);
+  char *fileName;
+  asprintf(&fileName, "PowerLawCreepInterpMode2/Output%05d.gzip.h5", 1);
+  int steps = getStepsCount(fileName);
+  EXPECT_GE(steps, 0);
+  free(inputName);
+  free(fileName);
+}

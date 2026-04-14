@@ -280,3 +280,56 @@ FFMPEG.ffmpeg_exe(`-framerate 15 -i output_%05d.png -c:v libx264 -pix_fmt yuv420
 5. Set time step range (`file_start`, `file_step`, `file_end`)
 6. Run script — produces figures or interactive window
 7. Optionally export PNGs and stitch into video
+
+## Quick Visualisation with Python + gnuplot
+
+When Julia/Makie isn't set up or you just need a fast sanity check, use h5py (Python) to extract arrays and gnuplot for plotting.
+
+### Extract a 2D Field with h5py
+
+```python
+import h5py, numpy as np
+
+f = h5py.File('Output00010.gzip.h5', 'r')
+params = f['/Model/Params'][:]
+nvx, nvz = int(params[3]), int(params[4])
+ncx, ncz = nvx - 1, nvz - 1
+
+# Cell-centre field (e.g., strain rate invariant)
+eII = np.reshape(f['/Centers/eII_pwl'][:], (ncx, ncz), order='C')
+np.savetxt('eII.dat', np.log10(eII).T)  # transpose for gnuplot's row=z convention
+
+# Phase map from VizGrid (same ncx×ncz on centres)
+compo = np.reshape(f['/VizGrid/compo'][:], (ncx, ncz), order='C')
+np.savetxt('phases.dat', compo.T)
+
+f.close()
+```
+
+### Plot with gnuplot
+
+```gnuplot
+set terminal pngcairo size 1200,500
+set output 'fields.png'
+
+set multiplot layout 1,2
+
+# Panel 1: strain rate
+set title 'log10(ε̇_{II})'
+set palette defined (-18 'blue', -15 'green', -12 'yellow', -9 'red')
+plot 'eII.dat' matrix with image notitle
+
+# Panel 2: phase map
+set title 'Phases'
+set palette defined (0 'grey', 1 'brown', 2 'green', 3 'orange')
+plot 'phases.dat' matrix with image notitle
+
+unset multiplot
+```
+
+### Tips
+
+- VizGrid `compo` uses the same `(ncx, ncz)` dimensions as cell-centre fields, **not** `(nvx, nvz)`
+- Always transpose (`.T`) when saving for gnuplot — gnuplot reads rows as the y-axis
+- Mask air cells (phase = -1) with NaN before computing log10
+- Coordinate arrays: `xc_coord` (length ncx), `zc_coord` (length ncz) for physical axis labels

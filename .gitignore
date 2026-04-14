@@ -25,3 +25,7 @@ runs/
 RUNS/
 *.mov
 *.bin
+*.pem
+benchmark-results/
+*.zip
+*.ZIP

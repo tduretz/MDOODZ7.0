@@ -28,6 +28,8 @@
 #include "math.h"
 #include "mdoodz-private.h"
 
+#include "mdoodz-log.h"
+
 #ifdef _OMP_
 #include "omp.h"
 #endif
@@ -105,6 +107,7 @@ void ChemicalDirectSolve( grid *mesh, params model, markers *particles, mat_prop
     // Solve system using CHOLMOD
     cholmod_common c;
     cholmod_start( &c );
+    c.nthreads_max = (model.cholmod_threads == -1) ? omp_get_max_threads() : model.cholmod_threads;
     cholmod_factor *Afact;
     cs_di *At;
     
@@ -149,7 +152,7 @@ void ChemicalDirectSolve( grid *mesh, params model, markers *particles, mat_prop
     
     //----------------------------------------------------//
 
-    printf("Assembling Energy matrix... with %d discrete equations\n", neq);
+    LOG_INFO("Assembling Energy matrix... with %d discrete equations", neq);
     
     // LOOP ON THE GRID TO CALCULATE FD COEFFICIENTS
     for( l=0; l<ncz; l++) {
@@ -199,7 +202,7 @@ void ChemicalDirectSolve( grid *mesh, params model, markers *particles, mat_prop
                 // Average conductivity for surface values (avoid zero conductivity)
                 ks = 0.25*(AE+AW+AN+AS);
                 if ( ks < mink ) {
-                    printf("ACHTUNG: interloplated surface conductivity is set lower cutoff value!!\n");
+                    LOG_INFO("ACHTUNG: interloplated surface conductivity is set lower cutoff value!!");
                     ks = mink;
                 }
                 
@@ -358,7 +361,7 @@ void ChemicalDirectSolve( grid *mesh, params model, markers *particles, mat_prop
     bufd = DoodzRealloc(A, nnzc*sizeof(double));
     J    = bufi;
     A    = bufd;
-    printf("Chemical diffusion --> System size: ndof = %d, nnz = %d\n", neq, nnzc);
+    LOG_INFO("Chemical diffusion --> System size: ndof = %d, nnz = %d", neq, nnzc);
     
     // ------------------------------------------- SOLVER ------------------------------------------- //
     
@@ -366,7 +369,7 @@ void ChemicalDirectSolve( grid *mesh, params model, markers *particles, mat_prop
     At = TransposeA( &c, A, Ic, J, neq, nnzc );
     
     // Factor matrix only at the first step
-    Afact = FactorEnergyCHOLMOD( &c, At, A, Ic, J, neq, nnzc, model.polar );
+    Afact = FactorEnergyCHOLMOD( &c, At, A, Ic, J, neq, nnzc, model.polar, 1, NULL );
     
     // Solve
     ArrayPlusScalarArray( b, 1.0, bbc, neq );
@@ -386,7 +389,7 @@ void ChemicalDirectSolve( grid *mesh, params model, markers *particles, mat_prop
                 //                mesh->dT[c2] = 1.0*(x[eqn] -  mesh->T[c2]);
                 mesh->X_n[c2]  = x[eqn];
                 if (mesh->X_n[c2] < 0.0) {
-                    printf("Negative X --- Are you crazy! (ChemicalDirectSolve)\n");
+                    LOG_INFO("Negative X --- Are you crazy! (ChemicalDirectSolve)");
                     exit(1);
                 }
             }

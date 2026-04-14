@@ -24,9 +24,10 @@
 #include "string.h"
 #include "math.h"
 #include "mdoodz-private.h"
+#include "mdoodz-log.h"
 
 #ifdef _VG_
-#define printf(...) printf("")
+#define LOG_INFO(...) LOG_INFO("")
 #endif
 
 /*--------------------------------------------------------------------------------------------------------------------*/
@@ -351,7 +352,7 @@ grid GridAlloc(params *model) {
   int NxVz = Nx + 1;
   int NzVx = Nz + 1;
 
-  printf("Allocation of grid arrays !\n");
+  LOG_INFO("Allocation of grid arrays !");
 
   mesh.FreeSurfW_s  = (double *) DoodzCalloc(Nx * Nz, sizeof(double));
   mesh.FreeSurfW_n  = (double *) DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
@@ -660,7 +661,7 @@ grid GridAlloc(params *model) {
   // Viscoplasticity
   mesh.OverS_n = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
 
-  printf("Memory succesfully allocated : \nDiantre, que c'est bon!\n");
+  LOG_INFO("Memory succesfully allocated : \nDiantre, que c'est bon!");
   return mesh;
 }
 

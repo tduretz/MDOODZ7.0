@@ -29,6 +29,9 @@
 #include "mdoodz-private.h"
 #include "mdoodz.h"
 
+#include "mdoodz-log.h"
+#include "sys/resource.h"
+
 #ifdef _OMP_
 #include "omp.h"
 #else
@@ -43,14 +46,24 @@
 
 void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
-    printf("\n********************************************************\n");
-    printf("************ Starting MDOODZ 7.0 simulation ************\n");
-    printf("********************************************************\n");
+    mdoodz_log_init(NULL);
+
+    LOG_INFO("********************************************************");
+    LOG_INFO("************ Starting MDOODZ 7.0 simulation ************");
+    LOG_INFO("********************************************************");
 
     Input inputFile   = ReadInputFile(inputFileName);
+
+    mdoodz_log_reconfigure(&inputFile.model.log);
     char *BaseOutputFileName, *BaseParticleFileName;
     asprintf(&BaseOutputFileName, "Output");
     asprintf(&BaseParticleFileName, "Particles");
+
+    // Open performance CSV
+    FILE *perf_csv = fopen("perf.csv", "w");
+    if (perf_csv) {
+        fprintf(perf_csv, "step,wall_s,time_ma,rheology_s,assembly_s,solve_s,thermal_s,advection_s,free_surface_s,reseeding_s,melting_s,anisotropy_s,gse_s,output_s,interp_s,stokes_setup_s,nl_overhead_s,post_solve_s,nit,n_particles,neq_mom,neq_cont,peak_rss_mb,user_cpu_s,sys_cpu_s\n");
+    }
 
     MdoodzInput input = (MdoodzInput){
             .model             = inputFile.model,
@@ -78,13 +91,19 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
     // ValidateSetup(setup, &input);
     input.model.L0 = input.model.xmax - input.model.xmin;
 
-    printf("*************************************\n");
-    printf("****** Allocate and initialise ******\n");
-    printf("*************************************\n");
+    LOG_INFO("*************************************");
+    LOG_INFO("****** Allocate and initialise ******");
+    LOG_INFO("*************************************");
 
     // Multi resolution allocation pointers
     grid mesh = GridAlloc(&input.model );
     int          Ncx = mesh.Nx - 1 , Ncz =  mesh.Nz - 1;
+
+    // Persistent interpolation buffer pool (modes 1, 2)
+    InterpBufPool *pool = NULL;
+    if (input.model.interp_mode >= 1) {
+        pool = InterpBufPoolInit(&mesh, input.model.interp_mode, omp_get_max_threads());
+    }
 
     // Initialise grid coordinates
     SetGridCoordinates( &mesh, &input.model, input.model.Nx, input.model.Nz );
@@ -106,11 +125,13 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
     {
         num_threads = omp_get_num_threads();
     }
-    printf("Num threads = %03d\n", omp_get_num_threads());
+    LOG_INFO("Num threads = %03d", omp_get_num_threads());
+    int cholmod_nthreads = (input.model.cholmod_threads == -1) ? num_threads : input.model.cholmod_threads;
+    LOG_INFO("CHOLMOD threads: %d", cholmod_nthreads);
 
-    printf("*************************************\n");
-    printf("******* Initialize particles ********\n");
-    printf("*************************************\n");
+    LOG_INFO("*************************************");
+    LOG_INFO("******* Initialize particles ********");
+    LOG_INFO("*************************************");
 
     // Initialize and allocate particle fields
     markers particles = PartAlloc(inputFile.particles, &input.model );
@@ -123,6 +144,14 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
     // Set new particle distribution
     int cent=1, vert=0, prop=1, interp=0, vxnodes=-1, vznodes=-2;
+
+    // Initialize persistent thermal CHOLMOD solver (before irestart branch, used by both paths)
+    DirectSolver ThermalSolver;
+    cholmod_start( &ThermalSolver.c );
+    ThermalSolver.c.nthreads_max = cholmod_nthreads;
+    ThermalSolver.Analyze = 1;
+    ThermalSolver.Lfact = NULL;
+
     if ( input.model.irestart == 0 ) {
 
       input.model.step = 0;
@@ -137,7 +166,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             const double k_crazy         = input.crazyConductivity->multiplier * input.materials.k[phase];
             input.materials.k_eff[phase] = k_crazy;
           }
-          printf("Running with crazy conductivity for the asthenosphere!!\n");
+          LOG_INFO("Running with crazy conductivity for the asthenosphere!!");
         }
 
         // Initial grid tags
@@ -179,20 +208,20 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         if (input.model.free_surface == 1 ) CleanUpSurfaceParticles( &particles, &mesh, topo, input.scaling );
 
         // Create phase percentage arrays
-        if ( input.model.reseed_mode == 0 ) CountPartCell_OLD( &particles, &mesh, input.model, topo, topo_ini, 0, input.scaling );
-        if ( input.model.reseed_mode == 1 ) CountPartCell( &particles, &mesh, input.model, topo, topo_ini, 0, input.scaling );
+        if ( input.model.reseed_mode == 0 ) CountPartCell_OLD( &particles, &mesh, input.model, topo, topo_ini, 0, input.scaling, pool );
+        if ( input.model.reseed_mode == 1 ) CountPartCell( &particles, &mesh, input.model, topo, topo_ini, 0, input.scaling, pool );
 
-        P2Mastah( &input.model, particles, input.materials.eta0, &mesh, mesh.eta_s, mesh.BCg.type,  0, 0, interp, vert, input.model.interp_stencil);
-        P2Mastah( &input.model, particles, input.materials.eta0, &mesh, mesh.eta_n, mesh.BCp.type,  0, 0, interp, cent, input.model.interp_stencil);
+        P2Mastah( &input.model, particles, input.materials.eta0, &mesh, mesh.eta_s, mesh.BCg.type,  0, 0, interp, vert, input.model.interp_stencil, pool);
+        P2Mastah( &input.model, particles, input.materials.eta0, &mesh, mesh.eta_n, mesh.BCp.type,  0, 0, interp, cent, input.model.interp_stencil, pool);
 
-        P2Mastah( &input.model, particles, particles.noise, &mesh, mesh.noise_s, mesh.BCg.type,  1, 0, interp, vert, input.model.interp_stencil);
-        P2Mastah( &input.model, particles, particles.noise, &mesh, mesh.noise_n, mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil);
+        P2Mastah( &input.model, particles, particles.noise, &mesh, mesh.noise_s, mesh.BCg.type,  1, 0, interp, vert, input.model.interp_stencil, pool);
+        P2Mastah( &input.model, particles, particles.noise, &mesh, mesh.noise_n, mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil, pool);
 
-        P2Mastah( &input.model, particles, particles.T,  &mesh, mesh.T , mesh.BCp.type,  1, 0, interp, cent, 1);
-        P2Mastah( &input.model, particles, input.materials.Cp, &mesh, mesh.Cp, mesh.BCp.type,  0, 0, interp, cent, 1);
+        P2Mastah( &input.model, particles, particles.T,  &mesh, mesh.T , mesh.BCp.type,  1, 0, interp, cent, 1, pool);
+        P2Mastah( &input.model, particles, input.materials.Cp, &mesh, mesh.Cp, mesh.BCp.type,  0, 0, interp, cent, 1, pool);
 
-        P2Mastah( &input.model, particles, input.materials.k_eff, &mesh, mesh.kx, mesh.BCu.type,  0, 0, interp, vxnodes, 1);
-        P2Mastah( &input.model, particles, input.materials.k_eff, &mesh, mesh.kz, mesh.BCv.type,  0, 0, interp, vznodes, 1);
+        P2Mastah( &input.model, particles, input.materials.k_eff, &mesh, mesh.kx, mesh.BCu.type,  0, 0, interp, vxnodes, 1, pool);
+        P2Mastah( &input.model, particles, input.materials.k_eff, &mesh, mesh.kz, mesh.BCv.type,  0, 0, interp, vznodes, 1, pool);
 
         if (input.model.noisy == 1 ) {
             MinMaxArray( mesh.u_in, input.scaling.V, (mesh.Nx)*(mesh.Nz+1),   "Vx. grid" );
@@ -205,7 +234,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             const double k_crazy         = input.crazyConductivity->multiplier * input.materials.k[phase];
             input.materials.k_eff[phase] = k_crazy;
           }
-          printf("Running with crazy conductivity for the asthenosphere!!\n");
+          LOG_INFO("Running with crazy conductivity for the asthenosphere!!");
         }
         // Initial solution fields
         SetBCs(*setup->SetBCs, &input, &mesh, &topo);
@@ -214,8 +243,8 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             InitialiseSolutionFields( &mesh, &input.model );
         }
         else {
-            P2Mastah( &input.model, particles, particles.Vx, &mesh, mesh.u_in, mesh.BCu.type,  1, 0, interp, vxnodes, 1);
-            P2Mastah( &input.model, particles, particles.Vz, &mesh, mesh.v_in, mesh.BCv.type,  1, 0, interp, vznodes, 1);
+            P2Mastah( &input.model, particles, particles.Vx, &mesh, mesh.u_in, mesh.BCu.type,  1, 0, interp, vxnodes, 1, pool);
+            P2Mastah( &input.model, particles, particles.Vz, &mesh, mesh.v_in, mesh.BCv.type,  1, 0, interp, vznodes, 1, pool);
             ApplyBC( &mesh, &input.model );
         }
 
@@ -223,41 +252,41 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         MinMaxArray( mesh.v_in, input.scaling.V, (mesh.Nx+1)*(mesh.Nz),   "Vz. grid" );
         MinMaxArray( mesh.p_in, input.scaling.S, (mesh.Nx-1)*(mesh.Nz-1), "       P" );
 
-        printf("*************************************\n");
-        printf("****** Initialize temperature *******\n");
-        printf("*************************************\n");
+        LOG_INFO("*************************************");
+        LOG_INFO("****** Initialize temperature *******");
+        LOG_INFO("*************************************");
 
         // Get energy and related material parameters from particles
-        P2Mastah( &input.model, particles, input.materials.k_eff, &mesh, mesh.kx, mesh.BCu.type,  0, 0, interp, vxnodes, 1);
-        P2Mastah( &input.model, particles, input.materials.k_eff, &mesh, mesh.kz, mesh.BCv.type,  0, 0, interp, vznodes, 1);
-        P2Mastah( &input.model, particles, particles.T,     &mesh, mesh.T , mesh.BCp.type,  1, 0, interp, cent, 1);
-        P2Mastah( &input.model, particles, input.materials.Cp,    &mesh, mesh.Cp, mesh.BCp.type,  0, 0, interp, cent, 1);
-        P2Mastah( &input.model, particles, input.materials.Qr,    &mesh, mesh.Qr, mesh.BCp.type,  0, 0, interp, cent, 1);
+        P2Mastah( &input.model, particles, input.materials.k_eff, &mesh, mesh.kx, mesh.BCu.type,  0, 0, interp, vxnodes, 1, pool);
+        P2Mastah( &input.model, particles, input.materials.k_eff, &mesh, mesh.kz, mesh.BCv.type,  0, 0, interp, vznodes, 1, pool);
+        P2Mastah( &input.model, particles, particles.T,     &mesh, mesh.T , mesh.BCp.type,  1, 0, interp, cent, 1, pool);
+        P2Mastah( &input.model, particles, input.materials.Cp,    &mesh, mesh.Cp, mesh.BCp.type,  0, 0, interp, cent, 1, pool);
+        P2Mastah( &input.model, particles, input.materials.Qr,    &mesh, mesh.Qr, mesh.BCp.type,  0, 0, interp, cent, 1, pool);
 
         SetBCs(*setup->SetBCs, &input, &mesh, &topo);
         UpdateDensity( &mesh, &particles, &input.materials, &input.model, &input.scaling );
-        if (input.model.initial_cooling == 1 ) ThermalSteps(   &mesh, input.model, mesh.rhs_t, &particles, input.model.cooling_duration, input.scaling );
+        if (input.model.initial_cooling == 1 ) ThermalSteps(   &mesh, input.model, mesh.rhs_t, &particles, input.model.cooling_duration, input.scaling, &ThermalSolver );
         if (input.model.therm_perturb   == 1 ) SetThermalPert( &mesh, input.model, input.scaling );
         Interp_Grid2P_centroids2( particles, particles.T,    &mesh, mesh.T, mesh.xvz_coord,  mesh.zvx_coord,  mesh.Nx-1, mesh.Nz-1, mesh.BCt.type, &input.model );
         ArrayEqualArray( mesh.T0_n, mesh.T, (mesh.Nx-1)*(mesh.Nz-1) );
 
         //--------------------------------------------------------------------------------------------------------
-        printf("*************************************\n");
-        printf("******** Initialize stresses ********\n");
-        printf("*************************************\n");
+        LOG_INFO("*************************************");
+        LOG_INFO("******** Initialize stresses ********");
+        LOG_INFO("*************************************");
         
         // stresses on particles should have been set in SetParticles, so here we only have to interpolate to the mesh
-        P2Mastah( &input.model, particles, particles.sxxd,   &mesh, mesh.sxxd0, mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil);
-        P2Mastah( &input.model, particles, particles.szzd,   &mesh, mesh.szzd0, mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil);
-        P2Mastah( &input.model, particles, particles.sxz,    &mesh, mesh.sxz0,  mesh.BCg.type,  1, 0, interp, vert, input.model.interp_stencil);
+        P2Mastah( &input.model, particles, particles.sxxd,   &mesh, mesh.sxxd0, mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil, pool);
+        P2Mastah( &input.model, particles, particles.szzd,   &mesh, mesh.szzd0, mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil, pool);
+        P2Mastah( &input.model, particles, particles.sxz,    &mesh, mesh.sxz0,  mesh.BCg.type,  1, 0, interp, vert, input.model.interp_stencil, pool);
 
         MinMaxArrayTag( mesh.sxxd0, input.scaling.S,   (mesh.Nx-1)*(mesh.Nz-1), "Sxx initial ", mesh.BCp.type );
         MinMaxArrayTag( mesh.szzd0, input.scaling.S,   (mesh.Nx-1)*(mesh.Nz-1), "Szz initial ", mesh.BCp.type );
 
 
-        printf("*************************************\n");
-        printf("******** Initialize pressure ********\n");
-        printf("*************************************\n");
+        LOG_INFO("*************************************");
+        LOG_INFO("******** Initialize pressure ********");
+        LOG_INFO("*************************************");
 
         // Compute deviatoric strain rate tensor components
         ApplyBC( &mesh, &input.model );
@@ -273,7 +302,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             // Compute pressure
             ComputeLithostaticPressure( &mesh, &input.model, input.materials.rho[0], input.scaling, 1 );
             Interp_Grid2P_centroids2( particles, particles.P,    &mesh, mesh.p_lith, mesh.xvz_coord,  mesh.zvx_coord,  mesh.Nx-1, mesh.Nz-1, mesh.BCp.type, &input.model );
-            P2Mastah( &input.model, particles, particles.P,     &mesh, mesh.p_in , mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil);
+            P2Mastah( &input.model, particles, particles.P,     &mesh, mesh.p_in , mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil, pool);
             ArrayEqualArray( mesh.p_in, mesh.p_lith,  (mesh.Nx-1)*(mesh.Nz-1) );
             ArrayEqualArray( mesh.p0_n, mesh.p_lith,  (mesh.Nx-1)*(mesh.Nz-1) );
             MinMaxArrayTag( mesh.p_in, input.scaling.S,   (mesh.Nx-1)*(mesh.Nz-1), "P initial ", mesh.BCp.type );
@@ -282,49 +311,49 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         // Interpolate pressure from centroids to vertices
         InterpCentroidsToVerticesDouble( mesh.p0_n, mesh.p0_s, &mesh, &input.model );
 
-        printf("****************************************\n");
-        printf("******* Initialize melt fraction *******\n");
-        printf("****************************************\n");
+        LOG_INFO("****************************************");
+        LOG_INFO("******* Initialize melt fraction *******");
+        LOG_INFO("****************************************");
         if (input.model.melting == 1 ) {
             MeltFractionGrid( &mesh, &particles, &input.materials, &input.model, &input.scaling );
             Interp_Grid2P_centroids2( particles, particles.phi,    &mesh, mesh.phi_n, mesh.xvz_coord,  mesh.zvx_coord,  mesh.Nx-1, mesh.Nz-1, mesh.BCp.type, &input.model );
         }
 
-        printf("*************************************\n");
-        printf("******* Initialize grain size *******\n");
-        printf("*************************************\n");
+        LOG_INFO("*************************************");
+        LOG_INFO("******* Initialize grain size *******");
+        LOG_INFO("*************************************");
         InitialiseGrainSizeParticles( &particles, &input.materials );
-        P2Mastah( &input.model, particles, particles.d,     &mesh, mesh.d_n , mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil);
+        P2Mastah( &input.model, particles, particles.d,     &mesh, mesh.d_n , mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil, pool);
         ArrayEqualArray( mesh.d0_n, mesh.d_n,  (mesh.Nx-1)*(mesh.Nz-1) );
 
-        printf("*************************************\n");
-        printf("******** Initialize density *********\n");
-        printf("*************************************\n");
+        LOG_INFO("*************************************");
+        LOG_INFO("******** Initialize density *********");
+        LOG_INFO("*************************************");
         UpdateDensity( &mesh, &particles, &input.materials, &input.model, &input.scaling );
         if (input.model.free_surface == 1 ) SurfaceDensityCorrection( &mesh, input.model, topo, input.scaling  );
         Interp_Grid2P_centroids2( particles, particles.rho,    &mesh, mesh.rho_n, mesh.xvz_coord,  mesh.zvx_coord,  mesh.Nx-1, mesh.Nz-1, mesh.BCp.type, &input.model );
 
-        printf("*************************************\n");
-        printf("****** Initialize composition *******\n");
-        printf("*************************************\n");
-        P2Mastah( &input.model, particles, particles.X,     &mesh, mesh.X0_n , mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil);
-        P2Mastah( &input.model, particles, particles.X,     &mesh, mesh.X0_s , mesh.BCg.type,  1, 0, interp, vert, input.model.interp_stencil);
+        LOG_INFO("*************************************");
+        LOG_INFO("****** Initialize composition *******");
+        LOG_INFO("*************************************");
+        P2Mastah( &input.model, particles, particles.X,     &mesh, mesh.X0_n , mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil, pool);
+        P2Mastah( &input.model, particles, particles.X,     &mesh, mesh.X0_s , mesh.BCg.type,  1, 0, interp, vert, input.model.interp_stencil, pool);
         ArrayEqualArray( mesh.X_n, mesh.X0_n,  (mesh.Nx-1)*(mesh.Nz-1) );
 
         if (input.model.anisotropy == 1 ) {
             InitialiseDirectorVector ( &mesh, &particles, &input.model, &input.materials, input.scaling.L);
-            P2Mastah( &input.model, particles, NULL, &mesh, mesh.d1_n,    mesh.BCp.type, -1, 0, interp, cent, input.model.interp_stencil);
-            P2Mastah( &input.model, particles, NULL, &mesh, mesh.d2_n,    mesh.BCp.type, -2, 0, interp, cent, input.model.interp_stencil);
-            P2Mastah( &input.model, particles, NULL, &mesh, mesh.angle_n, mesh.BCp.type, -3, 0, interp, cent, input.model.interp_stencil);
-            P2Mastah( &input.model, particles, NULL, &mesh, mesh.d1_s,    mesh.BCg.type, -1, 0, interp, vert, input.model.interp_stencil);
-            P2Mastah( &input.model, particles, NULL, &mesh, mesh.d2_s,    mesh.BCg.type, -2, 0, interp, vert, input.model.interp_stencil);
-            P2Mastah( &input.model, particles, NULL, &mesh, mesh.angle_s, mesh.BCg.type, -3, 0, interp, vert, input.model.interp_stencil);
+            P2Mastah( &input.model, particles, NULL, &mesh, mesh.d1_n,    mesh.BCp.type, -1, 0, interp, cent, input.model.interp_stencil, pool);
+            P2Mastah( &input.model, particles, NULL, &mesh, mesh.d2_n,    mesh.BCp.type, -2, 0, interp, cent, input.model.interp_stencil, pool);
+            P2Mastah( &input.model, particles, NULL, &mesh, mesh.angle_n, mesh.BCp.type, -3, 0, interp, cent, input.model.interp_stencil, pool);
+            P2Mastah( &input.model, particles, NULL, &mesh, mesh.d1_s,    mesh.BCg.type, -1, 0, interp, vert, input.model.interp_stencil, pool);
+            P2Mastah( &input.model, particles, NULL, &mesh, mesh.d2_s,    mesh.BCg.type, -2, 0, interp, vert, input.model.interp_stencil, pool);
+            P2Mastah( &input.model, particles, NULL, &mesh, mesh.angle_s, mesh.BCg.type, -3, 0, interp, vert, input.model.interp_stencil, pool);
             FiniteStrainAspectRatio ( &mesh, input.scaling, input.model, &particles );
         }
 
-        printf("*************************************\n");
-        printf("******* Initialize viscosity ********\n");
-        printf("*************************************\n");
+        LOG_INFO("*************************************");
+        LOG_INFO("******* Initialize viscosity ********");
+        LOG_INFO("*************************************");
 
         // Compute anisotropy factor, shear modulus, expansivity, compressibility, cohesion and friction angle on the grid
         CohesionFrictionDilationGrid( &mesh, &particles, input.materials, input.model, input.scaling );
@@ -336,7 +365,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         if (input.model.anisotropy==1) NonNewtonianViscosityGridAniso( &mesh, &input.materials, &input.model, Nmodel, &input.scaling, 0 );
 
         // Print informations!
-        printf("Number of phases : %d\n", input.model.Nb_phases);
+        LOG_INFO("Number of phases : %d", input.model.Nb_phases);
         if (input.model.noisy == 1 ) {
             MinMaxArrayTag( mesh.d0_n,       input.scaling.L,   (mesh.Nx-1)*(mesh.Nz-1), "d0        ", mesh.BCp.type );
             MinMaxArrayTag( mesh.d_n,        input.scaling.L,   (mesh.Nx-1)*(mesh.Nz-1), "d         ", mesh.BCp.type );
@@ -369,15 +398,15 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             if (input.model.marker_noise == 1) MinMaxArrayTag( mesh.noise_s, 1.0, (mesh.Nx-0)*(mesh.Nz-0), "noise_s     ", mesh.BCg.type );
             if (input.model.marker_noise == 1) MinMaxArrayTag( mesh.noise_n, 1.0, (mesh.Nx-1)*(mesh.Nz-1), "noise_n     ", mesh.BCp.type );
             for (int p=0; p< input.model.Nb_phases; p++) {
-                printf("Phase number %d:\n", p);
+                LOG_DBG("Phase number %d:", p);
                 MinMaxArrayTag( mesh.phase_perc_n[p],    1.0, (mesh.Nx-1)*(mesh.Nz-1), "ph_n      ", mesh.BCp.type );
                 MinMaxArrayTag( mesh.phase_perc_s[p],    1.0, (mesh.Nx-0)*(mesh.Nz-0), "ph_s      ", mesh.BCg.type );
             }
         }
 
-        printf("*************************************\n");
-        printf("******** Initialize timestep ********\n");
-        printf("*************************************\n");
+        LOG_INFO("*************************************");
+        LOG_INFO("******** Initialize timestep ********");
+        LOG_INFO("*************************************");
 
         DefineInitialTimestep( &input.model, &mesh, particles, input.materials, input.scaling );
 
@@ -392,9 +421,9 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         ComputeMeanQuantitesForTimeSeries( &mesh );
         LogTimeSeries( &mesh, input.model, input.scaling );
 
-        printf("*************************************\n");
-        printf("*** Write initial file or restart ***\n");
-        printf("*************************************\n");
+        LOG_INFO("*************************************");
+        LOG_INFO("*** Write initial file or restart ***");
+        LOG_INFO("*************************************");
 
         // Write initial output
         if ( input.model.writer == 1 ) {
@@ -409,7 +438,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
     else {
         // Which step do we restart from (BreakpointXXXX.dat)
         input.model.step = input.model.istep;
-        printf("Restarting from step number %05d...\n", input.model.step);
+        LOG_INFO("Restarting from step number %05d...", input.model.step);
         LoadBreakpointParticles( &particles, &mesh, &topo_chain, &topo_chain_ini, &input.model, &topo, &topo_ini, input.scaling  );
         SetGridCoordinates( &mesh, &input.model, input.model.Nx, input.model.Nz ); // Overwrite previous grid
     }
@@ -432,11 +461,20 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
     SparseMat    StokesA, StokesB, StokesC, StokesD;
     SparseMat    JacobA,  JacobB,  JacobC,  JacobD;
     DirectSolver CholmodSolver;
-    for (; input.model.step<= input.model.Nt; input.model.step++) {
+    for (; (input.model.t_end > 0 ? input.model.time < input.model.t_end : input.model.step <= input.model.Nt); input.model.step++) {
 
-        printf("*****************************************************\n");
-        printf("****************** Time step %05d ******************\n", input.model.step);
-        printf("*****************************************************\n");
+        mdoodz_log_set_step(input.model.step);
+        mdoodz_log_set_model_time(input.model.time * input.scaling.t, input.model.time_unit);
+
+        // Per-subsystem timing accumulators (reset each timestep)
+        double dt_thermal = 0, dt_advection = 0, dt_free_surface = 0, dt_reseeding = 0;
+        double dt_melting = 0, dt_anisotropy = 0, dt_gse = 0, dt_output = 0;
+        double dt_interp = 0, dt_stokes_setup = 0, dt_nl_overhead = 0, dt_post_solve = 0;
+        double t_post_solve0 = 0;
+
+        LOG_INFO("*****************************************************");
+        LOG_INFO("****************** Time step %05d ******************", input.model.step);
+        LOG_INFO("*****************************************************");
 
         //------------------------------------------------------------------------------------------------------------------------------//
 
@@ -454,7 +492,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         // pipo: loading before advection and phase change swich: ----
         if (input.model.time_advection_start > 0.0) {
             UpdateAdvectionMode( input.scaling, &input.model );
-            printf("model.advection in MainDOODZ = %d \n", input.model.advection);
+            LOG_DBG("model.advection in MainDOODZ = %d", input.model.advection);
         }
 
         if (input.model.time_switch_phase > 0.0) {
@@ -464,7 +502,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         
         clock_t t_omp_step = (double)omp_get_wtime();
 
-        printf(GREEN "Initial number of particles = %d --- max allowed: %d\n" RESET, particles.Nb_part_ini, particles.Nb_part_max);
+        LOG_INFO(GREEN "Initial number of particles = %d --- max allowed: %d" RESET, particles.Nb_part_ini, particles.Nb_part_max);
 
         // Old time step
         input.model.dt0 = input.model.dt;
@@ -472,7 +510,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         // Define new time step
         EvaluateCourantCriterion( mesh.u_in, mesh.v_in, &input.model, input.scaling, &mesh, 0 );
         input.model.time += input.model.dt;
-        printf("Selected dt = %2.2e\n", input.model.dt* input.scaling.t);
+        LOG_INFO("Selected dt = %2.2e", input.model.dt* input.scaling.t);
 
         // Save initial dt
         input.model.dt0 = input.model.dt;
@@ -497,63 +535,121 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
         // Energy - interpolate thermal parameters and advected energy
 
-        // Get energy and related material parameters from particles
-        P2Mastah( &input.model, particles, input.materials.Cp,     &mesh, mesh.Cp,     mesh.BCp.type,  0, 0, interp, cent, 1);
-        P2Mastah( &input.model, particles, input.materials.Qr,     &mesh, mesh.Qr,     mesh.BCp.type,  0, 0, interp, cent, 1);
+        // Batch 1 (cent, stencil=1): Cp, Qr, T0_n, divth0_n
+        if (pool && pool->interp_mode == 3) {
+            P2MastahField flds[16]; int nf = 0;
+            flds[nf++] = (P2MastahField){ input.materials.Cp,  mesh.Cp,       mesh.BCp.type, 0, 0, 0, 1 };
+            flds[nf++] = (P2MastahField){ input.materials.Qr,  mesh.Qr,       mesh.BCp.type, 0, 0, 0, 1 };
+            flds[nf++] = (P2MastahField){ particles.T,         mesh.T0_n,     mesh.BCp.type, 1, 0, 0, 1 };
+            flds[nf++] = (P2MastahField){ particles.divth,     mesh.divth0_n, mesh.BCp.type, 1, 0, 0, 1 };
+            P2Mastah_Fused(&input.model, particles, &mesh, cent, 1, flds, nf, pool);
+        } else {
+            // Get energy and related material parameters from particles
+            P2Mastah( &input.model, particles, input.materials.Cp,     &mesh, mesh.Cp,     mesh.BCp.type,  0, 0, interp, cent, 1, pool);
+            P2Mastah( &input.model, particles, input.materials.Qr,     &mesh, mesh.Qr,     mesh.BCp.type,  0, 0, interp, cent, 1, pool);
+            // Get T and dTdt from previous step from particles
+            P2Mastah( &input.model, particles, particles.T,     &mesh, mesh.T0_n,     mesh.BCp.type,  1, 0, interp, cent, 1, pool);
+            P2Mastah( &input.model, particles, particles.divth, &mesh, mesh.divth0_n, mesh.BCp.type,  1, 0, interp, cent, 1, pool);
+        }
 
-        P2Mastah ( &input.model, particles, input.materials.k_eff, &mesh, mesh.kx, mesh.BCu.type,  0, 0, interp, vxnodes, 1);
-        P2Mastah ( &input.model, particles, input.materials.k_eff, &mesh, mesh.kz, mesh.BCv.type,  0, 0, interp, vznodes, 1);
-
-        // Get T and dTdt from previous step from particles
-        P2Mastah( &input.model, particles, particles.T,     &mesh, mesh.T0_n,     mesh.BCp.type,  1, 0, interp, cent, 1);
-        P2Mastah( &input.model, particles, particles.divth, &mesh, mesh.divth0_n, mesh.BCp.type,  1, 0, interp, cent, 1);
+        // Singletons: kx (vxnodes), kz (vznodes) — not fused
+        P2Mastah ( &input.model, particles, input.materials.k_eff, &mesh, mesh.kx, mesh.BCu.type,  0, 0, interp, vxnodes, 1, pool);
+        P2Mastah ( &input.model, particles, input.materials.k_eff, &mesh, mesh.kz, mesh.BCv.type,  0, 0, interp, vznodes, 1, pool);
 
         // Make sure T is up to date for rheology evaluation
         ArrayEqualArray( mesh.T, mesh.T0_n, (mesh.Nx-1)*(mesh.Nz-1) );
 
         //-----------------------------------------------------------------------------------------------------------
-        // Interp P --> p0_n , p0_s
-        P2Mastah( &input.model, particles, particles.P,   &mesh, mesh.p0_n,  mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil);
-        P2Mastah( &input.model, particles, particles.P,   &mesh, mesh.p0_s,  mesh.BCg.type,  1, 0, interp, vert, input.model.interp_stencil);
+        // Batch 2a (cent, stencil=interp): p0_n, phi0_n, [sxxd0, szzd0 if elastic]
+        // Batch 2b (vert, stencil=interp): p0_s, [sxz0 if elastic]
+        if (pool && pool->interp_mode == 3) {
+            // Centroid batch
+            P2MastahField flds_c[16]; int nfc = 0;
+            flds_c[nfc++] = (P2MastahField){ particles.P,   mesh.p0_n,   mesh.BCp.type, 1, 0, 0, input.model.interp_stencil };
+            flds_c[nfc++] = (P2MastahField){ particles.phi, mesh.phi0_n, mesh.BCp.type, 1, 0, 0, input.model.interp_stencil };
+            if (input.model.elastic == 1) {
+                flds_c[nfc++] = (P2MastahField){ particles.sxxd, mesh.sxxd0, mesh.BCp.type, 1, 0, 0, input.model.interp_stencil };
+                flds_c[nfc++] = (P2MastahField){ particles.szzd, mesh.szzd0, mesh.BCp.type, 1, 0, 0, input.model.interp_stencil };
+            }
+            P2Mastah_Fused(&input.model, particles, &mesh, cent, input.model.interp_stencil, flds_c, nfc, pool);
+            // Vertex batch
+            P2MastahField flds_v[16]; int nfv = 0;
+            flds_v[nfv++] = (P2MastahField){ particles.P, mesh.p0_s, mesh.BCg.type, 1, 0, 0, input.model.interp_stencil };
+            if (input.model.elastic == 1) {
+                flds_v[nfv++] = (P2MastahField){ particles.sxz, mesh.sxz0, mesh.BCg.type, 1, 0, 0, input.model.interp_stencil };
+            }
+            P2Mastah_Fused(&input.model, particles, &mesh, vert, input.model.interp_stencil, flds_v, nfv, pool);
 
-        // Interpolate Melt fraction
-        P2Mastah( &input.model, particles, particles.phi,   &mesh, mesh.phi0_n , mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil);
-
-        // Elasticity - interpolate advected/rotated stresses
-        if  (input.model.elastic == 1 ) {
-
-            // Get old stresses from particles
-            P2Mastah( &input.model, particles, particles.sxxd,    &mesh, mesh.sxxd0, mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil);
-            P2Mastah( &input.model, particles, particles.szzd,    &mesh, mesh.szzd0, mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil);
-            P2Mastah( &input.model, particles, particles.sxz,     &mesh, mesh.sxz0,  mesh.BCg.type,  1, 0, interp, vert, input.model.interp_stencil);
-
-            InterpCentroidsToVerticesDouble( mesh.sxxd0, mesh.sxxd0_s, &mesh, &input.model );
-            InterpCentroidsToVerticesDouble( mesh.szzd0, mesh.szzd0_s, &mesh, &input.model );
-            InterpVerticesToCentroidsDouble( mesh.sxz0_n,  mesh.sxz0,  &mesh, &input.model );
-
-            // Interpolate shear modulus
-            ShearModCompExpGrid( &mesh, &input.materials, &input.model, input.scaling );
+            if (input.model.elastic == 1) {
+                InterpCentroidsToVerticesDouble( mesh.sxxd0, mesh.sxxd0_s, &mesh, &input.model );
+                InterpCentroidsToVerticesDouble( mesh.szzd0, mesh.szzd0_s, &mesh, &input.model );
+                InterpVerticesToCentroidsDouble( mesh.sxz0_n,  mesh.sxz0,  &mesh, &input.model );
+                ShearModCompExpGrid( &mesh, &input.materials, &input.model, input.scaling );
+            }
+        } else {
+            // Interp P --> p0_n , p0_s
+            P2Mastah( &input.model, particles, particles.P,   &mesh, mesh.p0_n,  mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil, pool);
+            P2Mastah( &input.model, particles, particles.P,   &mesh, mesh.p0_s,  mesh.BCg.type,  1, 0, interp, vert, input.model.interp_stencil, pool);
+            // Interpolate Melt fraction
+            P2Mastah( &input.model, particles, particles.phi,   &mesh, mesh.phi0_n , mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil, pool);
+            // Elasticity - interpolate advected/rotated stresses
+            if  (input.model.elastic == 1 ) {
+                P2Mastah( &input.model, particles, particles.sxxd,    &mesh, mesh.sxxd0, mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil, pool);
+                P2Mastah( &input.model, particles, particles.szzd,    &mesh, mesh.szzd0, mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil, pool);
+                P2Mastah( &input.model, particles, particles.sxz,     &mesh, mesh.sxz0,  mesh.BCg.type,  1, 0, interp, vert, input.model.interp_stencil, pool);
+                InterpCentroidsToVerticesDouble( mesh.sxxd0, mesh.sxxd0_s, &mesh, &input.model );
+                InterpCentroidsToVerticesDouble( mesh.szzd0, mesh.szzd0_s, &mesh, &input.model );
+                InterpVerticesToCentroidsDouble( mesh.sxz0_n,  mesh.sxz0,  &mesh, &input.model );
+                ShearModCompExpGrid( &mesh, &input.materials, &input.model, input.scaling );
+            }
         }
 
-        // Director vector
+        // Batch 3a/3b (cent/vert, stencil=interp): director vector (anisotropy only)
         if (input.model.anisotropy == 1 ) {
-            P2Mastah( &input.model, particles, NULL, &mesh, mesh.d1_n,    mesh.BCp.type, -1, 0, interp, cent, input.model.interp_stencil);
-            P2Mastah( &input.model, particles, NULL, &mesh, mesh.d2_n,    mesh.BCp.type, -2, 0, interp, cent, input.model.interp_stencil);
-            P2Mastah( &input.model, particles, NULL, &mesh, mesh.angle_n, mesh.BCp.type, -3, 0, interp, cent, input.model.interp_stencil);
-            P2Mastah( &input.model, particles, NULL, &mesh, mesh.d1_s,    mesh.BCg.type, -1, 0, interp, vert, input.model.interp_stencil);
-            P2Mastah( &input.model, particles, NULL, &mesh, mesh.d2_s,    mesh.BCg.type, -2, 0, interp, vert, input.model.interp_stencil);
-            P2Mastah( &input.model, particles, NULL, &mesh, mesh.angle_s, mesh.BCg.type, -3, 0, interp, vert, input.model.interp_stencil);
+            if (pool && pool->interp_mode == 3) {
+                // Batch 3a: cent
+                P2MastahField flds_c[16]; int nfc = 0;
+                flds_c[nfc++] = (P2MastahField){ NULL, mesh.d1_n,    mesh.BCp.type, -1, 0, 0, input.model.interp_stencil };
+                flds_c[nfc++] = (P2MastahField){ NULL, mesh.d2_n,    mesh.BCp.type, -2, 0, 0, input.model.interp_stencil };
+                flds_c[nfc++] = (P2MastahField){ NULL, mesh.angle_n, mesh.BCp.type, -3, 0, 0, input.model.interp_stencil };
+                P2Mastah_Fused(&input.model, particles, &mesh, cent, input.model.interp_stencil, flds_c, nfc, pool);
+                // Batch 3b: vert
+                P2MastahField flds_v[16]; int nfv = 0;
+                flds_v[nfv++] = (P2MastahField){ NULL, mesh.d1_s,    mesh.BCg.type, -1, 0, 0, input.model.interp_stencil };
+                flds_v[nfv++] = (P2MastahField){ NULL, mesh.d2_s,    mesh.BCg.type, -2, 0, 0, input.model.interp_stencil };
+                flds_v[nfv++] = (P2MastahField){ NULL, mesh.angle_s, mesh.BCg.type, -3, 0, 0, input.model.interp_stencil };
+                P2Mastah_Fused(&input.model, particles, &mesh, vert, input.model.interp_stencil, flds_v, nfv, pool);
+            } else {
+                P2Mastah( &input.model, particles, NULL, &mesh, mesh.d1_n,    mesh.BCp.type, -1, 0, interp, cent, input.model.interp_stencil, pool);
+                P2Mastah( &input.model, particles, NULL, &mesh, mesh.d2_n,    mesh.BCp.type, -2, 0, interp, cent, input.model.interp_stencil, pool);
+                P2Mastah( &input.model, particles, NULL, &mesh, mesh.angle_n, mesh.BCp.type, -3, 0, interp, cent, input.model.interp_stencil, pool);
+                P2Mastah( &input.model, particles, NULL, &mesh, mesh.d1_s,    mesh.BCg.type, -1, 0, interp, vert, input.model.interp_stencil, pool);
+                P2Mastah( &input.model, particles, NULL, &mesh, mesh.d2_s,    mesh.BCg.type, -2, 0, interp, vert, input.model.interp_stencil, pool);
+                P2Mastah( &input.model, particles, NULL, &mesh, mesh.angle_s, mesh.BCg.type, -3, 0, interp, vert, input.model.interp_stencil, pool);
+            }
             FiniteStrainAspectRatio ( &mesh, input.scaling, input.model, &particles );
         }
 
-        P2Mastah( &input.model, particles, particles.X,     &mesh, mesh.X0_n , mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil);
-        P2Mastah( &input.model, particles, particles.X,     &mesh, mesh.X0_s , mesh.BCg.type,  1, 0, interp, vert, input.model.interp_stencil);
-
-        P2Mastah( &input.model, particles, particles.noise, &mesh, mesh.noise_s, mesh.BCg.type,  1, 0, interp, vert, input.model.interp_stencil);
-        P2Mastah( &input.model, particles, particles.noise, &mesh, mesh.noise_n, mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil);
-
+        // Batch 4a (cent, stencil=interp): X0_n, noise_n, d0_n
+        // Batch 4b (vert, stencil=interp): X0_s, noise_s
+        if (pool && pool->interp_mode == 3) {
+            P2MastahField flds_c[16]; int nfc = 0;
+            flds_c[nfc++] = (P2MastahField){ particles.X,     mesh.X0_n,    mesh.BCp.type, 1, 0, 0, input.model.interp_stencil };
+            flds_c[nfc++] = (P2MastahField){ particles.noise, mesh.noise_n, mesh.BCp.type, 1, 0, 0, input.model.interp_stencil };
+            flds_c[nfc++] = (P2MastahField){ particles.d,     mesh.d0_n,    mesh.BCp.type, 1, 0, 0, input.model.interp_stencil };
+            P2Mastah_Fused(&input.model, particles, &mesh, cent, input.model.interp_stencil, flds_c, nfc, pool);
+            P2MastahField flds_v[16]; int nfv = 0;
+            flds_v[nfv++] = (P2MastahField){ particles.X,     mesh.X0_s,    mesh.BCg.type, 1, 0, 0, input.model.interp_stencil };
+            flds_v[nfv++] = (P2MastahField){ particles.noise, mesh.noise_s, mesh.BCg.type, 1, 0, 0, input.model.interp_stencil };
+            P2Mastah_Fused(&input.model, particles, &mesh, vert, input.model.interp_stencil, flds_v, nfv, pool);
+        } else {
+            P2Mastah( &input.model, particles, particles.X,     &mesh, mesh.X0_n , mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil, pool);
+            P2Mastah( &input.model, particles, particles.X,     &mesh, mesh.X0_s , mesh.BCg.type,  1, 0, interp, vert, input.model.interp_stencil, pool);
+            P2Mastah( &input.model, particles, particles.noise, &mesh, mesh.noise_s, mesh.BCg.type,  1, 0, interp, vert, input.model.interp_stencil, pool);
+            P2Mastah( &input.model, particles, particles.noise, &mesh, mesh.noise_n, mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil, pool);
+            P2Mastah( &input.model, particles, particles.d,     &mesh, mesh.d0_n , mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil, pool);
+        }
         // Interpolate Grain size
-        P2Mastah( &input.model, particles, particles.d,     &mesh, mesh.d0_n , mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil);
         ArrayEqualArray(  mesh.d_n,  mesh.d0_n, Ncx*Ncz );
 
         //-------------------------------------------------------------------------------------------------------------
@@ -568,7 +664,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         UpdateDensity( &mesh, &particles, &input.materials, &input.model, &input.scaling );
 
         // This somehow is the reason for instability: rho0 = f(rho_particles)
-        // P2Mastah( &input.model, particles, particles.rho,     &mesh, mesh.rho0_n , mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil);
+        // P2Mastah( &input.model, particles, particles.rho,     &mesh, mesh.rho0_n , mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil, pool);
 
         // This "fixes" the bug ==> rhof = f(T0, P0, ...)
         ArrayEqualArray(  mesh.rho0_n,   mesh.rho_n, Ncx*Ncz );
@@ -583,7 +679,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         ComputeLithostaticPressure( &mesh, &input.model, input.materials.rho[0], input.scaling, 1 );
 
         // Update anisotropy factor (function of accumulated strain and phase)
-        if ( input.model.anisotropy == 1 ) UpdateAnisoFactor( &mesh, &input.materials, &input.model, &input.scaling);
+        if ( input.model.anisotropy == 1 ) { double t_aniso0 = omp_get_wtime(); UpdateAnisoFactor( &mesh, &input.materials, &input.model, &input.scaling); dt_anisotropy += omp_get_wtime() - t_aniso0; }
 
         // Min/Max interpolated fields
         if (input.model.noisy == 1 ) {
@@ -636,16 +732,21 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             }
         }
 
-        printf("** Time for particles interpolations I = %lf sec\n",  (omp_get_wtime() - t_omp) );
+        LOG_TIME("Particle interpolations I: %lf sec",  (omp_get_wtime() - t_omp) );
+        dt_interp = omp_get_wtime() - t_omp_step;
+
+        double dt_rheology_total = 0, dt_assembly_total = 0, dt_solve_total = 0;
 
         if (input.model.mechanical == 1 ) {
+
+            double t_stokes_setup0 = omp_get_wtime();
 
             if (input.crazyConductivity) {
                 for (int n = 0; n < input.crazyConductivity->nPhases; n++) {
                 const int    phase           = input.crazyConductivity->phases[n];
                 input.materials.k_eff[phase] = input.materials.k[phase];
                 }
-                printf("Running with normal conductivity for the asthenosphere...\n");
+                LOG_INFO("Running with normal conductivity for the asthenosphere...");
             }
             // Allocate and initialise solution and RHS vectors
             RheologicalOperators( &mesh, &input.model, &input.materials, &input.scaling, 0, input.model.anisotropy );  // SURE?
@@ -669,8 +770,8 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
               SAlloc( &JacobC, Stokes.neq_cont);
               SAlloc( &JacobD, Stokes.neq_cont );
             }
-            printf( "Linear systems allocated\n");
-            printf( "neq_tot = %d, neq_mom = %d, neq_cont = %d\n", Stokes.neq, Stokes.neq_mom, Stokes.neq_cont );
+            LOG_INFO("Linear systems allocated");
+            LOG_INFO("neq_tot = %d, neq_mom = %d, neq_cont = %d", Stokes.neq, Stokes.neq_mom, Stokes.neq_cont);
 
             // Non-linear iteration cycle
             Nmodel.nit         = 0;
@@ -685,8 +786,9 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
             // Set up solver context
             cholmod_start( &CholmodSolver.c );
+            CholmodSolver.c.nthreads_max = cholmod_nthreads;
             if ( Nmodel.nit==0 ) CholmodSolver.Analyze = 1;
-            printf("Run CHOLMOD analysis yes/no: %d \n", CholmodSolver.Analyze);
+            LOG_INFO("Run CHOLMOD analysis yes/no: %d", CholmodSolver.Analyze);
             int Nmax_picard = Nmodel.nit_max;
             int IsFirstNewtonStep;
             // If Picard 2 Newton is activated: force initial Newton step
@@ -699,12 +801,20 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             // Set vector x = [u;p]
             InitialiseSolutionVector( &mesh, &Stokes, &input.model );
 
+            dt_stokes_setup = omp_get_wtime() - t_stokes_setup0;
+            LOG_TIME("Stokes setup: %.3f sec", dt_stokes_setup);
+
             //------------------------------------------------------------------------------------------------------------------------------//
+
 
             while ( Nmodel.nit <= Nmax_picard && nstag< input.model.max_num_stag) {
 
+                mdoodz_log_set_iteration(Nmodel.nit);
+                double t_phase, dt_rheology = 0, dt_assembly = 0, dt_solve_iter = 0;
+                double t_iter_start = omp_get_wtime();
+
                 if ( Nmodel.nit > 0 && Nmodel.Picard2Newton == 1 ) {
-                    printf("input.model.Newton = %d --- %d\n", input.model.Newton, Nmodel.rp_rel[Nmodel.nit-1] < Nmodel.Picard2Newton_tol);
+                    LOG_DBG("input.model.Newton = %d --- %d", input.model.Newton, Nmodel.rp_rel[Nmodel.nit-1] < Nmodel.Picard2Newton_tol);
                     if (Nmodel.rx_rel[Nmodel.nit-1] < Nmodel.Picard2Newton_tol || Nmodel.rz_rel[Nmodel.nit-1] < Nmodel.Picard2Newton_tol || Nmodel.rp_rel[Nmodel.nit-1] < Nmodel.Picard2Newton_tol || Nmodel.nit>= Nmodel.max_its_Pic) {
                         if ( IsFirstNewtonStep == 0 ) CholmodSolver.Analyze = 0;
                         if ( IsFirstNewtonStep == 1 ) {
@@ -723,19 +833,21 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                 // Determine whether Jacobian matrix should be assembled
                 if (input.model.Newton == 1 || input.model.anisotropy == 1) IsJacobianUsed = 1;
 
-                printf("**********************************************\n");
+                LOG_INFO("**********************************************");
                 if ( IsNewtonStep == 1 ) {
-                    printf("*** Newton it. %02d of %02d (step = %05d) on %03d threads ***\n", Nmodel.nit, Nmodel.nit_max, input.model.step, num_threads);
+                    LOG_INFO("*** Newton it. %02d of %02d (step = %05d) on %03d threads ***", Nmodel.nit, Nmodel.nit_max, input.model.step, num_threads);
                     Nmodel.LogIsNewtonStep[Nmodel.nit] = 1;
                 }
                 else {
-                    printf("*** Picard it. %02d of %02d (step = %05d) on %03d threads ***\n", Nmodel.nit, Nmodel.nit_max, input.model.step, num_threads);
+                    LOG_INFO("*** Picard it. %02d of %02d (step = %05d) on %03d threads ***", Nmodel.nit, Nmodel.nit_max, input.model.step, num_threads);
                     Nmodel.LogIsNewtonStep[Nmodel.nit] = 0;
                 }
-                printf("**********************************************\n");
+                LOG_INFO("**********************************************");
 
                 // Update non-linear rheology
+                t_phase = omp_get_wtime();
                 UpdateNonLinearity( &mesh, &particles, &topo_chain, &topo, input.materials, &input.model, &Nmodel, input.scaling, 0, 0 );
+                dt_rheology = omp_get_wtime() - t_phase;
 
                 if (input.model.noisy == 1 ) {
                     MinMaxArrayTag( mesh.T, input.scaling.T,            (mesh.Nx-1)*(mesh.Nz-1), "T         ", mesh.BCt.type );
@@ -778,6 +890,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                 }
 
                 // Build discrete system of equations - Linearised Picard without Newton linearisation nor anisotropic contributions
+                t_phase = omp_get_wtime();
                 int kill_aniso = 0, kill_Newton = 0;
                 RheologicalOperators( &mesh, &input.model, &input.materials, &input.scaling, kill_Newton, kill_aniso );
                 BuildStokesOperatorDecoupled  ( &mesh, input.model, 0, mesh.p_corr, mesh.p_in, mesh.u_in, mesh.v_in, &Stokes, &StokesA, &StokesB, &StokesC, &StokesD, 1 );
@@ -788,6 +901,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                 // Build discrete system of equations - Jacobian (do it also for densification since drhodp is needed)
                 if ( (IsFullNewton  == 1 && Nmodel.nit > 0) || input.model.density_variations == 1  ) RheologicalOperators( &mesh, &input.model, &input.materials, &input.scaling, 1, input.model.anisotropy );
                 if ( IsJacobianUsed == 1 ) BuildJacobianOperatorDecoupled( &mesh, input.model, 0, mesh.p_corr, mesh.p_in, mesh.u_in, mesh.v_in,  &Jacob,  &JacobA,  &JacobB,  &JacobC,   &JacobD, 1 );
+                dt_assembly = omp_get_wtime() - t_phase;
                 
                 // Diagonal input.scaling
                 if ( input.model.diag_scaling ) {
@@ -799,10 +913,10 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                 }
 
                 // Needs to be done after matrix assembly since diagonal input.scaling is used in there
-                printf("---- Non-linear residual ----\n");
+                LOG_INFO("---- Non-linear residual ----");
                 RheologicalOperators( &mesh, &input.model, &input.materials, &input.scaling, 0, input.model.anisotropy );
                 EvaluateStokesResidualDecoupled( &Stokes, &StokesA, &StokesB, &StokesC, &StokesD, &Nmodel, &mesh, input.model, input.scaling, 0 );
-                printf("---- Non-linear residual ----\n");
+                LOG_INFO("---- Non-linear residual ----");
 
                 if (input.model.Newton == 1 && input.model.anisotropy == 0 ) {
                     ArrayEqualArray( JacobA.F, StokesA.F,  StokesA.neq );
@@ -819,56 +933,73 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
                 // if pass --> clear matrix break
                 if ( (Nmodel.resx < Nmodel.nonlin_abs_mom || Nmodel.resx/Nmodel.resx0 < Nmodel.nonlin_rel_mom) && (Nmodel.resz < Nmodel.nonlin_abs_mom || Nmodel.resz/Nmodel.resz0 < Nmodel.nonlin_rel_mom) && (Nmodel.resp < Nmodel.nonlin_abs_div || Nmodel.resp/Nmodel.resp0 < Nmodel.nonlin_rel_div) ) {
-                    printf( "Non-linear solver converged to nonlin_abs_mom = %2.2e nonlin_abs_div = %2.2e nonlin_rel_mom = %2.2e nonlin_rel_div = %2.2e\n", Nmodel.nonlin_abs_mom, Nmodel.nonlin_abs_div, Nmodel.nonlin_rel_mom, Nmodel.nonlin_rel_div );
+                    LOG_INFO("Non-linear solver converged to nonlin_abs_mom = %2.2e nonlin_abs_div = %2.2e nonlin_rel_mom = %2.2e nonlin_rel_div = %2.2e", Nmodel.nonlin_abs_mom, Nmodel.nonlin_abs_div, Nmodel.nonlin_rel_mom, Nmodel.nonlin_rel_div);
+                    LOG_TIME("Iteration %02d: rheology=%.3f assembly=%.3f overhead=%.3f (converged, no solve)", Nmodel.nit, dt_rheology, dt_assembly, (omp_get_wtime() - t_iter_start) - dt_rheology - dt_assembly);
+                    dt_rheology_total += dt_rheology;
+                    dt_assembly_total += dt_assembly;
+                    { double dt_iter_total = omp_get_wtime() - t_iter_start;
+                    dt_nl_overhead += dt_iter_total - dt_rheology - dt_assembly; }
                     FreeSparseSystems( IsJacobianUsed, 1, &Stokes, &StokesA, &StokesB, &StokesC, &StokesD, &JacobA, &JacobB, &JacobC, &JacobD );
                     break;
                 }
 
                 // Direct-iterative solve
+                t_phase = omp_get_wtime();
                 t_omp = (double)omp_get_wtime();
                 if ( IsJacobianUsed==1 ) SolveStokesDefectDecoupled( &StokesA, &StokesB, &StokesC, &StokesD, &Stokes, &CholmodSolver, &Nmodel, &mesh, &input.model, &particles, &topo_chain, &topo, input.materials, input.scaling,  &JacobA,  &JacobB,  &JacobC );
                 else                     SolveStokesDefectDecoupled( &StokesA, &StokesB, &StokesC, &StokesD, &Stokes, &CholmodSolver, &Nmodel, &mesh, &input.model, &particles, &topo_chain, &topo, input.materials, input.scaling, &StokesA, &StokesB, &StokesC );
+                dt_solve_iter = omp_get_wtime() - t_phase;
 
                 if ( Nmodel.stagnated == 1 && input.model.safe_mode <= 0 ) {
-                    printf( "Non-linear solver stagnated to res_u = %2.2e res_z = %2.2e\n", Nmodel.resx_f, Nmodel.resz_f );
-                    printf( "You may want to try setting line_search_min > 0.0\n Good luck good man!\n");
+                    LOG_WARN("Non-linear solver stagnated to res_u = %2.2e res_z = %2.2e", Nmodel.resx_f, Nmodel.resz_f);
+                    LOG_WARN("You may want to try setting line_search_min > 0.0. Good luck good man!");
                     FreeSparseSystems( IsJacobianUsed, 1, &Stokes, &StokesA, &StokesB, &StokesC, &StokesD, &JacobA, &JacobB, &JacobC, &JacobD );
                     break;
                 }
                 
                 // Check for stagnation and apply safety restrictions is requested and required
                 if ( Nmodel.stagnated == 1 && input.model.elastic == 1 && input.model.safe_mode == 1 ) {
-                    printf( "\e[1;31mWARNING : Non-linear solver stagnated (nonlin_abs_mom = %2.2e nonlin_abs_div = %2.2e)\e[m\n", Nmodel.nonlin_abs_mom, Nmodel.nonlin_abs_div );
-                    printf( "\e[1;31mWARNING : Non-linear solver stagnated (nonlin_rel_mom = %2.2e nonlin_rel_div = %2.2e)\e[m\n", Nmodel.nonlin_rel_mom, Nmodel.nonlin_rel_div );
-                    printf( "\e[1;31mReducing the timestep, and restart the iterations cycle...\e[m\n");
-                    printf( "Before reduction: input.model.dt =, %2.2e\n", input.model.dt* input.scaling.t);
+                    LOG_WARN("Non-linear solver stagnated (nonlin_abs_mom = %2.2e nonlin_abs_div = %2.2e)", Nmodel.nonlin_abs_mom, Nmodel.nonlin_abs_div);
+                    LOG_WARN("Non-linear solver stagnated (nonlin_rel_mom = %2.2e nonlin_rel_div = %2.2e)", Nmodel.nonlin_rel_mom, Nmodel.nonlin_rel_div);
+                    LOG_WARN("Reducing the timestep, and restart the iterations cycle...");
+                    LOG_INFO("Before reduction: input.model.dt =, %2.2e", input.model.dt* input.scaling.t);
                     // ----------------------
                     input.model.dt /= input.model.safe_dt_div;
-                    printf( "Timestep divided by %2.2f => NEW CURRENT input.model.dt =, %2.2e\n", input.model.safe_dt_div, input.model.dt* input.scaling.t);
+                    LOG_INFO("Timestep divided by %2.2f => NEW CURRENT input.model.dt =, %2.2e", input.model.safe_dt_div, input.model.dt* input.scaling.t);
                     Nmodel.stagnated = 0;
                     // ----------------------
                     Nmodel.nit = -1;
-                    printf( "Restart solutions\n");
+                    LOG_INFO("Restart solutions");
                     ArrayEqualArray( mesh.p_in, mesh.p_start,  (mesh.Nx-1)*(mesh.Nz-1) );
                     ArrayEqualArray( mesh.u_in, mesh.u_start,  (mesh.Nx)  *(mesh.Nz+1) );
                     ArrayEqualArray( mesh.v_in, mesh.v_start,  (mesh.Nx+1)*(mesh.Nz)   );
                     nstag++;
                     //-----------------------
-                    printf( "nstag value = %02d - max_num_stag = %02d\n", nstag, input.model.max_num_stag);
+                    LOG_INFO("nstag value = %02d - max_num_stag = %02d", nstag, input.model.max_num_stag);
                     if (nstag== input.model.max_num_stag) {
-                        printf( "CheckDoudzOut!!\n");
+                        LOG_ERR("CheckDoudzOut!!");
                         exit(0);
                     //-----------------------
                     }
                 }
                 FreeSparseSystems( IsJacobianUsed, 1, &Stokes, &StokesA, &StokesB, &StokesC, &StokesD, &JacobA, &JacobB, &JacobC, &JacobD );
+                { double dt_iter_total = omp_get_wtime() - t_iter_start;
+                dt_nl_overhead += dt_iter_total - dt_rheology - dt_assembly - dt_solve_iter; }
+                LOG_TIME("Iteration %02d: rheology=%.3f assembly=%.3f solve=%.3f overhead=%.3f sec", Nmodel.nit, dt_rheology, dt_assembly, dt_solve_iter, (omp_get_wtime() - t_iter_start) - dt_rheology - dt_assembly - dt_solve_iter);
+                dt_rheology_total += dt_rheology;
+                dt_assembly_total += dt_assembly;
+                dt_solve_total += dt_solve_iter;
                 Nmodel.nit++;
                 input.model.nit = Nmodel.nit;
             }
 
+            mdoodz_log_clear_iteration();
+
+            t_post_solve0 = omp_get_wtime();
+
             // Clean solver context
             if ( Nmodel.nit>0 ) {
-                printf("Cleaning up Cholesky factors --- nit = %02d\n",  Nmodel.nit);
+                LOG_INFO("Cleaning up Cholesky factors --- nit = %02d",  Nmodel.nit);
                 cholmod_free_factor ( &CholmodSolver.Lfact, &CholmodSolver.c);
                 cholmod_finish( &CholmodSolver.c );
             }
@@ -883,26 +1014,26 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             MinMaxArray( mesh.p_in, input.scaling.S, (mesh.Nx-1)*(mesh.Nz-1), "      P" );
             MinMaxArray( mesh.div_u, input.scaling.E, (mesh.Nx-1)*(mesh.Nz-1), " div(V)" );
 
-            printf("--------------------------------------------------------------\n");
+            LOG_INFO("--------------------------------------------------------------");
             int i, nit;
             if (Nmodel.nit>=Nmodel.nit_max)  nit = Nmodel.nit_max;
             if (Nmodel.nit< Nmodel.nit_max)  nit = Nmodel.nit;
-            if (Nmodel.Picard2Newton == 1 )  printf("Picard 2 Newton is activated with condition: %2.2e\n", Nmodel.Picard2Newton_tol);
+            if (Nmodel.Picard2Newton == 1 )  LOG_INFO("Picard 2 Newton is activated with condition: %2.2e", Nmodel.Picard2Newton_tol);
             for (i=0; i<=nit; i++) {
-                if (Nmodel.LogIsNewtonStep[i] == 1) printf("New. it. %02d: abs: |Fx| = %2.2e - |Fz| = %2.2e - |Fp| = %2.2e --- rel: |Fx| = %2.2e - |Fz| = %2.2e - |Fp| = %2.2e\n", i, Nmodel.rx_abs[i], Nmodel.rz_abs[i], Nmodel.rp_abs[i], Nmodel.rx_rel[i], Nmodel.rz_rel[i], Nmodel.rp_rel[i]);
-                else                                printf("Pic. it. %02d: abs: |Fx| = %2.2e - |Fz| = %2.2e - |Fp| = %2.2e --- rel: |Fx| = %2.2e - |Fz| = %2.2e - |Fp| = %2.2e\n", i, Nmodel.rx_abs[i], Nmodel.rz_abs[i], Nmodel.rp_abs[i], Nmodel.rx_rel[i], Nmodel.rz_rel[i], Nmodel.rp_rel[i]);
+                if (Nmodel.LogIsNewtonStep[i] == 1) LOG_INFO("New. it. %02d: abs: |Fx| = %2.2e - |Fz| = %2.2e - |Fp| = %2.2e --- rel: |Fx| = %2.2e - |Fz| = %2.2e - |Fp| = %2.2e", i, Nmodel.rx_abs[i], Nmodel.rz_abs[i], Nmodel.rp_abs[i], Nmodel.rx_rel[i], Nmodel.rz_rel[i], Nmodel.rp_rel[i]);
+                else                                LOG_INFO("Pic. it. %02d: abs: |Fx| = %2.2e - |Fz| = %2.2e - |Fp| = %2.2e --- rel: |Fx| = %2.2e - |Fz| = %2.2e - |Fp| = %2.2e", i, Nmodel.rx_abs[i], Nmodel.rz_abs[i], Nmodel.rp_abs[i], Nmodel.rx_rel[i], Nmodel.rz_rel[i], Nmodel.rp_rel[i]);
                 if (i == Nmodel.nit_max && input.model.safe_mode == 1) {
-                    printf("Exit: Max iteration reached: Nmodel.nit_max = %02d! Check what you wanna do now...\n",Nmodel.nit_max);
+                    LOG_WARN("Exit: Max iteration reached: Nmodel.nit_max = %02d! Check what you wanna do now...",Nmodel.nit_max);
                     if ( (Nmodel.resx < Nmodel.nonlin_abs_mom) && (Nmodel.resz < Nmodel.nonlin_abs_mom) && (Nmodel.resp < Nmodel.nonlin_abs_div) ) {}
                     else exit(1);
                 }
             }
-            printf("--------------------------------------------------------------\n");
+            LOG_INFO("--------------------------------------------------------------");
 
             // plot residuals
             if (input.model.gnuplot_log_res == 1 ) { // && input.model.step % writer_step == 0
 
-                printf("DOING GNU PLOTTING!\n");
+                LOG_DBG("DOING GNU PLOTTING!");
 
                 int NumCommands = 3;
                 char *GNUplotCommands[] = {"set title \"Non-linear residuals\"", "set style line 1 lc rgb '#0060ad' lt 1 lw 2 pt 7 pi -1 ps 1.5", "set pointintervalbox 3"};
@@ -917,6 +1048,8 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             }
 
         }
+
+        if (t_post_solve0 == 0) t_post_solve0 = omp_get_wtime();
 
         //------------------------------------------------------------------------------------------------------------------------------//
 
@@ -937,7 +1070,9 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         UpdateParticlePressure( &mesh, input.scaling, input.model, &particles, &input.materials );
 
         // Grain size evolution
+        { double t_gse0 = omp_get_wtime();
         UpdateParticleGrainSize( &mesh, input.scaling, input.model, &particles, &input.materials );
+        dt_gse += omp_get_wtime() - t_gse0; }
 
         if (input.model.noisy == 1 ) {
             MinMaxArrayTag( mesh.d0_n   , input.scaling.L, (mesh.Nx-1)*(mesh.Nz-1), "d0", mesh.BCp.type );
@@ -946,8 +1081,10 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         }
 
         if (input.model.melting == 1 ) {
+            double t_melt0 = omp_get_wtime();
             MeltFractionGrid( &mesh, &particles, &input.materials, &input.model, &input.scaling );
             UpdateAlphaCp( &mesh, &particles, &input.materials, &input.model, &input.scaling );
+            dt_melting += omp_get_wtime() - t_melt0;
             MinMaxArrayTag( mesh.Cp,         input.scaling.Cp,             (mesh.Nx-1)*(mesh.Nz-1), "Cp     ", mesh.BCp.type );
             MinMaxArrayTag( mesh.alp,    1.0/input.scaling.T,              (mesh.Nx-1)*(mesh.Nz-1), "alp     ", mesh.BCp.type );
         }
@@ -962,23 +1099,26 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
         if (input.model.thermal == 1 ) {
 
-            printf("*************************************\n");
-            printf("*********** Thermal solver **********\n");
-            printf("*************************************\n");
+            LOG_INFO("*************************************");
+            LOG_INFO("*********** Thermal solver **********");
+            LOG_INFO("*************************************");
             
             t_omp = (double)omp_get_wtime();
 
             // Matrix assembly and direct solve
-            EnergyDirectSolve( &mesh, input.model,  mesh.rhs_t, &particles, input.model.dt, input.model.shear_heating, input.model.adiab_heating, input.scaling, 1 );
+            EnergyDirectSolve( &mesh, input.model,  mesh.rhs_t, &particles, input.model.dt, input.model.shear_heating, input.model.adiab_heating, input.scaling, 1, &ThermalSolver );
             MinMaxArray(particles.T, input.scaling.T, particles.Nb_part, "T part. before UpdateParticleEnergy");
-            printf("** Time for Thermal solver = %lf sec\n", (omp_get_wtime() - t_omp));
+            dt_thermal = omp_get_wtime() - t_omp;
+            LOG_TIME("Thermal solver: %lf sec", dt_thermal);
         }
 
         // Update energy on particles
         UpdateParticleEnergy( &mesh, input.scaling, input.model, &particles, &input.materials );
 
         // Grain size evolution
+        { double t_gse0 = omp_get_wtime();
         UpdateParticleGrainSize( &mesh, input.scaling, input.model, &particles, &input.materials );
+        dt_gse += omp_get_wtime() - t_gse0; }
 
         if (input.model.noisy == 1 ) {
             MinMaxArrayTag( mesh.d0_n   , input.scaling.L, (mesh.Nx-1)*(mesh.Nz-1), "d0", mesh.BCp.type );
@@ -987,28 +1127,30 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         }
 
         if (input.model.melting == 1 ) {
+            double t_melt0 = omp_get_wtime();
             MeltFractionGrid( &mesh, &particles, &input.materials, &input.model, &input.scaling );
             UpdateDensity( &mesh, &particles, &input.materials, &input.model, &input.scaling );
+            dt_melting += omp_get_wtime() - t_melt0;
         }
 
         //--------------------------------------------------------------------------------------------------------------------------------//
 
         if (input.model.chemical_production==1 || input.model.chemical_diffusion == 1) { 
-            printf("*************************************\n");
-            printf("********** Chemical solver **********\n");
-            printf("*************************************\n");
+            LOG_INFO("*************************************");
+            LOG_INFO("********** Chemical solver **********");
+            LOG_INFO("*************************************");
         }
 
         if (input.model.chemical_production == 1)  {
             if (input.model.anisotropy==0) NonNewtonianViscosityGrid(      &mesh, &input.materials, &input.model, Nmodel, &input.scaling, 0 );
-            if (input.model.anisotropy==1) NonNewtonianViscosityGridAniso( &mesh, &input.materials, &input.model, Nmodel, &input.scaling, 0 );
+            if (input.model.anisotropy==1) { double t_aniso0 = omp_get_wtime(); NonNewtonianViscosityGridAniso( &mesh, &input.materials, &input.model, Nmodel, &input.scaling, 0 ); dt_anisotropy += omp_get_wtime() - t_aniso0; }
             MinMaxArrayTag( mesh.X_s, 1.0, (mesh.Nx)*(mesh.Nz),     "X_s     ", mesh.BCg.type );
             MinMaxArrayTag( mesh.X_n, 1.0, (mesh.Nx-1)*(mesh.Nz-1), "X_n     ", mesh.BCp.type );
         }
 
         if (input.model.chemical_diffusion == 1)  {
-            P2Mastah ( &input.model, particles, input.materials.k_chem, &mesh, mesh.kc_x, mesh.BCu.type,  0, 0, interp, vxnodes, input.model.interp_stencil);
-            P2Mastah ( &input.model, particles, input.materials.k_chem, &mesh, mesh.kc_z, mesh.BCv.type,  0, 0, interp, vznodes, input.model.interp_stencil);
+            P2Mastah ( &input.model, particles, input.materials.k_chem, &mesh, mesh.kc_x, mesh.BCu.type,  0, 0, interp, vxnodes, input.model.interp_stencil, pool);
+            P2Mastah ( &input.model, particles, input.materials.k_chem, &mesh, mesh.kc_z, mesh.BCv.type,  0, 0, interp, vznodes, input.model.interp_stencil, pool);
             ChemicalDirectSolve( &mesh, input.model, &particles, &input.materials, input.model.dt, input.scaling );
         }
      
@@ -1044,9 +1186,9 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
         if (input.model.advection == 1 ) {
 
-            printf("*************************************\n");
-            printf("************** Advection ************\n");
-            printf("*************************************\n");
+            LOG_INFO("*************************************");
+            LOG_INFO("************** Advection ************");
+            LOG_INFO("*************************************");
 
             t_omp = (double)omp_get_wtime();
             double dt_solve = input.model.dt;
@@ -1057,9 +1199,9 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             if (input.model.dt < 0.95*dt_solve ) { // if dt advection is lower than dt used for thermo-mechanical solve then split dt
                 nsub   = ceil(dt_solve/ input.model.dt);
                 dt_sub = dt_solve / nsub;
-                printf("dt advection = %2.9e --- dt_solve = %2.9e\n", input.model.dt* input.scaling.t, dt_solve* input.scaling.t );
-                printf("dt is %lf larger than dt_solve: need %d substeps of %2.2e s\n", dt_solve/ input.model.dt, nsub , dt_sub* input.scaling.t );
-                printf("So: nsub*dt_sub = %2.2e for dt_solve = %2.2e\n", nsub*dt_sub* input.scaling.t, dt_solve* input.scaling.t);
+                LOG_INFO("dt advection = %2.9e --- dt_solve = %2.9e", input.model.dt* input.scaling.t, dt_solve* input.scaling.t);
+                LOG_INFO("dt is %lf larger than dt_solve: need %d substeps of %2.2e s", dt_solve/ input.model.dt, nsub , dt_sub* input.scaling.t);
+                LOG_INFO("So: nsub*dt_sub = %2.2e for dt_solve = %2.2e", nsub*dt_sub* input.scaling.t, dt_solve* input.scaling.t);
                 input.model.dt = dt_sub;
             }
             else {
@@ -1072,7 +1214,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             // Loop on substeps
             for (isub=0; isub<nsub; isub++) {
 
-                printf("************** Advection step %03d of %03d: dtsub = %2.2e **************\n", isub, nsub, input.model.dt* input.scaling.t );
+                LOG_INFO("************** Advection step %03d of %03d: dtsub = %2.2e **************", isub, nsub, input.model.dt* input.scaling.t);
 
                 // Advect domain boundaries
                 if (input.model.pure_shear_ALE > 0 ) {
@@ -1080,9 +1222,11 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                 }
 
                 if (input.model.free_surface == 1 ) {
+                    double t_fs0 = omp_get_wtime();
                     // Advect free surface with RK2
                     RogerGuntherII( &topo_chain, input.model, mesh, 1, input.scaling );
                     RogerGuntherII( &topo_chain_ini, input.model, mesh, 1, input.scaling );
+                    dt_free_surface += omp_get_wtime() - t_fs0;
                 }
 
                 // Correction for particle inflow 0
@@ -1106,6 +1250,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                 }
 
                 if (input.model.free_surface == 1 ) {
+                    double t_fs0 = omp_get_wtime();
 
                     // Get current topography
                     InterpTopoPart2Grid(  &topo,     &topo_chain,     input.model, mesh, input.scaling, mesh.xg_coord, 0 );
@@ -1139,8 +1284,8 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                     // Sedimentation
                     if ( input.model.surface_processes == 2 ) {
                         AddPartSed( &particles, input.materials, &topo_chain, &topo, input.model, input.scaling, &mesh);
-                        if ( input.model.reseed_mode == 0 ) CountPartCell_OLD( &particles, &mesh, input.model, topo, topo_ini, 0, input.scaling );
-                        if ( input.model.reseed_mode == 1 ) CountPartCell( &particles, &mesh, input.model, topo, topo_ini, 0, input.scaling );
+                        if ( input.model.reseed_mode == 0 ) CountPartCell_OLD( &particles, &mesh, input.model, topo, topo_ini, 0, input.scaling, pool );
+                        if ( input.model.reseed_mode == 1 ) CountPartCell( &particles, &mesh, input.model, topo, topo_ini, 0, input.scaling, pool );
                     }
 
                     if ( input.model.writer_debug == 1 ) {
@@ -1159,9 +1304,11 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
                     // Call cell flagging routine for free surface calculations
                     CellFlagging( &mesh, input.model, topo, input.scaling );
+                    dt_free_surface += omp_get_wtime() - t_fs0;
                 }
 
-                printf("** Time for advection solver = %lf sec\n", (omp_get_wtime() - t_omp) );
+                LOG_TIME("Advection solver: %lf sec", (omp_get_wtime() - t_omp) );
+                dt_advection += omp_get_wtime() - t_omp;
 
 #ifdef _HDF5_
                 if ( input.model.writer_debug == 1 ) {
@@ -1170,9 +1317,9 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                 }
 #endif
 
-                printf("*************************************\n");
-                printf("************** Reseeding ************\n");
-                printf("*************************************\n");
+                LOG_INFO("*************************************");
+                LOG_INFO("************** Reseeding ************");
+                LOG_INFO("*************************************");
 
                 // WriteOutputHDF5( &mesh, &particles, &topo, &topo_chain, input.model, Nmodel, "Output", input.materials, input.scaling );
                 // WriteOutputHDF5Particles( &mesh, &particles, &topo, &topo_chain, &topo_ini, &topo_chain_ini, input.model, "Particles", input.materials, input.scaling );
@@ -1182,19 +1329,20 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                 int NumPartOld  = particles.Nb_part;
                 // Reseed
                 if ( input.model.reseed_markers == 1 ) {
-                    if ( input.model.reseed_mode == 0 ) CountPartCell_OLD( &particles, &mesh, input.model, topo, topo_ini, 1, input.scaling );
-                    if ( input.model.reseed_mode == 1 ) CountPartCell( &particles, &mesh, input.model, topo, topo_ini, 1, input.scaling );
+                    if ( input.model.reseed_mode == 0 ) CountPartCell_OLD( &particles, &mesh, input.model, topo, topo_ini, 1, input.scaling, pool );
+                    if ( input.model.reseed_mode == 1 ) CountPartCell( &particles, &mesh, input.model, topo, topo_ini, 1, input.scaling, pool );
                 }
                 // Count
-                if ( input.model.reseed_mode == 0 ) CountPartCell_OLD( &particles, &mesh, input.model, topo, topo_ini, 0, input.scaling );
-                if ( input.model.reseed_mode == 1 ) CountPartCell( &particles, &mesh, input.model, topo, topo_ini, 0, input.scaling );
+                if ( input.model.reseed_mode == 0 ) CountPartCell_OLD( &particles, &mesh, input.model, topo, topo_ini, 0, input.scaling, pool );
+                if ( input.model.reseed_mode == 1 ) CountPartCell( &particles, &mesh, input.model, topo, topo_ini, 0, input.scaling, pool );
 
-                printf(GREEN "After re-seeding :\n" RESET);
-                printf(GREEN "Initial number of particles = %d --- max allowed: %d\n" RESET, particles.Nb_part_ini, particles.Nb_part_max);
-                printf(GREEN "Old number of particles     = %d\n" RESET, NumPartOld           );
-                printf(GREEN "New number of particles     = %d\n" RESET, particles.Nb_part    );
+                LOG_INFO(GREEN "After re-seeding :" RESET);
+                LOG_INFO(GREEN "Initial number of particles = %d --- max allowed: %d" RESET, particles.Nb_part_ini, particles.Nb_part_max);
+                LOG_INFO(GREEN "Old number of particles     = %d" RESET, NumPartOld           );
+                LOG_INFO(GREEN "New number of particles     = %d" RESET, particles.Nb_part    );
 
-                printf("** Time for CountPartCell = %lf sec\n", (omp_get_wtime() - t_omp) );
+                LOG_TIME("CountPartCell: %lf sec", (omp_get_wtime() - t_omp) );
+                dt_reseeding += omp_get_wtime() - t_omp;
 
                 // Remove particles that would be above the surface
                 if (input.model.free_surface == 1 ) {
@@ -1227,34 +1375,86 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             DoodzFree( Jacob.eqn_p );
         }
 
+        dt_post_solve = (omp_get_wtime() - t_post_solve0) - dt_thermal - dt_advection - dt_free_surface - dt_reseeding - dt_melting - dt_gse - dt_anisotropy;
+        LOG_TIME("Post-solve updates: %.3f sec", dt_post_solve);
+
         //------------------------------------------------------------------------------------------------------------------------------//
 
         // Write output data
         if ( input.model.writer == 1 && input.model.step % input.model.writer_step == 0 ) {
 
-            printf("*************************************\n");
-            printf("********* Write output files ********\n");
-            printf("*************************************\n");
+            LOG_INFO("*************************************");
+            LOG_INFO("********* Write output files ********");
+            LOG_INFO("*************************************");
+
+            double t_out0 = omp_get_wtime();
 
             // Breakpoint file
             t_omp = (double)omp_get_wtime();
             if (input.model.delete_breakpoints == 1 ) DeletePreviousBreakpoint(input.model.step, input.model.writer_step  );
             MakeBreakpointParticles( &particles, &mesh, &topo_chain, &topo_chain_ini, input.model, &topo, &topo_ini, input.scaling );
             // UpdateInputFile( inputFileName, input.model.step);
-            printf("** Time for Breakpoint file write = %lf sec\n", (omp_get_wtime() - t_omp));
+            LOG_TIME("Breakpoint file write: %lf sec", (omp_get_wtime() - t_omp));
 
             // Visualisation file
 #ifndef _VG_
             t_omp = (double)omp_get_wtime();
             WriteOutputHDF5( &mesh, &particles, &topo, &topo_chain, input.model, Nmodel, BaseOutputFileName, input.materials, input.scaling );
             if (input.model.writer_markers == 1 ) WriteOutputHDF5Particles( &mesh, &particles, &topo, &topo_chain, &topo_ini, &topo_chain_ini, input.model, BaseParticleFileName, input.materials, input.scaling );
-            printf("** Time for Output file write = %lf sec\n", (omp_get_wtime() - t_omp));
+            LOG_TIME("Output file write: %lf sec", (omp_get_wtime() - t_omp));
 #endif
+            dt_output += omp_get_wtime() - t_out0;
         }
 
-        printf("** Total timestep calculation time = %lf sec\n", (double)((double)omp_get_wtime() - t_omp_step) );
-        printf("** Model time = %2.2e sec\n", input.model.time* input.scaling.t );
-        printf("** Current dt = %2.2e sec, Old dt = %2.2e sec\n", input.model.dt* input.scaling.t, input.model.dt0* input.scaling.t );
+        LOG_TIME("Total timestep calculation time = %lf sec", (double)((double)omp_get_wtime() - t_omp_step) );
+        {
+            double time_ma_log = input.model.time * input.scaling.t / (1e6 * 365.25 * 24 * 3600);
+            LOG_TIME("  Model time: %.6f Ma | wall=%.3f sec", time_ma_log, (double)(omp_get_wtime() - t_omp_step));
+        }
+        if (input.model.mechanical == 1) {
+            double wall_total = (double)(omp_get_wtime() - t_omp_step);
+            double tracked = dt_interp + dt_stokes_setup + dt_rheology_total + dt_assembly_total + dt_solve_total + dt_nl_overhead + dt_thermal + dt_advection + dt_free_surface + dt_reseeding + dt_melting + dt_anisotropy + dt_gse + dt_post_solve + dt_output;
+            double coverage = (wall_total > 0) ? 100.0 * tracked / wall_total : 0.0;
+            LOG_TIME("  Breakdown: interp=%.3f stokes_setup=%.3f rheology=%.3f assembly=%.3f solve=%.3f nl_overhead=%.3f post_solve=%.3f sec (%d iterations, %.1f%% coverage)", dt_interp, dt_stokes_setup, dt_rheology_total, dt_assembly_total, dt_solve_total, dt_nl_overhead, dt_post_solve, Nmodel.nit, coverage);
+        }
+        {
+            struct rusage ru;
+            double peak_mb = 0, user_s = 0, sys_s = 0;
+            if (getrusage(RUSAGE_SELF, &ru) == 0) {
+#ifdef __APPLE__
+                peak_mb = (double)ru.ru_maxrss / (1024.0 * 1024.0);  // macOS: bytes
+#else
+                peak_mb = (double)ru.ru_maxrss / 1024.0;             // Linux: KB
+#endif
+                user_s  = (double)ru.ru_utime.tv_sec + (double)ru.ru_utime.tv_usec / 1e6;
+                sys_s   = (double)ru.ru_stime.tv_sec + (double)ru.ru_stime.tv_usec / 1e6;
+                LOG_DBG("Memory: peak RSS = %.1f MB, user CPU = %.1f s, sys CPU = %.1f s", peak_mb, user_s, sys_s);
+            }
+            if (perf_csv) {
+                double wall_s = (double)(omp_get_wtime() - t_omp_step);
+                double time_ma = input.model.time * input.scaling.t / (1e6 * 365.25 * 24 * 3600);
+                fprintf(perf_csv, "%d,%.4f,%.6e,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%d,%d,%d,%d,%.1f,%.1f,%.1f\n",
+                        input.model.step, wall_s, time_ma,
+                        dt_rheology_total, dt_assembly_total, dt_solve_total,
+                        dt_thermal, dt_advection, dt_free_surface, dt_reseeding,
+                        dt_melting, dt_anisotropy, dt_gse, dt_output,
+                        dt_interp, dt_stokes_setup, dt_nl_overhead, dt_post_solve,
+                        Nmodel.nit, particles.Nb_part,
+                        Stokes.neq_mom, Stokes.neq_cont,
+                        peak_mb, user_s, sys_s);
+                fflush(perf_csv);
+            }
+        }
+        {
+            double model_time_s  = input.model.time * input.scaling.t;
+            double model_time_ma = model_time_s / (1e6 * 365.25 * 24 * 3600);
+            double dt_s          = input.model.dt  * input.scaling.t;
+            double dt0_s         = input.model.dt0 * input.scaling.t;
+            LOG_INFO("Model time = %2.2e sec (%.6f Ma)", model_time_s, model_time_ma);
+            LOG_INFO("Current dt = %2.2e sec, Old dt = %2.2e sec", dt_s, dt0_s);
+        }
+
+        mdoodz_log_flush();
 
         if (error==1) exit(1);
     
@@ -1268,6 +1468,10 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
     if (input.model.gnuplot_log_res == 1) pclose(GNUplotPipe);
 
+    // Free thermal solver
+    if ( ThermalSolver.Lfact != NULL ) cholmod_free_factor( &ThermalSolver.Lfact, &ThermalSolver.c );
+    cholmod_finish( &ThermalSolver.c );
+
     //    // Free markers chains
     if (input.model.free_surface == 1 ) FreeMarkerChain( &topo,     &topo_chain     );
     if (input.model.free_surface == 1 ) FreeMarkerChain( &topo_ini, &topo_chain_ini );
@@ -1279,6 +1483,9 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
     PartFree( &particles, &input.model );
 
     // Free arrays
+    // Free interpolation buffer pool
+    InterpBufPoolFree(pool);
+
     GridFree( &mesh, &input.model );
 
     if (input.flux) {
@@ -1304,7 +1511,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
     for ( int k=0; k< input.model.Nb_phases; k++) {
 
         if (input.materials.density_model[k] == 4 ) {
-            printf("Unloading 1D diagram for coesite quartz only baby...\n");
+            LOG_INFO("Unloading 1D diagram for coesite quartz only baby...");
             DoodzFree(input.model.PD1Drho[k]);
         }
     }
@@ -1314,7 +1521,10 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
     DoodzFree(input.model.PD1Dmax);
     if (input.model.kinetics==1 ) DoodzFree(input.model.kin_dG);
 
-    printf("\n********************************************************\n");
-    printf("************* Ending MDOODZ 7.0 simulation *************\n");
-    printf("********************************************************\n");
+    LOG_INFO("********************************************************");
+    LOG_INFO("************* Ending MDOODZ 7.0 simulation *************");
+    LOG_INFO("********************************************************");
+
+    if (perf_csv) fclose(perf_csv);
+    mdoodz_log_shutdown();
 }

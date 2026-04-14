@@ -10,6 +10,8 @@
     #define M_PI 3.14159265358979323846
 #endif
 
+#include "mdoodz-log.h"
+
 #define RESET   "\033[0m"
 #define BLACK   "\033[30m"      /* Black */
 #define RED     "\033[31m"      /* Red */
@@ -47,13 +49,14 @@ typedef struct {
 typedef struct {
   int    balance_boundaries, zero_mean_topo; 
   char   description[500];
-  double xmin, zmin, xmax, zmax, time, dx, dz, dt, dt0, dt_start, dt_max, L0,
+  double xmin, zmin, xmax, zmax, time, dx, dz, dt, dt0, dt_start, dt_max, L0, t_end,
           dt_min, dt_reduction_factor;
   double  xmin0, zmin0, xmax0, zmax0;
   double  gx, gz;
   int     Nx, Nz, Nt, step, nit, Newton, noisy;
   average eta_average, ani_average;
   int     interp_stencil;
+  int     interp_mode;        // 0: legacy (default), 1: persistent buffers, 2: persistent + atomic scatter
   double  nexp_radial_basis;
   int     mechanical, periodic_x, elastic,
           thermal, pure_shear_ALE, free_surface, writer_markers, writer_debug, topo_update, melting, inject_dikes;
@@ -73,7 +76,13 @@ typedef struct {
   int    initial_noise, reseed_mode;
   // Linear solver
   int    lin_solver, diag_scaling, preconditioner, max_its_KSP, max_its_PH;
+  int    cholmod_threads; // CHOLMOD thread count: 1=single (default), -1=all OMP threads, N=explicit
   double penalty, lin_abs_div, lin_rel_div, lin_abs_mom, lin_rel_mom, auto_penalty, compressible, rel_tol_KSP; 
+  // Thermal solver
+  int    thermal_solver;    // 0: CHOLMOD direct (default), 1: PCG iterative
+  int    max_its_thermal;   // Max PCG iterations (default 1000)
+  double rel_tol_thermal;   // Relative tolerance for PCG (default 1e-8)
+  int    export_pcg_residuals; // Export per-iteration PCG residuals to CSV (0/1)
   // Non-linear solver
   double line_search_min, safe_dt_div;
   int    safe_mode, max_num_stag;
@@ -124,6 +133,9 @@ typedef struct {
   int      save_initial_markers, load_initial_markers;
   char    *initial_markers_file;
   int     marker_aniso_angle;
+  // Logging configuration
+  MdoodzLogConfig log;
+  int time_unit; // 0=Ma, 1=Ka, 2=yr
 } params;
 
 // Stucture scale contains scaling parameters

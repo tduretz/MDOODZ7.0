@@ -111,3 +111,30 @@ TEST_F(FreeSurface, SinkingBlock) {
   free(inputName);
   free(fileName);
 }
+
+
+// --- Interpolation mode tests ---
+
+TEST_F(FreeSurface, SinkingBlockInterpMode1) {
+  char *inputName;
+  asprintf(&inputName, "FreeSurface/SinkingBlockInterpMode1.txt");
+  RunMDOODZ(inputName, &setup);
+  char *fileName;
+  asprintf(&fileName, "SinkingBlockInterpMode1/Output%05d.gzip.h5", 1);
+  int steps = getStepsCount(fileName);
+  EXPECT_GE(steps, 0);
+  free(inputName);
+  free(fileName);
+}
+
+TEST_F(FreeSurface, SinkingBlockInterpMode2) {
+  char *inputName;
+  asprintf(&inputName, "FreeSurface/SinkingBlockInterpMode2.txt");
+  RunMDOODZ(inputName, &setup);
+  char *fileName;
+  asprintf(&fileName, "SinkingBlockInterpMode2/Output%05d.gzip.h5", 1);
+  int steps = getStepsCount(fileName);
+  EXPECT_GE(steps, 0);
+  free(inputName);
+  free(fileName);
+}
