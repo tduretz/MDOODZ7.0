@@ -1257,7 +1257,7 @@ Input ReadInputFile( char *fileName ) {
     model.gz                 = ReadDou2( fin, "gz",  0.0 ) / scaling.a;
     // Consequential behaviour
     if (model.interp_stencil!=1 && model.interp_stencil!=9) { LOG_ERR("Wrong value of interp_stencil: should be 1 or 9."); exit(1); }
-    if (model.interp_mode < 0 || model.interp_mode > 2) { LOG_WARN("Invalid interp_mode %d, clamping to 0 (legacy).", model.interp_mode); model.interp_mode = 0; }
+    if (model.interp_mode < 0 || model.interp_mode > 3) { LOG_WARN("Invalid interp_mode %d, clamping to 0 (legacy).", model.interp_mode); model.interp_mode = 0; }
     if ( model.shear_style == 1 ) model.periodic_x     = 1; // If simple shear, it must  be periodic in x
     if ( model.shear_style == 0 ) model.periodic_x     = 0; // If simple shear, it can't be periodic in x
     if ( model.anisotropy  == 1 ) model.finite_strain  = 1; // If anisotropy, then also track finite strain
