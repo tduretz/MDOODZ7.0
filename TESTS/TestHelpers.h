@@ -243,4 +243,15 @@ static double computeL1Error(const std::vector<double> &numerical, const std::ve
   return sumAbsDiff / (double)n;
 }
 
+// Extract a 1D vertical column at x-index ix from a flat ncx×ncz field array
+// Storage is column-major: field[ix + ncx * iz]
+static std::vector<double> readColumnProfile(const char *hdf5FileName, const char *groupName, const char *datasetName, int ix, int ncx, int ncz) {
+  auto field = readFieldAsArray(hdf5FileName, groupName, datasetName);
+  std::vector<double> column(ncz);
+  for (int iz = 0; iz < ncz; iz++) {
+    column[iz] = field[ix + ncx * iz];
+  }
+  return column;
+}
+
 #endif

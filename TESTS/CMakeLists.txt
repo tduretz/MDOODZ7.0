@@ -35,6 +35,11 @@ add_executable(ThermalTests ThermalTests.cpp)
 target_link_libraries(ThermalTests LINK_PUBLIC mdoodz GTest::gtest_main)
 add_test(ThermalTests ThermalTests)
 
+# Thermal Verification Tests (oceanic cooling, thermo-elastic coupling)
+add_executable(ThermalVerificationTests ThermalVerificationTests.cpp)
+target_link_libraries(ThermalVerificationTests LINK_PUBLIC mdoodz GTest::gtest_main)
+add_test(ThermalVerificationTests ThermalVerificationTests)
+
 # Boundary Condition Tests
 file(COPY ${PROJECT_SOURCE_DIR}/TESTS/BoundaryCondition DESTINATION ${PROJECT_BINARY_DIR}/TESTS)
 add_executable(BoundaryConditionTests BoundaryConditionTests.cpp)

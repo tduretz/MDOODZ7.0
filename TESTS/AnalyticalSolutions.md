@@ -149,7 +149,65 @@ where $Q_r$ is the volumetric heat production rate.
 EXPECT_NEAR(meanT_final, T_ana_mean, fabs(T_ana_mean - T0_SI) * 0.02);  // \u00b12% of \u0394T
 ```
 
-### 2.3 Hydrostatic Pressure
+### 2.3 Oceanic Half-Space Cooling
+
+**Source:** [ThermalVerificationTests.cpp](ThermalVerificationTests.cpp)
+**Parameter files:** [Thermal/OceanicCooling.txt](Thermal/OceanicCooling.txt), [Thermal/OceanicCoolingPCG.txt](Thermal/OceanicCoolingPCG.txt)
+**Tests:** `ThermalVerification.OceanicCooling`, `ThermalVerification.OceanicCoolingPCG`
+
+A half-space with uniform initial mantle temperature $T_m$ is cooled from the surface ($T_s = 0°C$). The temperature profile after time $t$ is the classical error-function solution:
+
+$$T(z,t) = T_s + (T_m - T_s)\,\mathrm{erf}\!\left(\frac{z}{\sqrt{4\kappa t}}\right)$$
+
+where $\kappa = k / (\rho C_p)$ is the thermal diffusivity, $z$ is depth (positive downward), $k = 3$ W/(m·K), $\rho = 3300$ kg/m³, $C_p = 1050$ J/(kg·K).
+
+**Parameters:** $T_m = 1400°C$, domain $[-200, 0]$ km, $N_x \times N_z = 11 \times 51$, $\Delta t = 10^{13}$ s, $N_t = 10$. Dirichlet $T_s$ at top, Dirichlet $T_m$ at bottom, Neumann (zero flux) on sides.
+
+**Measured accuracy:** $L_2(T) = 3.64 \times 10^{-3}$ for both CHOLMOD and PCG. CHOLMOD vs PCG absolute L2 difference = 0. The test runs in a separate `ThermalVerificationTests` binary due to a pre-existing MDOODZ global state issue when mixing different grid configurations in one process.
+
+**Code assertions** ([ThermalVerificationTests.cpp](ThermalVerificationTests.cpp)):
+```cpp
+double L2 = sqrt(sum_sq / sum_ref);
+EXPECT_LT(L2, 5e-2);  // CHOLMOD: measured 3.64e-3 (13× margin)
+
+double L2_pcg = sqrt(sum_sq / sum_ref);
+EXPECT_LT(L2_pcg, 5e-2);  // PCG: measured 3.64e-3
+
+double L2_diff = sqrt(sum_sq2 / sum_ref2);
+EXPECT_LT(L2_diff, 1e-6);  // CHOLMOD vs PCG: measured 0
+```
+
+### 2.4 Thermo-Elastic Coupling
+
+**Source:** [ThermalVerificationTests.cpp](ThermalVerificationTests.cpp)
+**Parameter files:** [Thermal/ThermoElastic.txt](Thermal/ThermoElastic.txt), [Thermal/ThermoElasticPCG.txt](Thermal/ThermoElasticPCG.txt)
+**Tests:** `ThermalVerification.ThermoElastic`, `ThermalVerification.ThermoElasticPCG`
+
+A confined elastic body undergoes linearly increasing temperature imposed via a `FixTemperature` callback: $T(t) = 273.15/T_0 + 0.1\,t$ (non-dimensional). Thermal expansion in a fully confined domain (pure-shear ALE with $\dot\varepsilon = 0$) produces compressive pressure proportional to the temperature change:
+
+$$\Delta P = K \alpha \Delta T$$
+
+where $K = 1/\beta = 10^{10}$ Pa is the bulk modulus ($\beta = 10^{-10}$ Pa$^{-1}$) and $\alpha = 10^{-5}$ K$^{-1}$.
+
+**Parameters:** $N_x \times N_z = 41 \times 41$, `elastic=1`, `compressible=1`, `fix_temperature=1`, $\Delta t = 10^9$ s, $N_t = 5$.
+
+**Why ~20% error.** The analytical formula assumes instantaneous elastic response, but MDOODZ updates pressure incrementally each time step, so the first step's temperature change does not contribute to pressure until the next step. On the coarse 41×41 grid with only 5 steps, this one-step elastic lag produces a systematic ~20% underestimate of $\Delta P$.
+
+**Measured accuracy:** Relative error $\approx 19.7\%$ for both CHOLMOD and PCG. CHOLMOD vs PCG: T field L2 = 0, P field L2 = 0.
+
+**Code assertions** ([ThermalVerificationTests.cpp](ThermalVerificationTests.cpp)):
+```cpp
+EXPECT_GT(meanP, 0.0);           // confined thermal expansion → compression
+EXPECT_LT(rel_err, 0.25);        // measured 19.7% (25% threshold: 1.27× margin)
+
+// Cross-compare CHOLMOD vs PCG
+double T_L2 = computeL2Error(T_field, T_cholmod);
+double P_L2 = computeL2Error(P_field, P_cholmod);
+EXPECT_LT(T_L2, 1e-6);          // measured 0
+EXPECT_LT(P_L2, 1e-4);          // measured 0
+```
+
+### 2.5 Hydrostatic Pressure
 
 **Source:** [DensityTests.cpp](DensityTests.cpp)
 **Parameter file:** [Density/HydrostaticPressure.txt](Density/HydrostaticPressure.txt)
@@ -165,7 +223,7 @@ double L2_P = computeL2Error(P_field, P_ana);
 EXPECT_LT(L2_P, 6e-2);  // Nx=41 gives L2 \u2248 0.043; first-order spatial convergence
 ```
 
-### 2.4 Thermal Expansion
+### 2.6 Thermal Expansion
 
 **Source:** [DensityTests.cpp](DensityTests.cpp)
 **Parameter file:** [Density/ThermalExpansion.txt](Density/ThermalExpansion.txt)
@@ -175,7 +233,7 @@ $$\rho(T) = \rho_0 \left(1 - \alpha(T - T_{ref})\right)$$
 
 Verified via `EXPECT_LT(minRho, maxRho)` — density contrast between hot inclusion and cold matrix confirms the equation of state is active.
 
-### 2.5 Pure Shear Velocity
+### 2.7 Pure Shear Velocity
 
 **Source:** [VelocityFieldTests.cpp](VelocityFieldTests.cpp)
 **Parameter file:** [VelocityField/PureShearVelocity.txt](VelocityField/PureShearVelocity.txt)
@@ -197,7 +255,7 @@ EXPECT_LT(L2_Vx, 3e-2);  // with 10:1 inclusion: L2 ≈ 0.024 (1.23× margin)
 EXPECT_LT(L2_Vz, 3e-2);  // with 10:1 inclusion: L2 ≈ 0.024 (1.23× margin)
 ```
 
-### 2.6 Maxwell Visco-Elastic Stress
+### 2.8 Maxwell Visco-Elastic Stress
 
 **Source:** [ViscoElasticTests.cpp](ViscoElasticTests.cpp)
 **Parameter file:** [ViscoElastic/StressAccumulation.txt](ViscoElastic/StressAccumulation.txt)
@@ -209,7 +267,7 @@ where $G$ is the shear modulus. Stress builds up exponentially toward the viscou
 
 Verified via `EXPECT_GE(fabs(maxSxxd_5), fabs(maxSxxd_1) * 0.9)` — monotonic stress build-up over 5 time steps confirms the Maxwell elastic branch is active.
 
-### 2.7 Viscous Dissipation (Shear Heating)
+### 2.9 Viscous Dissipation (Shear Heating)
 
 **Source:** [ShearHeatingTests.cpp](ShearHeatingTests.cpp)
 **Parameter file:** [ShearHeating/ViscousDissipation.txt](ShearHeating/ViscousDissipation.txt)
@@ -228,7 +286,7 @@ The test uses Neumann (zero-flux) temperature BCs on all boundaries to prevent h
 EXPECT_NEAR(dT_num, dT_ana, fabs(dT_ana) * 0.05);  // Neumann BCs: ~0.8% error
 ```
 
-### 2.8 Simple Shear Velocity (Periodic BCs)
+### 2.10 Simple Shear Velocity (Periodic BCs)
 
 **Source:** [VelocityFieldTests.cpp](VelocityFieldTests.cpp)
 **Parameter file:** [VelocityField/SimpleShearVelocity.txt](VelocityField/SimpleShearVelocity.txt)
@@ -420,13 +478,16 @@ For convergence-order tests, thresholds are set ~30–50% below the measured ord
 |------|--------|--------------------|-----------|-----------|
 | SolVi L2 (51×51) | [SolViBenchmarkTests.cpp](SolViBenchmarkTests.cpp) | Complex-variable (§1) | `EXPECT_LT(L2_Vx, 5e-1)` | 0.5 |
 | SolVi convergence | [SolViBenchmarkTests.cpp](SolViBenchmarkTests.cpp) | Order from 41→81 | `EXPECT_GE(order_Vx, 0.7)` | 0.7 |
-| Geotherm | [ThermalTests.cpp](ThermalTests.cpp) | Linear profile (§2.1) | `EXPECT_LT(L2_T, 1.0)` | 1.0 |
-| Hydrostatic P | [DensityTests.cpp](DensityTests.cpp) | $\rho g z$ (§2.3) | `EXPECT_LT(L2_P, 2e-1)` | 0.2 |
-| Pure shear Vx | [VelocityFieldTests.cpp](VelocityFieldTests.cpp) | $\dot{\varepsilon} x$ (§2.5) | `EXPECT_LT(L2_Vx, 3e-2)` | 3e-2 |
-| Pure shear Vz | [VelocityFieldTests.cpp](VelocityFieldTests.cpp) | $-\dot{\varepsilon} z$ (§2.5) | `EXPECT_LT(L2_Vz, 3e-2)` | 3e-2 |
-| Shear heating ΔT | [ShearHeatingTests.cpp](ShearHeatingTests.cpp) | $2\eta\dot{\varepsilon}^2 t / \rho C_p$ (§2.7) | `EXPECT_NEAR(dT, dT_ana, 2×dT_ana)` | 3× |
-| Simple shear Vx | [VelocityFieldTests.cpp](VelocityFieldTests.cpp) | $2\dot{\gamma} z$ (§2.8) | `EXPECT_LT(L2_Vx, 1e-6)` | 1e-6 |
-| Simple shear Vz | [VelocityFieldTests.cpp](VelocityFieldTests.cpp) | $0$ (§2.8) | `EXPECT_LT(L2_Vz, 1e-6)` | 1e-6 |
+| Geotherm | [ThermalTests.cpp](ThermalTests.cpp) | Linear profile (§2.1) | `EXPECT_LT(L2_T, 1.0)` | 1.0 || Oceanic cooling T | [ThermalVerificationTests.cpp](ThermalVerificationTests.cpp) | $T_s + (T_m - T_s)\,\mathrm{erf}(z/\sqrt{4\kappa t})$ (§2.3) | `EXPECT_LT(L2, 5e-2)` | 5e-2 |
+| Oceanic CHOLMOD vs PCG | [ThermalVerificationTests.cpp](ThermalVerificationTests.cpp) | CHOLMOD ≡ PCG (§2.3) | `EXPECT_LT(L2_diff, 1e-6)` | 1e-6 |
+| Thermo-elastic ΔP | [ThermalVerificationTests.cpp](ThermalVerificationTests.cpp) | $K\alpha\Delta T$ (§2.4) | `EXPECT_LT(rel_err, 0.25)` | 25% |
+| Thermo-elastic T L2 | [ThermalVerificationTests.cpp](ThermalVerificationTests.cpp) | CHOLMOD ≡ PCG (§2.4) | `EXPECT_LT(T_L2, 1e-6)` | 1e-6 |
+| Thermo-elastic P L2 | [ThermalVerificationTests.cpp](ThermalVerificationTests.cpp) | CHOLMOD ≡ PCG (§2.4) | `EXPECT_LT(P_L2, 1e-4)` | 1e-4 || Hydrostatic P | [DensityTests.cpp](DensityTests.cpp) | $\rho g z$ (§2.5) | `EXPECT_LT(L2_P, 6e-2)` | 6e-2 |
+| Pure shear Vx | [VelocityFieldTests.cpp](VelocityFieldTests.cpp) | $\dot{\varepsilon} x$ (§2.7) | `EXPECT_LT(L2_Vx, 3e-2)` | 3e-2 |
+| Pure shear Vz | [VelocityFieldTests.cpp](VelocityFieldTests.cpp) | $-\dot{\varepsilon} z$ (§2.7) | `EXPECT_LT(L2_Vz, 3e-2)` | 3e-2 |
+| Shear heating ΔT | [ShearHeatingTests.cpp](ShearHeatingTests.cpp) | $2\eta\dot{\varepsilon}^2 t / \rho C_p$ (§2.9) | `EXPECT_NEAR(dT, dT_ana, 2×dT_ana)` | 3× |
+| Simple shear Vx | [VelocityFieldTests.cpp](VelocityFieldTests.cpp) | $2\dot{\gamma} z$ (§2.10) | `EXPECT_LT(L2_Vx, 1e-6)` | 1e-6 |
+| Simple shear Vz | [VelocityFieldTests.cpp](VelocityFieldTests.cpp) | $0$ (§2.10) | `EXPECT_LT(L2_Vz, 1e-6)` | 1e-6 |
 | Director L2(θ) | [AnisotropyBenchmarkTests.cpp](AnisotropyBenchmarkTests.cpp) | $\arctan(\tan\theta_0 - \dot\gamma t)$ (§3.1) | `EXPECT_LT(L2, 5e-3)` | 5e-3 rad |
 | Director dt-order | [AnisotropyBenchmarkTests.cpp](AnisotropyBenchmarkTests.cpp) | Order from dt refinement (§3.2) | `EXPECT_GE(order, 0.8)` | 0.8 |
 | Stress τ_II | [AnisotropyBenchmarkTests.cpp](AnisotropyBenchmarkTests.cpp) | Rotation formula (§3.3) | `EXPECT_LT(relErr, 1e-4)` | 0.01% |

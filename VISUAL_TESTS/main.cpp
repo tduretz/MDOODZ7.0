@@ -717,5 +717,7 @@ int main() {
   PlotThermalAccuracy();
   PlotPCGConvergence();
   PlotInterpEquivalence();
+  PlotOceanicCooling();
+  PlotThermoElastic();
   UpdateReadmeTimestamp();
 }

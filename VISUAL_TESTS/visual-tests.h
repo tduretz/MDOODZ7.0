@@ -21,5 +21,7 @@ void PlotShrinkingGifRef();
 void PlotThermalAccuracy();
 void PlotPCGConvergence();
 void PlotInterpEquivalence();
+void PlotOceanicCooling();
+void PlotThermoElastic();
 
 #endif
