@@ -49,7 +49,7 @@ All optimizations are validated against analytic solutions and the original CHOL
 
 Both solvers produce identical L2 errors against analytic solutions:
 
-| Test | CHOLMOD L2 | PCG L2 | |diff| |
+| Test | CHOLMOD L2 | PCG L2 | \|diff\| |
 |---|---|---|---|
 | Gaussian diffusion (51×51) | 1.074e-02 | 1.074e-02 | **0** |
 | Steady-state geotherm (31×31) | 2.423e-06 | 2.423e-06 | **0** |
@@ -73,7 +73,7 @@ Residual export is available for diagnostics: set `export_pcg_residuals = 1` in 
 
 Field-level comparison of temperature, pressure, and viscosity between standard (`interp_mode=0`) and fused (`interp_mode=3`) interpolation on a 51×51 Gaussian diffusion setup (5 time steps):
 
-| Field | max|diff| |
+| Field | max\|diff\| |
 |---|---|
 | T (temperature) | **0** |
 | P (pressure) | **0** |
