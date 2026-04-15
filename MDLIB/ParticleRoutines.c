@@ -1032,57 +1032,6 @@ void FindClosestPhaseVertex( markers* particles, int ic, int jc, grid mesh, int 
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-void AddPartCell( markers *particles, grid mesh, int ic, int jc, int* ind_list, params model, int nb_neigh, int *ind_part_reuse, int *inc_reuse, int nb_part_reuse, surface topo  ) {
-
-    // This functions add particles to cells that are tag as 'particle deficient'.
-    // So far, it adds 4 new particles at different locations within the cell.
-    // The new particles get the phase and stored stresses of the closest particle.
-    int nxp=1, nzp=1;
-    int Nb_add = nxp*nzp;
-    double new_x, new_z, h=model.zmax;
-    int new_ind;
-    int k, l;
-
-    // Reallocate particle arrays if no more space in arrays (TO BE IMPLEMENTED)
-    if (particles->Nb_part + Nb_add > particles->Nb_part_max && Nb_add > nb_part_reuse) {
-        LOG_INFO("You have reached the maximum number of particles currently available (%d), please increase it...", particles->Nb_part_max);
-        LOG_INFO("Exiting...");
-        exit(1);
-    }
-
-    for (l=0;l<nzp;l++) {
-        for (k=0;k<nxp;k++) {
-
-            //-------------------------------------------------------------------------------------------------------------------------//
-
-            new_x = mesh.xg_coord[ic] + (1+k)*mesh.dx/(nxp+1) - 0.0*mesh.dx/10.0;
-            new_z = mesh.zg_coord[jc] + (1+l)*mesh.dz/(nzp+1) - 0.0*mesh.dz/10.0;
-
-            if ( new_x > model.xmin && new_z > model.zmin && new_z<h  ) {
-                if ( (*inc_reuse) < nb_part_reuse && nb_part_reuse>0  ) {
-                    new_ind = ind_part_reuse[*inc_reuse];
-                    (*inc_reuse)++;
-                }
-                else {
-                    new_ind = particles->Nb_part;
-                    particles->Nb_part++;
-                }
-
-                // Add 4 particules
-                particles->x[new_ind]      = new_x;
-                particles->z[new_ind]      = new_z;
-                FindClosestPhase( particles, ic, jc, mesh, ind_list, new_ind, nb_neigh, &model  );
-            }
-
-        }
-    }
-
-}
-
-/*--------------------------------------------------------------------------------------------------------------------*/
-/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
-/*--------------------------------------------------------------------------------------------------------------------*/
-
 void AddPartCell2( int *pidx, int *Nb_part_thread, markers *particles, grid mesh, int ic, int jc, int* ind_list, params model, int nb_neigh, surface topo, double* xg , double* zg, int cell, int *nnewp, double *newx, double *newz, int *newi, int sed_phase, surface topo_ini ) {
 
     // This functions add particles to cells that are tag as 'particle deficient'.
@@ -1129,130 +1078,6 @@ void AddPartCell2( int *pidx, int *Nb_part_thread, markers *particles, grid mesh
                 (*nnewp)++;
             }
 
-        }
-    }
-}
-
-/*--------------------------------------------------------------------------------------------------------------------*/
-/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
-/*--------------------------------------------------------------------------------------------------------------------*/
-
-void AddPartVert( markers *particles, grid mesh, int ic, int jc, int* ind_list, params model, int nb_neigh, int *ind_part_reuse, int *inc_reuse, int nb_part_reuse, surface topo ) {
-
-    // This functions add particles to cells that are tag as 'particle deficients'.
-    // So far, it adds 4 new particles at different locations within the cell.
-    // The new particles get the phase and stored stress of the closest particle.
-
-    int Nb_add = 4;
-    double new_x, new_z, h=model.zmax;
-    int new_ind;
-    int cell;
-
-    // Reallocate particle arrays if no more space in arrays (TO BE IMPLEMENTED)
-    if (particles->Nb_part + Nb_add > particles->Nb_part_max && Nb_add > nb_part_reuse ) {
-        LOG_INFO("You have reached the maximum number of particles currently available (%d), please increase it...", particles->Nb_part_max);
-        LOG_INFO("Exiting...");
-        exit(1);
-    }
-
-    // Add 4 particules
-    if ( Nb_add == 4 ) {
-
-        cell = ic;
-
-        //-------------------------------------------------------------------------------------------------------------------------//
-        // Get the particle index
-        new_x = mesh.xg_coord[ic] - mesh.dx/3.0;
-        new_z = mesh.zg_coord[jc] - mesh.dz/3.0;
-        //        distance=(new_x - xmin);
-        //        cell = ceil((distance/model.dx)+0.5) - 1;
-        //        if (cell<0) cell = 0;
-        //        if (cell>mesh.Nx[0]-2) cell = mesh.Nx[0]-2;
-        if ( model.free_surface==1 ) h  = topo.a[cell]*new_x  + topo.b[cell];
-
-
-        if ( new_x > model.xmin && new_z > model.zmin && new_z<h   ) {
-
-            //            if ( (*inc_reuse) < nb_part_reuse && nb_part_reuse>0  ) {
-            //                new_ind = ind_part_reuse[*inc_reuse];
-            //                (*inc_reuse)++;
-            //            }
-            //            else {
-            new_ind = particles->Nb_part;
-            particles->Nb_part++;
-            //            }
-
-            particles->x[new_ind]      = new_x;
-            particles->z[new_ind]      = new_z;
-            FindClosestPhaseVertex( particles, ic, jc, mesh, ind_list, new_ind, nb_neigh, &model );
-        }
-
-        //-------------------------------------------------------------------------------------------------------------------------//
-
-        // Get the particle index
-        new_x = mesh.xg_coord[ic] + mesh.dx/3.0;
-        new_z = mesh.zg_coord[jc] - mesh.dz/3.0;
-        if ( model.free_surface==1 ) h  = topo.a[cell]*new_x  + topo.b[cell];
-
-        if ( new_x < model.xmax && new_z > model.zmin && new_z<h   ) {
-
-            //            if ( (*inc_reuse) < nb_part_reuse && nb_part_reuse>0  ) {
-            //                new_ind = ind_part_reuse[*inc_reuse];
-            //                (*inc_reuse)++;
-            //            }
-            //            else {
-            new_ind = particles->Nb_part;
-            particles->Nb_part++;
-            //            }
-
-            particles->x[new_ind]      = new_x;
-            particles->z[new_ind]      = new_z;
-            FindClosestPhaseVertex( particles, ic, jc, mesh, ind_list, new_ind, nb_neigh, &model );
-        }
-
-        //-------------------------------------------------------------------------------------------------------------------------//
-        // Get the particle index
-        new_x = mesh.xg_coord[ic] - mesh.dx/3.0;
-        new_z = mesh.zg_coord[jc] + mesh.dz/3.0;
-        if ( model.free_surface==1 ) h  = topo.a[cell]*new_x  + topo.b[cell];
-
-        if ( new_z < model.zmax && new_x > model.xmin && new_z<h  ) {
-
-            //            if ( (*inc_reuse) < nb_part_reuse && nb_part_reuse>0  ) {
-            //                new_ind = ind_part_reuse[(*inc_reuse)];
-            //                (*inc_reuse)++;
-            //            }
-            //            else {
-            new_ind = particles->Nb_part;
-            particles->Nb_part++;
-            //            }
-
-            particles->x[new_ind]      = new_x;
-            particles->z[new_ind]      = new_z;
-            FindClosestPhaseVertex( particles, ic, jc, mesh, ind_list, new_ind, nb_neigh, &model );
-        }
-
-        //------------------------------------------------------------------------------------------------------------------------/
-        // Get the particle index
-        new_x = mesh.xg_coord[ic] + mesh.dx/3.0;
-        new_z = mesh.zg_coord[jc] + mesh.dz/3.0;
-        if ( model.free_surface==1 ) h  = topo.a[cell]*new_x  + topo.b[cell];
-
-
-        if ( new_z < model.zmax && new_x < model.xmax && new_z<h ) {
-
-            //            if ( (*inc_reuse) < nb_part_reuse && nb_part_reuse>0  ) {
-            //                new_ind = ind_part_reuse[*inc_reuse];
-            //                (*inc_reuse)++;
-            //            }
-            //            else {
-            new_ind = particles->Nb_part;
-            particles->Nb_part++;
-            //            }
-
-            particles->x[new_ind]      = new_x;
-            particles->z[new_ind]      = new_z;
-            FindClosestPhaseVertex( particles, ic, jc, mesh, ind_list, new_ind, nb_neigh, &model );
         }
     }
 }
@@ -3002,7 +2827,7 @@ void CountPartCell( markers* particles, grid *mesh, params model, surface topo, 
                     for (int i=imin; i<=imax; i++) {
                         for (int j=jmin; j<=jmax; j++) {
                             kc = i + j*ncx;
-                            for (int n=0; n<part_count[kc]; n++) {
+                            for (int n=0; n<nb_part_cell[kc]; n++) {
                                 neighbours[nb_neigh] = part_cell[kc][n];
                                 nb_neigh++;
                             }
@@ -3066,6 +2891,24 @@ void CountPartCell( markers* particles, grid *mesh, params model, surface topo, 
         //         printf("   k = %d\n",  k);
         //     }
         // }
+
+        // Deactivate excess particles in over-populated cells
+        int deact = 0;
+        for (ic=0; ic<ncx; ic++) {
+            for (jc=0; jc<ncz; jc++) {
+                kc = ic + jc * ncx;
+                if ( mesh->BCt_fine.type[kc] != 30 && nb_part_cell[kc] > particles->min_part_cell + 4 ) {
+                    for ( int nb=0; nb<nb_part_cell[kc]; nb++ ) {
+                        if (nb > particles->min_part_cell + 4) {
+                            int deactivate_idx = part_cell[kc][nb];
+                            particles->phase[deactivate_idx] = -1;
+                            deact++;
+                        }
+                    }
+                }
+            }
+        }
+        LOG_INFO("Deactivated particles: %03d", deact);
 
         // Freedom
         for (kc=0; kc<ncx*ncz; kc++) {
@@ -3928,6 +3771,88 @@ void CountPartCell_OLD( markers* particles, grid *mesh, params model, surface to
 
     for (ith=0; ith<nthreads; ith++) {
         particles->Nb_part += nb_new[ith];
+    }
+
+    // Deactivate excess particles in over-populated cells (serial pass on global mesh)
+    if (reseed_markers==1) {
+        int ncx_g = 2*Ncx, ncz_g = 2*Ncz;
+        double dx_f = dx/2.0, dz_f = dz/2.0;
+        double xmin_f = mesh->xg_coord[0] + dx_f/2.0;
+        double zmin_f = mesh->zg_coord[0] + dz_f/2.0;
+        int* npc_g  = DoodzCalloc(ncx_g*ncz_g, sizeof(int));
+        int** ipc_g = DoodzCalloc(ncx_g*ncz_g, sizeof(int*));
+
+        // Count particles per fine cell
+        for (k=0; k<particles->Nb_part; k++) {
+            if (particles->phase[k] != -1) {
+                distance = (particles->x[k] - xmin_f);
+                ic = ceil((distance/dx_f) + 0.5) - 1;
+                if (ic<0)       ic = 0;
+                if (ic>ncx_g-1) ic = ncx_g-1;
+                distance = (particles->z[k] - zmin_f);
+                jc = ceil((distance/dz_f) + 0.5) - 1;
+                if (jc<0)       jc = 0;
+                if (jc>ncz_g-1) jc = ncz_g-1;
+                npc_g[ic + jc*ncx_g]++;
+            }
+        }
+
+        // Allocate per-cell arrays
+        for (kc=0; kc<ncx_g*ncz_g; kc++) {
+            ipc_g[kc] = DoodzCalloc(npc_g[kc], sizeof(int));
+            npc_g[kc] = 0; // Reset for filling
+        }
+
+        // Fill per-cell arrays
+        for (k=0; k<particles->Nb_part; k++) {
+            if (particles->phase[k] != -1) {
+                distance = (particles->x[k] - xmin_f);
+                ic = ceil((distance/dx_f) + 0.5) - 1;
+                if (ic<0)       ic = 0;
+                if (ic>ncx_g-1) ic = ncx_g-1;
+                distance = (particles->z[k] - zmin_f);
+                jc = ceil((distance/dz_f) + 0.5) - 1;
+                if (jc<0)       jc = 0;
+                if (jc>ncz_g-1) jc = ncz_g-1;
+                kc = ic + jc*ncx_g;
+                ipc_g[kc][npc_g[kc]] = k;
+                npc_g[kc]++;
+            }
+        }
+
+        // Deactivate excess — use coarse BCt.type for boundary check
+        int deact = 0;
+        double x_f, z_f;
+        int ic_coarse, jc_coarse;
+        for (ic=0; ic<ncx_g; ic++) {
+            for (jc=0; jc<ncz_g; jc++) {
+                kc = ic + jc*ncx_g;
+                // Map fine cell to coarse cell for boundary check
+                x_f = mesh->xg_coord[0] + dx_f/2.0 + ic*dx_f;
+                distance = (x_f - (mesh->xg_coord[0] + dx/2.0));
+                ic_coarse = ceil((distance/dx) + 0.5) - 1;
+                if (ic_coarse<0)     ic_coarse = 0;
+                if (ic_coarse>Ncx-1) ic_coarse = Ncx-1;
+                z_f = mesh->zg_coord[0] + dz_f/2.0 + jc*dz_f;
+                distance = (z_f - (mesh->zg_coord[0] + dz/2.0));
+                jc_coarse = ceil((distance/dz) + 0.5) - 1;
+                if (jc_coarse<0)     jc_coarse = 0;
+                if (jc_coarse>Ncz-1) jc_coarse = Ncz-1;
+                if (mesh->BCt.type[ic_coarse + jc_coarse*Ncx] != 30 && npc_g[kc] > particles->min_part_cell + 4) {
+                    for (nb=0; nb<npc_g[kc]; nb++) {
+                        if (nb > particles->min_part_cell + 4) {
+                            particles->phase[ipc_g[kc][nb]] = -1;
+                            deact++;
+                        }
+                    }
+                }
+            }
+        }
+        LOG_INFO("Deactivated particles: %03d", deact);
+
+        for (kc=0; kc<ncx_g*ncz_g; kc++) DoodzFree(ipc_g[kc]);
+        DoodzFree(ipc_g);
+        DoodzFree(npc_g);
     }
     
 //    //________________________________________

@@ -13,7 +13,6 @@ add_library(mdoodz SHARED
         MeltingRoutines.c
         MemoryAllocFree.c
         MiscFunctions.c
-        ParticleReseeding.c
         ParticleRoutines.c
         RheologyDensity.c
         RheologyParticles.c

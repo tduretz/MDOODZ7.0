@@ -243,6 +243,19 @@ static double computeL1Error(const std::vector<double> &numerical, const std::ve
   return sumAbsDiff / (double)n;
 }
 
+// Read a single-element integer dataset from HDF5
+static int readScalarInt(const char *hdf5FileName, const char *groupName, const char *datasetName) {
+  hid_t file  = H5Fopen(hdf5FileName, H5F_ACC_RDONLY, H5P_DEFAULT);
+  hid_t group = H5Gopen(file, groupName, H5P_DEFAULT);
+  hid_t dset  = H5Dopen(group, datasetName, H5P_DEFAULT);
+  int value = 0;
+  H5Dread(dset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, &value);
+  H5Dclose(dset);
+  H5Gclose(group);
+  H5Fclose(file);
+  return value;
+}
+
 // Extract a 1D vertical column at x-index ix from a flat ncx×ncz field array
 // Storage is column-major: field[ix + ncx * iz]
 static std::vector<double> readColumnProfile(const char *hdf5FileName, const char *groupName, const char *datasetName, int ix, int ncx, int ncz) {

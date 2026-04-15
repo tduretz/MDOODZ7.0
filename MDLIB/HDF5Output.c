@@ -727,6 +727,10 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
     // Parameter array
     AddFieldToGroup( FileName, "Model", "Params"   , 'd', 8,  A, 1 );
 
+    // Particle count
+    int nb_part_out = particles->Nb_part;
+    AddFieldToGroup( FileName, "Model", "Nb_part"  , 'i', 1,  &nb_part_out, 1 );
+
     // Add time series
     AddFieldToGroup(  FileName, "TimeSeries", "Time_time"      , 'd', model.Nt+1,  mesh->Time_time      , 1 );
     AddFieldToGroup(  FileName, "TimeSeries", "Short_time"     , 'd', model.Nt+1,  mesh->Short_time     , 1 );

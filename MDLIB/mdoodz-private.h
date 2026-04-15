@@ -426,7 +426,6 @@ void            isoutPart(markers *, params *, int);
 void            CountPartCell(markers *, grid *, params, surface, surface, int, scale, InterpBufPool *);
 void            CountPartCell_Old(markers *, grid *, params, surface, int, scale);
 void            CountPartCell_OLD(markers *, grid *, params, surface, surface, int, scale, InterpBufPool *);
-void            CountPartCell2(markers *, grid *, params, surface, surface, int, scale);
 
 void            AccumulatedStrain(grid *, scale, params, markers *);
 void            PureShearALE(params *, grid *, markers *, scale);

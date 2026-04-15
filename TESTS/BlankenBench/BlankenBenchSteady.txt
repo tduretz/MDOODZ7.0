@@ -1,15 +1,18 @@
 /**** RESTART ****/
-istep = 200000
+istep = 100000
 irestart = 0
 
 /**** OUTPUT FILES ****/
 writer            = 1
-writer_step       = 100000
+writer_step       = 100
 writer_markers    = 0
 writer_debug      = 0
 writer_energies   = 0
 gnuplot_log_res   = 0
 writer_subfolder  = BlankenBench
+log_dest          = 2
+log_level         = 2
+log_timestamp     = 1
 
 /**** SCALES ****/
 eta = 1e20
@@ -32,9 +35,9 @@ min_part_cell = 16
 max_part_cell = 40
 
 /**** TIME ****/
-Nt          = 100000
+Nt          = 50000
 constant_dt = 0
-Courant     = 0.25
+Courant     = 0.5
 dt          = 1e11
 RK          = 4
 

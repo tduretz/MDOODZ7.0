@@ -178,6 +178,14 @@ TEST_F(BlankenBench, ConvectionDevelops) {
   }
   double Nu = -(H / DeltaT) * (sumDtDz / ncx);
   printf("BlankenBench: Nu = %.4f (published steady state: 4.884)\n", Nu);
+
+  // Particle count stability: recycling should prevent unbounded growth
+  int Nb_part = readScalarInt(outFile, "Model", "Nb_part");
+  int Nb_part_initial = ncx * ncz * 4 * 4;  // Nx_part=4, Nz_part=4
+  printf("BlankenBench: Nb_part = %d (initial: %d, ratio: %.2f)\n",
+         Nb_part, Nb_part_initial, (double)Nb_part / Nb_part_initial);
+  EXPECT_LE(Nb_part, 2 * Nb_part_initial)
+      << "Particle count grew beyond 2x initial — recycling may not be working";
 }
 
 // ---------------------------------------------------------------------------
@@ -217,25 +225,22 @@ TEST_F(BlankenBench, TemperatureProfile) {
 // ---------------------------------------------------------------------------
 // Test 3: Steady-state Nusselt number and Vrms (MANUAL — not in CI)
 //
-// Runs 100k steps with Courant=0.5 to reach thermal steady state, then
+// Runs 50k steps with Courant=0.5 to reach thermal steady state, then
 // computes Nu and Vrms and compares against Blankenbach et al. (1989)
-// published reference values. Requires OMP_NUM_THREADS=8.
+// published reference values.
 //
-// Run: OMP_NUM_THREADS=8 ./BlankenBenchTests --gtest_filter=BlankenBench.NusseltAndVrms
+// Run: BLANKENBACH_STEADY=1 ./BlankenBenchTests --gtest_filter=BlankenBench.NusseltAndVrms
 // ---------------------------------------------------------------------------
 TEST_F(BlankenBench, NusseltAndVrms) {
   // Guard: only run when explicitly requested via environment variable
   const char *run_steady = std::getenv("BLANKENBACH_STEADY");
   if (!run_steady || std::string(run_steady) != "1") {
-    GTEST_SKIP() << "Set BLANKENBACH_STEADY=1 to run this long test (~2-4 hours)";
+    GTEST_SKIP() << "Set BLANKENBACH_STEADY=1 to run this long test (~1-2 hours)";
   }
 
 #ifdef _OPENMP
   int nthreads = omp_get_max_threads();
   printf("BlankenBench: Running with %d OpenMP threads\n", nthreads);
-  ASSERT_GE(nthreads, 4) << "Need at least 4 threads for reasonable runtime";
-#else
-  GTEST_SKIP() << "Build without OpenMP (-DOMP=ON). Skipping long-running test.";
 #endif
 
   // Run steady-state simulation
@@ -243,7 +248,7 @@ TEST_F(BlankenBench, NusseltAndVrms) {
   RunMDOODZ(inputFile, &setup);
 
   // Read final output
-  const char *outFile = "BlankenBench/Output100000.gzip.h5";
+  const char *outFile = "BlankenBench/Output50000.gzip.h5";
 
   const int Nx = 41, Nz = 41;
   const int ncx = Nx - 1, ncz = Nz - 1;
@@ -300,6 +305,14 @@ TEST_F(BlankenBench, NusseltAndVrms) {
 
   EXPECT_NEAR(Nu,      Nu_ref,   tol * Nu_ref)   << "Nu outside 5% of published value";
   EXPECT_NEAR(Vrms_nd, Vrms_ref, tol * Vrms_ref) << "Vrms outside 5% of published value";
+
+  // --- Particle count stability: deactivation must prevent unbounded growth ---
+  int Nb_part = readScalarInt(outFile, "Model", "Nb_part");
+  int Nb_part_initial = ncx * ncz * 4 * 4;  // Nx_part=4, Nz_part=4
+  printf("BlankenBench: Nb_part = %d (initial: %d, ratio: %.2f)\n",
+         Nb_part, Nb_part_initial, (double)Nb_part / Nb_part_initial);
+  EXPECT_LE(Nb_part, 3 * Nb_part_initial)
+      << "Particle count grew beyond 3x initial — deactivation/recycling broken";
 }
 
 // ---------------------------------------------------------------------------
