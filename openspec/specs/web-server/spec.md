@@ -1,5 +1,55 @@
 ## MODIFIED Requirements
 
+### Requirement: Default dataset root directory
+
+When no command-line argument is provided, the server SHALL default `ROOT_DIR` to the parent directory of the `WebVis/` folder (i.e. the MDOODZ project root), not the current working directory. This SHALL be computed as `resolve(__dirname, '..')`. When a command-line argument is provided, it SHALL be used as `ROOT_DIR` as before.
+
+#### Scenario: No CLI argument
+
+- **WHEN** the server is started with `node server.mjs` (no arguments)
+- **THEN** `ROOT_DIR` SHALL resolve to the MDOODZ project root (parent of `WebVis/`)
+- **AND** dataset scanning SHALL recursively find any HDF5-containing directories under the project root
+
+#### Scenario: Explicit CLI argument
+
+- **WHEN** the server is started with `node server.mjs ../benchmark-results`
+- **THEN** `ROOT_DIR` SHALL resolve to `../benchmark-results` as before
+
+### Requirement: Recursive dataset scanning
+
+The dataset scanner SHALL recursively walk the directory tree under `ROOT_DIR` to find all directories containing `Output*.gzip.h5` files. Each discovered directory SHALL be listed as a dataset. The dataset display name SHALL be the path relative to `ROOT_DIR` (e.g. `benchmark-results/rifting-600x400-v2-h5`), excluding the project root itself. If `ROOT_DIR` itself contains HDF5 files, it SHALL be listed with the name `.`. Directories that commonly contain non-dataset content (e.g. `node_modules`, `.git`, `_deps`, `CMakeFiles`) SHALL be skipped during traversal.
+
+#### Scenario: Deeply nested dataset
+
+- **WHEN** `ROOT_DIR` is the project root and HDF5 files exist at `benchmark-results/rifting-600x400-v2-h5/`
+- **THEN** the dataset SHALL appear with name `benchmark-results/rifting-600x400-v2-h5`
+
+#### Scenario: Multiple depths
+
+- **WHEN** HDF5 files exist at `visualtests-out/` and also at `visualtests-out/OceanicCooling/`
+- **THEN** both `visualtests-out` and `visualtests-out/OceanicCooling` SHALL appear as separate datasets
+
+#### Scenario: Excluded directories
+
+- **WHEN** `node_modules/` or `.git/` or `_deps/` contain HDF5-like files
+- **THEN** those directories SHALL NOT appear as datasets
+
+### Requirement: Rescan datasets endpoint
+
+The server SHALL expose `POST /api/rescan` which re-executes the dataset scanning logic (`scanDatasets()`), clears any cached file lists, and returns the updated dataset list. This allows the client to discover newly created or deleted dataset directories without restarting the server.
+
+#### Scenario: New dataset directory appears
+
+- **WHEN** a new directory containing HDF5 output files is created under `ROOT_DIR`
+- **AND** the client sends `POST /api/rescan`
+- **THEN** the response SHALL include the new directory in the dataset list
+
+#### Scenario: Rescan preserves active dataset
+
+- **WHEN** the user has selected a dataset and `POST /api/rescan` is called
+- **AND** the active dataset still exists
+- **THEN** the active dataset selection SHALL be preserved
+
 ### Requirement: List available HDF5 files
 
 The server SHALL expose `GET /api/files` which returns a JSON object with a `files` array. Each entry SHALL be an object `{ name, step, time }` where `name` is the filename, `step` is the integer time-step number parsed from the filename, and `time` is the model time in seconds read from `/Model/Params[0]`. The files SHALL be sorted by step number. On the first call, the server SHALL read metadata from all files using `readAllMetadata` and cache the result in memory.

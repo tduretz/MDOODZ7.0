@@ -22,6 +22,7 @@ export class ControlPanel {
       <div class="ctrl-group">
         <label>Dataset</label>
         <select id="dataset-select"></select>
+        <button id="refresh-datasets" title="Rescan datasets and files">⟳</button>
       </div>
       <div class="ctrl-group">
         <label>File</label>
@@ -32,6 +33,7 @@ export class ControlPanel {
     `;
 
     this.datasetSelect = this.el.querySelector('#dataset-select');
+    this.refreshBtn    = this.el.querySelector('#refresh-datasets');
     this.fileSelect    = this.el.querySelector('#file-select');
     this.timeSlider    = this.el.querySelector('#time-slider');
     this.sliderLabel   = this.el.querySelector('#slider-label');
@@ -39,6 +41,11 @@ export class ControlPanel {
     // Dataset change
     this.datasetSelect.addEventListener('change', () => {
       this.el.dispatchEvent(new CustomEvent('ctrl:dataset-change', { detail: this.datasetSelect.value }));
+    });
+
+    // Refresh datasets
+    this.refreshBtn.addEventListener('click', () => {
+      this.el.dispatchEvent(new CustomEvent('ctrl:refresh-datasets'));
     });
 
     // DOM events → dispatched as custom events on this.el
@@ -64,9 +71,6 @@ export class ControlPanel {
     this.datasetSelect.innerHTML = datasets.map(d =>
       `<option value="${d.name}">${d.name} (${d.fileCount} files)</option>`
     ).join('');
-    // Hide dropdown if only one dataset
-    this.datasetSelect.closest('.ctrl-group').style.display =
-      datasets.length <= 1 ? 'none' : '';
     this._syncDatasetUI();
   }
 

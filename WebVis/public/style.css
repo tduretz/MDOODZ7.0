@@ -504,6 +504,11 @@ html, body {
   background: var(--accent);
   color: var(--bg);
 }
+#refresh-datasets {
+  font-size: 14px;
+  padding: 2px 6px;
+  line-height: 1;
+}
 
 /* ── Loading overlay ─────────────────────────────────────────────────── */
 #loading-overlay {

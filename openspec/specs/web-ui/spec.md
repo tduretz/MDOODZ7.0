@@ -1,5 +1,27 @@
 ## ADDED Requirements
 
+### Requirement: Refresh datasets button
+
+The UI SHALL display a refresh button (⟳ icon or "Refresh" label) near the dataset selector. Clicking the button SHALL send `POST /api/rescan` to the server, then re-fetch the dataset list via `GET /api/datasets`, and update the dataset selector dropdown. After updating datasets, the file list for the active dataset SHALL also be refreshed. A browser page refresh (F5 / Cmd+Shift+R) SHALL trigger the same rescan-then-fetch sequence on page load.
+
+#### Scenario: Click refresh button
+
+- **WHEN** the user clicks the refresh button
+- **THEN** the client SHALL POST `/api/rescan`, then GET `/api/datasets` to update the dropdown
+- **AND** the file list SHALL be refreshed for the active dataset
+
+#### Scenario: Page refresh triggers rescan
+
+- **WHEN** the user refreshes the browser page
+- **THEN** on page load the client SHALL POST `/api/rescan` before fetching datasets and files
+- **AND** newly appeared or removed datasets SHALL be reflected in the dropdown
+
+#### Scenario: Active dataset preserved after refresh
+
+- **WHEN** the user has selected "rifting-600x400-v2-h5" and clicks refresh
+- **AND** that dataset directory still exists
+- **THEN** the dropdown SHALL remain on "rifting-600x400-v2-h5" after the refresh completes
+
 ### Requirement: Overlay controls per panel
 
 Each panel SHALL display a collapsible "Overlays" control row below the zoom controls row. The row SHALL contain a toggle checkbox for each overlay layer type, labelled with a short name: Ph (phases), T (temperature), Topo (topography), V (velocity), Dir (director), σ₁ (sigma1), ε̇₁ (edot1), Melt (melt). Clicking a toggle SHALL dispatch a `ctrl:panel:overlay-toggle` event with `panelId` and `layerType`. The row SHALL be collapsed by default and expand on click of an "Overlays ▸" disclosure button. Toggles for unavailable layers SHALL be disabled and visually greyed out.

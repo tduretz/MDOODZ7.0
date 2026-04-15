@@ -11,36 +11,40 @@ import { getField, listAvailableFields, getFieldLabel, getFieldUnit } from './fi
 import { getCached, writeCache } from './field-cache.mjs';
 
 // ── Configuration ──────────────────────────────────────────────────────
-const ROOT_DIR  = resolve(process.argv[2] || '.');
-const PORT      = parseInt(process.env.PORT || '3000', 10);
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
+const ROOT_DIR  = resolve(process.argv[2] || join(__dirname, '..'));
+const PORT      = parseInt(process.env.PORT || '3000', 10);
 const PUBLIC    = join(__dirname, 'public');
 
 // ── Dataset (directory) scanning ───────────────────────────────────────
-// Scans ROOT_DIR for subdirectories containing Output*.gzip.h5 files.
-// If ROOT_DIR itself contains them, it is listed as '.'.
+// Recursively scans ROOT_DIR for directories containing Output*.gzip.h5.
+// Dataset names are paths relative to ROOT_DIR.
+const SKIP_DIRS = new Set(['node_modules', '.git', '_deps', 'CMakeFiles', '.cache', '__pycache__']);
 let datasetList = [];   // [{name, path, fileCount}]
 let activeDataset = null; // current dataset path (absolute)
 
 async function scanDatasets() {
   datasetList = [];
-  // Check ROOT_DIR itself
-  const rootFiles = (await readdir(ROOT_DIR)).filter(f => FILENAME_RE.test(f));
-  if (rootFiles.length > 0) {
-    datasetList.push({ name: '.', path: ROOT_DIR, fileCount: rootFiles.length });
+
+  async function walk(dirPath, relPath) {
+    let entries;
+    try { entries = await readdir(dirPath, { withFileTypes: true }); } catch { return; }
+
+    const h5Files = entries.filter(e => !e.isDirectory() && FILENAME_RE.test(e.name));
+    if (h5Files.length > 0) {
+      datasetList.push({ name: relPath || '.', path: dirPath, fileCount: h5Files.length });
+    }
+
+    for (const entry of entries) {
+      if (!entry.isDirectory() || SKIP_DIRS.has(entry.name)) continue;
+      const childPath = join(dirPath, entry.name);
+      const childRel = relPath ? `${relPath}/${entry.name}` : entry.name;
+      await walk(childPath, childRel);
+    }
   }
-  // Check subdirectories (one level deep)
-  const entries = await readdir(ROOT_DIR, { withFileTypes: true });
-  for (const entry of entries) {
-    if (!entry.isDirectory()) continue;
-    const subPath = join(ROOT_DIR, entry.name);
-    try {
-      const subFiles = (await readdir(subPath)).filter(f => FILENAME_RE.test(f));
-      if (subFiles.length > 0) {
-        datasetList.push({ name: entry.name, path: subPath, fileCount: subFiles.length });
-      }
-    } catch { /* skip unreadable dirs */ }
-  }
+
+  await walk(ROOT_DIR, '');
+
   // Sort: '.' first, then alphabetically
   datasetList.sort((a, b) => {
     if (a.name === '.') return -1;
@@ -50,6 +54,10 @@ async function scanDatasets() {
   // Default to first dataset
   if (datasetList.length > 0 && !activeDataset) {
     activeDataset = datasetList[0].path;
+  }
+  // If active dataset was removed, reset to first
+  if (activeDataset && !datasetList.find(d => d.path === activeDataset)) {
+    activeDataset = datasetList.length > 0 ? datasetList[0].path : null;
   }
 }
 
@@ -294,6 +302,14 @@ const server = createServer(async (req, res) => {
       cachedFileList = null;  // invalidate file-list cache
       cachedDataDir = null;
       jsonResponse(res, 200, { active: target.name });
+    } else if (path === '/api/rescan' && req.method === 'POST') {
+      await scanDatasets();
+      cachedFileList = null;
+      cachedDataDir = null;
+      await gzipJsonResponse(req, res, 200, {
+        datasets: datasetList.map(d => ({ name: d.name, fileCount: d.fileCount })),
+        active: datasetList.find(d => d.path === activeDataset)?.name || null,
+      });
     } else if (path === '/api/files') {
       await handleApiFiles(req, res);
     } else if (path.startsWith('/api/params/')) {

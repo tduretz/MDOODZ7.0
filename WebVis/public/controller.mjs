@@ -24,6 +24,7 @@ export class Controller {
     controlsEl.addEventListener('ctrl:time-unit',    e => { model.timeUnit = e.detail; });
     controlsEl.addEventListener('ctrl:layout-change', e => this.changeLayout(e.detail));
     controlsEl.addEventListener('ctrl:dataset-change', e => this.selectDataset(e.detail));
+    controlsEl.addEventListener('ctrl:refresh-datasets', () => this.refreshDatasets());
 
     // Panel-scoped events bubble from #panels-grid, listen at document level
     document.addEventListener('ctrl:panel:field', e => {
@@ -68,8 +69,8 @@ export class Controller {
   async init() {
     this.model.loading = true;
     try {
-      // Fetch available datasets (directories)
-      const dsRes = await fetch('/api/datasets');
+      // Rescan datasets on page load so newly created directories are discovered
+      const dsRes = await fetch('/api/rescan', { method: 'POST' });
       const { datasets, active } = await dsRes.json();
       this.model.datasets = datasets;
       this.model.activeDataset = active;
@@ -182,6 +183,27 @@ export class Controller {
       this.model.fileList = files;
       this.model.files = files.map(f => f.name);
       if (files.length > 0) {
+        await this.selectFile(files[0].name);
+      }
+    } finally {
+      this.model.loading = false;
+    }
+  }
+
+  async refreshDatasets() {
+    this.model.loading = true;
+    try {
+      const dsRes = await fetch('/api/rescan', { method: 'POST' });
+      const { datasets, active } = await dsRes.json();
+      this.model.datasets = datasets;
+      this.model.activeDataset = active;
+
+      // Re-fetch file list for the (possibly changed) active dataset
+      const res = await fetch('/api/files');
+      const { files } = await res.json();
+      this.model.fileList = files;
+      this.model.files = files.map(f => f.name);
+      if (files.length > 0 && !this.model.currentFile) {
         await this.selectFile(files[0].name);
       }
     } finally {
