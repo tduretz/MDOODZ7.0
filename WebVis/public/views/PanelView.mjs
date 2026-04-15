@@ -87,6 +87,26 @@ export class PanelView {
     this.lockBtn.title = 'Lock/unlock range';
     this.controls.appendChild(this.lockBtn);
 
+    // Phase config button + popover (shown only for discrete fields)
+    this.phaseBtn = document.createElement('button');
+    this.phaseBtn.textContent = 'Phases';
+    this.phaseBtn.title = 'Edit phase names & colours';
+    this.phaseBtn.className = 'phase-config-btn';
+    this.phaseBtn.style.display = 'none';
+    this.controls.appendChild(this.phaseBtn);
+
+    this.phasePopover = document.createElement('div');
+    this.phasePopover.className = 'phase-popover';
+    this.phasePopover.style.display = 'none';
+    this.el.appendChild(this.phasePopover);
+
+    this.phaseBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const visible = this.phasePopover.style.display !== 'none';
+      this.phasePopover.style.display = visible ? 'none' : 'block';
+      if (!visible) this._buildPhaseEditor();
+    });
+
     this.el.appendChild(this.controls);
 
     // Append to container
@@ -208,12 +228,71 @@ export class PanelView {
     }
     this._syncRange();
     this.cmapSelect.value = this.panelState.colourMap;
+
+    // Show/hide phase config button
+    const isDiscrete = this.panelState.fieldData && this.panelState.fieldData.discrete;
+    this.phaseBtn.style.display = isDiscrete ? '' : 'none';
+    if (!isDiscrete) this.phasePopover.style.display = 'none';
   }
 
   _syncRange() {
     const { min, max } = this.panelState.colourRange;
     this.rangeMin.value = _fmtVal(min);
     this.rangeMax.value = _fmtVal(max);
+  }
+
+  _buildPhaseEditor() {
+    const pop = this.phasePopover;
+    pop.innerHTML = '';
+
+    const data = this.panelState.fieldData;
+    if (!data) return;
+    const { values, nx, nz } = data;
+
+    // Scan for visible phases
+    const seen = new Set();
+    for (let col = 0; col < nx; col++)
+      for (let iz = 0; iz < nz; iz++) {
+        const v = values[col][iz];
+        if (v !== null && v !== undefined && !Number.isNaN(v)) {
+          const p = Math.round(v);
+          if (p >= 0) seen.add(p);
+        }
+      }
+    const phases = Array.from(seen).sort((a, b) => a - b);
+    const palette = this.colourMaps.phases || [];
+
+    const heading = document.createElement('div');
+    heading.className = 'phase-popover-heading';
+    heading.textContent = 'Phase Legend';
+    pop.appendChild(heading);
+
+    for (const p of phases) {
+      const cfg = this.model.getPhaseConfig(p, palette);
+      const row = document.createElement('div');
+      row.className = 'phase-row';
+
+      const colorInput = document.createElement('input');
+      colorInput.type = 'color';
+      colorInput.value = _rgbToHex(cfg.color);
+      colorInput.title = `Phase ${p} colour`;
+      colorInput.addEventListener('input', () => {
+        this.model.setPhaseConfig(p, { color: _hexToRgb(colorInput.value) });
+      });
+      row.appendChild(colorInput);
+
+      const nameInput = document.createElement('input');
+      nameInput.type = 'text';
+      nameInput.value = cfg.name;
+      nameInput.title = `Phase ${p} name`;
+      nameInput.className = 'phase-name-input';
+      nameInput.addEventListener('change', () => {
+        this.model.setPhaseConfig(p, { name: nameInput.value });
+      });
+      row.appendChild(nameInput);
+
+      pop.appendChild(row);
+    }
   }
 
   destroy() {
@@ -237,4 +316,13 @@ function _fmtVal(v) {
   if (abs === 0) return '0';
   if (abs >= 1e6 || abs < 0.01) return v.toExponential(3);
   return v.toPrecision(5);
+}
+
+function _rgbToHex([r, g, b]) {
+  return '#' + [r, g, b].map(c => c.toString(16).padStart(2, '0')).join('');
+}
+
+function _hexToRgb(hex) {
+  const m = hex.match(/^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i);
+  return m ? [parseInt(m[1], 16), parseInt(m[2], 16), parseInt(m[3], 16)] : [128, 128, 128];
 }

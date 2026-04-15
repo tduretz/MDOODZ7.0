@@ -40,6 +40,9 @@ export class Model extends EventTarget {
     this._panels      = [createDefaultPanel()];
     this._activePanelId = this._panels[0].id;
     this._stashedPanels = [];  // panels preserved across layout round-trips
+
+    // Phase config: Map<phaseId, { name: string, color: [r,g,b] }>
+    this._phaseConfig = new Map();
   }
 
   // ── Getters ────────────────────────────────────────────────────────
@@ -238,6 +241,26 @@ export class Model extends EventTarget {
   set spatialUnit(v) {
     this._spatialUnit = v;
     this._emit('spatial-unit-changed');
+  }
+
+  // ── Phase config ───────────────────────────────────────────────────
+  get phaseConfig() { return this._phaseConfig; }
+
+  /** Get config for a single phase, with defaults if not customised. */
+  getPhaseConfig(phaseId, defaultPalette) {
+    if (this._phaseConfig.has(phaseId)) return this._phaseConfig.get(phaseId);
+    const DEFAULTS = { 0: 'Crust', 1: 'Lithosphere', 2: 'Asthenosphere' };
+    const name  = DEFAULTS[phaseId] || `Phase ${phaseId}`;
+    const color = defaultPalette
+      ? (defaultPalette[phaseId % defaultPalette.length] || [128,128,128])
+      : [128,128,128];
+    return { name, color };
+  }
+
+  setPhaseConfig(phaseId, cfg) {
+    const prev = this._phaseConfig.get(phaseId) || {};
+    this._phaseConfig.set(phaseId, { ...prev, ...cfg });
+    this._emit('phase-config-changed', { phaseId });
   }
 
   // ── Internal ───────────────────────────────────────────────────────

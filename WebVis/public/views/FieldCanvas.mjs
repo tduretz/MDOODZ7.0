@@ -10,6 +10,7 @@ import { renderTitle, buildTitleContext } from '../title-render.mjs';
 // Fixed geometry (CSS px)
 const CBAR_W    = 14;   // colour-bar strip width
 const CBAR_PAD  = 6;    // gap between data rect and colour-bar strip
+const LEGEND_BOX = 12;  // phase legend colour box size
 const TICK_LEN  = 4;
 const FONT_SIZE = 11;
 const FONT      = `${FONT_SIZE}px monospace`;
@@ -39,12 +40,14 @@ export class FieldCanvas {
       this._onTitle   = e => { if (e.detail.panelId === pid) this.render(); };
       this._onParams  = () => this.render();
       this._onSpatial = () => this.render();
+      this._onPhaseConfig = () => this.render();
       model.addEventListener('panel:field-changed',      this._onField);
       model.addEventListener('panel:colourmap-changed',   this._onCmap);
       model.addEventListener('panel:range-changed',       this._onRange);
       model.addEventListener('panel:title-changed',       this._onTitle);
       model.addEventListener('params-loaded',             this._onParams);
       model.addEventListener('spatial-unit-changed',      this._onSpatial);
+      model.addEventListener('phase-config-changed',      this._onPhaseConfig);
     } else {
       this._onField   = () => this.render();
       this._onCmap    = () => this.render();
@@ -117,7 +120,7 @@ export class FieldCanvas {
         }
       }
     } else if (isDiscrete && phasePalette) {
-      // Scan for visible phases (same logic as _drawDiscreteBar)
+      // Scan for visible phases (same logic as _drawPhaseLegend)
       const seen = new Set();
       for (let col = 0; col < nx; col++)
         for (let iz = 0; iz < nz; iz++) {
@@ -127,8 +130,10 @@ export class FieldCanvas {
             if (p >= 0) seen.add(p);
           }
         }
-      for (const p of Array.from(seen).sort((a, b) => a - b))
-        cbarStrings.push(String(p));
+      for (const p of Array.from(seen).sort((a, b) => a - b)) {
+        const cfg = this.model.getPhaseConfig(p, phasePalette);
+        cbarStrings.push(cfg.name);
+      }
     }
 
     // Z-axis (left) labels
@@ -153,12 +158,14 @@ export class FieldCanvas {
       ? Math.max(...zStrings.map(s => ctx.measureText(s).width)) : 0;
 
     // Rotated colour-bar label (field [unit]) — adds ~FONT_SIZE to right margin
-    const rotLabelExtra = hasCbar ? FONT_SIZE + 4 : 0;
+    const rotLabelExtra = (hasCbar && !isDiscrete) ? FONT_SIZE + 4 : 0;
 
     const m = {
       top:    MIN_MARGIN.top,                                          // title row
       right:  hasCbar
-                ? CBAR_PAD + CBAR_W + 4 + Math.ceil(maxCbarW) + 6 + rotLabelExtra
+                ? (isDiscrete
+                    ? CBAR_PAD + LEGEND_BOX + 4 + Math.ceil(maxCbarW) + 8
+                    : CBAR_PAD + CBAR_W + 4 + Math.ceil(maxCbarW) + 6 + rotLabelExtra)
                 : MIN_MARGIN.right,
       bottom: hasCoords
                 ? TICK_LEN + 2 + FONT_SIZE + 4 + FONT_SIZE + 2       // ticks + "x [km]"
@@ -222,7 +229,8 @@ export class FieldCanvas {
           if (phase < 0) {
             pixels[idx] = 30; pixels[idx+1] = 30; pixels[idx+2] = 46; pixels[idx+3] = 255;
           } else {
-            const c = phasePalette[phase % phasePalette.length] || [128, 128, 128];
+            const cfg = this.model.getPhaseConfig(phase, phasePalette);
+            const c = cfg.color;
             pixels[idx] = c[0]; pixels[idx+1] = c[1]; pixels[idx+2] = c[2]; pixels[idx+3] = 255;
           }
           continue;
@@ -248,7 +256,7 @@ export class FieldCanvas {
       this._drawCbar(ctx, lut, colourRange, data, dataX + dW, dataY, dH);
     }
     if (isDiscrete && phasePalette) {
-      this._drawDiscreteBar(ctx, phasePalette, values, nx, nz, dataX + dW, dataY, dH);
+      this._drawPhaseLegend(ctx, phasePalette, values, nx, nz, dataX + dW, dataY, dH);
     }
 
     // ── Axis ticks + labels ───────────────────────────────────────────
@@ -335,10 +343,8 @@ export class FieldCanvas {
     }
   }
 
-  // ── Colour bar (discrete phases — only visible ones) ─────────────────
-  _drawDiscreteBar(ctx, palette, values, nx, nz, rightEdge, top, height) {
-    const cbarX = rightEdge + CBAR_PAD;
-
+  // ── Phase box legend (discrete phases — only visible ones) ────────────
+  _drawPhaseLegend(ctx, palette, values, nx, nz, rightEdge, top, height) {
     // Scan data for unique phase indices (skip air = -1 and NaN)
     const seen = new Set();
     for (let col = 0; col < nx; col++) {
@@ -353,23 +359,28 @@ export class FieldCanvas {
     const phases = Array.from(seen).sort((a, b) => a - b);
     if (phases.length === 0) return;
 
-    const n     = phases.length;
-    const cellH = height / n;
+    const lineH = LEGEND_BOX + 4;  // box height + vertical gap
+    const totalH = phases.length * lineH;
+    const startY = top + (height - totalH) / 2;  // vertically centre
+    const boxX   = rightEdge + CBAR_PAD;
 
-    for (let i = 0; i < n; i++) {
-      const y = top + (n - 1 - i) * cellH;
-      const p = phases[i];
-      const c = palette[p % palette.length] || [128, 128, 128];
-      ctx.fillStyle = `rgb(${c[0]},${c[1]},${c[2]})`;
-      ctx.fillRect(cbarX, y, CBAR_W, cellH);
-    }
-    ctx.fillStyle = '#ccc';
-    ctx.font = `${FONT_SIZE - 1}px monospace`;
+    ctx.font = `${FONT_SIZE - 1}px sans-serif`;
     ctx.textBaseline = 'middle';
     ctx.textAlign = 'left';
-    for (let i = 0; i < n; i++) {
-      const y = top + (n - 1 - i) * cellH + cellH / 2;
-      ctx.fillText(String(phases[i]), cbarX + CBAR_W + 4, y);
+
+    for (let i = 0; i < phases.length; i++) {
+      const p = phases[i];
+      const cfg = this.model.getPhaseConfig(p, palette);
+      const y = startY + i * lineH;
+
+      // Coloured box
+      const c = cfg.color;
+      ctx.fillStyle = `rgb(${c[0]},${c[1]},${c[2]})`;
+      ctx.fillRect(boxX, y, LEGEND_BOX, LEGEND_BOX);
+
+      // Phase name
+      ctx.fillStyle = '#ccc';
+      ctx.fillText(cfg.name, boxX + LEGEND_BOX + 4, y + LEGEND_BOX / 2);
     }
   }
 
@@ -463,6 +474,7 @@ export class FieldCanvas {
       if (this._onTitle)   this.model.removeEventListener('panel:title-changed', this._onTitle);
       if (this._onParams)  this.model.removeEventListener('params-loaded',       this._onParams);
       if (this._onSpatial) this.model.removeEventListener('spatial-unit-changed', this._onSpatial);
+      if (this._onPhaseConfig) this.model.removeEventListener('phase-config-changed', this._onPhaseConfig);
     } else {
       this.model.removeEventListener('field-loaded',       this._onField);
       this.model.removeEventListener('colourmap-changed',   this._onCmap);
