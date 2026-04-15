@@ -151,6 +151,70 @@ export class PanelView {
 
     this.el.appendChild(this.zoomRow);
 
+    // ── Overlay controls row (collapsible) ────────────────────────────
+    this._overlayToggles = {};
+    this._overlayGears = {};
+    this._overlayPopovers = {};
+
+    const overlayHeader = document.createElement('div');
+    overlayHeader.className = 'overlay-header';
+    overlayHeader.textContent = 'Overlays ▸';
+    overlayHeader.addEventListener('click', () => {
+      const expanded = overlayBody.style.display !== 'none';
+      overlayBody.style.display = expanded ? 'none' : '';
+      overlayHeader.textContent = expanded ? 'Overlays ▸' : 'Overlays ▾';
+    });
+    this.el.appendChild(overlayHeader);
+
+    const overlayBody = document.createElement('div');
+    overlayBody.className = 'overlay-row';
+    overlayBody.style.display = 'none'; // collapsed by default
+
+    const OVERLAY_LABELS = [
+      ['phases', 'Ph'], ['temperature', 'T'], ['topo', 'Topo'], ['velocity', 'V'],
+      ['director', 'Dir'], ['sigma1', 'σ₁'], ['edot1', 'ε̇₁'], ['melt', 'Melt'],
+    ];
+
+    for (const [type, label] of OVERLAY_LABELS) {
+      const wrap = document.createElement('span');
+      wrap.className = 'overlay-toggle-wrap';
+
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.className = 'overlay-toggle';
+      cb.dataset.layer = type;
+      cb.title = label;
+      cb.checked = false;
+      cb.addEventListener('change', () => {
+        document.dispatchEvent(new CustomEvent('ctrl:panel:overlay-toggle', {
+          detail: { panelId: pid, layerType: type, enabled: cb.checked },
+        }));
+      });
+      this._overlayToggles[type] = cb;
+
+      const lbl = document.createElement('label');
+      lbl.className = 'overlay-label';
+      lbl.textContent = label;
+      lbl.addEventListener('click', (e) => { e.preventDefault(); cb.click(); });
+
+      const gear = document.createElement('button');
+      gear.className = 'overlay-gear';
+      gear.textContent = '⚙';
+      gear.title = `${label} settings`;
+      gear.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this._toggleOverlayPopover(type);
+      });
+      this._overlayGears[type] = gear;
+
+      wrap.appendChild(cb);
+      wrap.appendChild(lbl);
+      wrap.appendChild(gear);
+      overlayBody.appendChild(wrap);
+    }
+    this.el.appendChild(overlayBody);
+    this._overlayBody = overlayBody;
+
     // Append to container
     containerEl.appendChild(this.el);
 
@@ -272,6 +336,9 @@ export class PanelView {
       }
     };
     this._onSpatialUnit = () => this._syncZoomInputs();
+    this._onOverlayAvail = (e) => {
+      if (e.detail.panelId === pid) this._syncOverlayAvailability();
+    };
 
     model.addEventListener('fields-loaded',              this._onFieldsLoaded);
     model.addEventListener('panel:field-changed',         this._onPanelField);
@@ -284,6 +351,7 @@ export class PanelView {
     model.addEventListener('time-unit-changed',           this._onTimeUnit);
     model.addEventListener('panel:view-bounds-changed',   this._onViewBounds);
     model.addEventListener('spatial-unit-changed',        this._onSpatialUnit);
+    model.addEventListener('panel:overlay-availability-changed', this._onOverlayAvail);
 
     // Initial population
     this._updateFieldList();
@@ -426,6 +494,120 @@ export class PanelView {
     }
   }
 
+  // ── Overlay helpers ─────────────────────────────────────────────────
+  _syncOverlayAvailability() {
+    const avail = this.panelState.overlayAvailable || new Set();
+    for (const [type, cb] of Object.entries(this._overlayToggles)) {
+      const available = avail.has(type);
+      cb.disabled = !available;
+      cb.parentElement.classList.toggle('unavailable', !available);
+    }
+  }
+
+  _toggleOverlayPopover(type) {
+    // Close any open popovers
+    for (const [t, pop] of Object.entries(this._overlayPopovers)) {
+      if (t !== type && pop.parentElement) pop.remove();
+    }
+    if (this._overlayPopovers[type]?.parentElement) {
+      this._overlayPopovers[type].remove();
+      delete this._overlayPopovers[type];
+      return;
+    }
+    const pop = document.createElement('div');
+    pop.className = 'overlay-popover';
+    this._buildOverlaySettings(pop, type);
+    this._overlayBody.appendChild(pop);
+    this._overlayPopovers[type] = pop;
+  }
+
+  _buildOverlaySettings(pop, type) {
+    const pid = this.panelState.id;
+    const cfg = this.panelState.overlays[type];
+
+    // Colour picker (all types)
+    const colourRow = document.createElement('div');
+    colourRow.className = 'overlay-setting-row';
+    const colourLabel = document.createElement('span');
+    colourLabel.textContent = 'Colour';
+    const colourInput = document.createElement('input');
+    colourInput.type = 'color';
+    colourInput.value = cfg.colour;
+    colourInput.addEventListener('input', () => {
+      document.dispatchEvent(new CustomEvent('ctrl:panel:overlay-config', {
+        detail: { panelId: pid, layerType: type, colour: colourInput.value },
+      }));
+    });
+    colourRow.appendChild(colourLabel);
+    colourRow.appendChild(colourInput);
+    pop.appendChild(colourRow);
+
+    // Type-specific controls
+    if (type === 'temperature') {
+      const dtRow = document.createElement('div');
+      dtRow.className = 'overlay-setting-row';
+      const dtLabel = document.createElement('span');
+      dtLabel.textContent = 'ΔT (°C)';
+      const dtInput = document.createElement('input');
+      dtInput.type = 'number';
+      dtInput.value = cfg.dT || 200;
+      dtInput.min = 10;
+      dtInput.step = 10;
+      dtInput.style.width = '60px';
+      dtInput.addEventListener('change', () => {
+        const v = parseInt(dtInput.value, 10);
+        if (v > 0) {
+          document.dispatchEvent(new CustomEvent('ctrl:panel:overlay-config', {
+            detail: { panelId: pid, layerType: type, dT: v },
+          }));
+        }
+      });
+      dtRow.appendChild(dtLabel);
+      dtRow.appendChild(dtInput);
+      pop.appendChild(dtRow);
+    }
+
+    if (type === 'velocity' || type === 'director' || type === 'sigma1' || type === 'edot1') {
+      const densRow = document.createElement('div');
+      densRow.className = 'overlay-setting-row';
+      const densLabel = document.createElement('span');
+      densLabel.textContent = 'Density';
+      const densInput = document.createElement('input');
+      densInput.type = 'range';
+      densInput.min = 5; densInput.max = 40; densInput.value = cfg.density || 20;
+      densInput.addEventListener('input', () => {
+        document.dispatchEvent(new CustomEvent('ctrl:panel:overlay-config', {
+          detail: { panelId: pid, layerType: type, density: parseInt(densInput.value, 10) },
+        }));
+      });
+      densRow.appendChild(densLabel);
+      densRow.appendChild(densInput);
+      pop.appendChild(densRow);
+    }
+
+    if (type === 'melt') {
+      const levRow = document.createElement('div');
+      levRow.className = 'overlay-setting-row';
+      const levLabel = document.createElement('span');
+      levLabel.textContent = 'Levels';
+      const levInput = document.createElement('input');
+      levInput.type = 'text';
+      levInput.value = (cfg.levels || [0.01, 0.1, 0.3, 0.5]).join(', ');
+      levInput.style.width = '120px';
+      levInput.addEventListener('change', () => {
+        const levels = levInput.value.split(',').map(s => parseFloat(s.trim())).filter(Number.isFinite);
+        if (levels.length > 0) {
+          document.dispatchEvent(new CustomEvent('ctrl:panel:overlay-config', {
+            detail: { panelId: pid, layerType: type, levels },
+          }));
+        }
+      });
+      levRow.appendChild(levLabel);
+      levRow.appendChild(levInput);
+      pop.appendChild(levRow);
+    }
+  }
+
   destroy() {
     this.fieldCanvas.destroy();
     this.titleInput.destroy();
@@ -440,6 +622,7 @@ export class PanelView {
     this.model.removeEventListener('time-unit-changed',           this._onTimeUnit);
     this.model.removeEventListener('panel:view-bounds-changed',   this._onViewBounds);
     this.model.removeEventListener('spatial-unit-changed',        this._onSpatialUnit);
+    this.model.removeEventListener('panel:overlay-availability-changed', this._onOverlayAvail);
     this.el.remove();
   }
 }

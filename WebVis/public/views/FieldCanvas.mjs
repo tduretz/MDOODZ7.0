@@ -6,6 +6,7 @@
 // nothing is ever clipped.
 
 import { renderTitle, buildTitleContext } from '../title-render.mjs';
+import { extractContours, inlineContourLabels, eigen2x2, interpVxToCenter, interpVzToCenter } from '../overlays.mjs';
 
 // Fixed geometry (CSS px)
 const CBAR_W    = 14;   // colour-bar strip width
@@ -64,6 +65,8 @@ export class FieldCanvas {
       this._onPhaseConfig = () => this.render();
       this._onTheme = () => this.render();
       this._onViewBounds = e => { if (e.detail.panelId === pid) this.render(); };
+      this._onOverlay = e => { if (e.detail.panelId === pid) this.render(); };
+      this._onOverlayData = e => { if (e.detail.panelId === pid) this.render(); };
       model.addEventListener('panel:field-changed',      this._onField);
       model.addEventListener('panel:colourmap-changed',   this._onCmap);
       model.addEventListener('panel:range-changed',       this._onRange);
@@ -73,6 +76,8 @@ export class FieldCanvas {
       model.addEventListener('phase-config-changed',      this._onPhaseConfig);
       model.addEventListener('theme-changed',             this._onTheme);
       model.addEventListener('panel:view-bounds-changed', this._onViewBounds);
+      model.addEventListener('panel:overlay-changed',     this._onOverlay);
+      model.addEventListener('panel:overlay-data-changed', this._onOverlayData);
     } else {
       this._onField   = () => this.render();
       this._onCmap    = () => this.render();
@@ -185,7 +190,8 @@ export class FieldCanvas {
     let nTicksZ = 0;
     if (hasCoords) {
       const zCoords = data.zCoords;
-      const czMin = zCoords[row0], czMax = zCoords[row1];
+      const czMin = zCoords[row0];
+      const czMax = (row1 + 1 < zCoords.length) ? zCoords[row1 + 1] : zCoords[row1];
       const czExt = czMax - czMin;
       nTicksZ = Math.min(6, Math.max(3, Math.floor(200 / 60)));
       for (let i = 0; i < nTicksZ; i++) {
@@ -300,6 +306,11 @@ export class FieldCanvas {
     ctx.strokeStyle = theme.frame;
     ctx.lineWidth = 1;
     ctx.strokeRect(dataX - 0.5, dataY - 0.5, dW + 1, dH + 1);
+
+    // ── Overlay layers ────────────────────────────────────────────────
+    if (ps) {
+      this._drawOverlays(ctx, data, dataX, dataY, dW, dH, col0, col1, row0, row1, theme);
+    }
 
     // ── Integrated colour bar ─────────────────────────────────────────
     if (!isDiscrete && lut) {
@@ -438,8 +449,14 @@ export class FieldCanvas {
   _drawAxes(ctx, data, dataX, dataY, dW, dH, unitLabel, divisor, theme, c0, c1, r0, r1) {
     const xCoords = data.xCoords;
     const zCoords = data.zCoords;
-    const xMin = xCoords[c0], xMax = xCoords[c1], xExt = xMax - xMin;
-    const zMin = zCoords[r0], zMax = zCoords[r1], zExt = zMax - zMin;
+    // For vizgrid fields, coords are vertex arrays (one longer than data).
+    // The image spans [xCoords[c0], xCoords[c1+1]].
+    const xMin = xCoords[c0];
+    const xMax = (c1 + 1 < xCoords.length) ? xCoords[c1 + 1] : xCoords[c1];
+    const xExt = xMax - xMin;
+    const zMin = zCoords[r0];
+    const zMax = (r1 + 1 < zCoords.length) ? zCoords[r1 + 1] : zCoords[r1];
+    const zExt = zMax - zMin;
 
     ctx.strokeStyle = theme.tickLine;
     ctx.lineWidth = 1;
@@ -516,6 +533,309 @@ export class FieldCanvas {
     ctx.fillText(text, displayW / 2, 4);
   }
 
+  // ── Coordinate-to-pixel helper ──────────────────────────────────────
+  _coordToPixel(x, z, xCoords, zCoords, col0, col1, row0, row1, dataX, dataY, dW, dH) {
+    // For vizgrid fields xCoords/zCoords are vertex arrays (one longer than
+    // the data columns/rows).  The image spans from the left edge of col0 to
+    // the right edge of col1, i.e. [xCoords[col0], xCoords[col1+1]].
+    const xMin = xCoords[col0];
+    const xMax = (col1 + 1 < xCoords.length) ? xCoords[col1 + 1] : xCoords[col1];
+    const zMin = zCoords[row0];
+    const zMax = (row1 + 1 < zCoords.length) ? zCoords[row1 + 1] : zCoords[row1];
+    const xExt = xMax - xMin || 1, zExt = zMax - zMin || 1;
+    return {
+      px: dataX + ((x - xMin) / xExt) * dW,
+      pz: dataY + ((zMax - z) / zExt) * dH,   // z-axis is inverted (top = high z)
+    };
+  }
+
+  // ── Overlay dispatch ────────────────────────────────────────────────
+  _drawOverlays(ctx, data, dataX, dataY, dW, dH, col0, col1, row0, row1, theme) {
+    const ps = this.panelState;
+    if (!ps || !ps.overlayData) return;
+    const overlays = ps.overlays;
+    const od = ps.overlayData;
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(dataX, dataY, dW, dH);
+    ctx.clip();
+
+    const pixMapper = (x, z) => this._coordToPixel(x, z,
+      data.xCoords, data.zCoords, col0, col1, row0, row1, dataX, dataY, dW, dH);
+
+    // Render order: contours first, then vectors, then topo on top
+    if (overlays.phases.enabled && od.phases) {
+      this._drawPhaseBoundaries(ctx, od.phases, overlays.phases, pixMapper);
+    }
+    if (overlays.temperature.enabled && od.temperature) {
+      this._drawIsotherms(ctx, od.temperature, overlays.temperature, pixMapper);
+    }
+    if (overlays.melt.enabled && od.melt) {
+      this._drawMeltContours(ctx, od.melt, overlays.melt, pixMapper);
+    }
+    if (overlays.velocity.enabled && od.velocity) {
+      this._drawVelocityLayer(ctx, od.velocity, overlays.velocity, pixMapper, dataX, dataY, dW, dH);
+    }
+    if (overlays.director.enabled && od.director) {
+      this._drawDirectorLayer(ctx, od.director, overlays.director, pixMapper, dataX, dataY, dW, dH);
+    }
+    if (overlays.sigma1.enabled && od.sigma1) {
+      this._drawTensorLayer(ctx, od.sigma1, overlays.sigma1, pixMapper, dataX, dataY, dW, dH, 'stress');
+    }
+    if (overlays.edot1.enabled && od.edot1) {
+      this._drawTensorLayer(ctx, od.edot1, overlays.edot1, pixMapper, dataX, dataY, dW, dH, 'strain');
+    }
+    if (overlays.topo.enabled && od.topo) {
+      this._drawTopoLine(ctx, od.topo, overlays.topo, pixMapper);
+    }
+
+    ctx.restore();
+  }
+
+  // ── Contour helper (shared by phases, temperature, melt) ───────────
+  _drawContourLayer(ctx, segments, colour, lineWidth) {
+    ctx.strokeStyle = colour;
+    ctx.lineWidth = lineWidth;
+    ctx.beginPath();
+    for (const s of segments) {
+      ctx.moveTo(s.px1, s.pz1);
+      ctx.lineTo(s.px2, s.pz2);
+    }
+    ctx.stroke();
+  }
+
+  // ── Phase boundaries ────────────────────────────────────────────────
+  _drawPhaseBoundaries(ctx, phaseData, config, pixMapper) {
+    const { compo, nx, nz, xCoords, zCoords } = phaseData;
+    // Find unique phase values and contour at midpoints
+    const seen = new Set();
+    for (let k = 0; k < compo.length; k++) {
+      const v = compo[k];
+      if (v === v && v >= 0) seen.add(Math.round(v));  // skip NaN and air
+    }
+    const phases = Array.from(seen).sort((a, b) => a - b);
+    const levels = [];
+    for (let i = 0; i < phases.length - 1; i++) {
+      levels.push((phases[i] + phases[i + 1]) / 2);
+    }
+    if (levels.length === 0) return;
+
+    const contours = extractContours(compo, xCoords, zCoords, levels);
+    for (const [, segs] of contours) {
+      const mapped = segs.map(s => {
+        const p1 = pixMapper(s.x1, s.z1), p2 = pixMapper(s.x2, s.z2);
+        return { px1: p1.px, pz1: p1.pz, px2: p2.px, pz2: p2.pz };
+      });
+      this._drawContourLayer(ctx, mapped, config.colour, config.lineWidth || 1);
+    }
+  }
+
+  // ── Temperature isotherms ───────────────────────────────────────────
+  _drawIsotherms(ctx, tempData, config, pixMapper) {
+    const { T, nx, nz, xCoords, zCoords } = tempData;
+    const dT = config.dT || 200;
+
+    // Find T range for level generation
+    let tMin = Infinity, tMax = -Infinity;
+    for (let k = 0; k < T.length; k++) {
+      const v = T[k];
+      if (v === v) { if (v < tMin) tMin = v; if (v > tMax) tMax = v; }
+    }
+    const levels = [];
+    const first = Math.ceil(tMin / dT) * dT;
+    for (let lev = first; lev <= tMax; lev += dT) levels.push(lev);
+    if (levels.length === 0) return;
+
+    const contours = extractContours(T, xCoords, zCoords, levels);
+    for (const [level, segs] of contours) {
+      const mapped = segs.map(s => {
+        const p1 = pixMapper(s.x1, s.z1), p2 = pixMapper(s.x2, s.z2);
+        return { px1: p1.px, pz1: p1.pz, px2: p2.px, pz2: p2.pz };
+      });
+      this._drawContourLayer(ctx, mapped, config.colour, config.lineWidth || 1);
+
+      // Inline labels
+      const labels = inlineContourLabels(segs, level, pixMapper, 150);
+      const labelColour = config.colour || '#000000';
+      ctx.save();
+      ctx.fillStyle = labelColour;
+      ctx.font = 'bold 10px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.lineWidth = 3;
+      ctx.lineJoin = 'round';
+      // Halo colour: invert brightness of overlay colour
+      const haloCol = _isLightColour(labelColour) ? '#000' : '#fff';
+      ctx.strokeStyle = haloCol;
+      for (const lbl of labels) {
+        const p = pixMapper(lbl.x, lbl.z);
+        ctx.save();
+        ctx.translate(p.px, p.pz);
+        ctx.rotate(lbl.angle);
+        const txt = lbl.text + '°C';
+        ctx.strokeText(txt, 0, 0);
+        ctx.fillText(txt, 0, 0);
+        ctx.restore();
+      }
+      ctx.restore();
+    }
+  }
+
+  // ── Melt fraction contours ──────────────────────────────────────────
+  _drawMeltContours(ctx, meltData, config, pixMapper) {
+    const { X, nx, nz, xCoords, zCoords } = meltData;
+    const levels = config.levels || [0.01, 0.1, 0.3, 0.5];
+
+    const contours = extractContours(X, xCoords, zCoords, levels);
+    for (const [level, segs] of contours) {
+      const mapped = segs.map(s => {
+        const p1 = pixMapper(s.x1, s.z1), p2 = pixMapper(s.x2, s.z2);
+        return { px1: p1.px, pz1: p1.pz, px2: p2.px, pz2: p2.pz };
+      });
+      this._drawContourLayer(ctx, mapped, config.colour, config.lineWidth || 1);
+    }
+  }
+
+  // ── Topography line ─────────────────────────────────────────────────
+  _drawTopoLine(ctx, topoData, config, pixMapper) {
+    const { z_grid, x_grid } = topoData;
+    if (!z_grid || !x_grid || x_grid.length === 0) return;
+
+    ctx.strokeStyle = config.colour;
+    ctx.lineWidth = config.lineWidth || 2;
+    ctx.beginPath();
+    let started = false;
+    for (let i = 0; i < x_grid.length && i < z_grid.length; i++) {
+      const p = pixMapper(x_grid[i], z_grid[i]);
+      if (!started) { ctx.moveTo(p.px, p.pz); started = true; }
+      else ctx.lineTo(p.px, p.pz);
+    }
+    ctx.stroke();
+  }
+
+  // ── Arrow primitive ─────────────────────────────────────────────────
+  _drawArrow(ctx, x, z, dx, dz, headSize) {
+    ctx.beginPath();
+    ctx.moveTo(x, z);
+    ctx.lineTo(x + dx, z + dz);
+    ctx.stroke();
+    // Triangle head
+    const len = Math.sqrt(dx * dx + dz * dz);
+    if (len < 1) return;
+    const ux = dx / len, uz = dz / len;
+    const px = -uz, pz = ux;  // perpendicular
+    const tipX = x + dx, tipZ = z + dz;
+    ctx.beginPath();
+    ctx.moveTo(tipX, tipZ);
+    ctx.lineTo(tipX - headSize * ux + headSize * 0.4 * px, tipZ - headSize * uz + headSize * 0.4 * pz);
+    ctx.lineTo(tipX - headSize * ux - headSize * 0.4 * px, tipZ - headSize * uz - headSize * 0.4 * pz);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // ── Velocity arrows ─────────────────────────────────────────────────
+  _drawVelocityLayer(ctx, velData, config, pixMapper, dataX, dataY, dW, dH) {
+    const { Vx, Vz, vxNx, vxNz, vzNx, vzNz, xCoords, zCoords } = velData;
+    const vxC = interpVxToCenter(Vx, vxNx, vxNz);
+    const vzC = interpVzToCenter(Vz, vzNx, vzNz);
+    const ncx = vxNx - 1, ncz = vxNz - 2;
+    // Centre coordinates (half-grid from vertex coords)
+    const cxCoords = [], czCoords = [];
+    for (let i = 0; i < ncx; i++) cxCoords.push((xCoords[i] + xCoords[i + 1]) * 0.5);
+    for (let j = 0; j < ncz; j++) czCoords.push((zCoords[j] + zCoords[j + 1]) * 0.5);
+
+    const density = config.density || 20;
+    const stepX = Math.max(1, Math.round(ncx / density));
+    const stepZ = Math.max(1, Math.round(ncz / density));
+
+    // Find max magnitude for scaling
+    let maxMag = 0;
+    for (let k = 0; k < vxC.length; k++) {
+      const mag = Math.sqrt(vxC[k] * vxC[k] + vzC[k] * vzC[k]);
+      if (mag > maxMag) maxMag = mag;
+    }
+    if (maxMag === 0) return;
+
+    const arrowScale = config.lengthScale || (Math.min(dW, dH) / density * 0.8);
+    ctx.strokeStyle = config.colour;
+    ctx.fillStyle = config.colour;
+    ctx.lineWidth = 1;
+
+    for (let ix = 0; ix < ncx; ix += stepX) {
+      for (let iz = 0; iz < ncz; iz += stepZ) {
+        const k = ix + iz * ncx;
+        const vx = vxC[k], vz = vzC[k];
+        const mag = Math.sqrt(vx * vx + vz * vz);
+        if (mag / maxMag < 0.01) continue;
+        const p = pixMapper(cxCoords[ix], czCoords[iz]);
+        const scale = arrowScale / maxMag;
+        this._drawArrow(ctx, p.px, p.pz, vx * scale, -vz * scale, 4);
+      }
+    }
+  }
+
+  // ── Anisotropy director ticks ───────────────────────────────────────
+  _drawDirectorLayer(ctx, dirData, config, pixMapper, dataX, dataY, dW, dH) {
+    const { nx: dnx, nz: dnz, ani_fac, gridNx, gridNz, xCoords, zCoords } = dirData;
+    const density = config.density || 20;
+    const stepX = Math.max(1, Math.round(gridNx / density));
+    const stepZ = Math.max(1, Math.round(gridNz / density));
+    const tickLen = config.lengthScale || (Math.min(dW, dH) / density * 0.5);
+
+    ctx.strokeStyle = config.colour;
+    ctx.lineWidth = 1;
+
+    for (let ix = 0; ix < gridNx; ix += stepX) {
+      for (let iz = 0; iz < gridNz; iz += stepZ) {
+        const k = ix + iz * gridNx;
+        if (ani_fac && ani_fac[k] < 0.01) continue;
+        // Director (nx, nz) → fabric direction is perpendicular: (-nz, nx)
+        const fx = -dnz[k], fz = dnx[k];
+        const len = Math.sqrt(fx * fx + fz * fz);
+        if (len < 1e-10) continue;
+        const ux = fx / len * tickLen * 0.5, uz = fz / len * tickLen * 0.5;
+        const p = pixMapper(xCoords[ix], zCoords[iz]);
+        ctx.beginPath();
+        ctx.moveTo(p.px - ux, p.pz + uz);  // +uz because z-axis is flipped
+        ctx.lineTo(p.px + ux, p.pz - uz);
+        ctx.stroke();
+      }
+    }
+  }
+
+  // ── Tensor eigenvector overlay (sigma1, edot1) ──────────────────────
+  _drawTensorLayer(ctx, tensorData, config, pixMapper, dataX, dataY, dW, dH, mode) {
+    const { nx, nz, xCoords, zCoords } = tensorData;
+    const density = config.density || 15;
+    const stepX = Math.max(1, Math.round(nx / density));
+    const stepZ = Math.max(1, Math.round(nz / density));
+    const tickLen = config.lengthScale || (Math.min(dW, dH) / density * 0.5);
+
+    let xxd, zzd, xz_c;
+    if (mode === 'stress') {
+      xxd = tensorData.sxxd; zzd = tensorData.szzd; xz_c = tensorData.sxz_c;
+    } else {
+      xxd = tensorData.exxd; zzd = tensorData.ezzd; xz_c = tensorData.exz_c;
+    }
+
+    ctx.strokeStyle = config.colour;
+    ctx.lineWidth = 1;
+
+    for (let ix = 0; ix < nx; ix += stepX) {
+      for (let iz = 0; iz < nz; iz += stepZ) {
+        const k = ix + iz * nx;
+        const { cos: ex, sin: ez } = eigen2x2(xxd[k], xz_c[k], zzd[k]);
+        const ux = ex * tickLen * 0.5, uz = ez * tickLen * 0.5;
+        const p = pixMapper(xCoords[ix], zCoords[iz]);
+        ctx.beginPath();
+        ctx.moveTo(p.px - ux, p.pz + uz);
+        ctx.lineTo(p.px + ux, p.pz - uz);
+        ctx.stroke();
+      }
+    }
+  }
+
   destroy() {
     if (this.panelState) {
       this.model.removeEventListener('panel:field-changed',      this._onField);
@@ -527,6 +847,8 @@ export class FieldCanvas {
       if (this._onPhaseConfig) this.model.removeEventListener('phase-config-changed', this._onPhaseConfig);
       if (this._onTheme) this.model.removeEventListener('theme-changed', this._onTheme);
       if (this._onViewBounds) this.model.removeEventListener('panel:view-bounds-changed', this._onViewBounds);
+      if (this._onOverlay) this.model.removeEventListener('panel:overlay-changed', this._onOverlay);
+      if (this._onOverlayData) this.model.removeEventListener('panel:overlay-data-changed', this._onOverlayData);
     } else {
       this.model.removeEventListener('field-loaded',       this._onField);
       this.model.removeEventListener('colourmap-changed',   this._onCmap);
@@ -559,4 +881,12 @@ function _fmtAxis(v) {
   if (abs >= 1000) return v.toFixed(0);
   if (abs >= 1)    return v.toFixed(1);
   return v.toPrecision(3);
+}
+
+function _isLightColour(hex) {
+  if (!hex) return false;
+  const m = hex.match(/^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i);
+  if (!m) return false;
+  const lum = 0.299 * parseInt(m[1], 16) + 0.587 * parseInt(m[2], 16) + 0.114 * parseInt(m[3], 16);
+  return lum > 140;
 }

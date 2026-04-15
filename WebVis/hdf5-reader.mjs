@@ -318,3 +318,141 @@ export async function datasetExists(filePath, hdf5Path) {
     return false;
   }
 }
+
+// ── Overlay data extraction ────────────────────────────────────────────
+// Reads multiple overlay datasets in one file-open for batched endpoint.
+
+function _tryRead(file, path) {
+  try {
+    const ds = file.get(path);
+    return ds ? Float64Array.from(ds.value) : null;
+  } catch { return null; }
+}
+
+function _exists(file, path) {
+  try { return file.get(path) != null; } catch { return false; }
+}
+
+/**
+ * Extract overlay data for requested layer types.
+ * @param {string} filePath  Absolute path to HDF5 file
+ * @param {string[]} layers  Array of layer keys (e.g. ['phases','temperature','velocity'])
+ * @returns {Promise<Object>}  Keyed by layer type, only includes layers whose data exists
+ */
+export async function extractOverlayData(filePath, layers) {
+  const file = await openFile(filePath);
+  const meta = await readMetadata(filePath);
+  const { nx, nz } = meta;
+  const ncx = nx - 1, ncz = nz - 1;
+  const result = {};
+
+  // Centre-grid coordinates
+  let xc = null, zc = null;
+  const _centerCoords = () => {
+    if (!xc) { xc = Array.from(file.get('/Model/xc_coord').value); zc = Array.from(file.get('/Model/zc_coord').value); }
+    return { xCoords: xc, zCoords: zc };
+  };
+
+  for (const layer of layers) {
+    switch (layer) {
+      case 'phases': {
+        const compo = _tryRead(file, '/VizGrid/compo');
+        if (!compo) break;
+        let xv, zv;
+        try { xv = Array.from(file.get('/VizGrid/xviz').value); zv = Array.from(file.get('/VizGrid/zviz').value); } catch { break; }
+        // xviz/zviz are vertex coords (Nx, Nz); compo is at centres (ncx, ncz)
+        // Average adjacent vertices to get cell-centre coordinates
+        const xvc = new Array(ncx);
+        for (let i = 0; i < ncx; i++) xvc[i] = (xv[i] + xv[i + 1]) / 2;
+        const zvc = new Array(ncz);
+        for (let i = 0; i < ncz; i++) zvc[i] = (zv[i] + zv[i + 1]) / 2;
+        result.phases = { compo: Array.from(compo), nx: ncx, nz: ncz, xCoords: xvc, zCoords: zvc };
+        break;
+      }
+      case 'temperature': {
+        const T = _tryRead(file, '/Centers/T');
+        if (!T) break;
+        // Apply K→°C offset
+        for (let k = 0; k < T.length; k++) T[k] -= 273.15;
+        const { xCoords, zCoords } = _centerCoords();
+        result.temperature = { T: Array.from(T), nx: ncx, nz: ncz, xCoords, zCoords };
+        break;
+      }
+      case 'velocity': {
+        const Vx = _tryRead(file, '/VxNodes/Vx');
+        const Vz = _tryRead(file, '/VzNodes/Vz');
+        if (!Vx || !Vz) break;
+        const vxNx = nx, vxNz = nz + 1;
+        const vzNx = nx + 1, vzNz = nz;
+        let xg, zg;
+        try { xg = Array.from(file.get('/Model/xg_coord').value); zg = Array.from(file.get('/Model/zg_coord').value); } catch { break; }
+        result.velocity = {
+          Vx: Array.from(Vx), Vz: Array.from(Vz),
+          vxNx, vxNz, vzNx, vzNz,
+          xCoords: xg, zCoords: zg,
+        };
+        break;
+      }
+      case 'topo': {
+        if (!_exists(file, '/Topo/z_grid')) break;
+        const z_grid = _tryRead(file, '/Topo/z_grid');
+        if (!z_grid) break;
+        let xg;
+        try { xg = Array.from(file.get('/Model/xg_coord').value); } catch { break; }
+        result.topo = { z_grid: Array.from(z_grid), x_grid: xg };
+        break;
+      }
+      case 'director': {
+        const dnx = _tryRead(file, '/Centers/nx');
+        const dnz = _tryRead(file, '/Centers/nz');
+        if (!dnx || !dnz) break;
+        const ani_fac = _tryRead(file, '/Centers/ani_fac');
+        const { xCoords, zCoords } = _centerCoords();
+        result.director = {
+          nx: Array.from(dnx), nz: Array.from(dnz),
+          ani_fac: ani_fac ? Array.from(ani_fac) : null,
+          gridNx: ncx, gridNz: ncz, xCoords, zCoords,
+        };
+        break;
+      }
+      case 'sigma1': {
+        const sxxd = _tryRead(file, '/Centers/sxxd');
+        const szzd = _tryRead(file, '/Centers/szzd');
+        const P    = _tryRead(file, '/Centers/P');
+        const sxz_v = _tryRead(file, '/Vertices/sxz');
+        if (!sxxd || !szzd || !P || !sxz_v) break;
+        const sxz_c = vertexToCentre(sxz_v, nx, nz);
+        const { xCoords, zCoords } = _centerCoords();
+        result.sigma1 = {
+          sxxd: Array.from(sxxd), szzd: Array.from(szzd),
+          sxz_c: Array.from(sxz_c), P: Array.from(P),
+          nx: ncx, nz: ncz, xCoords, zCoords,
+        };
+        break;
+      }
+      case 'edot1': {
+        const exxd = _tryRead(file, '/Centers/exxd');
+        const ezzd = _tryRead(file, '/Centers/ezzd');
+        const divu = _tryRead(file, '/Centers/divu');
+        const exz_v = _tryRead(file, '/Vertices/exz');
+        if (!exxd || !ezzd || !divu || !exz_v) break;
+        const exz_c = vertexToCentre(exz_v, nx, nz);
+        const { xCoords, zCoords } = _centerCoords();
+        result.edot1 = {
+          exxd: Array.from(exxd), ezzd: Array.from(ezzd),
+          exz_c: Array.from(exz_c), divu: Array.from(divu),
+          nx: ncx, nz: ncz, xCoords, zCoords,
+        };
+        break;
+      }
+      case 'melt': {
+        const X = _tryRead(file, '/Centers/X');
+        if (!X) break;
+        const { xCoords, zCoords } = _centerCoords();
+        result.melt = { X: Array.from(X), nx: ncx, nz: ncz, xCoords, zCoords };
+        break;
+      }
+    }
+  }
+  return result;
+}

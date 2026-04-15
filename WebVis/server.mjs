@@ -6,7 +6,7 @@ import { Readable } from 'node:stream';
 import { join, extname, resolve, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { readMetadata, extractField, datasetExists, readAllMetadata } from './hdf5-reader.mjs';
+import { readMetadata, extractField, datasetExists, readAllMetadata, extractOverlayData } from './hdf5-reader.mjs';
 import { getField, listAvailableFields, getFieldLabel, getFieldUnit } from './fields.mjs';
 import { getCached, writeCache } from './field-cache.mjs';
 
@@ -239,6 +239,30 @@ async function handleStatic(req, res, urlPath) {
   }
 }
 
+const VALID_OVERLAY_LAYERS = new Set([
+  'phases', 'temperature', 'velocity', 'topo', 'director', 'sigma1', 'edot1', 'melt',
+]);
+
+async function handleApiOverlayData(req, res, filename, searchParams) {
+  if (!FILENAME_RE.test(filename)) {
+    jsonResponse(res, 400, { error: 'Invalid filename' });
+    return;
+  }
+  const filePath = join(getDataDir(), filename);
+  try { await stat(filePath); } catch {
+    jsonResponse(res, 404, { error: 'File not found' });
+    return;
+  }
+  const raw = searchParams.get('layers') || '';
+  const layers = raw.split(',').map(s => s.trim()).filter(s => VALID_OVERLAY_LAYERS.has(s));
+  if (layers.length === 0) {
+    jsonResponse(res, 400, { error: 'No valid layers requested' });
+    return;
+  }
+  const data = await extractOverlayData(filePath, layers);
+  await gzipJsonResponse(req, res, 200, data);
+}
+
 // ── Router ─────────────────────────────────────────────────────────────
 const server = createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
@@ -275,6 +299,9 @@ const server = createServer(async (req, res) => {
     } else if (path.startsWith('/api/params/')) {
       const filename = path.slice('/api/params/'.length);
       await handleApiParams(req, res, filename);
+    } else if (path.startsWith('/api/overlay-data/')) {
+      const filename = path.slice('/api/overlay-data/'.length);
+      await handleApiOverlayData(req, res, filename, url.searchParams);
     } else if (path.startsWith('/api/fields/')) {
       const filename = path.slice('/api/fields/'.length);
       await handleApiFields(req, res, filename);

@@ -223,6 +223,97 @@ html, body {
   font-weight: 600;
 }
 
+/* ── Overlay controls ──────────────────────────────────────────────── */
+.overlay-header {
+  font-size: 11px;
+  color: var(--text-dim, #888);
+  cursor: pointer;
+  padding: 2px 6px;
+  user-select: none;
+}
+.overlay-header:hover { color: var(--text); }
+
+.overlay-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  padding: 2px 6px;
+  position: relative;
+}
+.overlay-toggle-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 11px;
+  color: var(--text);
+}
+.overlay-toggle-wrap.unavailable {
+  opacity: 0.35;
+  pointer-events: none;
+}
+.overlay-toggle {
+  margin: 0;
+  cursor: pointer;
+}
+.overlay-toggle:disabled { cursor: not-allowed; }
+.overlay-label {
+  cursor: pointer;
+  user-select: none;
+}
+.overlay-gear {
+  background: none;
+  border: none;
+  color: var(--text-dim, #888);
+  font-size: 10px;
+  cursor: pointer;
+  padding: 0 2px;
+  line-height: 1;
+}
+.overlay-gear:hover { color: var(--text); }
+
+.overlay-popover {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px;
+  z-index: 100;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+  min-width: 150px;
+}
+.overlay-setting-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+  font-size: 11px;
+  color: var(--text);
+}
+.overlay-setting-row input[type="color"] {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  cursor: pointer;
+  background: none;
+}
+.overlay-setting-row input[type="number"],
+.overlay-setting-row input[type="text"] {
+  padding: 2px 4px;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  font-size: 11px;
+}
+.overlay-setting-row input[type="range"] {
+  width: 80px;
+}
+
 /* ── Phase config popover ──────────────────────────────────────────── */
 .phase-config-btn { font-size: 11px; }
 

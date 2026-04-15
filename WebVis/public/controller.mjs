@@ -6,6 +6,7 @@ export class Controller {
   constructor(model, controlsEl) {
     this.model = model;
     this._abortCtrl = null;  // AbortController for in-flight fetches
+    this._overlayCache = new Map();  // filename → overlayDataObject
 
     // Legacy global control events (from ControlPanel / global controls)
     controlsEl.addEventListener('ctrl:file-change',  e => this.selectFile(e.detail));
@@ -50,6 +51,17 @@ export class Controller {
     });
     document.addEventListener('ctrl:panel:title', e => {
       model.setPanelTitle(e.detail.panelId, e.detail.template);
+    });
+
+    // Overlay events
+    document.addEventListener('ctrl:panel:overlay-toggle', e => {
+      const { panelId, layerType, enabled } = e.detail;
+      model.setPanelOverlay(panelId, layerType, { enabled });
+      this._ensureOverlayData(panelId);
+    });
+    document.addEventListener('ctrl:panel:overlay-config', e => {
+      const { panelId, layerType, ...config } = e.detail;
+      model.setPanelOverlay(panelId, layerType, config);
     });
   }
 
@@ -107,6 +119,7 @@ export class Controller {
   async selectFile(filename) {
     const signal = this._newAbort();
     this.model.loading = true;
+    this._overlayCache.clear();  // invalidate overlay cache on file change
     try {
       this.model.currentFile = filename;
 
@@ -133,6 +146,12 @@ export class Controller {
         return Promise.resolve();
       });
       await Promise.all(fetches);
+
+      // Re-fetch overlay data for panels with enabled layers
+      for (const panel of this.model.panels) {
+        const hasEnabled = Object.values(panel.overlays).some(o => o.enabled);
+        if (hasEnabled) this._ensureOverlayData(panel.id);
+      }
     } catch (err) {
       if (err.name === 'AbortError') return; // superseded by newer request
       throw err;
@@ -192,6 +211,40 @@ export class Controller {
       const min = data.pMin != null ? data.pMin : data.min;
       const max = data.pMax != null ? data.pMax : data.max;
       this.model.colourRange = { min, max };
+    }
+  }
+
+  /** Fetch overlay data for all enabled layers on a panel that aren't cached yet. */
+  async _ensureOverlayData(panelId) {
+    const file = this.model.currentFile;
+    if (!file) return;
+    const panel = this.model.getPanel(panelId);
+    if (!panel) return;
+
+    // On first request for this file, fetch ALL layers to discover availability
+    if (!this._overlayCache.has(file)) {
+      const allLayers = ['phases','temperature','velocity','topo','director','sigma1','edot1','melt'];
+      try {
+        const res = await fetch(`/api/overlay-data/${encodeURIComponent(file)}?layers=${allLayers.join(',')}`);
+        const data = await res.json();
+        this._overlayCache.set(file, data);
+      } catch (err) {
+        if (err.name !== 'AbortError') console.error('Overlay fetch error:', err);
+        return;
+      }
+    }
+
+    const cached = this._overlayCache.get(file);
+    const available = new Set(Object.keys(cached));
+    this.model.setPanelOverlayAvailability(panelId, available);
+    this._pushOverlayToPanel(panelId, file);
+  }
+
+  /** Push cached overlay data to model for a specific panel. */
+  _pushOverlayToPanel(panelId, file) {
+    const cached = this._overlayCache.get(file);
+    if (cached) {
+      this.model.setPanelOverlayData(panelId, cached);
     }
   }
 }

@@ -4,6 +4,19 @@
 
 let _nextPanelId = 1;
 
+export function createDefaultOverlays() {
+  return {
+    phases:      { enabled: false, color: '#ffffff', lineWidth: 1.5 },
+    temperature: { enabled: false, color: '#000000', lineWidth: 1.5, dT: 200 },
+    topo:        { enabled: false, color: '#000000', lineWidth: 2 },
+    velocity:    { enabled: false, color: '#ffff00', density: 8 },
+    director:    { enabled: false, color: '#ffffff', density: 6, lengthScale: 1.5 },
+    sigma1:      { enabled: false, color: '#ffffff', density: 6, lengthScale: 1.5 },
+    edot1:       { enabled: false, color: '#888888', density: 6, lengthScale: 1.5 },
+    melt:        { enabled: false, color: '#ff4444', lineWidth: 2, levels: [0.01, 0.05, 0.1] },
+  };
+}
+
 export function createDefaultPanel(id) {
   return {
     id: id ?? _nextPanelId++,
@@ -18,6 +31,9 @@ export function createDefaultPanel(id) {
     pMax: 1,
     _statsCache: null,     // { mean, median } — invalidated on field change
     viewBounds: null,      // null = full extent, or { xMin, xMax, zMin, zMax } in SI metres
+    overlays: createDefaultOverlays(),
+    overlayData: null,     // cached overlay data from server for this panel
+    overlayAvailable: new Set(),  // layer types available for current file
   };
 }
 
@@ -199,6 +215,30 @@ export class Model extends EventTarget {
       p.viewBounds = bounds ? { ...bounds } : null;
       this._emit('panel:view-bounds-changed', { panelId: p.id });
     }
+  }
+
+  /** Merge overlay config for a specific layer in a panel. */
+  setPanelOverlay(panelId, layerType, config) {
+    const p = this.getPanel(panelId);
+    if (!p || !p.overlays[layerType]) return;
+    Object.assign(p.overlays[layerType], config);
+    this._emit('panel:overlay-changed', { panelId, layerType });
+  }
+
+  /** Store which overlay layer types are available for the current file. */
+  setPanelOverlayAvailability(panelId, availableSet) {
+    const p = this.getPanel(panelId);
+    if (!p) return;
+    p.overlayAvailable = availableSet instanceof Set ? availableSet : new Set(availableSet);
+    this._emit('panel:overlay-availability-changed', { panelId });
+  }
+
+  /** Store fetched overlay data for a panel. */
+  setPanelOverlayData(panelId, data) {
+    const p = this.getPanel(panelId);
+    if (!p) return;
+    p.overlayData = data;
+    this._emit('panel:overlay-data-changed', { panelId });
   }
 
   // ── Global setters (dispatch events) ────────────────────────────────
