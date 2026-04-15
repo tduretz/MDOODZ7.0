@@ -109,6 +109,48 @@ export class PanelView {
 
     this.el.appendChild(this.controls);
 
+    // ── Zoom controls row ─────────────────────────────────────────────
+    this.zoomRow = document.createElement('div');
+    this.zoomRow.className = 'panel-controls zoom-row';
+
+    const mkLabel = (text) => {
+      const s = document.createElement('span');
+      s.className = 'zoom-label';
+      s.textContent = text;
+      return s;
+    };
+
+    this.zoomRow.appendChild(mkLabel('x:'));
+    this.zoomXMin = document.createElement('input');
+    this.zoomXMin.type = 'text'; this.zoomXMin.placeholder = 'min'; this.zoomXMin.size = 7;
+    this.zoomRow.appendChild(this.zoomXMin);
+    this.zoomXMax = document.createElement('input');
+    this.zoomXMax.type = 'text'; this.zoomXMax.placeholder = 'max'; this.zoomXMax.size = 7;
+    this.zoomRow.appendChild(this.zoomXMax);
+
+    this.zoomRow.appendChild(mkLabel('z:'));
+    this.zoomZMin = document.createElement('input');
+    this.zoomZMin.type = 'text'; this.zoomZMin.placeholder = 'min'; this.zoomZMin.size = 7;
+    this.zoomRow.appendChild(this.zoomZMin);
+    this.zoomZMax = document.createElement('input');
+    this.zoomZMax.type = 'text'; this.zoomZMax.placeholder = 'max'; this.zoomZMax.size = 7;
+    this.zoomRow.appendChild(this.zoomZMax);
+
+    this.zoomResetBtn = document.createElement('button');
+    this.zoomResetBtn.textContent = 'Reset';
+    this.zoomResetBtn.title = 'Reset to full extent';
+    this.zoomResetBtn.style.display = 'none';
+    this.zoomRow.appendChild(this.zoomResetBtn);
+
+    this.zoomApplyAllBtn = document.createElement('button');
+    this.zoomApplyAllBtn.textContent = '⇉ All';
+    this.zoomApplyAllBtn.title = 'Apply zoom to all panels';
+    this.zoomApplyAllBtn.className = 'zoom-apply-all';
+    this.zoomApplyAllBtn.style.display = 'none';
+    this.zoomRow.appendChild(this.zoomApplyAllBtn);
+
+    this.el.appendChild(this.zoomRow);
+
     // Append to container
     containerEl.appendChild(this.el);
 
@@ -156,6 +198,41 @@ export class PanelView {
       }));
     });
 
+    // ── Zoom input events ─────────────────────────────────────────────
+    const emitZoom = () => {
+      const d = this.panelState.fieldData;
+      if (!d || !d.xCoords || !d.zCoords) return;
+      const divisor = (this.model.spatialUnit || 'km') === 'km' ? 1e3 : 1;
+      const xMin = this.zoomXMin.value !== '' ? parseFloat(this.zoomXMin.value) * divisor : null;
+      const xMax = this.zoomXMax.value !== '' ? parseFloat(this.zoomXMax.value) * divisor : null;
+      const zMin = this.zoomZMin.value !== '' ? parseFloat(this.zoomZMin.value) * divisor : null;
+      const zMax = this.zoomZMax.value !== '' ? parseFloat(this.zoomZMax.value) * divisor : null;
+      const anySet = xMin != null || xMax != null || zMin != null || zMax != null;
+      const bounds = anySet ? { xMin, xMax, zMin, zMax } : null;
+      model.setPanelViewBounds(pid, bounds);
+      this._syncZoomBtns();
+    };
+    this.zoomXMin.addEventListener('change', emitZoom);
+    this.zoomXMax.addEventListener('change', emitZoom);
+    this.zoomZMin.addEventListener('change', emitZoom);
+    this.zoomZMax.addEventListener('change', emitZoom);
+
+    this.zoomResetBtn.addEventListener('click', () => {
+      this.zoomXMin.value = '';
+      this.zoomXMax.value = '';
+      this.zoomZMin.value = '';
+      this.zoomZMax.value = '';
+      model.setPanelViewBounds(pid, null);
+      this.zoomResetBtn.style.display = 'none';
+      // Show apply-all so user can reset all panels at once
+      this.zoomApplyAllBtn.style.display = '';
+    });
+
+    this.zoomApplyAllBtn.addEventListener('click', () => {
+      model.applyViewBoundsToAll(pid);
+      this.zoomApplyAllBtn.style.display = 'none';
+    });
+
     // Click panel → set active
     this.el.addEventListener('click', () => {
       model.activePanelId = pid;
@@ -186,6 +263,15 @@ export class PanelView {
     this._onParamsLoaded = () => {};
     this._onTitleChanged = () => {};
     this._onTimeUnit = () => {};
+    this._onViewBounds = (e) => {
+      if (e.detail.panelId === pid) {
+        this._syncZoomInputs();
+        // External sync: hide both buttons — this panel was just synced
+        this.zoomApplyAllBtn.style.display = 'none';
+        this.zoomResetBtn.style.display = this.panelState.viewBounds ? '' : 'none';
+      }
+    };
+    this._onSpatialUnit = () => this._syncZoomInputs();
 
     model.addEventListener('fields-loaded',              this._onFieldsLoaded);
     model.addEventListener('panel:field-changed',         this._onPanelField);
@@ -196,6 +282,8 @@ export class PanelView {
     model.addEventListener('params-loaded',               this._onParamsLoaded);
     model.addEventListener('panel:title-changed',         this._onTitleChanged);
     model.addEventListener('time-unit-changed',           this._onTimeUnit);
+    model.addEventListener('panel:view-bounds-changed',   this._onViewBounds);
+    model.addEventListener('spatial-unit-changed',        this._onSpatialUnit);
 
     // Initial population
     this._updateFieldList();
@@ -239,12 +327,49 @@ export class PanelView {
     this.rangeMax.style.display   = cont;
     this.autoBtn.style.display    = cont;
     this.lockBtn.style.display    = cont;
+
+    // Reset zoom on field change
+    this.zoomXMin.value = '';
+    this.zoomXMax.value = '';
+    this.zoomZMin.value = '';
+    this.zoomZMax.value = '';
+    this.zoomApplyAllBtn.style.display = 'none';
+    this.zoomResetBtn.style.display = 'none';
   }
 
   _syncRange() {
     const { min, max } = this.panelState.colourRange;
     this.rangeMin.value = _fmtVal(min);
     this.rangeMax.value = _fmtVal(max);
+  }
+
+  _syncApplyAllBtn() {
+    const vb = this.panelState.viewBounds;
+    this.zoomApplyAllBtn.style.display = vb ? '' : 'none';
+  }
+
+  _syncZoomBtns() {
+    const vb = this.panelState.viewBounds;
+    this.zoomApplyAllBtn.style.display = vb ? '' : 'none';
+    this.zoomResetBtn.style.display    = vb ? '' : 'none';
+  }
+
+  _syncZoomInputs() {
+    const vb = this.panelState.viewBounds;
+    const divisor = (this.model.spatialUnit || 'km') === 'km' ? 1e3 : 1;
+    if (vb) {
+      this.zoomXMin.value = vb.xMin != null ? _fmtVal(vb.xMin / divisor) : '';
+      this.zoomXMax.value = vb.xMax != null ? _fmtVal(vb.xMax / divisor) : '';
+      this.zoomZMin.value = vb.zMin != null ? _fmtVal(vb.zMin / divisor) : '';
+      this.zoomZMax.value = vb.zMax != null ? _fmtVal(vb.zMax / divisor) : '';
+    } else {
+      this.zoomXMin.value = '';
+      this.zoomXMax.value = '';
+      this.zoomZMin.value = '';
+      this.zoomZMax.value = '';
+    }
+    // Do NOT show/hide apply-all here — external sync should not toggle the button
+    // The button is only shown/hidden by direct user actions (emitZoom, reset, apply-all)
   }
 
   _buildPhaseEditor() {
@@ -313,6 +438,8 @@ export class PanelView {
     this.model.removeEventListener('params-loaded',               this._onParamsLoaded);
     this.model.removeEventListener('panel:title-changed',         this._onTitleChanged);
     this.model.removeEventListener('time-unit-changed',           this._onTimeUnit);
+    this.model.removeEventListener('panel:view-bounds-changed',   this._onViewBounds);
+    this.model.removeEventListener('spatial-unit-changed',        this._onSpatialUnit);
     this.el.remove();
   }
 }

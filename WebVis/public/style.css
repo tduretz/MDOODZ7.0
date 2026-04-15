@@ -209,6 +209,20 @@ html, body {
 }
 .panel-controls button:hover { background: var(--accent); color: var(--bg); }
 
+/* ── Zoom controls row ─────────────────────────────────────────────── */
+.zoom-row { padding-top: 2px; }
+.zoom-label {
+  font-size: 11px;
+  color: var(--text-dim, #888);
+  font-weight: 600;
+}
+.zoom-row input[type="text"] { width: 5.5em; }
+.zoom-apply-all {
+  background: var(--accent);
+  color: var(--bg);
+  font-weight: 600;
+}
+
 /* ── Phase config popover ──────────────────────────────────────────── */
 .phase-config-btn { font-size: 11px; }
 

@@ -17,6 +17,7 @@ export function createDefaultPanel(id) {
     pMin: 0,
     pMax: 1,
     _statsCache: null,     // { mean, median } — invalidated on field change
+    viewBounds: null,      // null = full extent, or { xMin, xMax, zMin, zMax } in SI metres
   };
 }
 
@@ -176,6 +177,24 @@ export class Model extends EventTarget {
     if (!p) return;
     p.title = template;
     this._emit('panel:title-changed', { panelId });
+  }
+
+  setPanelViewBounds(panelId, bounds) {
+    const p = this.getPanel(panelId);
+    if (!p) return;
+    p.viewBounds = bounds;  // null or { xMin, xMax, zMin, zMax }
+    this._emit('panel:view-bounds-changed', { panelId });
+  }
+
+  applyViewBoundsToAll(sourcePanelId) {
+    const src = this.getPanel(sourcePanelId);
+    if (!src) return;
+    const bounds = src.viewBounds ? { ...src.viewBounds } : null;
+    for (const p of this._panels) {
+      if (p.id === sourcePanelId) continue;
+      p.viewBounds = bounds ? { ...bounds } : null;
+      this._emit('panel:view-bounds-changed', { panelId: p.id });
+    }
   }
 
   // ── Global setters (dispatch events) ────────────────────────────────

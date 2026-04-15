@@ -63,6 +63,7 @@ export class FieldCanvas {
       this._onSpatial = () => this.render();
       this._onPhaseConfig = () => this.render();
       this._onTheme = () => this.render();
+      this._onViewBounds = e => { if (e.detail.panelId === pid) this.render(); };
       model.addEventListener('panel:field-changed',      this._onField);
       model.addEventListener('panel:colourmap-changed',   this._onCmap);
       model.addEventListener('panel:range-changed',       this._onRange);
@@ -71,6 +72,7 @@ export class FieldCanvas {
       model.addEventListener('spatial-unit-changed',      this._onSpatial);
       model.addEventListener('phase-config-changed',      this._onPhaseConfig);
       model.addEventListener('theme-changed',             this._onTheme);
+      model.addEventListener('panel:view-bounds-changed', this._onViewBounds);
     } else {
       this._onField   = () => this.render();
       this._onCmap    = () => this.render();
@@ -114,6 +116,23 @@ export class FieldCanvas {
     const isLog      = data.log;
     const isDiscrete = data.discrete;
 
+    // ── View bounds (zoom/crop) ───────────────────────────────────────
+    const vb = ps ? ps.viewBounds : null;
+    let col0 = 0, col1 = nx - 1, row0 = 0, row1 = nz - 1;
+    const hasCoords = data.xCoords && data.zCoords &&
+                      data.xCoords.length > 0 && data.zCoords.length > 0;
+    if (vb && hasCoords) {
+      const xC = data.xCoords, zC = data.zCoords;
+      if (vb.xMin != null) col0 = Math.max(0, xC.findIndex(x => x >= vb.xMin));
+      if (vb.xMax != null) { for (let i = nx - 1; i >= 0; i--) { if (xC[i] <= vb.xMax) { col1 = i; break; } } }
+      if (vb.zMin != null) row0 = Math.max(0, zC.findIndex(z => z >= vb.zMin));
+      if (vb.zMax != null) { for (let i = nz - 1; i >= 0; i--) { if (zC[i] <= vb.zMax) { row1 = i; break; } } }
+      if (col0 > col1) { col0 = 0; col1 = nx - 1; }
+      if (row0 > row1) { row0 = 0; row1 = nz - 1; }
+    }
+    const cropNx = col1 - col0 + 1;
+    const cropNz = row1 - row0 + 1;
+
     let lut, phasePalette;
     if (isDiscrete) {
       phasePalette = this.colourMaps.phases || [];
@@ -125,8 +144,6 @@ export class FieldCanvas {
 
     // ── Pre-compute all label strings for margin measurement ──────────
     const hasCbar  = (!isDiscrete && lut) || (isDiscrete && phasePalette);
-    const hasCoords = data.xCoords && data.zCoords &&
-                      data.xCoords.length > 0 && data.zCoords.length > 0;
 
     const spatialUnit = this.model.spatialUnit || 'km';
     const divisor   = spatialUnit === 'km' ? 1e3 : 1;
@@ -147,10 +164,10 @@ export class FieldCanvas {
         }
       }
     } else if (isDiscrete && phasePalette) {
-      // Scan for visible phases (same logic as _drawPhaseLegend)
+      // Scan for visible phases in cropped area
       const seen = new Set();
-      for (let col = 0; col < nx; col++)
-        for (let iz = 0; iz < nz; iz++) {
+      for (let col = col0; col <= col1; col++)
+        for (let iz = row0; iz <= row1; iz++) {
           const v = values[col][iz];
           if (v !== null && v !== undefined && !Number.isNaN(v)) {
             const p = Math.round(v);
@@ -163,17 +180,17 @@ export class FieldCanvas {
       }
     }
 
-    // Z-axis (left) labels
+    // Z-axis (left) labels — use cropped coordinate range
     const zStrings = [];
     let nTicksZ = 0;
     if (hasCoords) {
       const zCoords = data.zCoords;
-      const zMin = zCoords[0], zMax = zCoords[zCoords.length - 1];
-      const zExt = zMax - zMin;
+      const czMin = zCoords[row0], czMax = zCoords[row1];
+      const czExt = czMax - czMin;
       nTicksZ = Math.min(6, Math.max(3, Math.floor(200 / 60)));
       for (let i = 0; i < nTicksZ; i++) {
         const frac = i / (nTicksZ - 1);
-        zStrings.push(_fmtAxis((zMin + frac * zExt) / divisor));
+        zStrings.push(_fmtAxis((czMin + frac * czExt) / divisor));
       }
     }
 
@@ -212,7 +229,7 @@ export class FieldCanvas {
     const availH = displayH - m.top  - m.bottom;
     if (availW <= 0 || availH <= 0) { ctx.restore(); return; }
 
-    const dataAspect = nx / nz;
+    const dataAspect = cropNx / cropNz;
     let dW, dH;
     if (availW / availH > dataAspect) {
       dH = availH;
@@ -229,22 +246,23 @@ export class FieldCanvas {
     ctx.fillStyle = theme.bg;
     ctx.fillRect(0, 0, displayW, displayH);
 
-    // ── Field data via offscreen ImageData ────────────────────────────
+    // ── Field data via offscreen ImageData (cropped region) ───────────
     const off = this._offscreen;
-    off.width  = nx;
-    off.height = nz;
+    off.width  = cropNx;
+    off.height = cropNz;
     const offCtx  = off.getContext('2d');
-    const imgData = offCtx.createImageData(nx, nz);
+    const imgData = offCtx.createImageData(cropNx, cropNz);
     const pixels  = imgData.data;
 
     const logMin = isLog && min > 0 ? Math.log10(min) : 0;
     const logMax = isLog && max > 0 ? Math.log10(max) : 1;
     const range  = isLog ? (logMax - logMin) : (max - min);
 
-    for (let row = 0; row < nz; row++) {
-      const iz = nz - 1 - row;
-      for (let col = 0; col < nx; col++) {
-        const idx = (row * nx + col) * 4;
+    for (let r = 0; r < cropNz; r++) {
+      const iz = row1 - r;  // top row of crop = row1 (highest z)
+      for (let c = 0; c < cropNx; c++) {
+        const col = col0 + c;
+        const idx = (r * cropNx + c) * 4;
         const val = values[col][iz];
 
         if (val === null || val === undefined || Number.isNaN(val)) {
@@ -257,8 +275,8 @@ export class FieldCanvas {
             pixels[idx] = nullRgb[0]; pixels[idx+1] = nullRgb[1]; pixels[idx+2] = nullRgb[2]; pixels[idx+3] = 255;
           } else {
             const cfg = this.model.getPhaseConfig(phase, phasePalette);
-            const c = cfg.color;
-            pixels[idx] = c[0]; pixels[idx+1] = c[1]; pixels[idx+2] = c[2]; pixels[idx+3] = 255;
+            const cc = cfg.color;
+            pixels[idx] = cc[0]; pixels[idx+1] = cc[1]; pixels[idx+2] = cc[2]; pixels[idx+3] = 255;
           }
           continue;
         }
@@ -269,8 +287,8 @@ export class FieldCanvas {
         }
         const t  = range > 0 ? (mapped - (isLog ? logMin : min)) / range : 0.5;
         const ci = Math.max(0, Math.min(255, Math.round(t * 255)));
-        const c  = lut[ci];
-        pixels[idx] = c[0]; pixels[idx+1] = c[1]; pixels[idx+2] = c[2]; pixels[idx+3] = 255;
+        const rgb = lut[ci];
+        pixels[idx] = rgb[0]; pixels[idx+1] = rgb[1]; pixels[idx+2] = rgb[2]; pixels[idx+3] = 255;
       }
     }
     offCtx.putImageData(imgData, 0, 0);
@@ -288,12 +306,12 @@ export class FieldCanvas {
       this._drawCbar(ctx, lut, colourRange, data, dataX + dW, dataY, dH, theme);
     }
     if (isDiscrete && phasePalette) {
-      this._drawPhaseLegend(ctx, phasePalette, values, nx, nz, dataX + dW, dataY, dH, theme);
+      this._drawPhaseLegend(ctx, phasePalette, values, col0, col1, row0, row1, dataX + dW, dataY, dH, theme);
     }
 
     // ── Axis ticks + labels ───────────────────────────────────────────
     if (hasCoords) {
-      this._drawAxes(ctx, data, dataX, dataY, dW, dH, unitLabel, divisor, theme);
+      this._drawAxes(ctx, data, dataX, dataY, dW, dH, unitLabel, divisor, theme, col0, col1, row0, row1);
     }
 
     // ── Title ─────────────────────────────────────────────────────────
@@ -376,11 +394,11 @@ export class FieldCanvas {
   }
 
   // ── Phase box legend (discrete phases — only visible ones) ────────────
-  _drawPhaseLegend(ctx, palette, values, nx, nz, rightEdge, top, height, theme) {
+  _drawPhaseLegend(ctx, palette, values, c0, c1, r0, r1, rightEdge, top, height, theme) {
     // Scan data for unique phase indices (skip air = -1 and NaN)
     const seen = new Set();
-    for (let col = 0; col < nx; col++) {
-      for (let iz = 0; iz < nz; iz++) {
+    for (let col = c0; col <= c1; col++) {
+      for (let iz = r0; iz <= r1; iz++) {
         const v = values[col][iz];
         if (v !== null && v !== undefined && !Number.isNaN(v)) {
           const p = Math.round(v);
@@ -417,11 +435,11 @@ export class FieldCanvas {
   }
 
   // ── Axes: X on bottom, Z on left ──────────────────────────────────
-  _drawAxes(ctx, data, dataX, dataY, dW, dH, unitLabel, divisor, theme) {
+  _drawAxes(ctx, data, dataX, dataY, dW, dH, unitLabel, divisor, theme, c0, c1, r0, r1) {
     const xCoords = data.xCoords;
     const zCoords = data.zCoords;
-    const xMin = xCoords[0], xMax = xCoords[xCoords.length - 1], xExt = xMax - xMin;
-    const zMin = zCoords[0], zMax = zCoords[zCoords.length - 1], zExt = zMax - zMin;
+    const xMin = xCoords[c0], xMax = xCoords[c1], xExt = xMax - xMin;
+    const zMin = zCoords[r0], zMax = zCoords[r1], zExt = zMax - zMin;
 
     ctx.strokeStyle = theme.tickLine;
     ctx.lineWidth = 1;
@@ -508,6 +526,7 @@ export class FieldCanvas {
       if (this._onSpatial) this.model.removeEventListener('spatial-unit-changed', this._onSpatial);
       if (this._onPhaseConfig) this.model.removeEventListener('phase-config-changed', this._onPhaseConfig);
       if (this._onTheme) this.model.removeEventListener('theme-changed', this._onTheme);
+      if (this._onViewBounds) this.model.removeEventListener('panel:view-bounds-changed', this._onViewBounds);
     } else {
       this.model.removeEventListener('field-loaded',       this._onField);
       this.model.removeEventListener('colourmap-changed',   this._onCmap);

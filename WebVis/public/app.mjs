@@ -63,7 +63,21 @@ async function main() {
     for (const [id, view] of panelViews) {
       const panel = model.getPanel(id);
       if (!panel || !panel.fieldData) continue;
-      const { nx, nz } = panel.fieldData;
+      let { nx, nz } = panel.fieldData;
+
+      // If zoomed, use crop dimensions for aspect ratio sizing
+      const vb = panel.viewBounds;
+      if (vb && panel.fieldData.xCoords && panel.fieldData.zCoords) {
+        const xC = panel.fieldData.xCoords;
+        const zC = panel.fieldData.zCoords;
+        let c0 = 0, c1 = nx - 1, r0 = 0, r1 = nz - 1;
+        if (vb.xMin != null) c0 = Math.max(0, xC.findIndex(x => x >= vb.xMin));
+        if (vb.xMax != null) { const i = xC.findIndex(x => x > vb.xMax); c1 = i >= 0 ? Math.max(0, i - 1) : nx - 1; }
+        if (vb.zMin != null) r0 = Math.max(0, zC.findIndex(z => z >= vb.zMin));
+        if (vb.zMax != null) { const i = zC.findIndex(z => z > vb.zMax); r1 = i >= 0 ? Math.max(0, i - 1) : nz - 1; }
+        if (c0 <= c1 && r0 <= r1) { nx = c1 - c0 + 1; nz = r1 - r0 + 1; }
+      }
+
       const rowRect = view.canvasRow.getBoundingClientRect();
       const availW = rowRect.width;
       const availH = rowRect.height;
@@ -102,6 +116,11 @@ async function main() {
   // Also resize after field loads — ensures first render even if resize hasn't fired
   model.addEventListener('panel:field-changed', () => {
     // Double-rAF: wait for layout to settle, then size + render
+    requestAnimationFrame(() => requestAnimationFrame(resizePanels));
+  });
+
+  // Resize after zoom changes — crop alters effective aspect ratio
+  model.addEventListener('panel:view-bounds-changed', () => {
     requestAnimationFrame(() => requestAnimationFrame(resizePanels));
   });
 
