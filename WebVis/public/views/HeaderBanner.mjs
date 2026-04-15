@@ -37,6 +37,12 @@ export class HeaderBanner {
       const val = this.unitSel.value || null;
       controlsEl.dispatchEvent(new CustomEvent('ctrl:time-unit', { detail: val }));
     });
+
+    this.spatialSel = headerEl.querySelector('#spatial-unit-select');
+    this.spatialSel.value = model.spatialUnit || 'km';
+    this.spatialSel.addEventListener('change', () => {
+      model.spatialUnit = this.spatialSel.value;
+    });
   }
 
   _renderTime() {

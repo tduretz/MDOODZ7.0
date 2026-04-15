@@ -2,6 +2,7 @@
 import { Model }          from './model.mjs';
 import { Controller }     from './controller.mjs';
 import { PanelView }      from './views/PanelView.mjs';
+import { MARGIN_ESTIMATE } from './views/FieldCanvas.mjs';
 import { ControlPanel }   from './views/ControlPanel.mjs';
 import { StatusBar }      from './views/StatusBar.mjs';
 import { LoadingOverlay } from './views/LoadingOverlay.mjs';
@@ -54,10 +55,8 @@ async function main() {
   // Create initial panels
   syncPanels();
 
-  // Sync on layout changes
+  // Sync on layout changes (setLayout dispatches layout-changed after all add/remove)
   model.addEventListener('layout-changed', () => syncPanels());
-  model.addEventListener('panel-added',    () => syncPanels());
-  model.addEventListener('panel-removed',  () => syncPanels());
 
   // ── Responsive sizing ──────────────────────────────────────────────
   function resizePanels() {
@@ -66,24 +65,34 @@ async function main() {
       if (!panel || !panel.fieldData) continue;
       const { nx, nz } = panel.fieldData;
       const rowRect = view.canvasRow.getBoundingClientRect();
-      const cbarRect = view.colourBarEl.getBoundingClientRect();
-      const availW = rowRect.width - cbarRect.width - 8; // 8px gap
+      const availW = rowRect.width;
       const availH = rowRect.height;
       if (availW <= 0 || availH <= 0) continue;
-      const aspect = nx / nz;
-      let w, h;
-      if (availW / availH > aspect) {
-        h = availH;
-        w = Math.round(h * aspect);
+
+      // Budget for margins — FieldCanvas will compute exact values dynamically
+      const MARGIN_LR = MARGIN_ESTIMATE.left + MARGIN_ESTIMATE.right;
+      const MARGIN_TB = MARGIN_ESTIMATE.top  + MARGIN_ESTIMATE.bottom;
+      const dataAspect = nx / nz;
+
+      // Find best fit: data portion fills available space
+      let dataW, dataH;
+      const testW = availW - MARGIN_LR;
+      const testH = availH - MARGIN_TB;
+      if (testW <= 0 || testH <= 0) continue;
+
+      if (testW / testH > dataAspect) {
+        dataH = testH;
+        dataW = Math.round(dataH * dataAspect);
       } else {
-        w = availW;
-        h = Math.round(w / aspect);
+        dataW = testW;
+        dataH = Math.round(dataW / dataAspect);
       }
-      view.fieldCanvasEl.style.width  = w + 'px';
-      view.fieldCanvasEl.style.height = h + 'px';
-      view.colourBarEl.height = h;
+
+      const totalW = dataW + MARGIN_LR;
+      const totalH = dataH + MARGIN_TB;
+      view.fieldCanvasEl.style.width  = totalW + 'px';
+      view.fieldCanvasEl.style.height = totalH + 'px';
       view.fieldCanvas.render();
-      view.colourBar.render();
     }
   }
 

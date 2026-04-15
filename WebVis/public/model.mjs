@@ -33,6 +33,7 @@ export class Model extends EventTarget {
     this._loading     = false;
     this._fileList    = [];      // [{ name, step, time, nx, nz, dt }]
     this._timeUnit    = null;    // null=auto, 'yr', 'ka', 'Ma'
+    this._spatialUnit = 'km';   // 'm' or 'km'
 
     // Panel state
     this._layout      = '1x1';
@@ -50,6 +51,7 @@ export class Model extends EventTarget {
   get loading()      { return this._loading; }
   get fileList()     { return this._fileList; }
   get timeUnit()     { return this._timeUnit; }
+  get spatialUnit()  { return this._spatialUnit; }
   get layout()       { return this._layout; }
   get panels()       { return this._panels; }
   get activePanelId(){ return this._activePanelId; }
@@ -231,6 +233,11 @@ export class Model extends EventTarget {
   set timeUnit(v) {
     this._timeUnit = v;
     this._emit('time-unit-changed');
+  }
+
+  set spatialUnit(v) {
+    this._spatialUnit = v;
+    this._emit('spatial-unit-changed');
   }
 
   // ── Internal ───────────────────────────────────────────────────────

@@ -1,10 +1,10 @@
 // ── PanelView ─────────────────────────────────────────────────────────
-// Per-panel DOM subtree: title area, field canvas + colour bar, mini controls.
-// Each PanelView owns its FieldCanvas, ColourBar, and TitleInput instances.
+// Per-panel DOM subtree: title (DOM, above grid), single field canvas
+// (with integrated colour bar + axis ticks), and mini controls.
 
 import { FieldCanvas } from './FieldCanvas.mjs';
-import { ColourBar }   from './ColourBar.mjs';
 import { TitleInput }  from './TitleInput.mjs';
+// Title rendering moved into FieldCanvas (rendered on canvas for screenshots)
 
 const CMAP_OPTIONS = ['viridis', 'turbo', 'inferno', 'plasma', 'coolwarm'];
 
@@ -22,12 +22,14 @@ export class PanelView {
       this.el.classList.add('active');
     }
 
-    // ── Title area ────────────────────────────────────────────────────
+    // ── Title area (input + dropdown) ──────────────────────────────────
     this.titleContainer = document.createElement('div');
     this.el.appendChild(this.titleContainer);
     this.titleInput = new TitleInput(model, this.titleContainer, panelState, this.el);
 
-    // ── Canvas row (field canvas + colour bar) ────────────────────────
+    // Title is rendered inside the canvas by FieldCanvas._drawTitle()
+
+    // ── Canvas area (single canvas with integrated cbar + ticks) ──────
     this.canvasRow = document.createElement('div');
     this.canvasRow.className = 'panel-canvas-row';
 
@@ -35,17 +37,10 @@ export class PanelView {
     this.fieldCanvasEl.className = 'field-canvas';
     this.canvasRow.appendChild(this.fieldCanvasEl);
 
-    this.colourBarEl = document.createElement('canvas');
-    this.colourBarEl.className = 'colourbar-canvas';
-    this.colourBarEl.width = 80;
-    this.colourBarEl.height = 300;
-    this.canvasRow.appendChild(this.colourBarEl);
-
     this.el.appendChild(this.canvasRow);
 
-    // Instantiate FieldCanvas & ColourBar bound to this panel's state
+    // Instantiate FieldCanvas bound to this panel's state
     this.fieldCanvas = new FieldCanvas(model, this.fieldCanvasEl, colourMaps, panelState);
-    this.colourBar   = new ColourBar(model, this.colourBarEl, colourMaps, panelState);
 
     // ── Mini control row ──────────────────────────────────────────────
     this.controls = document.createElement('div');
@@ -149,7 +144,9 @@ export class PanelView {
     // ── Model events ──────────────────────────────────────────────────
     this._onFieldsLoaded = () => this._updateFieldList();
     this._onPanelField = (e) => {
-      if (e.detail.panelId === pid) this._syncAfterFieldChange();
+      if (e.detail.panelId === pid) {
+        this._syncAfterFieldChange();
+      }
     };
     this._onPanelCmap = (e) => {
       if (e.detail.panelId === pid) this.cmapSelect.value = panelState.colourMap;
@@ -163,9 +160,12 @@ export class PanelView {
         this._syncRange();
       }
     };
-    this._onActiveChange = (e) => {
+    this._onActiveChange = () => {
       this.el.classList.toggle('active', model.activePanelId === pid);
     };
+    this._onParamsLoaded = () => {};
+    this._onTitleChanged = () => {};
+    this._onTimeUnit = () => {};
 
     model.addEventListener('fields-loaded',              this._onFieldsLoaded);
     model.addEventListener('panel:field-changed',         this._onPanelField);
@@ -173,8 +173,11 @@ export class PanelView {
     model.addEventListener('panel:range-changed',         this._onPanelRange);
     model.addEventListener('panel:range-locked-changed',  this._onPanelLock);
     model.addEventListener('active-panel-changed',        this._onActiveChange);
+    model.addEventListener('params-loaded',               this._onParamsLoaded);
+    model.addEventListener('panel:title-changed',         this._onTitleChanged);
+    model.addEventListener('time-unit-changed',           this._onTimeUnit);
 
-    // Initial population of field list
+    // Initial population
     this._updateFieldList();
   }
 
@@ -215,7 +218,6 @@ export class PanelView {
 
   destroy() {
     this.fieldCanvas.destroy();
-    this.colourBar.destroy();
     this.titleInput.destroy();
     this.model.removeEventListener('fields-loaded',              this._onFieldsLoaded);
     this.model.removeEventListener('panel:field-changed',         this._onPanelField);
@@ -223,6 +225,9 @@ export class PanelView {
     this.model.removeEventListener('panel:range-changed',         this._onPanelRange);
     this.model.removeEventListener('panel:range-locked-changed',  this._onPanelLock);
     this.model.removeEventListener('active-panel-changed',        this._onActiveChange);
+    this.model.removeEventListener('params-loaded',               this._onParamsLoaded);
+    this.model.removeEventListener('panel:title-changed',         this._onTitleChanged);
+    this.model.removeEventListener('time-unit-changed',           this._onTimeUnit);
     this.el.remove();
   }
 }
