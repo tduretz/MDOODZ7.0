@@ -1,28 +1,31 @@
 // ── StatusBar View ────────────────────────────────────────────────────
-// Shows model time (Myr), grid dimensions, current field name.
+// Shows model time (adaptive), grid dimensions, current field label.
 
-const SEC_TO_MYR = 1 / 3.1558e13;
+import { formatTime } from '../time-display.mjs';
 
 export class StatusBar {
   constructor(model, el) {
     this.model = model;
     this.el = el;
 
-    model.addEventListener('field-loaded',  () => this.render());
-    model.addEventListener('file-selected', () => this.render());
-    model.addEventListener('params-loaded', () => this.render());
+    model.addEventListener('field-loaded',      () => this.render());
+    model.addEventListener('file-selected',     () => this.render());
+    model.addEventListener('params-loaded',     () => this.render());
+    model.addEventListener('time-unit-changed',  () => this.render());
   }
 
   render() {
     const parts = [];
     const p = this.model.params;
     if (p) {
-      const myr = (p.time * SEC_TO_MYR).toFixed(3);
-      parts.push(`t = ${myr} Myr`);
+      const { formatted } = formatTime(p.time, this.model.timeUnit);
+      parts.push(`t = ${formatted}`);
       parts.push(`${p.nx} × ${p.nz}`);
     }
-    if (this.model.currentField) {
-      parts.push(this.model.currentField);
+    const field = this.model.currentField;
+    if (field) {
+      const def = this.model.fieldDefs.get(field);
+      parts.push(def ? def.label : field);
     }
     this.el.textContent = parts.join(' | ');
   }

@@ -37,11 +37,41 @@ html, body {
   padding: 8px 16px;
   background: var(--surface);
   border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
-#header h1 {
+.header-title {
   font-size: 15px;
   font-weight: 600;
   letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+.header-field {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--accent);
+  text-align: center;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.header-time {
+  font-size: 13px;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.header-time select {
+  padding: 2px 4px;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  font-size: 11px;
 }
 
 #controls {
@@ -121,6 +151,13 @@ html, body {
   width: 100%;
   margin-top: 6px;
   accent-color: var(--accent);
+}
+
+.slider-label {
+  display: block;
+  font-size: 10px;
+  color: var(--text-dim);
+  margin-top: 2px;
 }
 
 .ctrl-group input[type="text"] {

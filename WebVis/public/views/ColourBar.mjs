@@ -8,9 +8,10 @@ export class ColourBar {
     this.ctx = canvasEl.getContext('2d');
     this.colourMaps = colourMaps;
 
-    model.addEventListener('field-loaded',      () => this.render());
-    model.addEventListener('colourmap-changed',  () => this.render());
-    model.addEventListener('range-changed',      () => this.render());
+    model.addEventListener('field-loaded',         () => this.render());
+    model.addEventListener('colourmap-changed',     () => this.render());
+    model.addEventListener('range-changed',         () => this.render());
+    model.addEventListener('range-locked-changed',  () => this.render());
   }
 
   render() {
@@ -18,6 +19,11 @@ export class ColourBar {
     if (!data) return;
 
     const { min, max, unit, log: isLog, discrete: isDiscrete } = data;
+    const field = this.model.currentField;
+    const def = this.model.fieldDefs.get(field);
+    const label = def ? def.label : (field || '');
+    const fUnit = def ? def.formattedUnit : (unit || '');
+
     const w = this.canvas.width;
     const h = this.canvas.height;
     this.ctx.clearRect(0, 0, w, h);
@@ -71,24 +77,41 @@ export class ColourBar {
       const frac = i / (nTicks - 1);
       const y = barBot - frac * barH;
 
-      let label;
+      let tickLabel;
       if (isLog) {
         const logVal = Math.log10(rMin > 0 ? rMin : 1) + frac * (Math.log10(rMax > 0 ? rMax : 1) - Math.log10(rMin > 0 ? rMin : 1));
-        label = `10^${logVal.toFixed(1)}`;
+        tickLabel = `10^${logVal.toFixed(1)}`;
       } else {
         const val = rMin + frac * (rMax - rMin);
-        label = formatVal(val);
+        tickLabel = formatVal(val);
       }
-      this.ctx.fillText(label, barX + barW + 4, y);
+      this.ctx.fillText(tickLabel, barX + barW + 4, y);
     }
 
-    // Unit label
-    if (unit) {
+    // Unit label (scientific formatted)
+    const unitStr = fUnit || unit || '';
+    if (unitStr) {
       this.ctx.fillStyle = '#aaa';
       this.ctx.font = '10px sans-serif';
       this.ctx.textAlign = 'center';
-      this.ctx.fillText(unit, barX + barW / 2, h - 8);
+      this.ctx.fillText(unitStr, barX + barW / 2, h - 14);
       this.ctx.textAlign = 'start';
+    }
+
+    // Field label
+    if (label) {
+      this.ctx.fillStyle = '#aaa';
+      this.ctx.font = '10px sans-serif';
+      this.ctx.textAlign = 'center';
+      this.ctx.fillText(label, barX + barW / 2, h - 3);
+      this.ctx.textAlign = 'start';
+    }
+
+    // Lock indicator
+    if (this.model.rangeLocked) {
+      this.ctx.fillStyle = '#ff9';
+      this.ctx.font = '12px sans-serif';
+      this.ctx.fillText('🔒', barX + barW + 4, barBot + 14);
     }
   }
 }

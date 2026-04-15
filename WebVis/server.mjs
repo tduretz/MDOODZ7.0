@@ -6,8 +6,9 @@ import { Readable } from 'node:stream';
 import { join, extname, resolve, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { readMetadata, extractField, datasetExists } from './hdf5-reader.mjs';
-import { getField, listAvailableFields } from './fields.mjs';
+import { readMetadata, extractField, datasetExists, readAllMetadata } from './hdf5-reader.mjs';
+import { getField, listAvailableFields, getFieldLabel, getFieldUnit } from './fields.mjs';
+import { getCached, writeCache } from './field-cache.mjs';
 
 // ── Configuration ──────────────────────────────────────────────────────
 const DATA_DIR = resolve(process.argv[2] || '.');
@@ -56,12 +57,15 @@ async function gzipJsonResponse(req, res, statusCode, data) {
 }
 
 // ── Route handlers ─────────────────────────────────────────────────────
+let cachedFileList = null; // in-memory cache for file-list metadata
+
 async function handleApiFiles(req, res) {
-  const entries = await readdir(DATA_DIR);
-  const files = entries
-    .filter(f => FILENAME_RE.test(f))
-    .sort();
-  await gzipJsonResponse(req, res, 200, { files });
+  if (!cachedFileList) {
+    const entries = await readdir(DATA_DIR);
+    const filenames = entries.filter(f => FILENAME_RE.test(f)).sort();
+    cachedFileList = await readAllMetadata(DATA_DIR, filenames);
+  }
+  await gzipJsonResponse(req, res, 200, { files: cachedFileList });
 }
 
 async function handleApiFields(req, res, filename) {
@@ -77,7 +81,12 @@ async function handleApiFields(req, res, filename) {
     return;
   }
   const params = await readMetadata(filePath);
-  const fields = await listAvailableFields(filePath, datasetExists);
+  const fieldNames = await listAvailableFields(filePath, datasetExists);
+  const fields = fieldNames.map(name => ({
+    name,
+    label: getFieldLabel(name),
+    formattedUnit: getFieldUnit(name),
+  }));
   await gzipJsonResponse(req, res, 200, { fields, params });
 }
 
@@ -98,7 +107,27 @@ async function handleApiFieldData(req, res, filename, fieldName) {
     jsonResponse(res, 404, { error: 'File not found' });
     return;
   }
+
+  // Try disk cache first
+  const cached = await getCached(DATA_DIR, filename, fieldName);
+  if (cached) {
+    const acceptGzip = (req.headers['accept-encoding'] || '').includes('gzip');
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    if (acceptGzip) {
+      res.writeHead(200, { 'Content-Encoding': 'gzip' });
+      await pipeline(Readable.from(cached), createGzip(), res);
+    } else {
+      res.writeHead(200);
+      res.end(cached);
+    }
+    return;
+  }
+
   const data = await extractField(filePath, fieldDef);
+  const json = JSON.stringify(data);
+  // Write cache asynchronously — don't block response
+  writeCache(DATA_DIR, filename, fieldName, json).catch(() => {});
   await gzipJsonResponse(req, res, 200, data);
 }
 

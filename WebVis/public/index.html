@@ -9,7 +9,17 @@
 <body>
   <div id="app">
     <header id="header">
-      <h1>MDOODZ WebVis</h1>
+      <span class="header-title">MDOODZ WebVis</span>
+      <span id="header-field" class="header-field"></span>
+      <span id="header-time" class="header-time">
+        <span id="time-display"></span>
+        <select id="time-unit-select">
+          <option value="">Auto</option>
+          <option value="yr">yr</option>
+          <option value="ka">ka</option>
+          <option value="Ma">Ma</option>
+        </select>
+      </span>
     </header>
     <aside id="controls"></aside>
     <main id="canvas-area">

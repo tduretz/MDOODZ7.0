@@ -6,6 +6,7 @@ import { ColourBar }      from './views/ColourBar.mjs';
 import { ControlPanel }   from './views/ControlPanel.mjs';
 import { StatusBar }      from './views/StatusBar.mjs';
 import { LoadingOverlay } from './views/LoadingOverlay.mjs';
+import { HeaderBanner }   from './views/HeaderBanner.mjs';
 
 async function main() {
   // Load colour maps
@@ -15,15 +16,18 @@ async function main() {
   // Model
   const model = new Model();
 
+  const controlsEl = document.getElementById('controls');
+
   // Views
-  new ControlPanel(model, document.getElementById('controls'));
+  new ControlPanel(model, controlsEl);
   new FieldCanvas(model, document.getElementById('field-canvas'), colourMaps);
   new ColourBar(model, document.getElementById('colourbar-canvas'), colourMaps);
   new StatusBar(model, document.getElementById('status-bar'));
   new LoadingOverlay(model, document.getElementById('loading-overlay'));
+  new HeaderBanner(model, document.getElementById('header'), controlsEl);
 
   // Controller
-  const ctrl = new Controller(model, document.getElementById('controls'));
+  const ctrl = new Controller(model, controlsEl);
   await ctrl.init();
 }
 

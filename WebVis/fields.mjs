@@ -12,61 +12,61 @@
 
 const REGISTRY = {
   // ── Centre fields (Nx-1 × Nz-1) ──────────────────────────────────────
-  'Pressure':           { path: '/Centers/P',           gridType: 'center', unit: 'Pa',    log: false },
-  'Temperature':        { path: '/Centers/T',           gridType: 'center', unit: '°C',    log: false, offset: -273.15 },
-  'Viscosity':          { path: '/Centers/eta_n',       gridType: 'center', unit: 'Pa·s',  log: true  },
-  'Density':            { path: '/Centers/rho_n',       gridType: 'center', unit: 'kg/m³', log: false },
-  'Grain size':         { path: '/Centers/d',           gridType: 'center', unit: 'm',     log: true  },
-  'Melt fraction':      { path: '/Centers/X',           gridType: 'center', unit: '',      log: false },
-  'Porosity':           { path: '/Centers/phi',         gridType: 'center', unit: '',      log: false },
-  'Overpressure':       { path: '/Centers/OverS',       gridType: 'center', unit: 'Pa',    log: false },
-  'Stress xx':          { path: '/Centers/sxxd',        gridType: 'center', unit: 'Pa',    log: false },
-  'Stress zz':          { path: '/Centers/szzd',        gridType: 'center', unit: 'Pa',    log: false },
-  'Strain rate xx':     { path: '/Centers/exxd',        gridType: 'center', unit: '1/s',   log: true  },
-  'Strain rate zz':     { path: '/Centers/ezzd',        gridType: 'center', unit: '1/s',   log: true  },
-  'Divergence':         { path: '/Centers/divu',        gridType: 'center', unit: '1/s',   log: false },
-  'Div elastic':        { path: '/Centers/divu_el',     gridType: 'center', unit: '1/s',   log: false },
-  'Div plastic':        { path: '/Centers/divu_pl',     gridType: 'center', unit: '1/s',   log: false },
-  'Div reaction':       { path: '/Centers/divu_r',      gridType: 'center', unit: '1/s',   log: false },
-  'Div thermal':        { path: '/Centers/divu_th',     gridType: 'center', unit: '1/s',   log: false },
-  'Strain (total)':     { path: '/Centers/strain',      gridType: 'center', unit: '',      log: false },
-  'Strain (elastic)':   { path: '/Centers/strain_el',   gridType: 'center', unit: '',      log: false },
-  'Strain (plastic)':   { path: '/Centers/strain_pl',   gridType: 'center', unit: '',      log: false },
-  'Strain (pwl)':       { path: '/Centers/strain_pwl',  gridType: 'center', unit: '',      log: false },
-  'Strain (exp)':       { path: '/Centers/strain_exp',  gridType: 'center', unit: '',      log: false },
-  'Strain (lin)':       { path: '/Centers/strain_lin',  gridType: 'center', unit: '',      log: false },
-  'Strain (gbs)':       { path: '/Centers/strain_gbs',  gridType: 'center', unit: '',      log: false },
-  'Strain (pl vol)':    { path: '/Centers/strain_pl_vol', gridType: 'center', unit: '',    log: false },
-  'eII elastic':        { path: '/Centers/eII_el',      gridType: 'center', unit: '1/s',   log: true  },
-  'eII plastic':        { path: '/Centers/eII_pl',      gridType: 'center', unit: '1/s',   log: true  },
-  'eII pwl':            { path: '/Centers/eII_pwl',     gridType: 'center', unit: '1/s',   log: true  },
-  'eII exp':            { path: '/Centers/eII_exp',     gridType: 'center', unit: '1/s',   log: true  },
-  'eII lin':            { path: '/Centers/eII_lin',     gridType: 'center', unit: '1/s',   log: true  },
-  'eII gbs':            { path: '/Centers/eII_gbs',     gridType: 'center', unit: '1/s',   log: true  },
-  'Cohesion':           { path: '/Centers/cohesion',    gridType: 'center', unit: 'Pa',    log: false },
-  'Friction angle':     { path: '/Centers/friction',    gridType: 'center', unit: '°',     log: false },
-  'Anisotropy factor':  { path: '/Centers/ani_fac',     gridType: 'center', unit: '',      log: false },
-  'Director nx':        { path: '/Centers/nx',          gridType: 'center', unit: '',      log: false },
-  'Director nz':        { path: '/Centers/nz',          gridType: 'center', unit: '',      log: false },
+  'Pressure':           { path: '/Centers/P',           gridType: 'center', unit: 'Pa',    log: false, label: 'P',           formattedUnit: 'Pa'      },
+  'Temperature':        { path: '/Centers/T',           gridType: 'center', unit: '°C',    log: false, offset: -273.15, label: 'T',  formattedUnit: '°C'  },
+  'Viscosity':          { path: '/Centers/eta_n',       gridType: 'center', unit: 'Pa·s',  log: true,  label: 'η',           formattedUnit: 'Pa·s'    },
+  'Density':            { path: '/Centers/rho_n',       gridType: 'center', unit: 'kg/m³', log: false, label: 'ρ',           formattedUnit: 'kg·m⁻³'  },
+  'Grain size':         { path: '/Centers/d',           gridType: 'center', unit: 'm',     log: true,  label: 'd',           formattedUnit: 'm'       },
+  'Melt fraction':      { path: '/Centers/X',           gridType: 'center', unit: '',      log: false, label: 'ϕ_melt',      formattedUnit: ''        },
+  'Porosity':           { path: '/Centers/phi',         gridType: 'center', unit: '',      log: false, label: 'φ',           formattedUnit: ''        },
+  'Overpressure':       { path: '/Centers/OverS',       gridType: 'center', unit: 'Pa',    log: false, label: 'ΔP',          formattedUnit: 'Pa'      },
+  'Stress xx':          { path: '/Centers/sxxd',        gridType: 'center', unit: 'Pa',    log: false, label: 'σ\'_xx',      formattedUnit: 'Pa'      },
+  'Stress zz':          { path: '/Centers/szzd',        gridType: 'center', unit: 'Pa',    log: false, label: 'σ\'_zz',      formattedUnit: 'Pa'      },
+  'Strain rate xx':     { path: '/Centers/exxd',        gridType: 'center', unit: '1/s',   log: true,  label: 'ε̇_xx',       formattedUnit: 's⁻¹'     },
+  'Strain rate zz':     { path: '/Centers/ezzd',        gridType: 'center', unit: '1/s',   log: true,  label: 'ε̇_zz',       formattedUnit: 's⁻¹'     },
+  'Divergence':         { path: '/Centers/divu',        gridType: 'center', unit: '1/s',   log: false, label: '∇·v',         formattedUnit: 's⁻¹'     },
+  'Div elastic':        { path: '/Centers/divu_el',     gridType: 'center', unit: '1/s',   log: false, label: '∇·v_el',      formattedUnit: 's⁻¹'     },
+  'Div plastic':        { path: '/Centers/divu_pl',     gridType: 'center', unit: '1/s',   log: false, label: '∇·v_pl',      formattedUnit: 's⁻¹'     },
+  'Div reaction':       { path: '/Centers/divu_r',      gridType: 'center', unit: '1/s',   log: false, label: '∇·v_r',       formattedUnit: 's⁻¹'     },
+  'Div thermal':        { path: '/Centers/divu_th',     gridType: 'center', unit: '1/s',   log: false, label: '∇·v_th',      formattedUnit: 's⁻¹'     },
+  'Strain (total)':     { path: '/Centers/strain',      gridType: 'center', unit: '',      log: false, label: 'ε_tot',       formattedUnit: ''        },
+  'Strain (elastic)':   { path: '/Centers/strain_el',   gridType: 'center', unit: '',      log: false, label: 'ε_el',        formattedUnit: ''        },
+  'Strain (plastic)':   { path: '/Centers/strain_pl',   gridType: 'center', unit: '',      log: false, label: 'ε_pl',        formattedUnit: ''        },
+  'Strain (pwl)':       { path: '/Centers/strain_pwl',  gridType: 'center', unit: '',      log: false, label: 'ε_pwl',       formattedUnit: ''        },
+  'Strain (exp)':       { path: '/Centers/strain_exp',  gridType: 'center', unit: '',      log: false, label: 'ε_exp',       formattedUnit: ''        },
+  'Strain (lin)':       { path: '/Centers/strain_lin',  gridType: 'center', unit: '',      log: false, label: 'ε_lin',       formattedUnit: ''        },
+  'Strain (gbs)':       { path: '/Centers/strain_gbs',  gridType: 'center', unit: '',      log: false, label: 'ε_gbs',       formattedUnit: ''        },
+  'Strain (pl vol)':    { path: '/Centers/strain_pl_vol', gridType: 'center', unit: '',    log: false, label: 'ε_pl_vol',    formattedUnit: ''        },
+  'eII elastic':        { path: '/Centers/eII_el',      gridType: 'center', unit: '1/s',   log: true,  label: 'ε̇_II(el)',   formattedUnit: 's⁻¹'     },
+  'eII plastic':        { path: '/Centers/eII_pl',      gridType: 'center', unit: '1/s',   log: true,  label: 'ε̇_II(pl)',   formattedUnit: 's⁻¹'     },
+  'eII pwl':            { path: '/Centers/eII_pwl',     gridType: 'center', unit: '1/s',   log: true,  label: 'ε̇_II(pwl)',  formattedUnit: 's⁻¹'     },
+  'eII exp':            { path: '/Centers/eII_exp',     gridType: 'center', unit: '1/s',   log: true,  label: 'ε̇_II(exp)',  formattedUnit: 's⁻¹'     },
+  'eII lin':            { path: '/Centers/eII_lin',     gridType: 'center', unit: '1/s',   log: true,  label: 'ε̇_II(lin)',  formattedUnit: 's⁻¹'     },
+  'eII gbs':            { path: '/Centers/eII_gbs',     gridType: 'center', unit: '1/s',   log: true,  label: 'ε̇_II(gbs)', formattedUnit: 's⁻¹'     },
+  'Cohesion':           { path: '/Centers/cohesion',    gridType: 'center', unit: 'Pa',    log: false, label: 'C',           formattedUnit: 'Pa'      },
+  'Friction angle':     { path: '/Centers/friction',    gridType: 'center', unit: '°',     log: false, label: 'φ_f',         formattedUnit: '°'       },
+  'Anisotropy factor':  { path: '/Centers/ani_fac',     gridType: 'center', unit: '',      log: false, label: 'δ_ani',       formattedUnit: ''        },
+  'Director nx':        { path: '/Centers/nx',          gridType: 'center', unit: '',      log: false, label: 'n_x',         formattedUnit: ''        },
+  'Director nz':        { path: '/Centers/nz',          gridType: 'center', unit: '',      log: false, label: 'n_z',         formattedUnit: ''        },
 
   // ── Vertex fields (Nx × Nz) ──────────────────────────────────────────
-  'Shear stress':       { path: '/Vertices/sxz',        gridType: 'vertex', unit: 'Pa',    log: false },
-  'Shear strain rate':  { path: '/Vertices/exz',        gridType: 'vertex', unit: '1/s',   log: true  },
-  'Viscosity (vertex)': { path: '/Vertices/eta_s',      gridType: 'vertex', unit: 'Pa·s',  log: true  },
-  'Density (vertex)':   { path: '/Vertices/rho_s',      gridType: 'vertex', unit: 'kg/m³', log: false },
+  'Shear stress':       { path: '/Vertices/sxz',        gridType: 'vertex', unit: 'Pa',    log: false, label: 'σ_xz',        formattedUnit: 'Pa'      },
+  'Shear strain rate':  { path: '/Vertices/exz',        gridType: 'vertex', unit: '1/s',   log: true,  label: 'ε̇_xz',       formattedUnit: 's⁻¹'     },
+  'Viscosity (vertex)': { path: '/Vertices/eta_s',      gridType: 'vertex', unit: 'Pa·s',  log: true,  label: 'η_s',         formattedUnit: 'Pa·s'    },
+  'Density (vertex)':   { path: '/Vertices/rho_s',      gridType: 'vertex', unit: 'kg/m³', log: false, label: 'ρ_s',         formattedUnit: 'kg·m⁻³'  },
 
   // ── Velocity fields (staggered) ──────────────────────────────────────
-  'Vx':                 { path: '/VxNodes/Vx',           gridType: 'vx',     unit: 'm/s',   log: false },
-  'Vz':                 { path: '/VzNodes/Vz',           gridType: 'vz',     unit: 'm/s',   log: false },
+  'Vx':                 { path: '/VxNodes/Vx',           gridType: 'vx',     unit: 'm/s',   log: false, label: 'V_x',         formattedUnit: 'm·s⁻¹'   },
+  'Vz':                 { path: '/VzNodes/Vz',           gridType: 'vz',     unit: 'm/s',   log: false, label: 'V_z',         formattedUnit: 'm·s⁻¹'   },
 
   // ── Derived fields (computed from multiple datasets) ─────────────────
-  'Stress II':          { path: null, gridType: 'center', unit: 'Pa',  log: false, derive: 'stress_invariant' },
-  'Strain rate II':     { path: null, gridType: 'center', unit: '1/s', log: true,  derive: 'strainrate_invariant' },
+  'Stress II':          { path: null, gridType: 'center', unit: 'Pa',  log: false, derive: 'stress_invariant',     label: 'τ_II',  formattedUnit: 'Pa'    },
+  'Strain rate II':     { path: null, gridType: 'center', unit: '1/s', log: true,  derive: 'strainrate_invariant', label: 'ε̇_II',  formattedUnit: 's⁻¹'   },
 
   // ── VizGrid fields ───────────────────────────────────────────────────
-  'Phases':             { path: '/VizGrid/compo',        gridType: 'vizgrid',    unit: '', log: false, discrete: true },
-  'Phases HR':          { path: '/VizGrid/compo_hr',     gridType: 'vizgrid_hr', unit: '', log: false, discrete: true },
-  'Phases dual HR':     { path: '/VizGrid/compo_dual_hr', gridType: 'vizgrid_hr', unit: '', log: false, discrete: true },
+  'Phases':             { path: '/VizGrid/compo',        gridType: 'vizgrid',    unit: '', log: false, discrete: true, label: 'Phase',       formattedUnit: '' },
+  'Phases HR':          { path: '/VizGrid/compo_hr',     gridType: 'vizgrid_hr', unit: '', log: false, discrete: true, label: 'Phase (HR)',  formattedUnit: '' },
+  'Phases dual HR':     { path: '/VizGrid/compo_dual_hr', gridType: 'vizgrid_hr', unit: '', log: false, discrete: true, label: 'Phase (2×HR)', formattedUnit: '' },
 };
 
 /** Return the field definition for a given display name, or null. */
@@ -77,6 +77,18 @@ export function getField(name) {
 /** Return all registered field names. */
 export function allFieldNames() {
   return Object.keys(REGISTRY);
+}
+
+/** Return the scientific display label for a field (Unicode). */
+export function getFieldLabel(name) {
+  const def = REGISTRY[name];
+  return def ? (def.label || name) : name;
+}
+
+/** Return the formatted unit string for a field (Unicode). */
+export function getFieldUnit(name) {
+  const def = REGISTRY[name];
+  return def ? (def.formattedUnit || '') : '';
 }
 
 /**

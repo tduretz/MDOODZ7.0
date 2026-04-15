@@ -1,4 +1,5 @@
 import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
 
 let h5wasm = null;
 
@@ -154,6 +155,53 @@ export function computeMinMax(values) {
   return { min: min === Infinity ? 0 : min, max: max === -Infinity ? 0 : max };
 }
 
+// ── Quickselect (partial sort for percentile) ─────────────────────────
+function quickselect(arr, k, left = 0, right = arr.length - 1) {
+  while (left < right) {
+    // Random pivot to avoid worst-case O(n²)
+    const pivotIdx = left + Math.floor(Math.random() * (right - left + 1));
+    const pivot = arr[pivotIdx];
+    arr[pivotIdx] = arr[right];
+    arr[right] = pivot;
+    let store = left;
+    for (let i = left; i < right; i++) {
+      if (arr[i] < pivot) {
+        const tmp = arr[store]; arr[store] = arr[i]; arr[i] = tmp;
+        store++;
+      }
+    }
+    arr[right] = arr[store]; arr[store] = pivot;
+    if (store === k) return arr[k];
+    if (k < store) right = store - 1;
+    else left = store + 1;
+  }
+  return arr[left];
+}
+
+/**
+ * Compute percentile-clipped range, ignoring NaN.
+ * @param {Float64Array} flat  1D data array
+ * @param {number} pLow   Low percentile (0–100), default 2
+ * @param {number} pHigh  High percentile (0–100), default 98
+ * @returns {{ pMin: number, pMax: number }}
+ */
+export function computePercentileRange(flat, pLow = 2, pHigh = 98) {
+  // Filter out NaN/Infinity into a working copy
+  const valid = [];
+  for (let k = 0; k < flat.length; k++) {
+    if (Number.isFinite(flat[k])) valid.push(flat[k]);
+  }
+  const n = valid.length;
+  if (n === 0) return { pMin: 0, pMax: 0 };
+  if (n === 1) return { pMin: valid[0], pMax: valid[0] };
+  const kLow  = Math.max(0, Math.floor(n * pLow / 100));
+  const kHigh = Math.min(n - 1, Math.floor(n * pHigh / 100));
+  const arr = Float64Array.from(valid);
+  const pMin = quickselect(arr, kLow);
+  const pMax = quickselect(arr, kHigh);
+  return { pMin, pMax };
+}
+
 // ── Reshape flat → 2D (column-major: flat[ix + iz*ncx]) ───────────────
 // Returns out[ix][iz] with ix=0..ncx-1, iz=0..ncz-1
 function reshape2D(flat, ncx, ncz) {
@@ -213,6 +261,7 @@ export async function extractField(filePath, fieldDef) {
   const zCoords = Array.from(file.get(gi.zPath).value);
 
   const { min, max } = computeMinMax(flat);
+  const { pMin, pMax } = computePercentileRange(flat);
   const values = reshape2D(flat, gi.rows, gi.cols);
 
   return {
@@ -226,7 +275,34 @@ export async function extractField(filePath, fieldDef) {
     discrete: fieldDef.discrete || false,
     min,
     max,
+    pMin,
+    pMax,
   };
+}
+
+// ── Batch metadata extraction ──────────────────────────────────────────
+const STEP_RE = /Output(\d+)\.gzip\.h5$/;
+
+/**
+ * Read time metadata from all files.
+ * @param {string} dataDir  Absolute path to the data directory.
+ * @param {string[]} filenames  Array of HDF5 filenames.
+ * @returns {Promise<Array<{ name: string, step: number, time: number }>>}
+ */
+export async function readAllMetadata(dataDir, filenames) {
+  const results = [];
+  for (const name of filenames) {
+    const match = STEP_RE.exec(name);
+    const step = match ? parseInt(match[1], 10) : 0;
+    let time = 0;
+    try {
+      const meta = await readMetadata(join(dataDir, name));
+      time = meta.time;
+    } catch (_) { /* skip unreadable files */ }
+    results.push({ name, step, time });
+  }
+  results.sort((a, b) => a.step - b.step);
+  return results;
 }
 
 // ── Check if a dataset exists ──────────────────────────────────────────
