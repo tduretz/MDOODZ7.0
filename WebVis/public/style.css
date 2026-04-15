@@ -1,4 +1,4 @@
-/* ── MDOODZ WebVis — Dark Theme ─────────────────────────────────────── */
+/* ── MDOODZ WebVis — Theme Variables ────────────────────────────────── */
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -9,6 +9,34 @@
   --text:     #cdd6f4;
   --text-dim: #888;
   --accent:   #89b4fa;
+
+  /* Canvas-specific (read by JS via getComputedStyle) */
+  --canvas-bg:        #1e1e2e;
+  --canvas-null:      #1e1e2e;
+  --canvas-tick:      #aaa;
+  --canvas-tick-line: #666;
+  --canvas-label:     #999;
+  --canvas-cbar-text: #ccc;
+  --canvas-title:     #89b4fa;
+  --canvas-frame:     #000;
+}
+
+[data-theme="light"] {
+  --bg:       #f4f4f8;
+  --surface:  #ffffff;
+  --border:   #c8c8d4;
+  --text:     #222;
+  --text-dim: #666;
+  --accent:   #2563eb;
+
+  --canvas-bg:        #ffffff;
+  --canvas-null:      #e8e8ee;
+  --canvas-tick:      #444;
+  --canvas-tick-line: #999;
+  --canvas-label:     #555;
+  --canvas-cbar-text: #333;
+  --canvas-title:     #2563eb;
+  --canvas-frame:     #000;
 }
 
 html, body {
@@ -73,6 +101,16 @@ html, body {
   border-radius: 3px;
   font-size: 11px;
 }
+.theme-toggle {
+  background: var(--border);
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 2px 6px;
+  line-height: 1;
+}
+.theme-toggle:hover { background: var(--accent); }
 
 /* ── Layout selector ─────────────────────────────────────────────────── */
 .header-layout {
@@ -142,7 +180,7 @@ html, body {
 .panel-canvas-row canvas {
   max-width: 100%;
   max-height: 100%;
-  background: #1e1e2e;
+  background: var(--canvas-bg);
 }
 .panel-controls {
   display: flex;

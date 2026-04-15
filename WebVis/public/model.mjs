@@ -43,6 +43,9 @@ export class Model extends EventTarget {
 
     // Phase config: Map<phaseId, { name: string, color: [r,g,b] }>
     this._phaseConfig = new Map();
+
+    // Theme: 'dark' or 'light'
+    this._theme = 'dark';
   }
 
   // ── Getters ────────────────────────────────────────────────────────
@@ -58,6 +61,7 @@ export class Model extends EventTarget {
   get layout()       { return this._layout; }
   get panels()       { return this._panels; }
   get activePanelId(){ return this._activePanelId; }
+  get theme()        { return this._theme; }
 
   // ── Legacy single-panel compat getters (delegate to first panel) ───
   get currentField() { return this._panels[0]?.fieldName ?? null; }
@@ -241,6 +245,17 @@ export class Model extends EventTarget {
   set spatialUnit(v) {
     this._spatialUnit = v;
     this._emit('spatial-unit-changed');
+  }
+
+  set theme(v) {
+    if (v !== 'dark' && v !== 'light') return;
+    this._theme = v;
+    if (v === 'light') {
+      document.documentElement.setAttribute('data-theme', 'light');
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+    }
+    this._emit('theme-changed');
   }
 
   // ── Phase config ───────────────────────────────────────────────────

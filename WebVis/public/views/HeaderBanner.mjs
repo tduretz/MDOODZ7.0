@@ -43,6 +43,15 @@ export class HeaderBanner {
     this.spatialSel.addEventListener('change', () => {
       model.spatialUnit = this.spatialSel.value;
     });
+
+    // Theme toggle
+    this.themeBtn = headerEl.querySelector('#theme-toggle');
+    this.themeBtn.addEventListener('click', () => {
+      model.theme = model.theme === 'dark' ? 'light' : 'dark';
+    });
+    model.addEventListener('theme-changed', () => {
+      this.themeBtn.textContent = model.theme === 'dark' ? '🌙' : '☀️';
+    });
   }
 
   _renderTime() {

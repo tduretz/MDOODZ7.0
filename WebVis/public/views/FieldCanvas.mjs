@@ -23,6 +23,27 @@ const MIN_MARGIN = { top: 22, right: 30, bottom: 30, left: 30 };
 // Generous estimates exported for app.mjs aspect-ratio layout
 export const MARGIN_ESTIMATE = { top: 24, right: 120, bottom: 38, left: 66 };
 
+/** Read canvas theme colours from CSS custom properties (reactive to theme switch). */
+function _getTheme() {
+  const s = getComputedStyle(document.documentElement);
+  return {
+    bg:       s.getPropertyValue('--canvas-bg').trim()        || '#1e1e2e',
+    nullCol:  s.getPropertyValue('--canvas-null').trim()      || '#1e1e2e',
+    tick:     s.getPropertyValue('--canvas-tick').trim()       || '#aaa',
+    tickLine: s.getPropertyValue('--canvas-tick-line').trim()  || '#666',
+    label:    s.getPropertyValue('--canvas-label').trim()      || '#999',
+    cbarText: s.getPropertyValue('--canvas-cbar-text').trim()  || '#ccc',
+    title:    s.getPropertyValue('--canvas-title').trim()      || '#89b4fa',
+    frame:    s.getPropertyValue('--canvas-frame').trim()      || '#000',
+  };
+}
+
+/** Parse a hex colour string to [r, g, b]. */
+function _hexToRgbArr(hex) {
+  const m = hex.match(/^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i);
+  return m ? [parseInt(m[1],16), parseInt(m[2],16), parseInt(m[3],16)] : [30,30,46];
+}
+
 export class FieldCanvas {
   constructor(model, canvasEl, colourMaps, panelState) {
     this.model = model;
@@ -41,6 +62,7 @@ export class FieldCanvas {
       this._onParams  = () => this.render();
       this._onSpatial = () => this.render();
       this._onPhaseConfig = () => this.render();
+      this._onTheme = () => this.render();
       model.addEventListener('panel:field-changed',      this._onField);
       model.addEventListener('panel:colourmap-changed',   this._onCmap);
       model.addEventListener('panel:range-changed',       this._onRange);
@@ -48,6 +70,7 @@ export class FieldCanvas {
       model.addEventListener('params-loaded',             this._onParams);
       model.addEventListener('spatial-unit-changed',      this._onSpatial);
       model.addEventListener('phase-config-changed',      this._onPhaseConfig);
+      model.addEventListener('theme-changed',             this._onTheme);
     } else {
       this._onField   = () => this.render();
       this._onCmap    = () => this.render();
@@ -80,6 +103,10 @@ export class FieldCanvas {
     const ctx = this.ctx;
     ctx.save();
     ctx.scale(dpr, dpr);
+
+    // ── Theme colours ─────────────────────────────────────────────────
+    const theme = _getTheme();
+    const nullRgb = _hexToRgbArr(theme.nullCol);
 
     // ── Colour range & LUT ────────────────────────────────────────────
     const colourRange = ps ? ps.colourRange : this.model.colourRange;
@@ -199,7 +226,7 @@ export class FieldCanvas {
     const dataY = m.top  + (availH - dH) / 2;
 
     // ── Clear background ──────────────────────────────────────────────
-    ctx.fillStyle = '#1e1e2e';
+    ctx.fillStyle = theme.bg;
     ctx.fillRect(0, 0, displayW, displayH);
 
     // ── Field data via offscreen ImageData ────────────────────────────
@@ -221,13 +248,13 @@ export class FieldCanvas {
         const val = values[col][iz];
 
         if (val === null || val === undefined || Number.isNaN(val)) {
-          pixels[idx] = 30; pixels[idx+1] = 30; pixels[idx+2] = 46; pixels[idx+3] = 255;
+          pixels[idx] = nullRgb[0]; pixels[idx+1] = nullRgb[1]; pixels[idx+2] = nullRgb[2]; pixels[idx+3] = 255;
           continue;
         }
         if (isDiscrete) {
           const phase = Math.round(val);
           if (phase < 0) {
-            pixels[idx] = 30; pixels[idx+1] = 30; pixels[idx+2] = 46; pixels[idx+3] = 255;
+            pixels[idx] = nullRgb[0]; pixels[idx+1] = nullRgb[1]; pixels[idx+2] = nullRgb[2]; pixels[idx+3] = 255;
           } else {
             const cfg = this.model.getPhaseConfig(phase, phasePalette);
             const c = cfg.color;
@@ -237,7 +264,7 @@ export class FieldCanvas {
         }
         let mapped = val;
         if (isLog) {
-          if (val <= 0) { pixels[idx] = 30; pixels[idx+1] = 30; pixels[idx+2] = 46; pixels[idx+3] = 255; continue; }
+          if (val <= 0) { pixels[idx] = nullRgb[0]; pixels[idx+1] = nullRgb[1]; pixels[idx+2] = nullRgb[2]; pixels[idx+3] = 255; continue; }
           mapped = Math.log10(val);
         }
         const t  = range > 0 ? (mapped - (isLog ? logMin : min)) / range : 0.5;
@@ -251,27 +278,32 @@ export class FieldCanvas {
     ctx.drawImage(off, dataX, dataY, dW, dH);
     ctx.imageSmoothingEnabled = true;
 
+    // ── Black frame around data area ──────────────────────────────────
+    ctx.strokeStyle = theme.frame;
+    ctx.lineWidth = 1;
+    ctx.strokeRect(dataX - 0.5, dataY - 0.5, dW + 1, dH + 1);
+
     // ── Integrated colour bar ─────────────────────────────────────────
     if (!isDiscrete && lut) {
-      this._drawCbar(ctx, lut, colourRange, data, dataX + dW, dataY, dH);
+      this._drawCbar(ctx, lut, colourRange, data, dataX + dW, dataY, dH, theme);
     }
     if (isDiscrete && phasePalette) {
-      this._drawPhaseLegend(ctx, phasePalette, values, nx, nz, dataX + dW, dataY, dH);
+      this._drawPhaseLegend(ctx, phasePalette, values, nx, nz, dataX + dW, dataY, dH, theme);
     }
 
     // ── Axis ticks + labels ───────────────────────────────────────────
     if (hasCoords) {
-      this._drawAxes(ctx, data, dataX, dataY, dW, dH, unitLabel, divisor);
+      this._drawAxes(ctx, data, dataX, dataY, dW, dH, unitLabel, divisor, theme);
     }
 
     // ── Title ─────────────────────────────────────────────────────────
-    this._drawTitle(ctx, displayW);
+    this._drawTitle(ctx, displayW, theme);
 
     ctx.restore();
   }
 
   // ── Colour bar (continuous) ─────────────────────────────────────────
-  _drawCbar(ctx, lut, colourRange, data, rightEdge, top, height) {
+  _drawCbar(ctx, lut, colourRange, data, rightEdge, top, height, theme) {
     const cbarX = rightEdge + CBAR_PAD;
 
     // Gradient strip
@@ -287,7 +319,7 @@ export class FieldCanvas {
     const { min: rMin, max: rMax } = colourRange;
     const isLog = data.log;
     const nTicks = 5;
-    ctx.fillStyle = '#ccc';
+    ctx.fillStyle = theme.cbarText;
     ctx.font = FONT;
     ctx.textBaseline = 'middle';
     ctx.textAlign = 'left';
@@ -315,7 +347,7 @@ export class FieldCanvas {
     const cbarLabel  = unitStr ? `${fieldLabel} [${unitStr}]` : fieldLabel;
     if (cbarLabel) {
       ctx.save();
-      ctx.fillStyle = '#aaa';
+      ctx.fillStyle = theme.label;
       ctx.font = `${FONT_SIZE}px sans-serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'bottom';
@@ -344,7 +376,7 @@ export class FieldCanvas {
   }
 
   // ── Phase box legend (discrete phases — only visible ones) ────────────
-  _drawPhaseLegend(ctx, palette, values, nx, nz, rightEdge, top, height) {
+  _drawPhaseLegend(ctx, palette, values, nx, nz, rightEdge, top, height, theme) {
     // Scan data for unique phase indices (skip air = -1 and NaN)
     const seen = new Set();
     for (let col = 0; col < nx; col++) {
@@ -379,25 +411,25 @@ export class FieldCanvas {
       ctx.fillRect(boxX, y, LEGEND_BOX, LEGEND_BOX);
 
       // Phase name
-      ctx.fillStyle = '#ccc';
+      ctx.fillStyle = theme.cbarText;
       ctx.fillText(cfg.name, boxX + LEGEND_BOX + 4, y + LEGEND_BOX / 2);
     }
   }
 
   // ── Axes: X on bottom, Z on left ──────────────────────────────────
-  _drawAxes(ctx, data, dataX, dataY, dW, dH, unitLabel, divisor) {
+  _drawAxes(ctx, data, dataX, dataY, dW, dH, unitLabel, divisor, theme) {
     const xCoords = data.xCoords;
     const zCoords = data.zCoords;
     const xMin = xCoords[0], xMax = xCoords[xCoords.length - 1], xExt = xMax - xMin;
     const zMin = zCoords[0], zMax = zCoords[zCoords.length - 1], zExt = zMax - zMin;
 
-    ctx.strokeStyle = '#666';
+    ctx.strokeStyle = theme.tickLine;
     ctx.lineWidth = 1;
 
     // ── Bottom axis (X) ──────────────────────────────────────────────
     const nTicksX = Math.min(6, Math.max(3, Math.floor(dW / 80)));
     ctx.font = FONT;
-    ctx.fillStyle = '#aaa';
+    ctx.fillStyle = theme.tick;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
     const yBase = dataY + dH;
@@ -411,14 +443,14 @@ export class FieldCanvas {
     }
 
     // "x [km]" axis label
-    ctx.fillStyle = '#999';
+    ctx.fillStyle = theme.label;
     ctx.font = AXIS_FONT;
     ctx.fillText(`x [${unitLabel}]`, dataX + dW / 2, yBase + TICK_LEN + FONT_SIZE + 4);
 
     // ── Left axis (Z) ────────────────────────────────────────────────
     const nTicksZ = Math.min(6, Math.max(3, Math.floor(dH / 60)));
     ctx.font = FONT;
-    ctx.fillStyle = '#aaa';
+    ctx.fillStyle = theme.tick;
     ctx.textAlign = 'right';
     ctx.textBaseline = 'middle';
 
@@ -432,7 +464,7 @@ export class FieldCanvas {
 
     // Rotated "z [km]" axis label
     ctx.save();
-    ctx.fillStyle = '#999';
+    ctx.fillStyle = theme.label;
     ctx.font = AXIS_FONT;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'bottom';
@@ -450,7 +482,7 @@ export class FieldCanvas {
   }
 
   // ── Title centred at top ────────────────────────────────────────────
-  _drawTitle(ctx, displayW) {
+  _drawTitle(ctx, displayW, theme) {
     const ps = this.panelState;
     if (!ps) return;
     const titleCtx = buildTitleContext(
@@ -459,7 +491,7 @@ export class FieldCanvas {
     const text = renderTitle(ps.title, titleCtx);
     if (!text) return;
 
-    ctx.fillStyle = '#89b4fa';
+    ctx.fillStyle = theme.title;
     ctx.font = TITLE_FONT;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
@@ -475,6 +507,7 @@ export class FieldCanvas {
       if (this._onParams)  this.model.removeEventListener('params-loaded',       this._onParams);
       if (this._onSpatial) this.model.removeEventListener('spatial-unit-changed', this._onSpatial);
       if (this._onPhaseConfig) this.model.removeEventListener('phase-config-changed', this._onPhaseConfig);
+      if (this._onTheme) this.model.removeEventListener('theme-changed', this._onTheme);
     } else {
       this.model.removeEventListener('field-loaded',       this._onField);
       this.model.removeEventListener('colourmap-changed',   this._onCmap);
