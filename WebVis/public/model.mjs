@@ -38,6 +38,7 @@ export class Model extends EventTarget {
     this._layout      = '1x1';
     this._panels      = [createDefaultPanel()];
     this._activePanelId = this._panels[0].id;
+    this._stashedPanels = [];  // panels preserved across layout round-trips
   }
 
   // ── Getters ────────────────────────────────────────────────────────
@@ -89,12 +90,26 @@ export class Model extends EventTarget {
     if (!LAYOUT_PANEL_COUNT[preset]) return;
     this._layout = preset;
     const target = LAYOUT_PANEL_COUNT[preset];
-    // Add / remove panels to match target count
-    while (this._panels.length < target) {
-      this.addPanel();
-    }
+
+    // Shrink: move excess panels to stash (preserve state)
     while (this._panels.length > target) {
-      this.removePanel(this._panels[this._panels.length - 1].id);
+      const panel = this._panels.pop();
+      if (this._activePanelId === panel.id) {
+        this._activePanelId = this._panels[0].id;
+      }
+      this._stashedPanels.push(panel);
+      this._emit('panel-removed', { panelId: panel.id });
+    }
+
+    // Grow: restore from stash first, then create new defaults
+    while (this._panels.length < target) {
+      if (this._stashedPanels.length > 0) {
+        const restored = this._stashedPanels.pop();
+        this._panels.push(restored);
+        this._emit('panel-added', { panelId: restored.id, restored: true });
+      } else {
+        this.addPanel();
+      }
     }
     this._emit('layout-changed');
   }
@@ -111,6 +126,7 @@ export class Model extends EventTarget {
     const p = this.getPanel(panelId);
     if (!p) return;
     p.fieldName = fieldName;
+    p.fieldData = null;  // release previous allocation for GC
     p.fieldData = data;
     p.pMin = data.pMin != null ? data.pMin : data.min;
     p.pMax = data.pMax != null ? data.pMax : data.max;

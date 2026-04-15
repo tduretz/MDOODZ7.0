@@ -36,10 +36,14 @@ export class ControlPanel {
       this.el.dispatchEvent(new CustomEvent('ctrl:file-change', { detail: this.fileSelect.value }));
     });
 
+    this._sliderTimer = null;
     this.timeSlider.addEventListener('input', () => {
       this.fileSelect.selectedIndex = parseInt(this.timeSlider.value, 10);
-      this._updateSliderLabel();
-      this.el.dispatchEvent(new CustomEvent('ctrl:file-change', { detail: this.fileSelect.value }));
+      this._updateSliderLabel();  // immediate visual feedback
+      clearTimeout(this._sliderTimer);
+      this._sliderTimer = setTimeout(() => {
+        this.el.dispatchEvent(new CustomEvent('ctrl:file-change', { detail: this.fileSelect.value }));
+      }, 150);
     });
   }
 

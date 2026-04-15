@@ -1,0 +1,71 @@
+## MODIFIED Requirements
+
+### Requirement: Map values to colours using a 256-entry LUT
+
+The renderer SHALL normalise data values to the range [0, 1] using the provided min/max bounds, multiply by 255, clamp to [0, 255], and use the integer index to look up an RGB triplet from the active colour map LUT. When the range is auto (unlocked), the bounds SHALL be pMin/pMax. When the range is locked or manually set, the bounds SHALL be the user-specified values. The renderer SHALL accept a target canvas element as a parameter rather than assuming a single global canvas, enabling per-panel rendering. After drawing the field data via ImageData, the renderer SHALL draw the panel's interpolated title text as an overlay at the top of the canvas with a semi-transparent dark background bar. The title SHALL be rendered using `ctx.fillText()` so it is included in any canvas-to-blob or screenshot export. The renderer SHALL use `devicePixelRatio` scaling for crisp text at non-integer DPI.
+
+#### Scenario: Value at minimum maps to first colour
+
+- **WHEN** a cell value equals the minimum
+- **THEN** it SHALL render with the colour at LUT index 0
+
+#### Scenario: Value at maximum maps to last colour
+
+- **WHEN** a cell value equals the maximum
+- **THEN** it SHALL render with the colour at LUT index 255
+
+#### Scenario: Value outside range is clamped
+
+- **WHEN** a cell value exceeds the maximum
+- **THEN** it SHALL render with the colour at LUT index 255 (clamped)
+
+#### Scenario: Auto-range uses percentile bounds
+
+- **WHEN** the range is not locked and not manually set
+- **THEN** the normalisation bounds SHALL be pMin and pMax from the field data
+
+#### Scenario: Render to specific canvas element
+
+- **WHEN** the renderer is called with a target canvas element for panel 2
+- **THEN** the field image SHALL be drawn on that specific canvas, not on any other panel's canvas
+
+#### Scenario: Title rendered inside canvas
+
+- **WHEN** a panel has a title template and field data is loaded
+- **THEN** the interpolated title text SHALL be drawn at the top of the canvas over a semi-transparent dark background bar
+- **AND** the title SHALL be included in any `canvas.toBlob()` or `canvas.toDataURL()` export
+
+#### Scenario: Canvas render triggered by data arrival
+
+- **WHEN** field data arrives for a panel (via `panel:field-changed` event)
+- **THEN** the canvas SHALL re-render immediately, even if the ResizeObserver has not yet fired
+
+### Requirement: Draw colour bar
+
+The renderer SHALL draw a vertical colour bar alongside the field image showing the mapping from value to colour. The bar SHALL display the min and max values, the scientific `formattedUnit` string (from field-labels), and 3–5 intermediate tick labels. For log-scale fields, tick labels SHALL show the exponents (e.g., 10¹⁸). The colour bar title SHALL use the field's scientific `label`. Each panel SHALL have its own independent colour bar instance bound to its PanelState's colour range and colour map. The colour bar view SHALL provide a `destroy()` method that removes all event listeners it registered on the model.
+
+#### Scenario: Colour bar for pressure field
+
+- **WHEN** the field "Pressure" is rendered in a panel with min=0, max=1e9
+- **THEN** that panel's colour bar SHALL appear with tick labels in Pa, the title `"P"`, and the unit `"Pa"` rendered using the `formattedUnit` string
+
+#### Scenario: Colour bar for log-scale viscosity
+
+- **WHEN** the field "Viscosity" is rendered in a panel with log=true
+- **THEN** that panel's colour bar tick labels SHALL display as powers of 10, the title SHALL be `"η"`, and the unit SHALL be `"Pa·s"`
+
+#### Scenario: Colour bar with locked range indicator
+
+- **WHEN** a panel's range is locked (rangeLocked === true)
+- **THEN** that panel's colour bar SHALL display a visual indicator (e.g., 🔒 icon or border) showing the range is locked
+
+#### Scenario: Independent colour bars across panels
+
+- **WHEN** panel 1 shows Viscosity [1e18, 1e24] and panel 2 shows Pressure [0, 1e9]
+- **THEN** each panel's colour bar SHALL display its own independent range and colour map
+
+#### Scenario: Destroy removes event listeners
+
+- **WHEN** a ColourBar's `destroy()` method is called
+- **THEN** all event listeners registered on the model SHALL be removed
+- **AND** no further model events SHALL trigger re-renders on this instance

@@ -5,6 +5,7 @@
 export class Controller {
   constructor(model, controlsEl) {
     this.model = model;
+    this._abortCtrl = null;  // AbortController for in-flight fetches
 
     // Legacy global control events (from ControlPanel / global controls)
     controlsEl.addEventListener('ctrl:file-change',  e => this.selectFile(e.detail));
@@ -66,14 +67,20 @@ export class Controller {
     }
   }
 
-  async fetchParams(filename) {
-    const res = await fetch(`/api/params/${encodeURIComponent(filename)}`);
+  _newAbort() {
+    if (this._abortCtrl) this._abortCtrl.abort();
+    this._abortCtrl = new AbortController();
+    return this._abortCtrl.signal;
+  }
+
+  async fetchParams(filename, signal) {
+    const res = await fetch(`/api/params/${encodeURIComponent(filename)}`, { signal });
     const params = await res.json();
     this.model.params = params;
     return params;
   }
 
-  async selectPanelField(panelId, fieldName) {
+  async selectPanelField(panelId, fieldName, signal) {
     const file = this.model.currentFile;
     if (!file) return;
     // Restore per-field colour map if stored
@@ -84,20 +91,21 @@ export class Controller {
         this.model.setPanelColourMap(panelId, savedMap);
       }
     }
-    const res = await fetch(`/api/field-data/${encodeURIComponent(file)}/${encodeURIComponent(fieldName)}`);
+    const res = await fetch(`/api/field-data/${encodeURIComponent(file)}/${encodeURIComponent(fieldName)}`, { signal });
     const data = await res.json();
     this.model.setPanelField(panelId, fieldName, data);
   }
 
   async selectFile(filename) {
+    const signal = this._newAbort();
     this.model.loading = true;
     try {
       this.model.currentFile = filename;
 
       // Fetch params + fields in parallel
       const [, fieldsRes] = await Promise.all([
-        this.fetchParams(filename),
-        fetch(`/api/fields/${encodeURIComponent(filename)}`),
+        this.fetchParams(filename, signal),
+        fetch(`/api/fields/${encodeURIComponent(filename)}`, { signal }),
       ]);
       const { fields } = await fieldsRes.json();
 
@@ -113,10 +121,13 @@ export class Controller {
       const fetches = this.model.panels.map(panel => {
         const prev = panel.fieldName;
         const field = (prev && fieldNames.includes(prev)) ? prev : fieldNames[0];
-        if (field) return this.selectPanelField(panel.id, field);
+        if (field) return this.selectPanelField(panel.id, field, signal);
         return Promise.resolve();
       });
       await Promise.all(fetches);
+    } catch (err) {
+      if (err.name === 'AbortError') return; // superseded by newer request
+      throw err;
     } finally {
       this.model.loading = false;
     }

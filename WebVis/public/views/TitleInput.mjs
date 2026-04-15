@@ -1,7 +1,5 @@
 // ── TitleInput View ───────────────────────────────────────────────────
-// Editable title input with ${...} token dropdown + rendered preview.
-
-import { renderTitle, buildTitleContext } from '../title-render.mjs';
+// Editable title input with ${...} token dropdown.
 
 const TOKEN_CATALOGUE = [
   { group: 'Metadata', items: [
@@ -45,11 +43,7 @@ export class TitleInput {
     this.row.appendChild(this.input);
     this.row.appendChild(this.insertBtn);
 
-    this.rendered = document.createElement('div');
-    this.rendered.className = 'panel-title-rendered';
-
     containerEl.appendChild(this.row);
-    containerEl.appendChild(this.rendered);
 
     // Dropdown (created lazily)
     this.dropdown = null;
@@ -74,28 +68,14 @@ export class TitleInput {
       }
     };
     document.addEventListener('click', this._outsideClickHandler, true);
-
-    // Listen for panel events to re-render title
-    const pid = panelState.id;
-    model.addEventListener('panel:field-changed', e => { if (e.detail.panelId === pid) this._renderPreview(); });
-    model.addEventListener('params-loaded', () => this._renderPreview());
-    model.addEventListener('time-unit-changed', () => this._renderPreview());
-
-    this._renderPreview();
   }
 
   _onInputChange() {
     this.panelState.title = this.input.value;
-    this._renderPreview();
     this.dispatchTarget.dispatchEvent(new CustomEvent('ctrl:panel:title', {
       bubbles: true,
       detail: { panelId: this.panelState.id, template: this.input.value }
     }));
-  }
-
-  _renderPreview() {
-    const ctx = buildTitleContext(this.model.params, this.panelState, this.model.fieldDefs, this.model.timeUnit);
-    this.rendered.textContent = renderTitle(this.panelState.title, ctx);
   }
 
   _showDropdown() {

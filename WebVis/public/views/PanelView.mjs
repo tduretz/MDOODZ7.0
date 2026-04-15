@@ -214,6 +214,8 @@ export class PanelView {
   }
 
   destroy() {
+    this.fieldCanvas.destroy();
+    this.colourBar.destroy();
     this.titleInput.destroy();
     this.model.removeEventListener('fields-loaded',              this._onFieldsLoaded);
     this.model.removeEventListener('panel:field-changed',         this._onPanelField);

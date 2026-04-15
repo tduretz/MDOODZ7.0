@@ -12,15 +12,23 @@ export class ColourBar {
 
     if (panelState) {
       const pid = panelState.id;
-      model.addEventListener('panel:field-changed',        e => { if (e.detail.panelId === pid) this.render(); });
-      model.addEventListener('panel:colourmap-changed',     e => { if (e.detail.panelId === pid) this.render(); });
-      model.addEventListener('panel:range-changed',         e => { if (e.detail.panelId === pid) this.render(); });
-      model.addEventListener('panel:range-locked-changed',  e => { if (e.detail.panelId === pid) this.render(); });
+      this._onField = e => { if (e.detail.panelId === pid) this.render(); };
+      this._onCmap  = e => { if (e.detail.panelId === pid) this.render(); };
+      this._onRange = e => { if (e.detail.panelId === pid) this.render(); };
+      this._onLock  = e => { if (e.detail.panelId === pid) this.render(); };
+      model.addEventListener('panel:field-changed',        this._onField);
+      model.addEventListener('panel:colourmap-changed',     this._onCmap);
+      model.addEventListener('panel:range-changed',         this._onRange);
+      model.addEventListener('panel:range-locked-changed',  this._onLock);
     } else {
-      model.addEventListener('field-loaded',         () => this.render());
-      model.addEventListener('colourmap-changed',     () => this.render());
-      model.addEventListener('range-changed',         () => this.render());
-      model.addEventListener('range-locked-changed',  () => this.render());
+      this._onField = () => this.render();
+      this._onCmap  = () => this.render();
+      this._onRange = () => this.render();
+      this._onLock  = () => this.render();
+      model.addEventListener('field-loaded',         this._onField);
+      model.addEventListener('colourmap-changed',     this._onCmap);
+      model.addEventListener('range-changed',         this._onRange);
+      model.addEventListener('range-locked-changed',  this._onLock);
     }
   }
 
@@ -126,6 +134,20 @@ export class ColourBar {
       this.ctx.fillStyle = '#ff9';
       this.ctx.font = '12px sans-serif';
       this.ctx.fillText('🔒', barX + barW + 4, barBot + 14);
+    }
+  }
+
+  destroy() {
+    if (this.panelState) {
+      this.model.removeEventListener('panel:field-changed',        this._onField);
+      this.model.removeEventListener('panel:colourmap-changed',     this._onCmap);
+      this.model.removeEventListener('panel:range-changed',         this._onRange);
+      this.model.removeEventListener('panel:range-locked-changed',  this._onLock);
+    } else {
+      this.model.removeEventListener('field-loaded',         this._onField);
+      this.model.removeEventListener('colourmap-changed',     this._onCmap);
+      this.model.removeEventListener('range-changed',         this._onRange);
+      this.model.removeEventListener('range-locked-changed',  this._onLock);
     }
   }
 }

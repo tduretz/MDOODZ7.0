@@ -39,13 +39,16 @@ async function main() {
       }
     }
 
-    // Create views for new panels
+    // Create views for new panels (including restored from stash)
     for (const panel of model.panels) {
       if (!panelViews.has(panel.id)) {
         const view = new PanelView(model, panel, colourMaps, gridEl);
         panelViews.set(panel.id, view);
       }
     }
+
+    // Trigger resize+render after layout settles (handles restored panels with existing data)
+    requestAnimationFrame(() => requestAnimationFrame(resizePanels));
   }
 
   // Create initial panels
@@ -62,9 +65,10 @@ async function main() {
       const panel = model.getPanel(id);
       if (!panel || !panel.fieldData) continue;
       const { nx, nz } = panel.fieldData;
-      const row = view.canvasRow;
-      const availW = row.clientWidth - 88; // colourbar + gap
-      const availH = row.clientHeight;
+      const rowRect = view.canvasRow.getBoundingClientRect();
+      const cbarRect = view.colourBarEl.getBoundingClientRect();
+      const availW = rowRect.width - cbarRect.width - 8; // 8px gap
+      const availH = rowRect.height;
       if (availW <= 0 || availH <= 0) continue;
       const aspect = nx / nz;
       let w, h;
@@ -86,9 +90,10 @@ async function main() {
   const ro = new ResizeObserver(() => resizePanels());
   ro.observe(gridEl);
 
-  // Also resize after field loads
+  // Also resize after field loads — ensures first render even if resize hasn't fired
   model.addEventListener('panel:field-changed', () => {
-    requestAnimationFrame(resizePanels);
+    // Double-rAF: wait for layout to settle, then size + render
+    requestAnimationFrame(() => requestAnimationFrame(resizePanels));
   });
 
   // Controller
