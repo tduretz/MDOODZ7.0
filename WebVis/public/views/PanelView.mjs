@@ -229,10 +229,16 @@ export class PanelView {
     this._syncRange();
     this.cmapSelect.value = this.panelState.colourMap;
 
-    // Show/hide phase config button
+    // Show/hide phase config button and continuous-only controls
     const isDiscrete = this.panelState.fieldData && this.panelState.fieldData.discrete;
     this.phaseBtn.style.display = isDiscrete ? '' : 'none';
     if (!isDiscrete) this.phasePopover.style.display = 'none';
+    const cont = isDiscrete ? 'none' : '';
+    this.cmapSelect.style.display = cont;
+    this.rangeMin.style.display   = cont;
+    this.rangeMax.style.display   = cont;
+    this.autoBtn.style.display    = cont;
+    this.lockBtn.style.display    = cont;
   }
 
   _syncRange() {
