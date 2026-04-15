@@ -1,11 +1,12 @@
 // ── Controller ────────────────────────────────────────────────────────
 // Wires control panel DOM events to API fetch calls and model updates.
+// Supports both legacy single-panel events and panel-scoped events.
 
 export class Controller {
   constructor(model, controlsEl) {
     this.model = model;
 
-    // Listen to custom events from ControlPanel
+    // Legacy global control events (from ControlPanel / global controls)
     controlsEl.addEventListener('ctrl:file-change',  e => this.selectFile(e.detail));
     controlsEl.addEventListener('ctrl:field-change', e => this.selectField(e.detail));
     controlsEl.addEventListener('ctrl:cmap-change',  e => {
@@ -19,6 +20,35 @@ export class Controller {
       if (!model.rangeLocked) this._resetRange();
     });
     controlsEl.addEventListener('ctrl:time-unit',    e => { model.timeUnit = e.detail; });
+    controlsEl.addEventListener('ctrl:layout-change', e => this.changeLayout(e.detail));
+
+    // Panel-scoped events bubble from #panels-grid, listen at document level
+    document.addEventListener('ctrl:panel:field', e => {
+      this.selectPanelField(e.detail.panelId, e.detail.fieldName);
+    });
+    document.addEventListener('ctrl:panel:cmap', e => {
+      model.setPanelColourMap(e.detail.panelId, e.detail.colourMap);
+    });
+    document.addEventListener('ctrl:panel:range', e => {
+      model.setPanelRange(e.detail.panelId, e.detail.range);
+    });
+    document.addEventListener('ctrl:panel:lock', e => {
+      const panel = model.getPanel(e.detail.panelId);
+      if (panel) {
+        model.setPanelRangeLocked(e.detail.panelId, !panel.rangeLocked);
+      }
+    });
+    document.addEventListener('ctrl:panel:range-auto', e => {
+      const panel = model.getPanel(e.detail.panelId);
+      if (panel && panel.fieldData) {
+        const min = panel.fieldData.pMin != null ? panel.fieldData.pMin : panel.fieldData.min;
+        const max = panel.fieldData.pMax != null ? panel.fieldData.pMax : panel.fieldData.max;
+        model.setPanelRange(e.detail.panelId, { min, max });
+      }
+    });
+    document.addEventListener('ctrl:panel:title', e => {
+      model.setPanelTitle(e.detail.panelId, e.detail.template);
+    });
   }
 
   async init() {
@@ -26,7 +56,6 @@ export class Controller {
     try {
       const res = await fetch('/api/files');
       const { files } = await res.json();
-      // files is now [{ name, step, time }]
       this.model.fileList = files;
       this.model.files = files.map(f => f.name);
       if (files.length > 0) {
@@ -37,15 +66,41 @@ export class Controller {
     }
   }
 
+  async fetchParams(filename) {
+    const res = await fetch(`/api/params/${encodeURIComponent(filename)}`);
+    const params = await res.json();
+    this.model.params = params;
+    return params;
+  }
+
+  async selectPanelField(panelId, fieldName) {
+    const file = this.model.currentFile;
+    if (!file) return;
+    // Restore per-field colour map if stored
+    const panel = this.model.getPanel(panelId);
+    if (panel) {
+      const savedMap = panel.fieldColourMaps.get(fieldName);
+      if (savedMap && savedMap !== panel.colourMap) {
+        this.model.setPanelColourMap(panelId, savedMap);
+      }
+    }
+    const res = await fetch(`/api/field-data/${encodeURIComponent(file)}/${encodeURIComponent(fieldName)}`);
+    const data = await res.json();
+    this.model.setPanelField(panelId, fieldName, data);
+  }
+
   async selectFile(filename) {
     this.model.loading = true;
     try {
       this.model.currentFile = filename;
-      const res = await fetch(`/api/fields/${encodeURIComponent(filename)}`);
-      const { fields, params } = await res.json();
-      this.model.params = params;
 
-      // fields is now [{ name, label, formattedUnit }]
+      // Fetch params + fields in parallel
+      const [, fieldsRes] = await Promise.all([
+        this.fetchParams(filename),
+        fetch(`/api/fields/${encodeURIComponent(filename)}`),
+      ]);
+      const { fields } = await fieldsRes.json();
+
       const fieldDefs = new Map();
       const fieldNames = fields.map(f => {
         fieldDefs.set(f.name, { label: f.label, formattedUnit: f.formattedUnit });
@@ -54,32 +109,37 @@ export class Controller {
       this.model._fieldDefs = fieldDefs;
       this.model.fields = fieldNames;
 
-      // Preserve field choice if available, else pick first
-      const prev = this.model.currentField;
-      const field = (prev && fieldNames.includes(prev)) ? prev : fieldNames[0];
-      if (field) {
-        await this.selectField(field);
-      }
+      // Re-fetch each panel's field in parallel
+      const fetches = this.model.panels.map(panel => {
+        const prev = panel.fieldName;
+        const field = (prev && fieldNames.includes(prev)) ? prev : fieldNames[0];
+        if (field) return this.selectPanelField(panel.id, field);
+        return Promise.resolve();
+      });
+      await Promise.all(fetches);
     } finally {
       this.model.loading = false;
     }
   }
 
   async selectField(fieldName) {
-    this.model.loading = true;
-    try {
-      this.model.currentField = fieldName;
-      // Restore per-field colour map if stored
-      const savedMap = this.model.fieldColourMaps.get(fieldName);
-      if (savedMap && savedMap !== this.model.colourMap) {
-        this.model.colourMap = savedMap;
+    // Legacy: delegate to first panel
+    await this.selectPanelField(this.model.panels[0].id, fieldName);
+  }
+
+  changeLayout(preset) {
+    const prevCount = this.model.panels.length;
+    this.model.setLayout(preset);
+
+    // Trigger field fetches for newly added panels
+    const file = this.model.currentFile;
+    const fieldNames = this.model.fields;
+    if (file && fieldNames.length > 0) {
+      for (const panel of this.model.panels) {
+        if (!panel.fieldName && fieldNames[0]) {
+          this.selectPanelField(panel.id, fieldNames[0]);
+        }
       }
-      const file = this.model.currentFile;
-      const res = await fetch(`/api/field-data/${encodeURIComponent(file)}/${encodeURIComponent(fieldName)}`);
-      const data = await res.json();
-      this.model.setFieldData(data);
-    } finally {
-      this.model.loading = false;
     }
   }
 

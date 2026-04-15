@@ -1,26 +1,37 @@
 // ── FieldCanvas View ──────────────────────────────────────────────────
 // Renders 2D field data to <canvas> via ImageData pixel-fill.
+// Accepts a canvas element + panelState (or falls back to model for legacy).
 
 export class FieldCanvas {
-  constructor(model, canvasEl, colourMaps) {
+  constructor(model, canvasEl, colourMaps, panelState) {
     this.model = model;
     this.canvas = canvasEl;
     this.ctx = canvasEl.getContext('2d');
     this.colourMaps = colourMaps;
+    this.panelState = panelState || null;
 
-    model.addEventListener('field-loaded',      () => this.render());
-    model.addEventListener('colourmap-changed',  () => this.render());
-    model.addEventListener('range-changed',      () => this.render());
+    if (panelState) {
+      // Panel-scoped: listen to panel events, filter by panelId
+      const pid = panelState.id;
+      model.addEventListener('panel:field-changed',     e => { if (e.detail.panelId === pid) this.render(); });
+      model.addEventListener('panel:colourmap-changed',  e => { if (e.detail.panelId === pid) this.render(); });
+      model.addEventListener('panel:range-changed',      e => { if (e.detail.panelId === pid) this.render(); });
+    } else {
+      // Legacy global mode
+      model.addEventListener('field-loaded',      () => this.render());
+      model.addEventListener('colourmap-changed',  () => this.render());
+      model.addEventListener('range-changed',      () => this.render());
+    }
   }
 
   render() {
-    const data = this.model.fieldData;
+    const ps = this.panelState;
+    const data = ps ? ps.fieldData : this.model.fieldData;
     if (!data) return;
 
-    // values[ix][iz]: ix=x (horizontal, 0..nx-1), iz=z (vertical, 0..nz-1)
     const { values, nx, nz } = data;
-    const width  = nx;   // x → canvas horizontal
-    const height = nz;   // z → canvas vertical
+    const width  = nx;
+    const height = nz;
 
     this.canvas.width  = width;
     this.canvas.height = height;
@@ -28,7 +39,8 @@ export class FieldCanvas {
     const imgData = this.ctx.createImageData(width, height);
     const pixels  = imgData.data;
 
-    const { min, max } = this.model.colourRange;
+    const colourRange = ps ? ps.colourRange : this.model.colourRange;
+    const { min, max } = colourRange;
     const isLog      = data.log;
     const isDiscrete = data.discrete;
 
@@ -36,7 +48,8 @@ export class FieldCanvas {
     if (isDiscrete) {
       phasePalette = this.colourMaps.phases || [];
     } else {
-      lut = this.colourMaps[this.model.colourMap];
+      const cmapName = ps ? ps.colourMap : this.model.colourMap;
+      lut = this.colourMaps[cmapName];
       if (!lut) return;
     }
 

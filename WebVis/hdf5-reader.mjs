@@ -294,12 +294,15 @@ export async function readAllMetadata(dataDir, filenames) {
   for (const name of filenames) {
     const match = STEP_RE.exec(name);
     const step = match ? parseInt(match[1], 10) : 0;
-    let time = 0;
+    let time = 0, nx = null, nz = null, dt = null;
     try {
       const meta = await readMetadata(join(dataDir, name));
       time = meta.time;
+      nx = meta.nx;
+      nz = meta.nz;
+      dt = meta.dt;
     } catch (_) { /* skip unreadable files */ }
-    results.push({ name, step, time });
+    results.push({ name, step, time, nx, nz, dt });
   }
   results.sort((a, b) => a.step - b.step);
   return results;

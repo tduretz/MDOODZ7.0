@@ -131,6 +131,43 @@ async function handleApiFieldData(req, res, filename, fieldName) {
   await gzipJsonResponse(req, res, 200, data);
 }
 
+async function handleApiParams(req, res, filename) {
+  if (!FILENAME_RE.test(filename)) {
+    jsonResponse(res, 400, { error: 'Invalid filename' });
+    return;
+  }
+  // Try to serve from in-memory metadata cache first
+  if (cachedFileList) {
+    const entry = cachedFileList.find(f => f.name === filename);
+    if (entry) {
+      await gzipJsonResponse(req, res, 200, {
+        step: entry.step,
+        time: entry.time,
+        Nx: entry.nx ?? null,
+        Nz: entry.nz ?? null,
+        dt: entry.dt ?? null,
+      });
+      return;
+    }
+  }
+  // Fallback: read from HDF5 file
+  const filePath = join(DATA_DIR, filename);
+  try {
+    await stat(filePath);
+  } catch {
+    jsonResponse(res, 404, { error: 'File not found' });
+    return;
+  }
+  const params = await readMetadata(filePath);
+  await gzipJsonResponse(req, res, 200, {
+    step: parseInt(filename.match(/\d+/)?.[0] || '0', 10),
+    time: params.time,
+    Nx: params.nx,
+    Nz: params.nz,
+    dt: params.dt,
+  });
+}
+
 async function handleStatic(req, res, urlPath) {
   let relPath = urlPath === '/' ? '/index.html' : urlPath;
   if (!isPathSafe(relPath)) {
@@ -171,6 +208,9 @@ const server = createServer(async (req, res) => {
   try {
     if (path === '/api/files') {
       await handleApiFiles(req, res);
+    } else if (path.startsWith('/api/params/')) {
+      const filename = path.slice('/api/params/'.length);
+      await handleApiParams(req, res, filename);
     } else if (path.startsWith('/api/fields/')) {
       const filename = path.slice('/api/fields/'.length);
       await handleApiFields(req, res, filename);

@@ -1,28 +1,42 @@
 // ── ColourBar View ────────────────────────────────────────────────────
 // Draws vertical gradient bar + tick labels alongside the field canvas.
+// Accepts a canvas element + panelState (or falls back to model for legacy).
 
 export class ColourBar {
-  constructor(model, canvasEl, colourMaps) {
+  constructor(model, canvasEl, colourMaps, panelState) {
     this.model = model;
     this.canvas = canvasEl;
     this.ctx = canvasEl.getContext('2d');
     this.colourMaps = colourMaps;
+    this.panelState = panelState || null;
 
-    model.addEventListener('field-loaded',         () => this.render());
-    model.addEventListener('colourmap-changed',     () => this.render());
-    model.addEventListener('range-changed',         () => this.render());
-    model.addEventListener('range-locked-changed',  () => this.render());
+    if (panelState) {
+      const pid = panelState.id;
+      model.addEventListener('panel:field-changed',        e => { if (e.detail.panelId === pid) this.render(); });
+      model.addEventListener('panel:colourmap-changed',     e => { if (e.detail.panelId === pid) this.render(); });
+      model.addEventListener('panel:range-changed',         e => { if (e.detail.panelId === pid) this.render(); });
+      model.addEventListener('panel:range-locked-changed',  e => { if (e.detail.panelId === pid) this.render(); });
+    } else {
+      model.addEventListener('field-loaded',         () => this.render());
+      model.addEventListener('colourmap-changed',     () => this.render());
+      model.addEventListener('range-changed',         () => this.render());
+      model.addEventListener('range-locked-changed',  () => this.render());
+    }
   }
 
   render() {
-    const data = this.model.fieldData;
+    const ps = this.panelState;
+    const data = ps ? ps.fieldData : this.model.fieldData;
     if (!data) return;
 
     const { min, max, unit, log: isLog, discrete: isDiscrete } = data;
-    const field = this.model.currentField;
-    const def = this.model.fieldDefs.get(field);
-    const label = def ? def.label : (field || '');
+    const fieldName = ps ? ps.fieldName : this.model.currentField;
+    const def = this.model.fieldDefs.get(fieldName);
+    const label = def ? def.label : (fieldName || '');
     const fUnit = def ? def.formattedUnit : (unit || '');
+    const rangeLocked = ps ? ps.rangeLocked : this.model.rangeLocked;
+    const colourRange = ps ? ps.colourRange : this.model.colourRange;
+    const cmapName = ps ? ps.colourMap : this.model.colourMap;
 
     const w = this.canvas.width;
     const h = this.canvas.height;
@@ -54,7 +68,7 @@ export class ColourBar {
       return;
     }
 
-    const lut = this.colourMaps[this.model.colourMap];
+    const lut = this.colourMaps[cmapName];
     if (!lut) return;
 
     // Draw gradient bar
@@ -67,7 +81,7 @@ export class ColourBar {
     }
 
     // Tick labels
-    const { min: rMin, max: rMax } = this.model.colourRange;
+    const { min: rMin, max: rMax } = colourRange;
     const nTicks = 5;
     this.ctx.fillStyle = '#ccc';
     this.ctx.font = '10px monospace';
@@ -108,7 +122,7 @@ export class ColourBar {
     }
 
     // Lock indicator
-    if (this.model.rangeLocked) {
+    if (rangeLocked) {
       this.ctx.fillStyle = '#ff9';
       this.ctx.font = '12px sans-serif';
       this.ctx.fillText('🔒', barX + barW + 4, barBot + 14);

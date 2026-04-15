@@ -1,18 +1,37 @@
 // ── HeaderBanner View ─────────────────────────────────────────────────
-// Shows: left=title, centre=field label+unit, right=time+unit selector.
+// Shows: left=title, centre=layout selector, right=time+unit selector.
 
 import { formatTime } from '../time-display.mjs';
+
+const LAYOUT_PRESETS = ['1x1', '1x2', '2x1', '2x2'];
 
 export class HeaderBanner {
   constructor(model, headerEl, controlsEl) {
     this.model = model;
-    this.fieldEl = headerEl.querySelector('#header-field');
+    this.controlsEl = controlsEl;
     this.timeEl  = headerEl.querySelector('#time-display');
     this.unitSel = headerEl.querySelector('#time-unit-select');
 
-    model.addEventListener('field-loaded',      () => this.render());
-    model.addEventListener('params-loaded',     () => this.render());
-    model.addEventListener('time-unit-changed',  () => this.render());
+    // Replace #header-field with layout selector
+    const oldField = headerEl.querySelector('#header-field');
+    this.layoutBar = document.createElement('span');
+    this.layoutBar.className = 'header-layout';
+    for (const preset of LAYOUT_PRESETS) {
+      const btn = document.createElement('button');
+      btn.className = 'layout-btn';
+      btn.dataset.layout = preset;
+      btn.textContent = preset;
+      if (preset === model.layout) btn.classList.add('active');
+      btn.addEventListener('click', () => {
+        controlsEl.dispatchEvent(new CustomEvent('ctrl:layout-change', { detail: preset }));
+      });
+      this.layoutBar.appendChild(btn);
+    }
+    oldField.replaceWith(this.layoutBar);
+
+    model.addEventListener('params-loaded',     () => this._renderTime());
+    model.addEventListener('time-unit-changed',  () => this._renderTime());
+    model.addEventListener('layout-changed',     () => this._syncLayoutBtns());
 
     this.unitSel.addEventListener('change', () => {
       const val = this.unitSel.value || null;
@@ -20,22 +39,18 @@ export class HeaderBanner {
     });
   }
 
-  render() {
-    const field = this.model.currentField;
-    const def = field && this.model.fieldDefs.get(field);
-    if (field) {
-      const label = def ? def.label : field;
-      const unit  = def ? def.formattedUnit : '';
-      this.fieldEl.textContent = unit ? `${label} [${unit}]` : label;
-    }
-
+  _renderTime() {
     const p = this.model.params;
     if (p) {
       const { formatted } = formatTime(p.time, this.model.timeUnit);
       this.timeEl.textContent = formatted;
     }
-
-    // Sync dropdown
     this.unitSel.value = this.model.timeUnit || '';
+  }
+
+  _syncLayoutBtns() {
+    for (const btn of this.layoutBar.querySelectorAll('.layout-btn')) {
+      btn.classList.toggle('active', btn.dataset.layout === this.model.layout);
+    }
   }
 }
