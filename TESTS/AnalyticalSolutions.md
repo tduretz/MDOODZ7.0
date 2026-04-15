@@ -207,6 +207,10 @@ EXPECT_LT(T_L2, 1e-6);          // measured 0
 EXPECT_LT(P_L2, 1e-4);          // measured 0
 ```
 
+**Visualization:** Top panel shows lag-corrected $P$ vs $T$ for both solvers against the analytical line. Bottom panel shows absolute pressure error.
+
+![Thermo-elastic benchmark](thermoelastic_benchmark.png)
+
 ### 2.5 Hydrostatic Pressure
 
 **Source:** [DensityTests.cpp](DensityTests.cpp)
