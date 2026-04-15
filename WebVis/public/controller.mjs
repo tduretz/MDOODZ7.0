@@ -22,6 +22,7 @@ export class Controller {
     });
     controlsEl.addEventListener('ctrl:time-unit',    e => { model.timeUnit = e.detail; });
     controlsEl.addEventListener('ctrl:layout-change', e => this.changeLayout(e.detail));
+    controlsEl.addEventListener('ctrl:dataset-change', e => this.selectDataset(e.detail));
 
     // Panel-scoped events bubble from #panels-grid, listen at document level
     document.addEventListener('ctrl:panel:field', e => {
@@ -55,6 +56,13 @@ export class Controller {
   async init() {
     this.model.loading = true;
     try {
+      // Fetch available datasets (directories)
+      const dsRes = await fetch('/api/datasets');
+      const { datasets, active } = await dsRes.json();
+      this.model.datasets = datasets;
+      this.model.activeDataset = active;
+
+      // Fetch files for the active dataset
       const res = await fetch('/api/files');
       const { files } = await res.json();
       this.model.fileList = files;
@@ -136,6 +144,30 @@ export class Controller {
   async selectField(fieldName) {
     // Legacy: delegate to first panel
     await this.selectPanelField(this.model.panels[0].id, fieldName);
+  }
+
+  async selectDataset(name) {
+    this.model.loading = true;
+    try {
+      // Tell server to switch active dataset
+      await fetch('/api/dataset', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name }),
+      });
+      this.model.activeDataset = name;
+
+      // Re-fetch file list for the new dataset
+      const res = await fetch('/api/files');
+      const { files } = await res.json();
+      this.model.fileList = files;
+      this.model.files = files.map(f => f.name);
+      if (files.length > 0) {
+        await this.selectFile(files[0].name);
+      }
+    } finally {
+      this.model.loading = false;
+    }
   }
 
   changeLayout(preset) {

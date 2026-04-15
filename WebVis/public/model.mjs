@@ -47,6 +47,10 @@ export class Model extends EventTarget {
 
     // Theme: 'dark' or 'light'
     this._theme = 'dark';
+
+    // Dataset (directory) selection
+    this._datasets      = [];   // [{ name, fileCount }]
+    this._activeDataset = null; // dataset name string
   }
 
   // ── Getters ────────────────────────────────────────────────────────
@@ -198,6 +202,21 @@ export class Model extends EventTarget {
   }
 
   // ── Global setters (dispatch events) ────────────────────────────────
+
+  // Dataset (directory) management
+  get datasets()      { return this._datasets; }
+  get activeDataset() { return this._activeDataset; }
+
+  set datasets(v) {
+    this._datasets = v;
+    this._emit('datasets-loaded');
+  }
+
+  set activeDataset(v) {
+    this._activeDataset = v;
+    this._emit('dataset-changed');
+  }
+
   set files(v) {
     this._files = v;
   }

@@ -11,10 +11,51 @@ import { getField, listAvailableFields, getFieldLabel, getFieldUnit } from './fi
 import { getCached, writeCache } from './field-cache.mjs';
 
 // ── Configuration ──────────────────────────────────────────────────────
-const DATA_DIR = resolve(process.argv[2] || '.');
-const PORT     = parseInt(process.env.PORT || '3000', 10);
+const ROOT_DIR  = resolve(process.argv[2] || '.');
+const PORT      = parseInt(process.env.PORT || '3000', 10);
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 const PUBLIC    = join(__dirname, 'public');
+
+// ── Dataset (directory) scanning ───────────────────────────────────────
+// Scans ROOT_DIR for subdirectories containing Output*.gzip.h5 files.
+// If ROOT_DIR itself contains them, it is listed as '.'.
+let datasetList = [];   // [{name, path, fileCount}]
+let activeDataset = null; // current dataset path (absolute)
+
+async function scanDatasets() {
+  datasetList = [];
+  // Check ROOT_DIR itself
+  const rootFiles = (await readdir(ROOT_DIR)).filter(f => FILENAME_RE.test(f));
+  if (rootFiles.length > 0) {
+    datasetList.push({ name: '.', path: ROOT_DIR, fileCount: rootFiles.length });
+  }
+  // Check subdirectories (one level deep)
+  const entries = await readdir(ROOT_DIR, { withFileTypes: true });
+  for (const entry of entries) {
+    if (!entry.isDirectory()) continue;
+    const subPath = join(ROOT_DIR, entry.name);
+    try {
+      const subFiles = (await readdir(subPath)).filter(f => FILENAME_RE.test(f));
+      if (subFiles.length > 0) {
+        datasetList.push({ name: entry.name, path: subPath, fileCount: subFiles.length });
+      }
+    } catch { /* skip unreadable dirs */ }
+  }
+  // Sort: '.' first, then alphabetically
+  datasetList.sort((a, b) => {
+    if (a.name === '.') return -1;
+    if (b.name === '.') return 1;
+    return a.name.localeCompare(b.name);
+  });
+  // Default to first dataset
+  if (datasetList.length > 0 && !activeDataset) {
+    activeDataset = datasetList[0].path;
+  }
+}
+
+function getDataDir() {
+  return activeDataset || ROOT_DIR;
+}
 
 // ── MIME types ─────────────────────────────────────────────────────────
 const MIME = {
@@ -58,12 +99,15 @@ async function gzipJsonResponse(req, res, statusCode, data) {
 
 // ── Route handlers ─────────────────────────────────────────────────────
 let cachedFileList = null; // in-memory cache for file-list metadata
+let cachedDataDir  = null; // which dataset the cache belongs to
 
 async function handleApiFiles(req, res) {
-  if (!cachedFileList) {
-    const entries = await readdir(DATA_DIR);
+  const dataDir = getDataDir();
+  if (!cachedFileList || cachedDataDir !== dataDir) {
+    const entries = await readdir(dataDir);
     const filenames = entries.filter(f => FILENAME_RE.test(f)).sort();
-    cachedFileList = await readAllMetadata(DATA_DIR, filenames);
+    cachedFileList = await readAllMetadata(dataDir, filenames);
+    cachedDataDir  = dataDir;
   }
   await gzipJsonResponse(req, res, 200, { files: cachedFileList });
 }
@@ -73,7 +117,7 @@ async function handleApiFields(req, res, filename) {
     jsonResponse(res, 400, { error: 'Invalid filename' });
     return;
   }
-  const filePath = join(DATA_DIR, filename);
+  const filePath = join(getDataDir(), filename);
   try {
     await stat(filePath);
   } catch {
@@ -100,7 +144,7 @@ async function handleApiFieldData(req, res, filename, fieldName) {
     jsonResponse(res, 400, { error: `Unknown field: ${fieldName}` });
     return;
   }
-  const filePath = join(DATA_DIR, filename);
+  const filePath = join(getDataDir(), filename);
   try {
     await stat(filePath);
   } catch {
@@ -109,7 +153,8 @@ async function handleApiFieldData(req, res, filename, fieldName) {
   }
 
   // Try disk cache first
-  const cached = await getCached(DATA_DIR, filename, fieldName);
+  const dataDir = getDataDir();
+  const cached = await getCached(dataDir, filename, fieldName);
   if (cached) {
     const acceptGzip = (req.headers['accept-encoding'] || '').includes('gzip');
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -127,7 +172,7 @@ async function handleApiFieldData(req, res, filename, fieldName) {
   const data = await extractField(filePath, fieldDef);
   const json = JSON.stringify(data);
   // Write cache asynchronously — don't block response
-  writeCache(DATA_DIR, filename, fieldName, json).catch(() => {});
+  writeCache(getDataDir(), filename, fieldName, json).catch(() => {});
   await gzipJsonResponse(req, res, 200, data);
 }
 
@@ -151,7 +196,7 @@ async function handleApiParams(req, res, filename) {
     }
   }
   // Fallback: read from HDF5 file
-  const filePath = join(DATA_DIR, filename);
+  const filePath = join(getDataDir(), filename);
   try {
     await stat(filePath);
   } catch {
@@ -206,7 +251,26 @@ const server = createServer(async (req, res) => {
   }
 
   try {
-    if (path === '/api/files') {
+    if (path === '/api/datasets') {
+      await gzipJsonResponse(req, res, 200, {
+        datasets: datasetList.map(d => ({ name: d.name, fileCount: d.fileCount })),
+        active: datasetList.find(d => d.path === activeDataset)?.name || null,
+      });
+    } else if (path === '/api/dataset' && req.method === 'POST') {
+      // Read JSON body
+      const chunks = [];
+      for await (const chunk of req) chunks.push(chunk);
+      const body = JSON.parse(Buffer.concat(chunks).toString());
+      const target = datasetList.find(d => d.name === body.name);
+      if (!target) {
+        jsonResponse(res, 404, { error: 'Dataset not found' });
+        return;
+      }
+      activeDataset = target.path;
+      cachedFileList = null;  // invalidate file-list cache
+      cachedDataDir = null;
+      jsonResponse(res, 200, { active: target.name });
+    } else if (path === '/api/files') {
       await handleApiFiles(req, res);
     } else if (path.startsWith('/api/params/')) {
       const filename = path.slice('/api/params/'.length);
@@ -235,8 +299,11 @@ const server = createServer(async (req, res) => {
   }
 });
 
-server.listen(PORT, () => {
+server.listen(PORT, async () => {
+  await scanDatasets();
   console.log(`MDOODZ WebVis server`);
-  console.log(`  Data dir: ${DATA_DIR}`);
-  console.log(`  URL:      http://localhost:${PORT}`);
+  console.log(`  Root dir:  ${ROOT_DIR}`);
+  console.log(`  Datasets:  ${datasetList.map(d => d.name).join(', ') || '(none)'}`);
+  console.log(`  Active:    ${datasetList.find(d => d.path === activeDataset)?.name || '(none)'}`);
+  console.log(`  URL:       http://localhost:${PORT}`);
 });

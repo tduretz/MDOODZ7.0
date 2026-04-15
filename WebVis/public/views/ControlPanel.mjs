@@ -10,13 +10,19 @@ export class ControlPanel {
     this.el = containerEl;
     this._build();
 
-    model.addEventListener('file-list-loaded',  () => this._updateFileList());
-    model.addEventListener('file-selected',     () => this._syncFileUI());
+    model.addEventListener('datasets-loaded',    () => this._updateDatasetList());
+    model.addEventListener('dataset-changed',    () => this._syncDatasetUI());
+    model.addEventListener('file-list-loaded',   () => this._updateFileList());
+    model.addEventListener('file-selected',      () => this._syncFileUI());
     model.addEventListener('time-unit-changed',  () => this._updateFileList());
   }
 
   _build() {
     this.el.innerHTML = `
+      <div class="ctrl-group">
+        <label>Dataset</label>
+        <select id="dataset-select"></select>
+      </div>
       <div class="ctrl-group">
         <label>File</label>
         <select id="file-select"></select>
@@ -25,9 +31,15 @@ export class ControlPanel {
       </div>
     `;
 
-    this.fileSelect  = this.el.querySelector('#file-select');
-    this.timeSlider  = this.el.querySelector('#time-slider');
-    this.sliderLabel = this.el.querySelector('#slider-label');
+    this.datasetSelect = this.el.querySelector('#dataset-select');
+    this.fileSelect    = this.el.querySelector('#file-select');
+    this.timeSlider    = this.el.querySelector('#time-slider');
+    this.sliderLabel   = this.el.querySelector('#slider-label');
+
+    // Dataset change
+    this.datasetSelect.addEventListener('change', () => {
+      this.el.dispatchEvent(new CustomEvent('ctrl:dataset-change', { detail: this.datasetSelect.value }));
+    });
 
     // DOM events → dispatched as custom events on this.el
     this.fileSelect.addEventListener('change', () => {
@@ -45,6 +57,23 @@ export class ControlPanel {
         this.el.dispatchEvent(new CustomEvent('ctrl:file-change', { detail: this.fileSelect.value }));
       }, 150);
     });
+  }
+
+  _updateDatasetList() {
+    const datasets = this.model.datasets;
+    this.datasetSelect.innerHTML = datasets.map(d =>
+      `<option value="${d.name}">${d.name} (${d.fileCount} files)</option>`
+    ).join('');
+    // Hide dropdown if only one dataset
+    this.datasetSelect.closest('.ctrl-group').style.display =
+      datasets.length <= 1 ? 'none' : '';
+    this._syncDatasetUI();
+  }
+
+  _syncDatasetUI() {
+    if (this.model.activeDataset) {
+      this.datasetSelect.value = this.model.activeDataset;
+    }
   }
 
   _updateFileList() {
