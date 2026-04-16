@@ -571,7 +571,7 @@ $$L_2 = \sqrt{\frac{1}{N}\sum_{i=1}^{N}(c_i^{final} - c_i^{initial})^2}$$
 |-------------|----------|------------------|
 | 0 (legacy) | 3.74e-02 | ~14 / 10000 |
 | 1 (current) | 2.83e-02 | 8 / 10000 |
-| 2 (improved) | 2.83e-02 | 8 / 10000 |
+| 2 (v2) | 2.83e-02 | 8 / 10000 |
 
 Modes 1 and 2 tie at L2 = 0.028, both better than mode 0 (L2 = 0.037). The randomised placement in mode 2 does not degrade advection accuracy.
 

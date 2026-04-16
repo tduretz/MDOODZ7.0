@@ -1139,7 +1139,7 @@ Runs the rigid-body rotation with `reseed_mode` 0, 1, and 2 (1000 steps each). R
 |------|----------|------------------|
 | 0 (legacy) | 3.74e-02 | ~14 / 10000 |
 | 1 (current) | 2.83e-02 | 8 / 10000 |
-| 2 (improved) | 2.83e-02 | 8 / 10000 |
+| 2 (v2) | 2.83e-02 | 8 / 10000 |
 
 **Code assertions:**
 ```cpp

@@ -182,7 +182,7 @@ TEST_F(RotationAdvection, CompareReseedModes) {
   printf("\n=== Rotation Advection L2 Summary ===\n");
   printf("  Mode 0 (legacy):   L2 = %.6e\n", l2_mode0);
   printf("  Mode 1 (current):  L2 = %.6e\n", l2_mode1);
-  printf("  Mode 2 (improved): L2 = %.6e\n", l2_mode2);
+  printf("  Mode 2 (v2):       L2 = %.6e\n", l2_mode2);
   printf("=====================================\n");
 
   // All modes should have reasonably small L2 error (< 0.1 = 10% RMS)

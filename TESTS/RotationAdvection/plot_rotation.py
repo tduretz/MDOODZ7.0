@@ -6,7 +6,7 @@ Reads HDF5 output from all 3 reseed modes and plots a 4-panel figure:
   Panel 1: Analytical (initial composition)
   Panel 2: Mode 0 (legacy) final composition
   Panel 3: Mode 1 (current) final composition
-  Panel 4: Mode 2 (improved) final composition
+  Panel 4: Mode 2 (v2) final composition
 
 Usage:
     python3 plot_rotation.py [build_dir]
@@ -65,7 +65,7 @@ def main():
     rotation_modes = [
         ("RotationMode0", "Mode 0 (legacy)"),
         ("RotationMode1", "Mode 1 (current)"),
-        ("RotationMode2", "Mode 2 (improved)"),
+        ("RotationMode2", "Mode 2 (v2)"),
     ]
 
     fig, axes = plt.subplots(1, 4, figsize=(16, 4), constrained_layout=True)
@@ -113,7 +113,7 @@ def main():
     vortex_modes = [
         ("VortexMode0", "Mode 0 (legacy)"),
         ("VortexMode1", "Mode 1 (current)"),
-        ("VortexMode2", "Mode 2 (improved)"),
+        ("VortexMode2", "Mode 2 (v2)"),
     ]
 
     vortex_init_path = os.path.join(tests_dir, "VortexMode0", "Output00000.gzip.h5")
