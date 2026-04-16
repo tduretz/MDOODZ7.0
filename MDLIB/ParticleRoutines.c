@@ -2892,24 +2892,6 @@ void CountPartCell( markers* particles, grid *mesh, params model, surface topo, 
         //     }
         // }
 
-        // Deactivate excess particles in over-populated cells
-        int deact = 0;
-        for (ic=0; ic<ncx; ic++) {
-            for (jc=0; jc<ncz; jc++) {
-                kc = ic + jc * ncx;
-                if ( mesh->BCt_fine.type[kc] != 30 && nb_part_cell[kc] > particles->min_part_cell + 4 ) {
-                    for ( int nb=0; nb<nb_part_cell[kc]; nb++ ) {
-                        if (nb > particles->min_part_cell + 4) {
-                            int deactivate_idx = part_cell[kc][nb];
-                            particles->phase[deactivate_idx] = -1;
-                            deact++;
-                        }
-                    }
-                }
-            }
-        }
-        LOG_INFO("Deactivated particles: %03d", deact);
-
         // Freedom
         for (kc=0; kc<ncx*ncz; kc++) {
             DoodzFree(part_cell[kc]);
@@ -2961,6 +2943,257 @@ void CountPartCell( markers* particles, grid *mesh, params model, surface topo, 
 
     // DoodzFree(nb_part_cell);
 
+}
+
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
+
+// Helper: compare by distance descending (for qsort in deactivation)
+typedef struct { int idx; double dist2; } PartDist;
+static int cmp_partdist_desc(const void *a, const void *b) {
+    double da = ((const PartDist*)a)->dist2;
+    double db = ((const PartDist*)b)->dist2;
+    if (da > db) return -1;
+    if (da < db) return  1;
+    return 0;
+}
+
+void CountPartCell_v2( markers* particles, grid *mesh, params model, surface topo, surface topo_ini, int reseed_markers, scale scaling, InterpBufPool *pool ) {
+
+    // First operation - compute phase proportions on centroids and vertices
+    int cent=1, vert=0, prop=1, interp=0;
+    P2Mastah ( &model, *particles, NULL, mesh, NULL, mesh->BCp.type,  0, 0, prop, cent, model.interp_stencil, pool);
+    P2Mastah ( &model, *particles, NULL, mesh, NULL, mesh->BCg.type,  0, 0, prop, vert, model.interp_stencil, pool);
+
+    // Fine mesh of double resolution
+    const int nvx = 2*mesh->Nx-1, ncx = 2*mesh->Nx-2;
+    const int nvz = 2*mesh->Nz-1, ncz = 2*mesh->Nz-2;
+    const double dx = model.dx/2.0;
+    const double dz = model.dz/2.0;
+    const double xmin = model.xmin, xmax = model.xmax;
+    const double zmin = model.zmin, zmax = model.zmax;
+
+    int Nb_part = particles->Nb_part, ic, jc, kc, nb_part_reuse = 0, icoarse, jcoarse, Ncx=model.Nx-1, Ncz=model.Nz-1;
+    double distance, x, z;
+
+    int* nb_part_cell = DoodzCalloc(     ncx*ncz, sizeof(int));
+    int* part_reuse   = DoodzCalloc(     Nb_part, sizeof(int));
+
+    // Copy flags from coarse to fine mesh
+    for (ic=0; ic<ncx; ic++) {
+        for (jc=0; jc<ncz; jc++) {
+            kc = ic + jc*ncx;
+            x = xmin + dx/2.0 + ic*dx;
+            distance = (x - (xmin + model.dx/2) );
+            icoarse  = ceil( (distance/model.dx) + 0.5) - 1;
+            if (icoarse<0    ) icoarse = 0;
+            if (icoarse>Ncx-1) icoarse = Ncx-1;
+            z = zmin + dz/2.0 + jc*dz;
+            distance = (z - (zmin + model.dz/2));
+            jcoarse  = ceil( (distance/model.dz) + 0.5) - 1;
+            if (jcoarse<0    ) jcoarse = 0;
+            if (jcoarse>Ncz-1) jcoarse = Ncz-1;
+            mesh->BCt_fine.type[kc] = mesh->BCt.type[icoarse + jcoarse*Ncx];
+        }
+    }
+
+    // Count particles in cells
+    for (int k=0; k<Nb_part; k++) {
+        if ( particles->phase[k] != -1 )  {
+            distance = ( particles->x[k] - (xmin + dx/2) );
+            ic       = ceil( (distance/dx) + 0.5) - 1;
+            if (ic<0    ) ic = 0;
+            if (ic>ncx-1) ic = ncx-1;
+            distance = ( particles->z[k] - (zmin + dz/2) );
+            jc       = ceil( (distance/dz) + 0.5) - 1;
+            if (jc<0    ) jc = 0;
+            if (jc>ncz-1) jc = ncz-1;
+            kc = ic + jc*ncx;
+            nb_part_cell[kc] += 1;
+        }
+        else {
+            part_reuse[nb_part_reuse] = k;
+            nb_part_reuse++;
+        }
+    }
+
+    if (reseed_markers==1) {
+
+        // Allocate per-cell particle index lists
+        int** part_cell = DoodzCalloc(ncx*ncz, sizeof(int*));
+        for (kc=0; kc<ncx*ncz; kc++) {
+            part_cell[kc] = DoodzCalloc(nb_part_cell[kc], sizeof(int));
+        }
+
+        // Store indices
+        int* part_count = DoodzCalloc(ncx*ncz, sizeof(int));
+        for (int k=0; k<Nb_part; k++) {
+            if ( particles->phase[k] != -1 )  {
+                distance = ( particles->x[k] - (xmin + dx/2) );
+                ic       = ceil( (distance/dx) + 0.5) - 1;
+                if (ic<0    ) ic = 0;
+                if (ic>ncx-1) ic = ncx-1;
+                distance = ( particles->z[k] - (zmin + dz/2) );
+                jc       = ceil( (distance/dz) + 0.5) - 1;
+                if (jc<0    ) jc = 0;
+                if (jc>ncz-1) jc = ncz-1;
+                kc = ic + jc*ncx;
+                part_cell[kc][part_count[kc]] = k;
+                part_count[kc] += 1;
+            }
+        }
+        DoodzFree(part_count);
+
+        // -----------------------------------------------------------
+        // Reseeding: fill depleted cells to threshold (2) in one pass
+        // -----------------------------------------------------------
+        int nb_new_parts = 0, new_ind;
+        int count_part_reuse = 0, count_created = 0;
+        double new_x, new_z, h = model.zmax;
+        const int reseed_threshold = 2;
+
+        for (ic=0; ic<ncx; ic++) {
+            for (jc=0; jc<ncz; jc++) {
+                kc = ic + jc*ncx;
+
+                h = model.free_surface == 1 ? topo.height_finer_c[ic] : model.zmax+model.dz/2;
+                double xc = xmin + dx/2 + ic*dx;
+                double zc = zmin + dz/2 + jc*dz;
+
+                if (nb_part_cell[kc] < reseed_threshold && mesh->BCt_fine.type[kc] != 30) {
+
+                    // Collect neighbour particles (5x5 stencil)
+                    int imin = ic>0     ? ic-1 : 0;
+                    int imax = ic<ncx-1 ? ic+1 : ncx-1;
+                    int jmin = jc>0     ? jc-1 : 0;
+                    int jmax = jc<ncz-1 ? jc+1 : ncz-1;
+                    if (ic>1    ) imin = ic-2;
+                    if (ic<ncx-2) imax = ic+2;
+                    if (jc>1    ) jmin = jc-2;
+                    if (jc<ncz-2) jmax = jc+2;
+
+                    int nb_neigh = 0;
+                    for (int i=imin; i<=imax; i++) {
+                        for (int j=jmin; j<=jmax; j++) {
+                            nb_neigh += nb_part_cell[i + j*ncx];
+                        }
+                    }
+                    if (nb_neigh==0) {
+                        LOG_INFO("Cell i=%d j=%d,flag=%d has 0 neighbouring particles... Exiting", ic, jc, mesh->BCt_fine.type[kc]);
+                        exit(122);
+                    }
+
+                    int* neighbours = DoodzCalloc(nb_neigh, sizeof(int));
+                    nb_neigh = 0;
+                    for (int i=imin; i<=imax; i++) {
+                        for (int j=jmin; j<=jmax; j++) {
+                            int kk = i + j*ncx;
+                            for (int n=0; n<nb_part_cell[kk]; n++) {
+                                neighbours[nb_neigh] = part_cell[kk][n];
+                                nb_neigh++;
+                            }
+                        }
+                    }
+
+                    // Fill-to-target: add (threshold - current) particles
+                    int needed = reseed_threshold - nb_part_cell[kc];
+                    for (int ip = 0; ip < needed; ip++) {
+
+                        // Randomized placement within fine cell
+                        new_x = xc - dx/2.0 + dx * ((double)rand() / (double)RAND_MAX);
+                        new_z = zc - dz/2.0 + dz * ((double)rand() / (double)RAND_MAX);
+
+                        if ( new_x >= model.xmin && new_x <= model.xmax && new_z >= model.zmin && (new_z <= model.zmax || new_z <= h) ) {
+
+                            if ( count_part_reuse < nb_part_reuse && nb_part_reuse>0 ) {
+                                new_ind = part_reuse[count_part_reuse];
+                                count_part_reuse++;
+                            }
+                            else {
+                                new_ind = particles->Nb_part;
+                                if (particles->Nb_part+1>=particles->Nb_part_max) {
+                                    LOG_INFO("Max number of particles reached, Exiting...");
+                                    exit(190);
+                                }
+                                particles->Nb_part++;
+                                count_created++;
+                            }
+
+                            particles->x[new_ind]          = new_x;
+                            particles->z[new_ind]          = new_z;
+                            particles->generation[new_ind] = 1;
+
+                            // Find closest neighbour
+                            double dist, closest_distance = model.xmax - model.xmin;
+                            int closest_neighbour = neighbours[0];
+                            for (int ind=0; ind<nb_neigh; ind++) {
+                                dist = sqrt( pow(particles->x[new_ind] - particles->x[neighbours[ind]], 2.0) + pow(particles->z[new_ind] - particles->z[neighbours[ind]], 2.0) );
+                                if (dist < closest_distance) {
+                                    closest_distance  = dist;
+                                    closest_neighbour = neighbours[ind];
+                                }
+                            }
+
+                            AssignMarkerProperties( particles, new_ind, closest_neighbour, &model, mesh, model.direct_neighbour );
+                        }
+                        nb_new_parts++;
+                    }
+                    DoodzFree(neighbours);
+                }
+            }
+        }
+        LOG_INFO("%d markers reused, %d markers created, out of %d new markers", count_part_reuse, count_created, nb_new_parts);
+
+        // -----------------------------------------------------------
+        // Deactivation: distance-from-centroid, farthest first
+        // -----------------------------------------------------------
+        int deact = 0;
+        for (ic=0; ic<ncx; ic++) {
+            for (jc=0; jc<ncz; jc++) {
+                kc = ic + jc * ncx;
+                if ( mesh->BCt_fine.type[kc] != 30 && nb_part_cell[kc] > particles->min_part_cell + 4 ) {
+                    double xc = xmin + dx/2 + ic*dx;
+                    double zc = zmin + dz/2 + jc*dz;
+                    int np = nb_part_cell[kc];
+
+                    // Build distance array
+                    PartDist* pd = DoodzCalloc(np, sizeof(PartDist));
+                    for (int nb=0; nb<np; nb++) {
+                        int pidx = part_cell[kc][nb];
+                        double ddx = particles->x[pidx] - xc;
+                        double ddz = particles->z[pidx] - zc;
+                        pd[nb].idx   = pidx;
+                        pd[nb].dist2 = ddx*ddx + ddz*ddz;
+                    }
+
+                    // Sort descending by distance
+                    qsort(pd, np, sizeof(PartDist), cmp_partdist_desc);
+
+                    // Deactivate the farthest particles beyond threshold
+                    int keep = particles->min_part_cell + 4;
+                    for (int nb=0; nb<np - keep; nb++) {
+                        particles->phase[pd[nb].idx] = -1;
+                        deact++;
+                    }
+                    DoodzFree(pd);
+                }
+            }
+        }
+        LOG_INFO("Deactivated particles: %03d", deact);
+
+        // Freedom
+        for (kc=0; kc<ncx*ncz; kc++) {
+            DoodzFree(part_cell[kc]);
+        }
+        DoodzFree(part_cell);
+    }
+    // Infos
+    MinMaxArrayI(particles->phase,          1, particles->Nb_part, "phase       ");
+    MinMaxArrayTagChar(mesh->BCt_fine.type, 1, ncx*ncz           , "Cell_flags  ", mesh->BCt_fine.type );
+    MinMaxArrayTagInt(nb_part_cell,         1, ncx*ncz           , "nb_part_cell", mesh->BCt_fine.type );
+    DoodzFree(nb_part_cell);
+    DoodzFree(part_reuse);
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
@@ -3771,88 +4004,6 @@ void CountPartCell_OLD( markers* particles, grid *mesh, params model, surface to
 
     for (ith=0; ith<nthreads; ith++) {
         particles->Nb_part += nb_new[ith];
-    }
-
-    // Deactivate excess particles in over-populated cells (serial pass on global mesh)
-    if (reseed_markers==1) {
-        int ncx_g = 2*Ncx, ncz_g = 2*Ncz;
-        double dx_f = dx/2.0, dz_f = dz/2.0;
-        double xmin_f = mesh->xg_coord[0] + dx_f/2.0;
-        double zmin_f = mesh->zg_coord[0] + dz_f/2.0;
-        int* npc_g  = DoodzCalloc(ncx_g*ncz_g, sizeof(int));
-        int** ipc_g = DoodzCalloc(ncx_g*ncz_g, sizeof(int*));
-
-        // Count particles per fine cell
-        for (k=0; k<particles->Nb_part; k++) {
-            if (particles->phase[k] != -1) {
-                distance = (particles->x[k] - xmin_f);
-                ic = ceil((distance/dx_f) + 0.5) - 1;
-                if (ic<0)       ic = 0;
-                if (ic>ncx_g-1) ic = ncx_g-1;
-                distance = (particles->z[k] - zmin_f);
-                jc = ceil((distance/dz_f) + 0.5) - 1;
-                if (jc<0)       jc = 0;
-                if (jc>ncz_g-1) jc = ncz_g-1;
-                npc_g[ic + jc*ncx_g]++;
-            }
-        }
-
-        // Allocate per-cell arrays
-        for (kc=0; kc<ncx_g*ncz_g; kc++) {
-            ipc_g[kc] = DoodzCalloc(npc_g[kc], sizeof(int));
-            npc_g[kc] = 0; // Reset for filling
-        }
-
-        // Fill per-cell arrays
-        for (k=0; k<particles->Nb_part; k++) {
-            if (particles->phase[k] != -1) {
-                distance = (particles->x[k] - xmin_f);
-                ic = ceil((distance/dx_f) + 0.5) - 1;
-                if (ic<0)       ic = 0;
-                if (ic>ncx_g-1) ic = ncx_g-1;
-                distance = (particles->z[k] - zmin_f);
-                jc = ceil((distance/dz_f) + 0.5) - 1;
-                if (jc<0)       jc = 0;
-                if (jc>ncz_g-1) jc = ncz_g-1;
-                kc = ic + jc*ncx_g;
-                ipc_g[kc][npc_g[kc]] = k;
-                npc_g[kc]++;
-            }
-        }
-
-        // Deactivate excess — use coarse BCt.type for boundary check
-        int deact = 0;
-        double x_f, z_f;
-        int ic_coarse, jc_coarse;
-        for (ic=0; ic<ncx_g; ic++) {
-            for (jc=0; jc<ncz_g; jc++) {
-                kc = ic + jc*ncx_g;
-                // Map fine cell to coarse cell for boundary check
-                x_f = mesh->xg_coord[0] + dx_f/2.0 + ic*dx_f;
-                distance = (x_f - (mesh->xg_coord[0] + dx/2.0));
-                ic_coarse = ceil((distance/dx) + 0.5) - 1;
-                if (ic_coarse<0)     ic_coarse = 0;
-                if (ic_coarse>Ncx-1) ic_coarse = Ncx-1;
-                z_f = mesh->zg_coord[0] + dz_f/2.0 + jc*dz_f;
-                distance = (z_f - (mesh->zg_coord[0] + dz/2.0));
-                jc_coarse = ceil((distance/dz) + 0.5) - 1;
-                if (jc_coarse<0)     jc_coarse = 0;
-                if (jc_coarse>Ncz-1) jc_coarse = Ncz-1;
-                if (mesh->BCt.type[ic_coarse + jc_coarse*Ncx] != 30 && npc_g[kc] > particles->min_part_cell + 4) {
-                    for (nb=0; nb<npc_g[kc]; nb++) {
-                        if (nb > particles->min_part_cell + 4) {
-                            particles->phase[ipc_g[kc][nb]] = -1;
-                            deact++;
-                        }
-                    }
-                }
-            }
-        }
-        LOG_INFO("Deactivated particles: %03d", deact);
-
-        for (kc=0; kc<ncx_g*ncz_g; kc++) DoodzFree(ipc_g[kc]);
-        DoodzFree(ipc_g);
-        DoodzFree(npc_g);
     }
     
 //    //________________________________________

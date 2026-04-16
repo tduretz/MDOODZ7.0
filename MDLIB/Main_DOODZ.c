@@ -210,6 +210,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         // Create phase percentage arrays
         if ( input.model.reseed_mode == 0 ) CountPartCell_OLD( &particles, &mesh, input.model, topo, topo_ini, 0, input.scaling, pool );
         if ( input.model.reseed_mode == 1 ) CountPartCell( &particles, &mesh, input.model, topo, topo_ini, 0, input.scaling, pool );
+        if ( input.model.reseed_mode == 2 ) CountPartCell_v2( &particles, &mesh, input.model, topo, topo_ini, 0, input.scaling, pool );
 
         P2Mastah( &input.model, particles, input.materials.eta0, &mesh, mesh.eta_s, mesh.BCg.type,  0, 0, interp, vert, input.model.interp_stencil, pool);
         P2Mastah( &input.model, particles, input.materials.eta0, &mesh, mesh.eta_n, mesh.BCp.type,  0, 0, interp, cent, input.model.interp_stencil, pool);
@@ -1286,6 +1287,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                         AddPartSed( &particles, input.materials, &topo_chain, &topo, input.model, input.scaling, &mesh);
                         if ( input.model.reseed_mode == 0 ) CountPartCell_OLD( &particles, &mesh, input.model, topo, topo_ini, 0, input.scaling, pool );
                         if ( input.model.reseed_mode == 1 ) CountPartCell( &particles, &mesh, input.model, topo, topo_ini, 0, input.scaling, pool );
+                        if ( input.model.reseed_mode == 2 ) CountPartCell_v2( &particles, &mesh, input.model, topo, topo_ini, 0, input.scaling, pool );
                     }
 
                     if ( input.model.writer_debug == 1 ) {
@@ -1331,10 +1333,12 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                 if ( input.model.reseed_markers == 1 ) {
                     if ( input.model.reseed_mode == 0 ) CountPartCell_OLD( &particles, &mesh, input.model, topo, topo_ini, 1, input.scaling, pool );
                     if ( input.model.reseed_mode == 1 ) CountPartCell( &particles, &mesh, input.model, topo, topo_ini, 1, input.scaling, pool );
+                    if ( input.model.reseed_mode == 2 ) CountPartCell_v2( &particles, &mesh, input.model, topo, topo_ini, 1, input.scaling, pool );
                 }
                 // Count
                 if ( input.model.reseed_mode == 0 ) CountPartCell_OLD( &particles, &mesh, input.model, topo, topo_ini, 0, input.scaling, pool );
                 if ( input.model.reseed_mode == 1 ) CountPartCell( &particles, &mesh, input.model, topo, topo_ini, 0, input.scaling, pool );
+                if ( input.model.reseed_mode == 2 ) CountPartCell_v2( &particles, &mesh, input.model, topo, topo_ini, 0, input.scaling, pool );
 
                 LOG_INFO(GREEN "After re-seeding :" RESET);
                 LOG_INFO(GREEN "Initial number of particles = %d --- max allowed: %d" RESET, particles.Nb_part_ini, particles.Nb_part_max);

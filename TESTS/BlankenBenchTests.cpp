@@ -56,7 +56,7 @@ protected:
     const double xmin = input->model.xmin;
     const double Lx   = input->model.xmax - xmin;
     double x_nd = (coordinates.x - xmin) / Lx;
-    double perturbation = 0.01 * cos(M_PI * x_nd) * sin(M_PI * z_nd) / input->scaling.T;
+    double perturbation = 0.01 * (T_bot - T_top) * cos(M_PI * x_nd) * sin(M_PI * z_nd);
     return T_lin + perturbation;
   }
 
@@ -250,7 +250,7 @@ TEST_F(BlankenBench, NusseltAndVrms) {
   // Read final output
   const char *outFile = "BlankenBench/Output50000.gzip.h5";
 
-  const int Nx = 41, Nz = 41;
+  const int Nx = 101, Nz = 101;
   const int ncx = Nx - 1, ncz = Nz - 1;
   const double T_top_K = zeroC;          // 273.15 K
   const double DeltaT  = 1000.0;         // K

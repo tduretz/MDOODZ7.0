@@ -4,7 +4,7 @@ irestart = 0
 
 /**** OUTPUT FILES ****/
 writer            = 1
-writer_step       = 100
+writer_step       = 500
 writer_markers    = 0
 writer_debug      = 0
 writer_energies   = 0
@@ -21,8 +21,8 @@ V   = 1e-9
 T   = 1000
 
 /**** SPACE ****/
-Nx      = 101
-Nz      = 101
+Nx      = 401
+Nz      = 401
 xmin    = -5.000000e4
 zmin    = -5.000000e4
 xmax    =  5.000000e4
@@ -120,5 +120,5 @@ gsel = 0             / grain size evo.
 eta0 = 1e20
 npwl = 1
 Qpwl = 0
-interp_mode = 3
+interp_mode = 2
 thermal_solver = 1

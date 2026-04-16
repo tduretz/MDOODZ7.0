@@ -424,6 +424,7 @@ void            RogerGunther(markers *, params, grid, int, scale);
 void            isout(markers *, params);
 void            isoutPart(markers *, params *, int);
 void            CountPartCell(markers *, grid *, params, surface, surface, int, scale, InterpBufPool *);
+void            CountPartCell_v2(markers *, grid *, params, surface, surface, int, scale, InterpBufPool *);
 void            CountPartCell_Old(markers *, grid *, params, surface, int, scale);
 void            CountPartCell_OLD(markers *, grid *, params, surface, surface, int, scale, InterpBufPool *);
 
