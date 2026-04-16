@@ -1151,16 +1151,15 @@ EXPECT_LE(l2_mode2, l2_mode0 * 1.5);  // Mode 2 no worse than mode 0
 
 #### Test: `VortexAdvection.CompareReseedModes`
 
-Runs the vortex flow for 500 steps with each reseeding mode. Compares final composition fields pairwise and against the initial state.
+Runs the vortex flow for 500 steps with each reseeding mode. The vortex strongly deforms the disk into a crescent — there is no analytical return state, so the test checks **inter-mode consistency** (do all reseeding strategies produce the same answer?).
+
+**Inter-mode L2** (should be small — modes should agree):
 
 | Comparison | L2 | Mismatched cells |
 |------------|-----|------------------|
 | Mode 0 vs Mode 1 | 4.24e-02 | 18 / 10000 (0.18%) |
 | Mode 0 vs Mode 2 | 6.93e-02 | 48 / 10000 (0.48%) |
 | Mode 1 vs Mode 2 | 6.63e-02 | 44 / 10000 (0.44%) |
-| Mode 0 vs initial | 2.53e-01 | — |
-| Mode 1 vs initial | 2.52e-01 | — |
-| Mode 2 vs initial | 2.51e-01 | — |
 
 **Code assertions:**
 ```cpp
@@ -1265,6 +1264,6 @@ rm -rf cmake-build && cmake -S . -B cmake-build -DTEST=ON && cmake --build cmake
 
 ## Analytical Benchmarks
 
-Suites 16–17 and L2 assertions in suites 4, 7–9, 11, 14 verify numerical solutions against known analytical formulas. These provide quantitative error metrics (L2 norms) rather than just qualitative bounds checks.
+Suites 16–17, 19 (rotation test) and L2 assertions in suites 4, 7–9, 11, 14 verify numerical solutions against known analytical formulas. These provide quantitative error metrics (L2 norms) rather than just qualitative bounds checks.
 
 See [AnalyticalSolutions.md](AnalyticalSolutions.md) for the full mathematical derivations, measured error values, and threshold calibration methodology.

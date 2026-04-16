@@ -501,6 +501,8 @@ For convergence-order tests, thresholds are set ~30–50% below the measured ord
 | Stress sxz L2 | [AnisotropyBenchmarkTests.cpp](AnisotropyBenchmarkTests.cpp) | Rotation formula (§3.4) | `EXPECT_LT(l2_sxz, 1e-6)` | 1e-6 |
 | TopoBench relax | [TopoBenchTests.cpp](TopoBenchTests.cpp) | $h_0 e^{-t/\tau_r}$ (§4.1) | `EXPECT_LT(relErr, 0.15)` | 15% |
 | TopoBench convergence | [TopoBenchTests.cpp](TopoBenchTests.cpp) | Grid convergence (§4.2) | `EXPECT_GE(order, 0.3)` | 0.3 |
+| Rotation advection L2 | [RotationAdvectionTests.cpp](RotationAdvectionTests.cpp) | Identity map after 1 revolution (§5) | `EXPECT_LT(l2, 0.1)` | 0.1 |
+| Rotation mode 2 ≤ mode 0 | [RotationAdvectionTests.cpp](RotationAdvectionTests.cpp) | Identity map (§5) | `EXPECT_LE(l2_2, l2_0 * 1.5)` | 1.5× |
 
 ---
 
@@ -536,3 +538,59 @@ where $k = 2\pi/\lambda$ is the wavenumber and $H$ is the domain depth below the
 **Parameters:** [TopoBench/TopoBenchConvergence31.txt](TopoBench/TopoBenchConvergence31.txt), [TopoBench/TopoBenchRelaxation.txt](TopoBench/TopoBenchRelaxation.txt), [TopoBench/TopoBenchConvergence101.txt](TopoBench/TopoBenchConvergence101.txt)
 
 Three resolutions (Nx = 31, 51, 101) are run with the same physics. The mean relative error against the analytical exponential decay must decrease monotonically, and the overall convergence order from coarsest to finest must be $\geq 0.3$.
+
+---
+
+## 5. Rigid-Body Rotation (Marker Advection)
+
+**Source:** [RotationAdvectionTests.cpp](RotationAdvectionTests.cpp)
+**Parameter files:** [RotationAdvection/RotationMode0.txt](RotationAdvection/RotationMode0.txt), [RotationAdvection/RotationMode1.txt](RotationAdvection/RotationMode1.txt), [RotationAdvection/RotationMode2.txt](RotationAdvection/RotationMode2.txt)
+**Test:** `RotationAdvection.CompareReseedModes`
+
+### Problem Statement
+
+A circular disk of phase 1 (radius $r = 0.1$, centred at $(0.25, 0)$) is embedded in a phase 0 matrix on a unit domain $[-0.5, 0.5]^2$ with a 51×51 grid. The Stokes solver is disabled (`mechanical=0`); only marker advection runs. A rigid-body rotation velocity field is prescribed:
+
+$$V_x = -\omega z, \quad V_z = +\omega x, \quad \omega = 2\pi$$
+
+After 1000 steps of $\Delta t = 10^{-3}$ (total $t = 1$), each marker completes exactly one full revolution.
+
+### Analytical Solution
+
+The analytical solution is the **identity map**: after one full revolution, every marker returns to its initial position. Therefore the composition field at $t = 1$ should be identical to the field at $t = 0$.
+
+Any deviation is purely numerical — advection interpolation error accumulated over 1000 RK4 steps. The error manifests as boundary smearing: a few cells at the disk edge end up with the wrong phase assignment.
+
+### Measured L2 Errors
+
+The L2 norm compares the high-resolution composition grid (`compo_hr`, 100×100 cells) between initial and final outputs:
+
+$$L_2 = \sqrt{\frac{1}{N}\sum_{i=1}^{N}(c_i^{final} - c_i^{initial})^2}$$
+
+| Reseed Mode | L2 error | Mismatched cells |
+|-------------|----------|------------------|
+| 0 (legacy) | 3.74e-02 | ~14 / 10000 |
+| 1 (current) | 2.83e-02 | 8 / 10000 |
+| 2 (improved) | 2.83e-02 | 8 / 10000 |
+
+Modes 1 and 2 tie at L2 = 0.028, both better than mode 0 (L2 = 0.037). The randomised placement in mode 2 does not degrade advection accuracy.
+
+### Code Assertions
+
+```cpp
+EXPECT_LT(l2_mode0, 0.1);                   // All modes below 10% RMS
+EXPECT_LT(l2_mode1, 0.1);
+EXPECT_LT(l2_mode2, 0.1);
+EXPECT_LE(l2_mode2, l2_mode0 * 1.5);        // Mode 2 no worse than mode 0
+```
+
+### Visualisation
+
+```bash
+cd build/TESTS
+./RotationAdvectionTests --gtest_filter="RotationAdvection.*"
+python3 ../../TESTS/RotationAdvection/plot_rotation.py .
+# → rotation_advection_comparison.png
+```
+
+![Rotation advection comparison](rotation_advection_comparison.png)

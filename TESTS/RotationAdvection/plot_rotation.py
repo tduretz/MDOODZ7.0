@@ -131,6 +131,7 @@ def main():
     axes2[0].set_xlabel("x")
     axes2[0].set_ylabel("z")
 
+    vortex_finals = {}
     for i, (folder, label) in enumerate(vortex_modes):
         final_path = os.path.join(tests_dir, folder, "Output00500.gzip.h5")
         if not os.path.exists(final_path):
@@ -141,12 +142,21 @@ def main():
             continue
 
         compo_final, _ = read_compo_hr(final_path)
-        l2 = compute_l2(compo_v_init, compo_final)
+        vortex_finals[i] = compo_final
 
         axes2[i + 1].imshow(compo_final, origin="lower", extent=extent_v, cmap="RdBu_r",
                             vmin=-0.5, vmax=1.5, aspect="equal")
-        axes2[i + 1].set_title(f"{label}\nvs init L2={l2:.4f}", fontsize=11)
+        axes2[i + 1].set_title(label, fontsize=11)
         axes2[i + 1].set_xlabel("x")
+
+    # Compute inter-mode L2 (the actual quality metric) and print summary
+    mode_names = ["Mode 0", "Mode 1", "Mode 2"]
+    pairs = [(0, 1), (0, 2), (1, 2)]
+    print("\n  Vortex inter-mode L2:")
+    for a, b in pairs:
+        if a in vortex_finals and b in vortex_finals:
+            l2 = compute_l2(vortex_finals[a], vortex_finals[b])
+            print(f"    {mode_names[a]} vs {mode_names[b]}: L2 = {l2:.4f}")
 
     for ax in axes2[1:]:
         ax.set_yticklabels([])
