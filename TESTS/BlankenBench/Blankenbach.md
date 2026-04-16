@@ -10,6 +10,20 @@ Setup: unit square, free-slip, T_top = 273.15 K, T_bot = 1273.15 K, constant vis
 
 ---
 
+## Run 0 — 41×41, benchmark script (performance experiment, not physics)
+
+**Setup:** BlankenBench (Blankenbach Case 1a, isoviscous convection), 41×41, 4×4 particles/cell (25,600 initial), 1000 steps, `writer_step = 1`. Resolution mode required (`--resolutions "default"`); grid mode patches Nx/Nz and breaks BlankenBench physics.
+
+**Platform:** MacBook M1 14" (2020), 16 GB, 8 cores (4P + 4E), arm64/Darwin.
+
+**Purpose:** Performance benchmark (Experiment 8 in `skill-benchmarking`), not a physics validation run. Tested whether Exp 1–7 optimizations (PCG thermal, fused P2Mastah) help at small grid sizes.
+
+**Note:** 1-thread and 2-thread runs crashed at steps 163 and 64 respectively ("Maximum number of particles exceeded!" — reseeding overflow, `Nb_part_max = 4.1 * Nb_part`). Per-step averages are still valid for those runs. This crash was the original motivation for adding particle deactivation (commit `4aae065`) and later `reseed_mode=2` (commit `889f1d4`).
+
+**Result:** Optimizations have zero effect at 41×41 — all differences within ±2%. Problem is too small for PCG or fused P2Mastah to matter. The particle overflow crash at low thread counts revealed that the existing reseeding logic (`CountPartCell`) could not keep particle counts bounded, leading to Runs 5–8 focusing on reseeding improvements.
+
+---
+
 ## Run 1 — 41×41, penalty=1e3, Courant=0.5
 
 **Config:** `Nx=41, Nz=41, penalty=1e3, Courant=0.5, Nt=50000`
