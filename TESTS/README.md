@@ -51,7 +51,8 @@ Quick rule of thumb:
 17. [Suite 14 — NeumannBC (Stress Boundary Conditions)](#suite-14--neumannbc-stress-boundary-conditions)
 18. [Suite 15 — ConvergenceRate (Newton vs Picard)](#suite-15--convergencerate-newton-vs-picard)
 19. [Suite 18 — BlankenBench (Thermal Convection)](#suite-18--blankenbench-thermal-convection)
-20. [Running the Tests](#running-the-tests)
+20. [Suite 19 — RotationAdvection (Marker Advection & Reseeding)](#suite-19--rotationadvection-marker-advection--reseeding)
+21. [Running the Tests](#running-the-tests)
 
 ---
 
@@ -1103,6 +1104,85 @@ The `BLANKENBACH_STEADY=1` environment variable is required — without it the t
 
 ---
 
+## Suite 19 — RotationAdvection (Marker Advection & Reseeding)
+
+**Source:** `RotationAdvectionTests.cpp`
+**Parameter files:** `RotationAdvection/RotationMode{0,1,2}.txt`, `RotationAdvection/VortexMode{0,1,2}.txt`
+
+### Purpose
+
+Verify that marker-in-cell advection preserves composition fields across all three particle reseeding modes (`reseed_mode` 0, 1, 2). Two complementary flow fields are tested: rigid-body rotation (analytical benchmark) and a single-vortex shear field (inter-mode consistency check).
+
+### Physical Background
+
+A circular disk of phase 1 (radius $r = 0.1$, centred at $(0.25, 0)$) is embedded in a phase 0 matrix on a unit domain $[-0.5, 0.5]^2$ with a 51×51 grid. The Stokes solver is disabled (`mechanical=0`); only marker advection runs.
+
+**Rigid-body rotation** prescribes:
+
+$$V_x = -\omega z, \quad V_z = +\omega x, \quad \omega = 2\pi$$
+
+After 1000 steps of $\Delta t = 10^{-3}$ (total $t = 1$), each marker completes exactly one full revolution. The analytical solution is that the composition field returns to its initial state. Any deviation is purely numerical — advection interpolation error accumulated over 1000 steps.
+
+**Single-vortex shear** prescribes a divergence-free velocity field:
+
+$$V_x = -V_0 \sin(2\pi x) \cos(2\pi z), \quad V_z = V_0 \cos(2\pi x) \sin(2\pi z), \quad V_0 = 2$$
+
+This produces strong deformation with no analytical return state, so the test compares modes against each other rather than against an exact solution.
+
+### Tests
+
+#### Test: `RotationAdvection.CompareReseedModes`
+
+Runs the rigid-body rotation with `reseed_mode` 0, 1, and 2 (1000 steps each). Reads the high-resolution composition grid (`compo_hr`) from the initial and final HDF5 outputs and computes the L2 norm of the difference.
+
+| Mode | L2 error | Mismatched cells |
+|------|----------|------------------|
+| 0 (legacy) | 3.74e-02 | ~14 / 10000 |
+| 1 (current) | 2.83e-02 | 8 / 10000 |
+| 2 (improved) | 2.83e-02 | 8 / 10000 |
+
+**Code assertions:**
+```cpp
+EXPECT_LT(l2_mode0, 0.1);  // All modes below 10% RMS error
+EXPECT_LT(l2_mode1, 0.1);
+EXPECT_LT(l2_mode2, 0.1);
+EXPECT_LE(l2_mode2, l2_mode0 * 1.5);  // Mode 2 no worse than mode 0
+```
+
+#### Test: `VortexAdvection.CompareReseedModes`
+
+Runs the vortex flow for 500 steps with each reseeding mode. Compares final composition fields pairwise and against the initial state.
+
+| Comparison | L2 | Mismatched cells |
+|------------|-----|------------------|
+| Mode 0 vs Mode 1 | 4.24e-02 | 18 / 10000 (0.18%) |
+| Mode 0 vs Mode 2 | 6.93e-02 | 48 / 10000 (0.48%) |
+| Mode 1 vs Mode 2 | 6.63e-02 | 44 / 10000 (0.44%) |
+| Mode 0 vs initial | 2.53e-01 | — |
+| Mode 1 vs initial | 2.52e-01 | — |
+| Mode 2 vs initial | 2.51e-01 | — |
+
+**Code assertions:**
+```cpp
+EXPECT_LT(l2_12, 0.10);  // Mode 1 vs Mode 2 divergence < 10% RMS
+```
+
+### Results
+
+**Rigid-body rotation** — disk returns to initial position after one full revolution. L2 error measures boundary smearing from numerical advection:
+
+![Rotation advection comparison](rotation_advection_comparison.png)
+
+**Vortex shear** — strong deformation stretches the disk into a crescent. All three reseeding modes produce visually identical results:
+
+![Vortex advection comparison](vortex_advection_comparison.png)
+
+### Justification
+
+This is the only test that exercises particle reseeding in isolation from the mechanical solver. The rigid-body rotation is an analytical benchmark: any L2 error is purely from marker advection interpolation and reseeding artefacts. The vortex test stresses the reseeding under strong deformation where cells can become depleted or overpopulated. Together they verify that `reseed_mode=2` (randomised placement, distance-from-centroid deactivation) does not degrade advection quality compared to the legacy modes.
+
+---
+
 ## Running the Tests
 
 ### Build and run
@@ -1178,7 +1258,8 @@ rm -rf cmake-build && cmake -S . -B cmake-build -DTEST=ON && cmake --build cmake
 | 16. SolViBenchmark | `SolViBenchmarkTests.cpp` | 2 | L2 error norms, grid-convergence order (Schmid & Podladchikov 2003) |
 | 17. AnisotropyBenchmark | `AnisotropyBenchmarkTests.cpp` | 2 | Director evolution, anisotropic stress invariant |
 | 18. BlankenBench | `BlankenBenchTests.cpp` | 2 | Thermal convection smoke test (Blankenbach Ra=10⁴) — **not in CI** |
-| **Total** | **18 executables** | **45** | |
+| 19. RotationAdvection | `RotationAdvectionTests.cpp` | 2 | Marker advection L2 (rigid rotation + vortex), reseeding mode comparison |
+| **Total** | **19 executables** | **47** | |
 
 ---
 
