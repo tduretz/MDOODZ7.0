@@ -186,3 +186,97 @@ Partially. The key dimensionless numbers are:
 - **CFL for markers.** The marker CFL is v_max·dt/dx < 1. With adaptive dt from Courant, this is guaranteed per step — but if the velocity has a localized spike (from penalty oscillation), the global Courant condition underestimates the local CFL.
 
 **Bottom line:** For well-behaved problems (constant viscosity, no free surface), a penalty of ~1e3–1e4 × (Nx/40)² with Courant ≤ 0.25 should be safe. For problems with viscosity contrasts or free surfaces, more care is needed. The main unpredictable factor is whether the penalty creates velocity oscillations — this depends on the specific flow pattern and is hard to predict analytically.
+
+---
+
+## Run 6 — 101×101, reseed_mode=2 (CountPartCell_v2)
+
+**Config:** `Nx=101, Nz=101, penalty=1e4, Courant=0.25, Nt=50000, interp_mode=3, thermal_solver=1, reseed_mode=2`
+
+**Purpose:** Test the improved reseeding algorithm (`CountPartCell_v2`) which uses distance-from-centroid deactivation and multi-particle fill-to-target, compared to Run 5's `reseed_mode=1`.
+
+**Result:** Stopped manually at step ~26011. Stable, oscillating, but noticeably smoother than Run 5.
+
+| Step  | Nu_top | Nu_bot | Vrms  | Vrms_err% | Nb_part |
+|-------|--------|--------|-------|-----------|---------|
+| 100   | 0.84   | 1.01   | 4.8   | 88.8%     | 161623  |
+| 1000  | 0.89   | 1.32   | 33.4  | 22.0%     | 189899  |
+| 2000  | 4.04   | 4.33   | 51.3  | 19.7%     | 231009  |
+| 5000  | 2.71   | 3.93   | 33.1  | 22.8%     | 330660  |
+| 10000 | 2.13   | 3.91   | 33.3  | 22.3%     | 398530  |
+| 15000 | 2.35   | 3.92   | 30.2  | 29.5%     | 410472  |
+| 20000 | 2.10   | 4.01   | 30.5  | 28.9%     | 410472  |
+| 25000 | 2.07   | 4.00   | 28.5  | 33.5%     | 410472  |
+| 25500 | 2.73   | 3.87   | 27.9  | 35.0%     | 410548  |
+
+**Comparison with Run 5 (last 100 outputs, ~steps 15000–25500):**
+
+| Metric | Run 5 (mode 1) | Run 6 (mode 2) | Improvement |
+|--------|---------------|---------------|-------------|
+| Nu_bot mean | 3.939 | 3.965 | +0.7% (closer to ref) |
+| Nu_bot std | 0.130 | 0.075 | **42% less oscillation** |
+| Vrms mean | 31.3 | 30.6 | comparable |
+| Vrms std | 2.4 | 1.4 | **42% less oscillation** |
+| Nb_part | 459k | 410k | **11% fewer particles** |
+| Vrms spikes | yes (62, 900+) | none | **eliminated** |
+
+**Key observations:**
+
+1. **reseed_mode=2 is significantly smoother.** Both Nu_bot and Vrms oscillation amplitudes are halved. The large velocity spikes seen in Run 5 (Vrms=62 at step 10000, Vrms=900+ at step 11000) are completely eliminated.
+
+2. **Fewer particles at equilibrium.** Mode 2 stabilizes at 410k vs 459k — the distance-from-centroid deactivation is more targeted than mode 1's index-order removal, so fewer excess particles accumulate.
+
+3. **Still resolution-limited.** Nu_bot ≈ 3.97 (19% below ref 4.884) and Vrms ≈ 30.6 (29% below ref 42.86). This gap is the same as Run 5 — the reseeding improvement reduces noise but doesn't fix the resolution deficit. Higher-resolution runs (Run 7, Run 8) are needed.
+
+4. **No Vrms outliers.** Run 5 had a clear Vrms spike at step ~10000 (62.3) and the catastrophic spike at step ~11000 (900+). Run 6 has zero such events across 25.5k steps.
+
+![Run 5 vs Run 6 comparison](blankenbach_run5_vs_run6.png)
+
+**Conclusion:** `reseed_mode=2` is a clear improvement over mode 1 — same accuracy, half the noise, fewer particles, no velocity spikes. The remaining error is resolution-limited.
+
+---
+
+## Run 7 — 201×201, reseed_mode=2 (planned, EC2)
+
+**Config file:** `BlankenBenchRun7.txt`
+
+```
+Nx=201, Nz=201, penalty=1e4, Courant=0.25, Nt=50000
+writer_step=200, reseed_mode=2, interp_mode=3, thermal_solver=1
+```
+
+**Purpose:** Double the resolution to test whether `reseed_mode=2` converges toward Blankenbach reference values. At 201×201, the thermal boundary layer is ~10 cells thick (vs ~5 at 101×101), which should substantially reduce the interpolation error from reseeding.
+
+**Platform:** AWS EC2 on-demand instance (c5.xlarge, 4 vCPU, 8 GB RAM), us-west-2b, Ubuntu 22.04, 40 GB gp3.
+
+**Notes:**
+- On-demand instance (not spot) to prevent mid-run termination
+- `interp_mode=3` (fused P2Mastah) matching Runs 5/6
+- Expected ~4× slower per step than 101×101 (matrix size scales as N²)
+- `writer_step=200` gives ~250 output files for 50k steps
+
+**Status:** Running on `i-0eee645be6e22cc2e` at `35.86.143.67` (PID 5529).
+
+---
+
+## Run 8 — 401×401, reseed_mode=2 (planned, EC2)
+
+**Config file:** `BlankenBenchRun8.txt`
+
+```
+Nx=401, Nz=401, penalty=1e4, Courant=0.25, Nt=50000
+writer_step=500, reseed_mode=2, interp_mode=3, thermal_solver=1
+```
+
+**Purpose:** Quadruple the resolution from Run 5/6. At 401×401, the thermal boundary layer is ~20 cells thick — this should be sufficient for the Blankenbach benchmark to converge to within a few percent of the reference values (Nu=4.884, Vrms=42.86).
+
+**Platform:** AWS EC2 on-demand instance (c7a.2xlarge, 8 vCPU, 16 GB RAM), us-west-2a, Ubuntu 22.04, 60 GB gp3.
+
+**Notes:**
+- On-demand instance (not spot) to prevent mid-run termination
+- `interp_mode=3` (fused P2Mastah) matching Runs 5/6
+- Expected ~16× slower per step than 101×101
+- `writer_step=500` gives ~100 output files (larger files at this resolution)
+- This is the resolution convergence test: if Run 8 matches the reference within 5%, the code is validated
+
+**Status:** Running on `i-0f6ae55661492cd15` at `35.87.140.139` (PID 7794).

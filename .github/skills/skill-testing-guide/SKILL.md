@@ -165,6 +165,8 @@ Every test `.txt` file **must** include:
 | `BlankenBenchTests.cpp` | ConvectionDevelops | Blankenbach Case 1a smoke test: T range, V > 0, no NaN (500 steps) |
 | `BlankenBenchTests.cpp` | TemperatureProfile | Mid-depth T_max in [0.1, 0.9], no NaN in T field |
 
+> **Note:** BlankenBench is **excluded from CI** (disabled in CMake). Even the 500-step smoke test is too slow for the fast CI pipeline. Run manually: `cd cmake-build/TESTS && ./BlankenBenchTests`
+
 ---
 
 ## Visual Regression Tests (`VISUAL_TESTS/`)

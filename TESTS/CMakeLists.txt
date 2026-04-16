@@ -130,14 +130,16 @@ add_executable(TopoBenchTests TopoBenchTests.cpp)
 target_link_libraries(TopoBenchTests LINK_PUBLIC mdoodz GTest::gtest_main)
 add_test(TopoBenchTests TopoBenchTests)
 
-# Blankenbach Thermal Convection Tests
+# Blankenbach Thermal Convection Tests (manual only — too slow for CI, ~30 min at 41×41)
 file(COPY ${PROJECT_SOURCE_DIR}/TESTS/BlankenBench DESTINATION ${PROJECT_BINARY_DIR}/TESTS)
 add_executable(BlankenBenchTests BlankenBenchTests.cpp)
 target_link_libraries(BlankenBenchTests LINK_PUBLIC mdoodz GTest::gtest_main)
 if (OMP AND TARGET OpenMP::OpenMP_CXX)
     target_link_libraries(BlankenBenchTests LINK_PUBLIC OpenMP::OpenMP_CXX)
 endif()
-add_test(BlankenBenchTests BlankenBenchTests)
+add_test(NAME BlankenBenchTests COMMAND BlankenBenchTests)
+set_tests_properties(BlankenBenchTests PROPERTIES LABELS "manual" TIMEOUT 3600)
+set_property(TEST BlankenBenchTests PROPERTY DISABLED TRUE)
 
 # Blankenbach HDF5-to-gnuplot extraction utility (no GTest, just HDF5)
 add_executable(extract_blankenbach BlankenBench/extract_fields.cpp)

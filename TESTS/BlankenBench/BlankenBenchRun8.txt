@@ -120,5 +120,5 @@ gsel = 0             / grain size evo.
 eta0 = 1e20
 npwl = 1
 Qpwl = 0
-interp_mode = 2
+interp_mode = 3
 thermal_solver = 1

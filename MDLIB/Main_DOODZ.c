@@ -148,7 +148,9 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
     // Initialize persistent thermal CHOLMOD solver (before irestart branch, used by both paths)
     DirectSolver ThermalSolver;
     cholmod_start( &ThermalSolver.c );
+#if CHOLMOD_MAIN_VERSION >= 4
     ThermalSolver.c.nthreads_max = cholmod_nthreads;
+#endif
     ThermalSolver.Analyze = 1;
     ThermalSolver.Lfact = NULL;
 
@@ -787,7 +789,9 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
             // Set up solver context
             cholmod_start( &CholmodSolver.c );
+#if CHOLMOD_MAIN_VERSION >= 4
             CholmodSolver.c.nthreads_max = cholmod_nthreads;
+#endif
             if ( Nmodel.nit==0 ) CholmodSolver.Analyze = 1;
             LOG_INFO("Run CHOLMOD analysis yes/no: %d", CholmodSolver.Analyze);
             int Nmax_picard = Nmodel.nit_max;

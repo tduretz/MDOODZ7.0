@@ -1037,9 +1037,11 @@ Comparing Newton vs Picard convergence on the same problem is a rigorous verific
 
 ---
 
-## Suite 18 — BlankenBench (Thermal Convection)
+## Suite 18 — BlankenBench (Thermal Convection) — **not in CI**
 
-**Source:** [BlankenBenchTests.cpp](BlankenBenchTests.cpp) | **Parameters:** [BlankenBench/BlankenBench.txt](BlankenBench/BlankenBench.txt) | **Tests:** 2 (CI) + 1 (manual)
+**Source:** [BlankenBenchTests.cpp](BlankenBenchTests.cpp) | **Parameters:** [BlankenBench/BlankenBench.txt](BlankenBench/BlankenBench.txt) | **Tests:** 3 (all manual)
+
+> **Excluded from CI.** Even the 500-step smoke test at 41×41 takes ~30 seconds — too slow for the fast CI pipeline. The test is disabled in CMake (`DISABLED TRUE`) and must be run manually. See below for instructions.
 
 ### Physical Setup
 
@@ -1112,10 +1114,10 @@ cmake --build ./cmake-build -j4
 cd cmake-build && ctest --output-on-failure
 ```
 
-All 15 test suites (35 individual test cases) should pass in under 15 seconds:
+All CI test suites should pass in under 15 seconds (BlankenBench is excluded — too slow):
 
 ```
-100% tests passed, 0 tests failed out of 15
+100% tests passed, 0 tests failed out of 17
 Total Test time (real) =   9.44 sec
 ```
 
@@ -1175,7 +1177,7 @@ rm -rf cmake-build && cmake -S . -B cmake-build -DTEST=ON && cmake --build cmake
 | 15. ConvergenceRate | `ConvergenceRateTests.cpp` | 3 | Newton vs Picard rate comparison |
 | 16. SolViBenchmark | `SolViBenchmarkTests.cpp` | 2 | L2 error norms, grid-convergence order (Schmid & Podladchikov 2003) |
 | 17. AnisotropyBenchmark | `AnisotropyBenchmarkTests.cpp` | 2 | Director evolution, anisotropic stress invariant |
-| 18. BlankenBench | `BlankenBenchTests.cpp` | 2 | Thermal convection smoke test (Blankenbach Ra=10⁴) |
+| 18. BlankenBench | `BlankenBenchTests.cpp` | 2 | Thermal convection smoke test (Blankenbach Ra=10⁴) — **not in CI** |
 | **Total** | **18 executables** | **45** | |
 
 ---

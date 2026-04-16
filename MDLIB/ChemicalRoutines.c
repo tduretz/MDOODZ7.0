@@ -107,7 +107,9 @@ void ChemicalDirectSolve( grid *mesh, params model, markers *particles, mat_prop
     // Solve system using CHOLMOD
     cholmod_common c;
     cholmod_start( &c );
+#if CHOLMOD_MAIN_VERSION >= 4
     c.nthreads_max = (model.cholmod_threads == -1) ? omp_get_max_threads() : model.cholmod_threads;
+#endif
     cholmod_factor *Afact;
     cs_di *At;
     
