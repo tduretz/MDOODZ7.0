@@ -668,6 +668,7 @@ void RunTestCases() {
   RenameTopoBenchCaseFiles();
   (*new Shrinking).run();
   (*new Validation).runAll();
+  RunReseedingGuide();
 }
 
 string currentDateTime() {
@@ -719,5 +720,6 @@ int main() {
   PlotInterpEquivalence();
   PlotOceanicCooling();
   PlotThermoElastic();
+  PlotReseedingGuide();
   UpdateReadmeTimestamp();
 }

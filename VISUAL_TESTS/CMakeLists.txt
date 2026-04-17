@@ -14,11 +14,22 @@ add_executable(visualtests
         Shrinking.cpp
         VEP.cpp
         GSE.cpp
-        Validation.cpp)
+        Validation.cpp
+        ReseedingGuide.cpp)
 
 target_link_libraries(visualtests LINK_PUBLIC mdoodz Eigen3::Eigen ${HDF5_LIBRARIES})
 
 set_target_properties(visualtests
+        PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/visualtests-out)
+
+add_executable(closed_box_runner
+        ClosedBoxRunner.cpp
+        HDF5pp.h)
+
+target_link_libraries(closed_box_runner LINK_PUBLIC mdoodz Eigen3::Eigen ${HDF5_LIBRARIES})
+
+set_target_properties(closed_box_runner
         PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/visualtests-out)
 
@@ -66,3 +77,19 @@ file(COPY ${PROJECT_SOURCE_DIR}/TESTS/Thermal/OceanicCooling.txt DESTINATION ${P
 file(COPY ${PROJECT_SOURCE_DIR}/TESTS/Thermal/OceanicCoolingPCG.txt DESTINATION ${PROJECT_SOURCE_DIR}/visualtests-out/)
 file(COPY ${PROJECT_SOURCE_DIR}/TESTS/Thermal/ThermoElastic.txt DESTINATION ${PROJECT_SOURCE_DIR}/visualtests-out/)
 file(COPY ${PROJECT_SOURCE_DIR}/TESTS/Thermal/ThermoElasticPCG.txt DESTINATION ${PROJECT_SOURCE_DIR}/visualtests-out/)
+
+# Reseeding visual guide
+file(COPY ${PROJECT_SOURCE_DIR}/VISUAL_TESTS/ReseedingGuide/ DESTINATION ${PROJECT_SOURCE_DIR}/visualtests-out/ReseedingGuide/)
+configure_file("${PROJECT_SOURCE_DIR}/VISUAL_TESTS/advection_primer.gnu" "${PROJECT_SOURCE_DIR}/visualtests-out/advection_primer.gnu" COPYONLY)
+configure_file("${PROJECT_SOURCE_DIR}/VISUAL_TESTS/reseed_placement.gnu" "${PROJECT_SOURCE_DIR}/visualtests-out/reseed_placement.gnu" COPYONLY)
+configure_file("${PROJECT_SOURCE_DIR}/VISUAL_TESTS/deactivation_strategy.gnu" "${PROJECT_SOURCE_DIR}/visualtests-out/deactivation_strategy.gnu" COPYONLY)
+configure_file("${PROJECT_SOURCE_DIR}/VISUAL_TESTS/nbpart_timeseries.gnu" "${PROJECT_SOURCE_DIR}/visualtests-out/nbpart_timeseries.gnu" COPYONLY)
+configure_file("${PROJECT_SOURCE_DIR}/VISUAL_TESTS/slot_usage.gnu" "${PROJECT_SOURCE_DIR}/visualtests-out/slot_usage.gnu" COPYONLY)
+configure_file("${PROJECT_SOURCE_DIR}/VISUAL_TESTS/edge_empty_cell.gnu" "${PROJECT_SOURCE_DIR}/visualtests-out/edge_empty_cell.gnu" COPYONLY)
+configure_file("${PROJECT_SOURCE_DIR}/VISUAL_TESTS/edge_multiphase.gnu" "${PROJECT_SOURCE_DIR}/visualtests-out/edge_multiphase.gnu" COPYONLY)
+configure_file("${PROJECT_SOURCE_DIR}/VISUAL_TESTS/placement_zoom.gnu" "${PROJECT_SOURCE_DIR}/visualtests-out/placement_zoom.gnu" COPYONLY)
+configure_file("${PROJECT_SOURCE_DIR}/VISUAL_TESTS/stress_comparison.gnu" "${PROJECT_SOURCE_DIR}/visualtests-out/stress_comparison.gnu" COPYONLY)
+configure_file("${PROJECT_SOURCE_DIR}/VISUAL_TESTS/cell_uniformity.gnu" "${PROJECT_SOURCE_DIR}/visualtests-out/cell_uniformity.gnu" COPYONLY)
+configure_file("${PROJECT_SOURCE_DIR}/VISUAL_TESTS/advection_anim.gnu" "${PROJECT_SOURCE_DIR}/visualtests-out/advection_anim.gnu" COPYONLY)
+configure_file("${PROJECT_SOURCE_DIR}/VISUAL_TESTS/mode_comparison_anim.gnu" "${PROJECT_SOURCE_DIR}/visualtests-out/mode_comparison_anim.gnu" COPYONLY)
+configure_file("${PROJECT_SOURCE_DIR}/VISUAL_TESTS/closed_box_crash_anim.gnu" "${PROJECT_SOURCE_DIR}/visualtests-out/closed_box_crash_anim.gnu" COPYONLY)

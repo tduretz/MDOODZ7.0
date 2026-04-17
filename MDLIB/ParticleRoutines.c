@@ -2792,7 +2792,7 @@ void CountPartCell( markers* particles, grid *mesh, params model, surface topo, 
                 double zc = zmin + dz/2 + jc*dz; // centroid of fine grid cell
 
                 if (nb_part_cell[kc] < 2 && mesh->BCt_fine.type[kc] != 30) {  // Cell_flags[kc]<30
-                    // printf("Adding... i=%d j=%d, nb = %d\n", ic, jc, nb_part_cell[kc]);
+                    LOG_DBG("cell (%d,%d) fine: %d particles (threshold=2), reseeding", ic, jc, nb_part_cell[kc]);
                     int imin = ic>0     ? ic-1 : 0;
                     int imax = ic<ncx-1 ? ic+1 : ncx-1;
                     int jmin = jc>0     ? jc-1 : 0;
@@ -2838,14 +2838,12 @@ void CountPartCell( markers* particles, grid *mesh, params model, surface topo, 
                     new_z = zc; // centroid of fine grid cell
 
                     if ( new_x >= model.xmin && new_x <= model.xmax && new_z >= model.zmin && (new_z <= model.zmax || new_z <= h) ) { 
-                        // printf("Adding marker\n");
                         if ( count_part_reuse < nb_part_reuse && nb_part_reuse>0  ) {
                             new_ind = part_reuse[count_part_reuse];
                             count_part_reuse++;
-                            // printf("reuse - nb_part_reuse = %d - count_part_reuse = %d\n", nb_part_reuse, count_part_reuse);
+                            LOG_DBG("  new particle at (%.6e, %.6e), reusing slot %d", new_x, new_z, new_ind);
                         }
                         else {
-                            // printf("create\n");
                             new_ind = particles->Nb_part;
                             if (particles->Nb_part+1>=particles->Nb_part_max) {
                                 LOG_INFO("Max number of particles reached, Exiting...");
@@ -2853,6 +2851,7 @@ void CountPartCell( markers* particles, grid *mesh, params model, surface topo, 
                             }
                             particles->Nb_part++;
                             count_created++;
+                            LOG_DBG("  new particle at (%.6e, %.6e), appended at index %d", new_x, new_z, new_ind);
                         }
 
                         // Add 1 particule
@@ -2884,6 +2883,7 @@ void CountPartCell( markers* particles, grid *mesh, params model, surface topo, 
             }
         }
         LOG_INFO("%d markers reused, %d markers created, out of %d new markers", count_part_reuse, count_created, nb_new_parts);
+        LOG_DBG("Nb_part: %d -> %d (reused=%d, created=%d)", Nb_part, particles->Nb_part, count_part_reuse, count_created);
 
         // // TBD
         // for (int k=0; k<Nb_part; k++) {
@@ -3063,6 +3063,8 @@ void CountPartCell_v2( markers* particles, grid *mesh, params model, surface top
 
                 if (nb_part_cell[kc] < reseed_threshold && mesh->BCt_fine.type[kc] != 30) {
 
+                    LOG_DBG("cell (%d,%d) fine: %d particles (threshold=%d), reseeding", ic, jc, nb_part_cell[kc], reseed_threshold);
+
                     // Collect neighbour particles (5x5 stencil)
                     int imin = ic>0     ? ic-1 : 0;
                     int imax = ic<ncx-1 ? ic+1 : ncx-1;
@@ -3109,6 +3111,7 @@ void CountPartCell_v2( markers* particles, grid *mesh, params model, surface top
                             if ( count_part_reuse < nb_part_reuse && nb_part_reuse>0 ) {
                                 new_ind = part_reuse[count_part_reuse];
                                 count_part_reuse++;
+                                LOG_DBG("  new particle at (%.6e, %.6e), reusing slot %d", new_x, new_z, new_ind);
                             }
                             else {
                                 new_ind = particles->Nb_part;
@@ -3118,6 +3121,7 @@ void CountPartCell_v2( markers* particles, grid *mesh, params model, surface top
                                 }
                                 particles->Nb_part++;
                                 count_created++;
+                                LOG_DBG("  new particle at (%.6e, %.6e), appended at index %d", new_x, new_z, new_ind);
                             }
 
                             particles->x[new_ind]          = new_x;
@@ -3149,13 +3153,16 @@ void CountPartCell_v2( markers* particles, grid *mesh, params model, surface top
         // Deactivation: distance-from-centroid, farthest first
         // -----------------------------------------------------------
         int deact = 0;
+        const int fine_threshold = (int)(ceil(particles->min_part_cell / 4.0)) + 4;
         for (ic=0; ic<ncx; ic++) {
             for (jc=0; jc<ncz; jc++) {
                 kc = ic + jc * ncx;
-                if ( mesh->BCt_fine.type[kc] != 30 && nb_part_cell[kc] > particles->min_part_cell + 4 ) {
+                if ( mesh->BCt_fine.type[kc] != 30 && nb_part_cell[kc] > fine_threshold ) {
                     double xc = xmin + dx/2 + ic*dx;
                     double zc = zmin + dz/2 + jc*dz;
                     int np = nb_part_cell[kc];
+                    int keep = fine_threshold;
+                    LOG_DBG("cell (%d,%d): %d particles, excess %d, deactivating %d farthest", ic, jc, np, np - keep, np - keep);
 
                     // Build distance array
                     PartDist* pd = DoodzCalloc(np, sizeof(PartDist));
@@ -3171,8 +3178,8 @@ void CountPartCell_v2( markers* particles, grid *mesh, params model, surface top
                     qsort(pd, np, sizeof(PartDist), cmp_partdist_desc);
 
                     // Deactivate the farthest particles beyond threshold
-                    int keep = particles->min_part_cell + 4;
                     for (int nb=0; nb<np - keep; nb++) {
+                        LOG_DBG("  deactivated particle %d (dist=%.6e from centroid)", pd[nb].idx, sqrt(pd[nb].dist2));
                         particles->phase[pd[nb].idx] = -1;
                         deact++;
                     }
@@ -3181,6 +3188,7 @@ void CountPartCell_v2( markers* particles, grid *mesh, params model, surface top
             }
         }
         LOG_INFO("Deactivated particles: %03d", deact);
+        LOG_DBG("Nb_part: %d -> %d (reused=%d, created=%d, deactivated=%d)", Nb_part, particles->Nb_part, count_part_reuse, count_created, deact);
 
         // Freedom
         for (kc=0; kc<ncx*ncz; kc++) {
@@ -3746,6 +3754,8 @@ void CountPartCell_OLD( markers* particles, grid *mesh, params model, surface to
 //                        printf("number = %d condition = %d\n",  mpc[ith][kd], (int)(ceil(particles->min_part_cell) / 4.0) );
                         if ( mpc[ith][kd] < (int)(ceil(particles->min_part_cell) / 4.0) ) {
 
+                            LOG_DBG("cell (%d,%d) fine: %d particles (threshold=%d), reseeding [thread %d]", k, l, mpc[ith][kd], (int)(ceil(particles->min_part_cell) / 4.0), ith);
+
                             neighs = 0;
                             oo     = 0;
 
@@ -3977,13 +3987,14 @@ void CountPartCell_OLD( markers* particles, grid *mesh, params model, surface to
                 
                 if ( ip<npreuse[ith]) {
                     // Reuse indices
-                    // printf("Recycle marker %d\n", ipreuse[ith][ip]);
                     k = ipreuse[ith][ip];
+                    LOG_DBG("  new particle at (%.6e, %.6e), reusing slot %d [thread %d]", newx[ith][ip], newz[ith][ip], k, ith);
                 }
                 else {
                     // New indices
                     k = id_new[ith] + nb_new[ith];
                     nb_new[ith]++;
+                    LOG_DBG("  new particle at (%.6e, %.6e), appended at index %d [thread %d]", newx[ith][ip], newz[ith][ip], k, ith);
                 }
                 // Security check
                 if (k>particles->Nb_part_max) {
@@ -4004,6 +4015,12 @@ void CountPartCell_OLD( markers* particles, grid *mesh, params model, surface to
 
     for (ith=0; ith<nthreads; ith++) {
         particles->Nb_part += nb_new[ith];
+    }
+
+    if (reseed_markers==1) {
+        int total_reused = 0, total_new = 0;
+        for (ith=0; ith<nthreads; ith++) { total_reused += (nnewp[ith] < npreuse[ith] ? nnewp[ith] : npreuse[ith]); total_new += nb_new[ith]; }
+        LOG_DBG("Nb_part: %d -> %d (reused=%d, created=%d)", Nb_part, particles->Nb_part, total_reused, total_new);
     }
     
 //    //________________________________________

@@ -23,5 +23,7 @@ void PlotPCGConvergence();
 void PlotInterpEquivalence();
 void PlotOceanicCooling();
 void PlotThermoElastic();
+void RunReseedingGuide();
+void PlotReseedingGuide();
 
 #endif

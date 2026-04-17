@@ -13,14 +13,15 @@ All reseeding logic lives in `MDLIB/ParticleRoutines.c`. The file `MDLIB/Particl
 
 ## Reseeding Modes
 
-Set `reseeding_mode` in the `.txt` parameter file:
+Set `reseed_mode` in the `.txt` parameter file:
 
-| Mode | Function | Threading | Cell→particle mapping | Notes |
-|------|----------|-----------|----------------------|-------|
-| 0 | `CountPartCell_OLD` | Per-thread `ipreuse[]` | `ipcell[ith][kc]` (extended fine mesh) | `nthreads` hardcoded to 1 |
-| 1 | `CountPartCell` | Global `part_reuse[]` | `part_cell[kc][nb]` (fine mesh) | Default; calls `exit(190)` at `Nb_part_max` |
+| Mode | Function | Placement | Deactivation | Slot Recycling |
+|------|----------|-----------|-------------|----------------|
+| 0 | `CountPartCell_OLD` | Closest-neighbour (per-thread `ipreuse[]`) | None | Per-thread `ipreuse[]` |
+| 1 | `CountPartCell` | Fine-cell centroid | None | Global `part_reuse[]` |
+| 2 | `CountPartCell_v2` | Random within fine cell | Distance-from-centroid, farthest first | Global `part_reuse[]` |
 
-Both modes use a **fine mesh** (2×Ncx × 2×Ncz) for cell-particle assignment, then map back to the coarse mesh for reseeding decisions.
+All modes use a **fine mesh** (2×Ncx × 2×Ncz) for cell-particle assignment, then map back to the coarse mesh for reseeding decisions.
 
 ## Key Struct Fields (`markers`)
 
@@ -39,17 +40,11 @@ A cell is considered under-populated when its particle count drops below `min_pa
 
 ## Deactivation (Excess Culling)
 
-After reseeding, both modes run a **deactivation pass** that scans all cells on the fine mesh. If a cell has more than `min_part_cell + 4` particles, the excess are marked `phase = -1` (dead), making their array slots available for recycling.
+**Only mode 2** (`CountPartCell_v2`) actively deactivates excess particles. After reseeding, it scans all cells on the fine mesh. If a cell has more than `fine_threshold` particles (where `fine_threshold = ceil(min_part_cell / 4.0) + 4`), the excess are sorted by distance from the cell centroid and the farthest are marked `phase = -1` (dead), making their array slots available for recycling.
 
 **Boundary guard:** Cells with `BCt.type == 30` (Dirichlet thermal boundary) are skipped — deactivating boundary particles would corrupt boundary conditions.
 
-### Mode 1 Deactivation (CountPartCell)
-
-Uses the existing `part_cell[kc][nb]` mapping and `mesh->BCt_fine.type[kc]` for the boundary check. Runs inside the `if (reseed_markers==1)` block, before `part_cell` is freed.
-
-### Mode 0 Deactivation (CountPartCell_OLD)
-
-Builds a fresh `npc_g[]` / `ipc_g[][]` count on the fine mesh (2×Ncx × 2×Ncz), then maps fine cell indices → coarse cell indices to check `mesh->BCt.type` (since `BCt_fine` is not populated in mode 0). Runs after the parallel reseeding section.
+**Modes 0 and 1 have no deactivation.** Particles can only become dead (`phase = -1`) by exiting the domain boundaries or being above the free surface. In a closed-box simulation (e.g., Blankenbach convection), modes 0 and 1 will see monotonic growth of active particle count, eventually hitting `Nb_part_max` and crashing with `exit(190)`. Mode 2 is the only mode that guarantees bounded active particle count in closed environments.
 
 ## Recycling Mechanism
 
@@ -67,16 +62,29 @@ Builds a fresh `npc_g[]` / `ipc_g[][]` count on the fine mesh (2×Ncx × 2×Ncz)
 | `exit(190)` crash | `Nb_part` reached `Nb_part_max` | Deactivation not working or threshold too high |
 | Particles cluster in corners | Convection concentrates markers in downwellings | Normal — deactivation culls excess |
 | Phase smearing at boundaries | Deactivation ran on boundary cells | Check `BCt.type != 30` guard |
-| `Nb_part` grows monotonically | No deactivation pass active | Verify `reseed_markers == 1` and deactivation code is present |
+| `Nb_part` grows monotonically | Using mode 0 or 1 (no deactivation) | Switch to `reseed_mode = 2` for closed-box simulations |
 
 ## .txt Parameters
 
 ```text
-particles_per_cell_x = 4     # Nx_part
-particles_per_cell_z = 4     # Nz_part
-min_part_cell        = 16    # Reseeding threshold
-reseeding_mode       = 1     # 0 or 1
+Nx_part          = 4     # particles_per_cell_x
+Nz_part          = 4     # particles_per_cell_z
+min_part_cell    = 16    # Reseeding threshold
+reseed_mode      = 1     # 0, 1, or 2
 ```
+
+## DEBUG Logging
+
+With `log_level = 3` (DEBUG), all three reseeding functions emit per-cell and per-particle diagnostic messages:
+
+- **Cell trigger**: `cell (i,j) fine: N particles (threshold=T), reseeding`
+- **Particle placement**: `new particle at (x, z), reusing slot K` or `appended at index K`
+- **Deactivation** (mode 2 only): `cell (i,j): N particles, excess E, deactivating E farthest` and `deactivated particle K (dist=D from centroid)`
+- **Summary**: `Nb_part: <before> -> <after> (reused=R, created=C)`
+
+Enable in `.txt`: `log_level = 3`. These messages are suppressed at the default `log_level = 2` (INFO).
+
+See also: `VISUAL_TESTS/ReseedingGuide.md` for a visual guide with plots from real simulation output.
 
 ## BlankenBench Test Coverage
 
