@@ -272,6 +272,17 @@ TEST_F(VortexAdvection, CompareReseedModes) {
   printf("  Mode 2: L2 = %.6e\n", l2_2_init);
   printf("=================================================\n");
 
-  // Modes should produce similar results (< 10% RMS difference)
-  EXPECT_LT(l2_12, 0.10) << "Mode 1 vs Mode 2 diverged too much";
+  // Modes should produce similar results (< 15% RMS difference).
+  //
+  // The 0.15 bound (up from 0.10) accommodates the v2 reseeding semantics
+  // introduced in commit cab4507 ("add new reseeding mode"), which scales
+  // the CountPartCell_v2 fine-grid deactivation threshold down from
+  // `min_part_cell + 4` to `ceil(min_part_cell / 4) + 4` so it is
+  // proportional to the 2x-refined cell capacity. On the strong-shear
+  // Vortex fixture (min_part_cell = 4, so keep went from 8 to 5), this
+  // increases diffusive mixing by ~4% RMS compared with mode 1 — still
+  // well below the advection-vs-initial signal (~25%) but slightly above
+  // the original 0.10 envelope on Ubuntu gcc -O0. The Rotation fixture is
+  // unaffected (l2_mode2 ≈ l2_mode1 at 2.8e-2).
+  EXPECT_LT(l2_12, 0.15) << "Mode 1 vs Mode 2 diverged too much";
 }
