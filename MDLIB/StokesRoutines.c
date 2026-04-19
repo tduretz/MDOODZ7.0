@@ -31,6 +31,7 @@
 #include "cholmod.h"
 
 #include "mdoodz-log.h"
+#include "MultigridStokes.h"
 
 #ifdef _OMP_
 #include "omp.h"
@@ -789,6 +790,17 @@ void SolveStokesDecoupled( SparseMat *StokesA, SparseMat *StokesB, SparseMat *St
     if (model.lin_solver== 1) KSPStokesDecoupled       ( StokesA, StokesB, StokesC, StokesD, PardisoStokes, StokesA->b, StokesC->b, Stokes->x, model, mesh, scaling, Stokes, Stokes, StokesA, StokesB, StokesC );
     if (model.lin_solver== 2) KillerSolver             ( StokesA, StokesB, StokesC, StokesD, PardisoStokes, StokesA->b, StokesC->b, Stokes->x, model, mesh, scaling, Stokes, Stokes, StokesA, StokesB, StokesC );
     if (model.lin_solver==-1) DirectStokesDecoupledComp( StokesA, StokesB, StokesC, StokesD, PardisoStokes, StokesA->b, StokesC->b, Stokes->x, model, mesh, scaling, Stokes );
+    if (model.lin_solver== 3) {
+        int gmg_rc = SolveStokesGMG(StokesA, StokesB, StokesC, StokesD, Stokes, PardisoStokes,
+                                    StokesA->b, StokesC->b, Stokes->x, model, mesh, scaling);
+        if (gmg_rc != 0) {
+            // Adapter stub or non-convergence: transparent fall-back so
+            // users still get a solution (with a warning already logged).
+            LOG_WARN("GMG lin_solver = 3: falling back to CHOLMOD direct solve (rc=%d).", gmg_rc);
+            DirectStokesDecoupled(StokesA, StokesB, StokesC, StokesD, PardisoStokes,
+                                  StokesA->b, StokesC->b, Stokes->x, model, mesh, scaling, Stokes);
+        }
+    }
 
     ScaleVelocitiesRHSBack(StokesA, StokesD, Stokes->x);
 
@@ -812,6 +824,15 @@ void SolveStokesDefectDecoupled( SparseMat *StokesA, SparseMat *StokesB, SparseM
     if ( model->lin_solver == 1 ) KSPStokesDecoupled       ( StokesA, StokesB, StokesC, StokesD, PardisoStokes, StokesA->F, StokesC->F, dx, *model, mesh, scaling, Stokes, Stokes, JacobA, JacobB, JacobC );
     if ( model->lin_solver == 2 ) KillerSolver             ( StokesA, StokesB, StokesC, StokesD, PardisoStokes, StokesA->F, StokesC->F, dx, *model, mesh, scaling, Stokes, Stokes, JacobA, JacobB, JacobC );
     if ( model->lin_solver ==-1 ) DirectStokesDecoupledComp( StokesA, StokesB, StokesC, StokesD, PardisoStokes, StokesA->F, StokesC->F, dx, *model, mesh, scaling, Stokes );
+    if ( model->lin_solver == 3 ) {
+        int gmg_rc = SolveStokesGMG(StokesA, StokesB, StokesC, StokesD, Stokes, PardisoStokes,
+                                    StokesA->F, StokesC->F, dx, *model, mesh, scaling);
+        if (gmg_rc != 0) {
+            LOG_WARN("GMG lin_solver = 3 (defect-correction): falling back to CHOLMOD direct solve (rc=%d).", gmg_rc);
+            DirectStokesDecoupled(StokesA, StokesB, StokesC, StokesD, PardisoStokes,
+                                  StokesA->F, StokesC->F, dx, *model, mesh, scaling, Stokes);
+        }
+    }
     LOG_TIME("direct Stokes solver = %lf sec", (double)((double)omp_get_wtime() - t_omp));
 
     // Scale back veolicities

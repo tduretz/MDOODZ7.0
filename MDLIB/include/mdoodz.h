@@ -77,7 +77,15 @@ typedef struct {
   // Linear solver
   int    lin_solver, diag_scaling, preconditioner, max_its_KSP, max_its_PH;
   int    cholmod_threads; // CHOLMOD thread count: 1=single (default), -1=all OMP threads, N=explicit
-  double penalty, lin_abs_div, lin_rel_div, lin_abs_mom, lin_rel_mom, auto_penalty, compressible, rel_tol_KSP; 
+  double penalty, lin_abs_div, lin_rel_div, lin_abs_mom, lin_rel_mom, auto_penalty, compressible, rel_tol_KSP;
+  // Geometric multigrid (lin_solver = 3); all optional with safe defaults.
+  // See openspec/changes/add-gmg-stokes-solver/specs/gmg-stokes-solver/spec.md
+  int    gmg_levels;         // 0 = auto (D6 policy); otherwise use this exact value, clamped to [2, floor(log2(min(Nx,Nz)))]
+  int    gmg_nu_pre;         // pre-smoothing Vanka sweeps per level (default 2)
+  int    gmg_nu_post;        // post-smoothing Vanka sweeps per level (default 2)
+  int    gmg_fgmres_restart; // FGMRES restart length (default 30)
+  double gmg_fgmres_tol;     // FGMRES convergence tolerance; 0.0 = auto (= nonlin_abs_mom / 10)
+  int    gmg_standalone;     // 0 = FGMRES+V-cycle (default), 1 = bare V-cycle (diagnostic)
   // Thermal solver
   int    thermal_solver;    // 0: CHOLMOD direct (default), 1: PCG iterative
   int    max_its_thermal;   // Max PCG iterations (default 1000)

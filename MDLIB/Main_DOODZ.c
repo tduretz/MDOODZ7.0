@@ -102,7 +102,12 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
     // Persistent interpolation buffer pool (modes 1, 2)
     InterpBufPool *pool = NULL;
     if (input.model.interp_mode >= 1) {
-        pool = InterpBufPoolInit(&mesh, input.model.interp_mode, omp_get_max_threads());
+#ifdef _OMP_
+        int nthreads_pool = omp_get_max_threads();
+#else
+        int nthreads_pool = 1;
+#endif
+        pool = InterpBufPoolInit(&mesh, input.model.interp_mode, nthreads_pool);
     }
 
     // Initialise grid coordinates

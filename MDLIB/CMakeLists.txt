@@ -13,12 +13,15 @@ add_library(mdoodz SHARED
         MeltingRoutines.c
         MemoryAllocFree.c
         MiscFunctions.c
+        MultigridLevels.c
+        MultigridStokes.c
         ParticleRoutines.c
         RheologyDensity.c
         RheologyParticles.c
         Solvers.c
         SparseTools.c
         StokesAssemblyDecoupled.c
+        StokesAssemblyGMG.c
         StokesRoutines.c
         ThermalRoutines.c
         ThermalSolver.c

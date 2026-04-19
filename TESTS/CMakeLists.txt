@@ -158,3 +158,33 @@ add_executable(RotationAdvectionTests RotationAdvectionTests.cpp)
 target_link_libraries(RotationAdvectionTests LINK_PUBLIC mdoodz GTest::gtest_main)
 add_test(NAME RotationAdvectionTests COMMAND RotationAdvectionTests)
 set_tests_properties(RotationAdvectionTests PROPERTIES LABELS "experimental" TIMEOUT 600)
+
+# Geometric multigrid unit tests (add-gmg-stokes-solver change)
+add_executable(MultigridTests MultigridTests.cpp)
+target_link_libraries(MultigridTests LINK_PUBLIC mdoodz GTest::gtest_main)
+target_include_directories(MultigridTests PRIVATE ${PROJECT_SOURCE_DIR}/MDLIB)
+add_test(NAME MultigridTests COMMAND MultigridTests)
+
+# GMG Stokes solver (matvec, Vanka, V-cycle, FGMRES) unit tests
+add_executable(MultigridStokesTests MultigridStokesTests.cpp)
+target_link_libraries(MultigridStokesTests LINK_PUBLIC mdoodz GTest::gtest_main)
+target_include_directories(MultigridStokesTests PRIVATE ${PROJECT_SOURCE_DIR}/MDLIB)
+add_test(NAME MultigridStokesTests COMMAND MultigridStokesTests)
+set_tests_properties(MultigridStokesTests PROPERTIES TIMEOUT 300)
+
+# GMG-vs-CHOLMOD Stokes solve equivalence tests (requires lin_solver=3 wiring
+# with full MDOODZ stencil matching; marked experimental until that work lands).
+add_executable(GmgStokesEquivalence GmgStokesEquivalence.cpp)
+target_link_libraries(GmgStokesEquivalence LINK_PUBLIC mdoodz GTest::gtest_main)
+target_include_directories(GmgStokesEquivalence PRIVATE ${PROJECT_SOURCE_DIR}/MDLIB)
+add_test(NAME GmgStokesEquivalence COMMAND GmgStokesEquivalence)
+set_tests_properties(GmgStokesEquivalence PROPERTIES LABELS "experimental" TIMEOUT 1800)
+
+# Stokes matvec golden cross-check (design D11, task 15.9–15.13): verifies the
+# fine-level ApplyStokesOperatorMDOODZ reproduces BuildStokesOperatorDecoupled's
+# assembled A·x to 1e-12 on a small representative mesh.
+add_executable(StokesMatvecEquivalence StokesMatvecEquivalence.cpp)
+target_link_libraries(StokesMatvecEquivalence LINK_PUBLIC mdoodz GTest::gtest_main)
+target_include_directories(StokesMatvecEquivalence PRIVATE ${PROJECT_SOURCE_DIR}/MDLIB)
+add_test(NAME StokesMatvecEquivalence COMMAND StokesMatvecEquivalence)
+set_tests_properties(StokesMatvecEquivalence PROPERTIES TIMEOUT 60)

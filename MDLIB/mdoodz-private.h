@@ -1,3 +1,6 @@
+#ifndef MDOODZ_PRIVATE_H
+#define MDOODZ_PRIVATE_H
+
 #include "cholmod.h"
 #include "cs.h"
 #include "mdoodz.h"
@@ -630,3 +633,5 @@ void            MeltFractionGrid( grid*, markers*, mat_prop*, params*, scale* );
 void            MassSourceTerm( grid*, markers*, mat_prop*, params*, scale* );
 void            UpdateParticleDivThermal( grid*, scale, params, markers*, mat_prop* );
 void            InjectDikesAndSills(markers*, MdoodzInput*);
+
+#endif // MDOODZ_PRIVATE_H

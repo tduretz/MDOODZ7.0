@@ -1115,8 +1115,16 @@ Input ReadInputFile( char *fileName ) {
     model.lin_rel_div        = ReadDou2( fin, "lin_rel_div",      1.0e-5 ); // Tolerance for linear mechanical solver
     model.lin_abs_mom        = ReadDou2( fin, "lin_abs_mom",      1.0e-9 ); // Tolerance for linear mechanical solver
     model.lin_rel_mom        = ReadDou2( fin, "lin_rel_mom",      1.0e-5 ); // Tolerance for linear mechanical solver
-    model.lin_solver         = ReadInt2( fin, "lin_solver",            2 ); // 1: Powell-Hestenes, 2: Powell-Hestenes augmented (killer solver) 
+    model.lin_solver         = ReadInt2( fin, "lin_solver",            2 ); // 1: Powell-Hestenes, 2: Powell-Hestenes augmented (killer solver), 3: GMG-preconditioned FGMRES
     model.max_its_PH         = ReadInt2( fin, "max_its_PH",           10 ); // Max number of Powell-Hestenes iterations
+    // Geometric-multigrid solver (lin_solver = 3); all optional, safe defaults.
+    // Default tolerance (0.0) is resolved at solve time to Nmodel.nonlin_abs_mom / 10.
+    model.gmg_levels         = ReadInt2( fin, "gmg_levels",            0 ); // 0 = auto (halve until <16 cells/side or <5000 DOFs)
+    model.gmg_nu_pre         = ReadInt2( fin, "gmg_nu_pre",            2 ); // pre-smoothing Vanka sweeps per level
+    model.gmg_nu_post        = ReadInt2( fin, "gmg_nu_post",           2 ); // post-smoothing Vanka sweeps per level
+    model.gmg_fgmres_restart = ReadInt2( fin, "gmg_fgmres_restart",   30 ); // FGMRES restart length
+    model.gmg_fgmres_tol     = ReadDou2( fin, "gmg_fgmres_tol",      0.0 ); // 0.0 = auto (nonlin_abs_mom / 10)
+    model.gmg_standalone     = ReadInt2( fin, "gmg_standalone",        0 ); // 0 = FGMRES+V-cycle, 1 = bare V-cycle (diagnostic)
     // Thermal solver
     model.thermal_solver     = ReadInt2( fin, "thermal_solver",        0 ); // 0: CHOLMOD direct (default), 1: PCG iterative
     model.max_its_thermal    = ReadInt2( fin, "max_its_thermal",    1000 ); // Max PCG iterations
@@ -1266,10 +1274,24 @@ Input ReadInputFile( char *fileName ) {
     // printf("%d\n", model.preconditioner); exit(1);
     if (model.Newton==0) Nmodel.Picard2Newton = 0; // If Picard is activated, do not switch to Newton
     if (model.Newton==1) model.line_search    = 1; // If Newton is activated, switch to line search
-    if ( model.lin_solver == 0 || model.Newton == 1 || model.anisotropy == 1) {
+    // Force lin_solver = 2 (KillerSolver) for solver type 0 and when Newton /
+    // anisotropy require a block-preconditioned Krylov outer solver. GMG
+    // (lin_solver = 3) is exempt: Phase 2 of design D11 (tasks 15.19-15.23)
+    // extended `ApplyStokesOperatorMDOODZ`'s Newton-Jacobian branch and the
+    // D7 symmetric-smoothing Vanka block so the GMG stack handles Newton
+    // mode end-to-end without falling back to CHOLMOD.
+    if ( model.lin_solver != 3 &&
+         ( model.lin_solver == 0 || model.Newton == 1 || model.anisotropy == 1 ) ) {
         LOG_WARN("WARNING!! Changing from solver type 0 to solver type 2!!! That's the new standard in MDOODZ 6.0.");
         model.lin_solver = 2;
     }
+    // Geometric-multigrid (lin_solver = 3) parameter validation.
+    if ( model.gmg_nu_pre < 1 )         { LOG_ERR("gmg_nu_pre must be >= 1 (got %d)", model.gmg_nu_pre);                 exit(1); }
+    if ( model.gmg_nu_post < 1 )        { LOG_ERR("gmg_nu_post must be >= 1 (got %d)", model.gmg_nu_post);               exit(1); }
+    if ( model.gmg_fgmres_restart < 1 ) { LOG_ERR("gmg_fgmres_restart must be >= 1 (got %d)", model.gmg_fgmres_restart); exit(1); }
+    if ( model.gmg_fgmres_tol < 0.0 )   { LOG_ERR("gmg_fgmres_tol must be >= 0.0 (got %g; use 0.0 for auto)", model.gmg_fgmres_tol); exit(1); }
+    if ( model.gmg_standalone != 0 && model.gmg_standalone != 1 ) { LOG_ERR("gmg_standalone must be 0 or 1 (got %d)", model.gmg_standalone); exit(1); }
+    if ( model.gmg_levels < 0 )         { LOG_ERR("gmg_levels must be >= 0 (got %d; use 0 for auto)", model.gmg_levels); exit(1); }
     //------------------------------------------------------------------------------------------------------------------------------//
     // DEFORMATION MAP PARAMETERS
     //------------------------------------------------------------------------------------------------------------------------------//
