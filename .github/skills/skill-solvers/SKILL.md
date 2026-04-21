@@ -116,12 +116,19 @@ Step-size control for Newton updates. Parameters:
 
 ## Linear Solver
 
-MDOODZ uses **SuiteSparse** direct solvers:
+MDOODZ exposes two linear-solver families for the Stokes system:
+
+1. **SuiteSparse direct solvers** (`lin_solver ∈ {-1, 0, 1, 2}`): CHOLMOD + UMFPACK factorisation of the assembled decoupled Stokes matrix. The historical workhorse; O(N^1.5) memory and wall-time on 2D grids.
+2. **GMG-preconditioned FGMRES** (`lin_solver = 3`): geometric-multigrid hierarchy of MAC-staggered grids + Vanka 5×5 block smoother + CHOLMOD (UMFPACK in practice) coarsest-level direct solve, wrapped in a flexible GMRES outer driver. O(N) memory and O(N log N) wall-time; added in `add-gmg-stokes-solver`, measured in `add-gmg-stokes-defence`.
+
+Transparent fall-back: `lin_solver = 3` silently routes to CHOLMOD if FGMRES fails to converge or if a configuration outside its current envelope is requested. Default envelope (after Phase 2): Newton + anisotropy are both supported.
+
+### Direct path — SuiteSparse
 
 | Component | Purpose |
 |-----------|---------|
-| CHOLMOD | Sparse Cholesky factorisation |
-| UMFPACK | Unsymmetric multifrontal LU |
+| CHOLMOD | Sparse Cholesky factorisation (SPD blocks, e.g. PH-augmented velocity) |
+| UMFPACK | Unsymmetric multifrontal LU (full saddle-point) |
 | AMD/COLAMD | Matrix ordering for sparsity |
 
 The `DirectSolver` struct wraps CHOLMOD:
@@ -132,15 +139,69 @@ The `DirectSolver` struct wraps CHOLMOD:
 | `Analyze` | Whether symbolic analysis is done |
 | `phase` | Solver phase (analyse/factorise/solve) |
 
+### GMG path — `lin_solver = 3`
+
+| File | Role |
+|------|------|
+| `MDLIB/MultigridLevels.{h,c}` | Hierarchy build, restrict/prolongate operators, active-mask propagation |
+| `MDLIB/MultigridStokes.{h,c}` | V-cycle driver, Vanka smoother, FGMRES outer loop, one-shot `gmg_dump_vcycle` instrumentation |
+| `MDLIB/StokesAssemblyGMG.{h,c}` | Fine-level matvec (stencil-bridge equivalent of `BuildStokesOperatorDecoupled`; guarded by a 1e-12 golden cross-check test — design D11) |
+
+Operator choices:
+
+| Operator | Velocity | Pressure |
+|---------|----------|----------|
+| Restriction | full-weighting | injection |
+| Prolongation | bilinear | piecewise-constant |
+| Viscosity restriction | harmonic-averaged above contrast ratio 10 | n/a |
+| Smoother | Vanka 5×5 block, ω = 0.6 under-relaxation | coupled in Vanka block |
+| Coarsest | UMFPACK direct solve on restricted Picard K | coupled |
+| Outer driver | FGMRES, restart 30 | — |
+
+Picard ↔ Newton phasing (design D7): the V-cycle's fine-level matvec tracks the current nonlinear mode, but the smoother and coarse-grid operator always use the Picard block — this keeps the preconditioner SPD and the coarse solve CHOLMOD-stable.
+
 ### Tuning
 
-| Parameter | `.txt` field | Description |
-|-----------|-------------|-------------|
-| Linear solver type | `lin_solver` | Solver variant selection |
-| Diagonal scaling | `diag_scaling` | Pre-condition with diagonal scaling (0/1) |
-| Preconditioner | `preconditioner` | Preconditioner type |
-| Max KSP iterations | `max_its_KSP` | For iterative refinement |
-| Relative KSP tolerance | `rel_tol_KSP` | Convergence for iterative refinement |
+| Parameter | `.txt` field | Path | Description |
+|-----------|--------------|------|-------------|
+| Linear solver type | `lin_solver` | both | `{-1,0,1,2} = direct`, `3 = GMG-FGMRES` |
+| Diagonal scaling | `diag_scaling` | direct | Pre-condition with diagonal scaling (0/1) |
+| Preconditioner | `preconditioner` | direct | Preconditioner type |
+| Max KSP iterations | `max_its_KSP` | direct | For iterative refinement |
+| Relative KSP tolerance | `rel_tol_KSP` | direct | Convergence for iterative refinement |
+| Multigrid levels | `gmg_levels` | GMG | 0 = auto (coarsen until ≤ 21²) |
+| Pre-smooth sweeps | `gmg_nu_pre` | GMG | Typically 2 |
+| Post-smooth sweeps | `gmg_nu_post` | GMG | Typically 2 |
+| FGMRES restart | `gmg_fgmres_restart` | GMG | Typically 30 |
+| FGMRES tolerance | `gmg_fgmres_tol` | GMG | Typically 1e-11 |
+| Standalone (no fall-back) | `gmg_standalone` | GMG | 1 = hard-fail instead of routing to CHOLMOD |
+| V-cycle snapshot dump | `gmg_dump_vcycle` | GMG | 1 = one-shot HDF5 dump per operator step |
+
+### Which solver for what problem?
+
+Quick decision tree:
+
+* **Small to medium (≤ 500²), no memory pressure**: `lin_solver = 2` (Killer / Powell–Hestenes direct) — the historical default.
+* **Larger grids or memory-bound**: `lin_solver = 3` (GMG-FGMRES) — O(N) memory, falls back to direct if it can't converge.
+* **Edge cases** (e.g. specific compressibility, augmented-Lagrangian sweeps): `lin_solver ∈ {1, 0, -1}` as documented in `Solvers.c` and design D1 of `add-gmg-stokes-solver`.
+
+### Verifying GMG is doing the work (not falling back)
+
+Three diagnostics:
+
+1. Per-run log lines report `FGMRES iter N | |r| = ...` and any `lin_solver = 3 → CHOLMOD fall-back` events; a solve that actually used GMG will have a block of FGMRES residual lines, a fallback will skip straight to the direct-solver header.
+2. `gmg_dump_vcycle = 1` emits `${writer_subfolder}/vcycle_dump/level_{N}_{step}_{pre|post}_{seq}.h5` for the very first V-cycle; `benchmarks/vcycle_vis/make_gif.py` renders those into the animation + 6-frame stills used in the defence §10.
+3. Dual-solver CI pattern: run the same `.txt` under `lin_solver = 0` (CHOLMOD twin) and `lin_solver = 3` (GMG twin), HDF5-compare the outputs. See `TESTS/GmgStokesEquivalence.cpp`, `TESTS/DisabledBenchmarks/TopoRelaxGmgEquivalence.cpp`, and `TESTS/DisabledBenchmarks/SolKzGmgEquivalence.cpp` for canonical templates (1e-8 relative L2 on velocities, 1e-6 on mean-subtracted pressure).
+
+### Performance characteristics (measured)
+
+`lin_solver = 3` has been measured on the `add-gmg-stokes-defence` pinned EC2 harness (`c7i.8xlarge`, `eu-west-1`). Headline regressions bounds:
+
+* Memory-scaling exponent α ≤ 1.2 (theoretical bound for GMG: α = 1.0).
+* 201×201 wall-time speedup ≥ 3× vs `lin_solver = 0` CHOLMOD baseline.
+* V-cycle convergence factor ρ ≤ 0.15 on well-posed Stokes problems.
+
+Point measurements and 95% confidence intervals live in `defence.pdf` §6 Measurements, with per-grid-size detail in `benchmarks/ec2/results/summary.md`. If a measurement falls short of a bound, the defence records it honestly in §8 Limitations rather than restating the bound as if met.
 
 ## Thermal Solver
 

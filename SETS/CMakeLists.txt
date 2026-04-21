@@ -29,5 +29,9 @@ else()
     add_set(SubductionMelting)
     add_set(RiftingCombinedYield)
     add_set(RiftingComprehensive)
+    # Local perf-harness driver (add-gmg-stokes-defence §5). main(argc,argv)
+    # variant of ViscousInclusion that accepts the .txt path at runtime and
+    # prints a PERF_JSON: sentinel line — see SETS/SolViPerf.c.
+    add_set(SolViPerf)
 endif()
 

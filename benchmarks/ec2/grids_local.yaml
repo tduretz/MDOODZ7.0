@@ -1,0 +1,89 @@
+# Local MacBook perf-sweep spec for add-gmg-stokes-defence §5.
+#
+# Sized to fit a ≤ 1-hour wall-clock budget on an Apple M1 / 16 GB / 8 cores.
+# Differs from grids.yaml (EC2) in four ways:
+#   1. provisioning.instance_type = macbook-m1-local (no cloud call).
+#   2. memory sweep stops at 321² for BOTH solvers — a 51² GMG smoke-test
+#      on this MacBook already cost 11 s wall, so a projected 801² GMG run
+#      (~250× more DOF, O(N log N) work) would eat the full 1-hour budget
+#      on its own. Keeping 321² as the top point still anchors four grid
+#      sizes for the log-log fit. The CHOLMOD memory wall at 801² is now
+#      argued analytically in defence.md §2 rather than demonstrated
+#      empirically — the honest ledger flags this in §6 (see STATUS.md §2).
+#   3. strong-scaling threads ∈ {1,2,4,8} — Apple M1 has 8 hardware cores.
+#   4. repetitions = 3 (not 5) — tight budget trades one sample-width for
+#      a better spread of grid points. Outliers still caught via IQR.
+#
+# See design.md §D1 amendment ("MacBook-local sweep") and §D2 amendment
+# ("thermal-throttle detection via wall-time variance on Apple Silicon").
+#
+# Running it:
+#   bash benchmarks/ec2/run_local.sh --grids benchmarks/ec2/grids_local.yaml
+
+schema_version: 1
+change: add-gmg-stokes-defence
+
+provisioning:
+  # Sentinel value — run_local.sh ignores provisioning entirely and skips
+  # provision.sh / teardown.sh. Kept in the file so schema stays uniform
+  # with grids.yaml and analyse.py can read instance_type unchanged.
+  instance_type: macbook-m1-local
+  region: local
+  ami_family: darwin-arm64
+  on_demand: true
+
+measurement:
+  repetitions: 3
+  thermal_throttle_reject: true
+  # On Apple Silicon, per-core throttle state requires root + powermetrics;
+  # the local harness instead flags a run as thermally throttled if its
+  # wall time is > 1.35× the median of its (grid, solver, threads) group.
+  # See run_local.sh -> flag_throttle_by_variance().
+  thermal_throttle_max_retries: 2
+  warn_above_throttle_fraction: 0.20
+  budget_usd: 0
+  # Hard wall-clock cap (s). The driver aborts the outer sweep loop when
+  # the elapsed budget would be exceeded by the next run, even if some
+  # configurations remain; analyse.py tolerates an incomplete matrix.
+  wallclock_budget_s: 3600
+
+binary:
+  git_sha: HEAD
+  build_flags:
+    - -DOPT=ON
+    - -DOMP=ON
+    - -DTEST=ON
+    - -DVIS=OFF
+    - -DHDF5_ENABLED=ON
+
+sweeps:
+  - name: memory_scaling
+    purpose: "alpha fit across log(RSS) = log(a) + alpha * log(DOF)"
+    # Four anchor points for a log-log fit under a 1-hour total budget on
+    # an M1/16 GiB MacBook. 801² was tested and projected to take ≈ 1 hour
+    # for GMG alone and is analytically infeasible for CHOLMOD (≈ 40 GiB
+    # factor); it is argued instead of measured in defence.md §2.
+    grids:
+      - { nx: 41,  nz: 41  }
+      - { nx: 81,  nz: 81  }
+      - { nx: 161, nz: 161 }
+      - { nx: 321, nz: 321 }
+    lin_solvers: [0, 3]
+    n_threads: [1]
+    txt_template: SolViRes41.txt
+
+  - name: walltime_comparison
+    purpose: "201x201 wall-time ratio t(CHOLMOD)/t(GMG)"
+    grids:
+      - { nx: 201, nz: 201 }
+    lin_solvers: [0, 3]
+    n_threads: [1]
+    txt_template: SolViRes201.txt
+
+  - name: strong_scaling
+    purpose: "efficiency vs thread count at 201x201 (M1 has 8 hw cores)"
+    grids:
+      - { nx: 201, nz: 201 }
+    lin_solvers: [3]
+    n_threads: [1, 2, 4, 8]
+    txt_template: SolViRes201.txt

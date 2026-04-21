@@ -188,3 +188,81 @@ target_link_libraries(StokesMatvecEquivalence LINK_PUBLIC mdoodz GTest::gtest_ma
 target_include_directories(StokesMatvecEquivalence PRIVATE ${PROJECT_SOURCE_DIR}/MDLIB)
 add_test(NAME StokesMatvecEquivalence COMMAND StokesMatvecEquivalence)
 set_tests_properties(StokesMatvecEquivalence PROPERTIES TIMEOUT 60)
+
+# AnalyticalBench fixtures (SolKz GMG↔CHOLMOD equivalence, §4.2; the
+# analytic-SolKz benchmark test binary is SolKzGmgEquivalence below).
+file(COPY ${PROJECT_SOURCE_DIR}/TESTS/AnalyticalBench DESTINATION ${PROJECT_BINARY_DIR}/TESTS)
+
+# -----------------------------------------------------------------------
+# add-gmg-stokes-defence §4 — easy GMG↔CHOLMOD equivalence fixtures.
+# Each test runs a GMG twin (`lin_solver = 3`) and a CHOLMOD twin
+# (`lin_solver = 0`) end-to-end and asserts the two linear solvers
+# produce the same Stokes solution to 1e-8 relative L2. Live tests
+# (not DISABLED_); the "DisabledBenchmarks" folder name refers to the
+# upstream DISABLED_* fixture moniker that §3 cleared.
+# -----------------------------------------------------------------------
+
+# TopoRelax — free-surface relaxation (§4.1). Fixtures live in TopoBench/.
+add_executable(TopoRelaxGmgEquivalence DisabledBenchmarks/TopoRelaxGmgEquivalence.cpp)
+target_link_libraries(TopoRelaxGmgEquivalence LINK_PUBLIC mdoodz GTest::gtest_main)
+target_include_directories(TopoRelaxGmgEquivalence PRIVATE ${PROJECT_SOURCE_DIR}/MDLIB ${PROJECT_SOURCE_DIR}/TESTS)
+add_test(NAME TopoRelaxGmgEquivalence COMMAND TopoRelaxGmgEquivalence)
+set_tests_properties(TopoRelaxGmgEquivalence PROPERTIES TIMEOUT 900)
+
+# SolKz high-contrast Stokes (§4.2). Fixtures live in AnalyticalBench/.
+add_executable(SolKzGmgEquivalence DisabledBenchmarks/SolKzGmgEquivalence.cpp)
+target_link_libraries(SolKzGmgEquivalence LINK_PUBLIC mdoodz GTest::gtest_main)
+target_include_directories(SolKzGmgEquivalence PRIVATE ${PROJECT_SOURCE_DIR}/MDLIB ${PROJECT_SOURCE_DIR}/TESTS)
+add_test(NAME SolKzGmgEquivalence COMMAND SolKzGmgEquivalence)
+set_tests_properties(SolKzGmgEquivalence PROPERTIES TIMEOUT 900)
+
+# -----------------------------------------------------------------------
+# add-gmg-stokes-defence §7 — anisotropic + shear-band equivalence fixtures.
+# Fixtures live in TESTS/SolViBenchmark/ and TESTS/ShearBand/ (copied above).
+# Each test runs a GMG twin (`lin_solver = 3`) and a CHOLMOD twin
+# (`lin_solver = 0` → KillerSolver under Newton/anisotropy, or
+#  `lin_solver = -1` → DirectStokesDecoupledComp where machine-precision
+# reference is required) end-to-end and asserts the §7.x acceptance
+# criteria for that fixture.
+# -----------------------------------------------------------------------
+
+# AnisotropyShearBand — anisotropic SolVi (§7.1). Fixtures in SolViBenchmark/.
+add_executable(AnisotropyShearBandGmgEquivalence
+    DisabledBenchmarks/AnisotropyShearBandGmgEquivalence.cpp)
+target_link_libraries(AnisotropyShearBandGmgEquivalence LINK_PUBLIC mdoodz GTest::gtest_main)
+target_include_directories(AnisotropyShearBandGmgEquivalence PRIVATE ${PROJECT_SOURCE_DIR}/MDLIB ${PROJECT_SOURCE_DIR}/TESTS)
+add_test(NAME AnisotropyShearBandGmgEquivalence COMMAND AnisotropyShearBandGmgEquivalence)
+set_tests_properties(AnisotropyShearBandGmgEquivalence PROPERTIES TIMEOUT 900)
+
+# Shear-band fixtures live in TESTS/ShearBand/ — copy them into the build tree.
+file(COPY ${PROJECT_SOURCE_DIR}/TESTS/ShearBand DESTINATION ${PROJECT_BINARY_DIR}/TESTS)
+
+# SingleShearBand — Newton + Drucker-Prager (§7.2). Fixtures in ShearBand/.
+add_executable(SingleShearBandGmgEquivalence
+    DisabledBenchmarks/SingleShearBandGmgEquivalence.cpp)
+target_link_libraries(SingleShearBandGmgEquivalence LINK_PUBLIC mdoodz GTest::gtest_main)
+target_include_directories(SingleShearBandGmgEquivalence PRIVATE ${PROJECT_SOURCE_DIR}/MDLIB ${PROJECT_SOURCE_DIR}/TESTS)
+add_test(NAME SingleShearBandGmgEquivalence COMMAND SingleShearBandGmgEquivalence)
+set_tests_properties(SingleShearBandGmgEquivalence PROPERTIES TIMEOUT 1800)
+
+# ConjugateShearBands — two crossing bands (§7.3). Fixtures in ShearBand/.
+add_executable(ConjugateShearBandsGmgEquivalence
+    DisabledBenchmarks/ConjugateShearBandsGmgEquivalence.cpp)
+target_link_libraries(ConjugateShearBandsGmgEquivalence LINK_PUBLIC mdoodz GTest::gtest_main)
+target_include_directories(ConjugateShearBandsGmgEquivalence PRIVATE ${PROJECT_SOURCE_DIR}/MDLIB ${PROJECT_SOURCE_DIR}/TESTS)
+add_test(NAME ConjugateShearBandsGmgEquivalence COMMAND ConjugateShearBandsGmgEquivalence)
+set_tests_properties(ConjugateShearBandsGmgEquivalence PROPERTIES TIMEOUT 1800)
+
+# -----------------------------------------------------------------------
+# add-gmg-stokes-defence §6 — V-cycle animation dump generator.
+# Runs the 41×41 SolCx-analog fixture with `gmg_dump_vcycle = 1` and
+# emits HDF5 snapshots under SolViRes41_gmg_vcycle_anim/vcycle_dump/
+# consumed by benchmarks/vcycle_vis/make_gif.py. Tagged experimental
+# so default ctest skips the regeneration step — only re-run when
+# updating defence figures.
+# -----------------------------------------------------------------------
+add_executable(VcycleAnimGenerate VcycleAnimGenerate.cpp)
+target_link_libraries(VcycleAnimGenerate LINK_PUBLIC mdoodz GTest::gtest_main)
+target_include_directories(VcycleAnimGenerate PRIVATE ${PROJECT_SOURCE_DIR}/MDLIB ${PROJECT_SOURCE_DIR}/TESTS)
+add_test(NAME VcycleAnimGenerate COMMAND VcycleAnimGenerate)
+set_tests_properties(VcycleAnimGenerate PROPERTIES LABELS "experimental" TIMEOUT 60)

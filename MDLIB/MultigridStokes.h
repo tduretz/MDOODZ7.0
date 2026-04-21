@@ -132,6 +132,28 @@ int  SolveStokesGMG(SparseMat *StokesA, SparseMat *StokesB,
                     double *rhs_u, double *rhs_p, double *x,
                     params model, grid *mesh, scale scaling);
 
+// --- V-cycle dump (test-only helpers) ------------------------------------
+//
+// These three helpers expose the otherwise file-static V-cycle dumper
+// so unit tests can arm / finish / reset independently of
+// `SolveStokesGMG`. Production code only uses the dump through
+// `gmg_dump_vcycle = 1` in the input file, which arms internally via
+// `SolveStokesGMG`. See design D9 of add-gmg-stokes-defence.
+
+// Reset the one-shot guard. Production never calls this; tests call it
+// between arms to exercise multiple dumps per process.
+void GmgVcycleDumpReset(void);
+
+// Arm the dumper with an explicit output directory (created recursively
+// if needed). If the one-shot guard has already fired, this is a no-op
+// and returns 0. Returns 1 when armed, 0 otherwise.
+int  GmgVcycleDumpArmForTest(const char *output_dir);
+
+// Mark the current recorded cycle as finished and latch the one-shot
+// guard. Safe to call when not armed. Returns the number of snapshots
+// written during the just-closed recording (0 if not armed).
+int  GmgVcycleDumpFinishForTest(void);
+
 #ifdef __cplusplus
 }
 #endif

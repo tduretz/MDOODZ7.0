@@ -5,9 +5,16 @@
 // whose exact velocity/pressure fields are known.
 
 #include <cmath>
+#include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <gtest/gtest.h>
+#include <string>
+#include <sys/stat.h>
+#include <unistd.h>
 #include <vector>
+
+#include <hdf5.h>
 
 #include "MultigridLevels.h"
 #include "MultigridStokes.h"
@@ -659,4 +666,199 @@ TEST(GMG_Vcycle, DirectCoarseTightensConvergenceFactor) {
     // from the iterative Vanka pseudo-solve.
     EXPECT_LT(rho_max, 0.4) << "rho_max=" << rho_max;
     MultigridHierarchyFree(&H);
+}
+
+// ---------------------------------------------------------------------------
+// V-cycle dump (add-gmg-stokes-defence §2.6 / §2.7, design D5/D9)
+// ---------------------------------------------------------------------------
+//
+// Each V-cycle touches every level at well-defined operator boundaries. The
+// dumper emits one HDF5 snapshot per boundary. For L levels the snapshot
+// count is
+//   - L == 1:         2   (coarse_solve pre + post only)
+//   - L >= 2:         8L - 6
+//     finest:     7  (pre_smooth pre/post + restrict_pre + prolongate pre/post + post_smooth pre/post)
+//     intermediate (L-2 of them):  each 8  (+ restrict_post from parent)
+//     coarsest:   3  (restrict_post from parent + coarse_solve pre/post)
+//
+// The formula is derived from the operator sequence in Vcycle() in
+// MultigridStokes.c; tightening the formula without tightening the code
+// path would be a silent regression, so this test nails both.
+
+static int gmg_dump_expected_count(int n_levels) {
+    if (n_levels <= 0) return 0;
+    if (n_levels == 1) return 2;
+    return 8 * n_levels - 6;
+}
+
+static std::string gmg_dump_make_tmpdir(const std::string &suffix) {
+    char buf[256];
+    // mkstemp-style tmpdir; ignore TMPDIR overrides for determinism.
+    std::snprintf(buf, sizeof(buf), "/tmp/mdoodz_vcycle_dump_%d_%s",
+                  (int)getpid(), suffix.c_str());
+    // Best-effort remove old contents — we don't recurse because the
+    // dumper creates the directory itself.
+    std::string cmd = std::string("rm -rf ") + buf;
+    (void)std::system(cmd.c_str());
+    return std::string(buf);
+}
+
+static bool gmg_dump_file_exists(const std::string &path) {
+    struct stat st;
+    return stat(path.c_str(), &st) == 0;
+}
+
+TEST(GMG_VcycleDump, EmitsExpectedSnapshotCountAndShapes) {
+    GmgVcycleDumpReset();
+    const std::string outdir = gmg_dump_make_tmpdir("count_and_shapes");
+
+    // 41x41 grid → MultigridComputeDefaultLevelCount returns 3 levels
+    // {41, 21, 11}. Using the auto-level policy guards against the
+    // formula and policy drifting apart.
+    MultigridHierarchy H;
+    ASSERT_EQ(MultigridHierarchyAllocate(&H, 41, 41, 1.0/40.0, 1.0/40.0, 0), 0);
+    H.nu_pre = 2; H.nu_post = 2;
+    const int L = H.n_levels;
+    const int expected = gmg_dump_expected_count(L);
+
+    SetManufacturedProblem(&H);
+
+    ASSERT_EQ(GmgVcycleDumpArmForTest(outdir.c_str()), 1);
+    Vcycle(&H, 0);
+    const int count = GmgVcycleDumpFinishForTest();
+
+    EXPECT_EQ(count, expected) << "levels=" << L;
+
+    // Spot-check two filenames at the boundaries of the sequence.
+    // seq 000 is "level_0_pre_smooth_pre"; the last dump on the finest
+    // recursion is post_smooth_post on level 0, issued as the final seq.
+    {
+        char path[1024];
+        std::snprintf(path, sizeof(path),
+                      "%s/level_0_pre_smooth_pre_000.h5", outdir.c_str());
+        EXPECT_TRUE(gmg_dump_file_exists(path)) << path;
+    }
+    {
+        char path[1024];
+        std::snprintf(path, sizeof(path),
+                      "%s/level_0_post_smooth_post_%03d.h5",
+                      outdir.c_str(), expected - 1);
+        EXPECT_TRUE(gmg_dump_file_exists(path)) << path;
+    }
+
+    // Open the first snapshot and verify HDF5 group/field shapes.
+    {
+        char path[1024];
+        std::snprintf(path, sizeof(path),
+                      "%s/level_0_pre_smooth_pre_000.h5", outdir.c_str());
+        hid_t file = H5Fopen(path, H5F_ACC_RDONLY, H5P_DEFAULT);
+        ASSERT_GE(file, 0) << path;
+
+        hid_t vx_ds = H5Dopen(file, "/Fields/Vx", H5P_DEFAULT);
+        ASSERT_GE(vx_ds, 0);
+        hid_t vx_sp = H5Dget_space(vx_ds);
+        hsize_t vx_n;
+        H5Sget_simple_extent_dims(vx_sp, &vx_n, nullptr);
+        const MultigridLevel *L0 = &H.levels[0];
+        EXPECT_EQ((int)vx_n, L0->Nx * L0->Ncz);
+        H5Sclose(vx_sp);
+        H5Dclose(vx_ds);
+
+        hid_t p_ds = H5Dopen(file, "/Fields/P", H5P_DEFAULT);
+        ASSERT_GE(p_ds, 0);
+        hid_t p_sp = H5Dget_space(p_ds);
+        hsize_t p_n;
+        H5Sget_simple_extent_dims(p_sp, &p_n, nullptr);
+        EXPECT_EQ((int)p_n, L0->Ncx * L0->Ncz);
+        H5Sclose(p_sp);
+        H5Dclose(p_ds);
+
+        // Meta/step should read back as "pre_smooth".
+        hid_t s_ds = H5Dopen(file, "/Meta/step", H5P_DEFAULT);
+        ASSERT_GE(s_ds, 0);
+        hid_t s_sp = H5Dget_space(s_ds);
+        hsize_t s_n;
+        H5Sget_simple_extent_dims(s_sp, &s_n, nullptr);
+        std::vector<char> step_buf((size_t)s_n + 1, 0);
+        H5Dread(s_ds, H5T_NATIVE_CHAR, H5S_ALL, H5S_ALL, H5P_DEFAULT, step_buf.data());
+        EXPECT_STREQ(step_buf.data(), "pre_smooth");
+        H5Sclose(s_sp);
+        H5Dclose(s_ds);
+
+        H5Fclose(file);
+    }
+
+    MultigridHierarchyFree(&H);
+    GmgVcycleDumpReset();
+}
+
+TEST(GMG_VcycleDump, DisabledDumperWritesNoFiles) {
+    // When gmg_dump_vcycle is off (equivalently: the dumper is never
+    // armed), Vcycle must produce zero snapshots. The instrumentation
+    // path itself returns immediately on !active, which is the
+    // compile-time-light way to guarantee "zero overhead when off"
+    // (task 2.7). Timing is intentionally not asserted — CI wall clocks
+    // are too noisy and the early-return is already visible in the
+    // inlined Vcycle snapshot-call sites.
+    GmgVcycleDumpReset();
+    const std::string outdir = gmg_dump_make_tmpdir("disabled");
+    // Ensure the directory exists so we can list it; it should stay empty.
+    (void)mkdir(outdir.c_str(), 0775);
+
+    MultigridHierarchy H;
+    ASSERT_EQ(MultigridHierarchyAllocate(&H, 17, 17, 1.0/16.0, 1.0/16.0, 0), 0);
+    H.nu_pre = 1; H.nu_post = 1;
+    SetManufacturedProblem(&H);
+
+    // Drive V-cycles without ever arming the dumper.
+    for (int k = 0; k < 3; ++k) Vcycle(&H, 0);
+
+    // FinishForTest reports 0 snapshots when not armed.
+    EXPECT_EQ(GmgVcycleDumpFinishForTest(), 0);
+
+    // Directory must still be empty (or at least contain no snapshot
+    // files).
+    char needle[1024];
+    std::snprintf(needle, sizeof(needle),
+                  "%s/level_0_pre_smooth_pre_000.h5", outdir.c_str());
+    EXPECT_FALSE(gmg_dump_file_exists(needle));
+
+    MultigridHierarchyFree(&H);
+    GmgVcycleDumpReset();
+}
+
+TEST(GMG_VcycleDump, OneShotGuardBlocksSecondArming) {
+    // First arming succeeds; second without reset must refuse even though
+    // a fresh output directory is supplied. This is the process-wide
+    // guard that prevents repeat Picard / FGMRES iterations from
+    // flooding the filesystem (design D9).
+    GmgVcycleDumpReset();
+    const std::string dir_a = gmg_dump_make_tmpdir("guard_a");
+    const std::string dir_b = gmg_dump_make_tmpdir("guard_b");
+
+    MultigridHierarchy H;
+    ASSERT_EQ(MultigridHierarchyAllocate(&H, 17, 17, 1.0/16.0, 1.0/16.0, 0), 0);
+    H.nu_pre = 1; H.nu_post = 1;
+    SetManufacturedProblem(&H);
+
+    ASSERT_EQ(GmgVcycleDumpArmForTest(dir_a.c_str()), 1);
+    Vcycle(&H, 0);
+    const int count_a = GmgVcycleDumpFinishForTest();
+    EXPECT_GT(count_a, 0);
+
+    // Second attempt MUST refuse.
+    EXPECT_EQ(GmgVcycleDumpArmForTest(dir_b.c_str()), 0);
+    Vcycle(&H, 0);
+    // Finish on a non-armed dumper must return 0 and write nothing.
+    EXPECT_EQ(GmgVcycleDumpFinishForTest(), 0);
+
+    // dir_b should have no snapshot files (the mkdir may have been
+    // attempted but no files should have been written there).
+    char needle[1024];
+    std::snprintf(needle, sizeof(needle),
+                  "%s/level_0_pre_smooth_pre_000.h5", dir_b.c_str());
+    EXPECT_FALSE(gmg_dump_file_exists(needle)) << needle;
+
+    MultigridHierarchyFree(&H);
+    GmgVcycleDumpReset();
 }

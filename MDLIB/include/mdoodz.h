@@ -86,6 +86,7 @@ typedef struct {
   int    gmg_fgmres_restart; // FGMRES restart length (default 30)
   double gmg_fgmres_tol;     // FGMRES convergence tolerance; 0.0 = auto (= nonlin_abs_mom / 10)
   int    gmg_standalone;     // 0 = FGMRES+V-cycle (default), 1 = bare V-cycle (diagnostic)
+  int    gmg_dump_vcycle;    // 0 = off (default); 1 = one-shot HDF5 dump of residual/solution at every V-cycle operator boundary (pre-smooth, restrict, coarse solve, prolongate, post-smooth) on the first V-cycle of the first FGMRES iteration of the first Picard iteration of the first time step. Output goes to `${writer_subfolder}/vcycle_dump/`. See openspec/changes/add-gmg-stokes-defence design D5/D9.
   // Thermal solver
   int    thermal_solver;    // 0: CHOLMOD direct (default), 1: PCG iterative
   int    max_its_thermal;   // Max PCG iterations (default 1000)

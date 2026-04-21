@@ -1,0 +1,66 @@
+# Default perf-sweep specification for add-gmg-stokes-defence.
+#
+# Covers the two regression bounds declared in add-gmg-stokes-solver:
+#   - memory-scaling exponent alpha <= 1.2 across 41..801 grids
+#   - 201x201 wall-time ratio t(CHOLMOD)/t(GMG) >= 3x
+# plus a strong-scaling sweep 1..32 threads at 201x201.
+#
+# Every entry expands into (grids.Nx * grids.Nz * solvers * threads) x N runs
+# inside run_perf_sweep.sh. Per D2 each configuration is measured N=5 times.
+#
+# Instance pin lives here, not in provision.sh, so a later change can override
+# by supplying a different grids.yaml.
+
+schema_version: 1
+change: add-gmg-stokes-defence
+
+provisioning:
+  instance_type: c7i.8xlarge
+  region: eu-west-1
+  ami_family: al2023-amd64
+  on_demand: true
+
+measurement:
+  repetitions: 5
+  thermal_throttle_reject: true
+  thermal_throttle_max_retries: 3
+  warn_above_throttle_fraction: 0.20
+  budget_usd: 50
+
+binary:
+  git_sha: HEAD
+  build_flags:
+    - -DOPT=ON
+    - -DOMP=ON
+    - -DTEST=OFF
+    - -DVIS=OFF
+    - -DHDF5_ENABLED=ON
+
+sweeps:
+  - name: memory_scaling
+    purpose: "alpha fit across log(RSS) = log(a) + alpha * log(DOF)"
+    grids:
+      - { nx: 41,  nz: 41  }
+      - { nx: 81,  nz: 81  }
+      - { nx: 161, nz: 161 }
+      - { nx: 321, nz: 321 }
+      - { nx: 801, nz: 801 }
+    lin_solvers: [0, 3]
+    n_threads: [1]
+    txt_template: SolViRes41.txt   # scaled via Nx/Nz override at run time
+
+  - name: walltime_comparison
+    purpose: "201x201 wall-time ratio t(CHOLMOD)/t(GMG)"
+    grids:
+      - { nx: 201, nz: 201 }
+    lin_solvers: [0, 3]
+    n_threads: [1]
+    txt_template: SolViRes201.txt
+
+  - name: strong_scaling
+    purpose: "efficiency vs thread count at 201x201"
+    grids:
+      - { nx: 201, nz: 201 }
+    lin_solvers: [3]
+    n_threads: [1, 2, 4, 8, 16, 32]
+    txt_template: SolViRes201.txt

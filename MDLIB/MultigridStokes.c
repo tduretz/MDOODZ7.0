@@ -36,11 +36,14 @@
 #include "MultigridStokes.h"
 #include "mdoodz-log.h"
 #include "StokesAssemblyGMG.h"
+#include "mdoodz-private.h"   // CreateOutputHDF5 / AddGroupToHDF5 / AddFieldToGroup
 
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
 #include "umfpack.h"
 
@@ -1167,6 +1170,195 @@ int CoarseSolve(MultigridHierarchy *H) {
 // Forward decl for the pressure-mean projector (defined earlier in this file).
 static void project_pressure_mean(double *Pfield, const char *mask, int Ncx, int Ncz);
 
+// ---- V-cycle dump (gmg_dump_vcycle = 1) --------------------------------
+//
+// Design D5/D9 of add-gmg-stokes-defence: on the first V-cycle of the first
+// FGMRES iteration of the first Picard iteration of the first time step,
+// emit per-level HDF5 snapshots of Vx/Vz/P/res_u/res_v/res_p immediately
+// before and after each V-cycle operator (pre-smooth, restrict, coarse
+// solve, prolongate, post-smooth). After that one cycle, the static
+// `fired` flag pins the dumper shut for the rest of the process lifetime
+// so a long run does not flood disk.
+//
+// Filenames carry a monotonically increasing step counter so the post-
+// processor (`benchmarks/vcycle_vis/make_gif.py`) can reconstruct the
+// traversal order deterministically even on deep hierarchies:
+//
+//   ${writer_subfolder}/vcycle_dump/level_{N}_{step}_{phase}_{seq}.h5
+//
+// where `seq` is zero-padded 3-digit order.
+
+static struct {
+    int   active;            // dumper is recording this V-cycle
+    int   fired;              // one-shot: set after the first recorded cycle
+    char  output_dir[1024];
+    int   step_counter;
+} g_vcycle_dumper = { 0, 0, {0}, 0 };
+
+static void gmg_dump_mkdir_p(const char *path) {
+    // Cheap mkdir -p: walk the path, mkdir each component. Silently
+    // ignores EEXIST. Good enough for ${writer_subfolder}/vcycle_dump/.
+    if (!path || !*path) return;
+    char buf[1024];
+    size_t n = strlen(path);
+    if (n >= sizeof(buf)) return;
+    memcpy(buf, path, n + 1);
+    for (size_t i = 1; i < n; ++i) {
+        if (buf[i] == '/') {
+            buf[i] = 0;
+#ifdef _WIN32
+            mkdir(buf);
+#else
+            mkdir(buf, 0775);
+#endif
+            buf[i] = '/';
+        }
+    }
+#ifdef _WIN32
+    mkdir(buf);
+#else
+    mkdir(buf, 0775);
+#endif
+}
+
+// Arm the dumper if the caller asked for it and it has not fired yet.
+// Called at SolveStokesGMG entry; returns 1 if the current invocation
+// will record, 0 otherwise.
+static int gmg_vcycle_dump_arm(const char *writer_subfolder,
+                               int gmg_dump_vcycle) {
+    if (gmg_dump_vcycle != 1 || g_vcycle_dumper.fired) {
+        g_vcycle_dumper.active = 0;
+        return 0;
+    }
+    const char *base = (writer_subfolder && *writer_subfolder) ? writer_subfolder : "./";
+    // Trim trailing slash from base for clean concatenation.
+    char trimmed[900];
+    size_t nb = strlen(base);
+    if (nb >= sizeof(trimmed)) {
+        LOG_WARN("GMG dump: writer_subfolder too long (%zu chars); dump disabled", nb);
+        return 0;
+    }
+    memcpy(trimmed, base, nb + 1);
+    if (nb > 0 && trimmed[nb - 1] == '/') trimmed[nb - 1] = 0;
+    int written = snprintf(g_vcycle_dumper.output_dir,
+                           sizeof(g_vcycle_dumper.output_dir),
+                           "%s/vcycle_dump", trimmed);
+    if (written < 0 || (size_t)written >= sizeof(g_vcycle_dumper.output_dir)) {
+        LOG_WARN("GMG dump: output path overflow; dump disabled");
+        return 0;
+    }
+    gmg_dump_mkdir_p(g_vcycle_dumper.output_dir);
+    g_vcycle_dumper.step_counter = 0;
+    g_vcycle_dumper.active       = 1;
+    LOG_INFO("GMG V-cycle dump armed: output directory = %s",
+             g_vcycle_dumper.output_dir);
+    return 1;
+}
+
+// Disarm + record that a dump has fired. Called after the first V-cycle
+// on the fine level returns.
+static void gmg_vcycle_dump_finish(void) {
+    if (!g_vcycle_dumper.active) return;
+    LOG_INFO("GMG V-cycle dump complete: %d snapshots written to %s",
+             g_vcycle_dumper.step_counter, g_vcycle_dumper.output_dir);
+    g_vcycle_dumper.active = 0;
+    g_vcycle_dumper.fired  = 1;
+}
+
+// Reset the one-shot guard. Exposed for tests that need to exercise the
+// dump more than once per process (unit tests live outside production
+// paths). Production never calls this.
+void GmgVcycleDumpReset(void) {
+    g_vcycle_dumper.active = 0;
+    g_vcycle_dumper.fired  = 0;
+    g_vcycle_dumper.step_counter = 0;
+    g_vcycle_dumper.output_dir[0] = 0;
+}
+
+// Test-only: arm the dumper with an explicit output directory. Production
+// always arms via gmg_vcycle_dump_arm(writer_subfolder,gmg_dump_vcycle).
+int GmgVcycleDumpArmForTest(const char *output_dir) {
+    if (g_vcycle_dumper.fired) {
+        g_vcycle_dumper.active = 0;
+        return 0;
+    }
+    if (output_dir == NULL || *output_dir == 0) return 0;
+    size_t n = strlen(output_dir);
+    if (n >= sizeof(g_vcycle_dumper.output_dir)) return 0;
+    memcpy(g_vcycle_dumper.output_dir, output_dir, n + 1);
+    gmg_dump_mkdir_p(g_vcycle_dumper.output_dir);
+    g_vcycle_dumper.step_counter = 0;
+    g_vcycle_dumper.active = 1;
+    return 1;
+}
+
+// Test-only: close the current recording and latch the one-shot guard.
+// Returns the snapshot count written during this recording.
+int GmgVcycleDumpFinishForTest(void) {
+    int count = g_vcycle_dumper.step_counter;
+    if (!g_vcycle_dumper.active) return 0;
+    g_vcycle_dumper.active = 0;
+    g_vcycle_dumper.fired  = 1;
+    return count;
+}
+
+// Emit one snapshot. `step_name` is one of
+//   "pre_smooth" / "restrict" / "coarse_solve" / "prolongate" / "post_smooth"
+// and `phase` is "pre" or "post". Snapshot contains:
+//   /Level/{Nx, Nz, Ncx, Ncz, dx, dz, level}
+//   /Fields/{Vx, Vz, P, res_u, res_v, res_p}
+//   /Meta/{step, phase, seq}
+static void gmg_vcycle_dump_snapshot(MultigridLevel *L,
+                                     const char *step_name,
+                                     const char *phase) {
+    if (!g_vcycle_dumper.active || L == NULL) return;
+
+    // Refresh residual on this level so Fields/res_* matches Fields/V*.
+    // StokesResidual = rhs - A * iterate; always well-defined at every
+    // point in the V-cycle.
+    StokesResidual(L);
+
+    const int seq = g_vcycle_dumper.step_counter++;
+    char filename[1100];
+    int written = snprintf(filename, sizeof(filename),
+                           "%s/level_%d_%s_%s_%03d.h5",
+                           g_vcycle_dumper.output_dir, L->level,
+                           step_name, phase, seq);
+    if (written < 0 || (size_t)written >= sizeof(filename)) {
+        LOG_WARN("GMG dump: filename overflow at seq=%d", seq);
+        return;
+    }
+
+    const size_t nVx = (size_t)L->Nx  * L->Ncz;
+    const size_t nVz = (size_t)L->Ncx * L->Nz;
+    const size_t nP  = (size_t)L->Ncx * L->Ncz;
+
+    CreateOutputHDF5(filename);
+    AddGroupToHDF5(filename, "Level");
+    AddGroupToHDF5(filename, "Fields");
+    AddGroupToHDF5(filename, "Meta");
+
+    int    level_dims[4] = { L->Nx, L->Nz, L->Ncx, L->Ncz };
+    double level_spacing[2] = { L->dx, L->dz };
+    int    level_index = L->level;
+    AddFieldToGroup(filename, "Level", "dims",     'i', 4, level_dims,    1);
+    AddFieldToGroup(filename, "Level", "spacing",  'd', 2, level_spacing, 1);
+    AddFieldToGroup(filename, "Level", "level",    'i', 1, &level_index,  1);
+
+    AddFieldToGroup(filename, "Fields", "Vx",      'd', (int)nVx, L->Vx,    1);
+    AddFieldToGroup(filename, "Fields", "Vz",      'd', (int)nVz, L->Vz,    1);
+    AddFieldToGroup(filename, "Fields", "P",       'd', (int)nP,  L->P,     1);
+    AddFieldToGroup(filename, "Fields", "res_u",   'd', (int)nVx, L->res_u, 1);
+    AddFieldToGroup(filename, "Fields", "res_v",   'd', (int)nVz, L->res_v, 1);
+    AddFieldToGroup(filename, "Fields", "res_p",   'd', (int)nP,  L->res_p, 1);
+
+    AddFieldToGroup(filename, "Meta", "step",  'c',
+                    (int)(strlen(step_name) + 1), (void *)step_name, 1);
+    AddFieldToGroup(filename, "Meta", "phase", 'c',
+                    (int)(strlen(phase) + 1), (void *)phase, 1);
+    AddFieldToGroup(filename, "Meta", "seq",   'i', 1, (void *)&seq, 1);
+}
+
 void Vcycle(MultigridHierarchy *H, int k) {
     if (H == NULL || k < 0 || k >= H->n_levels) return;
     MultigridLevel *L = &H->levels[k];
@@ -1174,17 +1366,23 @@ void Vcycle(MultigridHierarchy *H, int k) {
     if (k == H->n_levels - 1) {
         // Coarsest: solve. Project pressure null-space out of the RHS to
         // ensure solvability.
+        gmg_vcycle_dump_snapshot(L, "coarse_solve", "pre");
         project_pressure_mean(L->rhs_p, L->act_P, L->Ncx, L->Ncz);
         CoarseSolve(H);
         project_pressure_mean(L->P, L->act_P, L->Ncx, L->Ncz);
+        gmg_vcycle_dump_snapshot(L, "coarse_solve", "post");
         return;
     }
 
     // Pre-smooth, compute residual, restrict to coarser grid.
+    gmg_vcycle_dump_snapshot(L, "pre_smooth", "pre");
     VankaSweep(L, H->nu_pre);
+    gmg_vcycle_dump_snapshot(L, "pre_smooth", "post");
+
     StokesResidual(L);
 
     MultigridLevel *C = &H->levels[k + 1];
+    gmg_vcycle_dump_snapshot(L, "restrict", "pre");
     RestrictVelocity(L, C, L->res_u, C->rhs_u, 0);
     RestrictVelocity(L, C, L->res_v, C->rhs_v, 1);
     RestrictPressure(L, C, L->res_p, C->rhs_p);
@@ -1195,17 +1393,22 @@ void Vcycle(MultigridHierarchy *H, int k) {
     memset(C->Vx, 0, nVx_c * sizeof(double));
     memset(C->Vz, 0, nVz_c * sizeof(double));
     memset(C->P,  0, nP_c  * sizeof(double));
+    gmg_vcycle_dump_snapshot(C, "restrict", "post");
 
     Vcycle(H, k + 1);
 
+    gmg_vcycle_dump_snapshot(L, "prolongate", "pre");
     ProlongateVelocityAdd(C, L, C->Vx, L->Vx, 0);
     ProlongateVelocityAdd(C, L, C->Vz, L->Vz, 1);
     ProlongatePressureAdd(C, L, C->P,  L->P );
+    gmg_vcycle_dump_snapshot(L, "prolongate", "post");
 
     // Post-smooth and project pressure null-space at every level so
     // intermediate states stay in the gauge used by StokesApplyA.
+    gmg_vcycle_dump_snapshot(L, "post_smooth", "pre");
     VankaSweep(L, H->nu_post);
     project_pressure_mean(L->P, L->act_P, L->Ncx, L->Ncz);
+    gmg_vcycle_dump_snapshot(L, "post_smooth", "post");
 }
 
 // ---------- Flatten / scatter helpers (for FGMRES) ----------------------
@@ -1815,6 +2018,14 @@ int SolveStokesGMG(SparseMat *StokesA, SparseMat *StokesB,
 
     propagate_hierarchy_coefficients(&H);
 
+    // Arm the V-cycle dumper if requested and it has not fired yet this
+    // process. Exactly the first V-cycle after arming records; the
+    // finish call below marks `fired` so no subsequent solver invocation
+    // dumps again (see design D9: first V-cycle of first FGMRES of first
+    // Picard of first time step).
+    const int vcycle_dump_armed = gmg_vcycle_dump_arm(model.writer_subfolder,
+                                                      model.gmg_dump_vcycle);
+
     // Run the solver. `gmg_standalone` toggles between bare V-cycles
     // (diagnostic) and FGMRES preconditioned by V-cycles (production).
     const double tol    = (model.gmg_fgmres_tol > 0.0) ? model.gmg_fgmres_tol : 1e-8;
@@ -1842,6 +2053,13 @@ int SolveStokesGMG(SparseMat *StokesA, SparseMat *StokesB,
     } else {
         rc = FGMRES_GMG(&H, tol, restart, max_restarts, &stats);
     }
+
+    // Close out the one-shot dumper. It has already recorded the first
+    // (and only) V-cycle of this solve; finish logs the total count and
+    // flips the process-wide `fired` flag so no subsequent invocation
+    // dumps again.
+    if (vcycle_dump_armed) gmg_vcycle_dump_finish();
+
     if (rc != 0) {
         LOG_WARN("GMG did not converge: iters=%d, final_res=%.3e, tol=%.3e",
                  stats.iterations, stats.final_residual, tol);
