@@ -22,7 +22,7 @@ Archived OpenSpec changes (full `proposal.md` / `design.md` / `tasks.md` / `spec
 - `openspec/changes/archive/2026-04-21-add-gmg-stokes-defence/`
 - `openspec/changes/archive/2026-04-18-add-gmg-upleg-fix/`
 
-Removal change: `remove-gmg-stokes-solver` (see `openspec/changes/remove-gmg-stokes-solver/`).
+Removal change: `remove-gmg-stokes-solver` (see `openspec/changes/archive/2026-04-21-remove-gmg-stokes-solver/`).
 
 ## Successor
 
