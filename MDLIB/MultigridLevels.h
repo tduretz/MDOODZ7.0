@@ -104,16 +104,28 @@ typedef struct _multigrid_level {
     char   *act_Vx;                 // [Nx  * Ncz]
     char   *act_Vz;                 // [Ncx * Nz ]
 
-    // MDOODZ stencil bridge (design D11, tasks 15.7/15.8). When
-    // `use_mdoodz_matvec` is non-zero, `StokesApplyA` and
-    // `VankaBlockAssembleSolve` dispatch on this level to the bit-
-    // identical-with-`StokesAssemblyDecoupled.c` matvec/block-builder
-    // in `StokesAssemblyGMG.c`. Set only on the fine level (level 0)
-    // from the real `SolveStokesGMG` dispatch; coarse levels and
-    // stand-alone unit tests leave it zero and use the textbook Picard
-    // Stokes stencil (D4 explicitly allows coarse-level Picard-on-
-    // restricted-viscosity rediscretisation).
-    int           use_mdoodz_matvec;
+    // MDOODZ stencil bridge (design D11, tasks 15.7/15.8). Originally a
+    // single `use_mdoodz_matvec` toggle gated both the outer matvec and
+    // the Vanka 5×5 block assembly; add-gmg-upleg-fix §4 localised a
+    // divergent L0 pre-smoother to the Vanka bridge path and split the
+    // flag in two so the outer matvec can keep the MDOODZ bit-identical
+    // operator (for FGMRES fidelity) while the Vanka block falls back to
+    // the textbook path (which damps correctly on L1+).
+    //
+    // `use_mdoodz_matvec_outer` — when non-zero, `StokesApplyA` on this
+    //   level dispatches to `StokesApplyA_MDOODZ_bridge`. Set only on
+    //   level 0 from `SolveStokesGMG`.
+    // `use_mdoodz_matvec_vanka` — when non-zero, `VankaBlockAssembleSolve`
+    //   on this level dispatches to `VankaBlockAssembleSolve_MDOODZ_bridge`
+    //   (which uses `StokesCellBlockMDOODZ`). **Currently left zero**
+    //   everywhere pending a root-cause fix in the bridge 5×5 block; see
+    //   openspec/changes/add-gmg-upleg-fix/STATUS.md "Finding 3" and
+    //   "Fix candidate F" for the rationale.
+    // Coarse levels and stand-alone unit tests leave both flags zero and
+    // use the textbook Picard Stokes stencil (D4 explicitly allows
+    // coarse-level Picard-on-restricted-viscosity rediscretisation).
+    int           use_mdoodz_matvec_outer;
+    int           use_mdoodz_matvec_vanka;
     void         *mesh_ref;         // `grid*`; kept opaque to avoid circular include
     void         *model_ref;        // `params*`; kept opaque to avoid circular include
 
@@ -125,7 +137,7 @@ typedef struct _multigrid_level {
     // keeps them in sync with each cell's per-DOF update — that way the
     // Gauss-Seidel freshness of the textbook sweep is preserved without
     // repacking the entire grid per cell. Allocated lazily from
-    // `VankaSweep` when `use_mdoodz_matvec` is non-zero; freed by
+    // `VankaSweep` when `use_mdoodz_matvec_vanka` is non-zero; freed by
     // `FreeMultigridHierarchy`. NULL otherwise.
     double       *md_u_pad;         // [Nx   * (Nz + 1)]
     double       *md_v_pad;         // [(Nx + 1) * Nz ]

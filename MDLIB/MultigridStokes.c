@@ -77,7 +77,7 @@ void StokesApplyA(const MultigridLevel *L,
     // cross-check in TESTS/StokesMatvecEquivalence.cpp). Coarse levels
     // and manufactured-RHS unit tests leave the flag at its default
     // zero and continue on the textbook Picard Stokes stencil.
-    if (L->use_mdoodz_matvec) {
+    if (L->use_mdoodz_matvec_outer) {
         StokesApplyA_MDOODZ_bridge(L, Vx, Vz, P, out_u, out_v, out_p);
         return;
     }
@@ -433,7 +433,7 @@ static int solve5x5(double A[5][5], double b[5], double x[5]) {
 // `rhs_u/rhs_v/rhs_p` produced by `BuildLevelRHSFromCompressed`.
 //
 // Preconditions (enforced by guards):
-//   L->use_mdoodz_matvec is non-zero
+//   L->use_mdoodz_matvec_vanka is non-zero
 //   L->mesh_ref, L->model_ref, L->md_u_pad, L->md_v_pad, L->md_p_pad
 //   are all non-NULL (allocated by `VankaSweep` on entry).
 static int VankaBlockAssembleSolve_MDOODZ_bridge(
@@ -525,13 +525,15 @@ int VankaBlockAssembleSolve(const MultigridLevel *L,
                             const double *rhs_u, const double *rhs_v, const double *rhs_p,
                             int i, int j,
                             double block[5][5], double rhs[5], double sol[5]) {
-    // MDOODZ stencil bridge dispatch (design D11, task 15.8). On the
-    // fine level of a real SolveStokesGMG run we route the 5×5 block
-    // through `StokesCellBlockMDOODZ` so the Vanka preconditioner's
-    // block and the matvec both see the same coefficients. Coarse
-    // levels and stand-alone tests leave `use_mdoodz_matvec` at zero
-    // and fall through to the textbook block below.
-    if (L->use_mdoodz_matvec && L->md_u_pad != NULL) {
+    // MDOODZ stencil bridge dispatch (design D11, task 15.8). Gated
+    // by `use_mdoodz_matvec_vanka` (was `use_mdoodz_matvec` pre
+    // add-gmg-upleg-fix; the split is explained in MultigridLevels.h).
+    // Currently SolveStokesGMG leaves this flag at zero even on L0
+    // because the bridge 5×5 block caused a 7.55× per-sweep L0
+    // pre-smooth amplification (STATUS.md Finding 3). The dispatch is
+    // kept here so the bridge path can be re-enabled once its root
+    // cause is fixed in a follow-up change.
+    if (L->use_mdoodz_matvec_vanka && L->md_u_pad != NULL) {
         (void)Vx; (void)Vz; (void)P;
         return VankaBlockAssembleSolve_MDOODZ_bridge(L, rhs_u, rhs_v, rhs_p,
                                                      i, j, block, rhs, sol);
@@ -752,7 +754,7 @@ int VankaBlockAssembleSolve(const MultigridLevel *L,
 
 // Allocate and populate the MDOODZ-padded scratch buffers on a
 // `MultigridLevel`. Called lazily from `VankaSweep` when the level has
-// `use_mdoodz_matvec` set. Returns 0 on success, non-zero if allocation
+// `use_mdoodz_matvec_vanka` set. Returns 0 on success, non-zero if allocation
 // failed. Populating is done here once; `MdoodzPadFromLevel` repacks
 // per-sweep, and `MdoodzPadUpdateCell` keeps the buffers in lock-step
 // with per-cell under-relaxed updates so Gauss-Seidel freshness is
@@ -821,7 +823,7 @@ void VankaSweep(MultigridLevel *L, int nu) {
 
     // MDOODZ bridge scratch for the fine-level Vanka path (task 15.8).
     // Allocated once per level and repacked at the start of each sweep.
-    const int use_bridge = (L->use_mdoodz_matvec != 0);
+    const int use_bridge = (L->use_mdoodz_matvec_vanka != 0);
     if (use_bridge) {
         if (EnsureMdoodzPadScratch(L) != 0) return;
     }
@@ -2020,9 +2022,19 @@ int SolveStokesGMG(SparseMat *StokesA, SparseMat *StokesB,
     // restricted viscosity (design D4). The hierarchy borrows
     // mesh/model_local by pointer; model_local is a stack copy that
     // outlives the V-cycle (both live on SolveStokesGMG's frame).
-    H.levels[0].use_mdoodz_matvec = 1;
-    H.levels[0].mesh_ref          = (void *)mesh;
-    H.levels[0].model_ref         = (void *)&model_local;
+    //
+    // The Vanka 5×5 block builder stays on the TEXTBOOK path at L0:
+    // add-gmg-upleg-fix §4 localised a 7.55× per-sweep L0 pre-smooth
+    // amplification to `VankaBlockAssembleSolve_MDOODZ_bridge`, which
+    // disappears (ratio 0.174×, UplegAmplificationBound passes) once
+    // the bridge Vanka path is bypassed. Outer FGMRES fidelity is
+    // preserved because `StokesApplyA` still dispatches through the
+    // bridge. A follow-up change is tracked to fix the bridge 5×5
+    // block in-place; until then the two dispatches are kept split.
+    H.levels[0].use_mdoodz_matvec_outer = 1;
+    H.levels[0].use_mdoodz_matvec_vanka = 0;
+    H.levels[0].mesh_ref                = (void *)mesh;
+    H.levels[0].model_ref               = (void *)&model_local;
 
     // Build RHS in compressed equation space from the caller's vectors.
     // IMPORTANT: this must come AFTER PopulateLevelFromMesh (for the

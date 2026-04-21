@@ -1,0 +1,33 @@
+dump_dir=/Users/romankulakov/MDOODZ7.0/cmake-build/TESTS/SolViUpleg81/vcycle_dump
+first V-cycle window: seq 0..25 (26 events)
+
+ seq lvl stage          phase        ||r||      ratio        cum
+------------------------------------------------------------------------
+   0   0 pre_smooth     pre     1.0000e+00        nan      1.000
+   1   0 pre_smooth     post    7.5454e+00      7.545      7.545  <-- AMPLIFY > 2x
+   2   0 restrict       pre     7.5454e+00      1.000      7.545
+   3   1 restrict       post    3.3474e-01      0.044      0.335  <-- damp
+   4   1 pre_smooth     pre     3.3474e-01      1.000      0.335
+   5   1 pre_smooth     post    2.4790e-01      0.741      0.248
+   6   1 restrict       pre     2.4790e-01      1.000      0.248
+   7   2 restrict       post    1.1618e-01      0.469      0.116  <-- damp
+   8   2 pre_smooth     pre     1.1618e-01      1.000      0.116
+   9   2 pre_smooth     post    6.6565e-02      0.573      0.067
+  10   2 restrict       pre     6.6565e-02      1.000      0.067
+  11   3 restrict       post    2.8727e-02      0.432      0.029  <-- damp
+  12   3 coarse_solve   pre     2.8727e-02      1.000      0.029
+  13   3 coarse_solve   post    7.1433e-16      0.000      0.000  <-- damp
+  14   2 prolongate     pre     6.6565e-02 93185015237170.312      0.067  <-- AMPLIFY > 2x
+  15   2 prolongate     post    7.9885e-02      1.200      0.080
+  16   2 post_smooth    pre     7.9885e-02      1.000      0.080
+  17   2 post_smooth    post    8.4701e-03      0.106      0.008  <-- damp
+  18   1 prolongate     pre     2.4790e-01     29.267      0.248  <-- AMPLIFY > 2x
+  19   1 prolongate     post    3.0658e-01      1.237      0.307
+  20   1 post_smooth    pre     3.0658e-01      1.000      0.307
+  21   1 post_smooth    post    4.1581e-02      0.136      0.042  <-- damp
+  22   0 prolongate     pre     7.5454e+00    181.460      7.545  <-- AMPLIFY > 2x
+  23   0 prolongate     post    7.6717e+00      1.017      7.672
+  24   0 post_smooth    pre     7.6717e+00      1.000      7.672
+  25   0 post_smooth    post    8.7199e+00      1.137      8.720
+
+whole V-cycle ratio (exit / entry): 8.7199e+00 (bound = 4.0; FAIL if > 4.0)

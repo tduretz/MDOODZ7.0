@@ -280,6 +280,16 @@ add_test(NAME GmgConvergesAtDefaultLevels COMMAND GmgConvergesAtDefaultLevels)
 set_tests_properties(GmgConvergesAtDefaultLevels PROPERTIES TIMEOUT 1800)
 
 # -----------------------------------------------------------------------
+# add-gmg-upleg-fix §4 D1 — developer-driven diagnostic probe (no GTest,
+# no add_test). Runs one MDOODZ Stokes solve with SolVi-Dani BCs; input
+# .txt is argv[1]. The §4 bash driver loops over gmg_levels values and
+# captures per-run stdout into openspec/.../d1_probe_a/<label>.log.
+# -----------------------------------------------------------------------
+add_executable(GmgLevelsSweepProbe DisabledBenchmarks/GmgLevelsSweepProbe.cpp)
+target_link_libraries(GmgLevelsSweepProbe LINK_PUBLIC mdoodz)
+target_include_directories(GmgLevelsSweepProbe PRIVATE ${PROJECT_SOURCE_DIR}/MDLIB ${PROJECT_SOURCE_DIR}/TESTS)
+
+# -----------------------------------------------------------------------
 # add-gmg-stokes-defence §6 — V-cycle animation dump generator.
 # Runs the 41×41 SolCx-analog fixture with `gmg_dump_vcycle = 1` and
 # emits HDF5 snapshots under SolViRes41_gmg_vcycle_anim/vcycle_dump/
