@@ -1515,8 +1515,15 @@ int FGMRES_GMG(MultigridHierarchy *H, double tol, int restart, int max_restarts,
     double *sn = (double *)calloc((size_t)m,       sizeof(double));
     double *g  = (double *)calloc((size_t)(m + 1), sizeof(double));
 
-    const double bnorm = vec_norm(b, n);
-    const double target = tol * (bnorm > 0.0 ? bnorm : 1.0);
+    // Relative-reduction tolerance (add-gmg-upleg-fix D4): the predicate
+    // tests ‖r_k‖ / ‖r_0‖ ≤ tol, where ‖r_0‖ is the initial residual of
+    // this FGMRES invocation (computed lazily on the first restart so x_0
+    // can be any caller-provided warm start). Log messages downstream
+    // report the same quantity so "converged" is always numerically
+    // consistent with `gmg_fgmres_tol`.
+    double r0_norm   = 0.0;
+    double target    = 0.0;
+    int    have_r0   = 0;
     int total_iter = 0;
     int converged = 0;
     double rnorm = 0.0;
@@ -1526,6 +1533,15 @@ int FGMRES_GMG(MultigridHierarchy *H, double tol, int restart, int max_restarts,
         apply_A_flat(L, x, w);
         for (size_t k = 0; k < n; ++k) r[k] = b[k] - w[k];
         rnorm = vec_norm(r, n);
+        if (!have_r0) {
+            r0_norm = rnorm;
+            // If the initial residual is already zero (x_0 is exact), the
+            // ratio r/r0 is formally undefined; the predicate degenerates
+            // to testing the absolute residual against tol, which is the
+            // correct behaviour for this edge case.
+            target  = tol * (r0_norm > 0.0 ? r0_norm : 1.0);
+            have_r0 = 1;
+        }
         if (rnorm <= target) { converged = 1; break; }
         // V[0] = r / rnorm
         const double inv = 1.0 / rnorm;
@@ -1597,8 +1613,9 @@ int FGMRES_GMG(MultigridHierarchy *H, double tol, int restart, int max_restarts,
             double yi = y[i];
             for (size_t k = 0; k < n; ++k) x[k] += yi * Z[i][k];
         }
-        LOG_INFO("GMG-FGMRES: restart %d, total_iter %d, residual %.3e",
-                 restart_idx, total_iter, rnorm);
+        const double rel = (r0_norm > 0.0) ? (rnorm / r0_norm) : rnorm;
+        LOG_INFO("GMG-FGMRES: restart %d, total_iter %d, final_res_rel %.3e (tol %.3e)",
+                 restart_idx, total_iter, rel, tol);
     }
 
     // Store result back into level Vx/Vz/P.
@@ -1607,6 +1624,7 @@ int FGMRES_GMG(MultigridHierarchy *H, double tol, int restart, int max_restarts,
     if (out_stats != NULL) {
         out_stats->iterations           = total_iter;
         out_stats->restarts             = (total_iter + m - 1) / m;
+        out_stats->initial_residual     = r0_norm;
         out_stats->final_residual       = rnorm;
         out_stats->fell_back_to_cholmod = 0;
     }
@@ -2030,7 +2048,16 @@ int SolveStokesGMG(SparseMat *StokesA, SparseMat *StokesB,
     // (diagnostic) and FGMRES preconditioned by V-cycles (production).
     const double tol    = (model.gmg_fgmres_tol > 0.0) ? model.gmg_fgmres_tol : 1e-8;
     const int restart   = (model.gmg_fgmres_restart > 0) ? model.gmg_fgmres_restart : 30;
-    const int max_restarts = 20;
+    const int max_restarts = (model.gmg_fgmres_max_restarts >= 1) ? model.gmg_fgmres_max_restarts : 20;
+
+    // add-gmg-upleg-fix §1.3: echo the active GMG configuration once per
+    // Stokes solve so STATUS receipts, perf dumps, and ctest logs all see
+    // which knobs were in effect (including the new max_restarts).
+    LOG_INFO("GMG-FGMRES config: levels=%d (0=auto), nu_pre=%d, nu_post=%d, "
+             "restart=%d, max_restarts=%d, tol=%.3e, standalone=%d, dump=%d",
+             model.gmg_levels, H.nu_pre, H.nu_post,
+             restart, max_restarts, tol,
+             model.gmg_standalone, model.gmg_dump_vcycle);
 
     FGMRESStats stats = {0};
     int rc = 0;
@@ -2047,8 +2074,9 @@ int SolveStokesGMG(SparseMat *StokesA, SparseMat *StokesB,
             r = StokesResidualNorm(&H.levels[0]);
             ++sweep;
         }
-        stats.iterations     = sweep;
-        stats.final_residual = r;
+        stats.iterations       = sweep;
+        stats.initial_residual = r0;
+        stats.final_residual   = r;
         rc = (r > tol * (r0 > 0.0 ? r0 : 1.0)) ? 1 : 0;
     } else {
         rc = FGMRES_GMG(&H, tol, restart, max_restarts, &stats);
@@ -2060,15 +2088,24 @@ int SolveStokesGMG(SparseMat *StokesA, SparseMat *StokesB,
     // dumps again.
     if (vcycle_dump_armed) gmg_vcycle_dump_finish();
 
+    // add-gmg-upleg-fix D4/§1.6-1.7: the predicate tests ‖r_k‖/‖r_0‖ ≤ tol;
+    // emit `final_res_rel` (the same quantity) in both success and failure
+    // paths so "converged" in the log always means "rel ≤ tol" numerically.
+    const double final_res_rel = (stats.initial_residual > 0.0)
+                                     ? (stats.final_residual / stats.initial_residual)
+                                     : stats.final_residual;
+
     if (rc != 0) {
-        LOG_WARN("GMG did not converge: iters=%d, final_res=%.3e, tol=%.3e",
-                 stats.iterations, stats.final_residual, tol);
+        LOG_WARN("GMG-FGMRES did not converge: iters=%d, final_res_rel=%.3e, tol=%.3e "
+                 "(‖r_0‖=%.3e, ‖r_k‖=%.3e)",
+                 stats.iterations, final_res_rel, tol,
+                 stats.initial_residual, stats.final_residual);
         MultigridHierarchyFree(&H);
         return -4;
     }
 
-    LOG_INFO("GMG-FGMRES converged: iters=%d, restarts=%d, final_res=%.3e",
-             stats.iterations, stats.restarts, stats.final_residual);
+    LOG_INFO("GMG-FGMRES converged: iters=%d, restarts=%d, final_res_rel=%.3e, tol=%.3e",
+             stats.iterations, stats.restarts, final_res_rel, tol);
 
     // Copy the result from the GMG level's full-array layout back into
     // the caller's compressed-equation-space `x` vector. The caller

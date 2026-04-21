@@ -1122,8 +1122,9 @@ Input ReadInputFile( char *fileName ) {
     model.gmg_levels         = ReadInt2( fin, "gmg_levels",            0 ); // 0 = auto (halve until <16 cells/side or <5000 DOFs)
     model.gmg_nu_pre         = ReadInt2( fin, "gmg_nu_pre",            2 ); // pre-smoothing Vanka sweeps per level
     model.gmg_nu_post        = ReadInt2( fin, "gmg_nu_post",           2 ); // post-smoothing Vanka sweeps per level
-    model.gmg_fgmres_restart = ReadInt2( fin, "gmg_fgmres_restart",   30 ); // FGMRES restart length
-    model.gmg_fgmres_tol     = ReadDou2( fin, "gmg_fgmres_tol",      0.0 ); // 0.0 = auto (nonlin_abs_mom / 10)
+    model.gmg_fgmres_restart      = ReadInt2( fin, "gmg_fgmres_restart",      30 ); // FGMRES restart length
+    model.gmg_fgmres_max_restarts = ReadInt2( fin, "gmg_fgmres_max_restarts", 20 ); // FGMRES outer-restart budget; see add-gmg-upleg-fix
+    model.gmg_fgmres_tol          = ReadDou2( fin, "gmg_fgmres_tol",         0.0 ); // 0.0 = auto (nonlin_abs_mom / 10)
     model.gmg_standalone     = ReadInt2( fin, "gmg_standalone",        0 ); // 0 = FGMRES+V-cycle, 1 = bare V-cycle (diagnostic)
     model.gmg_dump_vcycle    = ReadInt2( fin, "gmg_dump_vcycle",       0 ); // 0 = off (default); 1 = one-shot HDF5 dump of residual/solution at every V-cycle operator boundary (add-gmg-stokes-defence D5/D9)
     // Thermal solver
@@ -1290,6 +1291,9 @@ Input ReadInputFile( char *fileName ) {
     if ( model.gmg_nu_pre < 1 )         { LOG_ERR("gmg_nu_pre must be >= 1 (got %d)", model.gmg_nu_pre);                 exit(1); }
     if ( model.gmg_nu_post < 1 )        { LOG_ERR("gmg_nu_post must be >= 1 (got %d)", model.gmg_nu_post);               exit(1); }
     if ( model.gmg_fgmres_restart < 1 ) { LOG_ERR("gmg_fgmres_restart must be >= 1 (got %d)", model.gmg_fgmres_restart); exit(1); }
+    if ( model.gmg_fgmres_max_restarts < 1 || model.gmg_fgmres_max_restarts > 1000 ) {
+        LOG_ERR("gmg_fgmres_max_restarts must be in [1, 1000] (got %d)", model.gmg_fgmres_max_restarts); exit(1);
+    }
     if ( model.gmg_fgmres_tol < 0.0 )   { LOG_ERR("gmg_fgmres_tol must be >= 0.0 (got %g; use 0.0 for auto)", model.gmg_fgmres_tol); exit(1); }
     if ( model.gmg_standalone != 0 && model.gmg_standalone != 1 ) { LOG_ERR("gmg_standalone must be 0 or 1 (got %d)", model.gmg_standalone); exit(1); }
     if ( model.gmg_dump_vcycle != 0 && model.gmg_dump_vcycle != 1 ) { LOG_ERR("gmg_dump_vcycle must be 0 or 1 (got %d)", model.gmg_dump_vcycle); exit(1); }

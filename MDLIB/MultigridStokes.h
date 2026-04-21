@@ -86,7 +86,8 @@ int  CoarseSolve(MultigridHierarchy *H);
 typedef struct _fgmres_stats {
     int    iterations;
     int    restarts;
-    double final_residual;
+    double initial_residual;  // ‖r_0‖ = ‖b - A*x_0‖ (gauges the relative-reduction tolerance)
+    double final_residual;    // ‖r_k‖ at exit; compare to tol via final_residual / initial_residual
     int    fell_back_to_cholmod;
 } FGMRESStats;
 

@@ -254,6 +254,32 @@ add_test(NAME ConjugateShearBandsGmgEquivalence COMMAND ConjugateShearBandsGmgEq
 set_tests_properties(ConjugateShearBandsGmgEquivalence PROPERTIES TIMEOUT 1800)
 
 # -----------------------------------------------------------------------
+# add-gmg-upleg-fix §1.8 / §3.1 — V-cycle upleg amplification regression.
+# Drives the three constant-viscosity fixtures at 81² / 161² / 201²,
+# dumps one V-cycle per run via gmg_dump_vcycle = 1, and asserts the
+# per-stage upleg ratio ≤ 2.0 and whole-V-cycle ratio ≤ 4.0 at level 0.
+# Expected to FAIL pre-fix (see PERFORMANCE_REPORT §7.5); §5.2 turns it
+# green after the root-cause fix lands.
+# -----------------------------------------------------------------------
+add_executable(UplegAmplificationBound DisabledBenchmarks/UplegAmplificationBound.cpp)
+target_link_libraries(UplegAmplificationBound LINK_PUBLIC mdoodz GTest::gtest_main)
+target_include_directories(UplegAmplificationBound PRIVATE ${PROJECT_SOURCE_DIR}/MDLIB ${PROJECT_SOURCE_DIR}/TESTS)
+add_test(NAME UplegAmplificationBound COMMAND UplegAmplificationBound)
+set_tests_properties(UplegAmplificationBound PROPERTIES TIMEOUT 1800)
+
+# -----------------------------------------------------------------------
+# add-gmg-upleg-fix §1.9 / §3.2 — 201² default-gmg_levels convergence.
+# Expected to FAIL pre-fix (FGMRES stalls at ~600 iters, dispatch falls
+# back to CHOLMOD). Post-fix (§5.2) converges in ≤ 60 inner iterations
+# with no CHOLMOD fallback.
+# -----------------------------------------------------------------------
+add_executable(GmgConvergesAtDefaultLevels DisabledBenchmarks/GmgConvergesAtDefaultLevels.cpp)
+target_link_libraries(GmgConvergesAtDefaultLevels LINK_PUBLIC mdoodz GTest::gtest_main)
+target_include_directories(GmgConvergesAtDefaultLevels PRIVATE ${PROJECT_SOURCE_DIR}/MDLIB ${PROJECT_SOURCE_DIR}/TESTS)
+add_test(NAME GmgConvergesAtDefaultLevels COMMAND GmgConvergesAtDefaultLevels)
+set_tests_properties(GmgConvergesAtDefaultLevels PROPERTIES TIMEOUT 1800)
+
+# -----------------------------------------------------------------------
 # add-gmg-stokes-defence §6 — V-cycle animation dump generator.
 # Runs the 41×41 SolCx-analog fixture with `gmg_dump_vcycle = 1` and
 # emits HDF5 snapshots under SolViRes41_gmg_vcycle_anim/vcycle_dump/
