@@ -1,9 +1,7 @@
 ## Purpose
 
 Defines the behaviour contract for the `skill-solvers` agent skill: what the skill must teach a user about MDOODZ's numerical solvers (Stokes + thermal), its nonlinear iteration strategy, its sparse linear algebra backends (SuiteSparse direct and GMG-preconditioned FGMRES), convergence monitoring, and troubleshooting. The spec is consumed by `.github/skills/skill-solvers/SKILL.md`, which is the documentation users actually read — any drift between spec and skill must be reconciled before shipping.
-
 ## Requirements
-
 ### Requirement: Skill documents the main time-stepping loop
 The skill SHALL explain the overall solver architecture in `Main_DOODZ.c` (`RunMDOODZ` function): read input → allocate grid and particles → initialise fields → enter time loop → (nonlinear Stokes solve → thermal solve → advect particles → update properties → write output) → repeat until Nt steps.
 
