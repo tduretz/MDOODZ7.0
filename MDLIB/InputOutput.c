@@ -1009,6 +1009,61 @@ void MakeBreakpointParticles( markers *particles,  grid* mesh, markers *topo_cha
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
+/** Scan setup file for deprecated `gmg_*` keys (GMG solver removed). Emits one WARN with examples. */
+static void WarnDeprecatedGmgKeys(const char *fileName) {
+    FILE *fp = fopen(fileName, "rt");
+    if (fp == NULL) return;
+    char line[4096];
+    int n_lines = 0;
+    char seen[8][64];
+    int nseen = 0;
+    memset(seen, 0, sizeof(seen));
+    while (fgets(line, sizeof line, fp) != NULL) {
+        const char *p = line;
+        while (*p == ' ' || *p == '\t') p++;
+        if (*p == '#' || *p == '%' || *p == '\n' || *p == '\0') continue;
+        char key[256];
+        int i = 0;
+        while (p[i] && p[i] != '=' && p[i] != ' ' && p[i] != '\t' && i < (int)sizeof(key) - 1) {
+            key[i] = p[i];
+            i++;
+        }
+        key[i] = '\0';
+        if (i < 4) continue;
+        int is_gmg = 1;
+        const char *pre = "gmg_";
+        for (int j = 0; j < 4 && is_gmg; j++) {
+            if (tolower((unsigned char)key[j]) != (unsigned char)pre[j]) is_gmg = 0;
+        }
+        if (!is_gmg) continue;
+        n_lines++;
+        int dup = 0;
+        for (int s = 0; s < nseen; s++) {
+            if (strcmp(seen[s], key) == 0) { dup = 1; break; }
+        }
+        if (!dup && nseen < 8) {
+            strncpy(seen[nseen], key, 63);
+            seen[nseen][63] = '\0';
+            nseen++;
+        }
+    }
+    fclose(fp);
+    if (n_lines == 0) return;
+    if (nseen == 0) {
+        LOG_WARN("Ignoring deprecated gmg_* parameters in '%s' (%d line(s); GMG solver removed). See openspec/specs/gmg-stokes-solver/spec.md.", fileName, n_lines);
+    } else {
+        char ex[512];
+        ex[0] = '\0';
+        int lim = nseen < 4 ? nseen : 4;
+        for (int s = 0; s < lim; s++) {
+            if (s > 0) strncat(ex, ", ", sizeof(ex) - strlen(ex) - 1);
+            strncat(ex, seen[s], sizeof(ex) - strlen(ex) - 1);
+        }
+        LOG_WARN("Ignoring deprecated gmg_* parameters in '%s' (%d line(s); examples: %s%s; GMG solver removed). See openspec/specs/gmg-stokes-solver/spec.md.",
+                 fileName, n_lines, ex, nseen > 4 ? ", ..." : "");
+    }
+}
+
 Input ReadInputFile( char *fileName ) {
 
     //------------------------------------------------------------------------------------------------------------------------------//
@@ -1115,18 +1170,8 @@ Input ReadInputFile( char *fileName ) {
     model.lin_rel_div        = ReadDou2( fin, "lin_rel_div",      1.0e-5 ); // Tolerance for linear mechanical solver
     model.lin_abs_mom        = ReadDou2( fin, "lin_abs_mom",      1.0e-9 ); // Tolerance for linear mechanical solver
     model.lin_rel_mom        = ReadDou2( fin, "lin_rel_mom",      1.0e-5 ); // Tolerance for linear mechanical solver
-    model.lin_solver         = ReadInt2( fin, "lin_solver",            2 ); // 1: Powell-Hestenes, 2: Powell-Hestenes augmented (killer solver), 3: GMG-preconditioned FGMRES
+    model.lin_solver         = ReadInt2( fin, "lin_solver",            2 ); // 1: Powell-Hestenes, 2: Powell-Hestenes augmented (killer solver)
     model.max_its_PH         = ReadInt2( fin, "max_its_PH",           10 ); // Max number of Powell-Hestenes iterations
-    // Geometric-multigrid solver (lin_solver = 3); all optional, safe defaults.
-    // Default tolerance (0.0) is resolved at solve time to Nmodel.nonlin_abs_mom / 10.
-    model.gmg_levels         = ReadInt2( fin, "gmg_levels",            0 ); // 0 = auto (halve until <16 cells/side or <5000 DOFs)
-    model.gmg_nu_pre         = ReadInt2( fin, "gmg_nu_pre",            2 ); // pre-smoothing Vanka sweeps per level
-    model.gmg_nu_post        = ReadInt2( fin, "gmg_nu_post",           2 ); // post-smoothing Vanka sweeps per level
-    model.gmg_fgmres_restart      = ReadInt2( fin, "gmg_fgmres_restart",      30 ); // FGMRES restart length
-    model.gmg_fgmres_max_restarts = ReadInt2( fin, "gmg_fgmres_max_restarts", 20 ); // FGMRES outer-restart budget; see add-gmg-upleg-fix
-    model.gmg_fgmres_tol          = ReadDou2( fin, "gmg_fgmres_tol",         0.0 ); // 0.0 = auto (nonlin_abs_mom / 10)
-    model.gmg_standalone     = ReadInt2( fin, "gmg_standalone",        0 ); // 0 = FGMRES+V-cycle, 1 = bare V-cycle (diagnostic)
-    model.gmg_dump_vcycle    = ReadInt2( fin, "gmg_dump_vcycle",       0 ); // 0 = off (default); 1 = one-shot HDF5 dump of residual/solution at every V-cycle operator boundary (add-gmg-stokes-defence D5/D9)
     // Thermal solver
     model.thermal_solver     = ReadInt2( fin, "thermal_solver",        0 ); // 0: CHOLMOD direct (default), 1: PCG iterative
     model.max_its_thermal    = ReadInt2( fin, "max_its_thermal",    1000 ); // Max PCG iterations
@@ -1277,27 +1322,17 @@ Input ReadInputFile( char *fileName ) {
     if (model.Newton==0) Nmodel.Picard2Newton = 0; // If Picard is activated, do not switch to Newton
     if (model.Newton==1) model.line_search    = 1; // If Newton is activated, switch to line search
     // Force lin_solver = 2 (KillerSolver) for solver type 0 and when Newton /
-    // anisotropy require a block-preconditioned Krylov outer solver. GMG
-    // (lin_solver = 3) is exempt: Phase 2 of design D11 (tasks 15.19-15.23)
-    // extended `ApplyStokesOperatorMDOODZ`'s Newton-Jacobian branch and the
-    // D7 symmetric-smoothing Vanka block so the GMG stack handles Newton
-    // mode end-to-end without falling back to CHOLMOD.
+    // anisotropy require a block-preconditioned Krylov outer solver.
+    // Do not rewrite lin_solver == 3 here — it is rejected immediately below.
     if ( model.lin_solver != 3 &&
          ( model.lin_solver == 0 || model.Newton == 1 || model.anisotropy == 1 ) ) {
         LOG_WARN("WARNING!! Changing from solver type 0 to solver type 2!!! That's the new standard in MDOODZ 6.0.");
         model.lin_solver = 2;
     }
-    // Geometric-multigrid (lin_solver = 3) parameter validation.
-    if ( model.gmg_nu_pre < 1 )         { LOG_ERR("gmg_nu_pre must be >= 1 (got %d)", model.gmg_nu_pre);                 exit(1); }
-    if ( model.gmg_nu_post < 1 )        { LOG_ERR("gmg_nu_post must be >= 1 (got %d)", model.gmg_nu_post);               exit(1); }
-    if ( model.gmg_fgmres_restart < 1 ) { LOG_ERR("gmg_fgmres_restart must be >= 1 (got %d)", model.gmg_fgmres_restart); exit(1); }
-    if ( model.gmg_fgmres_max_restarts < 1 || model.gmg_fgmres_max_restarts > 1000 ) {
-        LOG_ERR("gmg_fgmres_max_restarts must be in [1, 1000] (got %d)", model.gmg_fgmres_max_restarts); exit(1);
+    if ( model.lin_solver == 3 ) {
+        LOG_ERR("ERROR: lin_solver = 3 (GMG-preconditioned FGMRES) has been removed. Valid values: -1, 0, 1, 2. See openspec/specs/gmg-stokes-solver/spec.md and archived changes 2026-04-18-add-gmg-upleg-fix, 2026-04-19-add-gmg-stokes-solver, 2026-04-21-add-gmg-stokes-defence.");
+        exit(1);
     }
-    if ( model.gmg_fgmres_tol < 0.0 )   { LOG_ERR("gmg_fgmres_tol must be >= 0.0 (got %g; use 0.0 for auto)", model.gmg_fgmres_tol); exit(1); }
-    if ( model.gmg_standalone != 0 && model.gmg_standalone != 1 ) { LOG_ERR("gmg_standalone must be 0 or 1 (got %d)", model.gmg_standalone); exit(1); }
-    if ( model.gmg_dump_vcycle != 0 && model.gmg_dump_vcycle != 1 ) { LOG_ERR("gmg_dump_vcycle must be 0 or 1 (got %d)", model.gmg_dump_vcycle); exit(1); }
-    if ( model.gmg_levels < 0 )         { LOG_ERR("gmg_levels must be >= 0 (got %d; use 0 for auto)", model.gmg_levels); exit(1); }
     //------------------------------------------------------------------------------------------------------------------------------//
     // DEFORMATION MAP PARAMETERS
     //------------------------------------------------------------------------------------------------------------------------------//
@@ -1729,6 +1764,8 @@ Input ReadInputFile( char *fileName ) {
         model.kin_Pmax      = (49.9890/10*1e9)/scaling.S;  // Maximum pressure           (MANTLE) [Pa]
         model.kin_dG        = ReadBin(model.import_files_dir, "dG_QuartzCoesite.dat", model.kin_nT, model.kin_nP, scaling.J);
     }
+
+    WarnDeprecatedGmgKeys(fileName);
 
     // Close input file
     fclose(fin);
