@@ -39,6 +39,7 @@ Before answering questions about MDOODZ, check whether a relevant skill exists. 
 | Writing tests, running tests, CI tests, visual regression tests, GTest | skill-testing-guide |
 | Logging, LOG_INFO/WARN/ERR macros, log configuration, timestamps, log file | skill-logging |
 | Performance benchmarking, perf.csv, grid scaling, thread scaling, comparing machines | skill-benchmarking |
+| Benchmarking the Stokes solver on hard-solve state (shear bands, nit≥1), checkpoint/restart for solve_s measurement, sweeping threads/interp_mode on a warmed-up model | skill-stokes-benchmark |
 | Particle reseeding, recycling, deactivation, min_part_cell, Nb_part_max, exit(190) | skill-particle-reseeding |
 
 ## Code Style
