@@ -52,7 +52,8 @@ Quick rule of thumb:
 18. [Suite 15 — ConvergenceRate (Newton vs Picard)](#suite-15--convergencerate-newton-vs-picard)
 19. [Suite 18 — BlankenBench (Thermal Convection)](#suite-18--blankenbench-thermal-convection)
 20. [Suite 19 — RotationAdvection (Marker Advection & Reseeding)](#suite-19--rotationadvection-marker-advection--reseeding)
-21. [Running the Tests](#running-the-tests)
+21. [Suite 20 — Popov2025 (Combined Tensile Cap / DP Yield)](#suite-20--popov2025-combined-tensile-cap--dp-yield)
+22. [Running the Tests](#running-the-tests)
 
 ---
 
@@ -1179,6 +1180,70 @@ EXPECT_LT(l2_12, 0.10);  // Mode 1 vs Mode 2 divergence < 10% RMS
 ### Justification
 
 This is the only test that exercises particle reseeding in isolation from the mechanical solver. The rigid-body rotation is an analytical benchmark: any L2 error is purely from marker advection interpolation and reseeding artefacts. The vortex test stresses the reseeding under strong deformation where cells can become depleted or overpopulated. Together they verify that `reseed_mode=2` (randomised placement, distance-from-centroid deactivation) does not degrade advection quality compared to the legacy modes.
+
+---
+
+## Suite 20 — Popov2025 (Combined Tensile Cap / DP Yield)
+
+This suite pins the regression of the combined mode-I / mode-II yield surface
+of Popov et al. (2025, GMD, doi:10.5194/gmd-18-7035-2025), implemented in
+`MDLIB/RheologyDensity.c:685–899` and activated by `plast = 2`. See
+[AnalyticalSolutions.md — Popov et al. (2025) Combined Yield Surface](AnalyticalSolutions.md)
+for the reference solutions used by each test.
+
+Binary: `Popov2025Tests`. Three 0D stress-integration fixtures reproduce
+the paper's Fig. 5 a/b/c — the canonical verification of the local stress
+update algorithm.
+
+| Fixture · test case                             | Paper Fig. | Parameter file                              | Nx×Nz × Nt  | Budget |
+|------------------------------------------------|-----------|----------------------------------------------|-------------|--------|
+| `Popov2025_0DIntegration.VolumetricExtension`  | 5a        | `Popov2025/Popov0D_VolumetricExtension.txt` | 21×15 × 20  | <1 s   |
+| `Popov2025_0DIntegration.DeviatoricShear`      | 5b        | `Popov2025/Popov0D_DeviatoricShear.txt`     | 21×15 × 15  | <1 s   |
+| `Popov2025_0DIntegration.MixedStrain`          | 5c        | `Popov2025/Popov0D_MixedStrain.txt`         | 21×15 × 10  | <1 s   |
+
+Parameters match paper Table 1 "0D Fig. 5 a, b" exactly:
+`G = 10¹⁰`, `K = 2·10¹¹`, `φ = 30°`, `ψ = 10°`, `c_MC = 10⁶`,
+`p_T = -5·10⁵`, `η^vp = 0` (perfect plasticity), `Δt = 2 yr`.
+Volumetric loading uses `ε̇_xx = ε̇_zz = 2.333·10⁻¹⁵`; shear uses
+`ε̇_xy = 7·10⁻¹⁴`; mixed combines both via asymmetric normal BCs.
+
+### How to run
+
+```bash
+make -C cmake-build run-tests       # includes Popov2025Tests
+# or directly:
+(cd cmake-build/TESTS && ./Popov2025Tests)
+```
+
+CMake sets `LABELS "popov2025"` on the test for CTest-side filtering.
+Total wall time: ~2 s.
+
+### Paper-figure reproduction
+
+The `TESTS/Popov2025/plots/` folder ships `fig5_0d_stress.gp` plus the
+`extract_popov2025` HDF5 → ASCII helper. See
+[TESTS/Popov2025/plots/README.md](Popov2025/plots/README.md) for the
+invocation order. These scripts are **not** part of the CI / visual-
+regression pipeline — they are developer aids for paper-style figure
+reproduction.
+
+### Justification
+
+The combined yield surface introduces a 3×3 Newton local solve with Armijo
+line search (see `RheologyDensity.c:685`) and a cap-segment branching
+condition — a non-trivial numerical path that regresses silently without
+coverage. The three 0D fixtures together exercise:
+- **pure cap segment** (VolumetricExtension): pressure saturates at `p_T`;
+- **pure Drucker-Prager segment** (DeviatoricShear): stress sits on
+  `τ_II = k·P + c`;
+- **delimiter crossing** (MixedStrain): trajectory passes through the
+  cap ↔ DP transition region.
+
+2D localization tests (paper Figs. 6–9) were explored during development
+and require resolution beyond the fast-CI budget to reproduce meaningful
+band-width or orientation signals. They are deferred — the 0D tier gives
+regression coverage of the constitutive-law code path, which is the
+primary source of risk for the new yield surface.
 
 ---
 

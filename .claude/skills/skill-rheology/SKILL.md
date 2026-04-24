@@ -117,7 +117,20 @@ If yield is exceeded, viscosity is reduced to enforce the yield stress:
 
 ### Combined Mode-I/Mode-II Yield (`plast = 2`)
 
-Introduced in commit 8aecb92 (PR #159, Popov et al. 2025). Combines a standard Drucker-Prager shear yield surface with a tensile (mode-I) cap.
+Introduced in commit 8aecb92 (PR #159, Popov et al. 2025, doi:10.5194/gmd-18-7035-2025). Combines a standard Drucker-Prager shear yield surface with a circular tensile (mode-I) cap joined through a smooth delimiter point; implemented as a 3×3 implicit Newton local solve on `(τ_II, p, λ̇)` in `MDLIB/RheologyDensity.c:685-899`.
+
+**Yield-surface geometry** (paper Eqs. 13–17) from four material parameters (`φ`, `ψ`, `c_MC`, `p_T`):
+
+```
+k    = sin(φ)              kq   = sin(ψ)               c = c_MC · cos(φ)
+a    = sqrt(1 + k²)        b    = sqrt(1 + kq²)
+p_y  = (p_T + c/a) / (1 − k/a)       R_y  = p_y − p_T
+p_d  = p_y − R_y · k/a               τ_d  = k · p_d + c
+```
+
+- DP segment active when `τ_II·(p_y − p_d) ≥ τ_d·(p_y − p)`, otherwise cap
+- DP envelope: `τ_II = k·p + c`
+- Cap circle: centre `(p_y, 0)`, radius `R_y`; `τ_II² + (p − p_y)² = R_y²`
 
 **Additional per-phase parameter**:
 
@@ -125,13 +138,38 @@ Introduced in commit 8aecb92 (PR #159, Popov et al. 2025). Combines a standard D
 |-----------|-------|-------------|---------------|
 | Tensile strength | `T_st` | Mode-I tensile cutoff [Pa] | -10e6 (must be negative) |
 
-**Requirements**:
-- `eta_vp > 0` for all phases (numerical stability)
-- `T_st` set per phase (code default: -10e6 Pa)
-- Works with both Picard and Picard2Newton solvers
-- Optional: `tensile_line_search = 1` for additional solver stability in tensile-dominated problems
+**Global parameter**:
 
-**Example scenarios**: `Popov2025_Pureshear_VEVP`, `Popov2025_Tensile_VEVP`, `RiftingCombinedYield`
+| Parameter | Field | Description |
+|-----------|-------|-------------|
+| `tensile_line_search` | Global switch | 0 = raw Newton step; 1 = Armijo-damped line search (see caution below) |
+
+**Requirements**:
+- `T_st` set per phase (code default: -10e6 Pa)
+- Typically `eta_vp > 0` (Perzyna regularisation) for numerical stability under aggressive loading, but `eta_vp = 0` (rate-independent / perfect plasticity, as in the paper's 0D tests) is supported
+- Works with both Picard and Picard2Newton solvers
+
+**Caution — `tensile_line_search = 1` can abort the process**: If the 3×3 local Newton's Armijo line search fails to find a sufficient step within 100 iterations (α shrinks below 0.01), `RheologyDensity.c:886` calls `exit(0)` — the simulation terminates silently mid-run. For setups with large per-step elastic overshoot (`2·G·ε̇·dt ≫ yield`) consider either (a) `tensile_line_search = 0` + undamped Newton, (b) smaller `dt`, or (c) a small `eta_vp ≥ 1e16` for Perzyna damping.
+
+**Trial-pressure scheme (paper §3.3 / Eq. 31)**: The two-field mixed formulation uses `p*` = global discretised pressure (stored in `mesh->p_in`, written to HDF5 `/Centers/P`) and `p` = integration-point yield-clamped pressure. They are related by:
+
+```
+p = p* + K · θ̇_vp · dt               (Eq. 31)
+```
+
+Empirically in MDOODZ:
+- **DP segment** (shear, mixed after delimiter crossing): the global Stokes solver converges → `p* ≈ p` (within 0.1 %). HDF5 `/Centers/P` already sits on the yield surface.
+- **Tensile cap tip** (pure volumetric extension with `ψ > 0`): `p*` is offset from `p` by `K·θ̇_vp·dt` (≈ 8 % of τ_d for typical 0D parameters). Reconstruct via Eq. 31 using `/Centers/divu_pl`, or use a looser tolerance.
+
+For the extensional cap case, `θ̇_vp > 0` (plastic dilation), so `p > p*` (`p_local` is less tensile than the global trial).
+
+**0D test setup matching Popov 2025 Table 1 "Fig. 5 a, b"** (canonical verification of the local stress update):
+- `G = 10¹⁰ Pa`, `K = 2·10¹¹ Pa`, `φ = 30°`, `ψ = 10°`, `c_MC = 10⁶ Pa`, `p_T = −5·10⁵ Pa`
+- `η^vp = 0`, `Δt = 2 yr`
+- Strain rates: volumetric `ε̇_xx = ε̇_zz = 2.333·10⁻¹⁵`; shear `ε̇_xy = 7·10⁻¹⁴`; mixed superposition
+- BC convention: `Vx_W = -user2, Vx_E = +user2` → `ε̇_xx = 2·user2/Lx`, so `user2 = ε̇_xx·Lx/2` (**watch the factor of 2**)
+
+**Example scenarios**: `Popov2025_Pureshear_VEVP`, `Popov2025_Tensile_VEVP`, `Popov2025_0DIntegration.{VolumetricExtension,DeviatoricShear,MixedStrain}` (CI), `RiftingCombinedYield`, `PressurizedMagmaChamber`, `TCMagmaticSystem`
 
 ### Strain Softening
 

@@ -159,6 +159,27 @@ target_link_libraries(RotationAdvectionTests LINK_PUBLIC mdoodz GTest::gtest_mai
 add_test(NAME RotationAdvectionTests COMMAND RotationAdvectionTests)
 set_tests_properties(RotationAdvectionTests PROPERTIES LABELS "experimental" TIMEOUT 600)
 
+# Popov et al. (2025) Combined Tensile Cap / DP Yield Tests
+#
+# Three 0D stress-integration fixtures reproduce paper Fig. 5 a/b/c
+# (volumetric extension, deviatoric shear, mixed strain).  They pin the
+# local-stress-update Newton solve (MDLIB/RheologyDensity.c:685-899) with
+# exact paper parameters and analytical yield-surface assertions.
+file(COPY ${PROJECT_SOURCE_DIR}/TESTS/Popov2025 DESTINATION ${PROJECT_BINARY_DIR}/TESTS)
+add_executable(Popov2025Tests
+        Popov2025Tests.cpp
+        Popov2025/Popov0DAnalytical.cpp)
+target_link_libraries(Popov2025Tests LINK_PUBLIC mdoodz GTest::gtest_main)
+target_include_directories(Popov2025Tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+add_test(NAME Popov2025Tests COMMAND Popov2025Tests)
+set_tests_properties(Popov2025Tests PROPERTIES LABELS "popov2025")
+
+# Standalone HDF5 -> ASCII extractor that feeds the gnuplot paper-figure
+# scripts under TESTS/Popov2025/plots/.  Not wired into VISUAL_TESTS.
+add_executable(extract_popov2025 Popov2025/plots/extract_popov2025.cpp)
+target_link_libraries(extract_popov2025 LINK_PUBLIC ${HDF5_C_LIBRARIES})
+target_include_directories(extract_popov2025 PRIVATE ${HDF5_INCLUDE_DIRS})
+
 # AnalyticalBench fixtures (SolKz and related analytic benchmarks).
 file(COPY ${PROJECT_SOURCE_DIR}/TESTS/AnalyticalBench DESTINATION ${PROJECT_BINARY_DIR}/TESTS)
 

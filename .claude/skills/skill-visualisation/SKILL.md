@@ -125,6 +125,18 @@ Vzc = 0.5 .* (Vz[2:end-1, 1:end-1] .+ Vz[2:end-1, 2:end])
 
 ### Computing Invariants at Centres
 
+**Two conventions — pick the right one for your context:**
+
+**(a) 2D MDLIB-internal convention** (matches `RheologyDensity.c:2344`, used in `TESTS/Popov2025Tests.cpp::reconstructSII`). Drops the out-of-plane `τ_yy` term. Use this when comparing against MDLIB's internal `Tii` or when validating plasticity yield-surface membership where MDOODZ's own yield-function evaluation uses this form:
+
+```julia
+sxz_c = 0.25 .* (sxz[1:end-1,1:end-1] .+ sxz[2:end,1:end-1] .+
+                  sxz[1:end-1,2:end]   .+ sxz[2:end,2:end])
+τII_mdoodz = sqrt.(0.5 .* (τxx.^2 .+ τzz.^2) .+ sxz_c.^2)
+```
+
+**(b) Full 3D plane-strain closure** (physically correct second invariant for a 2D plane-strain setup). Use for paper comparisons or theory checks:
+
 ```julia
 τxx = reshape(Float64.(h5read(filename, "/Centers/sxxd")), ncx, ncz)
 τzz = reshape(Float64.(h5read(filename, "/Centers/szzd")), ncx, ncz)
@@ -135,6 +147,8 @@ sxz_c = 0.25 .* (sxz[1:end-1,1:end-1] .+ sxz[2:end,1:end-1] .+
 
 τII = sqrt.(0.5 .* (τxx.^2 .+ τyy.^2 .+ τzz.^2) .+ sxz_c.^2)
 ```
+
+The two formulas agree for pure shear (`τ_xx = -τ_zz`, so `τ_yy = 0`), but diverge for pure-volumetric loading where they differ by a factor of √3 — the MDOODZ convention is ≈ 0.577× the 3D plane-strain value.
 
 ### Masking Air Cells
 
