@@ -73,6 +73,26 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             .flux              = NULL,
     };
 
+    // Startup validation + registration for the optional SetGridDensity grid-override callback.
+    // Semantics (see mdoodz.h SetGridDensity_f): when the callback is set it overrides
+    // mesh->rho_n / mesh->rho_s at every rheology pass. To prevent silent conflict with the
+    // phase-based density pipeline, refuse the combination of the callback with any non-zero
+    // density_model on any phase.
+    {
+        SetGridDensity_f setrho_cb = (setup->SetParticles ? setup->SetParticles->SetGridDensity : NULL);
+        if (setrho_cb != NULL) {
+            for (int k = 0; k < input.materials.Nb_phases; k++) {
+                if (input.materials.density_model[k] != 0) {
+                    LOG_ERR("SetGridDensity callback is active but phase %d has density_model=%d. "
+                            "Either remove the callback or set density_model = 0 on every phase.",
+                            k, input.materials.density_model[k]);
+                    exit(1);
+                }
+            }
+        }
+        RegisterSetGridDensityCallback(&input, setrho_cb);
+    }
+
     if (input.model.free_surface) {
       input.flux = malloc(sizeof(LateralFlux));
       if (input.flux != NULL) {

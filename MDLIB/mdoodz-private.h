@@ -405,6 +405,8 @@ int             solve_local_3x3(double, double, double, double, double, double, 
 void            UpdateNonLinearity(grid *, markers *, markers *, surface *, mat_prop, params *, Nparams *, scale, int, int);
 double          LineSearch(SparseMat *, double *, grid *, params *, Nparams *, markers *, markers *, surface *, mat_prop, scale);
 void            NonNewtonianViscosityGrid(grid *, mat_prop *, params *, Nparams, scale *, int);
+void            RegisterSetGridDensityCallback(MdoodzInput *input, SetGridDensity_f cb);
+void            ApplySetGridDensityOverride(grid *mesh, params *model);
 void            StrainRateComponents(grid *, scale, params *);
 void            GenerateDeformationMaps(grid *, mat_prop *, params *, Nparams, scale *);
 void            UpdateParticleGrainSize(grid *, scale, params, markers *, mat_prop *);

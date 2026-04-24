@@ -118,6 +118,16 @@ add_executable(SolViBenchmarkTests SolViBenchmarkTests.cpp)
 target_link_libraries(SolViBenchmarkTests LINK_PUBLIC mdoodz GTest::gtest_main)
 add_test(SolViBenchmarkTests SolViBenchmarkTests)
 
+# SolCx Benchmark Tests (step-viscosity Stokes — Zhong 1996 / Duretz 2011)
+# Analytical solution is a verbatim port of ASPECT's _Velic_solCx (GPL v2+).
+file(COPY ${PROJECT_SOURCE_DIR}/TESTS/SolCx DESTINATION ${PROJECT_BINARY_DIR}/TESTS)
+add_executable(SolCxBenchmarkTests
+        SolCxBenchmarkTests.cpp
+        SolCx/SolCxAnalytical.cpp)
+target_link_libraries(SolCxBenchmarkTests LINK_PUBLIC mdoodz GTest::gtest_main)
+target_include_directories(SolCxBenchmarkTests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+add_test(NAME SolCxBenchmarkTests COMMAND SolCxBenchmarkTests)
+
 # Anisotropy Benchmark Tests
 file(COPY ${PROJECT_SOURCE_DIR}/TESTS/AnisotropyBenchmark DESTINATION ${PROJECT_BINARY_DIR}/TESTS)
 add_executable(AnisotropyBenchmarkTests AnisotropyBenchmarkTests.cpp)

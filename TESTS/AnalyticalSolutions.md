@@ -503,6 +503,12 @@ For convergence-order tests, thresholds are set ~30–50% below the measured ord
 | TopoBench convergence | [TopoBenchTests.cpp](TopoBenchTests.cpp) | Grid convergence (§4.2) | `EXPECT_GE(order, 0.3)` | 0.3 |
 | Rotation advection L2 | [RotationAdvectionTests.cpp](RotationAdvectionTests.cpp) | Identity map after 1 revolution (§5) | `EXPECT_LT(l2, 0.1)` | 0.1 |
 | Rotation mode 2 ≤ mode 0 | [RotationAdvectionTests.cpp](RotationAdvectionTests.cpp) | Identity map (§5) | `EXPECT_LE(l2_2, l2_0 * 1.5)` | 1.5× |
+| SolCx L2(Vx) 51×51 | [SolCxBenchmarkTests.cpp](SolCxBenchmarkTests.cpp) | Velic Chebyshev series (§7) | `EXPECT_LT(L2_Vx, 2.5e-1)` | 2.5e-1 |
+| SolCx L2(Vz) 51×51 | [SolCxBenchmarkTests.cpp](SolCxBenchmarkTests.cpp) | Velic Chebyshev series (§7) | `EXPECT_LT(L2_Vz, 2.5e-1)` | 2.5e-1 |
+| SolCx L1(P) 51×51 | [SolCxBenchmarkTests.cpp](SolCxBenchmarkTests.cpp) | Velic Chebyshev series (§7) | `EXPECT_LT(L1_P, 1e-2)` | 1e-2 |
+| SolCx convergence Vx | [SolCxBenchmarkTests.cpp](SolCxBenchmarkTests.cpp) | Order from 41→81 (§7) | `EXPECT_GE(orderVx, 0.7)` | 0.7 |
+| SolCx convergence Vz | [SolCxBenchmarkTests.cpp](SolCxBenchmarkTests.cpp) | Order from 41→81 (§7) | `EXPECT_GE(orderVz, 0.7)` | 0.7 |
+| SolCx convergence P (L1) | [SolCxBenchmarkTests.cpp](SolCxBenchmarkTests.cpp) | Order from 41→81 (§7) | `EXPECT_GE(orderP, 0.5)` | 0.5 |
 
 ---
 
@@ -744,3 +750,88 @@ fluid-pressure perturbations, depth-partitioned mode-I/mode-II
 coexistence). They are deferred — the 0D tier gives regression coverage
 of the constitutive-law code path, which is the primary source of
 risk for the new yield surface.
+
+
+---
+
+## 7. SolCx Benchmark (Step Viscosity)
+
+**Source:** [SolCxBenchmarkTests.cpp](SolCxBenchmarkTests.cpp)
+**Parameter files:** [SolCx/SolCx21.txt](SolCx/SolCx21.txt), [SolCx41.txt](SolCx/SolCx41.txt), [SolCx51.txt](SolCx/SolCx51.txt), [SolCx81.txt](SolCx/SolCx81.txt)
+**Analytical port:** [SolCx/SolCxAnalytical.h](SolCx/SolCxAnalytical.h) / [SolCx/SolCxAnalytical.cpp](SolCx/SolCxAnalytical.cpp) — verbatim from ASPECT `_Velic_solCx` (GPL v2+), originally from Underworld
+**Reference:** Zhong (1996); Duretz, May, Gerya, Tackley (2011) *Geochemistry Geophysics Geosystems* 12, Q07004
+
+### Problem Statement
+
+Incompressible Stokes flow on the unit square $[0, 1]^2$ with a step-function viscosity jump:
+
+$$\eta(x) = \begin{cases} 1 & x < 0.5 \\ 10^6 & x \geq 0.5 \end{cases}$$
+
+The flow is driven by a sinusoidal buoyancy:
+
+$$\rho(x, z) = \sin(\pi z) \cos(\pi x), \qquad \mathbf{g} = (0, 1)$$
+
+Free-slip is the natural boundary condition; we impose the Velic analytical velocity as Dirichlet on all four walls (matching SolVi precedent) to anchor the solution and measure the internal solver accuracy rather than BC-induced noise.
+
+### Analytical Solution
+
+The Velic SolCx evaluator is a Chebyshev-series solution of the 2D biharmonic stream-function equation under the step-viscosity boundary. The implementation is a ~2900-line Maple-generated series, ported verbatim from ASPECT with only two transformations: `numbers::PI` → `M_PI`, and wrapping in the `MdoodzSolCx::detail` namespace. The public facade is:
+
+```cpp
+struct SolCxValue { double vx, vz, p, sxx, szz, sxz, exx, ezz, exz; };
+SolCxValue EvalSolCx(double x, double z, double eta_A, double eta_B, double xc, int n);
+```
+
+Canonical headline parameters: `eta_A=1, eta_B=1e6, xc=0.5, n=1`.
+
+### Implementation Details
+
+- Two phases via `SetPhase`: phase 0 for $x < 0.5$ (`eta0 = 1`), phase 1 for $x \geq 0.5$ (`eta0 = 1e6`).
+- Spatially varying density supplied via the new **`SetGridDensity`** callback (see [skill-testing-guide](../.claude/skills/skill-testing-guide/SKILL.md) § SetGridDensity pitfall entry). Every `.txt` phase declares `density_model = 0` so the startup validator accepts the callback.
+- Gravity `gx = 0, gz = 1`. No thermal / elasticity / plasticity.
+- Dirichlet velocity BCs on all four walls, sampled from `EvalSolCx` at the appropriate staggered-grid coordinate (including half-cell offsets for `type=11` ghost Vx nodes on N/S faces and Vz nodes on W/E faces, same pattern as SolVi).
+- `Nt = 1` (single Stokes solve, no time integration needed).
+- L1 (not L2) for pressure: the analytical pressure crosses zero inside the domain, making relative L2 ill-conditioned — same lesson as SolVi § Cell-Face D-Tensor Averaging.
+
+### Measured L2 Errors
+
+| Resolution | $L_2(V_x)$ | $L_2(V_z)$ | $L_1(P)$ |
+|------------|------------|------------|----------|
+| 21×21  | 1.83e-1 | 2.10e-1 | 1.05e-2 |
+| 41×41  | 9.25e-2 | 1.06e-1 | 9.20e-3 |
+| 51×51  | 7.44e-2 | 8.48e-2 | 2.29e-3 |
+| 81×81  | 4.70e-2 | 5.32e-2 | 1.55e-3 |
+
+### Convergence Orders (41→81)
+
+| Field | Measured Order | Threshold |
+|-------|---------------|-----------|
+| $V_x$ | 0.98 | ≥ 0.7 |
+| $V_z$ | 0.99 | ≥ 0.7 |
+| $P$ (L1) | 2.57 | ≥ 0.5 |
+
+Near-first-order velocity and super-first-order pressure convergence on this staggered FD discretisation of a discontinuous-η problem is consistent with Duretz et al. 2011 §4. The absolute error levels are higher than ASPECT's Q2-P1 FE results at equivalent resolution — expected given MDOODZ is 2nd-order FD on staggered grids.
+
+### Code Assertions
+
+Single-resolution 51×51:
+
+```cpp
+EXPECT_LT(L2_Vx, 2.5e-1);   // measured 7.4e-2 (3.4x margin)
+EXPECT_LT(L2_Vz, 2.5e-1);   // measured 8.5e-2 (2.9x margin)
+EXPECT_LT(L1_P,  1e-2);     // measured 2.3e-3 (4.4x margin)
+```
+
+Grid convergence (41→81):
+
+```cpp
+EXPECT_GE(orderVx, 0.7);    // measured 0.98
+EXPECT_GE(orderVz, 0.7);    // measured 0.99
+EXPECT_GE(orderP,  0.5);    // measured 2.57
+```
+
+![SolCx grid-convergence plot: L2(Vx), L2(Vz), L1(P) vs h with slope-1 and slope-2 reference lines](SolCx/solcx_convergence.png)
+
+Generated by [SolCx/plot_solcx.gp](SolCx/plot_solcx.gp). The test writes `solcx_convergence.dat` as a side-effect of `GridConvergence`; regenerate with `gnuplot SolCx/plot_solcx.gp` from the build directory.
+
+The L1(P) kink between h=5e-2 and h=2.5e-2 is a known feature of staggered FD at an η-jump: coarse grids underestimate the pressure jump amplitude, so L1(P) is non-monotone in h at low resolutions. Convergence becomes clean from 41×41 onward.

@@ -42,6 +42,74 @@
 #endif
 
 /*--------------------------------------------------------------------------------------------------------------------*/
+/* SetGridDensity grid-override state (see mdoodz.h SetGridDensity_f).                                                 */
+/* Registered once by RunMDOODZ when setup->SetParticles->SetGridDensity != NULL. Applied at the end of the rheology  */
+/* density-grid routines to replace mesh->rho_n / mesh->rho_s with the callback's spatial formula. Null-default means */
+/* zero overhead for every scenario that does not use the callback.                                                    */
+/*--------------------------------------------------------------------------------------------------------------------*/
+
+static SetGridDensity_f  s_SetGridDensityCallback = NULL;
+static MdoodzInput      *s_SetGridDensityInput    = NULL;
+
+void RegisterSetGridDensityCallback(MdoodzInput *input, SetGridDensity_f cb) {
+  s_SetGridDensityInput    = input;
+  s_SetGridDensityCallback = cb;
+}
+
+static int DominantPhaseAtCentre(grid *mesh, params *model, int c0) {
+  int    phase    = 0;
+  double max_perc = -1.0;
+  for (int p = 0; p < model->Nb_phases; p++) {
+    if (mesh->phase_perc_n[p][c0] > max_perc) {
+      max_perc = mesh->phase_perc_n[p][c0];
+      phase    = p;
+    }
+  }
+  return phase;
+}
+
+static int DominantPhaseAtVertex(grid *mesh, params *model, int c1) {
+  int    phase    = 0;
+  double max_perc = -1.0;
+  for (int p = 0; p < model->Nb_phases; p++) {
+    if (mesh->phase_perc_s[p][c1] > max_perc) {
+      max_perc = mesh->phase_perc_s[p][c1];
+      phase    = p;
+    }
+  }
+  return phase;
+}
+
+void ApplySetGridDensityOverride(grid *mesh, params *model) {
+  if (s_SetGridDensityCallback == NULL || s_SetGridDensityInput == NULL) return;
+
+  const int Nx  = mesh->Nx;
+  const int Nz  = mesh->Nz;
+  const int Ncx = Nx - 1;
+  const int Ncz = Nz - 1;
+
+  // Cell centres: mesh->rho_n (Ncx × Ncz)
+  for (int c0 = 0; c0 < Ncx * Ncz; c0++) {
+    if (mesh->BCp.type[c0] == 30) continue;
+    const int k = c0 % Ncx;
+    const int l = c0 / Ncx;
+    const Coordinates coord = { .x = mesh->xc_coord[k], .z = mesh->zc_coord[l] };
+    const int    phase = DominantPhaseAtCentre(mesh, model, c0);
+    mesh->rho_n[c0] = s_SetGridDensityCallback(s_SetGridDensityInput, coord, phase);
+  }
+
+  // Vertices: mesh->rho_s (Nx × Nz)
+  for (int c1 = 0; c1 < Nx * Nz; c1++) {
+    if (mesh->BCg.type[c1] == 30) continue;
+    const int k = c1 % Nx;
+    const int l = c1 / Nx;
+    const Coordinates coord = { .x = mesh->xg_coord[k], .z = mesh->zg_coord[l] };
+    const int    phase = DominantPhaseAtVertex(mesh, model, c1);
+    mesh->rho_s[c1] = s_SetGridDensityCallback(s_SetGridDensityInput, coord, phase);
+  }
+}
+
+/*--------------------------------------------------------------------------------------------------------------------*/
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
@@ -1394,6 +1462,11 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
   //  Print2DArrayDouble( mesh->szzd,  mesh->Nx-1, mesh->Nz-1, scaling->S );
   // printf("Txz:\n");
   //  Print2DArrayDouble( mesh->sxz,  mesh->Nx, mesh->Nz, scaling->S );
+
+  // User-specified grid-density override (no-op if SetGridDensity callback is NULL).
+  // Needed here because density_variations=1 re-zeros mesh->rho_n inside this loop
+  // (line 1275-1277); re-applying the override ensures it survives.
+  ApplySetGridDensityOverride(mesh, model);
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
@@ -1842,6 +1915,11 @@ void UpdateDensity( grid* mesh, markers* particles, mat_prop *materials, params 
 
   // Interpolate to vertices
   InterpCentroidsToVerticesDouble( mesh->rho_n, mesh->rho_s, mesh, model );
+
+  // User-specified grid-density override (no-op if SetGridDensity callback is NULL).
+  // Applied AFTER the interpolation so both mesh->rho_n and mesh->rho_s are set
+  // directly from the callback at each point — consistent with SetViscosity's path.
+  ApplySetGridDensityOverride(mesh, model);
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/

@@ -812,6 +812,8 @@ void NonNewtonianViscosityGridAniso( grid *mesh, mat_prop *materials, params *mo
     }
   }
 
+  // User-specified grid-density override (no-op if SetGridDensity callback is NULL)
+  ApplySetGridDensityOverride(mesh, model);
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/

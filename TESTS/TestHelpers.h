@@ -243,6 +243,17 @@ static double computeL1Error(const std::vector<double> &numerical, const std::ve
   return sumAbsDiff / (double)n;
 }
 
+// Subtract the spatial mean from an array in place.
+// Used for pressure null-space handling in benchmarks with free-slip-everywhere BCs
+// (e.g., SolKz), where pressure is defined only up to an additive constant.
+static void subtractMean(std::vector<double> &field) {
+  if (field.empty()) return;
+  double sum = 0.0;
+  for (double v : field) sum += v;
+  const double mean = sum / (double)field.size();
+  for (double &v : field) v -= mean;
+}
+
 // Read a single-element integer dataset from HDF5
 static int readScalarInt(const char *hdf5FileName, const char *groupName, const char *datasetName) {
   hid_t file  = H5Fopen(hdf5FileName, H5F_ACC_RDONLY, H5P_DEFAULT);

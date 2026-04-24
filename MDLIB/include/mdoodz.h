@@ -206,6 +206,14 @@ typedef int    (*SetDualPhase_f)(MdoodzInput *input, Coordinates coordinates, in
 typedef double (*SetGrainSize_f)(MdoodzInput *input, Coordinates coordinates, int phase);
 typedef double (*SetPorosity_f)(MdoodzInput *input, Coordinates coordinates, int phase);
 typedef double (*SetDensity_f)(MdoodzInput *input, Coordinates coordinates, int phase);
+// SetGridDensity_f: grid-density override callback. When non-NULL, overrides
+// mesh->rho_n (cell centres) and mesh->rho_s (vertices) on every rheology pass
+// with the return value evaluated at the cell/vertex coordinate. Gives MDOODZ
+// an ASPECT-style "material model" hook for spatially-varying density that
+// cannot be expressed as a per-phase constant (e.g., SolCx's sin(πz)·cos(πx)
+// forcing). Startup validation rejects the combination of this callback with
+// any non-zero density_model on any phase — "one source of truth per phase".
+typedef double (*SetGridDensity_f)(MdoodzInput *input, Coordinates coordinates, int phase);
 typedef double (*SetXComponent_f)(MdoodzInput *input, Coordinates coordinates, int phase);
 typedef double (*SetPressure_f)(MdoodzInput *input, Coordinates coordinates, int phase);
 typedef double (*SetTxx_f)(MdoodzInput *input, Coordinates coordinates, int phase);
@@ -230,6 +238,7 @@ typedef struct {
   SetGrainSize_f          SetGrainSize;
   SetPorosity_f           SetPorosity;
   SetDensity_f            SetDensity;
+  SetGridDensity_f        SetGridDensity;
   SetXComponent_f         SetXComponent;
   SetDefGrad_f            SetDefGrad;
   SetAnisoAngle_f         SetAnisoAngle;
