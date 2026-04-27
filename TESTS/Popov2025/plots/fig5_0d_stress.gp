@@ -26,13 +26,17 @@ yr  = 365.25*86400.0
 # zero already, so no correction needed.
 clean_sII(sII_val, step) = (step == 0 ? 0.0 : sII_val)
 
-# MDOODZ writes the global discretised pressure p* to /Centers/P (= mesh->p_in).
-# On the DP segment (shear, mixed) the global Stokes solver has converged so
-# p* sits on the yield surface directly; on the tensile cap tip (volumetric)
-# p* is offset from the yield-clamped p by ≈ K·θ̇_vp·dt (paper Eq. 31).  The
-# plot displays p* as-is — honest representation of the MDOODZ HDF5 output.
-# The small cap-tip offset (≈ -80 kPa for the paper's 0D parameters) is
-# visible as panel (a)'s saturation ≈ -0.58 MPa vs T_st = -0.5 MPa.
+# MDOODZ writes the globally-discretised pressure p* to /Centers/P.  The
+# yield-clamped local pressure p_local = p* + K·θ̇_vp·dt (paper Eq. 31) is
+# reconstructed in extract_popov2025 and emitted as column 7 of trajectory.dat.
+# In the elastic regime they're equal; on the cap segment with ψ > 0 they
+# differ by ≈ 80 kPa for the paper's 0D parameters.
+#
+# Panels (a)-(c) plot p* vs time as-is — small cap-tip offset (≈ -80 kPa)
+# visible as panel (a)'s saturation at ~ -0.58 MPa vs T_st = -0.5 MPa.
+# Panel (d) plots trajectories using p_local (column 7) so they sit cleanly
+# on the yield envelope, demonstrating the constitutive law correctly
+# returns to yield.
 
 # Yield-surface geometry (paper Eqs. 13–17), paper Table 1 "0D" values:
 phi_deg = 30.0
@@ -98,9 +102,9 @@ set ylabel "{/Symbol t}_{II} [MPa]"
 envelope(P_MPa) = (P_MPa*1e6 <= pd_ ? cap_tau(P_MPa*1e6)/1e6 : DP_tau(P_MPa*1e6)/1e6)
 
 plot envelope(x) with lines lw 2 dt 2 lc rgb "dark-grey" title "yield envelope",\
-     VOL using ($4/1e6):(clean_sII($3, $1)/1e6) with linespoints pt 7 ps 0.6 lw 2 lc rgb "gold"  title "Extension",\
-     DEV using ($4/1e6):(clean_sII($3, $1)/1e6) with linespoints pt 7 ps 0.6 lw 2 lc rgb "blue"  title "Shear",\
-     MIX using ($4/1e6):(clean_sII($3, $1)/1e6) with linespoints pt 7 ps 0.6 lw 2 lc rgb "red"   title "Mixed"
+     VOL using ($7/1e6):(clean_sII($3, $1)/1e6) with linespoints pt 7 ps 0.6 lw 2 lc rgb "gold"  title "Extension",\
+     DEV using ($7/1e6):(clean_sII($3, $1)/1e6) with linespoints pt 7 ps 0.6 lw 2 lc rgb "blue"  title "Shear",\
+     MIX using ($7/1e6):(clean_sII($3, $1)/1e6) with linespoints pt 7 ps 0.6 lw 2 lc rgb "red"   title "Mixed"
 
 unset multiplot
 print "Wrote out/fig5_0d_stress.png"

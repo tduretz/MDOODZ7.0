@@ -3,7 +3,7 @@ The CI test suite SHALL include GTest cases that verify the local stress update 
 
 All three cases run a homogeneous 21×15 grid with custom pure-shear / outward-normal BCs, and use material parameters matching the paper exactly: `G = 10¹⁰ Pa`, `K = 2·10¹¹ Pa`, `φ = 30°`, `ψ = 10°`, `c_MC = 10⁶ Pa`, `p_T = −5·10⁵ Pa`, `η^vp = 0` (perfect plasticity), `Δt = 2 yr`.
 
-Assertions are made directly on yield-surface membership at the final step (rather than full-trajectory L2) to remain robust to the one-step trial-pressure offset that MDOODZ exposes through the HDF5 global `/Centers/P` field (see paper Eq. 31).
+Assertions are made directly on yield-surface membership at the final step (rather than full-trajectory L2) for robustness against per-step trial-stress noise. MDOODZ writes only the globally-discretised pressure `p*` to HDF5 (`/Centers/P`); the yield-clamped local pressure `p_local = p* + K·θ̇_vp·dt` (paper Eq. 31) is reconstructed in postprocessing using `/Centers/divu_pl` and the canonical 0D parameters (K = 2·10¹¹ Pa, dt = 2 yr).
 
 #### Scenario: Volumetric extension saturates on the tensile cap
 - **WHEN** the test runs `Popov2025/Popov0D_VolumetricExtension.txt` with `ε̇_xx = ε̇_zz = 2.333·10⁻¹⁵ s⁻¹` (outward normal BCs `user2 = user3 = 1.167·10⁻¹⁵ m/s`), `plast = 2`, `η^vp = 0`
@@ -46,7 +46,7 @@ The script lives under `TESTS/Popov2025/plots/` alongside an HDF5 → ASCII extr
 
 #### Scenario: fig5 script runs end-to-end against test HDF5 output
 - **WHEN** a developer builds the `extract_popov2025` and `Popov2025Tests` targets, runs the test binary, invokes `./extract_popov2025` on each of the three 0D output directories, and then runs `gnuplot fig5_0d_stress.gp` from `TESTS/Popov2025/plots/`
-- **THEN** a PNG SHALL land at `TESTS/Popov2025/plots/out/fig5_0d_stress.png` showing the four panels `(a) volumetric extension`, `(b) deviatoric shear`, `(c) mixed strain`, `(d) meridional P–τ_II trajectories`, with pressure reconstructed as `p_local = p* + K·θ̇_vp·dt` (paper Eq. 31) so that saturation values sit on the yield surface
+- **THEN** a PNG SHALL land at `TESTS/Popov2025/plots/out/fig5_0d_stress.png` showing the four panels `(a) volumetric extension`, `(b) deviatoric shear`, `(c) mixed strain`, `(d) meridional P–τ_II trajectories`. Panel (d) SHALL plot trajectories using the reconstructed `p_local = p* + K·θ̇_vp·dt` (paper Eq. 31, computed in `extract_popov2025` from `/Centers/P` and `/Centers/divu_pl` with canonical 0D `K` and `dt`) on the P axis so that the points sit ON the yield surface envelope, while panels (a)–(c) plot the global `/Centers/P` over time as-is.
 
 ### Requirement: CMake target registration
 The new test binary SHALL be wired into the project build system and run under `make run-tests`.

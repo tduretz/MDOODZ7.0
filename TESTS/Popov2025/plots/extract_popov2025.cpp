@@ -11,7 +11,10 @@
 // "Popov0D_VolumetricExtension"). The tool scans for Output*.gzip.h5 files in
 // that directory and writes:
 //
-//   <test_output_dir>/trajectory.dat   (columns: step t sII P eII_pl divu_pl)
+//   <test_output_dir>/trajectory.dat   (columns: step t sII P eII_pl divu_pl p_local)
+//     P       = /Centers/P (the globally-discretised p* MDOODZ writes)
+//     p_local = P + K · dt · divu_pl  (yield-clamped local pressure, paper Eq. 31)
+//     For the Popov 2025 0D tests K = 2e11 Pa, dt = 2 yr (paper Table 1 "0D").
 //   <test_output_dir>/sII_stepXXXXX.dat
 //   <test_output_dir>/P_stepXXXXX.dat
 //   ...
@@ -113,7 +116,7 @@ int main(int argc, char *argv[]) {
   const std::string trajPath = dir + "/trajectory.dat";
   FILE *traj = fopen(trajPath.c_str(), "w");
   if (!traj) { fprintf(stderr, "Cannot write %s\n", trajPath.c_str()); return 1; }
-  fprintf(traj, "# step  time[s]  sII[Pa]  P[Pa]  eII_pl[1/s]  divu_pl[1/s]\n");
+  fprintf(traj, "# step  time[s]  sII[Pa]  P[Pa]  eII_pl[1/s]  divu_pl[1/s]  p_local[Pa]\n");
 
   for (size_t fi = 0; fi < files.size(); ++fi) {
     hid_t fd = H5Fopen(files[fi].c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
@@ -162,12 +165,31 @@ int main(int argc, char *argv[]) {
     auto eIIpl  = readFloatDataset(fd, "Centers", "eII_pl");
     auto divupl = readFloatDataset(fd, "Centers", "divu_pl");
 
-    fprintf(traj, "%d  %.6e  %.6e  %.6e  %.6e  %.6e\n",
+    // Reconstruct yield-clamped local pressure (paper Eq. 31):
+    //   p_local = p* + K · θ̇_vp · dt
+    // - p*       = /Centers/P            (globally discretised pressure MDOODZ writes)
+    // - θ̇_vp     = /Centers/divu_pl       (plastic dilation rate)
+    // - dt       = /Model/Params[7]       (timestep, in seconds, read per-step from HDF5)
+    // - K (bulk) = 2e11 Pa = 1/bet, paper Popov 2025 Table 1 "0D" parameter set.
+    //   Tied to this specific test fixture (matches `bet = 5e-12` in the .txt files);
+    //   not derived from HDF5 because MDOODZ does not currently expose bet/K as a field.
+    //
+    // In the elastic regime (divu_pl = 0) p_local = p*. On the cap segment they
+    // differ by ~80 kPa for these parameters. Plotting trajectories in
+    // (p_local, σII) space puts them ON the yield envelope.
+    const double K_bulk_0D     = 2.0e11;     // paper Table 1 "0D"; see comment above
+    const double dt_step       = params.size() >= 8 ? (double)params[7] : 6.3072e7;
+    const float  P_centre      = centreValue(P,      ncx, ncz);
+    const float  divupl_centre = centreValue(divupl, ncx, ncz);
+    const double p_local_centre = (double)P_centre + K_bulk_0D * dt_step * (double)divupl_centre;
+
+    fprintf(traj, "%d  %.6e  %.6e  %.6e  %.6e  %.6e  %.6e\n",
             step, t,
             (double)centreValue(sII, ncx, ncz),
-            (double)centreValue(P,   ncx, ncz),
+            (double)P_centre,
             (double)centreValue(eIIpl,  ncx, ncz),
-            (double)centreValue(divupl, ncx, ncz));
+            (double)divupl_centre,
+            p_local_centre);
 
     // Per-step pm3d maps (only useful for the 2D tests).
     char stepTag[32];
