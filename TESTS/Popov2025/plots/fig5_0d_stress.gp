@@ -102,9 +102,9 @@ set ylabel "{/Symbol t}_{II} [MPa]"
 envelope(P_MPa) = (P_MPa*1e6 <= pd_ ? cap_tau(P_MPa*1e6)/1e6 : DP_tau(P_MPa*1e6)/1e6)
 
 plot envelope(x) with lines lw 2 dt 2 lc rgb "dark-grey" title "yield envelope",\
-     VOL using ($7/1e6):(clean_sII($3, $1)/1e6) with linespoints pt 7 ps 0.6 lw 2 lc rgb "gold"  title "Extension",\
-     DEV using ($7/1e6):(clean_sII($3, $1)/1e6) with linespoints pt 7 ps 0.6 lw 2 lc rgb "blue"  title "Shear",\
-     MIX using ($7/1e6):(clean_sII($3, $1)/1e6) with linespoints pt 7 ps 0.6 lw 2 lc rgb "red"   title "Mixed"
+     VOL using ($7/1e6):(clean_sII($3, $1)/1e6) with linespoints pt 7 ps 0.6 lw 2 lc rgb "gold"  title "Extension (p_{local})",\
+     DEV using ($4/1e6):(clean_sII($3, $1)/1e6) with linespoints pt 7 ps 0.6 lw 2 lc rgb "blue"  title "Shear",\
+     MIX using ($4/1e6):(clean_sII($3, $1)/1e6) with linespoints pt 7 ps 0.6 lw 2 lc rgb "red"   title "Mixed"
 
 unset multiplot
 print "Wrote out/fig5_0d_stress.png"
