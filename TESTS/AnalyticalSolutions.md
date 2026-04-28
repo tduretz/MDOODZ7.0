@@ -637,112 +637,45 @@ holds the point lies on the Drucker-Prager branch, otherwise on the cap.
 
 Paper Fig. 5 reproduced from the CI test HDF5 output (see
 [TESTS/Popov2025/plots/README.md](Popov2025/plots/README.md) for the
-invocation order). Volumetric Extension is configured with
-`out_of_plane = 1` so `ε̇_yy = 0.5·(ε̇_xx + ε̇_zz)` is imposed by the
-constitutive law — paper's true 3D 0D loading, which gives
-`τ_II ≡ 0` throughout (panel a, the artefact-free state).
-
-**Pressure column choice in panel (d).** The gnuplot picks the pressure
-variable that lands the trajectory ON the yield surface for each loading
-geometry (paper Eq. 31's two-field formulation):
-
-- **Shear** parks on the DP wing → `Centers/P` (= `p*`, column 4) is on yield.
-- **Mixed** parks on the cap arc / DP wing → `Centers/P` is on yield.
-- **Volumetric Extension** parks at the cap **apex** (vertical tangent,
-  where `Centers/P` overshoots `p_T` by `K·θ̇_vp·dt ≈ 90 kPa`). For this
-  trajectory only, the panel uses the reconstructed
-  `p_local = p* + K·θ̇_vp·dt` (column 7 of `trajectory.dat`, written by
-  `extract_popov2025`) so the trajectory lands at the apex as the paper's
-  Fig 5(d) shows. The legend names this trajectory `Extension (p_local)`
-  to make the convention explicit.
-
-Panel (a)'s `P` curve still plots raw `Centers/P` over time, so the apex
-overshoot is visible there as `P` saturating around `-0.59 MPa` instead
-of `-0.5 MPa = p_T`. That overshoot is the visual signature of the same
-`K·dt·divu_pl` offset, presented as a time series instead of a meridional
-trajectory.
-
-The CI assertion in `Popov2025Tests.cpp` reconstructs `p_local`
-internally for the Volumetric apex membership check, so yield-surface
-membership is verified to < 5 % regardless of the plotting choice.
-
-**How the data is produced** (important — the plot is NOT a single-step
-snapshot):
-- MDOODZ runs each 0D scenario for **`Nt` timesteps of `dt = 2 yr` each**
-  on a **21 × 15 homogeneous grid** (under homogeneous loading every
-  centre cell has the same state).
-- At each step, the test reads `(sII, P)` from the centre cell and
-  appends it to the trajectory.
-- `Nt = 20 / 15 / 10` for volumetric / shear / mixed respectively,
-  giving total simulated times of 40 / 30 / 20 years.
-- Each dot on the four panels is one timestep; successive dots are
-  connected by straight segments.
-
-**Why the plot matches the paper:** this IS the validation. MDOODZ's
-`plast = 2` implements the paper's §3.6 local stress update. Plugging
-in the paper's exact parameters (Table 1 "0D Fig. 5 a, b":
-`G = 10¹⁰`, `K = 2·10¹¹`, `φ = 30°`, `ψ = 10°`, `c_MC = 10⁶`,
-`p_T = -5·10⁵`, `η^vp = 0`, `Δt = 2 yr`) and matching the imposed
-strain rates (`ε̇_xx = ε̇_zz = 2.333·10⁻¹⁵` for volumetric, `ε̇_xy = 7·10⁻¹⁴`
-for shear, both for mixed) forces MDOODZ's output to coincide with the
-paper figure if — and only if — the implementation is correct. The
-visual match and the sub-1 % L2 error (§6.3) are the quantitative
-statement of that correctness.
+invocation order). Each 0D scenario runs on a 21×15 homogeneous grid
+for 20 / 15 / 10 timesteps of `dt = 2 yr` (Vol / Shear / Mixed); the
+trajectory plotted is the centre cell at each step.
 
 ![Fig. 5 — 0D stress integration](Popov2025/plots/reference/fig5_0d_stress.png)
 
-**(a) Volumetric extension** — `p → p_T = −0.5 MPa` at ≈ 14 yr, then
-plateaus; `τ_II ≈ 0` throughout.
-**(b) Deviatoric shear** — `τ_II` yields at the Drucker-Prager envelope
-≈ 1 MPa at ≈ 20 yr; `p` remains ≈ 0 during the elastic phase, then grows
-through dilatant coupling (ψ = 10°).
-**(c) Mixed strain** — composite trajectory that first approaches the cap
-(`p` dips to ≈ −0.35 MPa) and then crosses the delimiter toward the
-Drucker-Prager branch as `τ_II` grows.
-**(d) Meridional P–τ_II trajectories** — the three characteristic shapes
-of the combined yield surface.
+- **(a) Volumetric extension** — `p → p_T = −0.5 MPa`, `τ_II ≡ 0`
+  throughout. The plotted `Centers/P` overshoots `p_T` by ≈ 90 kPa
+  due to a structural cap-apex offset (paper Eq. 31, see §6.5).
+- **(b) Deviatoric shear** — `τ_II` yields on the Drucker-Prager
+  envelope ≈ 1 MPa at ≈ 20 yr; `p` grows through dilatant coupling.
+- **(c) Mixed strain** — trajectory approaches the cap (`p` dips to
+  ≈ −0.35 MPa) then crosses the delimiter onto the Drucker-Prager branch.
+- **(d) Meridional P–τ_II trajectories** — Volumetric uses the
+  reconstructed `p_local = p* + K·θ̇_vp·dt` so it lands at the cap apex;
+  Shear and Mixed use `Centers/P` directly because they sit on a sloped
+  yield segment where `p*` is already on yield.
 
-### 6.2 0D stress-integration reference (Fig. 5 / §4.1)
+### 6.2 Test parameters and reference integrator
 
-The helper `popov2025::tauII_trajectory()` /
-`popov2025::P_trajectory()` in
-[TESTS/Popov2025/Popov0DAnalytical.cpp](Popov2025/Popov0DAnalytical.cpp)
-performs the same implicit backward-Euler stress update as the paper's
-§3.6 algorithm (Eqs. 42–47), on a single integration point with constant
-background strain rates. It is compiled as part of the `Popov2025Tests`
-binary but intentionally **does not** link against MDLIB — it is a fresh
-implementation of the same equations so any future regression can be
-compared against an independent coding of the algorithm. A standalone
-build (`-DPOPOV0D_STANDALONE`) of the same source asserts the helper
-against two hard-coded Fig. 5 checkpoints:
+[`Popov0DAnalytical.cpp`](Popov2025/Popov0DAnalytical.cpp) re-implements
+paper §3.6's implicit backward-Euler stress update (Eqs. 42–47) at a
+single integration point. It is linked into `Popov2025Tests` as the
+trajectory reference but **does not** link against MDLIB — it is an
+independent coding of the same algorithm.
 
-- **Volumetric extension steady state:** $\tau_{II} \approx 0$,
-  $p \to p_T$ as $t \to \infty$.
-- **Deviatoric shear steady state:** $p$ stays near zero (for
-  dilatant $\psi$, slight compression from dilation coupling),
-  $\tau_{II}$ sits on the DP envelope $\tau_{II} = kp + c$.
-
-The CI tests assert yield-surface membership directly on the HDF5 centre
-cell at the final step (see the table in §6.3) rather than comparing
-full trajectories. This is more robust to one-step trial-pressure
-offsets (paper Eq. 31) without losing the physical constraint that
-`(sII, P)` must lie on the combined yield surface after yielding.
-
-**Parameters (match paper Table 1 "0D Fig. 5 a, b" exactly)**:
+**Material parameters** (paper Table 1 "0D Fig. 5 a, b"):
 `G = 10¹⁰ Pa`, `K = 2·10¹¹ Pa`, `φ = 30°`, `ψ = 10°`,
-`c_MC = 10⁶ Pa`, `p_T = −5·10⁵ Pa`, `η^vp = 0` (perfect plasticity),
-`Δt = 2 yr`. Loading rates:
+`c_MC = 10⁶ Pa`, `p_T = −5·10⁵ Pa`, `η^vp = 0`, `Δt = 2 yr`.
 
-- **VolumetricExtension:** `ε̇_xx = ε̇_zz = 2.333·10⁻¹⁵ s⁻¹`
-  (outward normal BCs, `user2 = 1.167·10⁻¹⁵`, `user3 = 8.167·10⁻¹⁶` —
-  scaled by `Lz/Lx = 0.7` because the domain is `1.0 × 0.7`).
-  **`out_of_plane = 1`** makes the constitutive law set
-  `ε̇_yy = 0.5·(ε̇_xx + ε̇_zz) = 2.333·10⁻¹⁵ s⁻¹` per cell — paper's true
-  3D 0D loading, deviator zero, `τ_II ≡ 0` throughout.
+**Loading rates:**
+
+- **VolumetricExtension:** `ε̇_xx = ε̇_zz = 2.333·10⁻¹⁵ s⁻¹` via outward
+  normal BCs, with `out_of_plane = 1` so the constitutive law sets
+  `ε̇_yy = 0.5·(ε̇_xx + ε̇_zz) = 2.333·10⁻¹⁵ s⁻¹` — paper's 3D 0D loading
+  (deviator identically zero).
 - **DeviatoricShear:** `ε̇_II = 7·10⁻¹⁴ s⁻¹` via standard pure-shear BCs.
-- **MixedStrain:** asymmetric outward BCs (`user2 = −3.325·10⁻¹⁴`,
-  `user3 = +2.573·10⁻¹⁴`) that reproduce paper's `trace = 7·10⁻¹⁵` and
-  `ε̇_II_dev = 7·10⁻¹⁴` simultaneously.
+- **MixedStrain:** asymmetric outward BCs reproducing paper's
+  `trace = 7·10⁻¹⁵` and `ε̇_II_dev = 7·10⁻¹⁴` simultaneously.
 
 ### 6.3 Test-case ↔ assertion summary
 
@@ -779,68 +712,31 @@ coexistence). They are deferred — the 0D tier gives regression coverage
 of the constitutive-law code path, which is the primary source of
 risk for the new yield surface.
 
-### 6.5 How `out_of_plane = 1` recovers the paper's 3D 0D loading
+### 6.5 Notes on `out_of_plane` and the cap-apex pressure offset
 
-A naive 2D plane-strain implementation of paper Fig 5 would lock
-`ε̇_yy = 0` (since the grid has no `y` extent) instead of `ε̇_yy = ε̇_xx`.
-That single missing strain-rate component is enough to break the test:
-with `ε̇_xx = ε̇_zz = 2.333·10⁻¹⁵ s⁻¹` imposed and `ε̇_yy = 0` forced,
-the trace becomes `4.667·10⁻¹⁵` instead of paper's `7·10⁻¹⁵`, the
-deviator picks up a non-zero `y`-component, and `τ_II` builds up at
-`~0.67 kPa/yr` to a visible saturation of `~26 kPa` above the apex
-on Fig 5(d). That was the state of this test before April 2026.
+Two structural details to be aware of when reproducing or extending this
+suite:
 
-**The fix (Thibault, Discord 2026-04-28).** MDOODZ has an
-[`out_of_plane = 1`](../MDLIB/RheologyDensity.c) flag (used previously
-in the QuartzCoesite scenario) that makes the constitutive law set
-`ε̇_yy = 0.5·(ε̇_xx + ε̇_zz)` per cell. With the fixture's symmetric
-loading (`user2 / user3` chosen so `ε̇_xx = ε̇_zz`), this gives
-`ε̇_yy = ε̇_xx = ε̇_zz` — paper's true 3D 0D loading, deviator
-identically zero, `τ_II ≡ 0` throughout. The flag is read by
-[InputOutput.c:1160](../MDLIB/InputOutput.c#L1160) and consumed in
-[RheologyDensity.c:2077](../MDLIB/RheologyDensity.c#L2077) and
-[StokesAssemblyDecoupled.c:67](../MDLIB/StokesAssemblyDecoupled.c#L67)
-where the elastic compressibility coefficients pick up the implicit
-out-of-plane volumetric strain.
+**`out_of_plane = 1` for 3D 0D loading.** In standard 2D plane-strain,
+`ε̇_yy = 0` is locked, and an imposed isotropic loading (`ε̇_xx = ε̇_zz`)
+develops a non-zero deviator that drives a spurious `τ_II`. The
+`out_of_plane = 1` flag makes the constitutive law set
+`ε̇_yy = 0.5·(ε̇_xx + ε̇_zz)` per cell, recovering the paper's 3D 0D
+loading exactly. This is needed only for matching a 3D constitutive
+benchmark; plane-strain is the correct assumption for every real
+geological scenario MDOODZ targets.
 
-**Two BC corrections were also needed:**
-
-1. The fixture domain is `1.0 × 0.7` (`Lx ≠ Lz`). With the original
-   `user2 = user3 = 1.167·10⁻¹⁵`, the imposed in-plane strain rates
-   came out *asymmetric* (`ε̇_xx = 2.33·10⁻¹⁵`, `ε̇_zz = 3.33·10⁻¹⁵`).
-   The fixture now sets `user3 = 8.167·10⁻¹⁶ = user2 · Lz/Lx` so the
-   imposed `ε̇_xx = ε̇_zz` exactly.
-2. Volumetric saturates at the cap apex, where the cap has a vertical
-   tangent and the global Stokes solver leaves a `K·dt·divu_pl`
-   residual between `Centers/P` and the yield-clamped local pressure.
-   The CI assertion now reconstructs `p_local = P + K·dt·divu_pl`
-   (paper Eq. 31) for the apex cap-membership check — see
-   [`readCentreTrajectory(..., reconstruct_p_local=true)`](Popov2025Tests.cpp).
-   Shear and Mixed park on the DP wing where `Centers/P` already
-   matches the reference algorithm, so they don't need the
-   reconstruction. Fig 5(d) plots raw `Centers/P` for all three
-   trajectories — the visible Volumetric overshoot past the apex
-   (~ 90 kPa more tensile than `p_T`) is precisely the `K·dt·divu_pl`
-   offset.
-
-**Result.** With those three changes (Vol .txt: `out_of_plane = 1` and
-corrected `user3`; Vol assertion: reconstruct `p_local` for the apex
-check), the trajectory matches the reference to floating-point
-precision: `L2(sII) = 0.0 %` (was 1.77 %) and `L2(P) = 1.93 %` (was
-16.2 %). Final `sII = 6.86 Pa` ≈ `7 ppm × τ_d` is pure floating-point
-noise from the BC implementation. The test bounds were tightened to
-`L2(sII) RMS/τ_d < 0.5 %` and `L2(P) < 5 %` to catch any future
-regression of the fix.
-
-**For your own scenarios.** If you care about reproducing a 3D 0D
-constitutive test in MDOODZ, set `out_of_plane = 1` and make sure your
-loading is symmetric (in-plane strain rates equal, scaled by domain
-aspect ratio if `Lx ≠ Lz`). Plane-strain is still the *correct*
-assumption for every real geological scenario MDOODZ targets — rifts,
-subduction, collision, fault systems are all elongated along strike,
-and `ε̇_yy = 0` is the right boundary condition for a vertical cross-
-section perpendicular to that strike. The flag is purely for matching
-3D 0D benchmarks, not for production runs.
+**Cap-apex pressure offset (paper Eq. 31).** At the cap apex the yield
+surface has a vertical tangent, so the global Stokes solver pins
+`Centers/P` at `p_T − K·θ̇_vp·dt` (≈ 90 kPa more tensile than `p_T` for
+the test parameters) while the constitutive law's local Newton return-
+mapping pins the yield-clamped pressure at `p_local = p_T`. The two
+differ by exactly `K · θ̇_vp · dt`. The Volumetric Extension assertion
+reconstructs `p_local = Centers/P + K · dt · divu_pl` for the apex
+membership check, and Fig 5(d) plots `p_local` for that trajectory.
+Shear and Mixed park on the DP wing (sloped tangent), where `Centers/P`
+already coincides with the reference algorithm's pressure — no
+reconstruction needed.
 
 
 ---
@@ -878,7 +774,7 @@ Canonical headline parameters: `eta_A=1, eta_B=1e6, xc=0.5, n=1`.
 ### Implementation Details
 
 - Two phases via `SetPhase`: phase 0 for $x < 0.5$ (`eta0 = 1`), phase 1 for $x \geq 0.5$ (`eta0 = 1e6`).
-- Spatially varying density supplied via the new **`SetGridDensity`** callback (see [skill-testing-guide](../.claude/skills/skill-testing-guide/SKILL.md) § SetGridDensity pitfall entry). Every `.txt` phase declares `density_model = 0` so the startup validator accepts the callback.
+- Spatially varying density supplied via the **`SetGridDensity`** callback. Every `.txt` phase declares `density_model = 0` so the startup validator accepts the callback.
 - Gravity `gx = 0, gz = 1`. No thermal / elasticity / plasticity.
 - Dirichlet velocity BCs on all four walls, sampled from `EvalSolCx` at the appropriate staggered-grid coordinate (including half-cell offsets for `type=11` ghost Vx nodes on N/S faces and Vz nodes on W/E faces, same pattern as SolVi).
 - `Nt = 1` (single Stokes solve, no time integration needed).
