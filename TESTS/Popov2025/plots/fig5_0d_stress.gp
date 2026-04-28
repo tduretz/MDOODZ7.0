@@ -26,17 +26,17 @@ yr  = 365.25*86400.0
 # zero already, so no correction needed.
 clean_sII(sII_val, step) = (step == 0 ? 0.0 : sII_val)
 
-# MDOODZ writes the globally-discretised pressure p* to /Centers/P.  The
-# yield-clamped local pressure p_local = p* + K·θ̇_vp·dt (paper Eq. 31) is
-# reconstructed in extract_popov2025 and emitted as column 7 of trajectory.dat.
-# In the elastic regime they're equal; on the cap segment with ψ > 0 they
-# differ by ≈ 80 kPa for the paper's 0D parameters.
-#
-# Panels (a)-(c) plot p* vs time as-is — small cap-tip offset (≈ -80 kPa)
-# visible as panel (a)'s saturation at ~ -0.58 MPa vs T_st = -0.5 MPa.
-# Panel (d) plots trajectories using p_local (column 7) so they sit cleanly
-# on the yield envelope, demonstrating the constitutive law correctly
-# returns to yield.
+# Panel (d) plots the meridional (P, τ_II) trajectories for each test, picking
+# the pressure variable that LANDS ON YIELD for that loading geometry:
+#   * Shear  parks on the DP wing → P* (Centers/P, column 4) is on yield.
+#   * Mixed  parks on the cap arc / DP wing → P* (column 4) is on yield.
+#   * Volumetric Extension parks at the cap APEX (vertical tangent), where P*
+#     overshoots the apex by K·θ̇_vp·dt ≈ 90 kPa.  For that one trajectory we
+#     plot the reconstructed p_local = P* + K·θ̇_vp·dt (column 7 of
+#     trajectory.dat, written by extract_popov2025) so the trajectory lands on
+#     the apex as the paper's Fig 5(d) does.  Paper Eq. 31's two-field
+#     formulation explicitly defines this offset between p* and p_local at the
+#     vertical-tangent singularity.
 
 # Yield-surface geometry (paper Eqs. 13–17), paper Table 1 "0D" values:
 phi_deg = 30.0

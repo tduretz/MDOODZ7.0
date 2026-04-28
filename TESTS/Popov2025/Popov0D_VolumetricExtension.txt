@@ -71,14 +71,16 @@ lin_rel_div     = 1e-11
 bkg_strain_rate = 1e-20
 user0           = 0       / unused
 user1           = 0.0     / no inclusion (homogeneous)
-/* Paper Table 1 "0D": edot_xx = edot_yy = edot_zz = 2.333e-15; the BCs apply
- * +/- user2 at boundaries, so edot_xx = 2*user2/Lx = 2.333e-15 requires
- * user2 = 1.167e-15.  Plane strain means edot_yy is forced to 0 and the
- * in-plane trace matches 2*2.333e-15 = 4.666e-15 (2/3 of the paper's 3D
- * trace of 7e-15) — the qualitative pressure-saturation behaviour is
- * preserved, with yield happening ~50 % later in the 2D setup.  */
-user2           = 1.167e-15 / Vx boundary magnitude (outward)
-user3           = 1.167e-15 / Vz boundary magnitude (outward)
+/* Paper Table 1 "0D": edot_xx = edot_yy = edot_zz = 2.333e-15.
+ * Domain is 1.0 x 0.7 (Lx != Lz), so user2 / user3 must be scaled by Lx / Lz
+ * for the imposed strain rates to come out equal:
+ *   edot_xx = 2*user2 / Lx;   edot_zz = 2*user3 / Lz.
+ * out_of_plane = 1 then makes the constitutive law set edot_yy = 0.5*(exx+ezz)
+ * = 2.333e-15 — i.e. the paper's true 3D 0D loading, which removes the
+ * plane-strain artefact (deviator = 0, tau_II = 0).  */
+out_of_plane    = 1
+user2           = 1.167e-15  / Vx at x boundary; edot_xx = 2*user2/Lx = 2.333e-15
+user3           = 8.167e-16  / Vz at z boundary; edot_zz = 2*user3/Lz = 2.333e-15 (Lz=0.7)
 
 /**** GRAVITY ****/
 gx = 0.0

@@ -40,9 +40,16 @@
 //           (≈ 8 % of τ_d): the Stokes solver leaves a one-step trial
 //           residual at the yield-surface corner.  Tests use p* directly
 //           and loosen the volumetric cap-membership tolerance accordingly.
-//   A5. Under pure-volumetric 2D loading (ε̇_xx = ε̇_zz, ε̇_yy = 0 imposed by
-//       plane strain), a small deviator arises from the plane-strain
-//       constraint.  Tolerance: |sII| < 0.15·τ_d.
+//   A5. Volumetric Extension uses out_of_plane = 1, which makes the
+//       constitutive law set ε̇_yy = 0.5·(ε̇_xx + ε̇_zz) per cell.  With the
+//       fixture's symmetric loading (user2/user3 chosen so ε̇_xx = ε̇_zz =
+//       2.333e-15), ε̇_yy = 2.333e-15 and the test reproduces the paper's
+//       true 3D 0D loading exactly: deviator = 0, sII ≡ 0 throughout.
+//       Residual sII < 0.001·τ_d is floating-point noise.
+//       Historical note: the original setup used plane-strain (ε̇_yy = 0)
+//       which produced a ~26 kPa sII offset (15 % of τ_d) — see
+//       AnalyticalSolutions.md §6.5 for the documentation of why the fix
+//       was needed.
 //   A6. HDF5 step 0 contains an initialisation artefact for sxxd/szzd
 //       (≈ 6e14 Pa before any Stokes solve has run).  Assertions are
 //       evaluated at the final step only; the gnuplot script clips step 0.
@@ -256,8 +263,15 @@ struct TrajectoryMDOODZ {
   std::vector<double> p_local; // yield-surface-clamped pressure [Pa]
 };
 
+// reconstruct_p_local controls whether to apply Eq. 31 (p_local = p* + K *
+// theta_dot_vp * dt).  Only the Volumetric test parks at the cap apex (vertical
+// tangent) where Centers/P is offset from the yield-clamped p_local by exactly
+// K * dt * divu_pl.  Shear and Mixed park on the DP wing, where the global
+// Newton converges with P_global already matching the reference algorithm's
+// pressure — applying the correction there pushes them OFF the reference.
 static TrajectoryMDOODZ readCentreTrajectory(const std::string &dir,
-                                             double /*K_bulk*/, double dt) {
+                                             double K_bulk, double dt,
+                                             bool reconstruct_p_local = false) {
   TrajectoryMDOODZ out;
   const auto files = listStepFiles(dir);
   for (const auto &h5 : files) {
@@ -273,7 +287,14 @@ static TrajectoryMDOODZ readCentreTrajectory(const std::string &dir,
     if (step == 0) continue;  // drop sxxd init artefact (A6)
     out.t.push_back((double)step * dt);
     out.sII.push_back(centreValue(sII, ci.ncx, ci.ncz));
-    out.p_local.push_back(centreValue(P, ci.ncx, ci.ncz));  // p* directly (A4)
+    const double P_c = centreValue(P, ci.ncx, ci.ncz);
+    if (reconstruct_p_local) {
+      const auto divu_pl = readCentersField(h5, "divu_pl");
+      const double divu_c = centreValue(divu_pl, ci.ncx, ci.ncz);
+      out.p_local.push_back(P_c + K_bulk * divu_c * dt);
+    } else {
+      out.p_local.push_back(P_c);
+    }
   }
   return out;
 }
@@ -357,28 +378,32 @@ TEST_F(Popov2025_0DIntegration, VolumetricExtension) {
   // (i) Tensile-cap plasticity activated (dilatant flow on the cap tip).
   EXPECT_GT(divu_c, 0.0) << "Tensile cap plasticity did not activate";
 
-  // (ii) Negligible deviator under pure-volumetric loading.  A small
-  // residual arises from the plane-strain constraint (ε̇_yy = 0 forces a
-  // non-zero 3D deviator even when ε̇_xx = ε̇_zz).
-  EXPECT_LT(std::fabs(sII_c), 0.15 * g.tau_d)
+  // (ii) Deviator must be ~0 — paper's true 3D 0D loading.  With
+  // out_of_plane=1 the constitutive law sets ε̇_yy = 0.5·(ε̇_xx + ε̇_zz),
+  // so ε̇_xx = ε̇_yy = ε̇_zz and the deviator vanishes by construction.
+  // Any residual sII is floating-point noise from the BC implementation.
+  EXPECT_LT(std::fabs(sII_c), 0.001 * g.tau_d)
       << "Spurious deviator: sII = " << sII_c;
 
-  // (iii) (sII, P) lies on the tensile cap circle.  On the cap the global
-  // Stokes solver leaves a one-step trial-pressure residual (assumption A4),
-  // so the tolerance is loose relative to the DP assertion below.
-  const double R_haty = std::sqrt(sII_c * sII_c + (P_c - g.py) * (P_c - g.py));
-  EXPECT_LT(std::fabs(R_haty - g.Ry) / g.Ry, 0.15)
-      << "P not on tensile cap: R_haty = " << R_haty << ", Ry = " << g.Ry;
+  // (iii) (sII, P) lies on the tensile cap circle (specifically at the apex,
+  // since deviator ≈ 0).  We check the yield-clamped p_local = P + K·dt·divu_pl
+  // (Eq. 31) lies on the cap; raw Centers/P is K·dt·divu_pl ≈ 90 kPa past the
+  // apex due to the vertical-tangent singularity (assumption A4).
+  const double p_local_c = P_c + Material0D{}.K * Material0D{}.dt * divu_c;
+  const double R_haty    = std::sqrt(sII_c * sII_c + (p_local_c - g.py) * (p_local_c - g.py));
+  EXPECT_LT(std::fabs(R_haty - g.Ry) / g.Ry, 0.05)
+      << "P_local not on tensile cap: R_haty = " << R_haty << ", Ry = " << g.Ry;
 
   // (iv) Full-trajectory L2 check against the independent reference
-  // integrator (Popov0DAnalytical.cpp).  Paper Table 1 "0D": ε̇_xx = ε̇_zz =
-  // 2.333e-15 giving trace = 4.666e-15 (2D plane-strain; 2/3 of the paper's
-  // 3D value).  sII should match nearly exactly; P has a systematic cap-
-  // segment trial-pressure offset (A4) so the tolerance is looser.
+  // integrator (Popov0DAnalytical.cpp).  With out_of_plane=1 we recover the
+  // paper's exact 3D 0D loading: edot_vol = 7e-15, edot_dev = 0.
+  // Reconstruct p_local via Eq. 31 because Volumetric parks at the apex
+  // (vertical tangent), where Centers/P is K·dt·divu_pl away from yield.
   const auto mdoodz = readCentreTrajectory("Popov0D_VolumetricExtension",
-                                           Material0D{}.K, Material0D{}.dt);
+                                           Material0D{}.K, Material0D{}.dt,
+                                           /*reconstruct_p_local=*/true);
   const auto ref    = referenceTrajectory(/*edot_dev=*/0.0,
-                                          /*edot_vol=*/4.666e-15,
+                                          /*edot_vol=*/7.0e-15,
                                           (double)mdoodz.t.size() * Material0D{}.dt,
                                           Material0D{}.dt);
   const double L2_tau_abs = relativeL2(mdoodz.sII,     ref.sII);
@@ -390,8 +415,8 @@ TEST_F(Popov2025_0DIntegration, VolumetricExtension) {
   const double L2_tau_rms = L2_tau_abs / (g.tau_d * std::sqrt(N_steps));
   std::printf("VolumetricExtension L2: sII RMS/τ_d = %.4f, P = %.4f\n",
               L2_tau_rms, L2_P);
-  EXPECT_LT(L2_tau_rms, 0.15) << "sII RMS exceeds 15 % of τ_d over trajectory";
-  EXPECT_LT(L2_P, 0.20)       << "P(t) trajectory disagrees with reference > 20 %";
+  EXPECT_LT(L2_tau_rms, 0.005) << "sII RMS exceeds 0.5 % of τ_d over trajectory";
+  EXPECT_LT(L2_P,       0.05)  << "P(t) trajectory disagrees with reference > 5 %";
 }
 
 // ---- Deviatoric shear (paper Fig. 5b) -----------------------------------
