@@ -700,6 +700,34 @@ apex with `sII = 0` to floating-point precision because the
 `out_of_plane = 1` flag (see §6.5) gives MDOODZ access to the paper's
 true 3D 0D loading.
 
+### Code Assertions
+
+**Volumetric Extension** ([Popov2025Tests.cpp](Popov2025Tests.cpp)):
+```cpp
+EXPECT_GT(divu_c, 0.0);                          // tensile cap plasticity active
+EXPECT_LT(std::fabs(sII_c), 0.001 * g.tau_d);    // deviator ≈ 0  (observed: 7 ppm)
+EXPECT_LT(std::fabs(R_haty - g.Ry) / g.Ry, 0.05);// p_local on cap circle  (observed: < 1%)
+EXPECT_LT(L2_tau_rms, 0.005);                    // sII RMS / τ_d < 0.5 %  (observed: 0.0%)
+EXPECT_LT(L2_P,       0.05);                     // L2(p_local) < 5 %      (observed: 1.93%)
+```
+
+**Deviatoric Shear** ([Popov2025Tests.cpp](Popov2025Tests.cpp)):
+```cpp
+EXPECT_GT(eII_c, 0.0);                                    // DP plasticity active
+EXPECT_LT(std::fabs(sII_c - tau_DP) / std::fabs(tau_DP), 0.05);  // sII on DP envelope (5%)
+EXPECT_LT(std::fabs(P_c), 10.0 * Material0D{}.C);                // |P| bounded
+EXPECT_LT(L2_tau, 0.05);                                  // L2(sII) < 5 %  (observed: 0.16%)
+EXPECT_LT(L2_P,   0.10);                                  // L2(P) < 10 %   (observed: 1.05%)
+```
+
+**Mixed Strain** ([Popov2025Tests.cpp](Popov2025Tests.cpp)):
+```cpp
+EXPECT_GT(mode_total, 0.0);                               // some plastic flow active
+EXPECT_LT(best / g.tau_d, 0.05);                          // (sII, P) on cap or DP (5%)
+EXPECT_LT(L2_tau, 0.10);                                  // L2(sII) < 10 % (observed: 0.05%)
+EXPECT_LT(L2_P,   0.25);                                  // L2(P) < 25 %   (observed: 0.09%)
+```
+
 ### 6.4 Deferred 2D tests
 
 The paper's Figs. 6–9 (2D localisation tests — regularisation,
