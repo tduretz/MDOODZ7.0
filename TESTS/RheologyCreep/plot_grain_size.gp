@@ -55,12 +55,12 @@ tau_disl(Eii) = 2.0 * B_pwl * Eii**(1.0/n_pwl)
 d_disl(Eii)   = ( Bg * Eii * tau_disl(Eii) * p / Ag )**(-1.0/(p+1.0))
 
 plot d_disl(x) with lines linewidth 2.5 linecolor rgb "#1f77b4" \
-        title "Analytical d_{ss} — dislocation only (Renner+02 + Austin&Evans+02)", \
+        title "Analytical d_{ss} — dislocation only (Renner 2002 + Austin & Evans 2002)", \
      "grain_size_benchmark.dat" using 1:5 with points pointtype 7 pointsize 1.8 \
         linecolor rgb "#1f77b4" \
         title "MDOODZ — dislocation-only sweep (linv = 0)", \
      "grain_size_benchmark_coupled.dat" index 0 using 1:3 with lines linewidth 2.5 linecolor rgb "#d62728" \
-        title "Analytical d_{ss} — coupled (+ Herwegh+03 diffusion creep)", \
+        title "Analytical d_{ss} — coupled (+ Herwegh 2003 diffusion creep)", \
      "grain_size_benchmark_coupled.dat" index 1 using 1:3 with points pointtype 9 pointsize 1.8 \
         linecolor rgb "#d62728" \
         title "MDOODZ — coupled sweep (linv = 15)"

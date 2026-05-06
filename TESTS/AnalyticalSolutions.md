@@ -968,6 +968,23 @@ The plot shows **both sweeps on a single chart with `d_ss` on the y-axis vs impo
 
 The coupled curve sits 4 % above the dislocation-only curve at low strain rate (where dislocation dominates and diffusion contributes little) and 26 % above at high strain rate (where diffusion takes nearly half of `Eii_total`).
 
+#### Paper-view visualisation: Schmalholz & Duretz 2017 Fig. 2 layout
+
+The same coupled-regime physics rendered in the paper's chosen axes — grain size on x, differential stress `2·τ_II` on y, both log — for visual paper-comparison. The `GrainSizeSweepCoupled` test writes 3 strain-rate iso-contours into `grain_size_benchmark_coupled.dat` (each: 40 grain-size samples × log-bisection root-find on `τ` satisfying the coupled creep balance) alongside the wattmeter line and MDOODZ measurements.
+
+```bash
+cd cmake-build-test/TESTS
+./RheologyCreepTests --gtest_filter="*GrainSizeSweepCoupled"
+gnuplot ../../TESTS/RheologyCreep/plot_grain_size_paper_view.gp
+# → grain_size_paper_view.png
+```
+
+![Calcite deformation map at T=350°C — three coupled-creep strain-rate iso-contours, the Renner 2002/Herwegh 2003/Austin & Evans 2002 paleowattmeter line, and 5 MDOODZ measurement points overlaid in the layout of Schmalholz & Duretz 2017 Fig. 2](grain_size_paper_view.png)
+
+Compare side-by-side with [Fig. 2 of Schmalholz & Duretz (2017)](https://ars.els-cdn.com/content/image/1-s2.0-S019181411730161X-gr2.jpg). MDOODZ's 5 measurements (red triangles) sit precisely on the heavy paleowattmeter line — the same locus the paper uses to compute steady-state grain size. The strain-rate iso-contours mirror the paper's "Renner 2002 & Herwegh 2003" panel: at small grain sizes diffusion creep dominates (steep rising left side), at large grain sizes dislocation creep dominates (flat plateau on the right), with the wattmeter line passing through both regimes.
+
+This is **visual paper-comparison only** — no automated digitisation gate. The quantitative validation is the L2 assertion in §8.1 (MDOODZ matches the analytical formula to 0.06–0.07 % across 4 decades). The paper figure itself was generated from the same equations our analytical reference encodes, so a digitisation-based gate would compare the same physics to itself with added noise.
+
 ### Coverage extensions
 
 The headline `GrainSizeSteadyState` and `GrainSizeSweep` tests above run with **dislocation creep only** (`linv = 0`) — a degenerate special case useful for isolating the wattmeter formula. Two follow-on tests extend coverage to the regime calcite *actually inhabits* at 350 °C and to the integrated 2D code path:

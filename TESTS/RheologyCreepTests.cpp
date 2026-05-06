@@ -243,7 +243,7 @@ TEST_F(RheologyCreep, PowerLawCreepInterpMode2) {
 
 // --- Grain-size evolution: paleowattmeter steady state ---
 //
-// Homogeneous pure-shear single-phase calcite (pwlv=15 Renner+02, gs=10 Austin&Evans+02).
+// Homogeneous pure-shear single-phase calcite (pwlv=15 Renner 2002, gs=10 Austin & Evans 2002).
 // Dislocation creep is the only viscous mechanism, so Eii_pwl = Eii_total. The local
 // Newton iteration must converge to the analytical paleowattmeter steady state:
 //
@@ -440,8 +440,8 @@ TEST_F(RheologyCreep, GrainSizeSweep) {
   g_sweepOverride = {0.0, nullptr};
 }
 
-// Coupled-mechanism sweep — same 5 strain rates, but with Herwegh+03 diffusion creep
-// active alongside Renner+02 dislocation creep. Analytical reference is the coupled
+// Coupled-mechanism sweep — same 5 strain rates, but with Herwegh 2003 diffusion creep
+// active alongside Renner 2002 dislocation creep. Analytical reference is the coupled
 // fixed-point: Eii_total = (tau/(2 B_pwl))^n_pwl + (tau/(2 B_lin))^n_lin · d_ss^(-m_lin),
 // with d_ss = (B_g · Eii_pwl · tau · p / A_g)^(-1/(p+1)). Solved by secant iteration on
 // log(tau) — a different scheme than MDOODZ's bisection-then-Newton on eta_ve, so a
@@ -470,20 +470,20 @@ TEST_F(RheologyCreep, GrainSizeSweepCoupled) {
   // Constants — same conventions as GrainSizeSweep
   const double T_K   = 350.0 + 273.15;
   const double R_g   = 8.314;
-  // Renner+02 dislocation creep — pwlv=15
+  // Renner 2002 dislocation creep — pwlv=15
   const double n_pwl = 4.7;
   const double Q_pwl = 297.0e3;
   const double A_pwl = 1.5849e-25;
   const double F_pwl = (1.0/6.0) * pow(2.0, 1.0/n_pwl) * pow(3.0, (n_pwl-1.0)/(2.0*n_pwl));
   const double B_pwl = F_pwl * pow(A_pwl, -1.0/n_pwl) * exp(Q_pwl / (n_pwl * R_g * T_K));
-  // Herwegh+03 diffusion creep — linv=15. tlin=1 same correction as power-law.
+  // Herwegh 2003 diffusion creep — linv=15. tlin=1 same correction as power-law.
   const double n_lin = 1.1;
   const double m_lin = 3.3;
   const double Q_lin = 200.0e3;
   const double A_lin = 1.7119e-19;
   const double F_lin = (1.0/6.0) * pow(2.0, 1.0/n_lin) * pow(3.0, (n_lin-1.0)/(2.0*n_lin));
   const double B_lin = F_lin * pow(A_lin, -1.0/n_lin) * exp(Q_lin / (n_lin * R_g * T_K));
-  // Austin&Evans+02 paleowattmeter — gs=10
+  // Austin & Evans 2002 paleowattmeter — gs=10
   const double p     = 3.0;
   const double K_g   = 2.5e9 * pow(10.0, -6.0 * p);
   const double Q_g   = 175.0e3;
@@ -528,7 +528,7 @@ TEST_F(RheologyCreep, GrainSizeSweepCoupled) {
     *out_Eii_lin = el;
   };
 
-  printf("[CoupledSweep] (Calcite Renner+02 dislocation + Herwegh+03 diffusion + Austin&Evans+02 wattmeter)\n");
+  printf("[CoupledSweep] (Calcite Renner 2002 dislocation + Herwegh 2003 diffusion + Austin & Evans 2002 wattmeter)\n");
   printf("[CoupledSweep] %-10s %-12s %-12s %-12s %-12s %-12s\n",
          "Eii", "tau_II[Pa]", "Eii_pwl/Eii", "d_ss_disl", "d_ss_couple", "d_n_mean");
 
@@ -542,11 +542,15 @@ TEST_F(RheologyCreep, GrainSizeSweepCoupled) {
   FILE *cdat = fopen("grain_size_benchmark_coupled.dat", "w");
   ASSERT_NE(cdat, nullptr);
   fprintf(cdat, "# Coupled-mechanism wattmeter trajectory (dislocation + diffusion + wattmeter, calcite, T=350°C)\n");
-  fprintf(cdat, "# Block 0: analytical curve sampled at 30 Eii_total values\n");
+  fprintf(cdat, "# Block 0: analytical curve sampled at 50 Eii_total values\n");
   fprintf(cdat, "# Eii_total [s^-1]   tau_II [Pa]   d_ss [m]\n");
-  const int N_curve = 30;
+  const int N_curve = 50;
+  // Extended range Eii ∈ [10^-19, 10^-8] so the paleowattmeter line spans the full
+  // d ∈ [1, 3000] µm visible range of the paper-view plot (Schmalholz & Duretz 2017
+  // Fig. 2). The narrower [10^-17, 10^-11] sampling used for the (Eii, d_ss) plot is
+  // still fine since that view's xrange is what limits visibility there.
   for (int k = 0; k < N_curve; ++k) {
-    double Eii_curve = pow(10.0, -17.0 + 6.0 * (double)k / (double)(N_curve - 1));  // 1e-17 → 1e-11
+    double Eii_curve = pow(10.0, -19.0 + 11.0 * (double)k / (double)(N_curve - 1));
     double tau_k, d_ss_k, ep_k, el_k;
     solveCoupled(Eii_curve, &tau_k, &d_ss_k, &ep_k, &el_k);
     fprintf(cdat, "%.6e   %.6e   %.6e\n", Eii_curve, tau_k, d_ss_k);
@@ -598,6 +602,43 @@ TEST_F(RheologyCreep, GrainSizeSweepCoupled) {
 
     free(fileName);
   }
+
+  // Strain-rate iso-contours for the (d, sigma) deformation map view —
+  // mirroring Schmalholz & Duretz 2017 Fig. 2 layout. At each Eii_iso, sample
+  // a range of grain sizes and solve for tau satisfying the coupled creep balance:
+  //     Eii_iso = (tau / (2 B_pwl))^n_pwl + (tau / (2 B_lin))^n_lin * d^(-m_lin)
+  // Both terms are monotonically increasing in tau → log-bisection converges fast.
+  auto solveTauForDEii = [&](double Eii_target, double d_grain) -> double {
+    auto residual_iso = [&](double tau) {
+      double Eii_p = pow(tau / (2.0 * B_pwl), n_pwl);
+      double Eii_l = pow(tau / (2.0 * B_lin), n_lin) * pow(d_grain, -m_lin);
+      return Eii_target - Eii_p - Eii_l;
+    };
+    double tau_lo = 1e3, tau_hi = 1e10;  // Pa
+    for (int k = 0; k < 60; ++k) {
+      double tau_mid = sqrt(tau_lo * tau_hi);
+      if (residual_iso(tau_mid) > 0) tau_lo = tau_mid;
+      else                            tau_hi = tau_mid;
+      if (tau_hi / tau_lo - 1.0 < 1e-12) break;
+    }
+    return sqrt(tau_lo * tau_hi);
+  };
+
+  const double iso_Eii[] = {1e-10, 1e-12, 1e-14};
+  const int N_iso = sizeof(iso_Eii) / sizeof(iso_Eii[0]);
+  const int N_d   = 40;
+  const double d_min = 1e-6, d_max = 3e-3;  // 1 µm to 3 mm — paper Fig. 2 range
+  for (int i = 0; i < N_iso; ++i) {
+    fprintf(cdat, "\n\n# Block %d: strain-rate iso-contour Eii = %.0e s^-1 in (d, tau) view (Fig. 2 of S&D 2017)\n",
+            2 + i, iso_Eii[i]);
+    fprintf(cdat, "# d [m]   tau_II [Pa]\n");
+    for (int k = 0; k < N_d; ++k) {
+      double d_grain = d_min * pow(d_max / d_min, (double)k / (double)(N_d - 1));
+      double tau_iso = solveTauForDEii(iso_Eii[i], d_grain);
+      fprintf(cdat, "%.6e   %.6e\n", d_grain, tau_iso);
+    }
+  }
+
   fclose(cdat);
   setup.MutateInput = nullptr;
   g_sweepOverride = {0.0, nullptr};
