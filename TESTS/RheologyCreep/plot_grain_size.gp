@@ -19,7 +19,7 @@
 set terminal pngcairo size 900,650 enhanced font "Arial,12"
 set output "grain_size_benchmark.png"
 
-set title "Calcite paleowattmeter — Austin & Evans (2002) at T = 623 K"
+set title "Calcite paleowattmeter — Austin and Evans (2002) at T = 623 K"
 set xlabel "Imposed total strain rate {/Symbol e}'_{II} (s^{-1})"
 set ylabel "Steady-state grain size d_{ss} (m)"
 
@@ -28,7 +28,19 @@ set format x "10^{%L}"
 set format y "10^{%L}"
 set xrange [1e-17:1e-11]
 set yrange [1e-5:1e-3]
-set grid
+
+# Paper-style ticks + dense grid network — minor tics inward (at 2, 3, ..., 9 per
+# decade), mirrored on top/right. Matches the look of plot_grain_size_paper_view.gp.
+set tics in scale 2.0, 1.0
+set xtics mirror
+set ytics mirror
+set mxtics 10
+set mytics 10
+set style line 81 linetype 1 linecolor rgb "#bbbbbb" linewidth 0.6
+set style line 82 linetype 1 linecolor rgb "#e0e0e0" linewidth 0.4
+set grid xtics ytics back linestyle 81
+set grid mxtics mytics back linestyle 82
+
 set key bottom left
 
 # Constants — must match GrainSizeSteadyState.txt and the test's analytical
@@ -55,7 +67,7 @@ tau_disl(Eii) = 2.0 * B_pwl * Eii**(1.0/n_pwl)
 d_disl(Eii)   = ( Bg * Eii * tau_disl(Eii) * p / Ag )**(-1.0/(p+1.0))
 
 plot d_disl(x) with lines linewidth 2.5 linecolor rgb "#1f77b4" \
-        title "Analytical d_{ss} — dislocation only (Renner 2002 + Austin & Evans 2002)", \
+        title "Analytical d_{ss} — dislocation only (Renner 2002 + Austin and Evans 2002)", \
      "grain_size_benchmark.dat" using 1:5 with points pointtype 7 pointsize 1.8 \
         linecolor rgb "#1f77b4" \
         title "MDOODZ — dislocation-only sweep (linv = 0)", \
