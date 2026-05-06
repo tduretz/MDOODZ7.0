@@ -9,7 +9,7 @@ writer_markers    = 0
 writer_debug      = 0
 writer_energies   = 0
 gnuplot_log_res   = 0
-writer_subfolder  = GrainSizeSweep_E16
+writer_subfolder  = GrainSizeSweepCoupledBase  / overridden via MutateInput per-iteration
 
 /**** SCALES ****/
 eta = 1e22
@@ -74,7 +74,7 @@ advection     = 0
 shear_style     = 0
 periodic_x      = 0
 pure_shear_ALE  = 1
-bkg_strain_rate = 1e-16
+bkg_strain_rate = 1e-14
 user0           = 350     / temperature [°C] — matches calcite ductile regime
 user1           = 0       / inclusion radius — 0 → single-phase homogeneous
 user2           = 0
@@ -102,7 +102,7 @@ bet  = 1e-11
 drho = 0
 cstv = 0             / constant visc law (off)
 pwlv = 15            / disloc. creep — Calcite, Renner et al. (2002)
-linv = 0             / diff. creep (off — analytical reference is wattmeter only)
+linv = 15            / diff. creep — Calcite, Herwegh (2003) — coupled regime
 gbsv = 0             / grain boundary sliding
 expv = 0             / peierls creep
 eta0 = 1e22

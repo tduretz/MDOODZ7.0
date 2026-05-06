@@ -511,6 +511,9 @@ For convergence-order tests, thresholds are set ~30–50% below the measured ord
 | SolCx convergence P (L1) | [SolCxBenchmarkTests.cpp](SolCxBenchmarkTests.cpp) | Order from 41→81 (§7) | `EXPECT_GE(orderP, 0.5)` | 0.5 |
 | Grain size L2 | [RheologyCreepTests.cpp](RheologyCreepTests.cpp) | $(B_g\dot\varepsilon\tau_{II}p/A_g)^{-1/(p+1)}$ (§8) | `EXPECT_LT(L2_d, 5e-3)` | 5e-3 |
 | Grain size mean | [RheologyCreepTests.cpp](RheologyCreepTests.cpp) | Paleowattmeter $d_{ss}$ (§8) | `EXPECT_NEAR(meanD, d_ss, d_ss*0.01)` | 1% |
+| Grain size coupled L2 | [RheologyCreepTests.cpp](RheologyCreepTests.cpp) | Coupled fixed-point on $\tau_{II}$ (§8.1) | `EXPECT_LT(L2, 5e-3)` | 5e-3 |
+| Grain size coupled physics | [RheologyCreepTests.cpp](RheologyCreepTests.cpp) | $d_{ss}^{coupled} > d_{ss}^{disloc}$ (§8.1) | `EXPECT_GT(d_ss_c, d_ss_disl)` | strict |
+| 2D PinchSwell smoke | [RheologyCreepTests.cpp](RheologyCreepTests.cpp) | finite + heterogeneity invariants (§8.2) | `EXPECT_GT(maxD/minD, 5.0)` | 5× |
 
 ---
 
@@ -858,8 +861,8 @@ The L1(P) kink between h=5e-2 and h=2.5e-2 is a known feature of staggered FD at
 ## 8. Grain Size Evolution: Steady-State Paleowattmeter
 
 **Source:** [RheologyCreepTests.cpp](RheologyCreepTests.cpp)
-**Parameter files:** [RheologyCreep/GrainSizeSteadyState.txt](RheologyCreep/GrainSizeSteadyState.txt) (Eii=10⁻¹⁴) plus four sweep variants `RheologyCreep/GrainSizeSweep_E{12,13,15,16}.txt` covering Eii ∈ {10⁻¹², 10⁻¹³, 10⁻¹⁵, 10⁻¹⁶}.
-**Tests:** `RheologyCreep.GrainSizeSteadyState` (single-point regression gate at Eii=10⁻¹⁴) and `RheologyCreep.GrainSizeSweep` (5-point sweep across 4 decades of strain rate).
+**Parameter file:** [RheologyCreep/GrainSizeSteadyState.txt](RheologyCreep/GrainSizeSteadyState.txt) — single base, used directly by `GrainSizeSteadyState` and via per-iteration parameter overrides by `GrainSizeSweep`. Strain rate (`bkg_strain_rate`) and `writer_subfolder` are injected at runtime through MDLIB's `MutateInput` hook ([mdoodz.h:338](../MDLIB/include/mdoodz.h#L338); callback runs in [Main_DOODZ.c:107](../MDLIB/Main_DOODZ.c#L107) after parsing, before init), eliminating the need for separate fixture files per strain rate.
+**Tests:** `RheologyCreep.GrainSizeSteadyState` (single-point regression gate at Eii=10⁻¹⁴) and `RheologyCreep.GrainSizeSweep` (5-point sweep across 4 decades of strain rate, sharing the same base `.txt`).
 **Reference:** Austin & Evans (2002), *Paleowattmeters: A scaling relation for dynamically recrystallized grain size*, Geology 30, 1031–1034. Renner et al. (2002) for the calcite power-law.
 
 ### Problem Statement
@@ -955,4 +958,94 @@ gnuplot ../../TESTS/RheologyCreep/plot_grain_size.gp
 # → grain_size_benchmark.png
 ```
 
-![Grain size benchmark: analytical paleowattmeter d_ss(τ_II) curve with 5 MDOODZ points (Eii=10⁻¹⁶ to 10⁻¹²) overlaid on log-log axes](grain_size_benchmark.png)
+![Grain size benchmark: dislocation-only and coupled wattmeter d_ss curves vs imposed strain rate, with MDOODZ measurements from both sweeps overlaid](grain_size_benchmark.png)
+
+The plot shows **both sweeps on a single chart with `d_ss` on the y-axis vs imposed total strain rate `Eii_total` on the x-axis**:
+- **Blue line + circles** — dislocation-only sweep (`GrainSizeSweep`, `linv = 0`). Closed-form analytical: `d_disl(Eii) = (B_g · Eii · 2·B_pwl·Eii^(1/n) · p / A_g)^{-1/(p+1)}`.
+- **Red line + triangles** — coupled sweep (`GrainSizeSweepCoupled`, `linv = 15`). Analytical sampled at 30 strain rates via the inline secant solver (no closed form because the τ_II ↔ Eii_total relation requires solving the coupled fixed-point).
+
+**Why this view (and not d_ss vs τ_II):** in `(τ_II, d_ss)` space the dislocation-only and coupled scenarios trace the *same* curve — the wattmeter formula `d_ss(τ, Eii_pwl(τ))` is mechanism-independent given τ. The coupling difference shows up in *which* τ each imposed Eii_total maps to: with diffusion creep absorbing 13–53 % of `Eii_total`, the same `Eii_total` lands at a smaller τ — and therefore a larger `d_ss`. Plotting `d_ss vs Eii_total` directly exposes this divergence as two distinct curves.
+
+The coupled curve sits 4 % above the dislocation-only curve at low strain rate (where dislocation dominates and diffusion contributes little) and 26 % above at high strain rate (where diffusion takes nearly half of `Eii_total`).
+
+### Coverage extensions
+
+The headline `GrainSizeSteadyState` and `GrainSizeSweep` tests above run with **dislocation creep only** (`linv = 0`) — a degenerate special case useful for isolating the wattmeter formula. Two follow-on tests extend coverage to the regime calcite *actually inhabits* at 350 °C and to the integrated 2D code path:
+
+#### 8.1 Coupled regime: `RheologyCreep.GrainSizeSweepCoupled`
+
+**Parameter file:** [RheologyCreep/GrainSizeSweepCoupledBase.txt](RheologyCreep/GrainSizeSweepCoupledBase.txt) — single base; strain rate and `writer_subfolder` overridden per iteration via `MutateInput`. Differs from `GrainSizeSteadyState.txt` only in `linv = 15` (diffusion creep enabled). The two-base-file split (`linv=0` vs `linv=15`) is required because `linv` is a flow-law dispatch index resolved during `.txt` parse — it cannot be safely overridden by `MutateInput` after the fact.
+
+**What it adds:** runs the same 5-strain-rate sweep with **both** dislocation (`pwlv = 15`) and diffusion creep (`linv = 15`, Calcite Herwegh 2003) active alongside the wattmeter. This is the regime that actually crashed `PinchSwellGSE` pre-fix (the coupled `Ėii_pwl + Ėii_lin(d_ve)` Jacobian path).
+
+**Analytical reference:** since `Eii_pwl ≠ Eii_total` with diffusion on, the closed-form dislocation-only formula doesn't apply. The test solves the coupled fixed-point on $\tau_{II}$ inside the test code (secant iteration on $\tau_{II}$, ~30 lines, converges to relative residual < 10⁻¹²):
+
+$$\dot\varepsilon_{II}^{tot} = \left(\frac{\tau_{II}}{2 B_{pwl}}\right)^{n_{pwl}} + \left(\frac{\tau_{II}}{2 B_{lin}}\right)^{n_{lin}} d_{ss}^{-m_{lin}}, \quad d_{ss} = \left(\frac{B_g\,\dot\varepsilon_{II}^{pwl}\,\tau_{II}\,p}{A_g}\right)^{-1/(p+1)}$$
+
+The test's solver uses a **different scheme** than MDOODZ's iteration kernel (secant on $\tau_{II}$ vs MDOODZ's bisection-then-Newton on $\eta_{ve}$) — so a self-consistent-but-wrong MDOODZ converged state is exposed by L2 disagreement, not masked.
+
+**Measured accuracy:**
+
+| Eii [s⁻¹] | τ_II [Pa] | Eii_pwl/Eii | d_ss disloc-only [m] | d_ss coupled [m] | d_n MDOODZ [m] | L2 | rel diff |
+|-----------|-----------|-------------|----------------------|------------------|-----------------|-----|----------|
+| 10⁻¹⁶ | 8.54 × 10⁶ | 87% | 5.024 × 10⁻⁴ | 5.243 × 10⁻⁴ | 5.246 × 10⁻⁴ | 6.75 × 10⁻⁴ | 0.068% |
+| 10⁻¹⁵ | 1.37 × 10⁷ | 80% | 2.499 × 10⁻⁴ | 2.677 × 10⁻⁴ | 2.679 × 10⁻⁴ | 6.59 × 10⁻⁴ | 0.066% |
+| 10⁻¹⁴ | 2.17 × 10⁷ | 70% | 1.244 × 10⁻⁴ | 1.384 × 10⁻⁴ | 1.385 × 10⁻⁴ | 6.39 × 10⁻⁴ | 0.064% |
+| 10⁻¹³ | 3.42 × 10⁷ | 59% | 6.19 × 10⁻⁵ | 7.26 × 10⁻⁵ | 7.27 × 10⁻⁵ | 6.16 × 10⁻⁴ | 0.062% |
+| 10⁻¹² | 5.31 × 10⁷ | 47% | 3.08 × 10⁻⁵ | 3.87 × 10⁻⁵ | 3.88 × 10⁻⁵ | 5.93 × 10⁻⁴ | 0.059% |
+
+Diffusion creep takes 13–53 % of the strain rate across the sweep — non-negligible everywhere. The coupled $d_{ss}$ is correctly larger than the dislocation-only $d_{ss}$ at every point (less stress driving grain reduction → wattmeter rewards larger steady-state grains). The 0.07 % systematic offset persists, confirming it's a constant-factor prefactor handling difference rather than a slope error in the formula.
+
+**Code assertions** ([RheologyCreepTests.cpp](RheologyCreepTests.cpp)):
+
+```cpp
+EXPECT_GT(d_ss_c, d_ss_disl);                   // physics: coupled > disloc-only (always)
+EXPECT_GT(minD, 0.0);
+EXPECT_TRUE(std::isfinite(minD) && std::isfinite(maxD));
+EXPECT_LT(maxD / minD - 1.0, 1e-3);             // homogeneity
+EXPECT_NEAR(meanD, d_ss_c, d_ss_c * 0.01);      // 1% absolute
+EXPECT_LT(L2, 5e-3);                            // spatial L2 (measured 5.9-6.8e-4)
+```
+
+This regression-gates exactly the Jacobian path (`dfdeta += params.m_lin * Eii_lin * dddeta / d_ve` plus the implicit `d_ve = f(τ_II, Eii_pwl)` substitution) that the dislocation-only sweep does not exercise.
+
+#### 8.2 Integrated 2D path: `RheologyCreep.PinchSwellGSESmoke`
+
+**Parameter file:** [RheologyCreep/PinchSwellGSESmoke.txt](RheologyCreep/PinchSwellGSESmoke.txt)
+
+**Reference:** Schmalholz, S.M. & Duretz, T. (2017), *Impact of grain size evolution on necking in calcite layers deforming by combined diffusion and dislocation creep*, J. Struct. Geol. 103, 37–56, doi:[10.1016/j.jsg.2017.08.007](https://doi.org/10.1016/j.jsg.2017.08.007).
+
+**What it adds:** runs a downsized version of the paper's 2D pinch-and-swell scenario (51×51 grid, 10 timesteps) through MDOODZ's full integrated pipeline — Stokes solve, advection, P2G interpolation, harmonic averaging into `mesh.d_n`, particle reseeding. The 0D constitutive-law tests above can't catch regressions in any of these 2D-only steps.
+
+**Approach:** sentinel test, not quantitative validator. The paper's spatial figures (Fig. 5 / Fig. 8 etc.) require minutes of compute and digitised reference data — research-grade validation, out of scope for fast CI. This test asserts physical-invariant sentinels instead:
+
+**Code assertions** ([RheologyCreepTests.cpp](RheologyCreepTests.cpp)):
+
+```cpp
+EXPECT_GT(minD, 0.0);                           // no NaN propagation in 2D path
+EXPECT_TRUE(std::isfinite(minD) && std::isfinite(maxD));
+EXPECT_GT(maxD / minD, 5.0);                    // wattmeter drove heterogeneity
+EXPECT_LT(minD, 1e-3);                          // d evolved below layer's gs_ref somewhere
+```
+
+**Measured accuracy** (51×51, Nt=10, ~835 ms wall):
+
+| Quantity | Value |
+|----------|-------|
+| Cells | 2500 |
+| min(d) | 1.00 × 10⁻⁵ m (matrix `gs_ref` — phase 0 has no GSE) |
+| max(d) | 1.08 × 10⁻² m (in low-stress pinch, grain growth) |
+| max/min ratio | ~1077 |
+
+The `max/min ≈ 1077` (vs threshold of 5) shows the wattmeter generated strong spatial heterogeneity in 10 timesteps. The `max(d) ≫ gs_ref` shows grain growth in low-stress regions, consistent with calcite paleowattmeter physics at 350 °C. Specifically, this catches:
+
+- **NaN propagation** in any 2D step (advection, P2G, harmonic average) → `minD ≤ 0` or non-finite
+- **Wattmeter silently bypassed in the layer** → `max/min` collapses toward `gs_ref_layer/gs_ref_matrix = 100`, fails the `> 5` × 200% headroom check loosely. (Even the bypass case satisfies `> 5` since 100 > 5; this is a known weakness — see "Weakness" note below.)
+- **Layer phase silently merged with matrix or wrong gs_ref applied** → `min(d)` bumps to a non-physical value
+- **Catastrophic regression that resets d everywhere** → `max(d)` drops to a constant value, `max/min` collapses to 1
+
+**Weakness:** since the matrix phase has no wattmeter, `min(d) = matrix gs_ref = 1e-5` always. The third assertion (`minD < 1e-3`) is therefore tautological for *this* parameter set — it doesn't actually verify wattmeter activity in the *layer*. A future tightening could filter cells by phase via `Centers/phase_perc_n`, but for now the heterogeneity check (`max/min > 5`) is the strong signal and the third is a redundant guard.
+
+Runtime: ~3 s on a typical CI machine, well within the < 30 s budget.
+
+**No spatial visualisation here.** A heatmap of the 51×51 × Nt=10 smoke output would just show "layer has different d than matrix" — essentially the IC, since 10 timesteps at `bkg_strain_rate = 1e-14` reach only ~1 % extension and the wattmeter pinch-and-swell pattern needs ~50 % extension to develop. The GTest assertions above already gate the integrated path more rigorously than a still image could. For the developed pinch-and-swell visualisation see [VISUAL_TESTS/img/gseref.gif](../VISUAL_TESTS/img/gseref.gif), generated from the paper's full 101² × Nt=100 scenario.
