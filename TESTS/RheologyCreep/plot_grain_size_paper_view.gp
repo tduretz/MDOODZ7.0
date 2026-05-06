@@ -4,7 +4,7 @@
 #   x = grain size d (µm), y = differential stress 2*tau_II (MPa), both log
 #
 # Reproduces the deformation-map view from S&D 2017 Fig. 2 for visual paper-
-# comparison. Renner 2002 dislocation + Herwegh 2003 diffusion + Austin & Evans 2002
+# comparison. Renner 2002 dislocation + Herwegh 2003 diffusion + Austin & Evans 2007/2009
 # wattmeter, T = 350 °C — all matching the paper's "Renner 2002 & Herwegh 2003"
 # panel.
 #

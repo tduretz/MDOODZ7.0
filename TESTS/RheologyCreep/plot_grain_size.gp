@@ -1,4 +1,4 @@
-# Grain Size Steady-State Benchmark — calcite paleowattmeter (Austin & Evans 2002)
+# Grain Size Steady-State Benchmark — calcite paleowattmeter (Austin & Evans 2007/2009)
 #
 # Plots d_ss vs the IMPOSED total strain rate Eii_total. In this view the
 # dislocation-only and coupled scenarios trace VISIBLY DISTINCT curves:
@@ -19,7 +19,7 @@
 set terminal pngcairo size 900,650 enhanced font "Arial,12"
 set output "grain_size_benchmark.png"
 
-set title "Calcite paleowattmeter — Austin and Evans (2002) at T = 623 K"
+set title "Calcite paleowattmeter — Austin and Evans (2007, 2009) at T = 623 K"
 set xlabel "Imposed total strain rate {/Symbol e}'_{II} (s^{-1})"
 set ylabel "Steady-state grain size d_{ss} (m)"
 
@@ -67,7 +67,7 @@ tau_disl(Eii) = 2.0 * B_pwl * Eii**(1.0/n_pwl)
 d_disl(Eii)   = ( Bg * Eii * tau_disl(Eii) * p / Ag )**(-1.0/(p+1.0))
 
 plot d_disl(x) with lines linewidth 2.5 linecolor rgb "#1f77b4" \
-        title "Analytical d_{ss} — dislocation only (Renner 2002 + Austin and Evans 2002)", \
+        title "Analytical d_{ss} — dislocation only (Renner 2002 + Austin and Evans 2007/2009)", \
      "grain_size_benchmark.dat" using 1:5 with points pointtype 7 pointsize 1.8 \
         linecolor rgb "#1f77b4" \
         title "MDOODZ — dislocation-only sweep (linv = 0)", \

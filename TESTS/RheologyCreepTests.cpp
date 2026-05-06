@@ -243,7 +243,7 @@ TEST_F(RheologyCreep, PowerLawCreepInterpMode2) {
 
 // --- Grain-size evolution: paleowattmeter steady state ---
 //
-// Homogeneous pure-shear single-phase calcite (pwlv=15 Renner 2002, gs=10 Austin & Evans 2002).
+// Homogeneous pure-shear single-phase calcite (pwlv=15 Renner 2002, gs=10 Austin & Evans 2007/2009).
 // Dislocation creep is the only viscous mechanism, so Eii_pwl = Eii_total. The local
 // Newton iteration must converge to the analytical paleowattmeter steady state:
 //
@@ -253,7 +253,7 @@ TEST_F(RheologyCreep, PowerLawCreepInterpMode2) {
 //   Ag    = Kg * exp(-Qg / (R T))
 //   d_ss  = ( Bg * Eii * Tii * p / Ag )^(-1/(p+1))
 //
-// Reference: Austin & Evans (2002) Geology 30, 1031-1034. See TESTS/AnalyticalSolutions.md §8.
+// Reference: Austin and Evans (2007, 2009) Geology 35(4), 343-346. See TESTS/AnalyticalSolutions.md §8.
 TEST_F(RheologyCreep, GrainSizeSteadyState) {
   const char *testName = testing::UnitTest::GetInstance()->current_test_info()->name();
   char *inputName;
@@ -277,7 +277,7 @@ TEST_F(RheologyCreep, GrainSizeSteadyState) {
   const double B_pwl   = F_pwl * pow(A_pwl, -1.0/n_pwl) * exp(Q_pwl / (n_pwl * R_g * T_K));
   const double tau_II  = 2.0 * B_pwl * pow(Eii, 1.0/n_pwl);
 
-  // Calcite paleowattmeter (Austin & Evans 2002, gs=10) — MDLIB/FlowLaws.c case 10
+  // Calcite paleowattmeter (Austin & Evans 2007/2009, gs=10) — MDLIB/FlowLaws.c case 10
   const double p     = 3.0;
   const double K_g   = 2.5e9 * pow(10.0, -6.0 * p);   // 2.5e-9 m^p/s
   const double Q_g   = 175.0e3;
@@ -376,7 +376,7 @@ TEST_F(RheologyCreep, GrainSizeSweep) {
   setup.MutateInput = mutateSweepInput;
   const char *baseTxt = "RheologyCreep/GrainSizeSteadyState.txt";  // dislocation-only base
 
-  // Constants — same as GrainSizeSteadyState (Renner et al. 2002 + Austin & Evans 2002)
+  // Constants — same as GrainSizeSteadyState (Renner et al. 2002 + Austin & Evans 2007/2009)
   const double T_K   = 350.0 + 273.15;
   const double R_g   = 8.314;
   const double n_pwl = 4.7;
@@ -396,7 +396,7 @@ TEST_F(RheologyCreep, GrainSizeSweep) {
   // Open .dat in write mode — overwrite prior single-point row
   FILE *dat = fopen("grain_size_benchmark.dat", "w");
   ASSERT_NE(dat, nullptr);
-  fprintf(dat, "# Strain-rate sweep — calcite paleowattmeter (Austin & Evans 2002, Renner 2002)\n");
+  fprintf(dat, "# Strain-rate sweep — calcite paleowattmeter (Austin & Evans 2007/2009, Renner 2002)\n");
   fprintf(dat, "# Eii [s^-1]    T [K]         tau_II [Pa]    d_ss_ana [m]   d_mean_mdoodz [m]\n");
 
   for (int i = 0; i < N; ++i) {
@@ -483,7 +483,7 @@ TEST_F(RheologyCreep, GrainSizeSweepCoupled) {
   const double A_lin = 1.7119e-19;
   const double F_lin = (1.0/6.0) * pow(2.0, 1.0/n_lin) * pow(3.0, (n_lin-1.0)/(2.0*n_lin));
   const double B_lin = F_lin * pow(A_lin, -1.0/n_lin) * exp(Q_lin / (n_lin * R_g * T_K));
-  // Austin & Evans 2002 paleowattmeter — gs=10
+  // Austin & Evans 2007/2009 paleowattmeter — gs=10
   const double p     = 3.0;
   const double K_g   = 2.5e9 * pow(10.0, -6.0 * p);
   const double Q_g   = 175.0e3;
@@ -528,7 +528,7 @@ TEST_F(RheologyCreep, GrainSizeSweepCoupled) {
     *out_Eii_lin = el;
   };
 
-  printf("[CoupledSweep] (Calcite Renner 2002 dislocation + Herwegh 2003 diffusion + Austin & Evans 2002 wattmeter)\n");
+  printf("[CoupledSweep] (Calcite Renner 2002 dislocation + Herwegh 2003 diffusion + Austin & Evans 2007/2009 wattmeter)\n");
   printf("[CoupledSweep] %-10s %-12s %-12s %-12s %-12s %-12s\n",
          "Eii", "tau_II[Pa]", "Eii_pwl/Eii", "d_ss_disl", "d_ss_couple", "d_n_mean");
 

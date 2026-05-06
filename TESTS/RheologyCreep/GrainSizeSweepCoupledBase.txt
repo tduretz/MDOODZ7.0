@@ -108,5 +108,5 @@ expv = 0             / peierls creep
 eta0 = 1e22
 npwl = 1
 Qpwl = 0
-gs   = 10            / paleowattmeter — Calcite, Austin & Evans (2002)
+gs   = 10            / paleowattmeter — Calcite, Austin and Evans (2007, 2009)
 gs_ref = 1e-3        / 1 mm initial guess (overwritten by wattmeter steady state)

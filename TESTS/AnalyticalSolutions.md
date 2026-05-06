@@ -863,7 +863,7 @@ The L1(P) kink between h=5e-2 and h=2.5e-2 is a known feature of staggered FD at
 **Source:** [RheologyCreepTests.cpp](RheologyCreepTests.cpp)
 **Parameter file:** [RheologyCreep/GrainSizeSteadyState.txt](RheologyCreep/GrainSizeSteadyState.txt) — single base, used directly by `GrainSizeSteadyState` and via per-iteration parameter overrides by `GrainSizeSweep`. Strain rate (`bkg_strain_rate`) and `writer_subfolder` are injected at runtime through MDLIB's `MutateInput` hook ([mdoodz.h:338](../MDLIB/include/mdoodz.h#L338); callback runs in [Main_DOODZ.c:107](../MDLIB/Main_DOODZ.c#L107) after parsing, before init), eliminating the need for separate fixture files per strain rate.
 **Tests:** `RheologyCreep.GrainSizeSteadyState` (single-point regression gate at Eii=10⁻¹⁴) and `RheologyCreep.GrainSizeSweep` (5-point sweep across 4 decades of strain rate, sharing the same base `.txt`).
-**Reference:** Austin & Evans (2002), *Paleowattmeters: A scaling relation for dynamically recrystallized grain size*, Geology 30, 1031–1034. Renner et al. (2002) for the calcite power-law.
+**Reference:** Austin and Evans (2007), *Paleowattmeters: A scaling relation for dynamically recrystallized grain size*, Geology **35**(4), 343–346 (the seminal wattmeter paper); Austin and Evans (2009) for the calcite-specific calibration whose constants S&D 2017 Table 1 lists. The dislocation flow law: MDLIB labels case 15 as "Renner et al. (2002)", but the numerical constants (n=4.7, Q=297 kJ/mol, A=1.585×10⁻²⁵ Pa⁻ⁿ s⁻¹) match what S&D 2017 Table 1 attributes to **Schmid et al. (1977)** — long-standing MDLIB mislabel; Renner+02 in S&D 2017 refers to a separate Peierls flow law not used here.
 
 ### Problem Statement
 
@@ -890,7 +890,7 @@ with $B_g = \lambda/(c_g\,\gamma)$ and $A_g = K_g\,\exp(-Q_g/R_g T)$.
 | $\lambda$ | 0.1 | partition factor |
 | $c_g$     | $\pi$ | geometric constant |
 
-**Calcite power-law (`pwlv = 15`, Renner et al. 2002)** from [MDLIB/FlowLaws.c:570-583](../MDLIB/FlowLaws.c#L570) (axial-compression correction `tpwl = 1`).
+**Calcite dislocation creep (`pwlv = 15`)** from [MDLIB/FlowLaws.c:570-583](../MDLIB/FlowLaws.c#L570) (axial-compression correction `tpwl = 1`). MDLIB's source comment labels case 15 as "Renner et al. (2002)" but the constants (n=4.7, Q=297 kJ/mol, A=1.585×10⁻²⁵ Pa⁻ⁿ s⁻¹) are what Schmalholz & Duretz 2017 Table 1 attributes to **Schmid et al. (1977)**. See note in the Reference section above.
 
 ### Implementation Details
 
@@ -979,7 +979,7 @@ gnuplot ../../TESTS/RheologyCreep/plot_grain_size_paper_view.gp
 # → grain_size_paper_view.png
 ```
 
-![Calcite deformation map at T=350°C — three coupled-creep strain-rate iso-contours, the Renner 2002/Herwegh 2003/Austin & Evans 2002 paleowattmeter line, and 5 MDOODZ measurement points overlaid in the layout of Schmalholz & Duretz 2017 Fig. 2](grain_size_paper_view.png)
+![Calcite deformation map at T=350°C — three coupled-creep strain-rate iso-contours, the Renner 2002/Herwegh 2003/Austin & Evans 2007/2009 paleowattmeter line, and 5 MDOODZ measurement points overlaid in the layout of Schmalholz & Duretz 2017 Fig. 2](grain_size_paper_view.png)
 
 Compare side-by-side with [Fig. 2 of Schmalholz & Duretz (2017)](https://ars.els-cdn.com/content/image/1-s2.0-S019181411730161X-gr2.jpg). MDOODZ's 5 measurements (red triangles) sit precisely on the heavy paleowattmeter line — the same locus the paper uses to compute steady-state grain size. The strain-rate iso-contours mirror the paper's "Renner 2002 & Herwegh 2003" panel: at small grain sizes diffusion creep dominates (steep rising left side), at large grain sizes dislocation creep dominates (flat plateau on the right), with the wattmeter line passing through both regimes.
 
