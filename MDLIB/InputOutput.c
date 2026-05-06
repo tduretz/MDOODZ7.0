@@ -1074,7 +1074,7 @@ Input ReadInputFile( char *fileName ) {
     mat_prop materials;
     Nparams Nmodel;
     FILE *fin;
-    int k, gsel;
+    int k;
 
     fin = fopen(fileName,"rt");
     if (fin == NULL) {
@@ -1416,7 +1416,6 @@ Input ReadInputFile( char *fileName ) {
         materials.linv[k]     = ReadMatProps( fin,     "linv", k,    0.0  );
         materials.gbsv[k]     = ReadMatProps( fin,     "gbsv", k,    0.0  );
         materials.expv[k]     = ReadMatProps( fin,     "expv", k,    0.0  );
-        gsel                  = ReadMatProps( fin,     "gsel", k,    0.0  );
         materials.eps0[k]     = ReadMatProps( fin,     "eps0", k,  1e-14  ) / scaling.E;
         materials.tau0[k]     = ReadMatProps( fin,     "tau0", k,    2e6  ) / scaling.S;
         materials.eta0[k]     = ReadMatProps( fin,     "eta0", k, 1.0e20  ) / scaling.eta;
@@ -1484,7 +1483,6 @@ Input ReadInputFile( char *fileName ) {
         if ( abs(materials.linv[k])>0 ) LOG_INFO("--->      Linear viscosity activated ");
         if ( abs(materials.gbsv[k])>0 ) LOG_INFO("--->         GBS viscosity activated ");
         if ( abs(materials.expv[k])>0 ) LOG_INFO("---> Exponential viscosity activated ");
-        if ( abs(gsel)              >0 ) LOG_INFO("--->  Grain size evolution activated ");
 
         // Call flow law data base
         if ( abs(materials.pwlv[k])>0 ) ReadDataPowerLaw   ( &materials, &model, k, materials.pwlv[k], &scaling );

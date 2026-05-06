@@ -202,7 +202,7 @@ void LocalIterationViscoElastic(LocalIterationMutables mutables, LocalIterationP
 
 void LocalIterationViscoElasticGrainSize(LocalIterationMutables mutables, LocalIterationParams params) {
   // Local iterations
-  const int   nitmax = 20;
+  const int   nitmax = 50;          // bisection narrows in log-space, Newton finishes
   const double tol   = 1.0e-11;
   double d_ve        = *mutables.d1;
   double eta_ve      = *mutables.eta;
@@ -248,117 +248,71 @@ void LocalIterationViscoElasticGrainSize(LocalIterationMutables mutables, LocalI
   // printf("%2.2e %2.2e\n", r_eta_lo, r_eta_up);
   // if ( (r_eta_up>0. && r_eta_lo>0.) || (r_eta_up<0. && r_eta_lo<0.) ) {printf("ouch!\n"); exit(113);}
 
-  // 1 residual formulations --- Alternate bisection and Newton
-  // if (params.noisy==1) printf("Start local iteration cycle GSE for phase %d:\n", params.phase);
-  // for (int it = 0; it < nitmax; it++) {
-
-  //   if (it<6) {
-  //     eta_ve = 0.5*(eta_up + eta_lo);
-  //     // Function evaluation at current effective viscosity
-  //     Tii     = 2.0 * eta_ve * params.Eii;
-  //     if (params.constant)    Eii_cst = Tii  / 2.0 / params.eta_cst;
-  //     if (params.dislocation) Eii_pwl = params.C_pwl * pow(Tii, params.n_pwl);
-  //     d_ve    = pow( 2*Bg*params.Eii*Eii_pwl*eta_ve*p/params.Ag, (-1.0/(p+1)) );
-  //     if (params.gbs)         Eii_gbs = params.C_gbs * pow(Tii, params.n_gbs);
-  //     if (params.peierls)     Eii_exp = params.C_exp * pow(Tii, params.ST + params.n_exp);                 // Peierls - power law
-  //     if (params.diffusion)   Eii_lin = params.C_lin * pow(Tii, params.n_lin) * pow(d_ve, -params.m_lin);// !!! gs - dependence !!!
-  //     const double            dddeta  = -1.0/2.0*Ag*d_ve*pow(2*Eii*eta_ve, -n_pwl)*(2*Bg*C_pwl*Eii*n_pwl*p*pow(2*Eii*eta_ve, n_pwl)/Ag + 2*Bg*C_pwl*Eii*p*pow(2*Eii*eta_ve, n_pwl)/Ag)/(Bg*C_pwl*Eii*eta_ve*p*(p + 1));
-  //     const double            Eii_vis = Eii_pwl + Eii_exp + Eii_lin + Eii_gbs + Eii_cst;
-  //     // Residual check
-  //     const double r_eta_ve = params.Eii - params.elastic * Tii  / (2.0 * params.eta_el) - Eii_vis;
-  //     const double res_eta  = fabs(r_eta_ve / params.Eii);
-  //     if (params.noisy==1) printf("Bisect. %d %d %2.4e %2.4e %2.4e\n", it, params.phase, r_eta_ve, Eii_pwl, Tii); // REMOVE
-  //     if (res_eta < tol / 100) {
-  //       if (it > 10) printf("L.I. Warnung: more that 10 local iterations, there might be a problem...\n");
-  //       if (it > 10) exit(1);
-  //       break;
-  //     } else if (it == nitmax - 1 && res_eta > tol) {
-  //       printf("Visco-Elastic iterations failed!\n");
-  //       exit(0);
-  //     }
-  //     if ( (r_eta_ve>0. && r_eta_lo>0.) || (r_eta_ve<0. && r_eta_lo<0.) ) {
-  //       eta_lo = eta_ve;
-  //     }
-  //     else {
-  //       eta_up = eta_ve;
-  //     }
-  //   }
-  //   else {
-
-  //     // Function evaluation at current effective viscosity
-  //   Tii     = 2.0 * eta_ve * params.Eii;
-  //   if (params.constant)    Eii_cst = Tii  / 2.0 / params.eta_cst;
-  //   if (params.dislocation) Eii_pwl = params.C_pwl * pow(Tii, params.n_pwl);
-  //   d_ve    = pow( 2*Bg*params.Eii*Eii_pwl*eta_ve*p/params.Ag, (-1.0/(p+1)) );
-  //   if (params.gbs)         Eii_gbs = params.C_gbs * pow(Tii, params.n_gbs);
-  //   if (params.peierls)     Eii_exp = params.C_exp * pow(Tii, params.ST + params.n_exp);                 // Peierls - power law
-  //   if (params.diffusion)   Eii_lin = params.C_lin * pow(Tii, params.n_lin) * pow(d_ve, -params.m_lin);// !!! gs - dependence !!!
-  //   const double            dddeta  = -1.0/2.0*Ag*d_ve*pow(2*Eii*eta_ve, -n_pwl)*(2*Bg*C_pwl*Eii*n_pwl*p*pow(2*Eii*eta_ve, n_pwl)/Ag + 2*Bg*C_pwl*Eii*p*pow(2*Eii*eta_ve, n_pwl)/Ag)/(Bg*C_pwl*Eii*eta_ve*p*(p + 1));
-  //   const double            Eii_vis = Eii_pwl + Eii_exp + Eii_lin + Eii_gbs + Eii_cst;
-  //   // Residual check
-  //   const double r_eta_ve = params.Eii - params.elastic * Tii  / (2.0 * params.eta_el) - Eii_vis;
-  //   const double res_eta  = fabs(r_eta_ve / params.Eii);
-  //   if (params.noisy==1) printf("Newton %d %d %2.4e %2.4e %2.4e\n", it, params.phase, r_eta_ve, Eii_pwl, Tii); // REMOVE
-  //   if (res_eta < tol / 100) {
-  //     if (it > 10) printf("L.I. Warnung: more that 10 local iterations, there might be a problem...\n");
-  //     if (it > 10) exit(1);
-  //     break;
-  //   } else if (it == nitmax - 1 && res_eta > tol) {
-  //     printf("Visco-Elastic iterations failed!\n");
-  //     exit(0);
-  //   }
-  //   // Analytical derivative of function
-  //   double dfdeta = 0.0;
-  //   if (params.elastic)     dfdeta += -params.Eii / params.eta_el;
-  //   if (params.constant)    dfdeta += -params.Eii / params.eta_cst;
-  //   if (params.peierls)     dfdeta += -(Eii_exp) * (params.ST + params.n_exp) / eta_ve;
-  //   if (params.diffusion)   dfdeta += -(Eii_lin) *params.n_lin / eta_ve;
-  //   if (params.dislocation) dfdeta += -(Eii_pwl) *params.n_pwl / eta_ve;
-  //   dfdeta += params.m_lin*Eii_lin*dddeta/d_ve;
-  //   // Update viscosity
-  //   // printf("dfdeta = %2.2e\n");
-  //   eta_ve -= r_eta_ve / dfdeta;
-
-  //   }
-
-  // }
-
-  // 1 residual formulations --- full Newton (see LocalIterationGrainSize.ipynb)
-  if (params.noisy==2) LOG_INFO("Start local iteration cycle GSE for phase %d:", params.phase);
+  // Bisection-then-Newton on the 1-residual formulation. r_eta(eta_ve) is monotonically
+  // decreasing in eta_ve (Tii ∝ eta_ve, Eii_vis ∝ Tii^n_pwl), so r_eta_lo > 0 > r_eta_up
+  // when the root is in [eta_lo, eta_up]. Bisection cannot diverge from a valid bracket;
+  // Newton recovers quadratic tail convergence. Order matters because Newton from
+  // eta_ve = eta_up alone overshoots into negative or NaN for stiff scenarios (PinchSwellGSE).
+  // 20 log-space bisection steps narrow a 30-dex initial bracket (eta_up to eta_lo can
+  // span this much for stiff scenarios) to ~3e-5 dex — well inside Newton's basin.
+  // Remaining 30 iterations are Newton's quadratic-convergence tail.
+  const int bisection_steps = 20;
+  if (params.noisy == 2) LOG_INFO("Start local iteration cycle GSE for phase %d:", params.phase);
   for (int it = 0; it < nitmax; it++) {
-    // Function evaluation at current effective viscosity
+    if (it < bisection_steps) {
+      // Geometric mean (log-space midpoint). Brackets here can span 20+ orders of
+      // magnitude, so linear bisection would need ~70 steps to narrow that to 1 dex.
+      // Log-space bisection narrows by half the dex per step → ~7 steps to 1 dex.
+      eta_ve = sqrt(eta_up * eta_lo);
+    }
+    // Function evaluation at current eta_ve (shared between bisection and Newton)
     Tii     = 2.0 * eta_ve * params.Eii;
     if (params.constant)    Eii_cst = Tii  / 2.0 / params.eta_cst;
     if (params.dislocation) Eii_pwl = params.C_pwl * pow(Tii, params.n_pwl);
     d_ve    = pow( 2*Bg*params.Eii*Eii_pwl*eta_ve*p/params.Ag, (-1.0/(p+1)) );
     if (params.gbs)         Eii_gbs = params.C_gbs * pow(Tii, params.n_gbs);
-    if (params.peierls)     Eii_exp = params.C_exp * pow(Tii, params.ST + params.n_exp);                 // Peierls - power law
-    if (params.diffusion)   Eii_lin = params.C_lin * pow(Tii, params.n_lin) * pow(d_ve, -params.m_lin);// !!! gs - dependence !!!
-    const double            dddeta  = -1.0/2.0*Ag*d_ve*pow(2*Eii*eta_ve, -n_pwl)*(2*Bg*C_pwl*Eii*n_pwl*p*pow(2*Eii*eta_ve, n_pwl)/Ag + 2*Bg*C_pwl*Eii*p*pow(2*Eii*eta_ve, n_pwl)/Ag)/(Bg*C_pwl*Eii*eta_ve*p*(p + 1));
-    const double            Eii_vis = Eii_pwl + Eii_exp + Eii_lin + Eii_gbs + Eii_cst;
-    // Residual check
-    const double r_eta_ve = params.Eii - params.elastic * Tii  / (2.0 * params.eta_el) - Eii_vis;
+    if (params.peierls)     Eii_exp = params.C_exp * pow(Tii, params.ST + params.n_exp);
+    if (params.diffusion)   Eii_lin = params.C_lin * pow(Tii, params.n_lin) * pow(d_ve, -params.m_lin);
+    Eii_vis = Eii_pwl + Eii_exp + Eii_lin + Eii_gbs + Eii_cst;
+    const double r_eta_ve = params.Eii - params.elastic * Tii / (2.0 * params.eta_el) - Eii_vis;
     const double res_eta  = fabs(r_eta_ve / params.Eii);
-    if (params.noisy==2) LOG_INFO("%d %2.4e %2.4e %2.4e", params.phase, r_eta_ve, Eii_pwl, Tii); // REMOVE
-    if (res_eta < tol / 100) {
-      if (it > 15) LOG_INFO("L.I. Warnung: more that 10 local iterations, there might be a problem...");
-      // if (it > 15) exit(1);
-      break;
-    } else if (it == nitmax - 1 && res_eta > tol) {
-      LOG_INFO("Visco-Elastic iterations failed!");
-      exit(0);
+
+    if (params.noisy == 2) LOG_INFO("%s %d %d %2.4e %2.4e %2.4e", (it < bisection_steps) ? "Bisect" : "Newton", it, params.phase, r_eta_ve, Eii_pwl, Tii);
+
+    // Standard convergence (matches pre-existing tol/100 threshold for back-compat)
+    if (res_eta < tol / 100) break;
+
+    // Early exit once bisection has narrowed the residual under tol — skip Newton
+    if (it == bisection_steps - 1 && res_eta < tol) break;
+
+    if (it < bisection_steps) {
+      // Update bracket using monotonicity of r(eta_ve): r decreases as eta_ve increases
+      // (Tii ∝ eta_ve and Eii_vis grows superlinearly with Tii). So r > 0 means eta_ve
+      // is too small (root at larger eta) → tighten the lower end of the bracket.
+      // Note: in this codebase, eta_up is the SMALL bound and eta_lo is the LARGE bound
+      // (eta_up = MIN of mechanism viscosities, eta_lo = MAX).
+      if (r_eta_ve > 0.0) {
+        eta_up = eta_ve;  // narrow from below
+      } else {
+        eta_lo = eta_ve;  // narrow from above
+      }
+    } else {
+      // Newton step (with grain-size feedback term enabled after settling iterations)
+      dddeta = -1.0/2.0*Ag*d_ve*pow(2*Eii*eta_ve, -n_pwl)*(2*Bg*C_pwl*Eii*n_pwl*p*pow(2*Eii*eta_ve, n_pwl)/Ag + 2*Bg*C_pwl*Eii*p*pow(2*Eii*eta_ve, n_pwl)/Ag)/(Bg*C_pwl*Eii*eta_ve*p*(p + 1));
+      double dfdeta = 0.0;
+      if (params.elastic)     dfdeta += -params.Eii / params.eta_el;
+      if (params.constant)    dfdeta += -params.Eii / params.eta_cst;
+      if (params.peierls)     dfdeta += -(Eii_exp) * (params.ST + params.n_exp) / eta_ve;
+      if (params.diffusion)   dfdeta += -(Eii_lin) * params.n_lin / eta_ve;
+      if (params.dislocation) dfdeta += -(Eii_pwl) * params.n_pwl / eta_ve;
+      dfdeta += params.m_lin * Eii_lin * dddeta / d_ve;
+      eta_ve -= r_eta_ve / dfdeta;
     }
-    // Analytical derivative of function
-    double dfdeta = 0.0;
-    if (params.elastic)     dfdeta += -params.Eii / params.eta_el;
-    if (params.constant)    dfdeta += -params.Eii / params.eta_cst;
-    if (params.peierls)     dfdeta += -(Eii_exp) * (params.ST + params.n_exp) / eta_ve;
-    if (params.diffusion)   dfdeta += -(Eii_lin) *params.n_lin / eta_ve;
-    if (params.dislocation) dfdeta += -(Eii_pwl) *params.n_pwl / eta_ve;
-    // only activate Newton after a couple of steps
-    if (it>1) dfdeta += params.m_lin*Eii_lin*dddeta/d_ve;
-    // Update viscosity
-    eta_ve -= r_eta_ve / dfdeta;
+
+    if (it == nitmax - 1 && res_eta > tol) {
+      LOG_ERR("GSE local iter failed to converge in %d iterations: phase=%d T=%2.2e Eii=%2.2e res=%2.2e", nitmax, params.phase, params.T, params.Eii, res_eta);
+      exit(346);
+    }
   }
 
   // 2 residuals formulations
@@ -409,8 +363,9 @@ void LocalIterationViscoElasticGrainSize(LocalIterationMutables mutables, LocalI
   //   d_ve    -= dd;
   // }
 
-  if (isnan(eta_ve)) {
-    LOG_INFO("Local iterations from grain size and viscoisity exploded -  guess is probably incorrect");
+  if (isnan(eta_ve) || isinf(eta_ve)) {
+    LOG_ERR("GSE local iter produced non-finite eta_ve: phase=%d T=%2.2e Eii=%2.2e last eta_ve=%2.2e", params.phase, params.T, params.Eii, eta_ve);
+    exit(346);
   }
 
   *mutables.eta     = eta_ve;
@@ -683,7 +638,8 @@ double ViscosityConcise( int phase, double G, double T, double P, double d, doub
           .d           = d,
           .n_gbs       = n_gbs,
           .eta_up      = eta_up,
-          .eta_lo      = eta_lo};
+          .eta_lo      = eta_lo,
+          .T           = T};
   if (gs) {
     LocalIterationViscoElasticGrainSize((LocalIterationMutables){.eta = &eta_ve, .Tii = &Tii, .Eii_cst=Eii_cst, .Eii_lin=Eii_lin, .Eii_gbs=Eii_gbs, .Eii_pwl=Eii_pwl, .Eii_exp=Eii_exp, .d1 = d1}, params);
   } else {
