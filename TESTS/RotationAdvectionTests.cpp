@@ -4,10 +4,37 @@ extern "C" {
 
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
 #include <cmath>
 #include <vector>
 #include <gtest/gtest.h>
 #include <hdf5.h>
+
+// Closure-style override state for MutateInput. The Rotation and Vortex tests
+// both run 3 reseed-mode variants — a single base .txt per scenario plus
+// per-call (mode, subfolder) overrides eliminates 4 redundant fixture files.
+namespace {
+  struct RotationOverride {
+    int         reseed_mode;  // -1 → no override
+    const char *subfolder;    // nullptr → no override
+  };
+  static RotationOverride g_rotOverride{-1, nullptr};
+
+  static void mutateRotationInput(MdoodzInput *input) {
+    if (g_rotOverride.reseed_mode >= 0) input->model.reseed_mode = g_rotOverride.reseed_mode;
+    if (g_rotOverride.subfolder != nullptr) {
+      free(input->model.writer_subfolder);
+      input->model.writer_subfolder = strdup(g_rotOverride.subfolder);
+    }
+  }
+
+  static void setRotationOverride(int mode, const char *subfolder) {
+    g_rotOverride = { mode, subfolder };
+  }
+  static void clearRotationOverride() {
+    g_rotOverride = {-1, nullptr};
+  }
+}
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -148,10 +175,14 @@ protected:
 
   // Run one simulation, return L2 error between initial and final composition
   double RunAndMeasureL2(const char *configName) {
-    char *inputName;
-    asprintf(&inputName, "RotationAdvection/%s.txt", configName);
-    RunMDOODZ(inputName, &setup);
-    free(inputName);
+    // Inject reseed_mode and writer_subfolder via MutateInput on a single
+    // base fixture (RotationMode0.txt). Eliminates RotationMode{1,2}.txt.
+    int mode = (configName[strlen(configName) - 1] - '0');
+    setRotationOverride(mode, configName);
+    setup.MutateInput = mutateRotationInput;
+    RunMDOODZ((char *)"RotationAdvection/RotationMode0.txt", &setup);
+    setup.MutateInput = nullptr;
+    clearRotationOverride();
 
     char *fileInit;
     asprintf(&fileInit, "%s/Output00000.gzip.h5", configName);
@@ -224,10 +255,14 @@ protected:
 
   // Run one vortex simulation, read final composition
   std::vector<signed char> RunAndGetFinal(const char *configName) {
-    char *inputName;
-    asprintf(&inputName, "RotationAdvection/%s.txt", configName);
-    RunMDOODZ(inputName, &setup);
-    free(inputName);
+    // Same MutateInput pattern as the Rotation case — single base fixture
+    // VortexMode0.txt, override reseed_mode + subfolder per call.
+    int mode = (configName[strlen(configName) - 1] - '0');
+    setRotationOverride(mode, configName);
+    setup.MutateInput = mutateRotationInput;
+    RunMDOODZ((char *)"RotationAdvection/VortexMode0.txt", &setup);
+    setup.MutateInput = nullptr;
+    clearRotationOverride();
 
     char *fileFinal;
     asprintf(&fileFinal, "%s/Output00500.gzip.h5", configName);

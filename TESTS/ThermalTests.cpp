@@ -229,7 +229,12 @@ TEST_F(Thermal, GaussianDiffusionL2) {
 }
 
 TEST_F(Thermal, GaussianDiffusionL2PCG) {
-  RunMDOODZ("Thermal/GaussianDiffusionL2PCG.txt", &setup);
+  // Shared base fixture + MutateInput override of thermal_solver and writer_subfolder
+  pcgOverride::set(1, "GaussianDiffusionL2PCG");
+  setup.MutateInput = pcgOverride::mutate;
+  RunMDOODZ((char *)"Thermal/GaussianDiffusionL2.txt", &setup);
+  setup.MutateInput = nullptr;
+  pcgOverride::clear();
   char *fileFinal;
   asprintf(&fileFinal, "GaussianDiffusionL2PCG/Output00005.gzip.h5");
 
@@ -279,7 +284,11 @@ TEST_F(Thermal, GaussianDiffusionL2PCG) {
 // ===================== PCG Thermal Solver Variants ===================== //
 
 TEST_F(Thermal, GaussianDiffusionPCG) {
-  RunMDOODZ("Thermal/GaussianDiffusionPCG.txt", &setup);
+  pcgOverride::set(1, "GaussianDiffusionPCG");
+  setup.MutateInput = pcgOverride::mutate;
+  RunMDOODZ((char *)"Thermal/GaussianDiffusion.txt", &setup);
+  setup.MutateInput = nullptr;
+  pcgOverride::clear();
   double maxT_init  = getMaxFieldValue("GaussianDiffusionPCG/Output00000.gzip.h5", "Centers", "T");
   double maxT_final = getMaxFieldValue("GaussianDiffusionPCG/Output00005.gzip.h5", "Centers", "T");
   printf("PCG Peak T init: %e, Peak T final: %e\n", maxT_init, maxT_final);
@@ -287,7 +296,11 @@ TEST_F(Thermal, GaussianDiffusionPCG) {
 }
 
 TEST_F(Thermal, SteadyStateGeothermPCG) {
-  RunMDOODZ("Thermal/SteadyStateGeothermPCG.txt", &setup);
+  pcgOverride::set(1, "SteadyStateGeothermPCG");
+  setup.MutateInput = pcgOverride::mutate;
+  RunMDOODZ((char *)"Thermal/SteadyStateGeotherm.txt", &setup);
+  setup.MutateInput = nullptr;
+  pcgOverride::clear();
   char *fileName;
   asprintf(&fileName, "SteadyStateGeothermPCG/Output00020.gzip.h5");
   double maxT = getMaxFieldValue(fileName, "Centers", "T");
@@ -328,7 +341,11 @@ TEST_F(Thermal, SteadyStateGeothermPCG) {
 }
 
 TEST_F(Thermal, RadiogenicHeatPCG) {
-  RunMDOODZ("Thermal/RadiogenicHeatPCG.txt", &setup);
+  pcgOverride::set(1, "RadiogenicHeatPCG");
+  setup.MutateInput = pcgOverride::mutate;
+  RunMDOODZ((char *)"Thermal/RadiogenicHeat.txt", &setup);
+  setup.MutateInput = nullptr;
+  pcgOverride::clear();
   double meanT_init  = getMeanFieldValue("RadiogenicHeatPCG/Output00000.gzip.h5", "Centers", "T");
   double meanT_final = getMeanFieldValue("RadiogenicHeatPCG/Output00005.gzip.h5", "Centers", "T");
   double maxT_init   = getMaxFieldValue("RadiogenicHeatPCG/Output00000.gzip.h5", "Centers", "T");
@@ -345,7 +362,11 @@ TEST_F(Thermal, RadiogenicHeatPCG) {
 }
 
 TEST_F(Thermal, DirichletBCPCG) {
-  RunMDOODZ("Thermal/DirichletBCPCG.txt", &setup);
+  pcgOverride::set(1, "DirichletBCPCG");
+  setup.MutateInput = pcgOverride::mutate;
+  RunMDOODZ((char *)"Thermal/DirichletBC.txt", &setup);
+  setup.MutateInput = nullptr;
+  pcgOverride::clear();
   double minT = getMinFieldValue("DirichletBCPCG/Output00001.gzip.h5", "Centers", "T");
   double maxT = getMaxFieldValue("DirichletBCPCG/Output00001.gzip.h5", "Centers", "T");
   printf("PCG T range: min=%e, max=%e\n", minT, maxT);

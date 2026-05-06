@@ -17,6 +17,35 @@ extern "C" {
 // Test 3: Stress-vs-angle under pure shear — analytical anisotropic stress
 // ============================================================================
 
+// Closure-style state for `mutateDirectorInput`. MDLIB's MutateInput receives
+// only `MdoodzInput*`, so a static struct is the simplest way to thread the
+// per-iteration override values through the callback. Tests run sequentially
+// within a binary → no race.
+namespace {
+  struct DirectorOverride {
+    double      dt;        // 0.0 → no override
+    int         Nt;        // 0   → no override
+    const char *subfolder; // nullptr → no override
+  };
+  static DirectorOverride g_dirOverride{0.0, 0, nullptr};
+
+  // writer_subfolder is heap-owned by ReadChar and freed at sim end —
+  // free() the original before strdup-ing the override (string literal would
+  // crash free() on shutdown).
+  static void mutateDirectorInput(MdoodzInput *input) {
+    if (g_dirOverride.dt != 0.0) {
+      input->model.dt       = g_dirOverride.dt;
+      input->model.dt0      = g_dirOverride.dt;  // dt0 set from dt at parse (InputOutput.c:1301)
+      input->model.dt_start = g_dirOverride.dt;  // dt_start used by AdvectionRoutines.c:685 to reset model.dt — must mirror
+    }
+    if (g_dirOverride.Nt != 0)   input->model.Nt = g_dirOverride.Nt;
+    if (g_dirOverride.subfolder != nullptr) {
+      free(input->model.writer_subfolder);
+      input->model.writer_subfolder = strdup(g_dirOverride.subfolder);
+    }
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Analytical helpers
 // ---------------------------------------------------------------------------
@@ -205,10 +234,17 @@ TEST_F(AnisotropyBenchmark, DirectorEvolution) {
   const double gamma_dot  = 1.0;                    // dudz = 2 * bkg_strain_rate
   const double total_time = 40 * 0.0125;            // Nt * dt = 0.5
 
+  // Inject dt=0.0125, Nt=40 via MutateInput on the shared base fixture
+  // (DirectorEvolution.txt). Eliminates the need for a separate
+  // DirectorEvolution_dt0125.txt fixture.
+  setup.MutateInput = mutateDirectorInput;
+  g_dirOverride = { 0.0125, 40, "DirectorEvolution_dt0125" };
   double L2 = runDirectorAndGetL2(&setup,
-    "AnisotropyBenchmark/DirectorEvolution_dt0125.txt",
+    "AnisotropyBenchmark/DirectorEvolution.txt",
     "DirectorEvolution_dt0125/Output00040.gzip.h5",
     theta0, gamma_dot, total_time);
+  setup.MutateInput = nullptr;
+  g_dirOverride = {0.0, 0, nullptr};
 
   EXPECT_LT(L2, 5e-3) << "Director L2 error (radians) exceeds threshold";
 }
@@ -231,20 +267,6 @@ TEST_F(AnisotropyBenchmark, DirectorDtConvergence) {
   const int N_DT = 5;
   const double dts[N_DT] = {0.25, 0.1, 0.05, 0.025, 0.0125};
   const int    Nts[N_DT] = {2, 5, 10, 20, 40};
-  const char *inputFiles[N_DT] = {
-    "AnisotropyBenchmark/DirectorEvolution_dt25.txt",
-    "AnisotropyBenchmark/DirectorEvolution_dt01.txt",
-    "AnisotropyBenchmark/DirectorEvolution.txt",
-    "AnisotropyBenchmark/DirectorEvolution_dt025.txt",
-    "AnisotropyBenchmark/DirectorEvolution_dt0125.txt"
-  };
-  const char *outFiles[N_DT] = {
-    "DirectorEvolution_dt25/Output00002.gzip.h5",
-    "DirectorEvolution_dt01/Output00005.gzip.h5",
-    "DirectorEvolution/Output00010.gzip.h5",
-    "DirectorEvolution_dt025/Output00020.gzip.h5",
-    "DirectorEvolution_dt0125/Output00040.gzip.h5"
-  };
   const char *outDirs[N_DT] = {
     "DirectorEvolution_dt25",
     "DirectorEvolution_dt01",
@@ -260,11 +282,22 @@ TEST_F(AnisotropyBenchmark, DirectorDtConvergence) {
     "director_trajectory_dt0125.dat"
   };
 
+  // All 5 dt values share a single base fixture (`DirectorEvolution.txt`).
+  // dt, Nt and writer_subfolder are injected per-iteration via MutateInput —
+  // eliminates 4 redundant fixture files.
+  setup.MutateInput = mutateDirectorInput;
+  const char *baseTxt = "AnisotropyBenchmark/DirectorEvolution.txt";
+
   double L2s[N_DT];
   for (int k = 0; k < N_DT; k++) {
-    L2s[k] = runDirectorAndGetL2(&setup, inputFiles[k], outFiles[k],
+    char outFile[256];
+    snprintf(outFile, sizeof(outFile), "%s/Output%05d.gzip.h5", outDirs[k], Nts[k]);
+    g_dirOverride = { dts[k], Nts[k], outDirs[k] };
+    L2s[k] = runDirectorAndGetL2(&setup, baseTxt, outFile,
                                   theta0, gamma_dot, total_time);
   }
+  setup.MutateInput = nullptr;
+  g_dirOverride = {0.0, 0, nullptr};
 
   // Monotonic error decrease
   for (int k = 1; k < N_DT; k++) {

@@ -1,6 +1,10 @@
 #ifndef MDOODZ_TEST_HELPERS_H
 #define MDOODZ_TEST_HELPERS_H
 
+extern "C" {
+#include "mdoodz.h"
+}
+
 #include <hdf5.h>
 #include <cstdio>
 #include <cstdlib>
@@ -8,6 +12,46 @@
 #include <cfloat>
 #include <cstring>
 #include <vector>
+
+// ---------------------------------------------------------------------------
+// MutateInput: PCG-vs-CHOLMOD twin override
+//
+// Many thermal/shear-heating tests have a `*PCG.txt` twin of a base .txt that
+// differs only in `thermal_solver = 1` and `writer_subfolder`. Rather than
+// committing 8 redundant fixture files, the PCG variant test sets:
+//   pcgOverride::set(1, "PCGSubfolderName");
+//   setup.MutateInput = pcgOverride::mutate;
+//   RunMDOODZ("Thermal/Base.txt", &setup);     // shared base fixture
+//   pcgOverride::clear();
+// to inject the two parameter overrides. `writer_subfolder` is heap-owned
+// (ReadChar at InputOutput.c:1096, freed at sim end) so the callback frees the
+// original before strdup-ing the override — string-literal assignment would
+// crash free() on shutdown.
+// ---------------------------------------------------------------------------
+namespace pcgOverride {
+  struct State {
+    int         thermal_solver;  // -1 → no override
+    const char *subfolder;       // nullptr → no override
+  };
+  inline State &state() {
+    static State s{-1, nullptr};
+    return s;
+  }
+  inline void mutate(MdoodzInput *input) {
+    State &s = state();
+    if (s.thermal_solver >= 0) input->model.thermal_solver = s.thermal_solver;
+    if (s.subfolder != nullptr) {
+      free(input->model.writer_subfolder);
+      input->model.writer_subfolder = strdup(s.subfolder);
+    }
+  }
+  inline void set(int solver, const char *subfolder) {
+    state() = { solver, subfolder };
+  }
+  inline void clear() {
+    state() = {-1, nullptr};
+  }
+}
 
 // Read the Newton iteration count from the HDF5 output
 static int getStepsCount(const char *hdf5FileName) {

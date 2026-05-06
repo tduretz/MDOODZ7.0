@@ -132,7 +132,13 @@ TEST_F(ThermalVerification, OceanicCoolingPCG) {
       .SetBCT  = OceanicCoolingCallbacks::SetBCT,
     },
   };
-  RunMDOODZ("Thermal/OceanicCoolingPCG.txt", &setup);
+  // Shared base fixture (Thermal/OceanicCooling.txt) + MutateInput override of
+  // thermal_solver and writer_subfolder. Eliminates the OceanicCoolingPCG.txt twin.
+  pcgOverride::set(1, "OceanicCoolingPCG");
+  setup.MutateInput = pcgOverride::mutate;
+  RunMDOODZ((char *)"Thermal/OceanicCooling.txt", &setup);
+  setup.MutateInput = nullptr;
+  pcgOverride::clear();
 
   char *fileFinal;
   asprintf(&fileFinal, "OceanicCoolingPCG/Output%05d.gzip.h5", 10);
@@ -252,7 +258,11 @@ TEST_F(ThermalVerification, ThermoElasticPCG) {
       .FixTemperature = ThermoElasticCallbacks::FixTemperature,
     },
   };
-  RunMDOODZ("Thermal/ThermoElasticPCG.txt", &setup);
+  pcgOverride::set(1, "ThermoElasticPCG");
+  setup.MutateInput = pcgOverride::mutate;
+  RunMDOODZ((char *)"Thermal/ThermoElastic.txt", &setup);
+  setup.MutateInput = nullptr;
+  pcgOverride::clear();
 
   char *fileFinal;
   asprintf(&fileFinal, "ThermoElasticPCG/Output%05d.gzip.h5", 5);

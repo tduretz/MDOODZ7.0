@@ -91,7 +91,11 @@ TEST_F(ShearHeating, ViscousDissipation) {
 }
 
 TEST_F(ShearHeating, ViscousDissipationPCG) {
-  RunMDOODZ("ShearHeating/ViscousDissipationPCG.txt", &setup);
+  pcgOverride::set(1, "ViscousDissipationPCG");
+  setup.MutateInput = pcgOverride::mutate;
+  RunMDOODZ((char *)"ShearHeating/ViscousDissipation.txt", &setup);
+  setup.MutateInput = nullptr;
+  pcgOverride::clear();
   double maxT_init  = getMaxFieldValue("ViscousDissipationPCG/Output00000.gzip.h5", "Centers", "T");
   double maxT_final = getMaxFieldValue("ViscousDissipationPCG/Output00003.gzip.h5", "Centers", "T");
   EXPECT_GE(maxT_final, maxT_init);
