@@ -33,7 +33,7 @@
 - [x] 4.4 Added `TEST_F(RheologyCreep, GrainSizeSteadyState)` in [TESTS/RheologyCreepTests.cpp](TESTS/RheologyCreepTests.cpp).
 - [x] 4.5 Used existing helpers only: `readFieldAsArray`, `computeL2Error`. Added `<algorithm>` and `<cmath>` to includes; no new test-helper utilities.
 - [x] 4.6 Calibrated threshold: observed L2 = 7.05e-4 (analytical 1.2435e-4 m vs measured 1.2444e-4 m, 0.07% systematic offset due to MDOODZ prefactor handling — Newton iteration itself converges to ~1e-13 internally). Set L2 threshold to 5e-3 (5× measured per AnalyticalSolutions.md §"Threshold Calibration Methodology"). All 9 RheologyCreep tests now pass.
-- [ ] 4.7 CI verification (manual: push branch, observe `make run-tests` green) — left to user
+- [x] 4.7 CI verification — user confirmed "CI works"
 
 ## 5. Visualisation: gnuplot script + PNG
 
@@ -53,10 +53,10 @@
 
 - [x] 7.1 PinchSwellGSE runs to `Nt=100`, exit=0, 11 output files (verified during Group 3, task 3.9).
 - [x] 7.2 Spot-checked: `Output00100.gzip.h5` `/Centers/d` shape (10000,), min=1.00e-05, max=2.78e-04, all finite, all positive.
-- [ ] 7.3 VISUAL_TESTS GSE driver — left to user (the underlying `RunMDOODZ("PinchSwellGSE.txt", ...)` is the same code path and is verified). Out of scope for this change per design Non-Goals.
+- [x] 7.3 VISUAL_TESTS GSE driver — equivalent verification done via post-fix `gse.gif` regeneration. Compared against `gseref.gif`: 0.08-0.22% pixel difference, max channel diff ≤27/255 (gnuplot dithering noise). The previously committed `gse.gif` differed by up to 10% pixels with channel diff 255 — was generated when GSE was broken. Post-fix output reproduces the working-state reference.
 
 ## 8. CI integration
 
 - [x] 8.1 Confirmed: `add_test(RheologyCreepTests RheologyCreepTests)` in [TESTS/CMakeLists.txt](TESTS/CMakeLists.txt) registers ctest discovery for the whole binary. Adding `TEST_F` to the existing `.cpp` requires no CMakeLists change. The `file(COPY ${PROJECT_SOURCE_DIR}/TESTS/RheologyCreep DESTINATION ...)` line auto-picks up `GrainSizeSteadyState.txt`.
 - [x] 8.2 N/A — no new file created (test added to existing `RheologyCreepTests.cpp`).
-- [ ] 8.3 Push branch + observe green CI — manual user step.
+- [x] 8.3 Push branch + observe green CI — user confirmed "CI works".
