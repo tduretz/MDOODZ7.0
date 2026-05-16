@@ -86,7 +86,7 @@ The Hansen ceiling is therefore $\delta_{\max} = 24.5\cdot 0.536 + 1 = 14.132$.
 This is the closed form implemented in
 `anisoDelta_HansenOlivine` ([`MDLIB/FlowLaws.c:1006`](../../MDLIB/FlowLaws.c) — searchable as literal `24.5`, `0.536`, `3.96`); the matching numerical inverse used by the F-init helper is in [`MDLIB/AnisotropyRoutines.c:60–82`](../../MDLIB/AnisotropyRoutines.c) (look for the literal `13.132`).
 
-### 1.3 From simple-shear γ to MDOODZ's FS_AR (kinematic identity)
+### 1.3 From simple-shear γ to MDOODZ's `FS_AR` (kinematic identity)
 
 MDOODZ tracks finite strain via a per-marker deformation tensor F, not
 a scalar shear γ. For an isochoric simple shear
@@ -100,13 +100,14 @@ $\lambda^{2} - (2 + \gamma_s^{2})\lambda + 1 = 0$, hence
 $\lambda_{\max}\lambda_{\min} = 1$ and
 $\lambda_{\max} + \lambda_{\min} = 2 + \gamma_s^{2}$. The principal
 stretches are $\sigma_{\max} = \sqrt{\lambda_{\max}},\;
-\sigma_{\min} = 1/\sigma_{\max}$, so with
-$\text{FS\_AR} \equiv \sigma_{\max}/\sigma_{\min}$,
+\sigma_{\min} = 1/\sigma_{\max}$, so writing
+$R \equiv \sigma_{\max}/\sigma_{\min}$ for the MDOODZ aspect-ratio field
+`FS_AR`:
 
 $$
 \sigma_{\max} - 1/\sigma_{\max} \;=\; \gamma_s
 \;\Longrightarrow\;
-\boxed{\;\gamma_{\text{eff}} \;=\; \sqrt{\text{FS\_AR}} - 1/\sqrt{\text{FS\_AR}}\;}.
+\boxed{\;\gamma_{\text{eff}} \;=\; \sqrt{R} - 1/\sqrt{R}\;}.
 $$
 
 This identity (no citation — pure kinematics) is the bridge between
@@ -114,7 +115,7 @@ the Hansen γ-domain calibration and MDOODZ's marker-F machinery. Its
 analytic inverse closes the round trip:
 
 $$
-\sqrt{\text{FS\_AR}} \;=\; \tfrac{1}{2}\bigl(\gamma_{\text{eff}} + \sqrt{\gamma_{\text{eff}}^{2} + 4}\bigr).
+\sqrt{R} \;=\; \tfrac{1}{2}\bigl(\gamma_{\text{eff}} + \sqrt{\gamma_{\text{eff}}^{2} + 4}\bigr).
 $$
 
 ### 1.4 What `ani_fstrain=2` actually computes
@@ -122,7 +123,7 @@ $$
 Each timestep, every marker on an `ani_fstrain=2` phase does:
 
 1. F is updated by the velocity gradient (standard MDOODZ advection).
-2. `FiniteStrainAspectRatio` SVDs F and returns FS_AR.
+2. `FiniteStrainAspectRatio` SVDs F and returns `FS_AR`.
 3. `aniso_delta_fn(FS_AR)` is the closed form of §1.2 + §1.3 → δ.
 4. δ is consumed by `ViscosityConciseAniso` in the transversely-
    isotropic V-E-VP rheology of
@@ -187,7 +188,7 @@ $$
 with $\Delta\rho_{\min/\max} \sim 10^{11}$–$10^{13}\,\mathrm{m^{-2}}$. This range originates with the olivine single-crystal piezometry of Karato & Jung (2003) compiled into the textbook [Karato 08, §5.3 ("Dislocations") pp. 88–89, Eqs 5.65–5.66 and Fig 5.7](#ref16) (linking $\rho$ to differential stress via $\rho = (\sigma/\alpha\mu b)^{2}$); Boneh+21 §3 quotes that same range verbatim when bracketing $\Delta\rho$ for olivine porphyroclasts ("For dislocation densities of ∼10¹¹–10¹³ m⁻² … strain energy will be significantly higher than surface energy" — Ctrl-F `"10¹¹"`). The saturating-exponential form $\Delta\rho(\varepsilon_{\text{pwl}})$ is **not** Boneh's — Boneh+21 treats Δρ as an externally-prescribed parameter, not as a function of past strain. This proxy is an MDOODZ-internal modelling choice documented in [`misc/aniso_fstrain/notes/boneh2021_delta_relaxation.md` §5.1](../../misc/aniso_fstrain/notes/boneh2021_delta_relaxation.md) (acknowledged caveat — see the openspec change `aniso-init-from-finite-strain` design.md D3 for the matching discussion of "Δρ-proxy validity").
 
 The relaxation timescale is then $\tau_{\text{relax}} = L_{\text{relax}}/V$
-with $L_{\text{relax}} = \mathtt{gs\_ref}$ (the per-phase annealed grain-
+with $L_{\text{relax}}$ set from `gs_ref` (the per-phase annealed grain-
 size proxy, default 2 mm). The δ update is the analytic exponential
 
 $$
@@ -226,21 +227,24 @@ A cratonic substrate carries past finite strain, *not* a magnitude offset.
 Encoding the prescribed `aniso_factor` as an F-tensor (rather than
 splatting it onto δ at $t=0$) keeps the operator split bounded by
 Hansen and means subsequent strain can only **add** to the inherited
-γ-equivalent (capped at $\delta_{\max}$). The closed-form pipeline
+γ-equivalent (capped at $\delta_{\max}$). The closed-form pipeline reads,
+with $\delta_{0}$ standing for the prescribed `aniso_factor` and
+$R$ for the resulting `FS_AR`
 ([`MDLIB/RheologyParticles.c:80`](../../MDLIB/RheologyParticles.c)):
 
 $$
-\underbrace{\texttt{aniso\_factor}}_{\delta_{0}}
+\delta_{0}
 \xrightarrow{\text{Hansen}^{-1}} \gamma_{\text{eff}}
-\xrightarrow{\text{kinematic}} \text{FS\_AR}
-\xrightarrow{\gamma_{\text{eq}} = \ln\text{FS\_AR}} F_{\text{init}},
+\xrightarrow{\text{kinematic}} R
+\xrightarrow{\gamma_{\text{eq}} = \ln R} F_{\text{init}},
 $$
 
 with the rotation onto the prescribed foliation angle
+$\theta_{F} = \theta_{\mathrm{aniso}} - \pi/2$, where
+$\theta_{\mathrm{aniso}}$ is the `aniso_angle` `.txt` parameter:
 
 $$
-F_{\text{init}} \;=\; R(\theta_{F})\,\text{diag}\bigl(e^{\gamma_{\text{eq}}/2},\,e^{-\gamma_{\text{eq}}/2}\bigr)\,R(\theta_{F})^{T},\qquad
-\theta_{F} \;=\; \mathtt{aniso\_angle} - \pi/2.
+F_{\text{init}} \;=\; Q(\theta_{F})\,\text{diag}\bigl(e^{\gamma_{\text{eq}}/2},\,e^{-\gamma_{\text{eq}}/2}\bigr)\,Q(\theta_{F})^{T}.
 $$
 
 The $-\pi/2$ rotates from MDOODZ's director-frame convention (`aniso_angle`
@@ -266,11 +270,11 @@ is regenerated by [`plot_07_rifting_comparison.py`](plot_07_rifting_comparison.p
 
 ### 3.1 The three setups
 
-| Panel  | `ani_fstrain` | δ_init | F_init  | Physics                                                            |
-| ------ | ------------- | ------ | ------- | ------------------------------------------------------------------ |
-| Left   | 0 (const)     | 4      | I       | δ frozen at 4 in lith. mantle; no kinematic evolution, no memory   |
-| Middle | 3             | 1      | I       | No inherited fabric; new strain builds δ via Hansen, gate locks it |
-| Right  | 3             | 4      | F-init  | Inherited cratonic δ=4 preserved cold/static + Hansen in shear     |
+| Panel  | `ani_fstrain` | $\delta_0$ | $F_0$  | Physics                                                            |
+| ------ | ------------- | ---------- | ------ | ------------------------------------------------------------------ |
+| Left   | 0 (const)     | 4          | I      | δ frozen at 4 in lith. mantle; no kinematic evolution, no memory   |
+| Middle | 3             | 1          | I      | No inherited fabric; new strain builds δ via Hansen, gate locks it |
+| Right  | 3             | 4          | F-init | Inherited cratonic δ=4 preserved cold/static + Hansen in shear     |
 
 ### 3.2 What you see
 
