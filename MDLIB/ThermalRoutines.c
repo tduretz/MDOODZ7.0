@@ -117,12 +117,12 @@ void EnergyDirectSolve( grid *mesh, params model, double *rhs_t, markers *partic
     neq   = EvalNumEqTemp( mesh, eqn_t );
     bbc   = DoodzCalloc(neq     , sizeof(double));
 
-    // Invalidate cached factor if matrix size changed (e.g., free surface moved)
-    if ( thermal_solver->Lfact != NULL && thermal_solver->Lfact->n != (size_t)neq ) {
-        cholmod_free_factor( &thermal_solver->Lfact, c );
-        thermal_solver->Lfact = NULL;
-        thermal_solver->Analyze = 1;
-    }
+    // NOTE: cached-factor validity is checked AFTER assembly (see the pattern-change
+    // check below), once the full sparsity pattern (Ic + J) is known. A size-only
+    // (neq) check here is insufficient: with free_surface=1 the surface advects every
+    // step, so the active-cell set and equation numbering shift — the pattern changes
+    // even when neq is unchanged — and reusing the stale cholmod_analyze ordering makes
+    // cholmod_factorize produce a garbage factor ("matrix not positive definite" → NaN).
 
     // Guess number of non-zeros
     nnz   = 5*neq;
@@ -396,6 +396,43 @@ void EnergyDirectSolve( grid *mesh, params model, double *rhs_t, markers *partic
             LOG_INFO("Energy balance --> System size: ndof = %d, nnz = %d", neq, nnzc);
         }
 
+        // ---- Cached-factorization validity: detect sparsity-pattern changes ----
+        // The cached CHOLMOD symbolic factorization (thermal_solver->Lfact, produced by
+        // cholmod_analyze) is valid ONLY while the matrix sparsity pattern is unchanged.
+        // With free_surface=1 the surface advects every step, so the active-cell set and
+        // the equation numbering (eqn_t) shift — the pattern changes even when neq is
+        // unchanged. Reusing the stale cholmod_analyze ordering then makes cholmod_factorize
+        // run against a mismatched elimination tree, producing a garbage factor that
+        // CHOLMOD reports as "matrix not positive definite" → NaN temperature field.
+        // Compare the full pattern (Ic + J) against the cached copy and force a fresh
+        // cholmod_analyze on any change. (Single thermal solver instance, never called
+        // concurrently → file-scope static cache is safe and keeps the fix self-contained.)
+        if ( it == 0 ) {
+            static int   cached_neq = -1, cached_nnzc = -1;
+            static int  *cached_Ic = NULL, *cached_J = NULL;
+            int pattern_changed = ( neq != cached_neq || nnzc != cached_nnzc );
+            if ( !pattern_changed && cached_Ic != NULL ) {
+                if ( memcmp( Ic, cached_Ic, (size_t)(neq+1)*sizeof(int) ) != 0 ||
+                     memcmp( J,  cached_J,  (size_t)nnzc *sizeof(int) ) != 0 ) {
+                    pattern_changed = 1;
+                }
+            }
+            if ( pattern_changed ) {
+                if ( thermal_solver->Lfact != NULL ) {
+                    cholmod_free_factor( &thermal_solver->Lfact, c );
+                    thermal_solver->Lfact = NULL;
+                }
+                thermal_solver->Analyze = 1;
+                cached_Ic = ( cached_Ic == NULL ) ? DoodzMalloc(  (size_t)(neq+1)*sizeof(int) )
+                                                  : DoodzRealloc( cached_Ic, (size_t)(neq+1)*sizeof(int) );
+                cached_J  = ( cached_J  == NULL ) ? DoodzMalloc(  (size_t)nnzc *sizeof(int) )
+                                                  : DoodzRealloc( cached_J,  (size_t)nnzc *sizeof(int) );
+                memcpy( cached_Ic, Ic, (size_t)(neq+1)*sizeof(int) );
+                memcpy( cached_J,  J,  (size_t)nnzc *sizeof(int) );
+                cached_neq = neq; cached_nnzc = nnzc;
+            }
+        }
+
         // ------------------------------------------- SOLVER ------------------------------------------- //
 
         // Add boundary condition RHS contribution
@@ -434,6 +471,18 @@ void EnergyDirectSolve( grid *mesh, params model, double *rhs_t, markers *partic
 
         // ------------------------------------------- SOLVER ------------------------------------------- //
 
+        // Guard against a non-finite thermal solution. A failed CHOLMOD factorisation can
+        // return NaN/Inf in x; the legacy "T < 0" check below does NOT catch NaN
+        // (NaN < 0 is false), so without this an upstream solver failure would propagate
+        // silently into the temperature field. Fail loud and immediately instead.
+        for ( int ii=0; ii<neq; ii++ ) {
+            if ( !isfinite( x[ii] ) ) {
+                LOG_ERR("EnergyDirectSolve: non-finite thermal solution x[%d]=%2.4e at step %d "
+                        "(CHOLMOD factorisation failure) --- aborting", ii, x[ii], model.step);
+                exit(1);
+            }
+        }
+
         // Extract temperature T from solution vector x, compute temperature increments dT and integrate heat increments dUt
         MinMaxArrayTag( mesh->T, scaling.T, (mesh->Nx-1)*(mesh->Nz-1), "T", mesh->BCt.type );
         dUt          = 0.0;
@@ -449,10 +498,10 @@ void EnergyDirectSolve( grid *mesh, params model, double *rhs_t, markers *partic
                     dT           = x[eqn] - mesh->T[c2];
                     mesh->T[c2]  = x[eqn];
                     dUt         += mesh->rho_n[c2]*mesh->Cp[c2]*dT;
-                    if (mesh->T[c2] < 0.0) {
+                    if (mesh->T[c2] < 0.0 || !isfinite(mesh->T[c2])) {
                         // printf("%2.2f %1.2f\n", mesh->T[c2]*scaling.T, mesh->zc_coord[l]*scaling.L);
                         // printf("%1.2e %1.2e %1.2e\n", mesh->alp[c2]/scaling.T, mesh->p0_n[c2]*scaling.S, mesh->p_in[c2]*scaling.S);
-                        LOG_INFO("Negative temperature --- Are you crazy! (EnergyDirectSolve)");
+                        LOG_INFO("Negative or non-finite temperature --- Are you crazy! (EnergyDirectSolve)");
                         exit(1);
                     }
                 }

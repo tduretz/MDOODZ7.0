@@ -514,6 +514,11 @@ For convergence-order tests, thresholds are set ~30–50% below the measured ord
 | Grain size coupled L2 | [RheologyCreepTests.cpp](RheologyCreepTests.cpp) | Coupled fixed-point on $\tau_{II}$ (§8.1) | `EXPECT_LT(L2, 5e-3)` | 5e-3 |
 | Grain size coupled physics | [RheologyCreepTests.cpp](RheologyCreepTests.cpp) | $d_{ss}^{coupled} > d_{ss}^{disloc}$ (§8.1) | `EXPECT_GT(d_ss_c, d_ss_disl)` | strict |
 | 2D PinchSwell smoke | [RheologyCreepTests.cpp](RheologyCreepTests.cpp) | finite + heterogeneity invariants (§8.2) | `EXPECT_GT(maxD/minD, 5.0)` | 5× |
+| Coupled GSE+aniso smoke | [RheologyCreepTests.cpp](RheologyCreepTests.cpp) | sentinel — coupling invariants (§8.3) | `EXPECT_GT(maxA, 1.0)` & `EXPECT_LE(maxA, 4+1e-9)` | sentinel |
+| AniFstrain simple-shear | [AnisotropyBenchmarkTests.cpp](AnisotropyBenchmarkTests.cpp) | $1 + \gamma^2/2 + \gamma\sqrt{\gamma^2/4+1}$ (§9.2) | `EXPECT_NEAR(s.mean/ana, 1.0, 1e-6)` | 1e-6 |
+| AniFstrain saturation | [AnisotropyBenchmarkTests.cpp](AnisotropyBenchmarkTests.cpp) | $\delta = \min(\mathrm{FS\_AR}, \mathrm{ani\_fac\_max})$ (§9.2) | `EXPECT_NEAR(s.mean, ani_fac_max, 1e-9)` | 1e-9 |
+| AniFstrain pure-shear | [AnisotropyBenchmarkTests.cpp](AnisotropyBenchmarkTests.cpp) | $\exp(2\dot\varepsilon(k-1) dt)$ (§9.2, §9.7) | `EXPECT_NEAR(s.mean/ana, 1.0, 1e-2)` | 1e-2 |
+| AniFstrain spatial homogeneity | [AnisotropyBenchmarkTests.cpp](AnisotropyBenchmarkTests.cpp) | constant under P2G (§9.4) | `EXPECT_LT(max/min - 1, 1e-4)` | 1e-4 |
 
 ---
 
@@ -1066,3 +1071,242 @@ The `max/min ≈ 1077` (vs threshold of 5) shows the wattmeter generated strong 
 Runtime: ~3 s on a typical CI machine, well within the < 30 s budget.
 
 **No spatial visualisation here.** A heatmap of the 51×51 × Nt=10 smoke output would just show "layer has different d than matrix" — essentially the IC, since 10 timesteps at `bkg_strain_rate = 1e-14` reach only ~1 % extension and the wattmeter pinch-and-swell pattern needs ~50 % extension to develop. The GTest assertions above already gate the integrated path more rigorously than a still image could. For the developed pinch-and-swell visualisation see [VISUAL_TESTS/img/gseref.gif](../VISUAL_TESTS/img/gseref.gif), generated from the paper's full 101² × Nt=100 scenario.
+
+#### 8.3 Coupled GSE + finite-strain anisotropy: `RheologyCreep.PinchSwellGSEAniso`
+
+**Parameter file:** [RheologyCreep/PinchSwellGSEAnisoSmoke.txt](RheologyCreep/PinchSwellGSEAnisoSmoke.txt) — 51×51 × Nt=10 downsized variant of [SETS/PinchSwellGSEAniso.txt](../SETS/PinchSwellGSEAniso.txt). Calcite layer phase has both `gs = 10` (paleowattmeter) AND `ani_fstrain = 1` (finite-strain anisotropy) active; matrix is isotropic.
+
+**Reference / context:** No published quantitative reference for the coupled regime exists at present (Schmalholz & Duretz 2017 had GSE only, no anisotropy). The test is sentinel-class — gates the integrated path's invariants, not analytical accuracy. Implemented as part of the [merge-gse-anisotropy](../openspec/changes/archive) change.
+
+**The bug this test gates:** before merge-gse-anisotropy, `gs = 10` + `anisotropy = 1` was silently a no-op. [`ViscosityConciseAniso`](../MDLIB/AnisotropyRoutines.c#L82) had its own inline Newton iteration that never updated `*d` (line 113 set `*d = d0` and the iteration loop only consumed `*d`, never wrote it). The non-anisotropy path [`ViscosityConcise`](../MDLIB/RheologyDensity.c#L385) routes through [`LocalIterationViscoElasticGrainSize`](../MDLIB/RheologyDensity.c#L203) which does evolve grain size. The fix added a `gs != 0` branch in `ViscosityConciseAniso` that calls the same wattmeter-aware iteration, fed with the rotated-frame `Eii = sqrt(I2(E_rot))` (rotation-invariant via I2, equal to lab-frame `sqrt(I2(E))` to FP precision).
+
+**Code assertions** ([RheologyCreepTests.cpp](RheologyCreepTests.cpp)):
+
+```cpp
+// GSE invariants (mirror PinchSwellGSESmoke)
+EXPECT_GT(minD, 0.0);
+EXPECT_TRUE(std::isfinite(minD) && std::isfinite(maxD));
+EXPECT_GT(maxD / minD, 5.0);                         // GSE active
+EXPECT_LT(minD, 1e-3);                                // wattmeter active in layer
+
+// Anisotropy invariants — catch silent-no-op regressions in the coupling
+EXPECT_TRUE(std::isfinite(minA) && std::isfinite(maxA));
+EXPECT_GE(minA, 0.999);                               // FS_AR ≥ 1
+EXPECT_GT(maxA, 1.0);                                 // anisotropy developing
+EXPECT_LE(maxA, 4.0 + 1e-9);                          // saturation clamp respected
+```
+
+**Measured accuracy** (51×51, Nt=10, ~5 s wall):
+
+| Quantity | Value |
+|----------|-------|
+| Cells | 2500 |
+| min(d) | 1.00 × 10⁻⁵ m (matrix `gs_ref` — phase 0 has no GSE) |
+| max(d) | 1.70 × 10⁻⁴ m (in low-stress neck region, grain growth) |
+| max(d) / min(d) | ≈ 17 (heterogeneity emerged in 10 steps) |
+| min(ani_fac) | 1.000 (matrix isotropic, `ani_fstrain = 0`) |
+| max(ani_fac) | 1.539 (layer's strain-ellipse aspect ratio after 10 steps) |
+| max(ani_fac) ≤ ani_fac_max = 4 | ✓ (well below saturation) |
+
+**What each sentinel catches:**
+
+- **`max(d)/min(d) > 5`** — if GSE were silently no-op'd under anisotropy (the pre-fix regression mode), grain size in the layer would stay at `gs_ref = 1e-3` and the matrix would stay at `gs_ref = 1e-5`. The IC ratio is already ~100, so this assertion is loose by design — the actual regression catch is via `min(d) < 1e-3` (layer must evolve below its `gs_ref`).
+- **`max(ani_fac) > 1`** — if anisotropy were silently disabled (e.g. `ani_fstrain` parsing broken), `δ` would equal the input `aniso_factor = 1` everywhere. This assertion catches that directly.
+- **`max(ani_fac) ≤ ani_fac_max + 1e-9`** — if the saturation clamp `min(FS_AR, ani_fac_max)` were broken, `δ` could exceed `ani_fac_max`. Defends against accidental disabling of the clamp during refactors.
+
+**Calibration of `ani_fac_max = 4`** — chosen from Carrara marble torsion experiments ([Barnhoorn, Bystricky, Burlini & Kunze 2004, *JGR* 109, B05203](https://doi.org/10.1029/2003JB002819); [Pieri, Burlini, Kunze, Stretton & Olgaard 2001, *Tectonophysics* 330, 119–140](https://doi.org/10.1016/S0040-1951(00)00224-4)). Both report viscous shear-strength anisotropy ratios of **3–5 at saturation** for calcite at lab strain rates (700–1000 K). The test value of 4 is the midpoint; use this as a starting point for research scenarios calibrating against published torsion data.
+
+Runtime: ~5 s on a typical CI machine, well within the < 30 s budget. Total CI footprint of the merge: +1 GTest case, +1 fixture file, +1 SETS scenario file (research-scale).
+
+---
+
+## 9. Finite-Strain Anisotropy: `δ = min(FS_AR, ani_fac_max)`
+
+**Parameter file:** [AnisotropyBenchmark/AniFstrainEvolution.txt](AnisotropyBenchmark/AniFstrainEvolution.txt) — single base, used by both `AniFstrainSimpleShear` (unsaturated) and `AniFstrainSaturation` (clamp). Per-test overrides for `bkg_strain_rate`, `Nt`, `dt`, `ani_fac_max`, `shear_style`, `periodic_x`, `pure_shear_ALE`, and `writer_subfolder` are injected via MDLIB's `MutateInput` hook.
+
+**Tests:** `AnisotropyBenchmark.AniFstrainSimpleShear` (validates `FS_AR(γ)` formula across 5 strain steps) and `AnisotropyBenchmark.AniFstrainSaturation` (validates the `min()` clamp by running past the saturation strain with `ani_fac_max = 4`).
+
+**Code under test:** [AnisotropyRoutines.c:46-54](../MDLIB/AnisotropyRoutines.c#L46) (`AnisoFactorEvolv`), [RheologyParticles.c:634-678](../MDLIB/RheologyParticles.c#L634) (`FiniteStrainAspectRatio`), [Main_DOODZ.c:1275](../MDLIB/Main_DOODZ.c#L1275) (`DeformationGradient`).
+
+### 9.1 Live formula
+
+When per-phase `ani_fstrain = 1`, MDOODZ replaces the static `aniso_factor` with:
+
+```c
+double AnisoFactorEvolv(double FS_AR, double aniso_fac_max) {
+  return MINV(FS_AR, aniso_fac_max);  // δ = min(FS_AR, ani_fac_max)
+}
+```
+
+`FS_AR = e1/e2` is the strain-ellipse aspect ratio (ratio of largest to smallest principal stretch) computed per-particle by `FiniteStrainAspectRatio`:
+
+1. Right Cauchy-Green tensor: `C = F^T·F` (where `F` is the per-particle deformation gradient integrated by `DeformationGradient`).
+2. Right stretch tensor `U = √C` via the closed-form 2D matrix square-root.
+3. Eigenvalues of `U` give the principal stretches `(e1, e2)` with `e1 ≥ e2`.
+4. `FS_AR = e1 / e2` (always ≥ 1 by construction).
+5. P2G interpolation onto cell centres `mesh.FS_AR_n` and vertices `mesh.FS_AR_s`.
+6. `mesh.aniso_factor_n = AnisoFactorEvolv(mesh.FS_AR_n, ani_fac_max)`, written to HDF5 as `Centers/ani_fac`.
+
+### 9.2 Closed-form references
+
+**Pure shear** (Vx = -x·ε̇, Vz = z·ε̇, so Exx = -ε̇, Ezz = ε̇):
+- `F(t) = diag(exp(-ε̇·t), exp(ε̇·t))`
+- Principal stretches `(e1, e2) = (exp(ε̇·t), exp(-ε̇·t))`
+- **`FS_AR(t) = e1 / e2 = exp(2·ε̇·t)`**
+- Saturation time: `t_sat = ln(ani_fac_max) / (2·ε̇)`
+
+**Simple shear** (Vx = γ̇·z, Vz = 0):
+- `F(t) = [[1, γ], [0, 1]]` with `γ = γ̇·t`
+- `C = F^T·F = [[1, γ], [γ, 1+γ²]]`
+- Eigenvalues of C: `λ_max = 1 + γ²/2 + γ·sqrt(γ²/4 + 1)`, `λ_min = 1 + γ²/2 - γ·sqrt(γ²/4 + 1)`
+- Note `λ_max · λ_min = 1` (incompressible plane strain), so `e1/e2 = sqrt(λ_max/λ_min) = λ_max`.
+- **`FS_AR(γ) = 1 + γ²/2 + γ·sqrt(γ²/4 + 1)`**
+- Saturation strain: `γ_sat = sqrt(D² - 1) / sqrt(D)` where `D = ani_fac_max`.
+
+**Saturation behaviour:** before saturation, `δ = FS_AR` and grows monotonically. After saturation, `δ = ani_fac_max` exactly (a flat clamp; no smooth roll-off). The "knee" at `γ_sat` is the visual signature of the `min()` form — see plot below.
+
+### 9.3 Note on output indexing (off-by-one)
+
+MDOODZ writes `Output<k>.gzip.h5` at the **end** of step `k`. But `mesh.aniso_factor_n` in that file is computed at the **start** of step `k`, from `particles.F` at the **end of step k−1** (the rheology pass uses the existing F before solving Stokes; F is then updated at the end of the step's advection). So the analytical reference for `Output<k>` is evaluated at `t = (k − 1) · dt`:
+
+| Output step | `t` | `γ` (simple shear, γ̇=2, dt=0.5) | FS_AR |
+|---|---|---|---|
+| 1 | 0.0 | 0 | 1.000 (IC) |
+| 2 | 0.5 | 1 | 2.618 |
+| 3 | 1.0 | 2 | 5.828 |
+| 4 | 1.5 | 3 | 10.908 |
+| 5 | 2.0 | 4 | 17.944 |
+
+This matters for any test that reads the HDF5 output and compares against analytical FS_AR.
+
+### 9.4 Test parameters and assertions
+
+All three tests share `Nb_phases = 1`, `anisotropy = 1`, `ani_fstrain = 1`, `Nx = Nz = 21`, `Nt = 5`, `dt = 0.5`, `pure_shear_ALE = 1`, `reseed_markers = 0`. They differ in BC mode (simple vs pure shear), `bkg_strain_rate`, and `ani_fac_max`.
+
+**`AnisotropyBenchmark.AniFstrainSimpleShear`** — `shear_style = 1`, `periodic_x = 1`, `bkg_strain_rate = 1.0` (γ̇ = 2), `ani_fac_max = 1e6` (no saturation). Closed-form reference `F = [[1, γ̇·t], [0, 1]]`, exact under periodic BCs:
+
+```cpp
+EXPECT_NEAR(s.mean / ana, 1.0, 1e-6);   // mean δ vs FS_AR(γ)
+EXPECT_LT(s.l2_rel, 1e-4);              // spatial L2 vs constant analytical
+EXPECT_LT(s.max_v / s.min_v - 1.0, 1e-4); // spatial homogeneity (P2G preserved)
+EXPECT_GE(s.min_v, 0.999);              // FS_AR ≥ 1 (float32 HDF5 slack)
+EXPECT_TRUE(std::isfinite(s.min_v));
+```
+
+**`AnisotropyBenchmark.AniFstrainSaturation`** — same as simple-shear plus `ani_fac_max = 4` (saturation between steps 2 and 3):
+
+```cpp
+if (saturated) EXPECT_NEAR(s.mean, ani_fac_max, 1e-9);  // δ pinned
+else           EXPECT_NEAR(s.mean / ana, 1.0, 1e-6);    // δ follows FS_AR
+EXPECT_LT(s.max_v / s.min_v - 1.0, 1e-4);
+EXPECT_GE(s.min_v, 0.999);
+```
+
+Saturation strain `γ_sat = sqrt(15)/2 ≈ 1.94`. With γ at output step `k` ∈ {0, 1, 2, 3, 4}, steps 1–2 are unsaturated and steps 3–5 are saturated.
+
+**`AnisotropyBenchmark.AniFstrainPureShear`** — `shear_style = 0`, `periodic_x = 0`, `pure_shear_ALE = 1`, `bkg_strain_rate = 0.1` (Eii = 0.1), `ani_fac_max = 1e6`. Pure-shear F is integrated through Stokes solve + advection (NOT closed-form), so thresholds are looser:
+
+```cpp
+EXPECT_NEAR(s.mean / ana, 1.0, 1e-2);   // mean δ vs exp(2·Eii·(step-1)·dt)
+EXPECT_LT(s.l2_rel, 1e-2);              // spatial L2
+EXPECT_LT(s.max_v / s.min_v - 1.0, 1e-4); // homogeneity (still tight — P2G is uniform)
+EXPECT_GE(s.min_v, 0.999);
+```
+
+The relative threshold of `1e-2` reflects accumulated forward-Euler-class integration error, NOT closed-form match — see §9.7 for the measured-residual table.
+
+### 9.5 Measured accuracy
+
+`AniFstrainSimpleShear` (5 steps, γ ∈ {0, 1, 2, 3, 4}):
+
+| step | γ | FS_AR_ana | δ_mean MDOODZ | spatial L2 |
+|---|---|---|---|---|
+| 1 | 0.0 | 1.000000 | 1.000000 | 0.0 |
+| 2 | 1.0 | 2.618034 | 2.618034 | 3.93 × 10⁻⁸ |
+| 3 | 2.0 | 5.828427 | 5.828427 | 3.26 × 10⁻⁸ |
+| 4 | 3.0 | 10.908326 | 10.908330 | 1.74 × 10⁻⁸ |
+| 5 | 4.0 | 17.944272 | 17.944270 | 4.58 × 10⁻⁸ |
+
+Residuals at the level of single-precision HDF5 round-trip (`float32` storage) — confirms the closed-form integration.
+
+`AniFstrainSaturation` (`ani_fac_max = 4`):
+
+| step | γ | FS_AR_ana | δ_clamped_ana | δ_mean MDOODZ | regime |
+|---|---|---|---|---|---|
+| 1 | 0 | 1.000 | 1.000 | 1.000000 | unsaturated |
+| 2 | 1 | 2.618 | 2.618 | 2.618034 | unsaturated |
+| 3 | 2 | 5.828 | 4.000 | 4.000000 | saturated |
+| 4 | 3 | 10.908 | 4.000 | 4.000000 | saturated |
+| 5 | 4 | 17.944 | 4.000 | 4.000000 | saturated |
+
+Saturated steps match `ani_fac_max = 4` to FP equality (`fabs(δ - 4.0) < 1e-9`).
+
+### 9.6 Visualisation
+
+The `AniFstrainSaturation` test writes `aniso_factor_evolution.dat` with columns `(step, t, γ, FS_AR_ana, δ_clamped_ana, δ_mdoodz_mean)`. The gnuplot script [AnisotropyBenchmark/plot_aniso_factor.gp](AnisotropyBenchmark/plot_aniso_factor.gp) renders:
+
+![Anisotropy factor evolution under simple shear](aniso_factor_evolution.png)
+
+Solid black: unbounded `FS_AR(γ) = 1 + γ²/2 + γ·sqrt(γ²/4 + 1)`. Dashed black: clamped `δ = min(FS_AR, 4)`. Red triangles: MDOODZ measurements (mean of `Centers/ani_fac` per output step). Grey reference lines: `y = ani_fac_max` and `x = γ_sat`. The MDOODZ markers sit on the dashed line at every step; the kink at `γ_sat ≈ 1.94` is the visual signature of the `min()` form.
+
+### 9.7 Pure shear — measured accuracy
+
+`AniFstrainPureShear` (5 steps, `Eii = 0.1`, `dt = 0.5`, t ∈ {0, 0.5, 1.0, 1.5, 2.0}, ani_fac_max = 1e6 unsaturated):
+
+| step | t | δ_ana = exp(2·Eii·(step-1)·dt) | δ_mean MDOODZ | rel. error |
+|---|---|---|---|---|
+| 1 | 0.0 | 1.000000 | 1.000000 | 0 (IC) |
+| 2 | 0.5 | 1.105171 | 1.105820 | 5.9 × 10⁻⁴ |
+| 3 | 1.0 | 1.221403 | 1.222838 | 1.2 × 10⁻³ |
+| 4 | 1.5 | 1.349859 | 1.352239 | 1.8 × 10⁻³ |
+| 5 | 2.0 | 1.491825 | 1.495333 | 2.4 × 10⁻³ |
+
+Residuals grow ~linearly with step count, characteristic of forward-Euler-class accumulated integration error in `dF/dt = L·F`. **This is much larger than the simple-shear test's 1e-8 because pure-shear `F` evolves through MDOODZ's Stokes-solve + advection chain** (subject to integration order and ALE remeshing), whereas simple-shear's `F = [[1, γ̇·t], [0, 1]]` is exact-by-construction under periodic BCs. CI threshold for the pure-shear test is therefore set to relative error `< 1e-2` and spatial L2 `< 1e-2`, with `~3×` headroom over observed values.
+
+The test assertion block (current, post-fix):
+
+```cpp
+EXPECT_NEAR(s.mean / ana, 1.0, 1e-2);     // relative mean error
+EXPECT_LT(s.l2_rel, 1e-2);                // spatial L2 vs constant analytical
+EXPECT_LT(s.max_v / s.min_v - 1.0, 1e-4); // spatial homogeneity (P2G preservation)
+EXPECT_GE(s.min_v, 0.999);                // FS_AR ≥ 1 lower bound
+```
+
+**Historical note (resolved by `fix-pure-shear-fstrain-segfault`)**: pure shear was originally deferred from CI in `gate-finite-strain-anisotropy` because `shear_style = 0` + `anisotropy = 1` + `ani_fstrain = 1` segfaulted at start of step 2. Two related MDLIB bugs were responsible:
+1. `Vertices2Particle` ([ParticleRoutines.c:482-484](../MDLIB/ParticleRoutines.c#L482)) had an active `LOG_ERR + exit(1)` for particles drifting outside the post-ALE-shrink mesh, while three sibling boundary checks in the same function gracefully clamped. The fix matched the sibling pattern (clamp `j_part = Nx-2`, no exit).
+2. `TransmutateMarkers` ([ParticleRoutines.c:4170-4173](../MDLIB/ParticleRoutines.c#L4170)) read `materials->transmutation[-1]` for inactive particles (`phase = -1`), returning garbage that could flip the conditional and corrupt their phase to a random integer — which then null-deref'd in `P2Mastah[Wm_ph[thread][p][kp]]` at step 2 setup. The fix added a `if (phase < 0) continue;` skip, matching the pattern used in `P2Mastah` itself.
+
+Both fixes are pure-shear-with-ALE-induced bugs that also affected the live `SETS/RiftingComprehensive*.txt` and `SETS/CollisionPolarCartesianAniso.txt` scenarios (which compensated by using very small SI strain rates, keeping particles within mesh bounds).
+
+### 9.8 Research note (NOT in CI)
+
+The `min()` saturation form is a known approximation. Empirical olivine-torsion data (Hansen et al. 2012, *Nature* 492, 415–418) is fit better by `δ(γ) = 13·tanh(0.25·γ) + 1`, which has a smoother roll-off and a different shape at low strain. See [misc/aniso_fstrain/notes/hansen2012_comparison.md](../misc/aniso_fstrain/notes/hansen2012_comparison.md) for a side-by-side comparison and future-work motivation. This is research-grade documentation, not a CI gate — Hansen+12 is an empirical fit at lab strains (γ ≤ 5) for one specific mineral, while MDOODZ's `min()` form is a placeholder applied generically.
+
+### 9.9 The `ani_fstrain` enumeration and `ani_fstrain == 3` δ-relaxation
+
+`ani_fstrain` is a per-phase integer selecting the finite-strain anisotropy form:
+
+| value | meaning |
+|---|---|
+| 0 | static `aniso_factor` (no strain dependence) |
+| 1 | `δ = min(FS_AR, ani_fac_max)` — MDOODZ default (§9 above) |
+| 2 | `δ = aniso_delta_fn(FS_AR)`, capped — mineral-calibrated form selected by `aniso_db` |
+| 3 | **`ani_fstrain == 2` δ-dispatch + a temperature-dependent kinetic relaxation of δ toward the isotropic limit** |
+
+**`ani_fstrain == 3` was redefined** by the `ani-fstrain3-delta-relaxation` change. Its previous meaning — an upstream `T < ani_T_threshold` deformation-gradient freeze, with the per-phase parameter `ani_T_threshold` — was removed: the 1100 °C threshold was a misattributed value and the freeze was a misinterpretation of an intended kinetic-relaxation directive. `ani_T_threshold` is no longer a recognised per-phase parameter.
+
+Under `ani_fstrain == 3`, δ is a **per-marker integrated state variable** (`markers->aniso_delta`, with `aniso_delta_fs_prev` for the two-field operator split). Each step it relaxes toward δ = 1 on the Boneh et al. 2021 (*G3*) discontinuous-static-recrystallization timescale `τ_relax = L_relax / V`, with grain-boundary-migration velocity `V = M₀·exp(−Q/RT)·μ·b²·Δρ` (`Q = 133 kJ/mol`, `μ = 50 GPa`, `b = 0.6 nm`, `M₀ = 2×10⁻¹¹ m⁴·J⁻¹·s⁻¹`). The per-step update is the analytic exponential `δ_new = 1 + (δ_prod − 1)·exp(−Δt/τ_relax)`, clamped to `[1, ani_fac_max]` — unconditionally stable, cannot overshoot. `L_relax` is the per-phase parameter `ani_relax_length` (sentinel −1 → inherit `gs_ref`; grain-size evolution is **not** required). `Δρ` is proxied from the per-marker `strain_pwl`. The redefined arm shares the `ani_fstrain == 2` calibration (it inherits the `aniso_delta_fn(FS_AR)` increment as its production term), so at cold T (`τ_relax ≫ run time`) it reproduces `ani_fstrain == 2` exactly. Full derivation, the constant-`L_relax` regime analysis, and the modelling caveats: [misc/aniso_fstrain/notes/boneh2021_delta_relaxation.md](../misc/aniso_fstrain/notes/boneh2021_delta_relaxation.md).
+
+**Tests** (`AnisotropyBenchmarkTests.cpp`, suite `AnisotropyBenchmark`): the relaxation is CI-gated against its closed-form limits. These run as deterministic per-marker calculations (a 1-marker / homogeneous "box"), exercising the MDLIB routine `DeltaRelaxationTau` directly together with the analytic exponential update — the established pattern in this file (cf. `anaDeltaHansenOlivine`). All use an identity scale (scaled units == SI) and the `gs` flow law OFF (`L_relax` is supplied directly), covering the spec's "runs with grain-size evolution disabled" scenario.
+
+| Test | What it gates |
+|---|---|
+| `AniFstrainRelaxColdFreeze` | cold marker: `τ_relax ≫ run time` ⇒ δ constant to FP precision |
+| `AniFstrainRelaxHot` | hot marker, no production: `δ(t) = 1 + (δ₀−1)·exp(−t/τ_relax)`; Arrhenius-ratio sub-assertion `τ(T₁)/τ(T₂) = exp(Q/R·(1/T₂−1/T₁))` |
+| `AniFstrainRelaxHalfLife` | δ reaches `1 + (δ₀−1)/2` at `t = τ_relax·ln2`; Δt-convergence sub-test + large-Δt no-overshoot sub-test |
+| `AniFstrainRelaxColdLimitEqualsFstrain2` | the `ani_fstrain == 3` two-field split telescopes to `aniso_delta_fn(FS_AR)` at cold T — identical to `ani_fstrain == 2` |
+| `AniFstrainRelaxLengthMonotonic` | `τ_relax ∝ L_relax`: larger `L_relax` ⇒ slower relaxation |
+| `AniFstrainRelaxClampAndFixedPoint` | `ani_fac_max` clamp honoured; δ = 1 is an exact fixed point |
+| `AniFstrainRelaxHistoryDependence` | two markers reaching the same `FS_AR` via different thermal histories store different δ — δ is genuinely history-carrying |
+
+The two `AniFstrainT_Threshold_Freeze_*` GTests that exercised the removed freeze were deleted by the same change.

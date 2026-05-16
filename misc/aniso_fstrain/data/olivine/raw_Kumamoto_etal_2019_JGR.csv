@@ -1,0 +1,47 @@
+## Kumamoto, Warren, Hansen (2019)
+## "Evolution of the Josephine Peridotite Shear Zones: 2. Influences on Olivine CPO Evolution"
+## J. Geophys. Res. Solid Earth 124, 12763.   doi:10.1029/2019JB017968
+## Source: bib/anisotropy_calibration_2026/olivine/Kumamoto_etal_2019b_Josephine_part2_olivine_CPO_evolution_JGR.pdf
+##
+## 30 natural samples from three Josephine Peridotite shear zones (SZA, SZG, SZP).
+## γ from foliation deflection following Ramsay & Graham (1970).
+## M-index from EBSD; stress from the olivine subgrain-size piezometer of
+## Toriumi (1979) (per Table 1 footnote).
+##
+## Fields:
+##   sample           — sample identifier
+##   shear_zone       — SZA / SZG / SZP
+##   gamma            — engineering shear strain
+##   M                — Skemer M-index
+##   stress_MPa       — olivine subgrain-size paleopiezometer stress (Toriumi 1979)
+sample,shear_zone,gamma,M,stress_MPa
+JP10-M15,SZA,0.0,0.14,7.0
+JP10-M14,SZA,0.07,0.08,7.1
+JP10-M13,SZA,0.31,0.11,6.4
+JP10-M12,SZA,0.84,0.11,8.9
+JP10-M11,SZA,1.36,0.03,9.6
+JP10-M10,SZA,2.99,0.10,9.4
+JP10-M09,SZA,8.88,0.11,10.5
+JP10-M06,SZA,11.4,0.14,10.1
+JP10-M08,SZA,20.0,0.11,13.6
+JP10-M08-KK,SZA,20.0,0.05,12.3
+JP08-PS01,SZG,0.0,0.08,5.4
+3925-G02,SZG,20.0,0.26,7.9
+3925-G02-f,SZG,20.0,0.13,8.3
+3923-J01,SZP,0.0,0.08,9.1
+3923-J06,SZP,0.32,0.06,9.2
+3923-J07,SZP,0.32,0.17,9.9
+3923-J11,SZP,0.65,0.06,9.2
+3923-J08,SZP,0.81,0.09,12.1
+3923-J09,SZP,0.81,0.14,10.0
+3923-J13,SZP,1.18,0.11,9.7
+3923-J14,SZP,1.37,0.07,7.7
+3924-J10,SZP,1.68,0.10,8.9
+3924-J05,SZP,2.58,0.23,13.5
+3924-J06,SZP,2.58,0.16,10.4
+3924-J03a,SZP,3.37,0.15,9.5
+3924-J03b,SZP,3.37,0.34,12.0
+3924-J09a,SZP,3.86,0.11,8.3
+3924-J09b,SZP,3.86,0.13,10.5
+3924-J07,SZP,5.25,0.27,14.2
+3924-J08,SZP,5.25,0.16,11.4

@@ -1,0 +1,44 @@
+## Combined Hansen+14 + Hansen+16 olivine torsion dataset (38 pts).
+## Used for case 1 (anisoDelta_HansenOlivine) calibration.
+## gamma_simple = engineering shear strain γ as reported (lab torsion).
+## M = Skemer M-index, no further conversion.
+## Generated from raw_Hansen_etal_2014_EPSL.csv + raw_Hansen_etal_2016_EPSL.csv.
+gamma_simple,M,source
+0,0.01,H14:PT0535
+0.3,0.06,H14:PT0248_1
+0.5,0.05,H14:Bystricky_a
+1,0.06,H14:PT0655
+1,0.06,H14:PT0248_2
+1.1,0.09,H14:PI-284
+2.1,0.2,H14:PT0248_3
+2.7,0.26,H14:PT0503_5
+2.9,0.36,H14:PT0248_4
+3.9,0.35,H14:PT0248_5
+3.9,0.34,H14:PT0503_4
+4,0.36,H14:PT0640
+4.9,0.45,H14:PT0503_3
+5,0.17,H14:Bystricky_b
+5.9,0.4,H14:PT0494
+6.8,0.46,H14:PT0538
+6.8,0.46,H14:PT0503_2
+7.6,0.44,H14:PT0541
+8.2,0.35,H14:PT0503_1
+8.7,0.39,H14:PT0633
+8.8,0.4,H14:PT0552
+10.2,0.69,H14:PT0505
+10.6,0.55,H14:PT0651
+10.9,0.61,H14:PT0499
+14.2,0.51,H14:PT0619
+18.7,0.51,H14:PT0484
+0.3,0.11,H16:PT0718_r1
+0.7,0.11,H16:PT0718_r2
+1.2,0.11,H16:PT0718_r3
+1.7,0.15,H16:PT0718_r4
+3.6,0.3,H16:PT0718_r5
+5,0.44,H16:PT0718_r6
+6.8,0.59,H16:PT0718_r7
+10.1,0.52,H16:PT0718_end
+5.5,0.4,H16:PT0754
+7.2,0.53,H16:PT0752
+8.2,0.42,H16:PT0716
+15.5,0.37,H16:PT0751

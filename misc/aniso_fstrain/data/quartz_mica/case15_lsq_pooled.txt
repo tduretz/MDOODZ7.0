@@ -1,0 +1,31 @@
+# case-15 quartz-mica polyphase LSQ — POOLED single-decay fit
+# drop compositional-mix V1/V2/V3
+# entirely; pool n=9 polyphase datapoints (X_ms ∈ {5, 10, 25}, γ ∈ {0, 0.6, 4})
+# and fit single 2-param decay form M(γ) = M_init · exp(-γ/γ_decay).
+# Input CSV: <repo>/misc/aniso_fstrain/data/quartz_mica/raw_Tokle_etal_2023_JSG.csv
+# Reproducible via: python3 case15_lsq_pooled.py
+# Stage: LSQ fit + PNG snapshot
+#
+# Model: M(γ) = M_init · exp(-γ / γ_decay)
+# Fitted parameters (scipy.optimize.curve_fit, bounds [0.1, 0.5] / [50, 200]):
+#   M_init      = 6.0229 ± 0.1442 m.u.d. (2%)
+#   γ_decay     = 15.3533 ± 2.8565 (19%)
+# Fit quality:
+#   N           = 9
+#   SSE         = 0.7188
+#   R²          = 0.8202
+#   RMSE        = 0.2826 m.u.d.
+# Roman hand-pooled target: M_init ≈ 6.0, γ_decay ≈ 15.4, R² ≈ 0.84.
+# This LSQ CONFIRMS the hand-pooled estimate.
+#
+# Per-datapoint table:
+X_ms_pct,gamma,M_observed_mud,M_fit_mud,residual
+5,0.0,6.24,6.0229,+0.2171
+5,0.6,6.35,5.7921,+0.5579
+5,4.0,4.78,4.6415,+0.1385
+10,0.0,6.00,6.0229,-0.0229
+10,0.6,5.54,5.7921,-0.2521
+10,4.0,4.77,4.6415,+0.1285
+25,0.0,5.94,6.0229,-0.0829
+25,0.6,5.35,5.7921,-0.4421
+25,4.0,4.40,4.6415,-0.2415

@@ -226,6 +226,11 @@ markers PartAlloc(ParticlesInput particlesInput, params *model) {
   particles.strain_lin = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
   particles.strain_gbs = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
 
+  // ani_fstrain == 3 δ-relaxation per-marker state — allocated unconditionally,
+  // mirroring strain_pwl (PartInit sets the isotropic δ = 1 start).
+  particles.aniso_delta         = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
+  particles.aniso_delta_fs_prev = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
+
   particles.intag      = DoodzCalloc(particles.Nb_part_max, sizeof(int));
 
   if (model->finite_strain == 1) {
@@ -299,6 +304,9 @@ void PartFree( markers *particles, params* model ) {
     DoodzFree(particles->strain_exp);
     DoodzFree(particles->strain_lin);
     DoodzFree(particles->strain_gbs);
+
+    DoodzFree(particles->aniso_delta);
+    DoodzFree(particles->aniso_delta_fs_prev);
 
     DoodzFree(particles->intag);
 
@@ -642,6 +650,12 @@ grid GridAlloc(params *model) {
   if (model->anisotropy == 1) mesh.FS_AR_s = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double));
   if (model->anisotropy == 1) Initialise1DArrayDouble(mesh.FS_AR_n, (Nx - 1) * (Nz - 1), 1.0);
   if (model->anisotropy == 1) Initialise1DArrayDouble(mesh.FS_AR_s, (Nx - 0) * (Nz - 0), 1.0);
+  // ani_fstrain == 3 relaxed-δ grid fields — mirror FS_AR_n / FS_AR_s. Init to
+  // 1.0 (isotropic) so a cell with no ani_fstrain==3 markers is harmless.
+  if (model->anisotropy == 1) mesh.aniso_delta_n = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  if (model->anisotropy == 1) mesh.aniso_delta_s = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double));
+  if (model->anisotropy == 1) Initialise1DArrayDouble(mesh.aniso_delta_n, (Nx - 1) * (Nz - 1), 1.0);
+  if (model->anisotropy == 1) Initialise1DArrayDouble(mesh.aniso_delta_s, (Nx - 0) * (Nz - 0), 1.0);
   if (model->anisotropy == 1) mesh.aniso_factor_n = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double)); // To delete
   if (model->anisotropy == 1) mesh.aniso_factor_s = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double)); // To delete
   if (model->anisotropy == 1) {
@@ -982,6 +996,8 @@ void GridFree(grid *mesh, params *model) {
     if ( model->anisotropy == 1 ) DoodzFree(mesh->angle_s);
     if ( model->anisotropy == 1 ) DoodzFree(mesh->FS_AR_n);
     if ( model->anisotropy == 1 ) DoodzFree(mesh->FS_AR_s);
+    if ( model->anisotropy == 1 ) DoodzFree(mesh->aniso_delta_n);
+    if ( model->anisotropy == 1 ) DoodzFree(mesh->aniso_delta_s);
     if ( model->anisotropy == 1 ) DoodzFree(mesh->aniso_factor_n);
     if ( model->anisotropy == 1 ) DoodzFree(mesh->aniso_factor_s);
     // Compressibility

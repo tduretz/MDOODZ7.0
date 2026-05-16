@@ -261,7 +261,9 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
     double A[8];
     int k;
     double *strain, *strain_el, *strain_pl, *strain_pl_vol, *strain_pwl, *strain_exp, *strain_lin, *strain_gbs, *X;
+    double *aniso_delta;
     float *Crho_s, *Crho_n, *Ceta_s, *Ceta_n, *CVx, *CVz, *CP, *Csxxd, *Cszzd, *Csxz, *Cexxd, *Cezzd, *Cexz, *Cstrain, *Cstrain_el, *Cstrain_pl, *Cstrain_pl_vol, *Cstrain_pwl, *Cstrain_exp, *Cstrain_lin, *Cstrain_gbs, *CT, *Cd;
+    float *Caniso_delta;
     float *Cxg_coord, *Czg_coord, *Cxc_coord, *Czc_coord, *Czvx_coord, *Cxvz_coord;
     float *CeII_el, *CeII_pl, *CeII_pwl, *CeII_exp, *CeII_lin, *CeII_gbs, *CX;
     double *Fxx, *Fxz, *Fzx, *Fzz, *nx, *nz;
@@ -514,6 +516,12 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
     P2Mastah( &model, *particles, particles->strain_pwl,     mesh, strain_pwl,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil, NULL);
     Cstrain_pwl  = DoodzMalloc( sizeof(float)*(model.Nx-1)*(model.Nz-1));
     DoubleToFloat( strain_pwl, Cstrain_pwl, (model.Nx-1)*(model.Nz-1) );
+
+    // ani_fstrain == 3 relaxed anisotropy factor δ (per-marker state)
+    aniso_delta  = DoodzCalloc((model.Nx-1)*(model.Nz-1), sizeof(double));
+    P2Mastah( &model, *particles, particles->aniso_delta,     mesh, aniso_delta,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil, NULL);
+    Caniso_delta  = DoodzMalloc( sizeof(float)*(model.Nx-1)*(model.Nz-1));
+    DoubleToFloat( aniso_delta, Caniso_delta, (model.Nx-1)*(model.Nz-1) );
 
     // Exponential flow strain
     strain_exp  = DoodzCalloc((model.Nx-1)*(model.Nz-1), sizeof(double));
@@ -783,6 +791,7 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
     AddFieldToGroup( FileName, "Centers" , "strain_pl", 'f', (model.Nx-1)*(model.Nz-1), Cstrain_pl, 1 );
     AddFieldToGroup( FileName, "Centers" , "strain_pl_vol", 'f', (model.Nx-1)*(model.Nz-1), Cstrain_pl_vol, 1 );
     AddFieldToGroup( FileName, "Centers" , "strain_pwl", 'f', (model.Nx-1)*(model.Nz-1), Cstrain_pwl, 1 );
+    AddFieldToGroup( FileName, "Centers" , "aniso_delta", 'f', (model.Nx-1)*(model.Nz-1), Caniso_delta, 1 );
     AddFieldToGroup( FileName, "Centers" , "strain_exp", 'f', (model.Nx-1)*(model.Nz-1), Cstrain_exp, 1 );
     AddFieldToGroup( FileName, "Centers" , "strain_lin", 'f', (model.Nx-1)*(model.Nz-1), Cstrain_lin, 1 );
     AddFieldToGroup( FileName, "Centers" , "strain_gbs", 'f', (model.Nx-1)*(model.Nz-1), Cstrain_gbs, 1 );
@@ -902,11 +911,13 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
     DoodzFree( strain_exp );
     DoodzFree( strain_lin );
     DoodzFree( strain_gbs );
+    DoodzFree( aniso_delta );
     DoodzFree( Cstrain     );
     DoodzFree( Cstrain_el  );
     DoodzFree( Cstrain_pl  );
     DoodzFree( Cstrain_pl_vol  );
     DoodzFree( Cstrain_pwl );
+    DoodzFree( Caniso_delta );
     DoodzFree( Cstrain_exp );
     DoodzFree( Cstrain_lin );
     DoodzFree( Cstrain_gbs );

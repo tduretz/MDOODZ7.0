@@ -1,0 +1,64 @@
+## Ko & Jung (2015)
+## "Crystal preferred orientation of an amphibole experimentally deformed by simple shear"
+## Nature Communications 6:6586.   doi:10.1038/ncomms7586
+## Source: bib/anisotropy_calibration_2026/amphibole/Ko_Jung_2015_amphibole_simple_shear_CPO_NatComms.pdf
+##
+## Conditions (paper Methods + Table 1): simple shear in modified Griggs
+## apparatus at P=1 GPa, T ∈ [480, 700]°C, strain rate 2.2e-4 to 1.7e-5 s^-1.
+## 14 deformed-amphibolite samples. Starting material = fine-grained
+## (avg 20 µm) natural amphibolite (Konansan, Pocheon-si, South Korea):
+## hornblende 68 % + anorthite 23 % + biotite 5 % + titanite 3 % + ilmenite 1 %.
+##
+## Three fabric types developed (Fig 5b phase diagram):
+##   Type-I   — T < 600 °C, (100) || shear plane, [001] || shear direction
+##   Type-II  — T ≈ 600 °C, high σ, (100) || shear plane, (010) poles || shear dir
+##   Type-III — T > 600 °C, (010) + [001] form girdle subparallel to shear plane
+##
+## Per-sample data extracted verbatim from Table 1 (γ, T, σ, water, fabric)
+## + Table 2 (AVp%, AVs% max, per-θ AVs% at flow-dipping 0°/30°/45°/90°).
+## Tables read from PDF of /research --resume aniso_fstrain.
+##
+## CPO-strength proxy:  AVp (%) = max P-wave anisotropy computed by
+## Voigt-Reuss-Hill of single-crystal hornblende Cij × EBSD ODF integration
+## (Table 3 gives Cij for JH54/JH46/JH74 representative samples;
+## density 3.120 g/cm³). For fixed mineralogy, AVp is monotonic in CPO
+## concentration; weak CPO → low AVp; strong CPO → high AVp.
+## AVp ≠ Skemer M-index directly — separate conversion required for MDLIB.
+##
+## γ uncertainty (Table 1): ranges from ±0.1 to ±2.1 (median ~0.6).
+## σ uncertainty: ±5 to ±30 MPa.
+## T uncertainty: ±10 to ±20 °C.
+##
+## Columns:
+##   sample      — run number (JH-series)
+##   T_C         — temperature (°C)
+##   T_err_C     — temperature 1σ uncertainty (°C)
+##   gamma       — shear strain γ_total
+##   gamma_err   — γ 1σ uncertainty
+##   stress_MPa  — peak differential stress (MPa)
+##   stress_err_MPa — stress 1σ uncertainty (MPa)
+##   strain_rate_s — strain rate (s^-1)
+##   water       — dry / wet
+##   fabric      — Type-I / Type-II / Type-III
+##   AVp_max_pct — max P-wave anisotropy (%, CPO-strength proxy)
+##   AVs_max_pct — max S-wave anisotropy (%)
+##   AVs_theta00 — AVs at flow dipping θ=0° (%)
+##   AVs_theta30 — AVs at flow dipping θ=30° (%)
+##   AVs_theta45 — AVs at flow dipping θ=45° (%)
+##   AVs_theta90 — AVs at flow dipping θ=90° (%)
+##
+sample,T_C,T_err_C,gamma,gamma_err,stress_MPa,stress_err_MPa,strain_rate_s,water,fabric,AVp_max_pct,AVs_max_pct,AVs_theta00,AVs_theta30,AVs_theta45,AVs_theta90
+JH54,480,20,1.7,0.8,192,20,5.0e-5,dry,Type-I,12.8,12.1,1.7,5.0,8.6,11.7
+JH53,500,20,1.0,0.1,150,30,5.8e-5,dry,Type-I,13.0,10.5,1.6,3.3,4.8,5.5
+JH65,500,10,5.1,2.0,53,5,7.2e-5,wet,Type-I,13.7,11.8,1.5,3.8,7.0,10.6
+JH75,550,15,1.5,0.9,39,5,1.3e-4,wet,Type-I,13.5,11.1,1.0,5.5,8.5,8.3
+JH40,590,20,4.2,2.1,261,20,2.2e-4,dry,Type-II,10.6,8.9,2.3,2.0,4.5,6.2
+JH46,600,15,2.9,1.6,113,10,3.6e-5,dry,Type-II,9.9,9.4,1.4,3.2,5.5,6.6
+JH58,600,15,1.8,1.1,155,15,4.4e-5,dry,Type-II,14.6,11.5,1.1,3.0,6.5,9.5
+JH62,600,20,1.5,0.2,59,5,4.0e-5,wet,Type-I,13.5,11.5,1.2,3.3,5.8,10.8
+JH72,600,15,2.2,0.3,49,5,6.0e-5,wet,Type-I,12.5,9.2,0.9,3.5,5.8,8.3
+JH74,640,15,3.1,0.6,67,5,1.1e-4,wet,Type-III,12.7,10.6,0.6,3.5,6.0,8.5
+JH49,650,15,5.7,0.5,132,10,2.2e-5,dry,Type-II,12.7,9.2,0.8,2.0,4.6,6.9
+JH56,690,15,3.5,0.4,128,10,7.6e-5,dry,Type-III,13.1,11.1,1.1,2.6,6.0,8.9
+JH64,690,20,0.9,0.7,34,5,1.7e-5,wet,Type-I,13.8,10.4,0.8,3.4,5.4,10.2
+JH43,700,10,1.5,0.6,170,20,1.4e-4,dry,Type-II,9.0,7.6,2.0,1.8,3.6,4.5

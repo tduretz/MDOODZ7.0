@@ -480,7 +480,11 @@ double Vertices2Particle( markers* particles, double* NodeField, double* X_vect,
             j_part = 0;
         }
         if (j_part>Nx-2) {
-            LOG_ERR("Should never be here II! (Vertices2Particle)"); exit(1);
+            // Match cases I, IV, V above: clamp to nearest valid cell instead
+            // of exiting. The exit was an oversight when sibling checks were
+            // disabled — see openspec/changes/archive/2026-05-06-gate-finite-strain-anisotropy/
+            // for context. Triggered by particles drifting outside the post-ALE-shrink
+            // mesh in pure-shear + anisotropy scenarios.
             j_part = Nx-2;
         }
         
@@ -689,7 +693,7 @@ reduction(+:npW,npE )
 /*--------------------------------------------------------------------------------------------------------------------*/
 
 void AssignMarkerProperties (markers* particles, int new_ind, int min_index, params *model, grid* mesh, int direct_neighbour ) {
-    
+
     particles->phase[new_ind]         = particles->phase[min_index];
     particles->dual[new_ind]          = particles->dual[min_index];
     if (particles->phase[min_index]==-1) {LOG_ERR("New particle is has phase -1, error! (AssignMarkerProperties)"); exit(99);}
@@ -702,6 +706,9 @@ void AssignMarkerProperties (markers* particles, int new_ind, int min_index, par
     particles->strain_exp[new_ind]    = particles->strain_exp[min_index];
     particles->strain_lin[new_ind]    = particles->strain_lin[min_index];
     particles->strain_gbs[new_ind]    = particles->strain_gbs[min_index];
+    // ani_fstrain == 3 δ-relaxation state — inherit from the source marker.
+    particles->aniso_delta[new_ind]         = particles->aniso_delta[min_index];
+    particles->aniso_delta_fs_prev[new_ind] = particles->aniso_delta_fs_prev[min_index];
     particles->divth[new_ind]         = particles->divth[min_index]; // to be changed
     if ( direct_neighbour == 1 ) {
         particles->d[new_ind]             = particles->d[min_index];
@@ -760,7 +767,7 @@ void AssignMarkerProperties (markers* particles, int new_ind, int min_index, par
 
 void AssignMarkerPropertiesInflow (markers* particles, int new_ind, int min_index, MdoodzInput *input, grid* mesh, int direct_neighbour, SetParticles_ff setParticles ) {
     
-    params *model = &(input->model);  
+    params *model = &(input->model);
     particles->phase[new_ind]         = particles->phase[min_index];
     particles->dual[new_ind]          = particles->dual[min_index];
     if (particles->phase[min_index]==-1) {LOG_ERR("New particle is has phase -1, error! (AssignMarkerProperties)"); exit(99);}
@@ -773,6 +780,9 @@ void AssignMarkerPropertiesInflow (markers* particles, int new_ind, int min_inde
     particles->strain_exp[new_ind]    = particles->strain_exp[min_index];
     particles->strain_lin[new_ind]    = particles->strain_lin[min_index];
     particles->strain_gbs[new_ind]    = particles->strain_gbs[min_index];
+    // ani_fstrain == 3 δ-relaxation state — inherit from the source marker.
+    particles->aniso_delta[new_ind]         = particles->aniso_delta[min_index];
+    particles->aniso_delta_fs_prev[new_ind] = particles->aniso_delta_fs_prev[min_index];
     particles->divth[new_ind]         = particles->divth[min_index]; // to be changed
     if ( direct_neighbour == 1 ) {
         particles->d[new_ind]             = particles->d[min_index];
@@ -894,6 +904,9 @@ void PartInit( markers *particles, params* model ) {
         particles->strain_exp[k] = 0.0;
         particles->strain_lin[k] = 0.0;
         particles->strain_gbs[k] = 0.0;
+        // ani_fstrain == 3 δ-relaxation state — isotropic start (δ = 1).
+        particles->aniso_delta[k]         = 1.0;
+        particles->aniso_delta_fs_prev[k] = 1.0;
         particles->T[k]          = 0.0;
         particles->phi[k]        = 0.0;
         particles->X[k]          = 0.0;
@@ -4164,6 +4177,11 @@ void TransmutateMarkers(markers *particles, mat_prop *materials, double scaling_
 #pragma omp parallel for reduction(+:transmutated_particles) shared(particles)
   for (int k=0; k<particles->Nb_part-1; k++) {
     const int phase = particles->phase[k];
+    // Skip inactive particles (phase = -1, e.g. drifted outside the mesh under pure-shear ALE).
+    // Without this guard, materials->transmutation[-1] is OOB UB; in release builds it can
+    // return garbage that flips the conditional below, corrupting the particle's phase to a
+    // garbage index that later null-derefs in P2Mastah (Wm_ph[thread][p][kp]).
+    if (phase < 0) continue;
     const double temperature = particles->T[k];
     const double transmutation = materials->transmutation[phase];
 

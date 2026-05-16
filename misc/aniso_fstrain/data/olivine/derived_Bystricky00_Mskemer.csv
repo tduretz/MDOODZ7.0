@@ -1,0 +1,8 @@
+## Bystricky+00 with M obtained via Skemer+05 linear J→M = max((J-1)/15, 0).
+## Used in olivine survey (overlay panel) — NOT a calibration target.
+## Generated from raw_Bystricky_etal_2000_Science.csv.
+gamma_simple,J,M_skemer
+0.5,1.3,0.02
+2,3.8,0.1867
+4,8,0.4667
+5,9,0.5333

@@ -52,21 +52,38 @@ The anisotropy factor controls the degree of viscous anisotropy:
 |-----------|-------------|---------------|
 | `aniso_factor` | Initial ratio of directional viscosity contrast | 1.0–10.0 |
 | `ani_fac_max` | Maximum anisotropy factor (saturation limit) | Same as or > `aniso_factor` |
-| `ani_fstrain` | Evolve factor with finite strain (0/1) | 0 or 1 |
+| `ani_fstrain` | Per-phase form selector for the anisotropy factor δ | 0, 1, 2, or 3 |
+| `aniso_db` | Mineral calibration database entry (used when `ani_fstrain` ∈ {2,3}) | 0 = off, 1 = Hansen olivine, … |
+| `ani_relax_length` | δ-relaxation length scale `L_relax` (used when `ani_fstrain = 3`) | −1 = inherit `gs_ref`, or metres |
 
 - **aniso_factor = 1.0**: Isotropic (no anisotropy effect)
 - **aniso_factor > 1.0**: Increasing anisotropy — deformation is easier along the foliation
+
+### The `ani_fstrain` enumeration
+
+| value | δ form |
+|-------|--------|
+| 0 | static `aniso_factor` (no strain dependence) |
+| 1 | `δ = min(FS_AR, ani_fac_max)` — MDOODZ default |
+| 2 | `δ = aniso_delta_fn(FS_AR)`, capped — mineral-calibrated form selected by `aniso_db` |
+| 3 | `ani_fstrain == 2` δ-dispatch **+** a temperature-dependent kinetic relaxation of δ toward the isotropic limit (δ → 1) |
 
 ### Finite Strain Evolution
 
 When `ani_fstrain = 1`:
 ```c
-double AnisoFactorEvolv(double FS_AR, double aniso_fac_max) {
+double AnisoFactorEvolv(double FS_AR, double aniso_fac_max, ...) {
     return MINV(FS_AR, aniso_fac_max);
 }
 ```
 
 The anisotropy factor equals the finite strain aspect ratio (`FS_AR`), clamped at `ani_fac_max`.
+
+### `ani_fstrain = 3` — temperature-dependent δ-relaxation
+
+`ani_fstrain = 3` keeps the `ani_fstrain = 2` δ-dispatch but makes δ a **per-marker integrated state variable** (`markers->aniso_delta`) that *relaxes* toward the isotropic limit (δ → 1) when deformation slows, on the Boneh et al. 2021 (*G3*) discontinuous-static-recrystallization timescale `τ_relax = L_relax / V`, `V = M₀·exp(−Q/RT)·μ·b²·Δρ`. The per-step update is the analytic exponential `δ_new = 1 + (δ_prod − 1)·exp(−Δt/τ_relax)`, clamped to `[1, ani_fac_max]`. `L_relax` comes from the per-phase `ani_relax_length` (sentinel −1 → inherit `gs_ref`; grain-size evolution is **not** required). At cold T (`τ_relax ≫ run time`) it reproduces `ani_fstrain = 2` exactly. The relaxed δ is P2G'd to `mesh->aniso_delta_n`/`aniso_delta_s` and output as the `aniso_delta` centroid field in the HDF5 files. Full derivation and caveats: [misc/aniso_fstrain/notes/boneh2021_delta_relaxation.md](../../../misc/aniso_fstrain/notes/boneh2021_delta_relaxation.md).
+
+> **Note:** `ani_fstrain = 3` was previously a `T < ani_T_threshold` deformation-gradient *freeze*. That freeze and the `ani_T_threshold` parameter were removed by the `ani-fstrain3-delta-relaxation` change — `ani_T_threshold` is no longer a recognised parameter.
 
 ## Anisotropic Invariants
 

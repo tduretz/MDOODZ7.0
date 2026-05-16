@@ -106,6 +106,26 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
     if (setup->MutateInput) {
       setup->MutateInput(&input);
+      // Re-run the anisotropy database population after MutateInput so that
+      // tests / scenario harnesses that flip ani_fstrain or aniso_db in the
+      // mutate callback (post-input-file-parse) still get the per-phase
+      // function pointer populated. Two cases handled:
+      //   (a) ani_fstrain=2 or 3 + aniso_db=0 → auto-default to aniso_db=1
+      //       (olivine). ani_fstrain=3 is "ani_fstrain=2 δ-dispatch +
+      //       δ-relaxation", so it needs aniso_db > 0 just like ==2.
+      //   (b) aniso_db>0 → always (re-)call ReadDataAnisotropy to populate
+      //       the function pointer (parser didn't see the post-MutateInput
+      //       value, so aniso_delta_fn[k] would still be NULL otherwise).
+      // Idempotent: ReadDataAnisotropy just reassigns the function pointer.
+      for (int k = 0; k < input.materials.Nb_phases; k++) {
+        if ((input.materials.ani_fstrain[k] == 2 || input.materials.ani_fstrain[k] == 3) && input.materials.aniso_db[k] == 0) {
+          input.materials.aniso_db[k] = 1;
+        }
+        if (input.materials.aniso_db[k] > 0) {
+          ReadDataAnisotropy(&input.materials, &input.model, k,
+                              input.materials.aniso_db[k], &input.scaling);
+        }
+      }
     }
 
     // ValidateSetup(setup, &input);
@@ -351,6 +371,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         LOG_INFO("******* Initialize grain size *******");
         LOG_INFO("*************************************");
         InitialiseGrainSizeParticles( &particles, &input.materials );
+        InitialiseAnisoDeltaParticles( &particles, &input.materials );
         P2Mastah( &input.model, particles, particles.d,     &mesh, mesh.d_n , mesh.BCp.type,  1, 0, interp, cent, input.model.interp_stencil, pool);
         ArrayEqualArray( mesh.d0_n, mesh.d_n,  (mesh.Nx-1)*(mesh.Nz-1) );
 
@@ -376,7 +397,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             P2Mastah( &input.model, particles, NULL, &mesh, mesh.d1_s,    mesh.BCg.type, -1, 0, interp, vert, input.model.interp_stencil, pool);
             P2Mastah( &input.model, particles, NULL, &mesh, mesh.d2_s,    mesh.BCg.type, -2, 0, interp, vert, input.model.interp_stencil, pool);
             P2Mastah( &input.model, particles, NULL, &mesh, mesh.angle_s, mesh.BCg.type, -3, 0, interp, vert, input.model.interp_stencil, pool);
-            FiniteStrainAspectRatio ( &mesh, input.scaling, input.model, &particles );
+            FiniteStrainAspectRatio ( &mesh, input.scaling, input.model, &particles, &input.materials );
         }
 
         LOG_INFO("*************************************");
@@ -655,7 +676,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                 P2Mastah( &input.model, particles, NULL, &mesh, mesh.d2_s,    mesh.BCg.type, -2, 0, interp, vert, input.model.interp_stencil, pool);
                 P2Mastah( &input.model, particles, NULL, &mesh, mesh.angle_s, mesh.BCg.type, -3, 0, interp, vert, input.model.interp_stencil, pool);
             }
-            FiniteStrainAspectRatio ( &mesh, input.scaling, input.model, &particles );
+            FiniteStrainAspectRatio ( &mesh, input.scaling, input.model, &particles, &input.materials );
         }
 
         // Batch 4a (cent, stencil=interp): X0_n, noise_n, d0_n
@@ -1272,7 +1293,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
                 if (input.model.pure_shear_ALE == -1 && input.model.periodic_x == 0) ParticleInflowCheck( &particles, &mesh,  &input, topo, 1, *setup->SetParticles );
 
                 // Update deformation gradient tensor components
-                if (input.model.finite_strain == 1 ) DeformationGradient( mesh, input.scaling, input.model, &particles );
+                if (input.model.finite_strain == 1 ) DeformationGradient( mesh, input.scaling, input.model, input.materials, &particles );
 
                 if (input.model.writer_debug == 1 ) {
                     WriteOutputHDF5( &mesh, &particles, &topo, &topo_chain, input.model, Nmodel, "Output_BeforeSurfRemesh", input.materials, input.scaling );

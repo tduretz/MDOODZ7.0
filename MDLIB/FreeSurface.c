@@ -149,6 +149,10 @@ void AddPartSed( markers *particles, mat_prop materials, markers *topo_chain, su
                 particles->strain_exp[new_ind]    =  0.0;
                 particles->strain_lin[new_ind]    =  0.0;
                 particles->strain_gbs[new_ind]    =  0.0;
+                // Fresh sediment is isotropic — ani_fstrain == 3 δ-relaxation
+                // state starts at δ = 1.
+                particles->aniso_delta[new_ind]         =  1.0;
+                particles->aniso_delta_fs_prev[new_ind] =  1.0;
                 particles->d[new_ind]             =  materials.gs_ref[sed_phase];
                 particles->T[new_ind]             =  zeroC/scaling.T;
                 particles->P[new_ind]             =  0.0;
@@ -159,10 +163,16 @@ void AddPartSed( markers *particles, mat_prop materials, markers *topo_chain, su
                 particles->sxz[new_ind]           =  0.0;
                 
                 if (finite_strain==1) {
+                    // Identity F for fresh sediment markers. Pre-fix values
+                    // Fzx=1.0, Fzz=0.0 made det(F)=0 — a singular F that the
+                    // downstream SVD (FiniteStrainAspectRatio) saturated to
+                    // FS_AR_CAP. Restored to identity (Fxx=Fzz=1, off-diag=0).
+                    // (Surfaced by Agent 2 + Agent 7 during the aniso-init-
+                    // from-finite-strain audit.)
                     particles->Fxx[new_ind]           = 1.0;
                     particles->Fxz[new_ind]           = 0.0;
-                    particles->Fzx[new_ind]           = 1.0;
-                    particles->Fzz[new_ind]           = 0.0;
+                    particles->Fzx[new_ind]           = 0.0;
+                    particles->Fzz[new_ind]           = 1.0;
                 }
                 
                 if (track_T_P_x_z==1) {
@@ -418,7 +428,7 @@ void MarkerChainPolyFit( surface *topo, markers *topo_chain, params model, grid 
 
 void AllocateMarkerChain( surface *topo, markers* topo_chain, params model ) {
     
-    topo_chain->Nb_part_max = 50*model.Nx;
+    topo_chain->Nb_part_max = 500*model.Nx;  // bumped 50->500 to support long-run, large-displacement free-surface scenarios (e.g. multi-Myr ridge-spread) that overflowed the 50*Nx cap
     topo_chain->x           = DoodzMalloc( topo_chain->Nb_part_max*sizeof(DoodzFP) );
     topo_chain->z           = DoodzMalloc( topo_chain->Nb_part_max*sizeof(DoodzFP) );
     topo_chain->z0           = DoodzMalloc( topo_chain->Nb_part_max*sizeof(DoodzFP) );
@@ -783,17 +793,81 @@ void CellFlagging( grid *mesh, params model, surface topo, scale scaling ) {
             }
             
             if ( i==nx-1 && j>0 && j<nz-1 && mesh->BCg.type[c1] == 30 ) {
-                
+
                 if ( mesh->BCp.type[c2-1] == -1  && mesh->BCp.type[c2-1-ncx] == -1 ) {
                     mesh->BCg.type[c1] = -1;
                 }
-                
+
             }
-            
-            
+
+
         }
     }
-    
+
+    //------------- DE-ORPHAN Vx DOFs -------------//
+    // The extended-grid PVtag can flag a Vx DOF active (BCu.type = -1) even when its
+    // entire real-grid X-momentum stencil neighbourhood is non-fluid. Such a DOF gets
+    // a structurally-zero momentum row (zero diagonal) -> zero pivot in the Stokes
+    // factorisation. Mirror the vertex de-orphaning passes above: demote any active Vx
+    // DOF whose real-grid stencil neighbours (pressure cells E/W via BCp.type, vertices
+    // N/S via BCg.type) are all non-fluid back to passive (30).
+    // A pressure cell is "non-fluid" if BCp.type != -1 (air/above-surface 30/31) or it
+    // is a grid corner cell, which SetBCs converts to a corner pressure BC (type 0).
+    // Loop bounds match the inner-node guard of Xmomentum_InnerNodesDecoupled
+    // (l in 1..nzvx-2 == 1..ncz, k restricted so both pressure cells iPrW/iPrE exist).
+    for( j=1; j<ncz+1; j++ ) {
+        for ( i=1; i<ncx; i++ ) {
+
+            c1 = i + j*nx;          // Vx node (BCu.type), == ixyN
+            c2 = i-1 + (j-1)*ncx;   // West pressure cell (BCp.type), == iPrW
+
+            if ( mesh->BCu.type[c1] == -1 ) {
+
+                // West/East pressure cells of the X-momentum stencil
+                const int piW = i-1, pjW = j-1, piE = i, pjE = j-1;
+                const int orphW = mesh->BCp.type[c2]     != -1 || ( (piW==0 || piW==ncx-1) && (pjW==0 || pjW==ncz-1) );
+                const int orphE = mesh->BCp.type[c2+1]   != -1 || ( (piE==0 || piE==ncx-1) && (pjE==0 || pjE==ncz-1) );
+                // North/South vertices of the X-momentum stencil
+                const int orphN = mesh->BCg.type[c1]     == 30;
+                const int orphS = mesh->BCg.type[c1-nx]  == 30;
+
+                if ( orphW && orphE && orphN && orphS ) {
+                    mesh->BCu.type[c1] = 30;
+                    mesh->BCu.val[c1]  = 0.0;
+                }
+            }
+        }
+    }
+
+    //------------- DE-ORPHAN Vz DOFs -------------//
+    // Same defect for Vz DOFs: demote any active Vz DOF whose real-grid Z-momentum
+    // stencil neighbours (pressure cells N/S via BCp.type, vertices W/E via BCg.type)
+    // are all non-fluid back to passive (30).
+    for( j=1; j<ncz; j++ ) {
+        for ( i=1; i<ncx+1; i++ ) {
+
+            c1 = i + j*nx;              // == ixyE of the Z-momentum stencil
+            c2 = i-1 + (j-1)*ncx;       // South pressure cell (BCp.type), == iPrS
+            const int c3 = i + j*nxvz;  // Vz node (BCv.type)
+
+            if ( mesh->BCv.type[c3] == -1 ) {
+
+                // South/North pressure cells of the Z-momentum stencil
+                const int piS = i-1, pjS = j-1, piN = i-1, pjN = j;
+                const int orphS = mesh->BCp.type[c2]     != -1 || ( (piS==0 || piS==ncx-1) && (pjS==0 || pjS==ncz-1) );
+                const int orphN = mesh->BCp.type[c2+ncx] != -1 || ( (piN==0 || piN==ncx-1) && (pjN==0 || pjN==ncz-1) );
+                // West/East vertices of the Z-momentum stencil
+                const int orphW = mesh->BCg.type[c1-1]   == 30;
+                const int orphE = mesh->BCg.type[c1]     == 30;
+
+                if ( orphS && orphN && orphW && orphE ) {
+                    mesh->BCv.type[c3] = 30;
+                    mesh->BCv.val[c3]  = 0.0;
+                }
+            }
+        }
+    }
+
     DoodzFree( PVtag  );
     DoodzFree( PVtag0 );
 }

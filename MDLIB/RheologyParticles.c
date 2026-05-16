@@ -52,6 +52,162 @@ void InitialiseGrainSizeParticles( markers* particles, mat_prop *materials ){
     }
 }
 
+// Per-marker init-from-finite-strain helper (design D1-D4, change
+// aniso-init-from-finite-strain). For a single marker on an ani_fstrain==3
+// phase with aniso_factor > 1, constructs F_init such that the per-marker
+// step-0 δ derived from F_init via the existing FiniteStrainAspectRatio SVD
+// + aniso_delta_fn pipeline equals exactly aniso_factor[phase]. Also sets
+// aniso_delta_fs_prev = aniso_factor so the step-1 operator-split increment
+// (δ_FS − aniso_delta_fs_prev) is the change in Hansen δ from step 0 to step
+// 1 — no permanent +offset. Cold-limit telescope collapses to
+//     aniso_delta_N → aniso_delta_fn(FS_AR_N)
+// and Hansen-saturation δ ≤ 14.13 holds by construction.
+//
+// Math (design D1-D3):
+//   γ_eff   = aniso_delta_fn_inv[phase](aniso_factor[phase])
+//   FS_AR   = ((γ_eff + √(γ_eff² + 4)) / 2)²
+//   γ_eq    = ln(FS_AR)
+//   a, b    = exp(±γ_eq/2)   (principal stretches of pure-shear F)
+//   θ_F     = aniso_angle[phase] − π/2     ← D3 corrigendum (foliation parallel)
+//   c, s    = cos(θ_F), sin(θ_F)
+//   F_init  = R(θ_F) · diag(a, b) · R(θ_F)^T (symmetric pure-shear)
+//   Fxx = c²·a + s²·b,  Fzz = s²·a + c²·b,  Fxz = Fzx = c·s·(a − b)
+//
+// aniso_angle[phase] is in RADIANS at this point (InputOutput.c:1456 already
+// did the deg → rad conversion). We subtract π/2 unconditionally to align
+// the F principal extension with the easy-slip plane direction (foliation),
+// not the director.
+static inline void aniso_init_finite_strain_for_marker( int k, int phase,
+                                                        mat_prop *materials,
+                                                        markers *particles ) {
+    const double aniso_factor = materials->aniso_factor[phase];
+    const double aniso_angle  = materials->aniso_angle[phase];    // radians
+
+    // Resolve γ_eff via per-phase analytic inverse. The caller has already
+    // gated this on aniso_delta_fn_inv != NULL.
+    const double gamma_eff = materials->aniso_delta_fn_inv[phase]( aniso_factor );
+
+    // FS_AR(γ_eff) from the simple-shear-equivalent inversion
+    //   γ_eff = √FS_AR − 1/√FS_AR     (forward in aniso_delta_fn)
+    //   → √FS_AR = (γ_eff + √(γ_eff² + 4)) / 2
+    const double sqrt_FS_AR = 0.5 * ( gamma_eff + sqrt( gamma_eff*gamma_eff + 4.0 ) );
+    const double FS_AR      = sqrt_FS_AR * sqrt_FS_AR;
+    const double gamma_eq   = log( FS_AR );
+
+    // Pure-shear F_canonical principal stretches.
+    const double a = exp(  0.5 * gamma_eq );
+    const double b = exp( -0.5 * gamma_eq );
+
+    // Rotation θ_F = aniso_angle − π/2 (foliation direction, not director).
+    const double theta_F = aniso_angle - 0.5 * M_PI;
+    const double c       = cos( theta_F );
+    const double s       = sin( theta_F );
+
+    // F_init = R(θ_F) · diag(a, b) · R(θ_F)^T   (symmetric, det = 1)
+    particles->Fxx[k] = c*c*a + s*s*b;
+    particles->Fzz[k] = s*s*a + c*c*b;
+    particles->Fxz[k] = c*s*( a - b );
+    particles->Fzx[k] = c*s*( a - b );
+
+    // δ-state consistency: with F_init as built, the step-0 production δ from
+    // the SVD-based FiniteStrainAspectRatio + aniso_delta_fn pipeline equals
+    // aniso_factor by construction. Set aniso_delta_fs_prev to match — so the
+    // step-1 operator-split increment is purely (δ_FS_1 − δ_FS_0), no offset.
+    particles->aniso_delta_fs_prev[k] = aniso_factor;
+    particles->aniso_delta[k]         = aniso_factor;
+}
+
+void InitialiseAnisoDeltaParticles( markers* particles, mat_prop *materials ){
+    // Initialise per-marker viscous-anisotropy state on ani_fstrain == 3 phases
+    // so the rifting "inherited cratonic fabric" interpretation is internally
+    // consistent (design aniso-init-from-finite-strain). For each marker on an
+    // ani_fstrain == 3 phase with aniso_factor > 1 and a non-NULL analytic
+    // inverse aniso_delta_fn_inv (populated per aniso_db by FlowLaws.c::
+    // ReadDataAnisotropy), the helper constructs:
+    //   F_init = R(aniso_angle − π/2) · diag(a, b) · R(aniso_angle − π/2)^T
+    // where (a, b) = exp(±γ_eq/2) and γ_eq = ln(FS_AR(γ_eff(aniso_factor))).
+    // It then sets aniso_delta_fs_prev = aniso_factor and aniso_delta =
+    // aniso_factor. With these three boundary conditions consistent, the
+    // FiniteStrainAspectRatio operator split's cold-limit telescope collapses
+    // to aniso_delta_N → aniso_delta_fn(FS_AR_N) exactly, the Hansen-saturation
+    // ceiling holds by construction, and the inherited-fabric persistence in
+    // cold quiescent rock is preserved by the strain-rate gate.
+    //
+    // For aniso_factor ≤ 1 (legacy isotropic init), aniso_db = 0 (no analytic
+    // forward / inverse), or ani_fstrain != 3, the helper is skipped and the
+    // legacy F = I, aniso_delta = 1, aniso_delta_fs_prev = 1 state from
+    // PartInit is preserved.
+    //
+    // Guards (design D7):
+    //  • aniso_factor < 1.0     → clamp to 1.0 with one-shot LOG_WARN per phase.
+    //  • aniso_delta_fn_inv NULL (aniso_db = 0) → skip silently; legacy fallthrough.
+    static int phase_logged[20] = {0};       // one-shot LOG_INFO per phase
+    static int phase_warn_neg[20] = {0};     // one-shot LOG_WARN per phase
+
+    for( int phase=0; phase<materials->Nb_phases && phase<20; phase++ ) {
+        if ( materials->ani_fstrain[phase] != 3 ) continue;
+
+        // guard aniso_factor < 1 (legacy invalid setting).
+        if ( materials->aniso_factor[phase] < 1.0 ) {
+            if ( !phase_warn_neg[phase] ) {
+                LOG_WARN("InitialiseAnisoDelta: phase %d aniso_factor=%g < 1 (invalid); clamping to 1.0",
+                         phase, materials->aniso_factor[phase]);
+                phase_warn_neg[phase] = 1;
+            }
+            materials->aniso_factor[phase] = 1.0;
+        }
+
+        // aniso_db = 0 ⇒ aniso_delta_fn_inv NULL ⇒ skip helper.
+        const int has_inverse = ( materials->aniso_delta_fn_inv[phase] != NULL );
+
+        // per-phase one-shot LOG_INFO (suppressed for aniso_factor == 1).
+        if ( !phase_logged[phase]
+             && materials->aniso_factor[phase] > 1.0 + 1.0e-12
+             && has_inverse ) {
+            const double factor    = materials->aniso_factor[phase];
+            const double angle_rad = materials->aniso_angle[phase];
+            const double gamma_eff = materials->aniso_delta_fn_inv[phase]( factor );
+            const double sqrt_FS_AR = 0.5 * ( gamma_eff + sqrt( gamma_eff*gamma_eff + 4.0 ) );
+            const double FS_AR      = sqrt_FS_AR * sqrt_FS_AR;
+            LOG_INFO("InitialiseAnisoDelta: phase %d ani_fstrain=3 aniso_factor=%g aniso_angle=%g deg -> gamma_eff=%g FS_AR=%g",
+                     phase, factor, angle_rad * 180.0 / M_PI, gamma_eff, FS_AR);
+            phase_logged[phase] = 1;
+        }
+    }
+
+    // OpenMP review: each iteration touches only particles->{Fxx,Fxz,
+    // Fzx,Fzz,aniso_delta,aniso_delta_fs_prev}[k] — fully per-marker, no shared
+    // mutable state. materials and particles pointers are shared (read-only for
+    // materials; per-k writes on disjoint indices for particles arrays). The
+    // existing static schedule is preserved.
+#pragma omp parallel for shared( particles, materials )
+    for( int k=0; k<particles->Nb_part; k++ ) {
+        const int phase = particles->phase[k];
+        if ( phase == -1 )                                  continue;
+        if ( materials->ani_fstrain[phase] != 3 )           continue;
+
+        // Skip phases with no analytic inverse (aniso_db = 0 or unconfigured).
+        if ( materials->aniso_delta_fn_inv[phase] == NULL ) {
+            // Legacy fallthrough: keep PartInit defaults (F = I, aniso_delta = 1,
+            // aniso_delta_fs_prev = 1). Preserve the historical aniso_factor copy
+            // into aniso_delta so the few legacy SETs that relied on it still get
+            // the per-marker initial δ they expect (degenerate without inverse).
+            particles->aniso_delta[k] = materials->aniso_factor[phase];
+            continue;
+        }
+
+        // aniso_factor ≈ 1: helper is a no-op (γ_eff=0, F=I). Skip so legacy
+        // init1-style runs (aniso_factor = 1, F = I, δ = 1) are byte-identical.
+        if ( materials->aniso_factor[phase] <= 1.0 + 1.0e-12 ) {
+            particles->aniso_delta[k]         = materials->aniso_factor[phase];
+            particles->aniso_delta_fs_prev[k] = materials->aniso_factor[phase];
+            continue;
+        }
+
+        aniso_init_finite_strain_for_marker( k, phase, materials, particles );
+    }
+}
+
 /*--------------------------------------------------------------------------------------------------------------------*/
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
@@ -546,7 +702,7 @@ void AccumulatedStrainII( grid* mesh, scale scaling, params model, markers* part
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-void DeformationGradient ( grid mesh, scale scaling, params model, markers *particles ) {
+void DeformationGradient ( grid mesh, scale scaling, params model, mat_prop materials, markers *particles ) {
 
     int k, l, cp, cu, cv, Nx, Nz;
     double dx, dz;
@@ -597,13 +753,48 @@ void DeformationGradient ( grid mesh, scale scaling, params model, markers *part
     Interp_Grid2P( *(particles), pdvdx, &mesh, dvdx, mesh.xg_coord,  mesh.zg_coord,  mesh.Nx,   mesh.Nz, mesh.BCg.type   );
     Interp_Grid2P( *(particles), pdudz, &mesh, dudz, mesh.xg_coord,  mesh.zg_coord,  mesh.Nx,   mesh.Nz, mesh.BCg.type   );
 
-#pragma omp parallel for shared ( particles ) private ( k, fxx, fxz, fzx, fzz, fxx_o, fxz_o, fzx_o, fzz_o ) firstprivate( model ) schedule( static )
+#pragma omp parallel for shared ( particles ) private ( k, fxx, fxz, fzx, fzz, fxx_o, fxz_o, fzx_o, fzz_o ) firstprivate( model, materials ) schedule( static )
     for(k=0; k<particles->Nb_part; k++) {
 
-        fxx = 1.0 + pdudx[k]*model.dt;
-        fxz = pdudz[k]*model.dt;
-        fzz = 1.0 + pdvdz[k]*model.dt;
-        fzx = pdvdx[k]*model.dt;
+        // Deformation-gradient update: integrate dF/dt = L*F over one step.
+        // The former first-order form F_new = (I + L*dt)*F_old is NOT
+        // volume-consistent: det(I + L*dt) = 1 + tr(L)*dt + det(L)*dt^2, so
+        // even for incompressible flow (tr(L)=0) it carries a spurious
+        // det(L)*dt^2 term and det(F) drifts every step (geometric decay for
+        // pure shear). We instead use the exact closed-form 2x2 matrix
+        // exponential F_new = expm(L*dt)*F_old, for which
+        // det(expm(L*dt)) = exp(tr(L)*dt) exactly — the physically correct
+        // volume change. Write A = L*dt = m*I + B with m = tr(A)/2 and B
+        // traceless (d = det(B)); then expm(A) = exp(m)*expm(B) with
+        //   d < 0: q=sqrt(-d), expm(B) = cosh(q)*I + (sinh(q)/q)*B
+        //   d > 0: p=sqrt(d),  expm(B) = cos(p)*I  + (sin(p)/p)*B
+        //   d ~ 0:             expm(B) = I + B
+        const double Axx = pdudx[k]*model.dt;
+        const double Axz = pdudz[k]*model.dt;
+        const double Azx = pdvdx[k]*model.dt;
+        const double Azz = pdvdz[k]*model.dt;
+        const double m   = 0.5*(Axx + Azz);          // A = m*I + B
+        const double Bxx = Axx - m;                  // traceless part (Bzz = -Bxx)
+        const double Bzz = Azz - m;
+        const double dB  = Bxx*Bzz - Axz*Azx;        // det(B)
+        double cI, sB;                               // expm(B) = cI*I + sB*B
+        if ( dB < -1.0e-300 ) {
+            const double q = sqrt(-dB);
+            cI = cosh(q);  sB = sinh(q)/q;
+        }
+        else if ( dB > 1.0e-300 ) {
+            const double p = sqrt(dB);
+            cI = cos(p);   sB = sin(p)/p;
+        }
+        else {                                       // d ~ 0 (nilpotent B)
+            cI = 1.0;      sB = 1.0;
+        }
+        const double em = exp(m);
+        // fij = expm(L*dt) (off-diagonals share the traceless off-diag of A)
+        fxx = em*(cI + sB*Bxx);
+        fxz = em*(sB*Axz);
+        fzx = em*(sB*Azx);
+        fzz = em*(cI + sB*Bzz);
         fxx_o = particles->Fxx[k];
         fxz_o = particles->Fxz[k];
         fzx_o = particles->Fzx[k];
@@ -631,46 +822,187 @@ void DeformationGradient ( grid mesh, scale scaling, params model, markers *part
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-void FiniteStrainAspectRatio ( grid *mesh, scale scaling, params model, markers *particles ) {
+void FiniteStrainAspectRatio ( grid *mesh, scale scaling, params model, markers *particles, mat_prop *materials ) {
 
     int k, l, cp, cu, cv;
-    double *FS_AR, CGxx, CGxz, CGzx, CGzz;
-    double Tr, Det, U0xx, U0xz, U0zx, U0zz, s, t, e1, e2;
+    double *FS_AR;
     int    cent=1, vert=0, prop=1, interp=0;
+
+    // Largest finite aspect ratio we ever store. The downstream consumer
+    // (AnisoFactorEvolv) clips with the per-phase ani_fac_max anyway; this is
+    // only a last-resort guard so the function never emits a non-finite value
+    // when the smaller singular value underflows for an extremely degenerate F.
+    const double FS_AR_CAP = 1.0e12;
 
     FS_AR = DoodzCalloc (particles->Nb_part, sizeof(double));
 
-    //#pragma omp parallel for shared ( particles ) private ( k, CGxx, CGxz, CGzx, CGzz, Tr, Det, U0xx, U0xz, U0zx, U0zz, s, t, e1, e2  ) schedule( static )
+    //#pragma omp parallel for shared ( particles ) private ( k ) schedule( static )
     for (k=0; k<particles->Nb_part; k++) {
 
-        // Cauchy-Green
-        CGxx = particles->Fxx[k]*particles->Fxx[k] + particles->Fzx[k]*particles->Fzx[k];
-        CGxz = particles->Fxx[k]*particles->Fxz[k] + particles->Fzx[k]*particles->Fzz[k];
-        CGzx = particles->Fxx[k]*particles->Fxz[k] + particles->Fzx[k]*particles->Fzz[k];
-        CGzz = particles->Fxz[k]*particles->Fxz[k] + particles->Fzz[k]*particles->Fzz[k];
+        // Finite-strain aspect ratio = ratio of the eigenvalues of the right
+        // stretch tensor U = sqrt(F^T F), i.e. sigma_max/sigma_min of F.
+        //
+        // The former implementation formed CG = F^T F, then
+        // Det = CGxx*CGzz - CGxz*CGzx and s = sqrt(Det). Det equals det(F)^2
+        // (>= 0 in exact arithmetic) but is built as a difference of large
+        // nearly-equal products, so under finite precision it goes slightly
+        // negative for ill-conditioned F and sqrt() returned a non-finite
+        // value; the downstream e1/e2 divide could also divide by ~0.
+        //
+        // Instead use the stable closed-form 2x2 SVD of F directly:
+        //   E = (Fxx+Fzz)/2,  Fd = (Fxx-Fzz)/2
+        //   G = (Fzx+Fxz)/2,  H  = (Fzx-Fxz)/2
+        //   Q = sqrt(E*E+H*H), R = sqrt(Fd*Fd+G*G)
+        //   sigma_max = Q + R,  sigma_min = |Q - R|
+        // Each sqrt has a non-negative argument by construction, so this never
+        // yields a non-finite value for finite F.
+        const double Fxx = particles->Fxx[k];
+        const double Fxz = particles->Fxz[k];
+        const double Fzx = particles->Fzx[k];
+        const double Fzz = particles->Fzz[k];
 
-        // U0 = Sqrt(CG)
-        Tr  = CGxx + CGzz;
-        Det = CGxx*CGzz - CGxz*CGzx;
-        s   = sqrt(Det);
-        t   = sqrt(Tr + 2.0*s);
-        U0xx = 1/t*(CGxx + s);
-        U0xz = 1/t*CGxz;
-        U0zx = 1/t*CGzx;
-        U0zz = 1/t*(CGzz + s);
+        const double E  = 0.5*(Fxx + Fzz);
+        const double Fd = 0.5*(Fxx - Fzz);
+        const double G  = 0.5*(Fzx + Fxz);
+        const double H  = 0.5*(Fzx - Fxz);
+        const double Q  = sqrt(E*E + H*H);
+        const double R  = sqrt(Fd*Fd + G*G);
 
-        // eigs(U0)
-        Tr   = U0xx + U0zz;
-        Det  = U0xx*U0zz - U0xz*U0zx;
-        e1   = Tr/2.0 + sqrt( Tr*Tr/4.0 - Det );
-        e2   = Tr/2.0 - sqrt( Tr*Tr/4.0 - Det );
+        const double sigma_max = Q + R;
+        const double sigma_min = fabs(Q - R);
 
-        // aspect ratio
-        FS_AR[k] = e1/e2;
+        // Guard sigma_min: if it underflows, clamp the ratio to a large finite
+        // value instead of returning a non-finite result.
+        if ( sigma_min > sigma_max/FS_AR_CAP ) {
+            FS_AR[k] = sigma_max/sigma_min;
+            if ( FS_AR[k] > FS_AR_CAP ) FS_AR[k] = FS_AR_CAP;
+        }
+        else {
+            FS_AR[k] = FS_AR_CAP;
+        }
+
+        // -------------------------------------------------------------------
+        // ani_fstrain == 3 — per-marker δ-relaxation update (design D1, D6)
+        // -------------------------------------------------------------------
+        // Placed HERE, inside the FS_AR k-loop, because the per-marker FS_AR
+        // exists only in this local array — there is no marker FS_AR field.
+        // Two-field operator split:
+        //   delta_FS   = aniso_delta_fn(FS_AR)                  (the ==2 value)
+        //   delta_prod = aniso_delta + (delta_FS - aniso_delta_fs_prev)
+        //                                          (inherit the ==2 increment)
+        //   delta_new  = 1 + (delta_prod - 1)·exp(-dt/tau_relax)  (relax → 1)
+        //   clamp to [1, ani_fac_max]; store aniso_delta, aniso_delta_fs_prev.
+        // Cold limit (tau → ∞): exp → 1 ⇒ delta_new = delta_prod ⇒ telescoping
+        // collapses (since aniso_delta_0 = aniso_delta_fs_prev_0 = aniso_factor
+        // by the init-from-finite-strain helper, design D4 / change aniso-init-
+        // from-finite-strain) to
+        //   aniso_delta_N → aniso_delta_fn(FS_AR_N)
+        // exactly — the mineral-specific Hansen-saturation ceiling holds with
+        // no permanent +offset. The "inherited fabric persists in cold static
+        // rock" feature survives via the strain-rate gate below: in quiescent
+        // cells τ_eff stays finite, so aniso_delta relaxes toward 1, but the
+        // gate AND/OR the (zero-deformation) cold-limit means FS_AR stays at
+        // its initial value, so δ stays at aniso_factor. Quiescent-hot limit
+        // (delta_FS == aniso_delta_fs_prev): pure relaxation
+        //   delta_new = 1 + (aniso_delta - 1)·exp(-dt/tau_eff).
+        // With the strain-rate gate below, tau_eff → ∞ in actively-creeping cells
+        // (gate suppresses DiSRX during deformation, per Boneh+21 static-anneal
+        // protocol), so CPO build-up via FS_AR survives in shear bands.
+        //
+        // ONE-STEP LAG (note, not a defect): at the line-676 anisotropy pass
+        // F/FS_AR and strain_pwl are end-of-previous-step values, while
+        // particles->T is current. The relaxation is a slow process and this
+        // is consistent with how ani_fstrain==2 already consumes FS_AR, so the
+        // lag is acceptable.
+        const int phase_d = particles->phase[k];
+        if ( phase_d >= 0 && materials->ani_fstrain[phase_d] == 3 ) {
+            // Production δ from the calibrated ani_fstrain==2 form. aniso_db>0
+            // is auto-defaulted for ani_fstrain==3 (InputOutput.c / Main_DOODZ.c),
+            // so aniso_delta_fn is populated; guard anyway.
+            double delta_FS = 1.0;
+            if ( materials->aniso_delta_fn[phase_d] != NULL ) {
+                delta_FS = materials->aniso_delta_fn[phase_d]( FS_AR[k] );
+            }
+            // Resolve the effective L_relax for this phase.
+            //   ani_relax_length >= 0  → explicit per-phase length
+            //   ani_relax_length  < 0  → sentinel: inherit gs_ref[phase]
+            // CAVEAT (constant-L_relax assumption, design D7a): with grain-size
+            // evolution OFF, L_relax is a per-phase CONSTANT. The annealed
+            // grain size that DiSRX actually grows to is itself T- and time-
+            // dependent; holding it fixed introduces a bounded error that is
+            // largest in the mid-temperature band and under episodic loading
+            // (where the "caught partway" regime lives) — the regime analysis
+            // bounds it at the ≤17 %-class on δ_final, never qualitative. With
+            // the gs flow law ON, L_relax could instead track mesh->d_n; that
+            // GSE-on path is deferred (design O3 — the -1 sentinel keeps it
+            // non-breaking to add later).
+            const double L_relax = ( materials->ani_relax_length[phase_d] >= 0.0 )
+                                   ? materials->ani_relax_length[phase_d]
+                                   : materials->gs_ref[phase_d];
+            // Boneh-2021 DiSRX kinetics constants — mineral-specific, pulled
+            // per-phase from the material database (set in ReadDataAnisotropy,
+            // FlowLaws.c; olivine-calibrated there).
+            const double tau_relax = DeltaRelaxationTau( particles->T[k], L_relax,
+                                                         particles->strain_pwl[k],
+                                                         materials->R, scaling,
+                                                         materials->ani_relax_Q[phase_d],
+                                                         materials->ani_relax_M0[phase_d],
+                                                         materials->ani_relax_mu[phase_d],
+                                                         materials->ani_relax_b[phase_d],
+                                                         materials->ani_relax_drho_min[phase_d],
+                                                         materials->ani_relax_drho_max[phase_d],
+                                                         materials->ani_relax_eps_ref[phase_d] );
+            // STRAIN-RATE GATE on DiSRX relaxation: Boneh-2021's M0/Q come from
+            // STATIC-anneal experiments (Karato 89, Cooper-Kohlstedt 84, Speciale
+            // 20); concurrent dislocation creep suppresses DiSRX (Hansen+12/14/16
+            // build CPO at ε̇ ≈ 1e-5 with no observed DiSRX). The gate slows the
+            // relaxation when this cell's dislocation strain rate exceeds the
+            // per-phase threshold ani_relax_eps_max (default 1e-13 s^-1):
+            //   f_gate = 1 / (1 + (eII_pwl / eps_max)^2),   tau_eff = tau_relax / f_gate
+            // f_gate → 1 in quiescent rock (gate disabled, classic DiSRX),
+            // f_gate → 0 in actively-deforming rock (tau_eff → ∞, CPO preserved).
+            // A sentinel ani_relax_eps_max < 0 disables the gate (legacy behaviour).
+            double tau_eff = tau_relax;
+            const double eps_max = materials->ani_relax_eps_max[phase_d];
+            if ( eps_max > 0.0 ) {
+                // nearest-cell lookup of the centroid eII_pwl (scaled units)
+                int icx = (int)floor( (particles->x[k] - model.xmin) / model.dx );
+                int icz = (int)floor( (particles->z[k] - model.zmin) / model.dz );
+                if (icx < 0) icx = 0;     if (icx > model.Nx-2) icx = model.Nx-2;
+                if (icz < 0) icz = 0;     if (icz > model.Nz-2) icz = model.Nz-2;
+                const int c2_m = icx + icz*(model.Nx-1);
+                const double eII = mesh->eII_pwl[c2_m];
+                if ( isfinite(eII) && eII >= 0.0 ) {
+                    const double ratio  = eII / eps_max;
+                    const double f_gate = 1.0 / ( 1.0 + ratio*ratio );
+                    if ( f_gate > 1.0e-30 ) tau_eff = tau_relax / f_gate;
+                    else                    tau_eff = 1.0e300;          // gate fully closed
+                }
+            }
+            const double delta_prod = particles->aniso_delta[k]
+                                      + ( delta_FS - particles->aniso_delta_fs_prev[k] );
+            // Analytic exponential relaxation toward the isotropic limit δ_eq = 1.
+            // Unconditionally stable for any dt; cannot overshoot below 1.
+            double delta_new = 1.0 + ( delta_prod - 1.0 ) * exp( -model.dt / tau_eff );
+            // Clamp to [1, ani_fac_max].
+            if ( delta_new > materials->ani_fac_max[phase_d] ) delta_new = materials->ani_fac_max[phase_d];
+            if ( delta_new < 1.0 )                             delta_new = 1.0;
+            particles->aniso_delta[k]         = delta_new;
+            particles->aniso_delta_fs_prev[k] = delta_FS;
+        }
     }
 
     P2Mastah( &model, *particles, FS_AR, mesh, mesh->FS_AR_n,   mesh->BCp.type,  1, 0, interp, cent, model.interp_stencil, NULL);
     P2Mastah( &model, *particles, FS_AR, mesh, mesh->FS_AR_s,   mesh->BCg.type,  1, 0, interp, vert, model.interp_stencil, NULL);
+
+    // ani_fstrain == 3: P2G the relaxed per-marker δ onto both the centroid
+    // and vertex grids, mirroring exactly the two FS_AR P2Mastah calls above.
+    // AnisoFactorEvolv's ani_fstrain==3 arm then consumes mesh->aniso_delta_n/_s
+    // (passed in as its relaxed_delta argument) — so the relaxed δ flows
+    // through the existing per-phase phase_perc weighting and harmonic/
+    // geometric averaging in UpdateAnisoFactor.
+    P2Mastah( &model, *particles, particles->aniso_delta, mesh, mesh->aniso_delta_n, mesh->BCp.type, 1, 0, interp, cent, model.interp_stencil, NULL);
+    P2Mastah( &model, *particles, particles->aniso_delta, mesh, mesh->aniso_delta_s, mesh->BCg.type, 1, 0, interp, vert, model.interp_stencil, NULL);
 
     DoodzFree(FS_AR);
 

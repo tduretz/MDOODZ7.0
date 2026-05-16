@@ -1,0 +1,140 @@
+/**** Coupled GSE + finite-strain anisotropy: 51×51 × Nt=10 smoke test ****/
+/* Downsized variant of SETS/PinchSwellGSEAniso.txt for CI. Same calcite
+ * pinch-and-swell setup, anisotropy enabled on the layer. The smoke test
+ * gates the integrated path post-merge-gse-anisotropy fix: GSE iteration
+ * routed through ViscosityConciseAniso, evolving both d and (after enough
+ * strain) δ.
+ */
+
+/**** RESTART ****/
+istep = 00010
+irestart = 0
+
+/**** OUTPUT FILES ****/
+writer            = 1
+writer_step       = 5
+writer_markers    = 0
+writer_debug      = 0
+writer_energies   = 0
+writer_subfolder  = PinchSwellGSEAnisoSmoke
+
+gnuplot_log_res = 0
+
+/**** SCALES ****/
+eta = 1e21
+L   = 5e0
+V   = 1e-13
+T   = 400
+
+/**** SPACE-TIME ****/
+Nx   = 51
+Nz   = 51
+Nt   = 10
+xmin = -0.25
+zmin = -0.30
+xmax =  0.25
+zmax =  0.30
+dt   = 1e11
+Courant = 0.50
+penalty = 1e5
+eta_average = 0
+
+/**** SWITCHES ****/
+mechanical    = 1
+constant_dt     = 0
+RK              = 4
+periodic_x    = 0
+pure_shear_ALE = 1
+
+elastic       = 0   / off so the wattmeter sees the spatial stress directly
+thermal       = 0   / fixed-T, no thermal transient
+line_search     = 0
+free_surface       = 0
+free_surface_stab  = 0
+
+initial_cooling      = 0
+subgrid_diffusion    = 0
+shear_heating      = 0
+adiab_heating      = 0
+
+/**** ANISOTROPY ****/
+anisotropy        = 1
+
+/**** SETUP DEPENDANT ****/
+bkg_strain_rate = -1e-14
+user0           = 350     / initial temperature [°C]
+
+/**** GRAVITY ****/
+gx = 0.0000
+gz = 0.0000
+
+/**** PHASE PROPERTIES ****/
+Nb_phases = 2
+
+/**** PHASE 0 — matrix ****/
+ID   = 0
+rho  = 2700
+G    = 1e10
+Cp   = 1000
+k    = 2.5
+Qr   = 0
+C    = 1e90
+phi  = 30
+Slim = 1e91
+alp  = 10.0e-6
+bet  = 1e-11
+drho = 0
+cstv = 0             / constant visc law
+pwlv = 15            / disloc. creep — Calcite, Renner et al. (2002)
+linv = 15            / diff. creep — Calcite, Herwegh (2003)
+gbsv = 0             / grain boundary sliding
+expv = 0             / peierls creep
+eta0 = 1e20
+npwl = 0
+Qpwl = 0
+gs_ref = 1e-5        / 10 µm — matrix grain size, no GSE for this phase
+aniso_angle  = 0      / matrix isotropic — angle is irrelevant
+aniso_factor = 1.0    / no static anisotropy
+ani_fstrain  = 0      / no finite-strain anisotropy in matrix
+ani_fac_max  = 1.0
+
+/**** PHASE 1 — calcite layer with grain-size evolution + finite-strain anisotropy ****/
+ID   = 1
+rho  = 2700
+G    = 1e10
+Cp   = 1000
+k    = 2.5
+Qr   = 0
+C    = 1e90
+phi  = 30
+Slim = 1e91
+alp  = 10.0e-6
+bet  = 1e-11
+drho = 0
+cstv = 0             / constant visc law
+pwlv = 15            / disloc. creep — Calcite, Renner et al. (2002)
+linv = 15            / diff. creep — Calcite, Herwegh (2003)
+gbsv = 0             / grain boundary sliding
+expv = 0             / peierls creep
+eta0 = 1e22
+npwl = 0
+Qpwl = 0
+gs_ref = 1e-3        / 1 mm initial grain size — overwritten by wattmeter
+gs    = 10           / paleowattmeter — Calcite, Austin & Evans (2007/2009)
+aniso_angle  = 0      / director vertical → foliation horizontal (bedding-parallel)
+aniso_factor = 1.0    / overridden by FS_AR via ani_fstrain = 1
+ani_fstrain  = 1      / finite-strain anisotropy active for calcite layer
+ani_fac_max  = 4      / Carrara marble torsion empirical (Barnhoorn et al. 2004)
+
+/**** PARTICLES ****/
+Nx_part  = 4
+Nz_part  = 4
+min_part_cell = 16
+
+/**** NON-LINEAR SOLVER ****/
+Newton      = 1
+line_search = 1
+nit_max     = 10
+rel_tol_KSP = 1e-4
+nonlin_abs_mom   = 1e-10
+nonlin_rel_div   = 1e-10
