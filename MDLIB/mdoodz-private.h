@@ -162,6 +162,11 @@ struct _SparseMat {
   int    *Ic, *J, neq;
   int    *eqn_u, *eqn_v, *eqn_p;
   int     nnz, neq_mom, neq_cont;
+  /* H02: CSR sparsity-pattern cache. Capacity held across AllocMat/FreeMat
+     cycles so the per-NL-iter calloc+free of Ic/J/A/bbc is skipped when the
+     requested sizes fit. Initialized by SAlloc; finally released by SFree. */
+  int     nnz_alloc;   /* current allocated capacity of J and A */
+  int     neq_alloc;   /* current allocated capacity of Ic (neq+1) and bbc (neq) */
 };
 
 // Nparams contains numerical parameters of the non-linear solver

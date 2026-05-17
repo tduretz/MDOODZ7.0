@@ -490,7 +490,7 @@ double ViscosityConciseAniso( int phase, double lxlz, double lx2, double angle, 
       // r(eta_ve) = Eii - elastic*Tii/(2 eta_el) - Eii_vis is monotonically
       // decreasing in eta_ve, so r>0 at small eta and r<0 at large eta.
       double r0 = 0.0, drdeta;
-      const int bisection_steps = 30;   // 30 → 9e-9 dex resolution on a 30-dex bracket
+      const int bisection_steps = 10;   // 30 → 9e-9 dex resolution on a 30-dex bracket
       // Bracket the visco-elastic root in [eta_bi_lo, eta_bi_hi]:
       //   • lower end = min_eta (user-supplied solver floor — at any
       //     eta_ve below this, Tii is small, viscous and elastic

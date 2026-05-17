@@ -52,6 +52,23 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
     LOG_INFO("************ Starting MDOODZ 7.0 simulation ************");
     LOG_INFO("********************************************************");
 
+    // Apple Silicon (macOS 15+): suppress Accelerate's internal GCD thread pool
+    // so it doesn't oversubscribe against our OpenMP threads. Per-thread setting.
+#if defined(__APPLE__)
+    {
+        #include <dlfcn.h>
+        typedef int (*blas_set_threading_fn_t)(unsigned int);
+        blas_set_threading_fn_t blas_set = (blas_set_threading_fn_t)dlsym(RTLD_DEFAULT, "BLASSetThreading");
+        if (blas_set != NULL) {
+            // BLAS_THREADING_SINGLE_THREADED = 1
+            int rc = blas_set(1);
+            LOG_INFO("BLASSetThreading(SINGLE_THREADED) via dlsym = %d", rc);
+        } else {
+            LOG_INFO("BLASSetThreading not available (macOS<15)");
+        }
+    }
+#endif
+
     Input inputFile   = ReadInputFile(inputFileName);
 
     mdoodz_log_reconfigure(&inputFile.model.log);
