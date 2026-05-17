@@ -642,7 +642,7 @@ double LineSearchDecoupled( SparseMat *Stokes, SparseMat *StokesA, SparseMat *St
         // literature describes this same early-exit pattern.
         int pc_accepted = 0;
         double pc_alpha = minalpha;  // full Newton step
-        {
+        if ( model->pc_line_search == 1 ) {
             // Start from initial solutions
             ArrayEqualArray( mesh->u_in, u, nx*nzvx );
             ArrayEqualArray( mesh->v_in, v, nxvz*nz );

@@ -66,9 +66,21 @@ The `SparseMat` struct SHALL carry allocated-capacity counters `nnz_alloc` (entr
 
 ### Requirement: Predictor-corrector line search in `LineSearchDecoupled`
 
-The Newton-branch of `LineSearchDecoupled` SHALL test the full Newton step (`alpha = -1.0`) first via a single residual evaluation and accept it when the resulting combined residual `||(rx,rz,rp)||` is strictly less than `frac * ||(prev_rx, prev_rz, prev_rp)||`, where `frac` is the existing Armijo coefficient (`Nmodel->LineSearch_armijo`, default `1.0`). On acceptance the function SHALL skip the original 6-trial geometric bracket scan. On rejection the function SHALL fall through to the existing 6-trial scan with no degradation versus the pre-patch behaviour.
+The system SHALL support an integer parameter `pc_line_search` in the `.txt` configuration file, read via `ReadInt2(fin, "pc_line_search", 0)`. The value `0` (default) SHALL produce bit-identical behaviour to the pre-change codebase, preserving CI test conformance on path-sensitive benchmarks (SolCx, Popov2025, Blankenbach). The value `1` SHALL enable a predictor-corrector early-exit in the Newton branch of `LineSearchDecoupled`.
+
+When `pc_line_search = 1`, the Newton-branch of `LineSearchDecoupled` SHALL test the full Newton step (`alpha = -1.0`) first via a single residual evaluation and accept it when the resulting combined residual `||(rx,rz,rp)||` is strictly less than `frac * ||(prev_rx, prev_rz, prev_rp)||`, where `frac` is the existing Armijo coefficient (`Nmodel->LineSearch_armijo`, default `1.0`). On acceptance the function SHALL skip the original 6-trial geometric bracket scan. On rejection the function SHALL fall through to the existing 6-trial scan with no degradation versus the pre-patch behaviour.
 
 The patch SHALL be confined to the Newton branch; the Picard branch (`Newton == 0`) is unchanged.
+
+#### Scenario: Parameter absent from .txt file
+
+- **WHEN** `pc_line_search` is not specified in the `.txt` configuration file
+- **THEN** the system SHALL default to `0` and the line search SHALL execute the unmodified 6-trial bracket scan, producing identical behaviour to the pre-change codebase
+
+#### Scenario: `pc_line_search = 1` enables the predictor
+
+- **WHEN** `pc_line_search = 1` is specified
+- **THEN** the predictor-corrector early-exit code path SHALL execute on each Newton-mode call to `LineSearchDecoupled`
 
 #### Scenario: Newton step satisfies Armijo
 
@@ -126,7 +138,8 @@ To achieve the documented `4.525 s/step` headline on the validated workload, run
 | Knob | Recommended value | Lives in |
 |---|---|---|
 | `OMP_NUM_THREADS` | `12` | environment (export before `RiftingRoman` invocation) |
-| Powell-Hestenes `penalty` | `1e1` | workload `.txt` (e.g. `cmake-exec/RiftingRoman/run_aniso3_v3/RiftingRomanAniso3_v3.txt:28`) |
+| Powell-Hestenes `penalty` | `1e1` | workload `.txt` (e.g. `cmake-exec/RiftingRoman/run_aniso3_v3/RiftingRomanAniso3_v3.txt`) |
+| `pc_line_search` | `1` | workload `.txt` (opt-in for validated workloads; off by default to preserve benchmark conformance) |
 | Clang PGO | `-fprofile-instr-use=<profdata>` | CMake build flag (3-stage instrumented build + training run + use rebuild) |
 
 #### Scenario: Production rifting run (Nx·Nz ≥ 10⁴)
