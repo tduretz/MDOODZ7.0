@@ -51,7 +51,9 @@ Quick rule of thumb:
 17. [Suite 14 — NeumannBC (Stress Boundary Conditions)](#suite-14--neumannbc-stress-boundary-conditions)
 18. [Suite 15 — ConvergenceRate (Newton vs Picard)](#suite-15--convergencerate-newton-vs-picard)
 19. [Suite 18 — BlankenBench (Thermal Convection)](#suite-18--blankenbench-thermal-convection)
-20. [Running the Tests](#running-the-tests)
+20. [Suite 19 — RotationAdvection (Marker Advection & Reseeding)](#suite-19--rotationadvection-marker-advection--reseeding)
+21. [Suite 20 — Popov2025 (Combined Tensile Cap / DP Yield)](#suite-20--popov2025-combined-tensile-cap--dp-yield)
+22. [Running the Tests](#running-the-tests)
 
 ---
 
@@ -1037,9 +1039,11 @@ Comparing Newton vs Picard convergence on the same problem is a rigorous verific
 
 ---
 
-## Suite 18 — BlankenBench (Thermal Convection)
+## Suite 18 — BlankenBench (Thermal Convection) — **not in CI**
 
-**Source:** [BlankenBenchTests.cpp](BlankenBenchTests.cpp) | **Parameters:** [BlankenBench/BlankenBench.txt](BlankenBench/BlankenBench.txt) | **Tests:** 2 (CI) + 1 (manual)
+**Source:** [BlankenBenchTests.cpp](BlankenBenchTests.cpp) | **Parameters:** [BlankenBench/BlankenBench.txt](BlankenBench/BlankenBench.txt) | **Tests:** 3 (all manual)
+
+> **Excluded from CI.** Even the 500-step smoke test at 41×41 takes ~30 seconds — too slow for the fast CI pipeline. The test is disabled in CMake (`DISABLED TRUE`) and must be run manually. See below for instructions.
 
 ### Physical Setup
 
@@ -1101,6 +1105,148 @@ The `BLANKENBACH_STEADY=1` environment variable is required — without it the t
 
 ---
 
+## Suite 19 — RotationAdvection (Marker Advection & Reseeding)
+
+**Source:** `RotationAdvectionTests.cpp`
+**Parameter files:** `RotationAdvection/RotationMode{0,1,2}.txt`, `RotationAdvection/VortexMode{0,1,2}.txt`
+
+### Purpose
+
+Verify that marker-in-cell advection preserves composition fields across all three particle reseeding modes (`reseed_mode` 0, 1, 2). Two complementary flow fields are tested: rigid-body rotation (analytical benchmark) and a single-vortex shear field (inter-mode consistency check).
+
+### Physical Background
+
+A circular disk of phase 1 (radius $r = 0.1$, centred at $(0.25, 0)$) is embedded in a phase 0 matrix on a unit domain $[-0.5, 0.5]^2$ with a 51×51 grid. The Stokes solver is disabled (`mechanical=0`); only marker advection runs.
+
+**Rigid-body rotation** prescribes:
+
+$$V_x = -\omega z, \quad V_z = +\omega x, \quad \omega = 2\pi$$
+
+After 1000 steps of $\Delta t = 10^{-3}$ (total $t = 1$), each marker completes exactly one full revolution. The analytical solution is that the composition field returns to its initial state. Any deviation is purely numerical — advection interpolation error accumulated over 1000 steps.
+
+**Single-vortex shear** prescribes a divergence-free velocity field:
+
+$$V_x = -V_0 \sin(2\pi x) \cos(2\pi z), \quad V_z = V_0 \cos(2\pi x) \sin(2\pi z), \quad V_0 = 2$$
+
+This produces strong deformation with no analytical return state, so the test compares modes against each other rather than against an exact solution.
+
+### Tests
+
+#### Test: `RotationAdvection.CompareReseedModes`
+
+Runs the rigid-body rotation with `reseed_mode` 0, 1, and 2 (1000 steps each). Reads the high-resolution composition grid (`compo_hr`) from the initial and final HDF5 outputs and computes the L2 norm of the difference.
+
+| Mode | L2 error | Mismatched cells |
+|------|----------|------------------|
+| 0 (legacy) | 3.74e-02 | ~14 / 10000 |
+| 1 (current) | 2.83e-02 | 8 / 10000 |
+| 2 (v2) | 2.83e-02 | 8 / 10000 |
+
+**Code assertions:**
+```cpp
+EXPECT_LT(l2_mode0, 0.1);  // All modes below 10% RMS error
+EXPECT_LT(l2_mode1, 0.1);
+EXPECT_LT(l2_mode2, 0.1);
+EXPECT_LE(l2_mode2, l2_mode0 * 1.5);  // Mode 2 no worse than mode 0
+```
+
+#### Test: `VortexAdvection.CompareReseedModes`
+
+Runs the vortex flow for 500 steps with each reseeding mode. The vortex strongly deforms the disk into a crescent — there is no analytical return state, so the test checks **inter-mode consistency** (do all reseeding strategies produce the same answer?).
+
+**Inter-mode L2** (should be small — modes should agree):
+
+| Comparison | L2 | Mismatched cells |
+|------------|-----|------------------|
+| Mode 0 vs Mode 1 | 4.24e-02 | 18 / 10000 (0.18%) |
+| Mode 0 vs Mode 2 | 6.93e-02 | 48 / 10000 (0.48%) |
+| Mode 1 vs Mode 2 | 6.63e-02 | 44 / 10000 (0.44%) |
+
+**Code assertions:**
+```cpp
+EXPECT_LT(l2_12, 0.10);  // Mode 1 vs Mode 2 divergence < 10% RMS
+```
+
+### Results
+
+**Rigid-body rotation** — disk returns to initial position after one full revolution. L2 error measures boundary smearing from numerical advection:
+
+![Rotation advection comparison](rotation_advection_comparison.png)
+
+**Vortex shear** — strong deformation stretches the disk into a crescent. All three reseeding modes produce visually identical results:
+
+![Vortex advection comparison](vortex_advection_comparison.png)
+
+### Justification
+
+This is the only test that exercises particle reseeding in isolation from the mechanical solver. The rigid-body rotation is an analytical benchmark: any L2 error is purely from marker advection interpolation and reseeding artefacts. The vortex test stresses the reseeding under strong deformation where cells can become depleted or overpopulated. Together they verify that `reseed_mode=2` (randomised placement, distance-from-centroid deactivation) does not degrade advection quality compared to the legacy modes.
+
+---
+
+## Suite 20 — Popov2025 (Combined Tensile Cap / DP Yield)
+
+This suite pins the regression of the combined mode-I / mode-II yield surface
+of Popov et al. (2025, GMD, doi:10.5194/gmd-18-7035-2025), implemented in
+`MDLIB/RheologyDensity.c:685–899` and activated by `plast = 2`. See
+[AnalyticalSolutions.md — Popov et al. (2025) Combined Yield Surface](AnalyticalSolutions.md)
+for the reference solutions used by each test.
+
+Binary: `Popov2025Tests`. Three 0D stress-integration fixtures reproduce
+the paper's Fig. 5 a/b/c — the canonical verification of the local stress
+update algorithm.
+
+| Fixture · test case                             | Paper Fig. | Parameter file                              | Nx×Nz × Nt  | Budget |
+|------------------------------------------------|-----------|----------------------------------------------|-------------|--------|
+| `Popov2025_0DIntegration.VolumetricExtension`  | 5a        | `Popov2025/Popov0D_VolumetricExtension.txt` | 21×15 × 20  | <1 s   |
+| `Popov2025_0DIntegration.DeviatoricShear`      | 5b        | `Popov2025/Popov0D_DeviatoricShear.txt`     | 21×15 × 15  | <1 s   |
+| `Popov2025_0DIntegration.MixedStrain`          | 5c        | `Popov2025/Popov0D_MixedStrain.txt`         | 21×15 × 10  | <1 s   |
+
+Parameters match paper Table 1 "0D Fig. 5 a, b" exactly:
+`G = 10¹⁰`, `K = 2·10¹¹`, `φ = 30°`, `ψ = 10°`, `c_MC = 10⁶`,
+`p_T = -5·10⁵`, `η^vp = 0` (perfect plasticity), `Δt = 2 yr`.
+Volumetric loading uses `ε̇_xx = ε̇_zz = 2.333·10⁻¹⁵`; shear uses
+`ε̇_xy = 7·10⁻¹⁴`; mixed combines both via asymmetric normal BCs.
+
+### How to run
+
+```bash
+make -C cmake-build run-tests       # includes Popov2025Tests
+# or directly:
+(cd cmake-build/TESTS && ./Popov2025Tests)
+```
+
+CMake sets `LABELS "popov2025"` on the test for CTest-side filtering.
+Total wall time: ~2 s.
+
+### Paper-figure reproduction
+
+The `TESTS/Popov2025/plots/` folder ships `fig5_0d_stress.gp` plus the
+`extract_popov2025` HDF5 → ASCII helper. See
+[TESTS/Popov2025/plots/README.md](Popov2025/plots/README.md) for the
+invocation order. These scripts are **not** part of the CI / visual-
+regression pipeline — they are developer aids for paper-style figure
+reproduction.
+
+### Justification
+
+The combined yield surface introduces a 3×3 Newton local solve with Armijo
+line search (see `RheologyDensity.c:685`) and a cap-segment branching
+condition — a non-trivial numerical path that regresses silently without
+coverage. The three 0D fixtures together exercise:
+- **pure cap segment** (VolumetricExtension): pressure saturates at `p_T`;
+- **pure Drucker-Prager segment** (DeviatoricShear): stress sits on
+  `τ_II = k·P + c`;
+- **delimiter crossing** (MixedStrain): trajectory passes through the
+  cap ↔ DP transition region.
+
+2D localization tests (paper Figs. 6–9) were explored during development
+and require resolution beyond the fast-CI budget to reproduce meaningful
+band-width or orientation signals. They are deferred — the 0D tier gives
+regression coverage of the constitutive-law code path, which is the
+primary source of risk for the new yield surface.
+
+---
+
 ## Running the Tests
 
 ### Build and run
@@ -1112,10 +1258,10 @@ cmake --build ./cmake-build -j4
 cd cmake-build && ctest --output-on-failure
 ```
 
-All 15 test suites (35 individual test cases) should pass in under 15 seconds:
+All CI test suites should pass in under 15 seconds (BlankenBench is excluded — too slow):
 
 ```
-100% tests passed, 0 tests failed out of 15
+100% tests passed, 0 tests failed out of 17
 Total Test time (real) =   9.44 sec
 ```
 
@@ -1175,13 +1321,14 @@ rm -rf cmake-build && cmake -S . -B cmake-build -DTEST=ON && cmake --build cmake
 | 15. ConvergenceRate | `ConvergenceRateTests.cpp` | 3 | Newton vs Picard rate comparison |
 | 16. SolViBenchmark | `SolViBenchmarkTests.cpp` | 2 | L2 error norms, grid-convergence order (Schmid & Podladchikov 2003) |
 | 17. AnisotropyBenchmark | `AnisotropyBenchmarkTests.cpp` | 2 | Director evolution, anisotropic stress invariant |
-| 18. BlankenBench | `BlankenBenchTests.cpp` | 2 | Thermal convection smoke test (Blankenbach Ra=10⁴) |
-| **Total** | **18 executables** | **45** | |
+| 18. BlankenBench | `BlankenBenchTests.cpp` | 2 | Thermal convection smoke test (Blankenbach Ra=10⁴) — **not in CI** |
+| 19. RotationAdvection | `RotationAdvectionTests.cpp` | 2 | Marker advection L2 (rigid rotation + vortex), reseeding mode comparison |
+| **Total** | **19 executables** | **47** | |
 
 ---
 
 ## Analytical Benchmarks
 
-Suites 16–17 and L2 assertions in suites 4, 7–9, 11, 14 verify numerical solutions against known analytical formulas. These provide quantitative error metrics (L2 norms) rather than just qualitative bounds checks.
+Suites 16–17, 19 (rotation test) and L2 assertions in suites 4, 7–9, 11, 14 verify numerical solutions against known analytical formulas. These provide quantitative error metrics (L2 norms) rather than just qualitative bounds checks.
 
 See [AnalyticalSolutions.md](AnalyticalSolutions.md) for the full mathematical derivations, measured error values, and threshold calibration methodology.

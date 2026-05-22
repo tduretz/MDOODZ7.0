@@ -1,0 +1,15 @@
+## Tasaka+16 reduced to (γ, M); Fo50 wet — case 7 calibration input.
+## Generated from raw_Tasaka_etal_2016_JGR.csv.
+gamma_simple,M,sample
+0,0.01,PT-916
+0,0.01,PT-933
+0.6,0.01,PT-938
+1.3,0.03,PT-952
+1.8,0.05,PT-892
+2.4,0.24,PT-954
+2.7,0.23,PT-973
+2.7,0.3,PT-930
+3,0.22,PT-939
+3.4,0.13,PT-889
+3.7,0.14,PT-976
+5,0.13,PT-966

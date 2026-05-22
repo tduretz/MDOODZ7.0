@@ -37,7 +37,7 @@ double SetTemperature(MdoodzInput *input, Coordinates coordinates) {
   const double xmax = input->model.xmax;
   const double Lx   = xmax - xmin;
   double x_nd = (coordinates.x - xmin) / Lx;
-  double perturbation = 0.01 * cos(M_PI * x_nd) * sin(M_PI * z_nd) / input->scaling.T;
+  double perturbation = 0.01 * (T_bot - T_top) * cos(M_PI * x_nd) * sin(M_PI * z_nd);
 
   return T_lin + perturbation;
 }

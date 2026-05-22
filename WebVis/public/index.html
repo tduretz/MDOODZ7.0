@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MDOODZ WebVis</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+    <header id="header">
+      <span class="header-title">MDOODZ WebVis</span>
+      <span id="header-field" class="header-field"></span>
+      <span id="header-time" class="header-time">
+        <span id="time-display"></span>
+        <select id="time-unit-select">
+          <option value="">Auto</option>
+          <option value="yr">yr</option>
+          <option value="ka">ka</option>
+          <option value="Ma">Ma</option>
+        </select>
+        <select id="spatial-unit-select">
+          <option value="km" selected>km</option>
+          <option value="m">m</option>
+        </select>
+        <button id="theme-toggle" class="theme-toggle" title="Toggle light/dark mode">🌙</button>
+      </span>
+    </header>
+    <aside id="controls"></aside>
+    <main id="panels-grid" class="grid-1x1">
+      <div id="loading-overlay" class="hidden">Loading…</div>
+    </main>
+    <footer id="status-bar"></footer>
+  </div>
+  <script type="module" src="app.mjs"></script>
+</body>
+</html>

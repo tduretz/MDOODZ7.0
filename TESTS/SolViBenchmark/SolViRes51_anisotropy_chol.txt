@@ -1,0 +1,127 @@
+/**** add-gmg-stokes-defence §3.2 — anisotropic SolVi twin (CHOLMOD) ****/
+/* CHOLMOD reference for SolViRes51_anisotropy. Identical to
+ * SolViRes51_anisotropy_gmg.txt except for the linear-solver block
+ * (lin_solver = -1, no gmg_* keys) and writer_subfolder.
+ *
+ * Why lin_solver = -1 (DirectStokesDecoupledComp) and not 0
+ * (DirectStokesDecoupled single solve)? InputOutput.c:1284 remaps
+ * lin_solver = 0 → lin_solver = 2 (KillerSolver / iterative Powell-
+ * Hestenes) whenever anisotropy = 1 is set, because the anisotropic
+ * tensor breaks the SPD assumption the direct single-solve path
+ * requires. That iterative re-mapping caps the linear residual at
+ * penalty⁻¹·iters ≈ 1e-4, so a GMG twin (fgmres_tol = 1e-11) would
+ * disagree with the "CHOLMOD" reference at the O(1e-4) level — orders
+ * of magnitude above the §7.1 dual-solver acceptance bound of 1e-8.
+ * lin_solver = -1 uses the same Powell-Hestenes outer loop but with a
+ * direct CHOLMOD inner solve each iteration, driving the linear
+ * residual to machine precision after ~5 PH passes. Same pattern
+ * as SolKz_chol.txt under §4.2.                                      */
+
+/**** RESTART ****/
+istep = 00001
+irestart = 0
+
+/**** OUTPUT FILES ****/
+writer           = 1
+writer_step      = 1
+writer_markers   = 0
+writer_debug     = 0
+writer_energies  = 0
+writer_subfolder = SolViRes51_anisotropy_chol
+
+/**** SCALES ****/
+eta = 1
+L   = 1
+V   = 1
+T   = 1
+
+/**** SPACE ****/
+Nx   = 51
+Nz   = 51
+Nt   = 1
+xmin = -5.000000e-1
+zmin = -5.000000e-1
+xmax =  5.000000e-1
+zmax =  5.000000e-1
+
+/**** PARTICLES ****/
+Nx_part = 4
+Nz_part = 4
+
+/**** TIME ****/
+constant_dt = 1
+Courant     = 0.3
+dt          = 0.5
+RK          = 4
+
+/**** LINEAR SOLVER ****/
+noisy        = 0
+penalty      = 1e10
+lin_solver   = -1
+diag_scaling = 0
+lin_abs_div  = 1e-11
+lin_rel_div  = 1e-11
+lin_abs_mom  = 1e-11
+lin_rel_mom  = 1e-11
+max_its_PH   = 40
+
+/**** NON-LINEAR SOLVER ****/
+Newton         = 0
+line_search    = 1
+nit_max        = 100
+rel_tol_KSP    = 1e-4
+nonlin_abs_mom = 1e-8
+nonlin_rel_mom = 1e-8
+nonlin_abs_div = 1e-8
+nonlin_rel_div = 1e-8
+
+/**** VISCOSITY CUT-OFF ****/
+min_eta = 1e-3
+max_eta = 1e6
+
+/**** SWITCHES ****/
+elastic           = 0
+anisotropy        = 1
+free_surface      = 0
+free_surface_stab = 0
+finite_strain     = 0
+advection         = 0
+gnuplot_log_res   = 0
+eta_average       = 0
+
+/**** SETUP-DEPENDANT ****/
+shear_style     = 0
+periodic_x      = 0
+pure_shear_ALE  = 1
+bkg_strain_rate = 1
+user0           = 0
+user1           = 0.2      / inclusion radius
+user2           = 0
+user3           = 0
+
+/**** GRAVITY ****/
+gx = 0.0000
+gz = 0.000
+
+/**** MAT PROPERTIES ****/
+Nb_phases = 2
+
+/**** PHASE 1 ****/
+ID    = 0
+plast = 0
+cstv  = 1
+eta0  = 1
+npwl  = 1.0
+Qpwl  = 0
+aniso_angle  = 30
+aniso_factor = 4
+
+/**** PHASE 2 ****/
+ID    = 1
+plast = 0
+cstv  = 1
+eta0  = 1000
+npwl  = 1.0
+Qpwl  = 0
+aniso_angle  = 30
+aniso_factor = 4

@@ -187,3 +187,30 @@ TEST_F(ShearTemplate, NonLinearSimpleshearAnisotropi) {
   ASSERT_TRUE(stepsCount > 1);
   ASSERT_TRUE(stepsCount < 10);
 }
+
+
+// --- Interpolation mode tests ---
+
+TEST_F(ShearTemplate, LinearPureshearIsotropicInterpMode1) {
+  char *inputName;
+  asprintf(&inputName, "ShearTemplate/LinearPureshearIsotropicInterpMode1.txt");
+  RunMDOODZ(inputName, &setup);
+  char *fileName;
+  asprintf(&fileName, "LinearPureshearIsotropicInterpMode1/Output%05d.gzip.h5", 1);
+  int steps = getStepsCount(fileName);
+  EXPECT_GE(steps, 0);
+  free(inputName);
+  free(fileName);
+}
+
+TEST_F(ShearTemplate, LinearPureshearIsotropicInterpMode2) {
+  char *inputName;
+  asprintf(&inputName, "ShearTemplate/LinearPureshearIsotropicInterpMode2.txt");
+  RunMDOODZ(inputName, &setup);
+  char *fileName;
+  asprintf(&fileName, "LinearPureshearIsotropicInterpMode2/Output%05d.gzip.h5", 1);
+  int steps = getStepsCount(fileName);
+  EXPECT_GE(steps, 0);
+  free(inputName);
+  free(fileName);
+}

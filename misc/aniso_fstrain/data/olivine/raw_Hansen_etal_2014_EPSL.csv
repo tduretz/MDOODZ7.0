@@ -1,0 +1,41 @@
+## Hansen, Zhao, Zimmerman, Kohlstedt (2014)
+## "Protracted fabric evolution in olivine: Implications for the relationship between strain and crystallographic preferred orientation"
+## Earth Planet. Sci. Lett. 387, 157-168.   doi:10.1016/j.epsl.2013.11.040
+## Source: bib/anisotropy_calibration_2026/olivine/Hansen_etal_2014_olivine_protracted_fabric_evolution_EPSL.pdf
+##
+## Hansen+14 Table 1 reanalyzed previously published samples (Bystricky+00,
+## Zhang & Karato 2005, Hansen+12a/b/c) using consistent M-index methodology
+## (Skemer+05 implementation). Reported as one unified γ vs M dataset.
+##
+## Fields exactly as in the paper:
+##   sample        — sample identifier
+##   gamma         — engineering shear strain (dimensionless)
+##   M             — Skemer M-index (unitless, ~ J convolution metric)
+##   provenance    — original publication that produced the sample
+sample,gamma,M,provenance
+PT0535,0.0,0.01,Hansen+12c
+PT0248_1,0.3,0.06,Hansen+14
+Bystricky_a,0.5,0.05,Bystricky+00 reanalyzed
+PT0655,1.0,0.06,Hansen+12b
+PT0248_2,1.0,0.06,Hansen+14
+PI-284,1.1,0.09,Zhang_Karato_2005
+PT0248_3,2.1,0.20,Hansen+14
+PT0503_5,2.7,0.26,Hansen+14
+PT0248_4,2.9,0.36,Hansen+14
+PT0248_5,3.9,0.35,Hansen+14
+PT0503_4,3.9,0.34,Hansen+14
+PT0640,4.0,0.36,Hansen+12b
+PT0503_3,4.9,0.45,Hansen+14
+Bystricky_b,5.0,0.17,Bystricky+00 reanalyzed
+PT0494,5.9,0.40,Hansen+12a
+PT0538,6.8,0.46,Hansen+12c
+PT0503_2,6.8,0.46,Hansen+14
+PT0541,7.6,0.44,Hansen+12c
+PT0503_1,8.2,0.35,Hansen+14
+PT0633,8.7,0.39,Hansen+12c
+PT0552,8.8,0.40,Hansen+12a
+PT0505,10.2,0.69,Hansen+12a
+PT0651,10.6,0.55,Hansen+12b
+PT0499,10.9,0.61,Hansen+12a
+PT0619,14.2,0.51,Hansen+12c
+PT0484,18.7,0.51,Hansen+12a

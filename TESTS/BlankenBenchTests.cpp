@@ -56,7 +56,7 @@ protected:
     const double xmin = input->model.xmin;
     const double Lx   = input->model.xmax - xmin;
     double x_nd = (coordinates.x - xmin) / Lx;
-    double perturbation = 0.01 * cos(M_PI * x_nd) * sin(M_PI * z_nd) / input->scaling.T;
+    double perturbation = 0.01 * (T_bot - T_top) * cos(M_PI * x_nd) * sin(M_PI * z_nd);
     return T_lin + perturbation;
   }
 
@@ -178,6 +178,14 @@ TEST_F(BlankenBench, ConvectionDevelops) {
   }
   double Nu = -(H / DeltaT) * (sumDtDz / ncx);
   printf("BlankenBench: Nu = %.4f (published steady state: 4.884)\n", Nu);
+
+  // Particle count stability: recycling should prevent unbounded growth
+  int Nb_part = readScalarInt(outFile, "Model", "Nb_part");
+  int Nb_part_initial = ncx * ncz * 4 * 4;  // Nx_part=4, Nz_part=4
+  printf("BlankenBench: Nb_part = %d (initial: %d, ratio: %.2f)\n",
+         Nb_part, Nb_part_initial, (double)Nb_part / Nb_part_initial);
+  EXPECT_LE(Nb_part, 2 * Nb_part_initial)
+      << "Particle count grew beyond 2x initial — recycling may not be working";
 }
 
 // ---------------------------------------------------------------------------
@@ -217,25 +225,22 @@ TEST_F(BlankenBench, TemperatureProfile) {
 // ---------------------------------------------------------------------------
 // Test 3: Steady-state Nusselt number and Vrms (MANUAL — not in CI)
 //
-// Runs 100k steps with Courant=0.5 to reach thermal steady state, then
+// Runs 50k steps with Courant=0.5 to reach thermal steady state, then
 // computes Nu and Vrms and compares against Blankenbach et al. (1989)
-// published reference values. Requires OMP_NUM_THREADS=8.
+// published reference values.
 //
-// Run: OMP_NUM_THREADS=8 ./BlankenBenchTests --gtest_filter=BlankenBench.NusseltAndVrms
+// Run: BLANKENBACH_STEADY=1 ./BlankenBenchTests --gtest_filter=BlankenBench.NusseltAndVrms
 // ---------------------------------------------------------------------------
 TEST_F(BlankenBench, NusseltAndVrms) {
   // Guard: only run when explicitly requested via environment variable
   const char *run_steady = std::getenv("BLANKENBACH_STEADY");
   if (!run_steady || std::string(run_steady) != "1") {
-    GTEST_SKIP() << "Set BLANKENBACH_STEADY=1 to run this long test (~2-4 hours)";
+    GTEST_SKIP() << "Set BLANKENBACH_STEADY=1 to run this long test (~1-2 hours)";
   }
 
 #ifdef _OPENMP
   int nthreads = omp_get_max_threads();
   printf("BlankenBench: Running with %d OpenMP threads\n", nthreads);
-  ASSERT_GE(nthreads, 4) << "Need at least 4 threads for reasonable runtime";
-#else
-  GTEST_SKIP() << "Build without OpenMP (-DOMP=ON). Skipping long-running test.";
 #endif
 
   // Run steady-state simulation
@@ -243,9 +248,9 @@ TEST_F(BlankenBench, NusseltAndVrms) {
   RunMDOODZ(inputFile, &setup);
 
   // Read final output
-  const char *outFile = "BlankenBench/Output100000.gzip.h5";
+  const char *outFile = "BlankenBench/Output50000.gzip.h5";
 
-  const int Nx = 41, Nz = 41;
+  const int Nx = 101, Nz = 101;
   const int ncx = Nx - 1, ncz = Nz - 1;
   const double T_top_K = zeroC;          // 273.15 K
   const double DeltaT  = 1000.0;         // K
@@ -300,4 +305,71 @@ TEST_F(BlankenBench, NusseltAndVrms) {
 
   EXPECT_NEAR(Nu,      Nu_ref,   tol * Nu_ref)   << "Nu outside 5% of published value";
   EXPECT_NEAR(Vrms_nd, Vrms_ref, tol * Vrms_ref) << "Vrms outside 5% of published value";
+
+  // --- Particle count stability: deactivation must prevent unbounded growth ---
+  int Nb_part = readScalarInt(outFile, "Model", "Nb_part");
+  int Nb_part_initial = ncx * ncz * 4 * 4;  // Nx_part=4, Nz_part=4
+  printf("BlankenBench: Nb_part = %d (initial: %d, ratio: %.2f)\n",
+         Nb_part, Nb_part_initial, (double)Nb_part / Nb_part_initial);
+  EXPECT_LE(Nb_part, 3 * Nb_part_initial)
+      << "Particle count grew beyond 3x initial — deactivation/recycling broken";
+}
+
+// ---------------------------------------------------------------------------
+// Test: Fused P2Mastah (interp_mode=3) smoke test
+// Runs same Blankenbach setup with interp_mode=3 and verifies identical
+// physical constraints as ConvectionDevelops.
+// ---------------------------------------------------------------------------
+TEST_F(BlankenBench, FusedP2Mastah) {
+  char inputFile[] = "BlankenBench/BlankenBenchOptimized.txt";
+  RunMDOODZ(inputFile, &setup);
+
+  const char *outFile = "BlankenBench/Output00500.gzip.h5";
+
+  const int Nx = 41, Nz = 41;
+  const int ncx = Nx - 1, ncz = Nz - 1;
+  const double T_top_K = zeroC;
+  const double DeltaT = 1000.0;
+  const double H = 1.0e5;
+
+  auto T_field = readFieldAsArray(outFile, "Centers", "T");
+  ASSERT_EQ((int)T_field.size(), ncx * ncz);
+
+  const double T_bot_K = T_top_K + DeltaT;
+  double T_min = 1e30, T_max = -1e30;
+  for (int i = 0; i < ncx * ncz; i++) {
+    if (T_field[i] < T_min) T_min = T_field[i];
+    if (T_field[i] > T_max) T_max = T_field[i];
+  }
+  printf("FusedP2Mastah: T range [%.1f, %.1f] K (expected ~[%.1f, %.1f])\n",
+         T_min, T_max, T_top_K, T_bot_K);
+  EXPECT_GT(T_min, T_top_K - 50.0) << "Temperature dropped below expected minimum";
+  EXPECT_LT(T_max, T_bot_K + 50.0) << "Temperature exceeded expected maximum";
+
+  auto Vx_field = readFieldAsArray(outFile, "VxNodes", "Vx");
+  auto Vz_field = readFieldAsArray(outFile, "VzNodes", "Vz");
+  ASSERT_EQ((int)Vx_field.size(), Nx * (Nz + 1));
+  ASSERT_EQ((int)Vz_field.size(), (Nx + 1) * Nz);
+
+  double sumV2 = 0.0;
+  for (size_t i = 0; i < Vx_field.size(); i++) sumV2 += Vx_field[i] * Vx_field[i];
+  for (size_t i = 0; i < Vz_field.size(); i++) sumV2 += Vz_field[i] * Vz_field[i];
+  EXPECT_GT(sumV2, 0.0) << "No velocity — convection did not start";
+  printf("FusedP2Mastah: sum(V^2) = %.4e (should be > 0)\n", sumV2);
+
+  // Nusselt number
+  double dz = H / ncz;
+  double sumDtDz = 0.0;
+  for (int i = 0; i < ncx; i++) {
+    double T_centre = T_field[(ncz - 1) * ncx + i];
+    double dTdz = (T_top_K - T_centre) / (dz / 2.0);
+    sumDtDz += dTdz;
+  }
+  double Nu = -(H / DeltaT) * (sumDtDz / ncx);
+  printf("FusedP2Mastah: Nu = %.4f (published steady state: 4.884)\n", Nu);
+
+  // No NaN in temperature
+  for (int i = 0; i < ncx * ncz; i++) {
+    ASSERT_FALSE(std::isnan(T_field[i])) << "NaN in temperature at index " << i;
+  }
 }

@@ -25,6 +25,8 @@
 #include "mdoodz-private.h"
 #include "time.h"
 
+#include "mdoodz-log.h"
+
 #ifdef _OMP_
 #include "omp.h"
 #else
@@ -34,7 +36,7 @@
 #endif
 
 #ifdef _VG_
-#define printf(...) printf("")
+#define LOG_INFO(...) LOG_INFO("")
 #endif
 
 /*--------------------------------------------------------------------------------------------------------------------*/
@@ -55,7 +57,7 @@ void CountPartCell2 ( markers* particles, grid *mesh, params model, surface topo
     int kk = 0;
     int jj, n_neigh=0, n_neigh0, ic2, *neigh_part, ii, p;
 
-    printf("USING CountPartCell2\n");
+    LOG_INFO("USING CountPartCell2");
 
     // Initialise
     Initialise2DArrayInt( mesh->nb_part_cell, ncx, ncz, 0 );
@@ -117,7 +119,7 @@ firstprivate( ncx, mesh ) schedule( static )
         }
     }
 
-    printf ("Before NODE re-seeding, nb_part_reuse: %d\n", nb_part_reuse);
+    LOG_INFO("Before NODE re-seeding, nb_part_reuse: %d", nb_part_reuse);
 
     // Final reduction for NODES
     for ( l=0; l<Nx*Nz; l++ ) {
@@ -290,7 +292,7 @@ firstprivate( ncx, mesh ) schedule( static )
         }
     }
 
-    printf ("Before CELL re-seeding, nb_part_reuse: %d\n", nb_part_reuse);
+    LOG_INFO("Before CELL re-seeding, nb_part_reuse: %d", nb_part_reuse);
 
 
     // Final reduction for CELLS
@@ -400,7 +402,7 @@ firstprivate( ncx, mesh ) schedule( static )
                     neighs              += mesh->nb_part_cell[ic];
 
                     if (neighs == 0) {
-                                           printf("All the neighbouring CELLS of ix = %d iz = %d are empty, simulation will stop\n", k, l);
+                                           LOG_INFO("All the neighbouring CELLS of ix = %d iz = %d are empty, simulation will stop", k, l);
                                            exit(1);
                                        }
                     if (k>0     && mesh->BCt.type[ic-1  ] != 30) neighs += mesh->nb_part_cell[ic-1];
@@ -420,7 +422,7 @@ firstprivate( ncx, mesh ) schedule( static )
                     neighs += mesh->nb_part_cell[ic+2*ncx];
 
                     if (neighs == 0) {
-                        printf("All the neighbouring CELLS of ix = %d iz = %d are empty, simulation will stop\n", k, l);
+                        LOG_INFO("All the neighbouring CELLS of ix = %d iz = %d are empty, simulation will stop", k, l);
                         exit(1);
                     }
 
@@ -688,7 +690,7 @@ firstprivate( ncx, mesh ) schedule( static )
     }
 
     particles->Nb_part = Np+Np_add;
-    printf("Deactivated particles: %03d\n", deact);
+    LOG_INFO("Deactivated particles: %03d", deact);
 
 
 

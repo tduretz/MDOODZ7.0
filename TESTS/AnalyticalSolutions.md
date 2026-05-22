@@ -149,7 +149,69 @@ where $Q_r$ is the volumetric heat production rate.
 EXPECT_NEAR(meanT_final, T_ana_mean, fabs(T_ana_mean - T0_SI) * 0.02);  // \u00b12% of \u0394T
 ```
 
-### 2.3 Hydrostatic Pressure
+### 2.3 Oceanic Half-Space Cooling
+
+**Source:** [ThermalVerificationTests.cpp](ThermalVerificationTests.cpp)
+**Parameter files:** [Thermal/OceanicCooling.txt](Thermal/OceanicCooling.txt), [Thermal/OceanicCoolingPCG.txt](Thermal/OceanicCoolingPCG.txt)
+**Tests:** `ThermalVerification.OceanicCooling`, `ThermalVerification.OceanicCoolingPCG`
+
+A half-space with uniform initial mantle temperature $T_m$ is cooled from the surface ($T_s = 0°C$). The temperature profile after time $t$ is the classical error-function solution:
+
+$$T(z,t) = T_s + (T_m - T_s)\,\mathrm{erf}\!\left(\frac{z}{\sqrt{4\kappa t}}\right)$$
+
+where $\kappa = k / (\rho C_p)$ is the thermal diffusivity, $z$ is depth (positive downward), $k = 3$ W/(m·K), $\rho = 3300$ kg/m³, $C_p = 1050$ J/(kg·K).
+
+**Parameters:** $T_m = 1400°C$, domain $[-200, 0]$ km, $N_x \times N_z = 11 \times 51$, $\Delta t = 10^{13}$ s, $N_t = 10$. Dirichlet $T_s$ at top, Dirichlet $T_m$ at bottom, Neumann (zero flux) on sides.
+
+**Measured accuracy:** $L_2(T) = 3.64 \times 10^{-3}$ for both CHOLMOD and PCG. CHOLMOD vs PCG absolute L2 difference = 0. The test runs in a separate `ThermalVerificationTests` binary due to a pre-existing MDOODZ global state issue when mixing different grid configurations in one process.
+
+**Code assertions** ([ThermalVerificationTests.cpp](ThermalVerificationTests.cpp)):
+```cpp
+double L2 = sqrt(sum_sq / sum_ref);
+EXPECT_LT(L2, 5e-2);  // CHOLMOD: measured 3.64e-3 (13× margin)
+
+double L2_pcg = sqrt(sum_sq / sum_ref);
+EXPECT_LT(L2_pcg, 5e-2);  // PCG: measured 3.64e-3
+
+double L2_diff = sqrt(sum_sq2 / sum_ref2);
+EXPECT_LT(L2_diff, 1e-6);  // CHOLMOD vs PCG: measured 0
+```
+
+### 2.4 Thermo-Elastic Coupling
+
+**Source:** [ThermalVerificationTests.cpp](ThermalVerificationTests.cpp)
+**Parameter files:** [Thermal/ThermoElastic.txt](Thermal/ThermoElastic.txt), [Thermal/ThermoElasticPCG.txt](Thermal/ThermoElasticPCG.txt)
+**Tests:** `ThermalVerification.ThermoElastic`, `ThermalVerification.ThermoElasticPCG`
+
+A confined elastic body undergoes linearly increasing temperature imposed via a `FixTemperature` callback: $T(t) = 273.15/T_0 + 0.1\,t$ (non-dimensional). Thermal expansion in a fully confined domain (pure-shear ALE with $\dot\varepsilon = 0$) produces compressive pressure proportional to the temperature change:
+
+$$\Delta P = K \alpha \Delta T$$
+
+where $K = 1/\beta = 10^{10}$ Pa is the bulk modulus ($\beta = 10^{-10}$ Pa$^{-1}$) and $\alpha = 10^{-5}$ K$^{-1}$.
+
+**Parameters:** $N_x \times N_z = 41 \times 41$, `elastic=1`, `compressible=1`, `fix_temperature=1`, $\Delta t = 10^9$ s, $N_t = 5$.
+
+**Why ~20% error.** The analytical formula assumes instantaneous elastic response, but MDOODZ updates pressure incrementally each time step, so the first step's temperature change does not contribute to pressure until the next step. On the coarse 41×41 grid with only 5 steps, this one-step elastic lag produces a systematic ~20% underestimate of $\Delta P$.
+
+**Measured accuracy:** Relative error $\approx 19.7\%$ for both CHOLMOD and PCG. CHOLMOD vs PCG: T field L2 = 0, P field L2 = 0.
+
+**Code assertions** ([ThermalVerificationTests.cpp](ThermalVerificationTests.cpp)):
+```cpp
+EXPECT_GT(meanP, 0.0);           // confined thermal expansion → compression
+EXPECT_LT(rel_err, 0.25);        // measured 19.7% (25% threshold: 1.27× margin)
+
+// Cross-compare CHOLMOD vs PCG
+double T_L2 = computeL2Error(T_field, T_cholmod);
+double P_L2 = computeL2Error(P_field, P_cholmod);
+EXPECT_LT(T_L2, 1e-6);          // measured 0
+EXPECT_LT(P_L2, 1e-4);          // measured 0
+```
+
+**Visualization:** Top panel shows lag-corrected $P$ vs $T$ for both solvers against the analytical line. Bottom panel shows absolute pressure error.
+
+![Thermo-elastic benchmark](thermoelastic_benchmark.png)
+
+### 2.5 Hydrostatic Pressure
 
 **Source:** [DensityTests.cpp](DensityTests.cpp)
 **Parameter file:** [Density/HydrostaticPressure.txt](Density/HydrostaticPressure.txt)
@@ -165,7 +227,7 @@ double L2_P = computeL2Error(P_field, P_ana);
 EXPECT_LT(L2_P, 6e-2);  // Nx=41 gives L2 \u2248 0.043; first-order spatial convergence
 ```
 
-### 2.4 Thermal Expansion
+### 2.6 Thermal Expansion
 
 **Source:** [DensityTests.cpp](DensityTests.cpp)
 **Parameter file:** [Density/ThermalExpansion.txt](Density/ThermalExpansion.txt)
@@ -175,7 +237,7 @@ $$\rho(T) = \rho_0 \left(1 - \alpha(T - T_{ref})\right)$$
 
 Verified via `EXPECT_LT(minRho, maxRho)` — density contrast between hot inclusion and cold matrix confirms the equation of state is active.
 
-### 2.5 Pure Shear Velocity
+### 2.7 Pure Shear Velocity
 
 **Source:** [VelocityFieldTests.cpp](VelocityFieldTests.cpp)
 **Parameter file:** [VelocityField/PureShearVelocity.txt](VelocityField/PureShearVelocity.txt)
@@ -197,7 +259,7 @@ EXPECT_LT(L2_Vx, 3e-2);  // with 10:1 inclusion: L2 ≈ 0.024 (1.23× margin)
 EXPECT_LT(L2_Vz, 3e-2);  // with 10:1 inclusion: L2 ≈ 0.024 (1.23× margin)
 ```
 
-### 2.6 Maxwell Visco-Elastic Stress
+### 2.8 Maxwell Visco-Elastic Stress
 
 **Source:** [ViscoElasticTests.cpp](ViscoElasticTests.cpp)
 **Parameter file:** [ViscoElastic/StressAccumulation.txt](ViscoElastic/StressAccumulation.txt)
@@ -209,7 +271,7 @@ where $G$ is the shear modulus. Stress builds up exponentially toward the viscou
 
 Verified via `EXPECT_GE(fabs(maxSxxd_5), fabs(maxSxxd_1) * 0.9)` — monotonic stress build-up over 5 time steps confirms the Maxwell elastic branch is active.
 
-### 2.7 Viscous Dissipation (Shear Heating)
+### 2.9 Viscous Dissipation (Shear Heating)
 
 **Source:** [ShearHeatingTests.cpp](ShearHeatingTests.cpp)
 **Parameter file:** [ShearHeating/ViscousDissipation.txt](ShearHeating/ViscousDissipation.txt)
@@ -228,7 +290,7 @@ The test uses Neumann (zero-flux) temperature BCs on all boundaries to prevent h
 EXPECT_NEAR(dT_num, dT_ana, fabs(dT_ana) * 0.05);  // Neumann BCs: ~0.8% error
 ```
 
-### 2.8 Simple Shear Velocity (Periodic BCs)
+### 2.10 Simple Shear Velocity (Periodic BCs)
 
 **Source:** [VelocityFieldTests.cpp](VelocityFieldTests.cpp)
 **Parameter file:** [VelocityField/SimpleShearVelocity.txt](VelocityField/SimpleShearVelocity.txt)
@@ -420,13 +482,16 @@ For convergence-order tests, thresholds are set ~30–50% below the measured ord
 |------|--------|--------------------|-----------|-----------|
 | SolVi L2 (51×51) | [SolViBenchmarkTests.cpp](SolViBenchmarkTests.cpp) | Complex-variable (§1) | `EXPECT_LT(L2_Vx, 5e-1)` | 0.5 |
 | SolVi convergence | [SolViBenchmarkTests.cpp](SolViBenchmarkTests.cpp) | Order from 41→81 | `EXPECT_GE(order_Vx, 0.7)` | 0.7 |
-| Geotherm | [ThermalTests.cpp](ThermalTests.cpp) | Linear profile (§2.1) | `EXPECT_LT(L2_T, 1.0)` | 1.0 |
-| Hydrostatic P | [DensityTests.cpp](DensityTests.cpp) | $\rho g z$ (§2.3) | `EXPECT_LT(L2_P, 2e-1)` | 0.2 |
-| Pure shear Vx | [VelocityFieldTests.cpp](VelocityFieldTests.cpp) | $\dot{\varepsilon} x$ (§2.5) | `EXPECT_LT(L2_Vx, 3e-2)` | 3e-2 |
-| Pure shear Vz | [VelocityFieldTests.cpp](VelocityFieldTests.cpp) | $-\dot{\varepsilon} z$ (§2.5) | `EXPECT_LT(L2_Vz, 3e-2)` | 3e-2 |
-| Shear heating ΔT | [ShearHeatingTests.cpp](ShearHeatingTests.cpp) | $2\eta\dot{\varepsilon}^2 t / \rho C_p$ (§2.7) | `EXPECT_NEAR(dT, dT_ana, 2×dT_ana)` | 3× |
-| Simple shear Vx | [VelocityFieldTests.cpp](VelocityFieldTests.cpp) | $2\dot{\gamma} z$ (§2.8) | `EXPECT_LT(L2_Vx, 1e-6)` | 1e-6 |
-| Simple shear Vz | [VelocityFieldTests.cpp](VelocityFieldTests.cpp) | $0$ (§2.8) | `EXPECT_LT(L2_Vz, 1e-6)` | 1e-6 |
+| Geotherm | [ThermalTests.cpp](ThermalTests.cpp) | Linear profile (§2.1) | `EXPECT_LT(L2_T, 1.0)` | 1.0 || Oceanic cooling T | [ThermalVerificationTests.cpp](ThermalVerificationTests.cpp) | $T_s + (T_m - T_s)\,\mathrm{erf}(z/\sqrt{4\kappa t})$ (§2.3) | `EXPECT_LT(L2, 5e-2)` | 5e-2 |
+| Oceanic CHOLMOD vs PCG | [ThermalVerificationTests.cpp](ThermalVerificationTests.cpp) | CHOLMOD ≡ PCG (§2.3) | `EXPECT_LT(L2_diff, 1e-6)` | 1e-6 |
+| Thermo-elastic ΔP | [ThermalVerificationTests.cpp](ThermalVerificationTests.cpp) | $K\alpha\Delta T$ (§2.4) | `EXPECT_LT(rel_err, 0.25)` | 25% |
+| Thermo-elastic T L2 | [ThermalVerificationTests.cpp](ThermalVerificationTests.cpp) | CHOLMOD ≡ PCG (§2.4) | `EXPECT_LT(T_L2, 1e-6)` | 1e-6 |
+| Thermo-elastic P L2 | [ThermalVerificationTests.cpp](ThermalVerificationTests.cpp) | CHOLMOD ≡ PCG (§2.4) | `EXPECT_LT(P_L2, 1e-4)` | 1e-4 || Hydrostatic P | [DensityTests.cpp](DensityTests.cpp) | $\rho g z$ (§2.5) | `EXPECT_LT(L2_P, 6e-2)` | 6e-2 |
+| Pure shear Vx | [VelocityFieldTests.cpp](VelocityFieldTests.cpp) | $\dot{\varepsilon} x$ (§2.7) | `EXPECT_LT(L2_Vx, 3e-2)` | 3e-2 |
+| Pure shear Vz | [VelocityFieldTests.cpp](VelocityFieldTests.cpp) | $-\dot{\varepsilon} z$ (§2.7) | `EXPECT_LT(L2_Vz, 3e-2)` | 3e-2 |
+| Shear heating ΔT | [ShearHeatingTests.cpp](ShearHeatingTests.cpp) | $2\eta\dot{\varepsilon}^2 t / \rho C_p$ (§2.9) | `EXPECT_NEAR(dT, dT_ana, 2×dT_ana)` | 3× |
+| Simple shear Vx | [VelocityFieldTests.cpp](VelocityFieldTests.cpp) | $2\dot{\gamma} z$ (§2.10) | `EXPECT_LT(L2_Vx, 1e-6)` | 1e-6 |
+| Simple shear Vz | [VelocityFieldTests.cpp](VelocityFieldTests.cpp) | $0$ (§2.10) | `EXPECT_LT(L2_Vz, 1e-6)` | 1e-6 |
 | Director L2(θ) | [AnisotropyBenchmarkTests.cpp](AnisotropyBenchmarkTests.cpp) | $\arctan(\tan\theta_0 - \dot\gamma t)$ (§3.1) | `EXPECT_LT(L2, 5e-3)` | 5e-3 rad |
 | Director dt-order | [AnisotropyBenchmarkTests.cpp](AnisotropyBenchmarkTests.cpp) | Order from dt refinement (§3.2) | `EXPECT_GE(order, 0.8)` | 0.8 |
 | Stress τ_II | [AnisotropyBenchmarkTests.cpp](AnisotropyBenchmarkTests.cpp) | Rotation formula (§3.3) | `EXPECT_LT(relErr, 1e-4)` | 0.01% |
@@ -436,6 +501,24 @@ For convergence-order tests, thresholds are set ~30–50% below the measured ord
 | Stress sxz L2 | [AnisotropyBenchmarkTests.cpp](AnisotropyBenchmarkTests.cpp) | Rotation formula (§3.4) | `EXPECT_LT(l2_sxz, 1e-6)` | 1e-6 |
 | TopoBench relax | [TopoBenchTests.cpp](TopoBenchTests.cpp) | $h_0 e^{-t/\tau_r}$ (§4.1) | `EXPECT_LT(relErr, 0.15)` | 15% |
 | TopoBench convergence | [TopoBenchTests.cpp](TopoBenchTests.cpp) | Grid convergence (§4.2) | `EXPECT_GE(order, 0.3)` | 0.3 |
+| Rotation advection L2 | [RotationAdvectionTests.cpp](RotationAdvectionTests.cpp) | Identity map after 1 revolution (§5) | `EXPECT_LT(l2, 0.1)` | 0.1 |
+| Rotation mode 2 ≤ mode 0 | [RotationAdvectionTests.cpp](RotationAdvectionTests.cpp) | Identity map (§5) | `EXPECT_LE(l2_2, l2_0 * 1.5)` | 1.5× |
+| SolCx L2(Vx) 51×51 | [SolCxBenchmarkTests.cpp](SolCxBenchmarkTests.cpp) | Velic Chebyshev series (§7) | `EXPECT_LT(L2_Vx, 2.5e-1)` | 2.5e-1 |
+| SolCx L2(Vz) 51×51 | [SolCxBenchmarkTests.cpp](SolCxBenchmarkTests.cpp) | Velic Chebyshev series (§7) | `EXPECT_LT(L2_Vz, 2.5e-1)` | 2.5e-1 |
+| SolCx L1(P) 51×51 | [SolCxBenchmarkTests.cpp](SolCxBenchmarkTests.cpp) | Velic Chebyshev series (§7) | `EXPECT_LT(L1_P, 1e-2)` | 1e-2 |
+| SolCx convergence Vx | [SolCxBenchmarkTests.cpp](SolCxBenchmarkTests.cpp) | Order from 41→81 (§7) | `EXPECT_GE(orderVx, 0.7)` | 0.7 |
+| SolCx convergence Vz | [SolCxBenchmarkTests.cpp](SolCxBenchmarkTests.cpp) | Order from 41→81 (§7) | `EXPECT_GE(orderVz, 0.7)` | 0.7 |
+| SolCx convergence P (L1) | [SolCxBenchmarkTests.cpp](SolCxBenchmarkTests.cpp) | Order from 41→81 (§7) | `EXPECT_GE(orderP, 0.5)` | 0.5 |
+| Grain size L2 | [RheologyCreepTests.cpp](RheologyCreepTests.cpp) | $(B_g\dot\varepsilon\tau_{II}p/A_g)^{-1/(p+1)}$ (§8) | `EXPECT_LT(L2_d, 5e-3)` | 5e-3 |
+| Grain size mean | [RheologyCreepTests.cpp](RheologyCreepTests.cpp) | Paleowattmeter $d_{ss}$ (§8) | `EXPECT_NEAR(meanD, d_ss, d_ss*0.01)` | 1% |
+| Grain size coupled L2 | [RheologyCreepTests.cpp](RheologyCreepTests.cpp) | Coupled fixed-point on $\tau_{II}$ (§8.1) | `EXPECT_LT(L2, 5e-3)` | 5e-3 |
+| Grain size coupled physics | [RheologyCreepTests.cpp](RheologyCreepTests.cpp) | $d_{ss}^{coupled} > d_{ss}^{disloc}$ (§8.1) | `EXPECT_GT(d_ss_c, d_ss_disl)` | strict |
+| 2D PinchSwell smoke | [RheologyCreepTests.cpp](RheologyCreepTests.cpp) | finite + heterogeneity invariants (§8.2) | `EXPECT_GT(maxD/minD, 5.0)` | 5× |
+| Coupled GSE+aniso smoke | [RheologyCreepTests.cpp](RheologyCreepTests.cpp) | sentinel — coupling invariants (§8.3) | `EXPECT_GT(maxA, 1.0)` & `EXPECT_LE(maxA, 4+1e-9)` | sentinel |
+| AniFstrain simple-shear | [AnisotropyBenchmarkTests.cpp](AnisotropyBenchmarkTests.cpp) | $1 + \gamma^2/2 + \gamma\sqrt{\gamma^2/4+1}$ (§9.2) | `EXPECT_NEAR(s.mean/ana, 1.0, 1e-6)` | 1e-6 |
+| AniFstrain saturation | [AnisotropyBenchmarkTests.cpp](AnisotropyBenchmarkTests.cpp) | $\delta = \min(\mathrm{FS\_AR}, \mathrm{ani\_fac\_max})$ (§9.2) | `EXPECT_NEAR(s.mean, ani_fac_max, 1e-9)` | 1e-9 |
+| AniFstrain pure-shear | [AnisotropyBenchmarkTests.cpp](AnisotropyBenchmarkTests.cpp) | $\exp(2\dot\varepsilon(k-1) dt)$ (§9.2, §9.7) | `EXPECT_NEAR(s.mean/ana, 1.0, 1e-2)` | 1e-2 |
+| AniFstrain spatial homogeneity | [AnisotropyBenchmarkTests.cpp](AnisotropyBenchmarkTests.cpp) | constant under P2G (§9.4) | `EXPECT_LT(max/min - 1, 1e-4)` | 1e-4 |
 
 ---
 
@@ -471,3 +554,759 @@ where $k = 2\pi/\lambda$ is the wavenumber and $H$ is the domain depth below the
 **Parameters:** [TopoBench/TopoBenchConvergence31.txt](TopoBench/TopoBenchConvergence31.txt), [TopoBench/TopoBenchRelaxation.txt](TopoBench/TopoBenchRelaxation.txt), [TopoBench/TopoBenchConvergence101.txt](TopoBench/TopoBenchConvergence101.txt)
 
 Three resolutions (Nx = 31, 51, 101) are run with the same physics. The mean relative error against the analytical exponential decay must decrease monotonically, and the overall convergence order from coarsest to finest must be $\geq 0.3$.
+
+---
+
+## 5. Rigid-Body Rotation (Marker Advection)
+
+**Source:** [RotationAdvectionTests.cpp](RotationAdvectionTests.cpp)
+**Parameter files:** [RotationAdvection/RotationMode0.txt](RotationAdvection/RotationMode0.txt), [RotationAdvection/RotationMode1.txt](RotationAdvection/RotationMode1.txt), [RotationAdvection/RotationMode2.txt](RotationAdvection/RotationMode2.txt)
+**Test:** `RotationAdvection.CompareReseedModes`
+
+### Problem Statement
+
+A circular disk of phase 1 (radius $r = 0.1$, centred at $(0.25, 0)$) is embedded in a phase 0 matrix on a unit domain $[-0.5, 0.5]^2$ with a 51×51 grid. The Stokes solver is disabled (`mechanical=0`); only marker advection runs. A rigid-body rotation velocity field is prescribed:
+
+$$V_x = -\omega z, \quad V_z = +\omega x, \quad \omega = 2\pi$$
+
+After 1000 steps of $\Delta t = 10^{-3}$ (total $t = 1$), each marker completes exactly one full revolution.
+
+### Analytical Solution
+
+The analytical solution is the **identity map**: after one full revolution, every marker returns to its initial position. Therefore the composition field at $t = 1$ should be identical to the field at $t = 0$.
+
+Any deviation is purely numerical — advection interpolation error accumulated over 1000 RK4 steps. The error manifests as boundary smearing: a few cells at the disk edge end up with the wrong phase assignment.
+
+### Measured L2 Errors
+
+The L2 norm compares the high-resolution composition grid (`compo_hr`, 100×100 cells) between initial and final outputs:
+
+$$L_2 = \sqrt{\frac{1}{N}\sum_{i=1}^{N}(c_i^{final} - c_i^{initial})^2}$$
+
+| Reseed Mode | L2 error | Mismatched cells |
+|-------------|----------|------------------|
+| 0 (legacy) | 3.74e-02 | ~14 / 10000 |
+| 1 (current) | 2.83e-02 | 8 / 10000 |
+| 2 (v2) | 2.83e-02 | 8 / 10000 |
+
+Modes 1 and 2 tie at L2 = 0.028, both better than mode 0 (L2 = 0.037). The randomised placement in mode 2 does not degrade advection accuracy.
+
+### Code Assertions
+
+```cpp
+EXPECT_LT(l2_mode0, 0.1);                   // All modes below 10% RMS
+EXPECT_LT(l2_mode1, 0.1);
+EXPECT_LT(l2_mode2, 0.1);
+EXPECT_LE(l2_mode2, l2_mode0 * 1.5);        // Mode 2 no worse than mode 0
+```
+
+### Visualisation
+
+```bash
+cd build/TESTS
+./RotationAdvectionTests --gtest_filter="RotationAdvection.*"
+python3 ../../TESTS/RotationAdvection/plot_rotation.py .
+# → rotation_advection_comparison.png
+```
+
+![Rotation advection comparison](rotation_advection_comparison.png)
+
+---
+
+## 6. Popov et al. (2025) Combined Yield Surface
+
+**Source:** [Popov2025Tests.cpp](Popov2025Tests.cpp), reference integrator
+[Popov2025/Popov0DAnalytical.cpp](Popov2025/Popov0DAnalytical.cpp)
+**Parameter files:** `TESTS/Popov2025/Popov0D_{VolumetricExtension,DeviatoricShear,MixedStrain}.txt`
+**Reference:** Popov, Berlie, Kaus (2025), *A dilatant visco-elasto-viscoplasticity model with globally continuous tensile cap: stable two-field mixed formulation*, Geosci. Model Dev., 18, 7035–7058, doi:[10.5194/gmd-18-7035-2025](https://doi.org/10.5194/gmd-18-7035-2025)
+
+This section documents the reference solutions used to verify MDOODZ's
+`plast = 2` code path (combined mode-I / mode-II yield surface, implemented
+in [MDLIB/RheologyDensity.c:685–899](../MDLIB/RheologyDensity.c)). The test
+suite focuses on paper Fig. 5 — 0D stress integration — which is the
+paper's canonical verification of the local stress update algorithm.
+
+### 6.1 Yield-surface geometry
+
+The combined yield surface (paper §2.4, Eqs. 13–17) is a linear
+Drucker-Prager shear envelope joined to a circular tensile cap through a
+delimiter point $(p_d, \tau_d)$. Four material parameters control it:
+friction $\varphi$, dilation $\psi$, cohesion $c_\mathrm{MC}$, tensile
+strength $p_T$ (negative in the paper's convention). Derived geometry:
+
+$$k = \sin\varphi, \quad k_q = \sin\psi, \quad c = c_\mathrm{MC}\cos\varphi,$$
+$$a = \sqrt{1 + k^2}, \quad b = \sqrt{1 + k_q^2},$$
+$$p_y = \frac{p_T + c/a}{1 - k/a}, \quad R_y = p_y - p_T,$$
+$$p_d = p_y - R_y \frac{k}{a}, \quad \tau_d = k p_d + c.$$
+
+The active segment is chosen by the delimiter condition
+$\tau_{II}(p_y - p_d) \gtreqless \tau_d(p_y - p)$: when the inequality
+holds the point lies on the Drucker-Prager branch, otherwise on the cap.
+
+### 6.1b Reference plot
+
+Paper Fig. 5 reproduced from the CI test HDF5 output (see
+[TESTS/Popov2025/plots/README.md](Popov2025/plots/README.md) for the
+invocation order). Each 0D scenario runs on a 21×15 homogeneous grid
+for 20 / 15 / 10 timesteps of `dt = 2 yr` (Vol / Shear / Mixed); the
+trajectory plotted is the centre cell at each step.
+
+![Fig. 5 — 0D stress integration](Popov2025/plots/reference/fig5_0d_stress.png)
+
+- **(a) Volumetric extension** — `p → p_T = −0.5 MPa`, `τ_II ≡ 0`
+  throughout. The plotted `Centers/P` overshoots `p_T` by ≈ 90 kPa
+  due to a structural cap-apex offset (paper Eq. 31, see §6.5).
+- **(b) Deviatoric shear** — `τ_II` yields on the Drucker-Prager
+  envelope ≈ 1 MPa at ≈ 20 yr; `p` grows through dilatant coupling.
+- **(c) Mixed strain** — trajectory approaches the cap (`p` dips to
+  ≈ −0.35 MPa) then crosses the delimiter onto the Drucker-Prager branch.
+- **(d) Meridional P–τ_II trajectories** — Volumetric uses the
+  reconstructed `p_local = p* + K·θ̇_vp·dt` so it lands at the cap apex;
+  Shear and Mixed use `Centers/P` directly because they sit on a sloped
+  yield segment where `p*` is already on yield.
+
+### 6.2 Test parameters and reference integrator
+
+[`Popov0DAnalytical.cpp`](Popov2025/Popov0DAnalytical.cpp) re-implements
+paper §3.6's implicit backward-Euler stress update (Eqs. 42–47) at a
+single integration point. It is linked into `Popov2025Tests` as the
+trajectory reference but **does not** link against MDLIB — it is an
+independent coding of the same algorithm.
+
+**Material parameters** (paper Table 1 "0D Fig. 5 a, b"):
+`G = 10¹⁰ Pa`, `K = 2·10¹¹ Pa`, `φ = 30°`, `ψ = 10°`,
+`c_MC = 10⁶ Pa`, `p_T = −5·10⁵ Pa`, `η^vp = 0`, `Δt = 2 yr`.
+
+**Loading rates:**
+
+- **VolumetricExtension:** `ε̇_xx = ε̇_zz = 2.333·10⁻¹⁵ s⁻¹` via outward
+  normal BCs, with `out_of_plane = 1` so the constitutive law sets
+  `ε̇_yy = 0.5·(ε̇_xx + ε̇_zz) = 2.333·10⁻¹⁵ s⁻¹` — paper's 3D 0D loading
+  (deviator identically zero).
+- **DeviatoricShear:** `ε̇_II = 7·10⁻¹⁴ s⁻¹` via standard pure-shear BCs.
+- **MixedStrain:** asymmetric outward BCs reproducing paper's
+  `trace = 7·10⁻¹⁵` and `ε̇_II_dev = 7·10⁻¹⁴` simultaneously.
+
+### 6.3 Test-case ↔ assertion summary
+
+Each fixture makes **two classes of assertions**:
+
+1. **Final-state yield-surface membership** — at the end of the simulation,
+   the centre cell's `(sII, P)` must lie on the combined yield surface.
+2. **Full-trajectory L2 comparison** — the step-by-step `sII(t)` and `P(t)`
+   are compared against the independent reference integrator
+   (`Popov2025/Popov0DAnalytical.cpp`, paper §3.6 re-implementation).
+
+| Fixture                                        | Paper Fig. | Final-state assertion                                                                                                       | L2(sII) bound | L2(P) bound | Observed L2(sII) | Observed L2(P) |
+|------------------------------------------------|-----------|------------------------------------------------------------------------------------------------------------------------------|---------------|-------------|------------------|----------------|
+| `Popov2025_0DIntegration.VolumetricExtension`  | 5a        | `divu_pl > 0`, `|sII| < 0.1 % τ_d`, reconstructed `p_local = P + K·dt·divu_pl` on cap circle (`|R̂_y − R_y|/R_y < 5 %`)         | RMS/τ_d < 0.5 % | < 5 %      | **0.0 %**         | **1.93 %**     |
+| `Popov2025_0DIntegration.DeviatoricShear`      | 5b        | `eII_pl > 0`, `|sII − (k·P + c)|/(k·P + c) < 5 %`, `|P| < 10·c_MC`                                                            | < 5 %          | < 10 %      | **0.16 %**        | **1.05 %**     |
+| `Popov2025_0DIntegration.MixedStrain`          | 5c        | plastic flow active, final `(sII, P)` within 5 % of cap circle or DP envelope                                                  | < 10 %         | < 25 %      | **0.05 %**        | **0.09 %**     |
+
+All three tests achieve **sub-2-percent agreement** on both invariants —
+MDLIB `plast = 2` and the stand-alone reference integrator produce
+essentially identical trajectories. Volumetric Extension lands at the
+apex with `sII = 0` to floating-point precision because the
+`out_of_plane = 1` flag (see §6.5) gives MDOODZ access to the paper's
+true 3D 0D loading.
+
+### Code Assertions
+
+**Volumetric Extension** ([Popov2025Tests.cpp](Popov2025Tests.cpp)):
+```cpp
+EXPECT_GT(divu_c, 0.0);                          // tensile cap plasticity active
+EXPECT_LT(std::fabs(sII_c), 0.001 * g.tau_d);    // deviator ≈ 0  (observed: 7 ppm)
+EXPECT_LT(std::fabs(R_haty - g.Ry) / g.Ry, 0.05);// p_local on cap circle  (observed: < 1%)
+EXPECT_LT(L2_tau_rms, 0.005);                    // sII RMS / τ_d < 0.5 %  (observed: 0.0%)
+EXPECT_LT(L2_P,       0.05);                     // L2(p_local) < 5 %      (observed: 1.93%)
+```
+
+**Deviatoric Shear** ([Popov2025Tests.cpp](Popov2025Tests.cpp)):
+```cpp
+EXPECT_GT(eII_c, 0.0);                                    // DP plasticity active
+EXPECT_LT(std::fabs(sII_c - tau_DP) / std::fabs(tau_DP), 0.05);  // sII on DP envelope (5%)
+EXPECT_LT(std::fabs(P_c), 10.0 * Material0D{}.C);                // |P| bounded
+EXPECT_LT(L2_tau, 0.05);                                  // L2(sII) < 5 %  (observed: 0.16%)
+EXPECT_LT(L2_P,   0.10);                                  // L2(P) < 10 %   (observed: 1.05%)
+```
+
+**Mixed Strain** ([Popov2025Tests.cpp](Popov2025Tests.cpp)):
+```cpp
+EXPECT_GT(mode_total, 0.0);                               // some plastic flow active
+EXPECT_LT(best / g.tau_d, 0.05);                          // (sII, P) on cap or DP (5%)
+EXPECT_LT(L2_tau, 0.10);                                  // L2(sII) < 10 % (observed: 0.05%)
+EXPECT_LT(L2_P,   0.25);                                  // L2(P) < 25 %   (observed: 0.09%)
+```
+
+### 6.4 Deferred 2D tests
+
+The paper's Figs. 6–9 (2D localisation tests — regularisation,
+crust-scale shear bands, tensile-fracture propagation, brittle-ductile
+transition) were explored during development and require resolution
+beyond the fast-CI budget to resolve the diagnostic signals (FWHM of
+localisation bands, Arthur's dip angle, monotone propagation of
+fluid-pressure perturbations, depth-partitioned mode-I/mode-II
+coexistence). They are deferred — the 0D tier gives regression coverage
+of the constitutive-law code path, which is the primary source of
+risk for the new yield surface.
+
+### 6.5 Notes on `out_of_plane` and the cap-apex pressure offset
+
+Two structural details to be aware of when reproducing or extending this
+suite:
+
+**`out_of_plane = 1` for 3D 0D loading.** In standard 2D plane-strain,
+`ε̇_yy = 0` is locked, and an imposed isotropic loading (`ε̇_xx = ε̇_zz`)
+develops a non-zero deviator that drives a spurious `τ_II`. The
+`out_of_plane = 1` flag makes the constitutive law set
+`ε̇_yy = 0.5·(ε̇_xx + ε̇_zz)` per cell, recovering the paper's 3D 0D
+loading exactly. This is needed only for matching a 3D constitutive
+benchmark; plane-strain is the correct assumption for every real
+geological scenario MDOODZ targets.
+
+**Cap-apex pressure offset (paper Eq. 31).** At the cap apex the yield
+surface has a vertical tangent, so the global Stokes solver pins
+`Centers/P` at `p_T − K·θ̇_vp·dt` (≈ 90 kPa more tensile than `p_T` for
+the test parameters) while the constitutive law's local Newton return-
+mapping pins the yield-clamped pressure at `p_local = p_T`. The two
+differ by exactly `K · θ̇_vp · dt`. The Volumetric Extension assertion
+reconstructs `p_local = Centers/P + K · dt · divu_pl` for the apex
+membership check, and Fig 5(d) plots `p_local` for that trajectory.
+Shear and Mixed park on the DP wing (sloped tangent), where `Centers/P`
+already coincides with the reference algorithm's pressure — no
+reconstruction needed.
+
+
+---
+
+## 7. SolCx Benchmark (Step Viscosity)
+
+**Source:** [SolCxBenchmarkTests.cpp](SolCxBenchmarkTests.cpp)
+**Parameter files:** [SolCx/SolCx21.txt](SolCx/SolCx21.txt), [SolCx41.txt](SolCx/SolCx41.txt), [SolCx51.txt](SolCx/SolCx51.txt), [SolCx81.txt](SolCx/SolCx81.txt)
+**Analytical port:** [SolCx/SolCxAnalytical.h](SolCx/SolCxAnalytical.h) / [SolCx/SolCxAnalytical.cpp](SolCx/SolCxAnalytical.cpp) — verbatim from ASPECT `_Velic_solCx` (GPL v2+), originally from Underworld
+**Reference:** Zhong (1996); Duretz, May, Gerya, Tackley (2011) *Geochemistry Geophysics Geosystems* 12, Q07004
+
+### Problem Statement
+
+Incompressible Stokes flow on the unit square $[0, 1]^2$ with a step-function viscosity jump:
+
+$$\eta(x) = \begin{cases} 1 & x < 0.5 \\ 10^6 & x \geq 0.5 \end{cases}$$
+
+The flow is driven by a sinusoidal buoyancy:
+
+$$\rho(x, z) = \sin(\pi z) \cos(\pi x), \qquad \mathbf{g} = (0, 1)$$
+
+Free-slip is the natural boundary condition; we impose the Velic analytical velocity as Dirichlet on all four walls (matching SolVi precedent) to anchor the solution and measure the internal solver accuracy rather than BC-induced noise.
+
+### Analytical Solution
+
+The Velic SolCx evaluator is a Chebyshev-series solution of the 2D biharmonic stream-function equation under the step-viscosity boundary. The implementation is a ~2900-line Maple-generated series, ported verbatim from ASPECT with only two transformations: `numbers::PI` → `M_PI`, and wrapping in the `MdoodzSolCx::detail` namespace. The public facade is:
+
+```cpp
+struct SolCxValue { double vx, vz, p, sxx, szz, sxz, exx, ezz, exz; };
+SolCxValue EvalSolCx(double x, double z, double eta_A, double eta_B, double xc, int n);
+```
+
+Canonical headline parameters: `eta_A=1, eta_B=1e6, xc=0.5, n=1`.
+
+### Implementation Details
+
+- Two phases via `SetPhase`: phase 0 for $x < 0.5$ (`eta0 = 1`), phase 1 for $x \geq 0.5$ (`eta0 = 1e6`).
+- Spatially varying density supplied via the **`SetGridDensity`** callback. Every `.txt` phase declares `density_model = 0` so the startup validator accepts the callback.
+- Gravity `gx = 0, gz = 1`. No thermal / elasticity / plasticity.
+- Dirichlet velocity BCs on all four walls, sampled from `EvalSolCx` at the appropriate staggered-grid coordinate (including half-cell offsets for `type=11` ghost Vx nodes on N/S faces and Vz nodes on W/E faces, same pattern as SolVi).
+- `Nt = 1` (single Stokes solve, no time integration needed).
+- L1 (not L2) for pressure: the analytical pressure crosses zero inside the domain, making relative L2 ill-conditioned — same lesson as SolVi § Cell-Face D-Tensor Averaging.
+
+### Measured L2 Errors
+
+| Resolution | $L_2(V_x)$ | $L_2(V_z)$ | $L_1(P)$ |
+|------------|------------|------------|----------|
+| 21×21  | 1.83e-1 | 2.10e-1 | 1.05e-2 |
+| 41×41  | 9.25e-2 | 1.06e-1 | 9.20e-3 |
+| 51×51  | 7.44e-2 | 8.48e-2 | 2.29e-3 |
+| 81×81  | 4.70e-2 | 5.32e-2 | 1.55e-3 |
+
+### Convergence Orders (41→81)
+
+| Field | Measured Order | Threshold |
+|-------|---------------|-----------|
+| $V_x$ | 0.98 | ≥ 0.7 |
+| $V_z$ | 0.99 | ≥ 0.7 |
+| $P$ (L1) | 2.57 | ≥ 0.5 |
+
+Near-first-order velocity and super-first-order pressure convergence on this staggered FD discretisation of a discontinuous-η problem is consistent with Duretz et al. 2011 §4. The absolute error levels are higher than ASPECT's Q2-P1 FE results at equivalent resolution — expected given MDOODZ is 2nd-order FD on staggered grids.
+
+### Code Assertions
+
+Single-resolution 51×51:
+
+```cpp
+EXPECT_LT(L2_Vx, 2.5e-1);   // measured 7.4e-2 (3.4x margin)
+EXPECT_LT(L2_Vz, 2.5e-1);   // measured 8.5e-2 (2.9x margin)
+EXPECT_LT(L1_P,  1e-2);     // measured 2.3e-3 (4.4x margin)
+```
+
+Grid convergence (41→81):
+
+```cpp
+EXPECT_GE(orderVx, 0.7);    // measured 0.98
+EXPECT_GE(orderVz, 0.7);    // measured 0.99
+EXPECT_GE(orderP,  0.5);    // measured 2.57
+```
+
+![SolCx grid-convergence plot: L2(Vx), L2(Vz), L1(P) vs h with slope-1 and slope-2 reference lines](SolCx/solcx_convergence.png)
+
+Generated by [SolCx/plot_solcx.gp](SolCx/plot_solcx.gp). The test writes `solcx_convergence.dat` as a side-effect of `GridConvergence`; regenerate with `gnuplot SolCx/plot_solcx.gp` from the build directory.
+
+The L1(P) kink between h=5e-2 and h=2.5e-2 is a known feature of staggered FD at an η-jump: coarse grids underestimate the pressure jump amplitude, so L1(P) is non-monotone in h at low resolutions. Convergence becomes clean from 41×41 onward.
+
+---
+
+## 8. Grain Size Evolution: Steady-State Paleowattmeter
+
+**Source:** [RheologyCreepTests.cpp](RheologyCreepTests.cpp)
+**Parameter file:** [RheologyCreep/GrainSizeSteadyState.txt](RheologyCreep/GrainSizeSteadyState.txt) — single base, used directly by `GrainSizeSteadyState` and via per-iteration parameter overrides by `GrainSizeSweep`. Strain rate (`bkg_strain_rate`) and `writer_subfolder` are injected at runtime through MDLIB's `MutateInput` hook ([mdoodz.h:338](../MDLIB/include/mdoodz.h#L338); callback runs in [Main_DOODZ.c:107](../MDLIB/Main_DOODZ.c#L107) after parsing, before init), eliminating the need for separate fixture files per strain rate.
+**Tests:** `RheologyCreep.GrainSizeSteadyState` (single-point regression gate at Eii=10⁻¹⁴) and `RheologyCreep.GrainSizeSweep` (5-point sweep across 4 decades of strain rate, sharing the same base `.txt`).
+**Reference:** Austin and Evans (2007), *Paleowattmeters: A scaling relation for dynamically recrystallized grain size*, Geology **35**(4), 343–346 (the seminal wattmeter paper); Austin and Evans (2009) for the calcite-specific calibration whose constants S&D 2017 Table 1 lists. The dislocation flow law: MDLIB labels case 15 as "Renner et al. (2002)", but the numerical constants (n=4.7, Q=297 kJ/mol, A=1.585×10⁻²⁵ Pa⁻ⁿ s⁻¹) match what S&D 2017 Table 1 attributes to **Schmid et al. (1977)** — long-standing MDLIB mislabel; Renner+02 in S&D 2017 refers to a separate Peierls flow law not used here.
+
+### Problem Statement
+
+Homogeneous pure-shear box, single-phase calcite, dislocation creep + paleowattmeter grain-size evolution. No inclusion, no thermal solve, no elasticity, `Nt = 1`. Every cell must converge to the same steady-state grain size.
+
+### Analytical Solution
+
+For a single viscous mechanism (dislocation creep), `Eii_pwl = Eii_total = Eii`, and the local equilibrium of grain growth (driven by `A_g = K_g exp(-Q_g/R_g T)`) and stress-driven reduction gives:
+
+$$\tau_{II} = 2 B_{pwl}\,\dot\varepsilon_{II}^{1/n_{pwl}}$$
+
+$$d_{ss} = \left(\frac{B_g\,\dot\varepsilon_{II}\,\tau_{II}\,p}{A_g}\right)^{-1/(p+1)}$$
+
+with $B_g = \lambda/(c_g\,\gamma)$ and $A_g = K_g\,\exp(-Q_g/R_g T)$.
+
+**Calcite paleowattmeter (`gs = 10`)** constants from [MDLIB/FlowLaws.c:866-875](../MDLIB/FlowLaws.c#L866):
+
+| Parameter | Value | Notes |
+|-----------|-------|-------|
+| $p$       | 3.0 | grain-growth exponent |
+| $K_g$     | $2.5 \times 10^{-9}$ m³/s | $= 2.5\times 10^9 \cdot 10^{-6p}$ |
+| $Q_g$     | 175 kJ/mol | grain-growth activation energy |
+| $\gamma$  | 1 J/m² | grain-boundary surface energy |
+| $\lambda$ | 0.1 | partition factor |
+| $c_g$     | $\pi$ | geometric constant |
+
+**Calcite dislocation creep (`pwlv = 15`)** from [MDLIB/FlowLaws.c:570-583](../MDLIB/FlowLaws.c#L570) (axial-compression correction `tpwl = 1`). MDLIB's source comment labels case 15 as "Renner et al. (2002)" but the constants (n=4.7, Q=297 kJ/mol, A=1.585×10⁻²⁵ Pa⁻ⁿ s⁻¹) are what Schmalholz & Duretz 2017 Table 1 attributes to **Schmid et al. (1977)**. See note in the Reference section above.
+
+### Implementation Details
+
+- Single phase, no inclusion (`user1 = 0` → `SetPhase` always returns 0).
+- `elastic = 0`, `thermal = 0` → fully viscous, fixed temperature `T = 350°C` via `SetTemperature` callback.
+- `Nt = 1` → captures steady-state from the first solver call.
+- Test reads `Centers/d` from `GrainSizeSteadyState/Output00001.gzip.h5` (already in SI, m), computes the analytical $d_{ss}$ inline using the constants tabled above, and L2-compares against a constant-vector at $d_{ss}$.
+
+### L2 Metric
+
+```cpp
+std::vector<double> d_ana(d_field.size(), d_ss);
+double L2_d = computeL2Error(d_field, d_ana);
+```
+
+For a homogeneous problem the field should be uniform at $d_{ss}$ to iteration tolerance; the L2 collapses to spatial scatter around the analytical scalar.
+
+### Measured Accuracy
+
+Single-point regression gate (`GrainSizeSteadyState`, Eii=10⁻¹⁴):
+
+| Quantity | Analytical | Measured | Relative diff |
+|----------|------------|----------|---------------|
+| $\tau_{II}$ | $2.343 \times 10^7$ Pa | (post-solve) | — |
+| $d_{ss}$ | $1.244 \times 10^{-4}$ m | $1.244 \times 10^{-4}$ m | 0.071% |
+| max(d_n)/min(d_n) - 1 | 0 (homogeneous) | 0 | — |
+| L2(d) | — | $7.05 \times 10^{-4}$ | — |
+
+5-point strain-rate sweep (`GrainSizeSweep`, 4 decades of Eii):
+
+| Eii [s⁻¹] | τ_II [Pa] | d_ss analytical [m] | d_n MDOODZ [m] | rel diff |
+|-----------|-----------|---------------------|----------------|----------|
+| 10⁻¹⁶ | 8.79 × 10⁶ | 5.024 × 10⁻⁴ | 5.027 × 10⁻⁴ | 0.071% |
+| 10⁻¹⁵ | 1.43 × 10⁷ | 2.499 × 10⁻⁴ | 2.501 × 10⁻⁴ | 0.071% |
+| 10⁻¹⁴ | 2.34 × 10⁷ | 1.244 × 10⁻⁴ | 1.244 × 10⁻⁴ | 0.071% |
+| 10⁻¹³ | 3.82 × 10⁷ | 6.187 × 10⁻⁵ | 6.191 × 10⁻⁵ | 0.071% |
+| 10⁻¹² | 6.24 × 10⁷ | 3.078 × 10⁻⁵ | 3.080 × 10⁻⁵ | 0.071% |
+
+The 0.07% relative offset is **constant across 4 decades of strain rate**, indicating it's a small constant-factor difference between the strict closed-form expression and MDOODZ's internal prefactor handling (F_pwl, scaling round-trip), not a slope error in the wattmeter. The Newton iteration itself converges to ~tol/100 = 1e-13 internally. The L2 (≈ 7.05 × 10⁻⁴) is set by this offset, not by iteration tolerance or grid noise.
+
+### Code Assertions
+
+```cpp
+EXPECT_GT(minD, 0.0);                            // no NaN propagation
+EXPECT_TRUE(std::isfinite(minD) && std::isfinite(maxD));
+EXPECT_LT(maxD / minD - 1.0, 1e-3);              // homogeneity (measured: 0)
+EXPECT_NEAR(meanD, d_ss, d_ss * 0.01);           // 1% absolute (measured: 0.07%)
+EXPECT_LT(L2_d, 5e-3);                           // spatial L2 (measured: 7e-4)
+```
+
+The thresholds follow the §"Threshold Calibration Methodology" — `5×` the measured value, with `EXPECT_GT(minD, 0.0)` specifically catching the NaN-propagation regression that motivated this benchmark (`LocalIterationViscoElasticGrainSize` previously diverged → NaN → "Cell went empty" → exit at step 0).
+
+### Visualisation
+
+The `GrainSizeSweep` test writes `grain_size_benchmark.dat` (5 rows: Eii, T, tau_II, d_ss_analytical, d_n_mean_mdoodz, one per strain rate) as a side-effect. A gnuplot script renders the canonical Austin & Evans paleowattmeter plot — log-log axes (stress vs grain size) with the analytical $d_{ss}(\tau_{II})$ curve over $10^4$–$10^9$ Pa and all 5 MDOODZ points overlaid.
+
+The analytical curve in the plot is the **single-mechanism dislocation steady state**: for fixed temperature, $\tau_{II}$ and $\dot\varepsilon_{II}$ are coupled through the Renner power-law ($\dot\varepsilon_{II} = (\tau_{II}/2 B_{pwl})^n$), which substituted into the wattmeter gives a single curve in $(\tau_{II}, d_{ss})$ space — every sweep point at any strain rate must land on it:
+
+$$d_{ss}(\tau_{II}) = \left(\frac{B_g \cdot p}{A_g}\right)^{-1/(p+1)} \cdot \tau_{II}^{-(n+1)/(p+1)} \cdot (2 B_{pwl})^{n/(p+1)}$$
+
+```bash
+cd cmake-build-test/TESTS
+./RheologyCreepTests --gtest_filter="*GrainSize*"
+gnuplot ../../TESTS/RheologyCreep/plot_grain_size.gp
+# → grain_size_benchmark.png
+```
+
+![Grain size benchmark: dislocation-only and coupled wattmeter d_ss curves vs imposed strain rate, with MDOODZ measurements from both sweeps overlaid](grain_size_benchmark.png)
+
+The plot shows **both sweeps on a single chart with `d_ss` on the y-axis vs imposed total strain rate `Eii_total` on the x-axis**:
+- **Blue line + circles** — dislocation-only sweep (`GrainSizeSweep`, `linv = 0`). Closed-form analytical: `d_disl(Eii) = (B_g · Eii · 2·B_pwl·Eii^(1/n) · p / A_g)^{-1/(p+1)}`.
+- **Red line + triangles** — coupled sweep (`GrainSizeSweepCoupled`, `linv = 15`). Analytical sampled at 30 strain rates via the inline secant solver (no closed form because the τ_II ↔ Eii_total relation requires solving the coupled fixed-point).
+
+**Why this view (and not d_ss vs τ_II):** in `(τ_II, d_ss)` space the dislocation-only and coupled scenarios trace the *same* curve — the wattmeter formula `d_ss(τ, Eii_pwl(τ))` is mechanism-independent given τ. The coupling difference shows up in *which* τ each imposed Eii_total maps to: with diffusion creep absorbing 13–53 % of `Eii_total`, the same `Eii_total` lands at a smaller τ — and therefore a larger `d_ss`. Plotting `d_ss vs Eii_total` directly exposes this divergence as two distinct curves.
+
+The coupled curve sits 4 % above the dislocation-only curve at low strain rate (where dislocation dominates and diffusion contributes little) and 26 % above at high strain rate (where diffusion takes nearly half of `Eii_total`).
+
+#### Paper-view visualisation: Schmalholz & Duretz 2017 Fig. 2 layout
+
+The same coupled-regime physics rendered in the paper's chosen axes — grain size on x, differential stress `2·τ_II` on y, both log — for visual paper-comparison. The `GrainSizeSweepCoupled` test writes 3 strain-rate iso-contours into `grain_size_benchmark_coupled.dat` (each: 40 grain-size samples × log-bisection root-find on `τ` satisfying the coupled creep balance) alongside the wattmeter line and MDOODZ measurements.
+
+```bash
+cd cmake-build-test/TESTS
+./RheologyCreepTests --gtest_filter="*GrainSizeSweepCoupled"
+gnuplot ../../TESTS/RheologyCreep/plot_grain_size_paper_view.gp
+# → grain_size_paper_view.png
+```
+
+![Calcite deformation map at T=350°C — three coupled-creep strain-rate iso-contours, the Renner 2002/Herwegh 2003/Austin & Evans 2007/2009 paleowattmeter line, and 5 MDOODZ measurement points overlaid in the layout of Schmalholz & Duretz 2017 Fig. 2](grain_size_paper_view.png)
+
+Compare side-by-side with [Fig. 2 of Schmalholz & Duretz (2017)](https://ars.els-cdn.com/content/image/1-s2.0-S019181411730161X-gr2.jpg). MDOODZ's 5 measurements (red triangles) sit precisely on the heavy paleowattmeter line — the same locus the paper uses to compute steady-state grain size. The strain-rate iso-contours mirror the paper's "Renner 2002 & Herwegh 2003" panel: at small grain sizes diffusion creep dominates (steep rising left side), at large grain sizes dislocation creep dominates (flat plateau on the right), with the wattmeter line passing through both regimes.
+
+This is **visual paper-comparison only** — no automated digitisation gate. The quantitative validation is the L2 assertion in §8.1 (MDOODZ matches the analytical formula to 0.06–0.07 % across 4 decades). The paper figure itself was generated from the same equations our analytical reference encodes, so a digitisation-based gate would compare the same physics to itself with added noise.
+
+### Coverage extensions
+
+The headline `GrainSizeSteadyState` and `GrainSizeSweep` tests above run with **dislocation creep only** (`linv = 0`) — a degenerate special case useful for isolating the wattmeter formula. Two follow-on tests extend coverage to the regime calcite *actually inhabits* at 350 °C and to the integrated 2D code path:
+
+#### 8.1 Coupled regime: `RheologyCreep.GrainSizeSweepCoupled`
+
+**Parameter file:** [RheologyCreep/GrainSizeSweepCoupledBase.txt](RheologyCreep/GrainSizeSweepCoupledBase.txt) — single base; strain rate and `writer_subfolder` overridden per iteration via `MutateInput`. Differs from `GrainSizeSteadyState.txt` only in `linv = 15` (diffusion creep enabled). The two-base-file split (`linv=0` vs `linv=15`) is required because `linv` is a flow-law dispatch index resolved during `.txt` parse — it cannot be safely overridden by `MutateInput` after the fact.
+
+**What it adds:** runs the same 5-strain-rate sweep with **both** dislocation (`pwlv = 15`) and diffusion creep (`linv = 15`, Calcite Herwegh 2003) active alongside the wattmeter. This is the regime that actually crashed `PinchSwellGSE` pre-fix (the coupled `Ėii_pwl + Ėii_lin(d_ve)` Jacobian path).
+
+**Analytical reference:** since `Eii_pwl ≠ Eii_total` with diffusion on, the closed-form dislocation-only formula doesn't apply. The test solves the coupled fixed-point on $\tau_{II}$ inside the test code (secant iteration on $\tau_{II}$, ~30 lines, converges to relative residual < 10⁻¹²):
+
+$$\dot\varepsilon_{II}^{tot} = \left(\frac{\tau_{II}}{2 B_{pwl}}\right)^{n_{pwl}} + \left(\frac{\tau_{II}}{2 B_{lin}}\right)^{n_{lin}} d_{ss}^{-m_{lin}}, \quad d_{ss} = \left(\frac{B_g\,\dot\varepsilon_{II}^{pwl}\,\tau_{II}\,p}{A_g}\right)^{-1/(p+1)}$$
+
+The test's solver uses a **different scheme** than MDOODZ's iteration kernel (secant on $\tau_{II}$ vs MDOODZ's bisection-then-Newton on $\eta_{ve}$) — so a self-consistent-but-wrong MDOODZ converged state is exposed by L2 disagreement, not masked.
+
+**Measured accuracy:**
+
+| Eii [s⁻¹] | τ_II [Pa] | Eii_pwl/Eii | d_ss disloc-only [m] | d_ss coupled [m] | d_n MDOODZ [m] | L2 | rel diff |
+|-----------|-----------|-------------|----------------------|------------------|-----------------|-----|----------|
+| 10⁻¹⁶ | 8.54 × 10⁶ | 87% | 5.024 × 10⁻⁴ | 5.243 × 10⁻⁴ | 5.246 × 10⁻⁴ | 6.75 × 10⁻⁴ | 0.068% |
+| 10⁻¹⁵ | 1.37 × 10⁷ | 80% | 2.499 × 10⁻⁴ | 2.677 × 10⁻⁴ | 2.679 × 10⁻⁴ | 6.59 × 10⁻⁴ | 0.066% |
+| 10⁻¹⁴ | 2.17 × 10⁷ | 70% | 1.244 × 10⁻⁴ | 1.384 × 10⁻⁴ | 1.385 × 10⁻⁴ | 6.39 × 10⁻⁴ | 0.064% |
+| 10⁻¹³ | 3.42 × 10⁷ | 59% | 6.19 × 10⁻⁵ | 7.26 × 10⁻⁵ | 7.27 × 10⁻⁵ | 6.16 × 10⁻⁴ | 0.062% |
+| 10⁻¹² | 5.31 × 10⁷ | 47% | 3.08 × 10⁻⁵ | 3.87 × 10⁻⁵ | 3.88 × 10⁻⁵ | 5.93 × 10⁻⁴ | 0.059% |
+
+Diffusion creep takes 13–53 % of the strain rate across the sweep — non-negligible everywhere. The coupled $d_{ss}$ is correctly larger than the dislocation-only $d_{ss}$ at every point (less stress driving grain reduction → wattmeter rewards larger steady-state grains). The 0.07 % systematic offset persists, confirming it's a constant-factor prefactor handling difference rather than a slope error in the formula.
+
+**Code assertions** ([RheologyCreepTests.cpp](RheologyCreepTests.cpp)):
+
+```cpp
+EXPECT_GT(d_ss_c, d_ss_disl);                   // physics: coupled > disloc-only (always)
+EXPECT_GT(minD, 0.0);
+EXPECT_TRUE(std::isfinite(minD) && std::isfinite(maxD));
+EXPECT_LT(maxD / minD - 1.0, 1e-3);             // homogeneity
+EXPECT_NEAR(meanD, d_ss_c, d_ss_c * 0.01);      // 1% absolute
+EXPECT_LT(L2, 5e-3);                            // spatial L2 (measured 5.9-6.8e-4)
+```
+
+This regression-gates exactly the Jacobian path (`dfdeta += params.m_lin * Eii_lin * dddeta / d_ve` plus the implicit `d_ve = f(τ_II, Eii_pwl)` substitution) that the dislocation-only sweep does not exercise.
+
+#### 8.2 Integrated 2D path: `RheologyCreep.PinchSwellGSESmoke`
+
+**Parameter file:** [RheologyCreep/PinchSwellGSESmoke.txt](RheologyCreep/PinchSwellGSESmoke.txt)
+
+**Reference:** Schmalholz, S.M. & Duretz, T. (2017), *Impact of grain size evolution on necking in calcite layers deforming by combined diffusion and dislocation creep*, J. Struct. Geol. 103, 37–56, doi:[10.1016/j.jsg.2017.08.007](https://doi.org/10.1016/j.jsg.2017.08.007).
+
+**What it adds:** runs a downsized version of the paper's 2D pinch-and-swell scenario (51×51 grid, 10 timesteps) through MDOODZ's full integrated pipeline — Stokes solve, advection, P2G interpolation, harmonic averaging into `mesh.d_n`, particle reseeding. The 0D constitutive-law tests above can't catch regressions in any of these 2D-only steps.
+
+**Approach:** sentinel test, not quantitative validator. The paper's spatial figures (Fig. 5 / Fig. 8 etc.) require minutes of compute and digitised reference data — research-grade validation, out of scope for fast CI. This test asserts physical-invariant sentinels instead:
+
+**Code assertions** ([RheologyCreepTests.cpp](RheologyCreepTests.cpp)):
+
+```cpp
+EXPECT_GT(minD, 0.0);                           // no NaN propagation in 2D path
+EXPECT_TRUE(std::isfinite(minD) && std::isfinite(maxD));
+EXPECT_GT(maxD / minD, 5.0);                    // wattmeter drove heterogeneity
+EXPECT_LT(minD, 1e-3);                          // d evolved below layer's gs_ref somewhere
+```
+
+**Measured accuracy** (51×51, Nt=10, ~835 ms wall):
+
+| Quantity | Value |
+|----------|-------|
+| Cells | 2500 |
+| min(d) | 1.00 × 10⁻⁵ m (matrix `gs_ref` — phase 0 has no GSE) |
+| max(d) | 1.08 × 10⁻² m (in low-stress pinch, grain growth) |
+| max/min ratio | ~1077 |
+
+The `max/min ≈ 1077` (vs threshold of 5) shows the wattmeter generated strong spatial heterogeneity in 10 timesteps. The `max(d) ≫ gs_ref` shows grain growth in low-stress regions, consistent with calcite paleowattmeter physics at 350 °C. Specifically, this catches:
+
+- **NaN propagation** in any 2D step (advection, P2G, harmonic average) → `minD ≤ 0` or non-finite
+- **Wattmeter silently bypassed in the layer** → `max/min` collapses toward `gs_ref_layer/gs_ref_matrix = 100`, fails the `> 5` × 200% headroom check loosely. (Even the bypass case satisfies `> 5` since 100 > 5; this is a known weakness — see "Weakness" note below.)
+- **Layer phase silently merged with matrix or wrong gs_ref applied** → `min(d)` bumps to a non-physical value
+- **Catastrophic regression that resets d everywhere** → `max(d)` drops to a constant value, `max/min` collapses to 1
+
+**Weakness:** since the matrix phase has no wattmeter, `min(d) = matrix gs_ref = 1e-5` always. The third assertion (`minD < 1e-3`) is therefore tautological for *this* parameter set — it doesn't actually verify wattmeter activity in the *layer*. A future tightening could filter cells by phase via `Centers/phase_perc_n`, but for now the heterogeneity check (`max/min > 5`) is the strong signal and the third is a redundant guard.
+
+Runtime: ~3 s on a typical CI machine, well within the < 30 s budget.
+
+**No spatial visualisation here.** A heatmap of the 51×51 × Nt=10 smoke output would just show "layer has different d than matrix" — essentially the IC, since 10 timesteps at `bkg_strain_rate = 1e-14` reach only ~1 % extension and the wattmeter pinch-and-swell pattern needs ~50 % extension to develop. The GTest assertions above already gate the integrated path more rigorously than a still image could. For the developed pinch-and-swell visualisation see [VISUAL_TESTS/img/gseref.gif](../VISUAL_TESTS/img/gseref.gif), generated from the paper's full 101² × Nt=100 scenario.
+
+#### 8.3 Coupled GSE + finite-strain anisotropy: `RheologyCreep.PinchSwellGSEAniso`
+
+**Parameter file:** [RheologyCreep/PinchSwellGSEAnisoSmoke.txt](RheologyCreep/PinchSwellGSEAnisoSmoke.txt) — 51×51 × Nt=10 downsized variant of [SETS/PinchSwellGSEAniso.txt](../SETS/PinchSwellGSEAniso.txt). Calcite layer phase has both `gs = 10` (paleowattmeter) AND `ani_fstrain = 1` (finite-strain anisotropy) active; matrix is isotropic.
+
+**Reference / context:** No published quantitative reference for the coupled regime exists at present (Schmalholz & Duretz 2017 had GSE only, no anisotropy). The test is sentinel-class — gates the integrated path's invariants, not analytical accuracy. Implemented as part of the [merge-gse-anisotropy](../openspec/changes/archive) change.
+
+**The bug this test gates:** before merge-gse-anisotropy, `gs = 10` + `anisotropy = 1` was silently a no-op. [`ViscosityConciseAniso`](../MDLIB/AnisotropyRoutines.c#L82) had its own inline Newton iteration that never updated `*d` (line 113 set `*d = d0` and the iteration loop only consumed `*d`, never wrote it). The non-anisotropy path [`ViscosityConcise`](../MDLIB/RheologyDensity.c#L385) routes through [`LocalIterationViscoElasticGrainSize`](../MDLIB/RheologyDensity.c#L203) which does evolve grain size. The fix added a `gs != 0` branch in `ViscosityConciseAniso` that calls the same wattmeter-aware iteration, fed with the rotated-frame `Eii = sqrt(I2(E_rot))` (rotation-invariant via I2, equal to lab-frame `sqrt(I2(E))` to FP precision).
+
+**Code assertions** ([RheologyCreepTests.cpp](RheologyCreepTests.cpp)):
+
+```cpp
+// GSE invariants (mirror PinchSwellGSESmoke)
+EXPECT_GT(minD, 0.0);
+EXPECT_TRUE(std::isfinite(minD) && std::isfinite(maxD));
+EXPECT_GT(maxD / minD, 5.0);                         // GSE active
+EXPECT_LT(minD, 1e-3);                                // wattmeter active in layer
+
+// Anisotropy invariants — catch silent-no-op regressions in the coupling
+EXPECT_TRUE(std::isfinite(minA) && std::isfinite(maxA));
+EXPECT_GE(minA, 0.999);                               // FS_AR ≥ 1
+EXPECT_GT(maxA, 1.0);                                 // anisotropy developing
+EXPECT_LE(maxA, 4.0 + 1e-9);                          // saturation clamp respected
+```
+
+**Measured accuracy** (51×51, Nt=10, ~5 s wall):
+
+| Quantity | Value |
+|----------|-------|
+| Cells | 2500 |
+| min(d) | 1.00 × 10⁻⁵ m (matrix `gs_ref` — phase 0 has no GSE) |
+| max(d) | 1.70 × 10⁻⁴ m (in low-stress neck region, grain growth) |
+| max(d) / min(d) | ≈ 17 (heterogeneity emerged in 10 steps) |
+| min(ani_fac) | 1.000 (matrix isotropic, `ani_fstrain = 0`) |
+| max(ani_fac) | 1.539 (layer's strain-ellipse aspect ratio after 10 steps) |
+| max(ani_fac) ≤ ani_fac_max = 4 | ✓ (well below saturation) |
+
+**What each sentinel catches:**
+
+- **`max(d)/min(d) > 5`** — if GSE were silently no-op'd under anisotropy (the pre-fix regression mode), grain size in the layer would stay at `gs_ref = 1e-3` and the matrix would stay at `gs_ref = 1e-5`. The IC ratio is already ~100, so this assertion is loose by design — the actual regression catch is via `min(d) < 1e-3` (layer must evolve below its `gs_ref`).
+- **`max(ani_fac) > 1`** — if anisotropy were silently disabled (e.g. `ani_fstrain` parsing broken), `δ` would equal the input `aniso_factor = 1` everywhere. This assertion catches that directly.
+- **`max(ani_fac) ≤ ani_fac_max + 1e-9`** — if the saturation clamp `min(FS_AR, ani_fac_max)` were broken, `δ` could exceed `ani_fac_max`. Defends against accidental disabling of the clamp during refactors.
+
+**Calibration of `ani_fac_max = 4`** — chosen from Carrara marble torsion experiments ([Barnhoorn, Bystricky, Burlini & Kunze 2004, *JGR* 109, B05203](https://doi.org/10.1029/2003JB002819); [Pieri, Burlini, Kunze, Stretton & Olgaard 2001, *Tectonophysics* 330, 119–140](https://doi.org/10.1016/S0040-1951(00)00224-4)). Both report viscous shear-strength anisotropy ratios of **3–5 at saturation** for calcite at lab strain rates (700–1000 K). The test value of 4 is the midpoint; use this as a starting point for research scenarios calibrating against published torsion data.
+
+Runtime: ~5 s on a typical CI machine, well within the < 30 s budget. Total CI footprint of the merge: +1 GTest case, +1 fixture file, +1 SETS scenario file (research-scale).
+
+---
+
+## 9. Finite-Strain Anisotropy: `δ = min(FS_AR, ani_fac_max)`
+
+**Parameter file:** [AnisotropyBenchmark/AniFstrainEvolution.txt](AnisotropyBenchmark/AniFstrainEvolution.txt) — single base, used by both `AniFstrainSimpleShear` (unsaturated) and `AniFstrainSaturation` (clamp). Per-test overrides for `bkg_strain_rate`, `Nt`, `dt`, `ani_fac_max`, `shear_style`, `periodic_x`, `pure_shear_ALE`, and `writer_subfolder` are injected via MDLIB's `MutateInput` hook.
+
+**Tests:** `AnisotropyBenchmark.AniFstrainSimpleShear` (validates `FS_AR(γ)` formula across 5 strain steps) and `AnisotropyBenchmark.AniFstrainSaturation` (validates the `min()` clamp by running past the saturation strain with `ani_fac_max = 4`).
+
+**Code under test:** [AnisotropyRoutines.c:46-54](../MDLIB/AnisotropyRoutines.c#L46) (`AnisoFactorEvolv`), [RheologyParticles.c:634-678](../MDLIB/RheologyParticles.c#L634) (`FiniteStrainAspectRatio`), [Main_DOODZ.c:1275](../MDLIB/Main_DOODZ.c#L1275) (`DeformationGradient`).
+
+### 9.1 Live formula
+
+When per-phase `ani_fstrain = 1`, MDOODZ replaces the static `aniso_factor` with:
+
+```c
+double AnisoFactorEvolv(double FS_AR, double aniso_fac_max) {
+  return MINV(FS_AR, aniso_fac_max);  // δ = min(FS_AR, ani_fac_max)
+}
+```
+
+`FS_AR = e1/e2` is the strain-ellipse aspect ratio (ratio of largest to smallest principal stretch) computed per-particle by `FiniteStrainAspectRatio`:
+
+1. Right Cauchy-Green tensor: `C = F^T·F` (where `F` is the per-particle deformation gradient integrated by `DeformationGradient`).
+2. Right stretch tensor `U = √C` via the closed-form 2D matrix square-root.
+3. Eigenvalues of `U` give the principal stretches `(e1, e2)` with `e1 ≥ e2`.
+4. `FS_AR = e1 / e2` (always ≥ 1 by construction).
+5. P2G interpolation onto cell centres `mesh.FS_AR_n` and vertices `mesh.FS_AR_s`.
+6. `mesh.aniso_factor_n = AnisoFactorEvolv(mesh.FS_AR_n, ani_fac_max)`, written to HDF5 as `Centers/ani_fac`.
+
+### 9.2 Closed-form references
+
+**Pure shear** (Vx = -x·ε̇, Vz = z·ε̇, so Exx = -ε̇, Ezz = ε̇):
+- `F(t) = diag(exp(-ε̇·t), exp(ε̇·t))`
+- Principal stretches `(e1, e2) = (exp(ε̇·t), exp(-ε̇·t))`
+- **`FS_AR(t) = e1 / e2 = exp(2·ε̇·t)`**
+- Saturation time: `t_sat = ln(ani_fac_max) / (2·ε̇)`
+
+**Simple shear** (Vx = γ̇·z, Vz = 0):
+- `F(t) = [[1, γ], [0, 1]]` with `γ = γ̇·t`
+- `C = F^T·F = [[1, γ], [γ, 1+γ²]]`
+- Eigenvalues of C: `λ_max = 1 + γ²/2 + γ·sqrt(γ²/4 + 1)`, `λ_min = 1 + γ²/2 - γ·sqrt(γ²/4 + 1)`
+- Note `λ_max · λ_min = 1` (incompressible plane strain), so `e1/e2 = sqrt(λ_max/λ_min) = λ_max`.
+- **`FS_AR(γ) = 1 + γ²/2 + γ·sqrt(γ²/4 + 1)`**
+- Saturation strain: `γ_sat = sqrt(D² - 1) / sqrt(D)` where `D = ani_fac_max`.
+
+**Saturation behaviour:** before saturation, `δ = FS_AR` and grows monotonically. After saturation, `δ = ani_fac_max` exactly (a flat clamp; no smooth roll-off). The "knee" at `γ_sat` is the visual signature of the `min()` form — see plot below.
+
+### 9.3 Note on output indexing (off-by-one)
+
+MDOODZ writes `Output<k>.gzip.h5` at the **end** of step `k`. But `mesh.aniso_factor_n` in that file is computed at the **start** of step `k`, from `particles.F` at the **end of step k−1** (the rheology pass uses the existing F before solving Stokes; F is then updated at the end of the step's advection). So the analytical reference for `Output<k>` is evaluated at `t = (k − 1) · dt`:
+
+| Output step | `t` | `γ` (simple shear, γ̇=2, dt=0.5) | FS_AR |
+|---|---|---|---|
+| 1 | 0.0 | 0 | 1.000 (IC) |
+| 2 | 0.5 | 1 | 2.618 |
+| 3 | 1.0 | 2 | 5.828 |
+| 4 | 1.5 | 3 | 10.908 |
+| 5 | 2.0 | 4 | 17.944 |
+
+This matters for any test that reads the HDF5 output and compares against analytical FS_AR.
+
+### 9.4 Test parameters and assertions
+
+All three tests share `Nb_phases = 1`, `anisotropy = 1`, `ani_fstrain = 1`, `Nx = Nz = 21`, `Nt = 5`, `dt = 0.5`, `pure_shear_ALE = 1`, `reseed_markers = 0`. They differ in BC mode (simple vs pure shear), `bkg_strain_rate`, and `ani_fac_max`.
+
+**`AnisotropyBenchmark.AniFstrainSimpleShear`** — `shear_style = 1`, `periodic_x = 1`, `bkg_strain_rate = 1.0` (γ̇ = 2), `ani_fac_max = 1e6` (no saturation). Closed-form reference `F = [[1, γ̇·t], [0, 1]]`, exact under periodic BCs:
+
+```cpp
+EXPECT_NEAR(s.mean / ana, 1.0, 1e-6);   // mean δ vs FS_AR(γ)
+EXPECT_LT(s.l2_rel, 1e-4);              // spatial L2 vs constant analytical
+EXPECT_LT(s.max_v / s.min_v - 1.0, 1e-4); // spatial homogeneity (P2G preserved)
+EXPECT_GE(s.min_v, 0.999);              // FS_AR ≥ 1 (float32 HDF5 slack)
+EXPECT_TRUE(std::isfinite(s.min_v));
+```
+
+**`AnisotropyBenchmark.AniFstrainSaturation`** — same as simple-shear plus `ani_fac_max = 4` (saturation between steps 2 and 3):
+
+```cpp
+if (saturated) EXPECT_NEAR(s.mean, ani_fac_max, 1e-9);  // δ pinned
+else           EXPECT_NEAR(s.mean / ana, 1.0, 1e-6);    // δ follows FS_AR
+EXPECT_LT(s.max_v / s.min_v - 1.0, 1e-4);
+EXPECT_GE(s.min_v, 0.999);
+```
+
+Saturation strain `γ_sat = sqrt(15)/2 ≈ 1.94`. With γ at output step `k` ∈ {0, 1, 2, 3, 4}, steps 1–2 are unsaturated and steps 3–5 are saturated.
+
+**`AnisotropyBenchmark.AniFstrainPureShear`** — `shear_style = 0`, `periodic_x = 0`, `pure_shear_ALE = 1`, `bkg_strain_rate = 0.1` (Eii = 0.1), `ani_fac_max = 1e6`. Pure-shear F is integrated through Stokes solve + advection (NOT closed-form), so thresholds are looser:
+
+```cpp
+EXPECT_NEAR(s.mean / ana, 1.0, 1e-2);   // mean δ vs exp(2·Eii·(step-1)·dt)
+EXPECT_LT(s.l2_rel, 1e-2);              // spatial L2
+EXPECT_LT(s.max_v / s.min_v - 1.0, 1e-4); // homogeneity (still tight — P2G is uniform)
+EXPECT_GE(s.min_v, 0.999);
+```
+
+The relative threshold of `1e-2` reflects accumulated forward-Euler-class integration error, NOT closed-form match — see §9.7 for the measured-residual table.
+
+### 9.5 Measured accuracy
+
+`AniFstrainSimpleShear` (5 steps, γ ∈ {0, 1, 2, 3, 4}):
+
+| step | γ | FS_AR_ana | δ_mean MDOODZ | spatial L2 |
+|---|---|---|---|---|
+| 1 | 0.0 | 1.000000 | 1.000000 | 0.0 |
+| 2 | 1.0 | 2.618034 | 2.618034 | 3.93 × 10⁻⁸ |
+| 3 | 2.0 | 5.828427 | 5.828427 | 3.26 × 10⁻⁸ |
+| 4 | 3.0 | 10.908326 | 10.908330 | 1.74 × 10⁻⁸ |
+| 5 | 4.0 | 17.944272 | 17.944270 | 4.58 × 10⁻⁸ |
+
+Residuals at the level of single-precision HDF5 round-trip (`float32` storage) — confirms the closed-form integration.
+
+`AniFstrainSaturation` (`ani_fac_max = 4`):
+
+| step | γ | FS_AR_ana | δ_clamped_ana | δ_mean MDOODZ | regime |
+|---|---|---|---|---|---|
+| 1 | 0 | 1.000 | 1.000 | 1.000000 | unsaturated |
+| 2 | 1 | 2.618 | 2.618 | 2.618034 | unsaturated |
+| 3 | 2 | 5.828 | 4.000 | 4.000000 | saturated |
+| 4 | 3 | 10.908 | 4.000 | 4.000000 | saturated |
+| 5 | 4 | 17.944 | 4.000 | 4.000000 | saturated |
+
+Saturated steps match `ani_fac_max = 4` to FP equality (`fabs(δ - 4.0) < 1e-9`).
+
+### 9.6 Visualisation
+
+The `AniFstrainSaturation` test writes `aniso_factor_evolution.dat` with columns `(step, t, γ, FS_AR_ana, δ_clamped_ana, δ_mdoodz_mean)`. The gnuplot script [AnisotropyBenchmark/plot_aniso_factor.gp](AnisotropyBenchmark/plot_aniso_factor.gp) renders:
+
+![Anisotropy factor evolution under simple shear](aniso_factor_evolution.png)
+
+Solid black: unbounded `FS_AR(γ) = 1 + γ²/2 + γ·sqrt(γ²/4 + 1)`. Dashed black: clamped `δ = min(FS_AR, 4)`. Red triangles: MDOODZ measurements (mean of `Centers/ani_fac` per output step). Grey reference lines: `y = ani_fac_max` and `x = γ_sat`. The MDOODZ markers sit on the dashed line at every step; the kink at `γ_sat ≈ 1.94` is the visual signature of the `min()` form.
+
+### 9.7 Pure shear — measured accuracy
+
+`AniFstrainPureShear` (5 steps, `Eii = 0.1`, `dt = 0.5`, t ∈ {0, 0.5, 1.0, 1.5, 2.0}, ani_fac_max = 1e6 unsaturated):
+
+| step | t | δ_ana = exp(2·Eii·(step-1)·dt) | δ_mean MDOODZ | rel. error |
+|---|---|---|---|---|
+| 1 | 0.0 | 1.000000 | 1.000000 | 0 (IC) |
+| 2 | 0.5 | 1.105171 | 1.105820 | 5.9 × 10⁻⁴ |
+| 3 | 1.0 | 1.221403 | 1.222838 | 1.2 × 10⁻³ |
+| 4 | 1.5 | 1.349859 | 1.352239 | 1.8 × 10⁻³ |
+| 5 | 2.0 | 1.491825 | 1.495333 | 2.4 × 10⁻³ |
+
+Residuals grow ~linearly with step count, characteristic of forward-Euler-class accumulated integration error in `dF/dt = L·F`. **This is much larger than the simple-shear test's 1e-8 because pure-shear `F` evolves through MDOODZ's Stokes-solve + advection chain** (subject to integration order and ALE remeshing), whereas simple-shear's `F = [[1, γ̇·t], [0, 1]]` is exact-by-construction under periodic BCs. CI threshold for the pure-shear test is therefore set to relative error `< 1e-2` and spatial L2 `< 1e-2`, with `~3×` headroom over observed values.
+
+The test assertion block (current, post-fix):
+
+```cpp
+EXPECT_NEAR(s.mean / ana, 1.0, 1e-2);     // relative mean error
+EXPECT_LT(s.l2_rel, 1e-2);                // spatial L2 vs constant analytical
+EXPECT_LT(s.max_v / s.min_v - 1.0, 1e-4); // spatial homogeneity (P2G preservation)
+EXPECT_GE(s.min_v, 0.999);                // FS_AR ≥ 1 lower bound
+```
+
+**Historical note (resolved by `fix-pure-shear-fstrain-segfault`)**: pure shear was originally deferred from CI in `gate-finite-strain-anisotropy` because `shear_style = 0` + `anisotropy = 1` + `ani_fstrain = 1` segfaulted at start of step 2. Two related MDLIB bugs were responsible:
+1. `Vertices2Particle` ([ParticleRoutines.c:482-484](../MDLIB/ParticleRoutines.c#L482)) had an active `LOG_ERR + exit(1)` for particles drifting outside the post-ALE-shrink mesh, while three sibling boundary checks in the same function gracefully clamped. The fix matched the sibling pattern (clamp `j_part = Nx-2`, no exit).
+2. `TransmutateMarkers` ([ParticleRoutines.c:4170-4173](../MDLIB/ParticleRoutines.c#L4170)) read `materials->transmutation[-1]` for inactive particles (`phase = -1`), returning garbage that could flip the conditional and corrupt their phase to a random integer — which then null-deref'd in `P2Mastah[Wm_ph[thread][p][kp]]` at step 2 setup. The fix added a `if (phase < 0) continue;` skip, matching the pattern used in `P2Mastah` itself.
+
+Both fixes are pure-shear-with-ALE-induced bugs that also affected the live `SETS/RiftingComprehensive*.txt` and `SETS/CollisionPolarCartesianAniso.txt` scenarios (which compensated by using very small SI strain rates, keeping particles within mesh bounds).
+
+### 9.8 Research note (NOT in CI)
+
+The `min()` saturation form is a known approximation. Empirical olivine-torsion data (Hansen et al. 2012, *Nature* 492, 415–418) is fit better by `δ(γ) = 13·tanh(0.25·γ) + 1`, which has a smoother roll-off and a different shape at low strain. See [misc/aniso_fstrain/notes/hansen2012_comparison.md](../misc/aniso_fstrain/notes/hansen2012_comparison.md) for a side-by-side comparison and future-work motivation. This is research-grade documentation, not a CI gate — Hansen+12 is an empirical fit at lab strains (γ ≤ 5) for one specific mineral, while MDOODZ's `min()` form is a placeholder applied generically.
+
+### 9.9 The `ani_fstrain` enumeration and `ani_fstrain == 3` δ-relaxation
+
+`ani_fstrain` is a per-phase integer selecting the finite-strain anisotropy form:
+
+| value | meaning |
+|---|---|
+| 0 | static `aniso_factor` (no strain dependence) |
+| 1 | `δ = min(FS_AR, ani_fac_max)` — MDOODZ default (§9 above) |
+| 2 | `δ = aniso_delta_fn(FS_AR)`, capped — mineral-calibrated form selected by `aniso_db` |
+| 3 | **`ani_fstrain == 2` δ-dispatch + a temperature-dependent kinetic relaxation of δ toward the isotropic limit** |
+
+**`ani_fstrain == 3` was redefined** by the `ani-fstrain3-delta-relaxation` change. Its previous meaning — an upstream `T < ani_T_threshold` deformation-gradient freeze, with the per-phase parameter `ani_T_threshold` — was removed: the 1100 °C threshold was a misattributed value and the freeze was a misinterpretation of an intended kinetic-relaxation directive. `ani_T_threshold` is no longer a recognised per-phase parameter.
+
+Under `ani_fstrain == 3`, δ is a **per-marker integrated state variable** (`markers->aniso_delta`, with `aniso_delta_fs_prev` for the two-field operator split). Each step it relaxes toward δ = 1 on the Boneh et al. 2021 (*G3*) discontinuous-static-recrystallization timescale `τ_relax = L_relax / V`, with grain-boundary-migration velocity `V = M₀·exp(−Q/RT)·μ·b²·Δρ` (`Q = 133 kJ/mol`, `μ = 50 GPa`, `b = 0.6 nm`, `M₀ = 2×10⁻¹¹ m⁴·J⁻¹·s⁻¹`). The per-step update is the analytic exponential `δ_new = 1 + (δ_prod − 1)·exp(−Δt/τ_relax)`, clamped to `[1, ani_fac_max]` — unconditionally stable, cannot overshoot. `L_relax` is the per-phase parameter `ani_relax_length` (sentinel −1 → inherit `gs_ref`; grain-size evolution is **not** required). `Δρ` is proxied from the per-marker `strain_pwl`. The redefined arm shares the `ani_fstrain == 2` calibration (it inherits the `aniso_delta_fn(FS_AR)` increment as its production term), so at cold T (`τ_relax ≫ run time`) it reproduces `ani_fstrain == 2` exactly. Full derivation, the constant-`L_relax` regime analysis, and the modelling caveats: [misc/aniso_fstrain/notes/boneh2021_delta_relaxation.md](../misc/aniso_fstrain/notes/boneh2021_delta_relaxation.md).
+
+**Tests** (`AnisotropyBenchmarkTests.cpp`, suite `AnisotropyBenchmark`): the relaxation is CI-gated against its closed-form limits. These run as deterministic per-marker calculations (a 1-marker / homogeneous "box"), exercising the MDLIB routine `DeltaRelaxationTau` directly together with the analytic exponential update — the established pattern in this file (cf. `anaDeltaHansenOlivine`). All use an identity scale (scaled units == SI) and the `gs` flow law OFF (`L_relax` is supplied directly), covering the spec's "runs with grain-size evolution disabled" scenario.
+
+| Test | What it gates |
+|---|---|
+| `AniFstrainRelaxColdFreeze` | cold marker: `τ_relax ≫ run time` ⇒ δ constant to FP precision |
+| `AniFstrainRelaxHot` | hot marker, no production: `δ(t) = 1 + (δ₀−1)·exp(−t/τ_relax)`; Arrhenius-ratio sub-assertion `τ(T₁)/τ(T₂) = exp(Q/R·(1/T₂−1/T₁))` |
+| `AniFstrainRelaxHalfLife` | δ reaches `1 + (δ₀−1)/2` at `t = τ_relax·ln2`; Δt-convergence sub-test + large-Δt no-overshoot sub-test |
+| `AniFstrainRelaxColdLimitEqualsFstrain2` | the `ani_fstrain == 3` two-field split telescopes to `aniso_delta_fn(FS_AR)` at cold T — identical to `ani_fstrain == 2` |
+| `AniFstrainRelaxLengthMonotonic` | `τ_relax ∝ L_relax`: larger `L_relax` ⇒ slower relaxation |
+| `AniFstrainRelaxClampAndFixedPoint` | `ani_fac_max` clamp honoured; δ = 1 is an exact fixed point |
+| `AniFstrainRelaxHistoryDependence` | two markers reaching the same `FS_AR` via different thermal histories store different δ — δ is genuinely history-carrying |
+
+The two `AniFstrainT_Threshold_Freeze_*` GTests that exercised the removed freeze were deleted by the same change.

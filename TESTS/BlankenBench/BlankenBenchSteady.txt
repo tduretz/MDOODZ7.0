@@ -1,15 +1,18 @@
 /**** RESTART ****/
-istep = 200000
+istep = 50000
 irestart = 0
 
 /**** OUTPUT FILES ****/
 writer            = 1
-writer_step       = 100000
+writer_step       = 100
 writer_markers    = 0
 writer_debug      = 0
 writer_energies   = 0
 gnuplot_log_res   = 0
 writer_subfolder  = BlankenBench
+log_dest          = 2
+log_level         = 2
+log_timestamp     = 1
 
 /**** SCALES ****/
 eta = 1e20
@@ -18,8 +21,8 @@ V   = 1e-9
 T   = 1000
 
 /**** SPACE ****/
-Nx      = 41
-Nz      = 41
+Nx      = 101
+Nz      = 101
 xmin    = -5.000000e4
 zmin    = -5.000000e4
 xmax    =  5.000000e4
@@ -32,7 +35,7 @@ min_part_cell = 16
 max_part_cell = 40
 
 /**** TIME ****/
-Nt          = 100000
+Nt          = 50000
 constant_dt = 0
 Courant     = 0.25
 dt          = 1e11
@@ -40,7 +43,7 @@ RK          = 4
 
 /**** LINEAR SOLVER ****/
 noisy        = 1
-penalty      = 1e3
+penalty      = 1e4
 lin_solver   = -1
 diag_scaling = 0
 lin_abs_div  = 1e-9
@@ -66,7 +69,7 @@ max_eta      = 1e25
 mechanical    = 1
 thermal       = 1
 reseed_markers = 1
-reseed_mode    = 1
+reseed_mode    = 2
 anisotropy    = 0
 elastic       = 0
 free_surface  = 0
@@ -117,3 +120,5 @@ gsel = 0             / grain size evo.
 eta0 = 1e20
 npwl = 1
 Qpwl = 0
+interp_mode = 3
+thermal_solver = 1

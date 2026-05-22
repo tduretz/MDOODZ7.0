@@ -1,3 +1,8 @@
+// Popov et al. (2025, GMD, doi:10.5194/gmd-18-7035-2025) pureshear VEVP demo —
+// § 4.2 / Fig. 6d (regularised shear-band localisation). Uses plast = 2 (combined
+// tensile-cap + Drucker-Prager) via the accompanying .txt. Introduced in
+// commit 8aecb92 and corrected in change add-popov2025-vevp-tests.
+
 #include "mdoodz.h"
 
 

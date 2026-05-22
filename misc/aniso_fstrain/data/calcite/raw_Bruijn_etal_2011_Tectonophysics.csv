@@ -1,0 +1,40 @@
+## Bruijn, Burlini, Drury (2011)
+## "Mechanical and microstructural development of Carrara marble with pre-existing strain variation"
+## Tectonophysics 503, 75-91.   doi:10.1016/j.tecto.2010.09.029
+## Source: bib/anisotropy_calibration_2026/calcite/Bruijn_etal_2011_calcite_torsion_glide_systems_Tectonophysics.pdf
+##
+## ⚠️ AUDIT WARNING (2026-05-08, see audit/Bruijn_etal_2011_audit.md):
+## ⚠️
+## ⚠️ The 3 (γ, J) values below CANNOT BE SOURCED from Bruijn et al. 2011.
+## ⚠️ The paper does not tabulate D1-stage J-indices.  Fig. 8 left column
+## ⚠️ shows pole figures at γ = 0, 0.6, 1.0, 2.0, 3.0, 5.0, 9.0, 11 with
+## ⚠️ NO numerical J labels, and the caption explicitly states the figures
+## ⚠️ are reproduced from Pieri+01 / Barnhoorn+04, not new measurements.
+## ⚠
+## ⚠️ The values appear to be visual estimates from greyscale pole-figure
+## ⚠️ intensities in Bruijn's Fig. 8.  They do not match Pieri+01 or
+## ⚠️ Barnhoorn+04 727°C numerical J-values either.
+## ⚠️
+## ⚠️ Impact on committed FlowLaws.c calibrations if these 3 rows are
+## ⚠️ removed:
+## ⚠️    case 2 (T-averaged):  M_inf 0.41 → 0.41,  γ_e 3.71 → 3.18,
+## ⚠️                          δ_∞ 3.46 → 3.47   (negligible)
+## ⚠️    case 5 (high-T):      M_inf 0.83 → 0.73,  γ_e 8.24 → 5.25,
+## ⚠️                          δ_∞ 5.99 → 5.39   (≈10% shift, MATERIAL)
+## ⚠️
+## ⚠️ Decision pending: keep as-is (documented), delete + re-fit, or
+## ⚠️ re-attribute to Pieri+01 / Barnhoorn+04 with corrected values.
+##
+## Fields:
+##   gamma    — engineering shear strain (D1 single-stage segment)
+##   J        — ODF J-index (UNVERIFIED — see audit warning above)
+##   T_C      — experimental temperature (°C)
+##
+## Fields:
+##   gamma    — engineering shear strain
+##   J        — ODF J-index
+##   T_C      — experimental temperature (°C)
+gamma,J,T_C
+1.0,1.6,727
+2.6,2.5,727
+5.0,4.0,727

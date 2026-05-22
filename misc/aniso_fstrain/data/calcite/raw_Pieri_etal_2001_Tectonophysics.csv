@@ -1,0 +1,21 @@
+## Pieri, Burlini, Kunze, Stretton, Olgaard (2001)
+## "Rheological and microstructural evolution of Carrara marble with high shear strain: results from high temperature torsion experiments"
+## Tectonophysics 330, 119-140.   doi:10.1016/S0040-1951(00)00224-4
+## Source: bib/anisotropy_calibration_2026/calcite/Pieri_etal_2001_Carrara_marble_torsion_727C_Tectonophysics.pdf
+##
+## Carrara marble torsion at 1000 K (727°C), 300 MPa.  Table 1 reports γ vs
+## J-index for 5 samples (incl. 1 undeformed).  The non-monotonic decline
+## between γ=5 (J=9.76) and γ=11 (J=8.92) reflects dynamic recrystallization
+## randomization rather than measurement noise.
+##
+## Fields:
+##   sample   — sample identifier
+##   gamma    — engineering shear strain
+##   J        — ODF J-index (unitless)
+##   T_C      — experimental temperature (°C)
+sample,gamma,J,T_C
+CLB3a,0.0,1.12,727
+P089,1.0,1.66,727
+P143,2.0,2.02,727
+P087,5.0,9.76,727
+P088,11.0,8.92,727

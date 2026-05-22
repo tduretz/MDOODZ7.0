@@ -1,6 +1,10 @@
 #ifndef MDOODZ_TEST_HELPERS_H
 #define MDOODZ_TEST_HELPERS_H
 
+extern "C" {
+#include "mdoodz.h"
+}
+
 #include <hdf5.h>
 #include <cstdio>
 #include <cstdlib>
@@ -8,6 +12,46 @@
 #include <cfloat>
 #include <cstring>
 #include <vector>
+
+// ---------------------------------------------------------------------------
+// MutateInput: PCG-vs-CHOLMOD twin override
+//
+// Many thermal/shear-heating tests have a `*PCG.txt` twin of a base .txt that
+// differs only in `thermal_solver = 1` and `writer_subfolder`. Rather than
+// committing 8 redundant fixture files, the PCG variant test sets:
+//   pcgOverride::set(1, "PCGSubfolderName");
+//   setup.MutateInput = pcgOverride::mutate;
+//   RunMDOODZ("Thermal/Base.txt", &setup);     // shared base fixture
+//   pcgOverride::clear();
+// to inject the two parameter overrides. `writer_subfolder` is heap-owned
+// (ReadChar at InputOutput.c:1096, freed at sim end) so the callback frees the
+// original before strdup-ing the override — string-literal assignment would
+// crash free() on shutdown.
+// ---------------------------------------------------------------------------
+namespace pcgOverride {
+  struct State {
+    int         thermal_solver;  // -1 → no override
+    const char *subfolder;       // nullptr → no override
+  };
+  inline State &state() {
+    static State s{-1, nullptr};
+    return s;
+  }
+  inline void mutate(MdoodzInput *input) {
+    State &s = state();
+    if (s.thermal_solver >= 0) input->model.thermal_solver = s.thermal_solver;
+    if (s.subfolder != nullptr) {
+      free(input->model.writer_subfolder);
+      input->model.writer_subfolder = strdup(s.subfolder);
+    }
+  }
+  inline void set(int solver, const char *subfolder) {
+    state() = { solver, subfolder };
+  }
+  inline void clear() {
+    state() = {-1, nullptr};
+  }
+}
 
 // Read the Newton iteration count from the HDF5 output
 static int getStepsCount(const char *hdf5FileName) {
@@ -241,6 +285,41 @@ static double computeL1Error(const std::vector<double> &numerical, const std::ve
     sumAbsDiff += fabs(numerical[i] - analytical[i]);
   }
   return sumAbsDiff / (double)n;
+}
+
+// Subtract the spatial mean from an array in place.
+// Used for pressure null-space handling in benchmarks with free-slip-everywhere BCs
+// (e.g., SolKz), where pressure is defined only up to an additive constant.
+static void subtractMean(std::vector<double> &field) {
+  if (field.empty()) return;
+  double sum = 0.0;
+  for (double v : field) sum += v;
+  const double mean = sum / (double)field.size();
+  for (double &v : field) v -= mean;
+}
+
+// Read a single-element integer dataset from HDF5
+static int readScalarInt(const char *hdf5FileName, const char *groupName, const char *datasetName) {
+  hid_t file  = H5Fopen(hdf5FileName, H5F_ACC_RDONLY, H5P_DEFAULT);
+  hid_t group = H5Gopen(file, groupName, H5P_DEFAULT);
+  hid_t dset  = H5Dopen(group, datasetName, H5P_DEFAULT);
+  int value = 0;
+  H5Dread(dset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, &value);
+  H5Dclose(dset);
+  H5Gclose(group);
+  H5Fclose(file);
+  return value;
+}
+
+// Extract a 1D vertical column at x-index ix from a flat ncx×ncz field array
+// Storage is column-major: field[ix + ncx * iz]
+static std::vector<double> readColumnProfile(const char *hdf5FileName, const char *groupName, const char *datasetName, int ix, int ncx, int ncz) {
+  auto field = readFieldAsArray(hdf5FileName, groupName, datasetName);
+  std::vector<double> column(ncz);
+  for (int iz = 0; iz < ncz; iz++) {
+    column[iz] = field[ix + ncx * iz];
+  }
+  return column;
 }
 
 #endif

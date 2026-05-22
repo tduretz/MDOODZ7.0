@@ -1,0 +1,29 @@
+## Barnhoorn, Bystricky, Burlini, Kunze (2004)
+## "The role of recrystallisation on the deformation behaviour of calcite rocks: large strain torsion experiments on Carrara marble"
+## J. Struct. Geol. 26, 885-903.   doi:10.1016/j.jsg.2003.11.024
+## Source: bib/anisotropy_calibration_2026/calcite/Barnhoorn_etal_2004_Carrara_marble_torsion_500_to_727C_JSG.pdf
+##
+## Carrara marble torsion to γ=50 across three temperatures (500/600/727°C).
+## J-index from Fig. 7.  J_∞ values reported in parentheses in the paper are
+## NOT included — we use J for consistency with Pieri+01 / Bruijn+11.
+##
+## Fields:
+##   gamma    — engineering shear strain
+##   J        — ODF J-index
+##   T_C      — experimental temperature (°C)
+##   note     — qualitative note for downstream filtering
+gamma,J,T_C,note
+0.5,1.8,500,
+3.0,3.8,500,
+4.0,6.7,500,
+10.0,3.3,500,recryst-randomization outlier
+2.0,2.9,600,
+4.0,3.7,600,
+9.0,4.1,600,
+32.0,42.1,600,outside Skemer linear range (J>15)
+0.6,3.1,727,
+3.0,1.7,727,low outlier
+5.0,12.5,727,
+9.0,20.6,727,outside Skemer linear range (J>15)
+26.0,31.1,727,outside Skemer linear range (J>15)
+46.0,34.5,727,outside Skemer linear range (J>15)

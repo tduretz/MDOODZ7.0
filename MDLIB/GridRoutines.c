@@ -25,6 +25,8 @@
 #include "math.h"
 #include "mdoodz-private.h"
 
+#include "mdoodz-log.h"
+
 #ifdef _OMP_
 #include "omp.h"
 #else
@@ -404,7 +406,7 @@ void InitialiseSolutionFields( grid *mesh, params *model ) {
 
     // Very important step: Set BC's here!!!!!!!
     ApplyBC( mesh, model ); 
-    printf("Velocity field was set to background shear\n");
+    LOG_INFO("Velocity field was set to background shear");
 }
 
 
@@ -599,7 +601,7 @@ void SetUpModel_NoMarkers ( grid* mesh, params *model, scale *scaling ) {
     Ncx = Nx-1;
     Ncz = Nz-1;
     
-    printf("Setting up mode without using markers --- DEBUG !!!!\n");
+    LOG_INFO("Setting up mode without using markers --- DEBUG !!!!");
     
     // Vertices
     for ( k1=0; k1<Ncx*Ncz; k1++ ) {
@@ -664,7 +666,7 @@ void Diffuse_X( grid* mesh, params* model, scale* scaling ) {
     int * flag;
     X0   = DoodzCalloc(sizeof(DoodzFP), ncx*ncz);
     flag = DoodzCalloc(sizeof(int), ncx*ncz);
-    printf("Diffusion length = %2.2e  Diffusion time = %2.2e dt = %2.2e nsteps = %03d\n", L_diff*scaling->L, t_diff*scaling->t, dt*scaling->t, nsteps);
+    LOG_INFO("Diffusion length = %2.2e  Diffusion time = %2.2e dt = %2.2e nsteps = %03d", L_diff*scaling->L, t_diff*scaling->t, dt*scaling->t, nsteps);
     
     
     for (l=1;l<ncz-1;l++) {

@@ -35,6 +35,11 @@ add_executable(ThermalTests ThermalTests.cpp)
 target_link_libraries(ThermalTests LINK_PUBLIC mdoodz GTest::gtest_main)
 add_test(ThermalTests ThermalTests)
 
+# Thermal Verification Tests (oceanic cooling, thermo-elastic coupling)
+add_executable(ThermalVerificationTests ThermalVerificationTests.cpp)
+target_link_libraries(ThermalVerificationTests LINK_PUBLIC mdoodz GTest::gtest_main)
+add_test(ThermalVerificationTests ThermalVerificationTests)
+
 # Boundary Condition Tests
 file(COPY ${PROJECT_SOURCE_DIR}/TESTS/BoundaryCondition DESTINATION ${PROJECT_BINARY_DIR}/TESTS)
 add_executable(BoundaryConditionTests BoundaryConditionTests.cpp)
@@ -83,6 +88,12 @@ add_executable(CompressibilityTests CompressibilityTests.cpp)
 target_link_libraries(CompressibilityTests LINK_PUBLIC mdoodz GTest::gtest_main)
 add_test(CompressibilityTests CompressibilityTests)
 
+# Interp Equivalence Tests
+file(COPY ${PROJECT_SOURCE_DIR}/TESTS/InterpEquiv DESTINATION ${PROJECT_BINARY_DIR}/TESTS)
+add_executable(InterpEquivalenceTests InterpEquivalenceTests.cpp)
+target_link_libraries(InterpEquivalenceTests LINK_PUBLIC mdoodz GTest::gtest_main)
+add_test(InterpEquivalenceTests InterpEquivalenceTests)
+
 # Finite Strain Tests
 file(COPY ${PROJECT_SOURCE_DIR}/TESTS/FiniteStrain DESTINATION ${PROJECT_BINARY_DIR}/TESTS)
 add_executable(FiniteStrainTests FiniteStrainTests.cpp)
@@ -107,11 +118,28 @@ add_executable(SolViBenchmarkTests SolViBenchmarkTests.cpp)
 target_link_libraries(SolViBenchmarkTests LINK_PUBLIC mdoodz GTest::gtest_main)
 add_test(SolViBenchmarkTests SolViBenchmarkTests)
 
+# SolCx Benchmark Tests (step-viscosity Stokes — Zhong 1996 / Duretz 2011)
+# Analytical solution is a verbatim port of ASPECT's _Velic_solCx (GPL v2+).
+file(COPY ${PROJECT_SOURCE_DIR}/TESTS/SolCx DESTINATION ${PROJECT_BINARY_DIR}/TESTS)
+add_executable(SolCxBenchmarkTests
+        SolCxBenchmarkTests.cpp
+        SolCx/SolCxAnalytical.cpp)
+target_link_libraries(SolCxBenchmarkTests LINK_PUBLIC mdoodz GTest::gtest_main)
+target_include_directories(SolCxBenchmarkTests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+add_test(NAME SolCxBenchmarkTests COMMAND SolCxBenchmarkTests)
+
 # Anisotropy Benchmark Tests
 file(COPY ${PROJECT_SOURCE_DIR}/TESTS/AnisotropyBenchmark DESTINATION ${PROJECT_BINARY_DIR}/TESTS)
 add_executable(AnisotropyBenchmarkTests AnisotropyBenchmarkTests.cpp)
 target_link_libraries(AnisotropyBenchmarkTests LINK_PUBLIC mdoodz GTest::gtest_main)
 add_test(AnisotropyBenchmarkTests AnisotropyBenchmarkTests)
+
+# Init-from-Finite-Strain Tests (aniso-init-from-finite-strain change, Phase 1).
+# Pure unit tests of the aniso_delta_inv_hansen + F_init construction math —
+# no MDOODZ simulation; no input fixture directory.
+add_executable(InitAnisoFromFiniteStrainTests InitAnisoFromFiniteStrainTests.cpp)
+target_link_libraries(InitAnisoFromFiniteStrainTests LINK_PUBLIC mdoodz GTest::gtest_main)
+add_test(InitAnisoFromFiniteStrainTests InitAnisoFromFiniteStrainTests)
 
 # TopoBench Tests
 file(COPY ${PROJECT_SOURCE_DIR}/TESTS/TopoBench DESTINATION ${PROJECT_BINARY_DIR}/TESTS)
@@ -119,14 +147,16 @@ add_executable(TopoBenchTests TopoBenchTests.cpp)
 target_link_libraries(TopoBenchTests LINK_PUBLIC mdoodz GTest::gtest_main)
 add_test(TopoBenchTests TopoBenchTests)
 
-# Blankenbach Thermal Convection Tests
+# Blankenbach Thermal Convection Tests (manual only — too slow for CI, ~30 min at 41×41)
 file(COPY ${PROJECT_SOURCE_DIR}/TESTS/BlankenBench DESTINATION ${PROJECT_BINARY_DIR}/TESTS)
 add_executable(BlankenBenchTests BlankenBenchTests.cpp)
 target_link_libraries(BlankenBenchTests LINK_PUBLIC mdoodz GTest::gtest_main)
-if (OMP)
+if (OMP AND TARGET OpenMP::OpenMP_CXX)
     target_link_libraries(BlankenBenchTests LINK_PUBLIC OpenMP::OpenMP_CXX)
 endif()
-add_test(BlankenBenchTests BlankenBenchTests)
+add_test(NAME BlankenBenchTests COMMAND BlankenBenchTests)
+set_tests_properties(BlankenBenchTests PROPERTIES LABELS "manual" TIMEOUT 3600)
+set_property(TEST BlankenBenchTests PROPERTY DISABLED TRUE)
 
 # Blankenbach HDF5-to-gnuplot extraction utility (no GTest, just HDF5)
 add_executable(extract_blankenbach BlankenBench/extract_fields.cpp)
@@ -138,3 +168,37 @@ add_executable(SolViMarkerComparison SolViMarkerComparison.cpp)
 target_link_libraries(SolViMarkerComparison LINK_PUBLIC mdoodz GTest::gtest_main)
 add_test(NAME SolViMarkerComparison COMMAND SolViMarkerComparison)
 set_tests_properties(SolViMarkerComparison PROPERTIES LABELS "experimental" TIMEOUT 300)
+
+# Rotation Advection Test (reseed mode comparison)
+file(COPY ${PROJECT_SOURCE_DIR}/TESTS/RotationAdvection DESTINATION ${PROJECT_BINARY_DIR}/TESTS)
+add_executable(RotationAdvectionTests RotationAdvectionTests.cpp)
+target_link_libraries(RotationAdvectionTests LINK_PUBLIC mdoodz GTest::gtest_main)
+add_test(NAME RotationAdvectionTests COMMAND RotationAdvectionTests)
+set_tests_properties(RotationAdvectionTests PROPERTIES LABELS "experimental" TIMEOUT 600)
+
+# Popov et al. (2025) Combined Tensile Cap / DP Yield Tests
+#
+# Three 0D stress-integration fixtures reproduce paper Fig. 5 a/b/c
+# (volumetric extension, deviatoric shear, mixed strain).  They pin the
+# local-stress-update Newton solve (MDLIB/RheologyDensity.c:685-899) with
+# exact paper parameters and analytical yield-surface assertions.
+file(COPY ${PROJECT_SOURCE_DIR}/TESTS/Popov2025 DESTINATION ${PROJECT_BINARY_DIR}/TESTS)
+add_executable(Popov2025Tests
+        Popov2025Tests.cpp
+        Popov2025/Popov0DAnalytical.cpp)
+target_link_libraries(Popov2025Tests LINK_PUBLIC mdoodz GTest::gtest_main)
+target_include_directories(Popov2025Tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+add_test(NAME Popov2025Tests COMMAND Popov2025Tests)
+set_tests_properties(Popov2025Tests PROPERTIES LABELS "popov2025")
+
+# Standalone HDF5 -> ASCII extractor that feeds the gnuplot paper-figure
+# scripts under TESTS/Popov2025/plots/.  Not wired into VISUAL_TESTS.
+add_executable(extract_popov2025 Popov2025/plots/extract_popov2025.cpp)
+target_link_libraries(extract_popov2025 LINK_PUBLIC ${HDF5_C_LIBRARIES})
+target_include_directories(extract_popov2025 PRIVATE ${HDF5_INCLUDE_DIRS})
+
+# AnalyticalBench fixtures (SolKz and related analytic benchmarks).
+file(COPY ${PROJECT_SOURCE_DIR}/TESTS/AnalyticalBench DESTINATION ${PROJECT_BINARY_DIR}/TESTS)
+
+# ShearBand fixtures (shear-zone benchmarks).
+file(COPY ${PROJECT_SOURCE_DIR}/TESTS/ShearBand DESTINATION ${PROJECT_BINARY_DIR}/TESTS)

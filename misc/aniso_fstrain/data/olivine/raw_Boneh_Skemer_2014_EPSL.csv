@@ -1,0 +1,38 @@
+## Boneh, Skemer (2014)
+## "The effect of pre-existing CPO on the deformation and crystallographic preferred orientation of olivine"
+## Earth Planet. Sci. Lett. 406, 213-222.   doi:10.1016/j.epsl.2014.09.018
+## Source: bib/anisotropy_calibration_2026/olivine/Boneh_Skemer_2014_*.pdf
+##
+## Aheim dunite with pre-existing CPO (M_initial ≈ 0.13).  Solid-medium Griggs
+## apparatus, 1 GPa confining pressure, 1200°C, axial compression, strain
+## rates 3.9–5.4 × 10⁻⁶ s⁻¹.
+## Three sample geometries (relative to pre-existing foliation):
+##     1 = perpendicular,  2 = oblique (45°),  3 = parallel
+##     0 = undeformed reference
+##
+## Fields (all 16 rows directly transcribed from Table 1, p. 215):
+##   sample        — sample identifier (`undef` or `WUG-###`)
+##   epsilon       — natural axial strain (dimensionless)
+##   M             — Skemer M-index
+##   geometry      — 0 undef / 1 perp / 2 oblique / 3 parallel
+##
+## Audit 2026-05-08 caught a one-row label shift in the previous version of
+## this file (oblique + parallel blocks); see audit/Boneh_Skemer_2014_audit.md.
+## This version is the post-audit corrected transcript of the published Table 1.
+sample,epsilon,M,geometry
+undef,0.000,0.13,0
+WUG-116,0.217,0.10,1
+WUG-114,0.328,0.09,1
+WUG-125,0.406,0.08,1
+WUG-122,0.507,0.12,1
+WUG-126,0.653,0.11,1
+WUG-130,0.187,0.09,2
+WUG-128,0.410,0.08,2
+WUG-129,0.482,0.14,2
+WUG-143,0.685,0.15,2
+WUG-127,0.717,0.15,2
+WUG-138,0.207,0.06,3
+WUG-133,0.360,0.06,3
+WUG-146,0.370,0.06,3
+WUG-134,0.415,0.05,3
+WUG-147,0.610,0.06,3

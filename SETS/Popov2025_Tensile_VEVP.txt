@@ -1,3 +1,10 @@
+/**** POPOV ET AL. 2025 — TENSILE VEVP DEMO ****/
+/* Reference: Popov, Berlie, Kaus (2025) doi:10.5194/gmd-18-7035-2025       */
+/* § 4.2 / Fig. 6b (regularised tensile localisation). Matches Table 1     */
+/* "Regularization" column. plast = 2 activates the combined tensile-cap + */
+/* Drucker-Prager yield surface of MDLIB/RheologyDensity.c:685.            */
+/* Introduced in commit 8aecb92 and corrected in add-popov2025-vevp-tests. */
+
 /**** RESTART ****/
 istep =00030
 irestart = 0
@@ -5,6 +12,7 @@ irestart = 0
 /**** OUTPUT FILES ****/
 writer          = 1
 writer_step     = 50
+writer_subfolder = Popov2025_Tensile_VEVP
 writer_markers  = 0
 writer_debug    = 0
 writer_energies = 0
@@ -50,6 +58,7 @@ shear_heating      = 0
 adiab_heating      = 0
 finite_strain      = 1
 hardening_modulus = 1
+tensile_line_search = 1
 
 penalty           = 1e2
 lin_solver        = 2
@@ -86,8 +95,7 @@ G       = 4e10
 Cp      = 1050
 k       = 2.5
 Qr      = 0
-plast   = 0
-tensile = 1
+plast   = 2
 C       = 2e7
 coh_soft = 0
 Ce      = 5e6
@@ -120,8 +128,7 @@ G       = 4e9
 Cp      = 1050
 k       = 2.5
 Qr      = 0
-plast   = 0
-tensile = 1
+plast   = 2
 C       = 2e7
 coh_soft = 0
 Ce      = 5e6

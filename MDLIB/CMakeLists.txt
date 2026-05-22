@@ -9,10 +9,10 @@ add_library(mdoodz SHARED
         HDF5Output.c
         InputOutput.c
         Main_DOODZ.c
+        MdoodzLog.c
         MeltingRoutines.c
         MemoryAllocFree.c
         MiscFunctions.c
-        ParticleReseeding.c
         ParticleRoutines.c
         RheologyDensity.c
         RheologyParticles.c
@@ -27,7 +27,7 @@ add_library(mdoodz SHARED
 target_link_libraries(mdoodz ${DEPENDENCIES})
 target_include_directories(mdoodz PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 set_target_properties(mdoodz PROPERTIES
-        PUBLIC_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/include/mdoodz.h)
+        PUBLIC_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/include/mdoodz.h;${CMAKE_CURRENT_SOURCE_DIR}/include/mdoodz-log.h")
 
 install(TARGETS mdoodz
         LIBRARY DESTINATION lib

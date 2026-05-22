@@ -46,6 +46,10 @@ typedef struct {
   int    phase;
   int    noisy;
   double d;
+  double T;
 } LocalIterationParams;
+
+void LocalIterationViscoElastic(LocalIterationMutables mutables, LocalIterationParams params);
+void LocalIterationViscoElasticGrainSize(LocalIterationMutables mutables, LocalIterationParams params);
 
 #endif

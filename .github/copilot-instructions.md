@@ -27,6 +27,7 @@ Before answering questions about MDOODZ, check whether a relevant skill exists. 
 | Building, compiling, dependencies, CMake | skill-build-and-run |
 | Creating a new simulation, .c/.txt files, callbacks, boundary conditions | skill-model-setup |
 | Viscosity, creep laws, flow laws, plasticity, elasticity, material properties | skill-rheology |
+| Partial melting, melt fraction, solidus/liquidus, melt weakening | skill-melting |
 | Anisotropy, fabric, director field, foliation | skill-anisotropy |
 | Solver convergence, Newton, Picard, time stepping, penalty | skill-solvers |
 | Governing equations, Stokes, energy, scaling, advection, free surface | skill-physics-theory |
@@ -36,6 +37,10 @@ Before answering questions about MDOODZ, check whether a relevant skill exists. 
 | Plotting, HDF5 output, Julia visualisation, extracting data | skill-visualisation |
 | Validating .txt parameters, checking physical ranges | skill-parameter-validation |
 | Writing tests, running tests, CI tests, visual regression tests, GTest | skill-testing-guide |
+| Logging, LOG_INFO/WARN/ERR macros, log configuration, timestamps, log file | skill-logging |
+| Performance benchmarking, perf.csv, grid scaling, thread scaling, comparing machines | skill-benchmarking |
+| Benchmarking the Stokes solver on hard-solve state (shear bands, nit≥1), checkpoint/restart for solve_s measurement, sweeping threads/interp_mode on a warmed-up model | skill-stokes-benchmark |
+| Particle reseeding, recycling, deactivation, min_part_cell, Nb_part_max, exit(190) | skill-particle-reseeding |
 
 ## Code Style
 

@@ -140,7 +140,7 @@ Every test `.txt` file **must** include:
    add_test(NAME <Group>Tests COMMAND <Group>Tests)
    ```
 
-### Existing CI Tests (15 suites, 39 test cases)
+### Existing CI Tests (17 suites, 47 test cases)
 
 | File | Tests | What It Covers |
 |------|-------|----------------|
@@ -164,6 +164,10 @@ Every test `.txt` file **must** include:
 | `ConvergenceRateTests.cpp` | NewtonPwl, PicardPwl, NewtonFasterThanPicard | Newton vs Picard comparison |
 | `BlankenBenchTests.cpp` | ConvectionDevelops | Blankenbach Case 1a smoke test: T range, V > 0, no NaN (500 steps) |
 | `BlankenBenchTests.cpp` | TemperatureProfile | Mid-depth T_max in [0.1, 0.9], no NaN in T field |
+| `RotationAdvectionTests.cpp` | RotationAdvection.CompareReseedModes | Rigid-body rotation L2 < 0.1 for all 3 reseed_modes; mode 2 ≤ 1.5× mode 0 |
+| `RotationAdvectionTests.cpp` | VortexAdvection.CompareReseedModes | Vortex shear inter-mode L2 < 0.1; reseeding does not degrade advection |
+
+> **Note:** BlankenBench is **excluded from CI** (disabled in CMake). Even the 500-step smoke test is too slow for the fast CI pipeline. Run manually: `cd cmake-build/TESTS && ./BlankenBenchTests`
 
 ---
 

@@ -1,0 +1,17 @@
+## Hansen, Zimmerman, Kohlstedt (2012)
+## "Laboratory measurements of the viscous anisotropy of olivine aggregates"
+## Nature 492, 415-418.   doi:10.1038/nature11671
+## Source: bib/anisotropy_calibration_2026/olivine/Hansen_etal_2012_*.pdf
+##
+## Original Hansen+12 dataset (3 representative torsion samples).
+## NOTE: this is RETAINED ONLY FOR HISTORIC COMPARISON in the calibration plot.
+## The same samples were re-analysed in Hansen+14 with consistent M-index
+## methodology — the calibration uses Hansen+14 / Hansen+16, not these.
+##
+## Fields:
+##   gamma   — engineering shear strain
+##   M       — Skemer M-index
+gamma,M
+0.03,0.03
+4.0,0.36
+10.0,0.55

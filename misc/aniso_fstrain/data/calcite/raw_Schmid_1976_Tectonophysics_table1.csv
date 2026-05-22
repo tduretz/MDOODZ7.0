@@ -1,0 +1,12 @@
+# Schmid 1976 Tectonophysics 31:T21-T28 (DOI 10.1016/0040-1951(76)90160-8)
+# Solenhofen limestone σ_c(T) regime-transition stress per T-bin
+# Extracted from Schmid 1976 Table I (45 runs) + Table II (Arrhenius LSQ fits) + page T26 (transition-stress values)
+# σ_c = transition stress between high-n (n≈4.5) and low-n (n≈2) power-law creep regimes
+# 600°C + 900°C values stated explicitly in paper text (page T26: "300 bars at 900°C to 1050 bars at 600°C")
+# 700°C + 800°C values interpolated from Table I regime-2 (lowest σ) vs regime-3 (highest σ) boundary
+# Solenhofen limestone grain size ~1-10 µm; confining pressure 3 kbar
+T_C,T_K,inv_T,sigma_c_bar,sigma_c_Pa,ln_sigma_c,source,uncertainty
+600,873,1.1455e-3,1050,1.05e8,6.957,paper_text_T26,low
+700,973,1.0278e-3,600,6.0e7,6.397,Table_I_interpolated_regime2_to_3,moderate
+800,1073,9.3197e-4,535,5.35e7,6.282,Table_I_interpolated_regime2_to_3,moderate
+900,1173,8.5252e-4,300,3.0e7,5.704,paper_text_T26,low

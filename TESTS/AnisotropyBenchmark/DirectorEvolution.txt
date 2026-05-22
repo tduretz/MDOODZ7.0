@@ -30,6 +30,8 @@ dt_min       = 1e-10
 Courant      = 0.5
 lin_solver   = 0
 penalty      = 1e5
+min_eta      = 1e-30
+max_eta      = 1e30
 diag_scaling = 1
 
 /**** SWITCHES ****/

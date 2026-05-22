@@ -1,0 +1,57 @@
+## Pennacchioni, Menegon, Leiss, Nestola, Bromiley (2010)
+## "Development of crystallographic preferred orientation and microstructure during plastic deformation of natural coarse-grained quartz veins"
+## J. Geophys. Res. 115, B12405.   doi:10.1029/2010JB007674
+## Source: bib/anisotropy_calibration_2026/quartz/Pennacchioni_etal_2010_quartz_natural_shear_zones_500C_JGR.pdf
+##
+## ⚠️ AUDIT WARNING (2026-05-08, see audit/Pennacchioni_etal_2010_audit.md):
+## ⚠️
+## ⚠️ The paper does NOT report a numerical J-index anywhere — not in text,
+## ⚠️ table, or plot. Table 1 is Ti-in-quartz thermometry only. Fig. 7 is
+## ⚠️ porphyroclast COIs (NOT a J-vs-γ plot).  CPO method is X-ray texture
+## ⚠️ goniometry + CIP (NOT EBSD).
+## ⚠️
+## ⚠️ The 17 J values below MUST therefore come from a downstream re-
+## ⚠️ extraction (e.g., MTEX from the published pole figures) or a later
+## ⚠️ compilation paper, not from Pennacchioni+10 directly.
+## ⚠️
+## ⚠️ Regime codes (WDV/MDV/SDV) and γ_fol values DO match the paper's
+## ⚠️ §3 regime definitions and per-sample γ_fol reports in Figs 3/4/8.
+## ⚠️
+## ⚠️ Locality is the Avio pluton (Adamello batholith, Southern Alps,
+## ⚠️ Italy), NOT Mont Mary as previously stated.
+## ⚠️
+## ⚠️ Impact on case 3 calibration if J values are wrong: M_inf and γ_e
+## ⚠️ may shift; this is the primary calibration data source for case 3,
+## ⚠️ so a re-derivation from the original pole figures (or a citation
+## ⚠️ of the actual J-source paper) is recommended.
+##
+## 17 natural-shear-zone samples from the Avio pluton (Adamello, Southern Alps).
+## γ_fol from foliation deflection (paper §3 + Figs 3 / 4 / 8).
+## J values: provenance currently undocumented; needs re-derivation.
+## Three deformation regimes (per paper §3):
+##     0 = WDV (γ < 1, weak dynamic recrystallization)
+##     1 = MDV (1 < γ < 3, moderate, basal-a / rhomb-a transition)
+##     2 = SDV (4 < γ < 15, strong, prism-a dominated, T ≥ 500°C)
+##
+## Fields:
+##   gamma     — foliation-deflection shear strain
+##   J         — overall ODF J-index
+##   regime    — 0 WDV / 1 MDV / 2 SDV
+gamma,J,regime
+0.3,2.2,0
+0.5,2.6,0
+0.7,3.0,0
+0.9,3.6,0
+2.0,4.5,1
+2.3,5.8,1
+2.5,6.0,1
+2.8,6.8,1
+3.0,7.5,1
+4.0,9.0,2
+5.0,10.0,2
+6.0,10.5,2
+8.0,11.0,2
+10.0,11.5,2
+12.0,11.0,2
+13.5,12.0,2
+15.0,11.5,2

@@ -1,0 +1,85 @@
+## Bernard, Behr, Becker & Young (2019)
+## "Relationships Between Olivine CPO and Deformation Parameters in Naturally Deformed
+##  Rocks and Implications for Mantle Seismic Anisotropy"
+## Geochemistry, Geophysics, Geosystems 20:7 (3469–3494). doi:10.1029/2019GC008289
+## Source: bib/anisotropy_calibration_2026/olivine/Bernard_etal_2019_olivine_CPO_natural_compilation_510samples_G3.pdf
+##
+## Used for: — direct test of Skemer's M=(J-1)/15 conversion.
+## Bernard+19 Table 2 reports BOTH M-index and J-index for n=65 of their own samples
+## (not for the 445 literature compilation, which has only one or the other per sample).
+## CPO type is from Table 1 (same paper); '?' means inconclusive in the original.
+##
+## Columns:
+##   sample      — sample id (Tables 1 & 2 share this column)
+##   cpo_type    — A / B / C / D / E / AG / ? (from Table 1)
+##   M_index     — Skemer+05 M-index (Table 2 EBSD-derived values)
+##   J_index     — Bunge 1982 J-index   (Table 2 EBSD-derived values)
+##
+## Bernard's own §5.2 finding: R²=0.72 between M and J across n=65, with D-type
+## samples flagged as overpredicting M relative to J (Fig S5 in supporting info).
+sample,cpo_type,M_index,J_index
+07EB4-1,A,0.11,3.71
+114027-10,E,0.18,3.87
+114027-16,A,0.13,3.24
+114027-23,A,0.11,3.00
+114027-6,A,0.17,4.61
+116610-26,D,0.11,2.71
+117200-205,AG,0.12,2.72
+117200-211,AG,0.22,4.62
+BELB9-6a,A,0.16,3.42
+CC07-1-22,C,0.04,1.67
+CC07-2-1,?,0.05,2.28
+CG07-1-26,?,0.02,2.20
+CG07-1-36,?,0.08,2.10
+CG07-1-52,A,0.06,2.34
+DW8,A,0.23,5.54
+I7,B,0.05,2.14
+I8,E,0.04,1.70
+Kb,B,0.12,2.72
+KH1,AG,0.14,2.64
+KH2,B,0.08,2.23
+Ki-5-319,A,0.08,2.60
+N117,AG,0.22,5.07
+N122,A,0.23,5.52
+N167,AG,0.20,4.32
+N178,B,0.29,6.49
+N188,E,0.17,4.55
+O16D,C,0.01,1.19
+O16E,AG,0.04,1.45
+O18A,A,0.18,3.53
+O18B,AG,0.01,1.35
+O18C,AG,0.05,1.55
+PL1,A,0.22,5.88
+PL10,E,0.09,3.02
+PL11,E,0.37,17.38
+PL13,E,0.31,5.98
+PL6,C,0.23,7.93
+RCiV8-1,E,0.01,1.55
+RCiV8-22,A,0.11,3.07
+RCiV8-6,A,0.21,3.91
+RDH11,B,0.10,2.98
+RDH14,A,0.13,4.34
+RDH15,E,0.06,2.54
+RDH23,E,0.13,3.46
+RDH26,A,0.05,2.46
+RDH33,D,0.08,2.31
+RDH44,?,0.04,3.55
+RDH49,E,0.03,2.19
+RNF7,A,0.08,2.35
+RNF8,?,0.06,2.20
+SQ1,D,0.09,2.07
+SQ2,D,0.11,2.42
+SQ3,D,0.08,2.95
+SQ5,?,0.11,2.32
+V17A,?,0.03,1.45
+V24A,B,0.03,1.35
+WCiVb36,C,0.10,3.44
+WCiVb46,E,0.08,2.86
+WCiVb47,A,0.11,3.09
+Y12B,?,0.04,1.43
+YF12,E,0.09,3.22
+YF3,E,0.22,9.39
+YF4,E,0.29,8.81
+YF9a,E,0.05,1.99
+YFN11,?,0.12,3.07
+YFN13,E,0.07,1.93

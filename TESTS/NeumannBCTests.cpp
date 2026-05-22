@@ -75,3 +75,30 @@ TEST_F(NeumannBC, StressBCPureShear) {
   free(inputName);
   free(fileName);
 }
+
+
+// --- Interpolation mode tests ---
+
+TEST_F(NeumannBC, StressBCPureShearInterpMode1) {
+  char *inputName;
+  asprintf(&inputName, "NeumannBC/StressBCPureShearInterpMode1.txt");
+  RunMDOODZ(inputName, &setup);
+  char *fileName;
+  asprintf(&fileName, "StressBCPureShearInterpMode1/Output%05d.gzip.h5", 1);
+  int steps = getStepsCount(fileName);
+  EXPECT_GE(steps, 0);
+  free(inputName);
+  free(fileName);
+}
+
+TEST_F(NeumannBC, StressBCPureShearInterpMode2) {
+  char *inputName;
+  asprintf(&inputName, "NeumannBC/StressBCPureShearInterpMode2.txt");
+  RunMDOODZ(inputName, &setup);
+  char *fileName;
+  asprintf(&fileName, "StressBCPureShearInterpMode2/Output%05d.gzip.h5", 1);
+  int steps = getStepsCount(fileName);
+  EXPECT_GE(steps, 0);
+  free(inputName);
+  free(fileName);
+}

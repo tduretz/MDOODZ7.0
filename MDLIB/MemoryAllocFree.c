@@ -24,9 +24,10 @@
 #include "string.h"
 #include "math.h"
 #include "mdoodz-private.h"
+#include "mdoodz-log.h"
 
 #ifdef _VG_
-#define printf(...) printf("")
+#define LOG_INFO(...) LOG_INFO("")
 #endif
 
 /*--------------------------------------------------------------------------------------------------------------------*/
@@ -100,10 +101,29 @@ void DoodzFree( void *pointer ) {
 /*--------------------------------------------------------------------------------------------------------------------*/
 
 void AllocMat( SparseMat *Mat, int nnz ) {
+    /* H02: reuse capacity held over from previous AllocMat/FreeMat cycle if it
+       fits. SAlloc zeroes the cache fields, so on the very first call the
+       pointers are NULL and we fall through to a fresh alloc. */
+    if ( Mat->Ic != NULL && Mat->J != NULL && Mat->A != NULL && Mat->bbc != NULL
+         && Mat->nnz_alloc >= nnz && Mat->neq_alloc >= Mat->neq ) {
+        memset(Mat->Ic,  0, (Mat->neq+1) * sizeof(int));
+        memset(Mat->J,   0, nnz * sizeof(int));
+        memset(Mat->A,   0, nnz * sizeof(double));
+        memset(Mat->bbc, 0, Mat->neq * sizeof(double));
+        return;
+    }
+    /* Capacity insufficient (or first call): release any partial pool and
+       allocate fresh. */
+    if (Mat->Ic  != NULL) DoodzFree(Mat->Ic);
+    if (Mat->J   != NULL) DoodzFree(Mat->J);
+    if (Mat->A   != NULL) DoodzFree(Mat->A);
+    if (Mat->bbc != NULL) DoodzFree(Mat->bbc);
     Mat->Ic  = DoodzCalloc((Mat->neq+1), sizeof(int));
     Mat->J   = DoodzCalloc(nnz, sizeof(int));
     Mat->A   = DoodzCalloc(nnz, sizeof(double));
     Mat->bbc = DoodzCalloc(Mat->neq, sizeof(double));
+    Mat->nnz_alloc = nnz;
+    Mat->neq_alloc = Mat->neq;
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
@@ -111,10 +131,10 @@ void AllocMat( SparseMat *Mat, int nnz ) {
 /*--------------------------------------------------------------------------------------------------------------------*/
 
 void FreeMat( SparseMat *Mat ) {
-    DoodzFree(Mat->Ic);
-    DoodzFree(Mat->J);
-    DoodzFree(Mat->A);
-    DoodzFree(Mat->bbc);
+    /* H02: NO-OP. Keep Ic/J/A/bbc capacity around so the next NL-iter
+       AllocMat reuses them. Final release is performed by SFree at end of
+       simulation (or end of timestep block before SAlloc is rerun). */
+    (void)Mat;
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
@@ -162,6 +182,14 @@ void SAlloc( SparseMat *Mat, int neq ) {
     Mat->b   = DoodzCalloc(neq, sizeof(double)); // rhs
     Mat->x   = DoodzCalloc(neq, sizeof(double)); // solution
     Mat->F   = DoodzCalloc(neq, sizeof(double)); // residual
+    /* H02: initialize CSR-cache fields so AllocMat can detect first-call
+       state. SAlloc runs once per timestep, before any AllocMat. */
+    Mat->Ic        = NULL;
+    Mat->J         = NULL;
+    Mat->A         = NULL;
+    Mat->bbc       = NULL;
+    Mat->nnz_alloc = 0;
+    Mat->neq_alloc = 0;
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
@@ -173,6 +201,13 @@ void SFree( SparseMat *Mat ) {
     DoodzFree(Mat->x);
     DoodzFree(Mat->F);
     DoodzFree(Mat->b);
+    /* H02: release the CSR pool kept alive by FreeMat-no-op. */
+    if (Mat->Ic  != NULL) { DoodzFree(Mat->Ic);  Mat->Ic  = NULL; }
+    if (Mat->J   != NULL) { DoodzFree(Mat->J);   Mat->J   = NULL; }
+    if (Mat->A   != NULL) { DoodzFree(Mat->A);   Mat->A   = NULL; }
+    if (Mat->bbc != NULL) { DoodzFree(Mat->bbc); Mat->bbc = NULL; }
+    Mat->nnz_alloc = 0;
+    Mat->neq_alloc = 0;
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
@@ -224,6 +259,11 @@ markers PartAlloc(ParticlesInput particlesInput, params *model) {
   particles.strain_exp = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
   particles.strain_lin = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
   particles.strain_gbs = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
+
+  // ani_fstrain == 3 δ-relaxation per-marker state — allocated unconditionally,
+  // mirroring strain_pwl (PartInit sets the isotropic δ = 1 start).
+  particles.aniso_delta         = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
+  particles.aniso_delta_fs_prev = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
 
   particles.intag      = DoodzCalloc(particles.Nb_part_max, sizeof(int));
 
@@ -299,6 +339,9 @@ void PartFree( markers *particles, params* model ) {
     DoodzFree(particles->strain_lin);
     DoodzFree(particles->strain_gbs);
 
+    DoodzFree(particles->aniso_delta);
+    DoodzFree(particles->aniso_delta_fs_prev);
+
     DoodzFree(particles->intag);
 
     if (model->finite_strain == 1) {
@@ -351,7 +394,7 @@ grid GridAlloc(params *model) {
   int NxVz = Nx + 1;
   int NzVx = Nz + 1;
 
-  printf("Allocation of grid arrays !\n");
+  LOG_INFO("Allocation of grid arrays !");
 
   mesh.FreeSurfW_s  = (double *) DoodzCalloc(Nx * Nz, sizeof(double));
   mesh.FreeSurfW_n  = (double *) DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
@@ -641,6 +684,12 @@ grid GridAlloc(params *model) {
   if (model->anisotropy == 1) mesh.FS_AR_s = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double));
   if (model->anisotropy == 1) Initialise1DArrayDouble(mesh.FS_AR_n, (Nx - 1) * (Nz - 1), 1.0);
   if (model->anisotropy == 1) Initialise1DArrayDouble(mesh.FS_AR_s, (Nx - 0) * (Nz - 0), 1.0);
+  // ani_fstrain == 3 relaxed-δ grid fields — mirror FS_AR_n / FS_AR_s. Init to
+  // 1.0 (isotropic) so a cell with no ani_fstrain==3 markers is harmless.
+  if (model->anisotropy == 1) mesh.aniso_delta_n = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  if (model->anisotropy == 1) mesh.aniso_delta_s = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double));
+  if (model->anisotropy == 1) Initialise1DArrayDouble(mesh.aniso_delta_n, (Nx - 1) * (Nz - 1), 1.0);
+  if (model->anisotropy == 1) Initialise1DArrayDouble(mesh.aniso_delta_s, (Nx - 0) * (Nz - 0), 1.0);
   if (model->anisotropy == 1) mesh.aniso_factor_n = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double)); // To delete
   if (model->anisotropy == 1) mesh.aniso_factor_s = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double)); // To delete
   if (model->anisotropy == 1) {
@@ -660,7 +709,7 @@ grid GridAlloc(params *model) {
   // Viscoplasticity
   mesh.OverS_n = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
 
-  printf("Memory succesfully allocated : \nDiantre, que c'est bon!\n");
+  LOG_INFO("Memory succesfully allocated : \nDiantre, que c'est bon!");
   return mesh;
 }
 
@@ -981,6 +1030,8 @@ void GridFree(grid *mesh, params *model) {
     if ( model->anisotropy == 1 ) DoodzFree(mesh->angle_s);
     if ( model->anisotropy == 1 ) DoodzFree(mesh->FS_AR_n);
     if ( model->anisotropy == 1 ) DoodzFree(mesh->FS_AR_s);
+    if ( model->anisotropy == 1 ) DoodzFree(mesh->aniso_delta_n);
+    if ( model->anisotropy == 1 ) DoodzFree(mesh->aniso_delta_s);
     if ( model->anisotropy == 1 ) DoodzFree(mesh->aniso_factor_n);
     if ( model->anisotropy == 1 ) DoodzFree(mesh->aniso_factor_s);
     // Compressibility

@@ -1,0 +1,36 @@
+## Marti, Stünitz, Heilbronner, Plümper, Kilian (2018)
+## "Syn-kinematic hydration reactions, grain size reduction, and dissolution-precipitation creep in experimentally deformed plagioclase-pyroxene mixtures"
+## Solid Earth 9, 985-1009.   doi:10.5194/se-9-985-2018
+## Source: bib/anisotropy_calibration_2026/plagioclase/Marti_etal_2018_plagioclase_pyroxene_DPC_GBS_SolidEarth.pdf
+##
+## Conditions (paper §2.1,): general shear in Griggs apparatus
+## with 0.1 wt% water, T=800°C, P=1.0 or 1.5 GPa, strain rate
+## 3×10⁻⁵ to 3×10⁻⁶ s⁻¹. 4 starting compositions:
+##   i)   An60-70 + cpx + opx (MD Maryland diabase)
+##   ii)  An60 + diopside (Ab+Di)
+##   iii) An60 + enstatite (Ab+En)
+##   iv)  An01 + enstatite (~albite + en)
+##
+## / LSQ extraction. **Status: PARTIAL — only known
+## datapoint from page-11-15 read is included below**.
+## Additional samples + γ levels need extraction from Marti+18 Fig 13
+## (MD diabase sample 414), Fig 5-8 (per-sample γ + σ mechanical data),
+## and any other EBSD reports in §3.2.* not yet read.
+##
+## Fields:
+##   sample          — Marti+18 experiment number
+##   starting_mat    — composition code: AbEn / AbDi / MD / AbEn01
+##   gamma           — engineering shear strain
+##   M_proxy         — M-index proxy. Marti+18 Fig 12 reports pfJ
+##                     (pole-figure J-index for plag). Skemer+05 J→M
+##                     conversion is M ≈ (J-1)/15 — approximate. Or
+##                     pole-fig max as listed. See M_metric column.
+##   M_metric        — measurement type: pfJ, pfmax, M_skemer, or IPF_max
+##   site            — site within sample (upper/lower) if applicable
+##   provenance_fig  — paper figure source
+sample,starting_mat,gamma,M_proxy,M_metric,site,provenance_fig
+518,AbEn,4.0,3.9,pfJ,Upper,Fig12c
+518,AbEn,4.0,3.7,pfJ,Lower,Fig12c
+518,AbEn,4.0,3.4,IPF_max,Site1,Fig12d
+518,AbEn,4.0,4.0,IPF_max,Site2,Fig12d
+518,AbEn,4.0,3.2,IPF_max,Site3,Fig12d

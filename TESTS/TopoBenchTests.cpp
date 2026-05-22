@@ -2,6 +2,7 @@ extern "C" {
 #include "mdoodz.h"
 }
 
+#include <algorithm>
 #include <cstdio>
 #include <cstdlib>
 #include <cmath>
@@ -234,4 +235,31 @@ TEST_F(TopoBench, TopoBenchConvergence) {
   double order = log(errors[0] / errors[2]) / log(h_coarse / h_fine);
   printf("Overall order (Nx=%d->%d): %.2f\n", Nx_vals[0], Nx_vals[2], order);
   EXPECT_GE(order, 0.3) << "Overall convergence order < 0.3 from Nx=" << Nx_vals[0] << " to " << Nx_vals[2];
+}
+
+
+// --- Interpolation mode tests ---
+
+TEST_F(TopoBench, TopoBenchConvergence31InterpMode1) {
+  char *inputName;
+  asprintf(&inputName, "TopoBench/TopoBenchConvergence31InterpMode1.txt");
+  RunMDOODZ(inputName, &setup);
+  char *fileName;
+  asprintf(&fileName, "TopoBenchConvergence31InterpMode1/Output%05d.gzip.h5", 1);
+  int steps = getStepsCount(fileName);
+  EXPECT_GE(steps, 0);
+  free(inputName);
+  free(fileName);
+}
+
+TEST_F(TopoBench, TopoBenchConvergence31InterpMode2) {
+  char *inputName;
+  asprintf(&inputName, "TopoBench/TopoBenchConvergence31InterpMode2.txt");
+  RunMDOODZ(inputName, &setup);
+  char *fileName;
+  asprintf(&fileName, "TopoBenchConvergence31InterpMode2/Output%05d.gzip.h5", 1);
+  int steps = getStepsCount(fileName);
+  EXPECT_GE(steps, 0);
+  free(inputName);
+  free(fileName);
 }

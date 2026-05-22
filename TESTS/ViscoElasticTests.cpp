@@ -79,3 +79,30 @@ TEST_F(ViscoElastic, StressAccumulation) {
   free(file1);
   free(file5);
 }
+
+
+// --- Interpolation mode tests ---
+
+TEST_F(ViscoElastic, StressAccumulationInterpMode1) {
+  char *inputName;
+  asprintf(&inputName, "ViscoElastic/StressAccumulationInterpMode1.txt");
+  RunMDOODZ(inputName, &setup);
+  char *fileName;
+  asprintf(&fileName, "StressAccumulationInterpMode1/Output%05d.gzip.h5", 1);
+  int steps = getStepsCount(fileName);
+  EXPECT_GE(steps, 0);
+  free(inputName);
+  free(fileName);
+}
+
+TEST_F(ViscoElastic, StressAccumulationInterpMode2) {
+  char *inputName;
+  asprintf(&inputName, "ViscoElastic/StressAccumulationInterpMode2.txt");
+  RunMDOODZ(inputName, &setup);
+  char *fileName;
+  asprintf(&fileName, "StressAccumulationInterpMode2/Output%05d.gzip.h5", 1);
+  int steps = getStepsCount(fileName);
+  EXPECT_GE(steps, 0);
+  free(inputName);
+  free(fileName);
+}

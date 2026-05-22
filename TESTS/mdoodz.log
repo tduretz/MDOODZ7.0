@@ -1,0 +1,414 @@
+[    0.000] INFO  | ********************************************************
+[    0.000] INFO  | ************ Starting MDOODZ 7.0 simulation ************
+[    0.000] INFO  | ********************************************************
+[    0.000] WARN  | Warning : Parameter 'track_T_P_x_z' not found in the setup file, running with default value 0
+[    0.000] WARN  | Warning : Parameter 'delete_breakpoints' not found in the setup file, running with default value 1
+[    0.000] WARN  | Warning : Parameter 'import_files_dir' not found in the setup file, running with default value ../../IMPORT
+[    0.000] WARN  | Warning : Parameter 'import_file' not found in the setup file, running with default value blah.bin
+[    0.000] WARN  | Warning : Parameter 'save_initial_markers' not found in the setup file, running with default value 0
+[    0.000] WARN  | Warning : Parameter 'load_initial_markers' not found in the setup file, running with default value 0
+[    0.000] WARN  | Warning : Parameter 'initial_markers_file' not found in the setup file, running with default value markers.bin
+[    0.000] WARN  | Warning : Parameter 'log_dest' not found in the setup file, running with default value 2
+[    0.000] WARN  | Warning : Parameter 'log_level' not found in the setup file, running with default value 2
+[    0.000] WARN  | Warning : Parameter 'log_timestamp' not found in the setup file, running with default value 1
+[    0.000] WARN  | Warning : Parameter 'log_ts_mode' not found in the setup file, running with default value 0
+[    0.000] WARN  | Warning : Parameter 'log_metadata' not found in the setup file, running with default value 0
+[    0.000] WARN  | Warning : Parameter 'time_unit' not found in the setup file, running with default value 0
+[    0.000] WARN  | Warning : Parameter 'balance_boundaries' not found in the setup file, running with default value 0
+[    0.000] WARN  | Warning : Parameter 'zero_mean_topo' not found in the setup file, running with default value 0
+[    0.000] WARN  | Warning : Parameter 'stress_rotation' not found in the setup file, running with default value 1
+[    0.000] WARN  | Warning : Parameter 'mechanical' not found in the setup file, running with default value 1
+[    0.000] WARN  | Warning : Parameter 'thermal' not found in the setup file, running with default value 0
+[    0.000] WARN  | Warning : Parameter 'anisotropy' not found in the setup file, running with default value 0
+[    0.000] WARN  | Warning : Parameter 'polar' not found in the setup file, running with default value 0
+[    0.000] WARN  | Warning : Parameter 'compressible' not found in the setup file, running with default value 0
+[    0.000] WARN  | Warning : Parameter 'density_variations' not found in the setup file, running with default value 0
+[    0.000] WARN  | Warning : Parameter 'kinetics' not found in the setup file, running with default value 0
+[    0.000] WARN  | Warning : Parameter 'out_of_plane' not found in the setup file, running with default value 0
+[    0.001] WARN  | Warning : Parameter 'melting' not found in the setup file, running with default value 0
+[    0.001] WARN  | Warning : Parameter 'preconditioner' not found in the setup file, running with default value 0
+[    0.001] WARN  | Warning : Parameter 'cholmod_threads' not found in the setup file, running with default value 1
+[    0.001] WARN  | Warning : Parameter 'max_its_PH' not found in the setup file, running with default value 10
+[    0.001] WARN  | Warning : Parameter 'gmg_levels' not found in the setup file, running with default value 0
+[    0.001] WARN  | Warning : Parameter 'gmg_nu_pre' not found in the setup file, running with default value 2
+[    0.001] WARN  | Warning : Parameter 'gmg_nu_post' not found in the setup file, running with default value 2
+[    0.001] WARN  | Warning : Parameter 'gmg_fgmres_restart' not found in the setup file, running with default value 30
+[    0.001] WARN  | Warning : Parameter 'gmg_standalone' not found in the setup file, running with default value 0
+[    0.001] WARN  | Warning : Parameter 'thermal_solver' not found in the setup file, running with default value 0
+[    0.001] WARN  | Warning : Parameter 'max_its_thermal' not found in the setup file, running with default value 1000
+[    0.001] WARN  | Warning : Parameter 'export_pcg_residuals' not found in the setup file, running with default value 0
+[    0.001] WARN  | Warning : Parameter 'Picard2Newton' not found in the setup file, running with default value 0
+[    0.001] WARN  | Warning : Parameter 'max_its_Pic' not found in the setup file, running with default value 10
+[    0.001] WARN  | Warning : Parameter 'let_res_grow' not found in the setup file, running with default value 0
+[    0.001] WARN  | Warning : Parameter 'max_its_KSP' not found in the setup file, running with default value 100
+[    0.001] WARN  | Warning : Parameter 'safe_mode' not found in the setup file, running with default value 0
+[    0.001] WARN  | Warning : Parameter 'max_num_stag' not found in the setup file, running with default value 3
+[    0.001] WARN  | Warning : Parameter 'tensile_line_search' not found in the setup file, running with default value 0
+[    0.001] WARN  | Warning : Parameter 'residual_form' not found in the setup file, running with default value 1
+[    0.001] WARN  | Warning : Parameter 'ani_average' not found in the setup file, running with default value 1
+[    0.001] WARN  | Warning : Parameter 'interp_stencil' not found in the setup file, running with default value 1
+[    0.001] WARN  | Warning : Parameter 'interp_mode' not found in the setup file, running with default value 0
+[    0.001] WARN  | Warning : Parameter 'subgrid_diffusion' not found in the setup file, running with default value 0
+[    0.001] WARN  | Warning : Parameter 'conserv_interp' not found in the setup file, running with default value 0
+[    0.001] WARN  | Warning : Parameter 'direct_neighbour' not found in the setup file, running with default value 0
+[    0.001] WARN  | Warning : Parameter 'initial_noise' not found in the setup file, running with default value 0
+[    0.001] WARN  | Warning : Parameter 'marker_noise' not found in the setup file, running with default value 0
+[    0.001] WARN  | Warning : Parameter 'reseed_markers' not found in the setup file, running with default value 1
+[    0.001] WARN  | Warning : Parameter 'reseed_mode' not found in the setup file, running with default value 0
+[    0.001] WARN  | Warning : Parameter 'min_part_cell' not found in the setup file, running with default value 16
+[    0.001] WARN  | Warning : Parameter 'topo_update' not found in the setup file, running with default value 1
+[    0.001] WARN  | Warning : Parameter 'initial_cooling' not found in the setup file, running with default value 0
+[    0.001] WARN  | Warning : Parameter 'shear_heating' not found in the setup file, running with default value 1
+[    0.001] WARN  | Warning : Parameter 'adiab_heating' not found in the setup file, running with default value 0
+[    0.001] WARN  | Warning : Parameter 'surface_processes' not found in the setup file, running with default value 0
+[    0.001] WARN  | Warning : Parameter 'marker_aniso_angle' not found in the setup file, running with default value 0
+[    0.001] WARN  | Warning : Parameter 'layering' not found in the setup file, running with default value 0
+[    0.001] WARN  | Warning : Parameter 'inject_dikes' not found in the setup file, running with default value 0
+[    0.001] WARN  | Warning : Parameter 'dikePh' not found in the setup file, running with default value 0
+[    0.001] WARN  | Warning : Parameter 'chemical_diffusion' not found in the setup file, running with default value 0
+[    0.001] WARN  | Warning : Parameter 'chemical_production' not found in the setup file, running with default value 0
+[    0.001] WARN  | Warning : Parameter 'smooth_softening' not found in the setup file, running with default value 1
+[    0.001] WARN  | Warning : Parameter 'hardening_modulus' not found in the setup file, running with default value 0
+[    0.001] WARN  | Warning : Parameter 'fix_temperature' not found in the setup file, running with default value 0
+[    0.001] WARN  | Warning : Parameter 'surf_ised1' not found in the setup file, running with default value 0
+[    0.001] WARN  | Warning : Parameter 'surf_ised2' not found in the setup file, running with default value 0
+[    0.001] WARN  | Warning : Parameter 'preload' not found in the setup file, running with default value 0
+[    0.001] WARN  | Warning : Parameter 'therm_perturb' not found in the setup file, running with default value 0
+[    0.001] WARN  | Warning : Parameter 'force_act_vol_ast' not found in the setup file, running with default value 0
+[    0.002] WARN  | Warning : Parameter 'force_melt_weak' not found in the setup file, running with default value 0
+[    0.002] WARN  | Warning : Parameter 'phase_switch_init' not found in the setup file, running with default value 0
+[    0.002] WARN  | Warning : Parameter 'phase_switch_final' not found in the setup file, running with default value 0
+[    0.002] WARN  | Warning : Parameter 'diffuse_X' not found in the setup file, running with default value 0
+[    0.002] WARN  | Warning : Parameter 'diffuse_avg' not found in the setup file, running with default value 0
+[    0.002] WARN  | WARNING!! Changing from solver type 0 to solver type 2!!! That's the new standard in MDOODZ 6.0.
+[    0.002] WARN  | Warning : Parameter 'deformation_maps' not found in the setup file, running with default value 0
+[    0.002] WARN  | Warning : Parameter 'nT' not found in the setup file, running with default value 11
+[    0.002] WARN  | Warning : Parameter 'nE' not found in the setup file, running with default value 11
+[    0.002] WARN  | Warning : Parameter 'nd' not found in the setup file, running with default value 11
+[    0.002] WARN  | Warning : Parameter 'rho' not found in the setup file, running with default value 2.70e+03
+[    0.002] WARN  | Warning : Parameter 'G' not found in the setup file, running with default value 1.00e+10
+[    0.002] WARN  | Warning : Parameter 'Cp' not found in the setup file, running with default value 1.00e+03
+[    0.002] WARN  | Warning : Parameter 'k' not found in the setup file, running with default value 0.00
+[    0.002] WARN  | Warning : Parameter 'Qr' not found in the setup file, running with default value 0.00
+[    0.002] WARN  | Warning : Parameter 'alp' not found in the setup file, running with default value 0.00
+[    0.002] WARN  | Warning : Parameter 'bet' not found in the setup file, running with default value 0.00
+[    0.002] WARN  | Warning : Parameter 'drho' not found in the setup file, running with default value 0.00
+[    0.002] WARN  | Warning : Parameter 'melt' not found in the setup file, running with default value 0.00
+[    0.002] WARN  | Warning : Parameter 'sig_tens' not found in the setup file, running with default value 1.00e+07
+[    0.002] WARN  | Warning : Parameter 'sig1' not found in the setup file, running with default value 1.00e+07
+[    0.002] WARN  | Warning : Parameter 'dsig1' not found in the setup file, running with default value 1.00e+07
+[    0.002] WARN  | Warning : Parameter 'C' not found in the setup file, running with default value 1.00e+07
+[    0.002] WARN  | Warning : Parameter 'T_st' not found in the setup file, running with default value -1.00e+07
+[    0.002] WARN  | Warning : Parameter 'phi' not found in the setup file, running with default value 30.00
+[    0.002] WARN  | Warning : Parameter 'psi' not found in the setup file, running with default value 0.00
+[    0.002] WARN  | Warning : Parameter 'Slim' not found in the setup file, running with default value 1.00e+90
+[    0.002] WARN  | Warning : Parameter 'n_vp' not found in the setup file, running with default value 1.00
+[    0.002] WARN  | Warning : Parameter 'eta_vp' not found in the setup file, running with default value 0.00
+[    0.002] WARN  | Warning : Parameter 'coh_soft' not found in the setup file, running with default value 0.00
+[    0.002] WARN  | Warning : Parameter 'phi_soft' not found in the setup file, running with default value 0.00
+[    0.002] WARN  | Warning : Parameter 'psi_soft' not found in the setup file, running with default value 0.00
+[    0.002] WARN  | Warning : Parameter 'Ce' not found in the setup file, running with default value 1.00e+07
+[    0.002] WARN  | Warning : Parameter 'phie' not found in the setup file, running with default value 30.00
+[    0.002] WARN  | Warning : Parameter 'psie' not found in the setup file, running with default value 0.00
+[    0.002] WARN  | Warning : Parameter 'Hc' not found in the setup file, running with default value 0.00
+[    0.002] INFO  | 0 materials.coh_soft[k]=0  materials.C[k] = 1.00e+07  materials.C_end[k] = 1.00e+07
+[    0.002] WARN  | Warning : Parameter 'plss' not found in the setup file, running with default value 1.00
+[    0.002] WARN  | Warning : Parameter 'plse' not found in the setup file, running with default value 2.00
+[    0.002] WARN  | Warning : Parameter 'pwlv' not found in the setup file, running with default value 0.00
+[    0.002] WARN  | Warning : Parameter 'linv' not found in the setup file, running with default value 0.00
+[    0.002] WARN  | Warning : Parameter 'gbsv' not found in the setup file, running with default value 0.00
+[    0.002] WARN  | Warning : Parameter 'expv' not found in the setup file, running with default value 0.00
+[    0.002] WARN  | Warning : Parameter 'gsel' not found in the setup file, running with default value 0.00
+[    0.002] WARN  | Warning : Parameter 'eps0' not found in the setup file, running with default value 0.00
+[    0.002] WARN  | Warning : Parameter 'tau0' not found in the setup file, running with default value 2.00e+06
+[    0.002] WARN  | Warning : Parameter 'Apwl' not found in the setup file, running with default value 0.00
+[    0.002] WARN  | Warning : Parameter 'apwl' not found in the setup file, running with default value 0.00
+[    0.002] WARN  | Warning : Parameter 'tpwl' not found in the setup file, running with default value 0.00
+[    0.002] WARN  | Warning : Parameter 'pref_pwl' not found in the setup file, running with default value 1.00
+[    0.002] WARN  | Warning : Parameter 'gs' not found in the setup file, running with default value 0.00
+[    0.002] WARN  | Warning : Parameter 'gs_ref' not found in the setup file, running with default value 0.00
+[    0.002] WARN  | Warning : Parameter 'kin' not found in the setup file, running with default value 0.00
+[    0.002] WARN  | Warning : Parameter 'reac_soft' not found in the setup file, running with default value 0.00
+[    0.002] WARN  | Warning : Parameter 'reac_phase' not found in the setup file, running with default value 0.00
+[    0.002] WARN  | Warning : Parameter 'Pr' not found in the setup file, running with default value 0.00
+[    0.002] WARN  | Warning : Parameter 'dPr' not found in the setup file, running with default value 0.00
+[    0.002] WARN  | Warning : Parameter 'tau_kin' not found in the setup file, running with default value 0.00
+[    0.002] WARN  | Warning : Parameter 'k_chem' not found in the setup file, running with default value 0.00
+[    0.002] WARN  | Warning : Parameter 'density_model' not found in the setup file, running with default value 3.00
+[    0.002] WARN  | Warning : Parameter 'phase_diagram' not found in the setup file, running with default value -1.00
+[    0.002] WARN  | Warning : Parameter 'phase_mix' not found in the setup file, running with default value 0.00
+[    0.002] WARN  | Warning : Parameter 'phase_mix' not found in the setup file, running with default value 0.00
+[    0.002] WARN  | Warning : Parameter 'aniso_angle' not found in the setup file, running with default value 90.00
+[    0.002] WARN  | Warning : Parameter 'aniso_factor' not found in the setup file, running with default value 1.00
+[    0.003] WARN  | Warning : Parameter 'ani_fac_max' not found in the setup file, running with default value 1.00e+03
+[    0.003] WARN  | Warning : Parameter 'ani_fstrain' not found in the setup file, running with default value 0.00
+[    0.003] WARN  | Warning : Parameter 'axx' not found in the setup file, running with default value 1.00
+[    0.003] WARN  | Warning : Parameter 'azz' not found in the setup file, running with default value 1.00
+[    0.003] WARN  | Warning : Parameter 'ayy' not found in the setup file, running with default value 1.00
+[    0.003] WARN  | Warning : Parameter 'transmutation' not found in the setup file, running with default value 0.00
+[    0.003] WARN  | Warning : Parameter 'transmutation_phase' not found in the setup file, running with default value 1.00
+[    0.003] WARN  | Warning : Parameter 'transmutation_temperature' not found in the setup file, running with default value 1.30e+03
+[    0.003] INFO  | ----------------------------------------- MODEL DOMAIN ------------------------------------------
+[    0.003] INFO  | Xmin   = -0.0  km         Xmax   = 0.0  km     Nx   =  51    dx   = 0.02 m
+[    0.003] INFO  | Zmin   = -0.0  km         Zmax   = 0.0  km      Nz   =  51    dz   = 0.02 m
+[    0.003] INFO  | -------------------------------------------- PHASE: 0 -------------------------------------------
+[    0.003] INFO  | rho    = 2.70e+03 kg/m^3     G = 1.00e+10 Pa
+[    0.003] INFO  | Cp     = 1.00e+03 J/kg/K      k = 1.00e-06 W/m/K      Qr = 1.00e-30 W/m3
+[    0.003] INFO  | C      = 1.00e+07 Pa        phi = 3.00e+01 deg      Slim = 1.00e+90 Pa
+[    0.003] INFO  | alp    = 0.00e+00 1/T        T0 = 2.73e+02 K         bet = 1.00e-40 1/Pa       P0 = 1.00e+05 Pa       drho = 0.00e+00 kg/m^3 
+[    0.003] INFO  | prefactor for power-law: 1.00e+00
+[    0.003] INFO  | C_end    = 1.00e+07 Pa        Phi_end = 3.00e+01 deg         pls_start = 1.00e+00        pls_end = 2.00e+00 
+[    0.003] INFO  | eta0_vp   = 0.00e+00  Pa.s^(1/n)         n_vp   = 1.00e+00
+[    0.003] INFO  | aniso_factor = 1.00e+00 []        aniso_angle = 9.00e+01 deg         ani_fac_max = 1.00e+03 []        ani_fstrain = 0
+[    0.003] INFO  | Flow law settings:
+[    0.003] INFO  | --->    Constant viscosity activated 
+[    0.003] WARN  | Warning : Parameter 'rho' not found in the setup file, running with default value 2.70e+03
+[    0.003] WARN  | Warning : Parameter 'G' not found in the setup file, running with default value 1.00e+10
+[    0.003] WARN  | Warning : Parameter 'Cp' not found in the setup file, running with default value 1.00e+03
+[    0.003] WARN  | Warning : Parameter 'k' not found in the setup file, running with default value 0.00
+[    0.003] WARN  | Warning : Parameter 'Qr' not found in the setup file, running with default value 0.00
+[    0.003] WARN  | Warning : Parameter 'alp' not found in the setup file, running with default value 0.00
+[    0.003] WARN  | Warning : Parameter 'bet' not found in the setup file, running with default value 0.00
+[    0.003] WARN  | Warning : Parameter 'drho' not found in the setup file, running with default value 0.00
+[    0.003] WARN  | Warning : Parameter 'melt' not found in the setup file, running with default value 0.00
+[    0.003] WARN  | Warning : Parameter 'sig_tens' not found in the setup file, running with default value 1.00e+07
+[    0.003] WARN  | Warning : Parameter 'sig1' not found in the setup file, running with default value 1.00e+07
+[    0.003] WARN  | Warning : Parameter 'dsig1' not found in the setup file, running with default value 1.00e+07
+[    0.003] WARN  | Warning : Parameter 'C' not found in the setup file, running with default value 1.00e+07
+[    0.003] WARN  | Warning : Parameter 'T_st' not found in the setup file, running with default value -1.00e+07
+[    0.003] WARN  | Warning : Parameter 'phi' not found in the setup file, running with default value 30.00
+[    0.003] WARN  | Warning : Parameter 'psi' not found in the setup file, running with default value 0.00
+[    0.003] WARN  | Warning : Parameter 'Slim' not found in the setup file, running with default value 1.00e+90
+[    0.003] WARN  | Warning : Parameter 'n_vp' not found in the setup file, running with default value 1.00
+[    0.003] WARN  | Warning : Parameter 'eta_vp' not found in the setup file, running with default value 0.00
+[    0.003] WARN  | Warning : Parameter 'coh_soft' not found in the setup file, running with default value 0.00
+[    0.003] WARN  | Warning : Parameter 'phi_soft' not found in the setup file, running with default value 0.00
+[    0.003] WARN  | Warning : Parameter 'psi_soft' not found in the setup file, running with default value 0.00
+[    0.003] WARN  | Warning : Parameter 'Ce' not found in the setup file, running with default value 1.00e+07
+[    0.003] WARN  | Warning : Parameter 'phie' not found in the setup file, running with default value 30.00
+[    0.003] WARN  | Warning : Parameter 'psie' not found in the setup file, running with default value 0.00
+[    0.003] WARN  | Warning : Parameter 'Hc' not found in the setup file, running with default value 0.00
+[    0.003] INFO  | 1 materials.coh_soft[k]=0  materials.C[k] = 1.00e+07  materials.C_end[k] = 1.00e+07
+[    0.003] WARN  | Warning : Parameter 'plss' not found in the setup file, running with default value 1.00
+[    0.003] WARN  | Warning : Parameter 'plse' not found in the setup file, running with default value 2.00
+[    0.003] WARN  | Warning : Parameter 'pwlv' not found in the setup file, running with default value 0.00
+[    0.003] WARN  | Warning : Parameter 'linv' not found in the setup file, running with default value 0.00
+[    0.003] WARN  | Warning : Parameter 'gbsv' not found in the setup file, running with default value 0.00
+[    0.003] WARN  | Warning : Parameter 'expv' not found in the setup file, running with default value 0.00
+[    0.003] WARN  | Warning : Parameter 'gsel' not found in the setup file, running with default value 0.00
+[    0.003] WARN  | Warning : Parameter 'eps0' not found in the setup file, running with default value 0.00
+[    0.003] WARN  | Warning : Parameter 'tau0' not found in the setup file, running with default value 2.00e+06
+[    0.003] WARN  | Warning : Parameter 'Apwl' not found in the setup file, running with default value 0.00
+[    0.003] WARN  | Warning : Parameter 'apwl' not found in the setup file, running with default value 0.00
+[    0.003] WARN  | Warning : Parameter 'tpwl' not found in the setup file, running with default value 0.00
+[    0.003] WARN  | Warning : Parameter 'pref_pwl' not found in the setup file, running with default value 1.00
+[    0.003] WARN  | Warning : Parameter 'gs' not found in the setup file, running with default value 0.00
+[    0.003] WARN  | Warning : Parameter 'gs_ref' not found in the setup file, running with default value 0.00
+[    0.003] WARN  | Warning : Parameter 'kin' not found in the setup file, running with default value 0.00
+[    0.003] WARN  | Warning : Parameter 'reac_soft' not found in the setup file, running with default value 0.00
+[    0.003] WARN  | Warning : Parameter 'reac_phase' not found in the setup file, running with default value 0.00
+[    0.003] WARN  | Warning : Parameter 'Pr' not found in the setup file, running with default value 0.00
+[    0.003] WARN  | Warning : Parameter 'dPr' not found in the setup file, running with default value 0.00
+[    0.003] WARN  | Warning : Parameter 'tau_kin' not found in the setup file, running with default value 0.00
+[    0.003] WARN  | Warning : Parameter 'k_chem' not found in the setup file, running with default value 0.00
+[    0.003] WARN  | Warning : Parameter 'density_model' not found in the setup file, running with default value 3.00
+[    0.003] WARN  | Warning : Parameter 'phase_diagram' not found in the setup file, running with default value -1.00
+[    0.003] WARN  | Warning : Parameter 'phase_mix' not found in the setup file, running with default value 0.00
+[    0.003] WARN  | Warning : Parameter 'phase_mix' not found in the setup file, running with default value 1.00
+[    0.003] WARN  | Warning : Parameter 'aniso_angle' not found in the setup file, running with default value 90.00
+[    0.003] WARN  | Warning : Parameter 'aniso_factor' not found in the setup file, running with default value 1.00
+[    0.003] WARN  | Warning : Parameter 'ani_fac_max' not found in the setup file, running with default value 1.00e+03
+[    0.003] WARN  | Warning : Parameter 'ani_fstrain' not found in the setup file, running with default value 0.00
+[    0.003] WARN  | Warning : Parameter 'axx' not found in the setup file, running with default value 1.00
+[    0.004] WARN  | Warning : Parameter 'azz' not found in the setup file, running with default value 1.00
+[    0.004] WARN  | Warning : Parameter 'ayy' not found in the setup file, running with default value 1.00
+[    0.004] WARN  | Warning : Parameter 'transmutation' not found in the setup file, running with default value 0.00
+[    0.004] WARN  | Warning : Parameter 'transmutation_phase' not found in the setup file, running with default value 1.00
+[    0.004] WARN  | Warning : Parameter 'transmutation_temperature' not found in the setup file, running with default value 1.30e+03
+[    0.004] INFO  | ----------------------------------------- MODEL DOMAIN ------------------------------------------
+[    0.004] INFO  | Xmin   = -0.0  km         Xmax   = 0.0  km     Nx   =  51    dx   = 0.02 m
+[    0.004] INFO  | Zmin   = -0.0  km         Zmax   = 0.0  km      Nz   =  51    dz   = 0.02 m
+[    0.004] INFO  | -------------------------------------------- PHASE: 1 -------------------------------------------
+[    0.004] INFO  | rho    = 2.70e+03 kg/m^3     G = 1.00e+10 Pa
+[    0.004] INFO  | Cp     = 1.00e+03 J/kg/K      k = 1.00e-06 W/m/K      Qr = 1.00e-30 W/m3
+[    0.004] INFO  | C      = 1.00e+07 Pa        phi = 3.00e+01 deg      Slim = 1.00e+90 Pa
+[    0.004] INFO  | alp    = 0.00e+00 1/T        T0 = 2.73e+02 K         bet = 1.00e-40 1/Pa       P0 = 1.00e+05 Pa       drho = 0.00e+00 kg/m^3 
+[    0.004] INFO  | prefactor for power-law: 1.00e+00
+[    0.004] INFO  | C_end    = 1.00e+07 Pa        Phi_end = 3.00e+01 deg         pls_start = 1.00e+00        pls_end = 2.00e+00 
+[    0.004] INFO  | eta0_vp   = 0.00e+00  Pa.s^(1/n)         n_vp   = 1.00e+00
+[    0.004] INFO  | aniso_factor = 1.00e+00 []        aniso_angle = 9.00e+01 deg         ani_fac_max = 1.00e+03 []        ani_fstrain = 0
+[    0.004] INFO  | Flow law settings:
+[    0.004] INFO  | --->    Constant viscosity activated 
+[    0.004] INFO  | Phase 0 ---  density model 3 
+[    0.004] INFO  | Phase 1 ---  density model 3 
+[    0.004] INFO  | *************************************
+[    0.004] INFO  | ****** Allocate and initialise ******
+[    0.004] INFO  | *************************************
+[    0.004] INFO  | Allocation of grid arrays !
+[    0.004] INFO  | Memory succesfully allocated : 
+Diantre, que c'est bon!
+[    0.004] INFO  | Num threads = 001
+[    0.004] INFO  | CHOLMOD threads: 1
+[    0.004] INFO  | *************************************
+[    0.004] INFO  | ******* Initialize particles ********
+[    0.004] INFO  | *************************************
+[    0.019] INFO  | VxWestSum: 22.161019, VxEastSum: -22.161019
+[    0.020] INFO  | VxWestSum*dx: 0.443220, VxEastSum*dx: -0.443220, VzEastSum*dz: -0.423348: 
+[    0.020] INFO  | Total West+East+South sum: 0.463093
+[    0.020] INFO  | SetBCs: Boundary conditions were set up
+[    0.020] INFO  | Initial particle spacing : dxm = 0.005000 dzm = 0.005000 m
+[    0.020] INFO  | Initial number of particles = 40000
+[    0.022] INFO  | min(Vxp init) = -4.9750000000e-01 max(Vxp init) = 4.9750000000e-01
+[    0.022] INFO  | min(Vzp init) = -4.9750000000e-01 max(Vzp init) = 4.9750000000e-01
+[    0.022] INFO  | min(Tp init) = 2.7315000000e+02 max(Tp init) = 2.7315000000e+02
+[    0.022] INFO  | min(sxxd part  ) = 0.0000000000e+00 max(sxxd part  ) = 0.0000000000e+00
+[    0.022] INFO  | min(szzd part  ) = 0.0000000000e+00 max(szzd part  ) = 0.0000000000e+00
+[    0.023] INFO  | min(sxz part  ) = 0.0000000000e+00 max(sxz part  ) = 0.0000000000e+00
+[    0.023] INFO  | USING NEW PART IN CELL
+[    0.030] INFO  | VxWestSum: 22.161019, VxEastSum: -22.161019
+[    0.030] INFO  | VxWestSum*dx: 0.443220, VxEastSum*dx: -0.443220, VzEastSum*dz: -0.423348: 
+[    0.030] INFO  | Total West+East+South sum: 0.463093
+[    0.030] INFO  | SetBCs: Boundary conditions were set up
+[    0.030] INFO  | Velocity field was set to background shear
+[    0.030] INFO  | min(Vx. grid) = -4.9844777744e-01 max(Vx. grid) = 4.9844777744e-01
+[    0.030] INFO  | min(Vz. grid) = -4.9844777744e-01 max(Vz. grid) = 4.9844777744e-01
+[    0.030] INFO  | min(       P) = 0.0000000000e+00 max(       P) = 0.0000000000e+00
+[    0.030] INFO  | *************************************
+[    0.030] INFO  | ****** Initialize temperature *******
+[    0.030] INFO  | *************************************
+[    0.034] INFO  | VxWestSum: 22.161019, VxEastSum: -22.161019
+[    0.034] INFO  | VxWestSum*dx: 0.443220, VxEastSum*dx: -0.443220, VzEastSum*dz: -0.423348: 
+[    0.034] INFO  | Total West+East+South sum: 0.463093
+[    0.035] INFO  | SetBCs: Boundary conditions were set up
+[    0.036] INFO  | *************************************
+[    0.036] INFO  | ******** Initialize stresses ********
+[    0.036] INFO  | *************************************
+[    0.038] INFO  | min(Sxx initial ) = 0.0000000000e+00 max(Sxx initial ) = 0.0000000000e+00
+[    0.038] INFO  | min(Szz initial ) = 0.0000000000e+00 max(Szz initial ) = 0.0000000000e+00
+[    0.038] INFO  | *************************************
+[    0.038] INFO  | ******** Initialize pressure ********
+[    0.038] INFO  | *************************************
+[    0.040] INFO  | min(P initial ) = 0.0000000000e+00 max(P initial ) = 0.0000000000e+00
+[    0.042] INFO  | min(P initial ) = 0.0000000000e+00 max(P initial ) = 0.0000000000e+00
+[    0.045] INFO  | min(P initial ) = 0.0000000000e+00 max(P initial ) = 0.0000000000e+00
+[    0.047] INFO  | min(P initial ) = 0.0000000000e+00 max(P initial ) = 0.0000000000e+00
+[    0.049] INFO  | min(P initial ) = 0.0000000000e+00 max(P initial ) = 0.0000000000e+00
+[    0.051] INFO  | min(P initial ) = 0.0000000000e+00 max(P initial ) = 0.0000000000e+00
+[    0.053] INFO  | min(P initial ) = 0.0000000000e+00 max(P initial ) = 0.0000000000e+00
+[    0.055] INFO  | min(P initial ) = 0.0000000000e+00 max(P initial ) = 0.0000000000e+00
+[    0.058] INFO  | min(P initial ) = 0.0000000000e+00 max(P initial ) = 0.0000000000e+00
+[    0.060] INFO  | min(P initial ) = 0.0000000000e+00 max(P initial ) = 0.0000000000e+00
+[    0.060] INFO  | ****************************************
+[    0.060] INFO  | ******* Initialize melt fraction *******
+[    0.060] INFO  | ****************************************
+[    0.060] INFO  | *************************************
+[    0.060] INFO  | ******* Initialize grain size *******
+[    0.060] INFO  | *************************************
+[    0.060] INFO  | *************************************
+[    0.060] INFO  | ******** Initialize density *********
+[    0.060] INFO  | *************************************
+[    0.062] INFO  | *************************************
+[    0.062] INFO  | ****** Initialize composition *******
+[    0.062] INFO  | *************************************
+[    0.063] INFO  | *************************************
+[    0.063] INFO  | ******* Initialize viscosity ********
+[    0.063] INFO  | *************************************
+[    0.069] INFO  | Number of phases : 2
+[    0.069] INFO  | *************************************
+[    0.069] INFO  | ******** Initialize timestep ********
+[    0.069] INFO  | *************************************
+[    0.069] INFO  | Initial timestep = 5.00e-01 s
+[    0.070] INFO  | *************************************
+[    0.070] INFO  | *** Write initial file or restart ***
+[    0.070] INFO  | *************************************
+[    0.154] INFO  | *****************************************************
+[    0.154] INFO  | ****************** Time step 00001 ******************
+[    0.154] INFO  | *****************************************************
+[    0.154] INFO  | Transmutated particles = 000
+[    0.154] INFO  | Initial number of particles = 40000 --- max allowed: 164000
+[    0.154] INFO  | Min Vxm = -4.98e-01 m/s / Max Vxm = 4.98e-01 m/s
+[    0.154] INFO  | Min Vzm = -4.98e-01 m/s / Max Vzm = 4.98e-01 m/s
+[    0.154] INFO  | Fixed timestep dt = 5.00e-01 s
+[    0.154] INFO  | Selected dt = 5.00e-01
+[    0.167] TIME  | Particle interpolations I: 0.000000 sec
+[    0.167] INFO  | VxWestSum: 22.161019, VxEastSum: -22.161019
+[    0.167] INFO  | VxWestSum*dx: 0.443220, VxEastSum*dx: -0.443220, VzEastSum*dz: -0.423348: 
+[    0.167] INFO  | Total West+East+South sum: 0.463093
+[    0.167] INFO  | SetBCs: Boundary conditions were set up
+[    0.167] INFO  | Velocity field was set to background shear
+[    0.168] INFO  | Linear systems allocated
+[    0.168] INFO  | neq_tot = 7400, neq_mom = 4900, neq_cont = 2500
+[    0.168] INFO  | Run CHOLMOD analysis yes/no: 1
+[    0.168] TIME  | Stokes setup: 1.000 sec
+[    0.168] INFO  | **********************************************
+[    0.168] INFO  | *** Picard it. 00 of 100 (step = 00001) on 001 threads ***
+[    0.168] INFO  | **********************************************
+[    0.169] INFO  | Assemble Picard operator on 1 threads
+[    0.171] INFO  | Number of momentum equations: 4900
+[    0.171] INFO  | ---- Non-linear residual ----
+[    0.172] INFO  | Fu abs. = 4.282860e+00 --- Fu rel. = 1.000000e+00
+[    0.172] INFO  | Fv abs. = 4.282860e+00 --- Fv rel. = 1.000000e+00
+[    0.172] INFO  | Fp abs. = 5.118397e-04 --- Fp rel. = 1.000000e+00
+[    0.172] INFO  | ---- Non-linear residual ----
+[    0.172] INFO  | ---- Solve Stokes in a decoupled/segregated fashion and defect correction mode, lin_solver = 2 ----
+[    0.172] INFO  | Killer solver...
+[    0.172] INFO  | Preparing Matrices...
+[    0.172] INFO  | Penalty factor = 2.50e+08
+[    0.173] INFO  | Construct preconditioner:   PC  = K
+[    0.174] INFO  | Compute Schur complement 1:  Jt  = J  - grad*(PPI*div)
+[    0.174] INFO  | Compute Schur complement 2:  Jts = PC - grad*(PPI*div)
+[    0.174] INFO  | Cholesky factors of Jts...
+[    0.177] TIME  | Cholesky analysis = 0.009060 sec
+[    0.180] INFO  | Powell-Hestenes iterations, noisy = 1...
+[    0.180] INFO  | Initial residual:
+[    0.180] INFO  | PH comp it. 0. its_KSP = 01: max. cont. = 2.74e-08 - rel. max. div. = 1.00e+00 / max. mom. = 2.28e-11 - rel. max. mom. = 1.00e+00
+[    0.181] INFO  | PH comp it. 1. its_KSP = 01: max. cont. = 2.35e-10 - rel. max. div. = 8.58e-03 / max. mom. = 8.97e-12 - rel. max. mom. = 3.93e-01
+[    0.181] INFO  | PH comp it. 2. its_KSP = 01: max. cont. = 1.98e-12 - rel. max. div. = 7.23e-05 / max. mom. = 7.70e-12 - rel. max. mom. = 3.37e-01
+[    0.181] INFO  | ** PH - iterations = 0.013761 sec - its_KSP_tot = 03
+[    0.182] TIME  | direct Stokes solver = 0.013973 sec
+[    0.182] INFO  | ---- Line search for decoupled Stokes equations ----
+[    0.186] INFO  | Alpha = -0.000000 --> rx = 4.2829e+00 rz = 4.2829e+00 rp = 5.1184e-04
+[    0.189] INFO  | Alpha = -0.500000 --> rx = 2.1414e+00 rz = 2.1414e+00 rp = 2.5592e-04
+[    0.192] INFO  | Alpha = -1.000000 --> rx = 1.8037e-12 rz = 1.9307e-12 rp = 1.9665e-13
+[    0.195] INFO  | Alpha = -1.500000 --> rx = 2.1414e+00 rz = 2.1414e+00 rp = 2.5592e-04
+[    0.197] INFO  | Alpha = -2.000000 --> rx = 4.2829e+00 rz = 4.2829e+00 rp = 5.1184e-04
+[    0.200] INFO  | Alpha = -2.500000 --> rx = 6.4243e+00 rz = 6.4243e+00 rp = 7.6776e-04
+[    0.200] INFO  | Predicted Residuals : alpha  = -1.000000 --> rx = 1.8037e-12 rz = 1.9307e-12 rp = 1.9665e-13
+[    0.200] INFO  | ** Line search took = 0.032437 sec
+[    0.200] TIME  | Iteration 00: rheology=0.000 assembly=0.000 solve=0.000 overhead=0.000 sec
+[    0.200] INFO  | **********************************************
+[    0.200] INFO  | *** Picard it. 01 of 100 (step = 00001) on 001 threads ***
+[    0.200] INFO  | **********************************************
+[    0.201] INFO  | Assemble Picard operator on 1 threads
+[    0.203] INFO  | Number of momentum equations: 4900
+[    0.203] INFO  | ---- Non-linear residual ----
+[    0.205] INFO  | Fu abs. = 1.803745e-12 --- Fu rel. = 4.211543e-13
+[    0.205] INFO  | Fv abs. = 1.930702e-12 --- Fv rel. = 4.507974e-13
+[    0.205] INFO  | Fp abs. = 1.966539e-13 --- Fp rel. = 3.842099e-10
+[    0.205] INFO  | ---- Non-linear residual ----
+[    0.205] INFO  | Non-linear solver converged to nonlin_abs_mom = 1.00e-08 nonlin_abs_div = 1.00e-08 nonlin_rel_mom = 1.00e-08 nonlin_rel_div = 1.00e-08
+[    0.205] TIME  | Iteration 01: rheology=0.000 assembly=0.000 overhead=0.000 (converged, no solve)
+[    0.205] INFO  | Cleaning up Cholesky factors --- nit = 01
+[    0.206] INFO  | min(Vx grid) = -4.9844777744e-01 max(Vx grid) = 4.9844777744e-01
+[    0.206] INFO  | min(Vz grid) = -4.9844777744e-01 max(Vz grid) = 4.9844777744e-01
+[    0.206] INFO  | min(      P) = -6.9178258598e+00 max(      P) = 6.9178258599e+00
+[    0.206] INFO  | min( div(V)) = -4.9613806119e-09 max( div(V)) = 4.9613819997e-09
+[    0.206] INFO  | --------------------------------------------------------------
+[    0.206] INFO  | Pic. it. 00: abs: |Fx| = 4.28e+00 - |Fz| = 4.28e+00 - |Fp| = 5.12e-04 --- rel: |Fx| = 1.00e+00 - |Fz| = 1.00e+00 - |Fp| = 1.00e+00
+[    0.206] INFO  | Pic. it. 01: abs: |Fx| = 1.80e-12 - |Fz| = 1.93e-12 - |Fp| = 1.97e-13 --- rel: |Fx| = 4.21e-13 - |Fz| = 4.51e-13 - |Fp| = 3.84e-10
+[    0.206] INFO  | --------------------------------------------------------------
+[    0.221] TIME  | Post-solve updates: 0.000 sec
+[    0.221] INFO  | *************************************
+[    0.221] INFO  | ********* Write output files ********
+[    0.221] INFO  | *************************************
+[    0.223] INFO  | Loading phase proportions - Nb_phases = 2:
+[    0.225] TIME  | Breakpoint file write: -0.052952 sec
+[    0.312] TIME  | Output file write: -0.057288 sec
+[    0.312] TIME  | Total timestep calculation time = 1.144247 sec
+[    0.312] TIME  |   Model time: 0.000000 Ma | wall=1.000 sec
+[    0.312] TIME  |   Breakdown: interp=0.000 stokes_setup=1.000 rheology=0.000 assembly=0.000 solve=0.000 nl_overhead=0.000 post_solve=0.000 sec (1 iterations, 100.0% coverage)
+[    0.312] INFO  | Model time = 5.00e-01 sec (0.000000 Ma)
+[    0.312] INFO  | Current dt = 5.00e-01 sec, Old dt = 5.00e-01 sec
+[    0.313] INFO  | ********************************************************
+[    0.313] INFO  | ************* Ending MDOODZ 7.0 simulation *************
+[    0.313] INFO  | ********************************************************
