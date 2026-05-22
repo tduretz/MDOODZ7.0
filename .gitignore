@@ -30,3 +30,5 @@ benchmark-results/
 *.zip
 *.ZIP
 benchmarks/ec2/results/
+*.dylib
+*.log

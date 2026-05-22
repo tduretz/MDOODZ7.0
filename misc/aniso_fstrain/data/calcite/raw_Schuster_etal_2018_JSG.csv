@@ -1,0 +1,41 @@
+## Schuster, Habler, Schafler, Abart (2018)
+## "Microstructural and textural evolution of calcite deformed to high shear strain by high-pressure torsion"
+## J. Struct. Geol., DOI: 10.1016/j.jsg.2018.09.003
+## Source: bib/anisotropy_calibration_2026/calcite/Schuster_etal_2018_calcite_HPT_high_shear_strain_JSG.pdf
+##
+## Annotation-only entry. The paper reports gamma per (sample, scan) in Table 2
+## but does NOT tabulate J-index, M-index, or peak m.r.d. for any sample.
+## Texture is shown qualitatively as pole figures (Figs 9, 13). Schuster+18 is
+## therefore added as a gamma-coverage annotation on calcite calibration plots,
+## NOT as input to the LSQ. fit_status = "annotation-only" excludes these rows
+## from any M(gamma) fit. See also questions/Q12_schuster18_hpt.md (research dir)
+## and audit/Schuster_etal_2018_annotation.md.
+##
+## All rows are 450 C samples (the ductile-CPO regime). 235 C samples are
+## brittle/twinning-dominated per the paper's section 4.7 and are excluded.
+##
+## Fields:
+##   sample        — Schuster Table 2 EBSD-map identifier
+##   gamma         — local shear strain at the EBSD-map distance from rotation axis
+##   P_GPa         — confining pressure in GPa
+##   T_C           — deformation temperature in C
+##   epsdot        — local strain rate (s^-1)
+##   note          — qualitative observation
+##   fit_status    — annotation-only (never enters LSQ)
+sample,gamma,P_GPa,T_C,epsdot,note,fit_status
+C1.2-450-1-scan2,5,1.2,450,1.7e-3,low-strain (1 mm from axis),annotation-only
+C1.2-450-1-scan9,21,1.2,450,3.5e-3,intermediate strain (1 mm),annotation-only
+C1.2-450-1-scan10,21,1.2,450,3.5e-3,intermediate strain duplicate,annotation-only
+C1.2-450-1-scan8,27,1.2,450,5.6e-3,intermediate strain (1.6 mm),annotation-only
+C1.2-450-1-scan4,35,1.2,450,8.8e-2,high strain (2.5 mm),annotation-only
+C1.2-450-1-scan5,35,1.2,450,8.8e-2,high strain duplicate,annotation-only
+C2-450-1-scan6,21,2,450,7e-3,intermediate (2 mm),annotation-only
+C2-450-1-scan5,31,2,450,1e-2,high (3 mm),annotation-only
+C3-450-1-scan2,31,3,450,1e-2,high (3 mm),annotation-only
+C4-450-0.25-scan1,3,4,450,3.5e-3,low strain 0.25 rotations (1 mm),annotation-only
+C4-450-0.25-scan2,8,4,450,1e-2,low-intermediate (3 mm),annotation-only
+C4-450-1-scan1,10,4,450,3.5e-3,intermediate (1 mm),annotation-only
+C4-450-1-scan3,21,4,450,7e-3,intermediate (2 mm),annotation-only
+C4-450-1-scan2,31,4,450,1e-2,high (3 mm),annotation-only
+C4-450-2-scan4,42,4,450,7e-3,very high (2 mm 2 rotations),annotation-only
+C4-450-2-scan5,63,4,450,1e-2,very high (3 mm 2 rotations) — paper's max ductile gamma,annotation-only

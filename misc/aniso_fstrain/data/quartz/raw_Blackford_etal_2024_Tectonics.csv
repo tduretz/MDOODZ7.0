@@ -1,0 +1,55 @@
+## Blackford, Sullivan, Lonn, Singleton (2024)
+## "Distribution and Magnitude of Deformation in the Northern Snake Range Décollement"
+## Tectonics 43, e2023TC008166.   doi:10.1029/2023TC008166
+## Source: bib/anisotropy_calibration_2026/quartz/Blackford_etal_2024_quartz_pfJ_NSR_finite_strain_Tectonics.pdf
+##
+## 38 quartzite samples from the Northern Snake Range metamorphic core complex (NV, USA).
+## 3-D strain ellipsoids on detrital quartz clasts → "octahedral shear strain" γ_oct (Nadai natural strain).
+## pfJ-index = pole-figure J of c-axes density norm (different scale than ODF J,
+## typically pfJ < ODF_J for the same texture).
+## Strain domain 1 (lowest γ) → 5 (highest γ) traverses the NSR west→east.
+##
+## Fields:
+##   sample          — sample identifier as in Blackford+24 Table 1
+##   gamma_oct       — Nadai octahedral shear strain ε
+##   pfJ             — pole-figure J of c-axis density
+##   strain_domain   — 1 (low) → 5 (high)
+sample,gamma_oct,pfJ,strain_domain
+2_FourmileCanyon,0.85,2.27,1
+4,0.97,1.86,1
+6,1.11,1.79,1
+8,1.38,2.25,1
+9_SaltCreek,1.22,1.31,1
+JL1-116,1.37,1.27,1
+JL1-115,1.25,1.34,1
+10,1.29,1.56,1
+11,1.39,1.50,1
+JL1-157,1.66,1.71,2
+12,1.53,1.26,2
+13,1.56,1.33,2
+14,1.63,1.29,2
+16,1.80,1.86,2
+17,1.68,1.74,2
+18,1.90,1.80,2
+19,1.67,1.32,2
+20,1.52,2.04,2
+JL1-149,1.60,1.65,2
+JL1-150,1.50,1.69,2
+JL1-148,1.68,1.81,2
+JL1-151,1.42,2.33,2
+JL1-152,1.56,1.56,2
+21,1.79,2.09,2
+22,2.04,2.29,3
+23,1.69,1.95,3
+29_HendrysCreek,1.41,2.91,3
+30,1.52,2.93,3
+JL1-202,1.96,4.85,3
+JL1-204,2.05,3.38,3
+JL1-205,2.10,2.66,3
+33,2.21,3.01,4
+38,1.86,3.58,4
+42,2.33,2.80,4
+46,1.84,1.65,4
+49,2.27,2.35,4
+50,1.61,2.77,4
+51,2.35,2.32,5

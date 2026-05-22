@@ -1,0 +1,25 @@
+## Combined Pieri+01 / Barnhoorn+04 calcite torsion dataset.
+## Bruijn+11 removed after the 2026-05-08 audit (audit/Bruijn_etal_2011_audit.md).
+## Skemer+05 J→M conversion applied. J ≤ 15 kept for case-2 LSQ fit (15 pts).
+## Used for case 2 (anisoDelta_Calcite combined T-averaged fit).
+## Generated from raw_Pieri_etal_2001 + raw_Barnhoorn_etal_2004.
+gamma_simple,J,M_skemer,T_C,source,fit_status
+0,1.12,0.008,727,Pieri01:CLB3a,kept
+1,1.66,0.044,727,Pieri01:P089,kept
+2,2.02,0.068,727,Pieri01:P143,kept
+5,9.76,0.584,727,Pieri01:P087,kept
+11,8.92,0.528,727,Pieri01:P088,kept
+0.5,1.8,0.05333,500,Barnhoorn04,kept
+3,3.8,0.1867,500,Barnhoorn04,kept
+4,6.7,0.38,500,Barnhoorn04,kept
+10,3.3,0.1533,500,Barnhoorn04 (recryst-randomization outlier),kept
+2,2.9,0.1267,600,Barnhoorn04,kept
+4,3.7,0.18,600,Barnhoorn04,kept
+9,4.1,0.2067,600,Barnhoorn04,kept
+32,42.1,2.74,600,Barnhoorn04 (outside Skemer linear range (J>15)),filtered (J>15)
+0.6,3.1,0.14,727,Barnhoorn04,kept
+3,1.7,0.04667,727,Barnhoorn04 (low outlier),kept
+5,12.5,0.7667,727,Barnhoorn04,kept
+9,20.6,1.307,727,Barnhoorn04 (outside Skemer linear range (J>15)),filtered (J>15)
+26,31.1,2.007,727,Barnhoorn04 (outside Skemer linear range (J>15)),filtered (J>15)
+46,34.5,2.233,727,Barnhoorn04 (outside Skemer linear range (J>15)),filtered (J>15)

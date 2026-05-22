@@ -61,7 +61,7 @@ typedef struct {
   int     mechanical, periodic_x, elastic,
           thermal, pure_shear_ALE, free_surface, writer_markers, writer_debug, topo_update, melting, inject_dikes;
   double free_surface_stab;
-  int    constant_dt, RK, line_search, tensile_line_search, initial_cooling, subgrid_diffusion, adiab_heating,
+  int    constant_dt, RK, line_search, tensile_line_search, pc_line_search, initial_cooling, subgrid_diffusion, adiab_heating,
           shear_heating, advection, finite_strain, conserv_interp;
   int surface_processes, loc_iter, therm_perturb, surf_ised1,
           surf_ised2, MantleID, topografix, reseed_markers, smooth_softening, fix_temperature, hardening_modulus;
@@ -143,6 +143,11 @@ typedef struct {
   double eta, L, V, T, t, a, E, S, m, rho, F, J, W, Cp, rhoE, k;
 } scale;
 
+// Function-pointer type for the per-phase analytic inverse of aniso_delta_fn.
+// Given a target δ, returns γ_eff such that aniso_delta_fn(FS_AR(γ_eff)) == δ.
+// Implementations live in MDLIB/AnisotropyRoutines.c (one per aniso_db case).
+typedef double (*aniso_delta_inv_t)(double delta);
+
 // mat_prop contains information related to material phase properties
 typedef struct {
   int    Nb_phases;
@@ -173,6 +178,63 @@ typedef struct {
   double aniso_angle[20], ani_fac_max[20], aniso_factor[20];   //ani_fac_v[20], ani_fac_e[20], ani_fac_p[20]
   double axx[20], azz[20], ayy[20];
   int    ani_fstrain[20];
+  // Strain-dependent anisotropy database (used when ani_fstrain == 2).
+  // aniso_db: per-phase database entry — 0 = off, 1 = Hansen olivine,
+  //          2 = (future) calcite, 3 = (future) quartz, …
+  // aniso_delta_fn: per-phase function pointer δ(FS_AR) populated by
+  //          ReadDataAnisotropy() in MDLIB/FlowLaws.c. Each mineral picks
+  //          its own functional form (saturating exponential, slip-system-
+  //          aware, tanh, …) — AnisotropyRoutines.c stays mineral-agnostic
+  //          and just calls the function pointer.
+  int    aniso_db[20];
+  double (*aniso_delta_fn[20])(double FS_AR);
+  // Per-phase analytic INVERSE of aniso_delta_fn — given a target δ, returns
+  // γ_eff such that aniso_delta_fn(FS_AR(γ_eff)) == δ. Populated in lockstep
+  // with aniso_delta_fn by ReadDataAnisotropy() in MDLIB/FlowLaws.c. Used by
+  // the init-from-finite-strain helper (RheologyParticles.c::aniso_init_
+  // finite_strain_for_marker) to construct F_init such that the per-marker
+  // step-0 δ derived from F_init matches the user-set aniso_factor[phase].
+  // NULL for aniso_db = 0 — the init helper skips those phases.
+  aniso_delta_inv_t aniso_delta_fn_inv[20];
+  // d-coupling modifier — when grain size drops below aniso_d_threshold,
+  // δ decays toward 1 (isotropic) following (d/threshold)^aniso_d_decay.
+  // Captures DisGBS / GBM-induced CPO randomization at small grain size.
+  // Default 0 = inactive (cases 1–8 are byte-identical to pre-d-coupling
+  // behavior). Set automatically to 5e-6 m for case 9 plagioclase based
+  // on Mehl & Hirth (2008) DisGBS onset observation.
+  double aniso_d_threshold[20];
+  double aniso_d_decay[20];
+  // δ-relaxation length scale (used when ani_fstrain == 3). L_relax is the
+  // characteristic DiSRX boundary-migration distance (≈ annealed grain size)
+  // that sets the relaxation timescale τ_relax = L_relax / V (Boneh et al.
+  // 2021 grain-boundary-migration kinetics). Sentinel -1 (parser default) =
+  // "use gs_ref[phase]" — so grain-size evolution (the gs flow law) is NOT
+  // required to be active. A user-set positive value overrides gs_ref.
+  // Stored in scaled units (parsed metres / scaling.L).
+  double ani_relax_length[20];
+  // Per-phase Boneh et al. 2021 DiSRX grain-boundary-migration kinetics
+  // constants (used when ani_fstrain == 3). These set the relaxation
+  // timescale tau_relax = L_relax / V via DeltaRelaxationTau. They are
+  // mineral-specific: the values populated in ReadDataAnisotropy are the
+  // OLIVINE calibration (Boneh's Q, M0 are olivine DiSRX values; the
+  // delta-rho range is the olivine dislocation-density range). A future
+  // calcite/quartz aniso_db case can override them per-phase. Q, mu, b are
+  // stored in SI; M0 in SI (m^4 J^-1 s^-1); drho_min/drho_max in SI (m^-2);
+  // eps_ref is dimensionless.
+  double ani_relax_Q[20];          // activation energy [J/mol]
+  double ani_relax_M0[20];         // grain-boundary mobility prefactor [m^4 J^-1 s^-1]
+  double ani_relax_mu[20];         // shear modulus [Pa]
+  double ani_relax_b[20];          // Burgers vector [m]
+  double ani_relax_drho_min[20];   // delta-rho proxy floor [m^-2]
+  double ani_relax_drho_max[20];   // delta-rho proxy saturation [m^-2]
+  double ani_relax_eps_ref[20];    // delta-rho proxy reference saturation strain [-]
+  double ani_relax_eps_max[20];    // strain-rate gate threshold [s^-1] above which
+                                   //   DiSRX relaxation is suppressed: tau_eff = tau_relax / f_gate,
+                                   //   f_gate = 1 / (1 + (eII_pwl / eps_max)^2). Boneh-2021 DiSRX
+                                   //   kinetics were measured under STATIC annealing — concurrent
+                                   //   deformation suppresses the mechanism (lab CPO build-up at
+                                   //   eII > 1e-5 shows no DiSRX). Default 1e-13 s^-1 splits the
+                                   //   "transient-event" mantle regime from quiescent steady state.
   int    transmutation[20], transmutation_phase[20];
   double transmutation_temperature[20];
 } mat_prop;

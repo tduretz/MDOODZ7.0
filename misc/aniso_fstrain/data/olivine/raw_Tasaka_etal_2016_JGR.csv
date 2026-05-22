@@ -1,0 +1,35 @@
+## Tasaka, Zimmerman, Kohlstedt (2016)
+## "Evolution of the rheological and microstructural properties of olivine aggregates during dislocation creep under hydrous conditions"
+## J. Geophys. Res. Solid Earth 121, 92-113.   doi:10.1002/2015JB012134
+## Source: bib/anisotropy_calibration_2026/olivine/Tasaka_etal_2016_wet_Fo50_torsion_dislocation_creep_JGR.pdf
+##
+## Wet Fo50 (iron-rich), 1200°C, 300 MPa, torsion (Paterson rig, Ni capsule
+## with dehydrating talc core for water saturation). 12 samples (10 deformed
+## + 2 undeformed). γ, M, J transcribed verbatim from the numerical labels
+## printed on the pole-figure panels of Fig. 5 (no graphical re-digitisation
+## needed). Composition (Fo50, wet) differs from Hansen's dry Fo90 — used
+## for the "damped" calibration (case 7).
+##
+## Fields:
+##   sample   — sample identifier (PT-###)
+##   gamma    — γ_crease (jacket-crease rotation), as displayed in Fig. 5;
+##              for PT-939 this differs from γ_deformation (3.0 vs 4.43);
+##              CSV uses γ_crease for consistency with the Fig. 5 panel labels.
+##   M        — Skemer M-index
+##   J        — ODF J-index
+##
+## NOTE: PT-938 was excluded from the paper's mechanical analysis (piston-slip),
+## but its microstructural M, J are valid and kept here for the calibration.
+sample,gamma,M,J
+PT-916,0.0,0.01,1.71
+PT-933,0.0,0.01,1.66
+PT-938,0.6,0.01,1.81
+PT-952,1.3,0.03,2.14
+PT-892,1.8,0.05,2.33
+PT-954,2.4,0.24,8.84
+PT-973,2.7,0.23,5.99
+PT-930,2.7,0.30,13.38
+PT-939,3.0,0.22,8.47
+PT-889,3.4,0.13,4.90
+PT-976,3.7,0.14,7.10
+PT-966,5.0,0.13,5.73

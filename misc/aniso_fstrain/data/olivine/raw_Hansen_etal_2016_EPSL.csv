@@ -1,0 +1,28 @@
+## Hansen, Warren, Zimmerman, Kohlstedt (2016)
+## "Viscous anisotropy of textured olivine aggregates, Part 1: Measurement of the magnitude and evolution of anisotropy"
+## Earth Planet. Sci. Lett. 445, 92-103.   doi:10.1016/j.epsl.2016.04.008
+## Source: bib/anisotropy_calibration_2026/olivine/Hansen_etal_2016_*.pdf  (Part 1)
+##
+## 5 NEW torsion samples not present in Hansen+14:
+##   PT0716, PT0718, PT0751, PT0752, PT0754.
+## PT0718 has a radial profile in Fig. 6 (8 pts).
+## PT0716/PT0751/PT0752/PT0754 contribute single end-of-experiment values from Table 1.
+##
+## Fields:
+##   sample      — sample identifier
+##   gamma       — engineering shear strain (dimensionless)
+##   M           — Skemer M-index
+##   source_fig  — fig./table reference within Hansen+16 Part 1
+sample,gamma,M,source_fig
+PT0718_r1,0.3,0.11,Fig.6 radial-profile
+PT0718_r2,0.7,0.11,Fig.6 radial-profile
+PT0718_r3,1.2,0.11,Fig.6 radial-profile
+PT0718_r4,1.7,0.15,Fig.6 radial-profile
+PT0718_r5,3.6,0.30,Fig.6 radial-profile
+PT0718_r6,5.0,0.44,Fig.6 radial-profile
+PT0718_r7,6.8,0.59,Fig.6 radial-profile
+PT0718_end,10.1,0.52,Fig.6 / Table 1 (end-of-run)
+PT0754,5.5,0.40,Table 1
+PT0752,7.2,0.53,Table 1
+PT0716,8.2,0.42,Table 1
+PT0751,15.5,0.37,Table 1

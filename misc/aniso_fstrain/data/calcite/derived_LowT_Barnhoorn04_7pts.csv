@@ -1,0 +1,11 @@
+## Calcite mid-low-T regime (T ≤ 650°C, subgrain-rotation recryst).
+## Used for case 4 (anisoDelta_Calcite_LowT) calibration.
+## Barnhoorn+04 500°C and 600°C samples filtered to J ≤ 15 (7 pts).
+gamma_simple,J,M_skemer,T_C,source
+0.5,1.8,0.05333,500,Barnhoorn04
+3,3.8,0.1867,500,Barnhoorn04
+4,6.7,0.38,500,Barnhoorn04
+10,3.3,0.1533,500,Barnhoorn04 (recryst-randomization outlier)
+2,2.9,0.1267,600,Barnhoorn04
+4,3.7,0.18,600,Barnhoorn04
+9,4.1,0.2067,600,Barnhoorn04

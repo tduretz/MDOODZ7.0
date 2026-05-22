@@ -685,3 +685,44 @@ TEST_F(PinchSwellGSEFixture, PinchSwellGSESmoke) {
   // grains must have evolved BELOW their starting value (1e-3 m) in at least some cells.
   EXPECT_LT(minD, 1e-3) << "min(d) is at or above layer gs_ref — wattmeter not active in layer";
 }
+
+// Coupled GSE + finite-strain anisotropy smoke test (merge-gse-anisotropy).
+// Pre-fix, gs = 10 + anisotropy = 1 was silently a no-op because
+// ViscosityConciseAniso never updated *d. This test gates the coupled regime:
+// the layer phase must develop both grain-size heterogeneity (GSE active)
+// AND non-trivial anisotropy strength (ani_fstrain active under aniso).
+// If either subsystem is silently disabled, the corresponding assertion fails.
+TEST_F(PinchSwellGSEFixture, PinchSwellGSEAniso) {
+  RunMDOODZ("RheologyCreep/PinchSwellGSEAnisoSmoke.txt", &setup);
+  const char *fileName = "PinchSwellGSEAnisoSmoke/Output00010.gzip.h5";
+
+  int stepsCount = getStepsCount(fileName);
+  ASSERT_GE(stepsCount, 0) << "PinchSwellGSEAnisoSmoke didn't produce a readable output";
+
+  std::vector<double> d_field   = readFieldAsArray(fileName, "Centers", "d");
+  std::vector<double> ani_field = readFieldAsArray(fileName, "Centers", "ani_fac");
+  ASSERT_FALSE(d_field.empty());
+  ASSERT_FALSE(ani_field.empty());
+
+  double minD = *std::min_element(d_field.begin(), d_field.end());
+  double maxD = *std::max_element(d_field.begin(), d_field.end());
+  double minA = *std::min_element(ani_field.begin(), ani_field.end());
+  double maxA = *std::max_element(ani_field.begin(), ani_field.end());
+  printf("[PinchSwellGSEAnisoSmoke] N=%zu  d=[%.3e,%.3e] r=%.2f  "
+         "ani=[%.3e,%.3e] r=%.2f\n",
+         d_field.size(), minD, maxD, maxD/minD, minA, maxA, maxA/minA);
+
+  // GSE invariants (mirror PinchSwellGSESmoke)
+  EXPECT_GT(minD, 0.0) << "non-positive d (NaN propagation?)";
+  EXPECT_TRUE(std::isfinite(minD) && std::isfinite(maxD));
+  EXPECT_GT(maxD / minD, 5.0) << "d field too uniform — GSE not driving heterogeneity";
+  EXPECT_LT(minD, 1e-3) << "min(d) at/above layer gs_ref — wattmeter inactive in layer";
+
+  // Anisotropy invariants — these catch silent-no-op regressions in the coupling
+  EXPECT_TRUE(std::isfinite(minA) && std::isfinite(maxA));
+  EXPECT_GE(minA, 0.999) << "ani_fac < 1 (FS_AR is bounded below by 1)";
+  EXPECT_GT(maxA, 1.0)
+      << "ani_fac never exceeds 1 — anisotropy not developing (silent no-op?)";
+  EXPECT_LE(maxA, 4.0 + 1e-9)
+      << "ani_fac exceeded ani_fac_max — saturation clamp broken";
+}

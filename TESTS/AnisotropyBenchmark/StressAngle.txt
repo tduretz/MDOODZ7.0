@@ -31,6 +31,8 @@ Courant      = 0.5
 lin_solver   = 0
 penalty      = 1e5
 diag_scaling = 1
+min_eta      = 1e-30
+max_eta      = 1e30
 
 /**** SWITCHES ****/
 mechanical        = 1

@@ -1,0 +1,13 @@
+## Calcite high-T regime (T > 650°C, grain-boundary-migration recryst).
+## Pieri+01 (727°C) + Barnhoorn+04 727°C (J ≤ 15) — 8 pts.
+## Bruijn+11 removed after the 2026-05-08 audit (audit/Bruijn_etal_2011_audit.md).
+## Used for case 5 (anisoDelta_Calcite_HighT) calibration.
+gamma_simple,J,M_skemer,T_C,source
+0,1.12,0.008,727,Pieri01:CLB3a
+1,1.66,0.044,727,Pieri01:P089
+2,2.02,0.068,727,Pieri01:P143
+5,9.76,0.584,727,Pieri01:P087
+11,8.92,0.528,727,Pieri01:P088
+0.6,3.1,0.14,727,Barnhoorn04 727°C
+3,1.7,0.04667,727,Barnhoorn04 727°C (low outlier)
+5,12.5,0.7667,727,Barnhoorn04 727°C

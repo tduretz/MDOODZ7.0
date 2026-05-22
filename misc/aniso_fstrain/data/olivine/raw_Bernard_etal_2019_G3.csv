@@ -1,0 +1,51 @@
+## Bernard, Behr, Becker, Young (2019)
+## "Relationships Between Olivine CPO and Deformation Parameters in Naturally Deformed Rocks and Implications for Mantle Seismic Anisotropy"
+## Geochem. Geophys. Geosyst. 20, 3469-3494.   doi:10.1029/2019GC008289
+## Source: bib/anisotropy_calibration_2026/olivine/Bernard_etal_2019_*.pdf
+##
+## Natural-sample compilation. Table 2 entries with X/Z aspect ratio reported
+## (n=35 below). γ_simple_eq is computed downstream via plane-strain inversion
+##     γ_eq = √(X/Z) − 1/√(X/Z)
+## Some samples are constrictional or oblate (Flinn k far from 1) — quality
+## flagging is left to the consumer.
+##
+## Fields:
+##   M       — Skemer M-index
+##   J       — ODF J-index
+##   xz      — X/Z aspect ratio of finite-strain ellipsoid
+M,J,xz
+0.18,3.87,2.73
+0.13,3.24,2.01
+0.11,3.00,3.03
+0.17,4.61,1.72
+0.12,2.72,2.90
+0.23,5.54,2.52
+0.05,2.14,2.17
+0.04,1.70,2.03
+0.12,2.72,1.56
+0.14,2.64,2.42
+0.08,2.23,2.13
+0.22,5.07,2.60
+0.23,5.52,2.23
+0.20,4.32,2.30
+0.01,1.19,3.08
+0.04,1.45,2.31
+0.05,1.55,1.72
+0.01,1.55,3.06
+0.06,2.54,3.02
+0.13,3.46,3.56
+0.05,2.46,3.05
+0.08,2.31,3.32
+0.04,3.55,3.44
+0.03,2.19,3.33
+0.09,2.07,2.65
+0.11,2.42,2.49
+0.08,2.95,4.75
+0.03,1.45,1.85
+0.03,1.35,2.02
+0.10,3.44,2.45
+0.08,2.86,3.72
+0.11,3.09,2.67
+0.29,8.81,3.63
+0.12,3.07,3.11
+0.07,1.93,2.65

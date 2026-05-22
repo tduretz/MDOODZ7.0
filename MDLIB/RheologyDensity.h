@@ -49,4 +49,7 @@ typedef struct {
   double T;
 } LocalIterationParams;
 
+void LocalIterationViscoElastic(LocalIterationMutables mutables, LocalIterationParams params);
+void LocalIterationViscoElasticGrainSize(LocalIterationMutables mutables, LocalIterationParams params);
+
 #endif

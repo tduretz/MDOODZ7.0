@@ -39,6 +39,13 @@ typedef struct {
   // double *dsxxd, *dszzd, *dsxz, *syy, *dsyy;
   double *noise, *rho;
   double *aniso_angle;
+  // ani_fstrain == 3 δ-relaxation state (two-field operator split, design D1).
+  // aniso_delta:         the relaxing anisotropy factor δ carried as history.
+  // aniso_delta_fs_prev: the previous step's finite-strain δ = aniso_delta_fn(FS_AR),
+  //                      used to inherit the ani_fstrain==2 production increment.
+  // Both dimensionless → no scaling-loop entry (mirrors strain_pwl). Allocated
+  // unconditionally (mirrors strain_pwl); only written for ani_fstrain==3 phases.
+  double *aniso_delta, *aniso_delta_fs_prev;
 } markers;
 
 
@@ -124,6 +131,10 @@ typedef struct {
   double *phi0_s, *d0_s, *T_s, *P_s;
   // For anisotropy
   double *FS_AR_n, *FS_AR_s, *aniso_factor_n, *aniso_factor_s;
+  // ani_fstrain == 3: relaxed δ P2G'd from the marker aniso_delta field
+  // (centroid + vertex), mirrors FS_AR_n / FS_AR_s. Consumed by
+  // AnisoFactorEvolv's ani_fstrain==3 arm.
+  double *aniso_delta_n, *aniso_delta_s;
   double *d1_n, *d2_n, *d1_s, *d2_s, *angle_n, *angle_s;
 
   double *cell_min_z, *cell_max_z, *vert_min_z, *vert_max_z;
@@ -151,6 +162,11 @@ struct _SparseMat {
   int    *Ic, *J, neq;
   int    *eqn_u, *eqn_v, *eqn_p;
   int     nnz, neq_mom, neq_cont;
+  /* H02: CSR sparsity-pattern cache. Capacity held across AllocMat/FreeMat
+     cycles so the per-NL-iter calloc+free of Ic/J/A/bbc is skipped when the
+     requested sizes fit. Initialized by SAlloc; finally released by SFree. */
+  int     nnz_alloc;   /* current allocated capacity of J and A */
+  int     neq_alloc;   /* current allocated capacity of Ic (neq+1) and bbc (neq) */
 };
 
 // Nparams contains numerical parameters of the non-linear solver
@@ -419,7 +435,13 @@ void            UpdateAdvectionMode(scale, params *);
 void            UpdateParticlePhase(grid *, scale, params *, markers *, mat_prop *);
 // Anisotropy
 void            NonNewtonianViscosityGridAniso(grid *, mat_prop *, params *, Nparams, scale *, int);
-double          AnisoFactorEvolv( double FS_AR, double aniso_fac_max );
+double          AnisoFactorEvolv( double FS_AR, double aniso_fac_max, int ani_fstrain, double (*aniso_delta_fn)(double FS_AR), double grain_size, double aniso_d_threshold, double aniso_d_decay, double relaxed_delta );
+double          DeltaRelaxationTau( double T_scaled, double L_relax_scaled, double strain_pwl, double R_scaled, scale scaling, double Q, double M0, double mu, double b, double drho_min, double drho_max, double eps_ref );
+// Per-aniso_db analytic inverses of aniso_delta_fn (init-from-finite-strain).
+// Each returns γ_eff such that aniso_delta_fn(FS_AR(γ_eff)) == δ. Implemented
+// in MDLIB/AnisotropyRoutines.c. Wired into mat_prop::aniso_delta_fn_inv by
+// ReadDataAnisotropy() in MDLIB/FlowLaws.c.
+double          aniso_delta_inv_hansen( double delta );
 
 // Advection
 void            DefineInitialTimestep(params *, grid *, markers, mat_prop, scale);
@@ -437,7 +459,7 @@ void            AccumulatedStrain(grid *, scale, params, markers *);
 void            PureShearALE(params *, grid *, markers *, scale);
 void            VelocitiesOnCenters(double *, double *, double *, double *, int, int, scale);
 void            VelocitiesToParticles(grid *, markers *, DoodzFP *, DoodzFP *, params, scale);
-void            DeformationGradient(grid, scale, params, markers *);
+void            DeformationGradient(grid, scale, params, mat_prop, markers *);
 
 
 // Energy
@@ -500,6 +522,7 @@ void            ReadDataGBS(mat_prop *, params *, int, int, scale *);
 void            ReadDataExponential(mat_prop *, params *, int, int, scale *);
 void            ReadDataGSE(mat_prop *, params *, int, int, scale *);
 void            ReadDataKinetics(mat_prop *, params *, int, int, scale *);
+void            ReadDataAnisotropy(mat_prop *, params *, int, int, scale *);
 
 void            AllocatePhaseDiagrams(params *);
 void            FreePhaseDiagrams(params *);
@@ -585,7 +608,7 @@ void            RheologicalOperators(grid*, params*, mat_prop*, scale*, int, int
 void            ComputeViscosityDerivatives_FD(grid*, mat_prop*, params*, Nparams, scale*);
 void            SetUpModel_NoMarkers(grid*, params*, scale*);
 void            Diffuse_X(grid*, params*, scale*);
-void            FiniteStrainAspectRatio(grid*, scale, params, markers*);
+void            FiniteStrainAspectRatio(grid*, scale, params, markers*, mat_prop*);
 void            Print2DArrayDouble(DoodzFP*, int, int, double);
 void            Print2DArrayInt(int*, int, int, double);
 
@@ -602,6 +625,7 @@ void            RogerGunther(markers *, params, grid, int, scale);
 void            CheckSym(DoodzFP *, double, int, int, char *, int, int);
 void            ChemicalDirectSolve(grid *, params, markers *, mat_prop *, double, scale);
 void            InitialiseGrainSizeParticles(markers *, mat_prop *);
+void            InitialiseAnisoDeltaParticles(markers *, mat_prop *);
 
 void            DerivativesOnTheFly_n( double*, double*, double*, double*, double*, double*, double*, double*, double*, double*, double*, double*, double*, int, double, double, double, double, double, double, double, double, double, double, grid*, mat_prop*, params*, scale* );
 void            DerivativesOnTheFly_s( double*, double*, double*, double*, double*, double*, double*, double*, int, double, double, double, double, double, double, double, double, double, double, grid*, mat_prop*, params*, scale* );

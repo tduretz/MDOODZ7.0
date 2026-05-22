@@ -134,6 +134,13 @@ add_executable(AnisotropyBenchmarkTests AnisotropyBenchmarkTests.cpp)
 target_link_libraries(AnisotropyBenchmarkTests LINK_PUBLIC mdoodz GTest::gtest_main)
 add_test(AnisotropyBenchmarkTests AnisotropyBenchmarkTests)
 
+# Init-from-Finite-Strain Tests (aniso-init-from-finite-strain change, Phase 1).
+# Pure unit tests of the aniso_delta_inv_hansen + F_init construction math —
+# no MDOODZ simulation; no input fixture directory.
+add_executable(InitAnisoFromFiniteStrainTests InitAnisoFromFiniteStrainTests.cpp)
+target_link_libraries(InitAnisoFromFiniteStrainTests LINK_PUBLIC mdoodz GTest::gtest_main)
+add_test(InitAnisoFromFiniteStrainTests InitAnisoFromFiniteStrainTests)
+
 # TopoBench Tests
 file(COPY ${PROJECT_SOURCE_DIR}/TESTS/TopoBench DESTINATION ${PROJECT_BINARY_DIR}/TESTS)
 add_executable(TopoBenchTests TopoBenchTests.cpp)

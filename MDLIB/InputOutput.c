@@ -226,6 +226,11 @@ void LoadBreakpointParticles( markers *particles, grid* mesh, markers *topo_chai
     fread( particles->strain_exp,    s3, particles->Nb_part, file);
     fread( particles->strain_lin,    s3, particles->Nb_part, file);
     fread( particles->strain_gbs,    s3, particles->Nb_part, file);
+    // ani_fstrain == 3 δ-relaxation state — positional I/O, must mirror the
+    // matching fwrite block in MakeBreakpointParticles. Dimensionless → no
+    // scaling-loop entry (matches strain_pwl).
+    fread( particles->aniso_delta,         s3, particles->Nb_part, file);
+    fread( particles->aniso_delta_fs_prev, s3, particles->Nb_part, file);
     fread( particles->d         ,    s3, particles->Nb_part, file);
 
     if (model->finite_strain == 1) {
@@ -737,6 +742,11 @@ void MakeBreakpointParticles( markers *particles,  grid* mesh, markers *topo_cha
     fwrite( particles->strain_exp,    s3, particles->Nb_part, file);
     fwrite( particles->strain_lin,    s3, particles->Nb_part, file);
     fwrite( particles->strain_gbs,    s3, particles->Nb_part, file);
+    // ani_fstrain == 3 δ-relaxation state — positional I/O, must mirror the
+    // matching fread block in LoadBreakpointParticles. Dimensionless → no
+    // scaling-loop entry (matches strain_pwl).
+    fwrite( particles->aniso_delta,         s3, particles->Nb_part, file);
+    fwrite( particles->aniso_delta_fs_prev, s3, particles->Nb_part, file);
     fwrite( particles->d         ,    s3, particles->Nb_part, file);
 
     if (model.finite_strain == 1) {
@@ -1198,7 +1208,8 @@ Input ReadInputFile( char *fileName ) {
     model.max_num_stag       = ReadInt2( fin, "max_num_stag",          3 ); // maximum number of stagnation (safe mode)
     model.line_search        = ReadInt2( fin, "line_search",           0 ); // Activates line search
     model.tensile_line_search = ReadInt2( fin, "tensile_line_search",  0 ); // Activates line search for combined mode-I/mode-II plasticity
-    model.line_search_min    = ReadDou2( fin, "line_search_min",     0.0 ); // Minimum alpha value for line search 
+    model.pc_line_search     = ReadInt2( fin, "pc_line_search",        0 ); // Predictor-corrector early-exit on Newton line search (test alpha=-1 first; opt-in, default 0)
+    model.line_search_min    = ReadDou2( fin, "line_search_min",     0.0 ); // Minimum alpha value for line search
     model.residual_form      = ReadInt2( fin, "residual_form",         1 ); // Form of residual - TODO: delete if our models work with new default value (1)
     Nmodel.stagnated         = 0;
     // Numerics: marker-in-cell
@@ -1450,6 +1461,32 @@ Input ReadInputFile( char *fileName ) {
         // materials.ani_fac_p[k]      =  ReadMatProps( fin, "ani_fac_p",    k,    1.0  );        // plastic anisotropy strength
         materials.ani_fac_max[k]    =  ReadMatProps( fin, "ani_fac_max",  k, 1000.0  );        // maximum anisotropy strength
         materials.ani_fstrain[k]    =  (int)ReadMatProps( fin, "ani_fstrain",    k,    0.0  ); // strain dependent anisotropy per phase
+        materials.aniso_db[k]       =  (int)ReadMatProps( fin, "aniso_db",       k,    0.0  ); // viscous-anisotropy database entry (0=off, 1=Hansen olivine)
+        materials.aniso_delta_fn[k] =  NULL;                                                  // populated by ReadDataAnisotropy() if aniso_db > 0
+        materials.aniso_delta_fn_inv[k] = NULL;                                               // analytic inverse, populated by ReadDataAnisotropy() in lockstep with aniso_delta_fn
+        // d-coupling modifier (DisGBS / GBM regime). Sentinel -1 = "user didn't set it,
+        // ReadDataAnisotropy may apply per-case default" (e.g., 5e-6 for case 9
+        // plagioclase from Mehl & Hirth 2008). User-set 0 = explicitly disabled,
+        // overrides any per-case default. User-set positive = explicit threshold in metres.
+        // The check in AnisoFactorEvolv requires strictly > 0 to activate, so the
+        // sentinel state -1 is also inactive at runtime.
+        const double dthr_raw_ = ReadMatProps( fin, "aniso_d_threshold", k, -1.0 );
+        materials.aniso_d_threshold[k] = (dthr_raw_ >= 0.0) ? (dthr_raw_ / scaling.L) : -1.0;
+        materials.aniso_d_decay[k]     = ReadMatProps( fin, "aniso_d_decay",     k,    1.0  );
+        // δ-relaxation length scale for ani_fstrain==3 (Boneh et al. 2021 DiSRX
+        // kinetics). Sentinel -1 = "user didn't set it" → the use site resolves
+        // L_relax = gs_ref[phase] (so grain-size evolution is NOT required;
+        // ReadDataAnisotropy may also leave it at -1 to inherit gs_ref).
+        // User-set positive = explicit length in metres (divided by scaling.L).
+        const double relax_raw_ = ReadMatProps( fin, "ani_relax_length", k, -1.0 );
+        materials.ani_relax_length[k]  = (relax_raw_ >= 0.0) ? (relax_raw_ / scaling.L) : -1.0;
+        // ani_relax_eps_max — per-phase strain-rate gate threshold for the
+        // ani_fstrain=3 Boneh-DiSRX relaxation. Reads in SI [s^-1] and converts to
+        // scaled units (the gate is then applied in `FiniteStrainAspectRatio`
+        // against `mesh->eII_pwl` which lives in scaled units). Sentinel < 0 means
+        // "no gate" (legacy / always-on behaviour). Default 1e-13 s^-1.
+        const double eps_max_raw_ = ReadMatProps( fin, "ani_relax_eps_max", k, 1.0e-13 );
+        materials.ani_relax_eps_max[k] = (eps_max_raw_ >= 0.0) ? (eps_max_raw_ * scaling.t) : -1.0;
         materials.axx[k]            =  ReadMatProps( fin, "axx",    k,    1.0  );              // plastic directional factor xx
         materials.azz[k]            =  ReadMatProps( fin, "azz",    k,    1.0  );              // plastic directional factor zz
         materials.ayy[k]            =  ReadMatProps( fin, "ayy",    k,    1.0  );              // plastic directional factor yy
@@ -1491,6 +1528,20 @@ Input ReadInputFile( char *fileName ) {
         if ( abs(materials.expv[k])>0 ) ReadDataExponential( &materials, &model, k, materials.expv[k], &scaling );
         if ( abs(materials.gs[k])  >0 ) ReadDataGSE        ( &materials, &model, k, materials.gs[k],   &scaling );
         if ( abs(materials.kin[k]) >0 ) ReadDataKinetics   ( &materials, &model, k, materials.kin[k],  &scaling );
+
+        // Auto-default the Hansen olivine calibration when the user opts into
+        // ani_fstrain=2 OR ani_fstrain=3 without an explicit aniso_db. Matches
+        // the FlowLaws.c pattern: an explicit per-phase database int selects
+        // calibration constants, and we default to the only currently-shipped
+        // olivine calibration (case 1 = Hansen). ani_fstrain=3 is "ani_fstrain=2
+        // δ-dispatch + δ-relaxation", so it needs aniso_db > 0 just like ==2.
+        // Users wanting a different calibration (calcite, quartz, ...) would set
+        // aniso_db explicitly once those entries are added to ReadDataAnisotropy.
+        if ( (materials.ani_fstrain[k] == 2 || materials.ani_fstrain[k] == 3) && materials.aniso_db[k] == 0 ) {
+            materials.aniso_db[k] = 1;
+            LOG_INFO("Phase %d: ani_fstrain=%d with no aniso_db; defaulting to aniso_db=1 (Hansen olivine).", k, materials.ani_fstrain[k]);
+        }
+        if ( abs(materials.aniso_db[k]) >0 ) ReadDataAnisotropy( &materials, &model, k, materials.aniso_db[k], &scaling );
     }
 
     materials.R = Rg / (scaling.J/scaling.T);

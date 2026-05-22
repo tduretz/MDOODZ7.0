@@ -1,0 +1,16 @@
+## Bystricky, Kunze, Burlini, Burg (2000)
+## "High shear strain of olivine aggregates: rheological and seismic consequences"
+## Science 290, 1564-1567.   doi:10.1126/science.290.5497.1564
+## Source: bib/anisotropy_calibration_2026/olivine/Bystricky_etal_2000_*.pdf
+##
+## San Carlos Fo90, dry, 1200°C, 300 MPa, torsion.  4 lab points.
+## J-index (overall ODF J) read from Fig. 4.
+##
+## Fields:
+##   gamma   — engineering shear strain (dimensionless)
+##   J       — overall ODF J-index (unitless)
+gamma,J
+0.5,1.3
+2.0,3.8
+4.0,8.0
+5.0,9.0

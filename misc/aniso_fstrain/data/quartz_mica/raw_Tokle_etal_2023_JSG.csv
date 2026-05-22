@@ -1,0 +1,50 @@
+## Tokle, Hirth, Stünitz (2023)
+## "The effect of muscovite on the microstructural evolution and rheology of quartzite in general shear"
+## Journal of Structural Geology 169, 104835.   doi:10.1016/j.jsg.2023.104835
+## Source: bib/anisotropy_calibration_2026/mica_polyphase/Tokle_etal_2023_quartz_muscovite_polyphase_general_shear_JSG.pdf
+##
+## Conditions (paper §2.1 + §3.2): general shear in Griggs apparatus
+## at T=800°C, P=1.5 GPa, 0.1 wt% H2O added.
+## 4 modal-fraction starting materials: 0, 5, 10, 25 vol% muscovite.
+## 3 strain protocols per modal fraction:
+##   hydrostatic   — γ ≈ 0, lead run-in pressurization only
+##   low strain    — γ ≈ 0.5-0.75 (peak-stress experiments)
+##   high strain   — γ ≈ 3.9-4.3 (steady-state experiments)
+##
+## Data extracted from Tokle+23 Fig 12 (quartz c-axis
+## pole-figure maxima in m.u.d. units = multiples of uniform
+## distribution). Each row = one (X_ms, strain_protocol) datapoint.
+##
+## Note on metric: Tokle+23 reports pole-figure maxima (m.u.d.) for
+## quartz c-axis distribution. This is NOT Skemer M-index directly
+## (Skemer M needs full ODF integration). Treating m.u.d. as a CPO
+## strength PROXY for LSQ purposes. For final case-15 calibration,
+## conversion factor m.u.d. → Skemer M would need to be calibrated
+## via supplementary data or D-Rex VPSC modeling.
+##
+## DRX% per X_ms (from Tokle+23 §3.2.3, + #614 read):
+##   0% Ms  → ~97% DRX (quartz completely recrystallizes)
+##   5% Ms  → ~85% DRX
+##   10% Ms → ~30% DRX
+##   25% Ms → ~5% DRX (qz mostly remains as relict porphyroclasts)
+##
+## Fields:
+##   X_ms_pct        — muscovite modal fraction (vol %)
+##   strain_protocol — hydrostatic / low_strain / high_strain
+##   gamma           — representative engineering shear strain (per §3 nomenclature)
+##   pf_max_mud      — pole-figure max of quartz c-axis (m.u.d.)
+##   drx_pct         — DRX percentage of quartz (paper-reported, per §3.2.3)
+##   provenance_fig  — paper figure source
+X_ms_pct,strain_protocol,gamma,pf_max_mud,drx_pct,provenance_fig
+0,hydrostatic,0.0,5.03,0,Fig12
+0,low_strain,0.7,5.41,0,Fig12
+0,high_strain,4.0,12.30,97,Fig12
+5,hydrostatic,0.0,6.24,0,Fig12
+5,low_strain,0.6,6.35,0,Fig12
+5,high_strain,4.0,4.78,85,Fig12
+10,hydrostatic,0.0,6.00,0,Fig12
+10,low_strain,0.6,5.54,0,Fig12
+10,high_strain,4.0,4.77,30,Fig12
+25,hydrostatic,0.0,5.94,0,Fig12
+25,low_strain,0.6,5.35,0,Fig12
+25,high_strain,4.0,4.40,5,Fig12

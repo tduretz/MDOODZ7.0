@@ -1,0 +1,20 @@
+## Boneh & Skemer 2014 with γ_simple_eq = 2·sinh(ε/2) from axial natural strain.
+## Used in case 7 (damped) calibration as one of 4 dataset inputs.
+## Generated from raw_Boneh_Skemer_2014_EPSL.csv.
+gamma_simple_eq,M,sample,geometry
+0,0.13,undef,undeformed
+0.2174,0.1,WUG-116,perpendicular
+0.3295,0.09,WUG-114,perpendicular
+0.4088,0.08,WUG-125,perpendicular
+0.5124,0.12,WUG-122,perpendicular
+0.6647,0.11,WUG-126,perpendicular
+0.1873,0.09,WUG-130,oblique
+0.4129,0.08,WUG-128,oblique
+0.4867,0.14,WUG-129,oblique
+0.6985,0.15,WUG-143,oblique
+0.7325,0.15,WUG-127,oblique
+0.2074,0.06,WUG-138,parallel
+0.3619,0.06,WUG-133,parallel
+0.3721,0.06,WUG-146,parallel
+0.418,0.05,WUG-134,parallel
+0.6195,0.06,WUG-147,parallel
