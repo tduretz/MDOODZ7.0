@@ -9,7 +9,7 @@ SET_PATH = ../SETS
 
 #---------------------------------------------------#
 # C flags
-CFLAGS = -std=c99 -D _UMFPACK_ -I ./include/ -I ./
+CFLAGS = -std=c99 -D _UMFPACK_ -I ./include/ -I ./ -D_GNU_SOURCE
 
 ifeq ($(OPT),yes)	
 	CFLAGS += -O3 -ftree-vectorize -funroll-loops -finline -fomit-frame-pointer -march=native
@@ -34,11 +34,11 @@ endif
 CFLAGS += -Wno-unused-variable  -Wno-comment
 #---------------------------------------------------#
 # Libraries
-LIBS = -lz -lhdf5
+LIBS = -lz -lhdf5 -lm
 
 # Related to SuiteSparse
-LIBS += -L /usr/lib/ -llapack -lcxsparse -lumfpack -lcblas -lamd -lcholmod -lcolamd -lbtf -lsuitesparseconfig -lblas
-
+LIBS += -L /usr/lib64/ #-L /home/lilou/librairies/MDOODZ7.0/deps/suitesparse/install/lib64/ -L ~/librairies/MDOODZ7.0/deps/suitesparse/SuiteSparse/metis-5.1.0/build/Linux-x86_64/libmetis/CMakeFiles/metis.dir/
+LIBS += -llapack -lblas -lcxsparse -lumfpack -lcblas -lamd -lmetis -lcholmod -lcolamd -lbtf -lsuitesparseconfig 
 # Link to openmp
 ifeq ($(OMP),yes)
     LIBS += -lgomp
