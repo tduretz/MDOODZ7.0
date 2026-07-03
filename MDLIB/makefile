@@ -14,7 +14,8 @@ CFLAGS = -std=c99 -D _UMFPACK_ -I ./include/ -I ./ -D_GNU_SOURCE
 ifeq ($(OPT),yes)	
 	CFLAGS += -O3 -ftree-vectorize -funroll-loops -finline -fomit-frame-pointer -march=native
 else
-	CFLAGS += -g -Wall  -O0 -fno-inline -fno-omit-frame-pointer
+	CFLAGS += -g -O0 -fno-inline -fno-omit-frame-pointer 
+# - Wall
 endif
 
 ifeq ($(OMP),yes)
