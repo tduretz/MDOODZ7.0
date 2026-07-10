@@ -264,6 +264,8 @@ markers PartAlloc(ParticlesInput particlesInput, params *model) {
   // mirroring strain_pwl (PartInit sets the isotropic δ = 1 start).
   particles.aniso_delta         = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
   particles.aniso_delta_fs_prev = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
+  // CLZ particles.eta  = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
+
 
   particles.intag      = DoodzCalloc(particles.Nb_part_max, sizeof(int));
 
@@ -341,6 +343,7 @@ void PartFree( markers *particles, params* model ) {
 
     DoodzFree(particles->aniso_delta);
     DoodzFree(particles->aniso_delta_fs_prev);
+    // CLZ DoodzFree(particles->eta);
 
     DoodzFree(particles->intag);
 
