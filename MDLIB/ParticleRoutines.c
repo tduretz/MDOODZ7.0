@@ -709,6 +709,7 @@ void AssignMarkerProperties (markers* particles, int new_ind, int min_index, par
     // ani_fstrain == 3 δ-relaxation state — inherit from the source marker.
     particles->aniso_delta[new_ind]         = particles->aniso_delta[min_index];
     particles->aniso_delta_fs_prev[new_ind] = particles->aniso_delta_fs_prev[min_index];
+    // CLZ particles->eta[new_ind] = particles->eta[min_index];
     particles->divth[new_ind]         = particles->divth[min_index]; // to be changed
     if ( direct_neighbour == 1 ) {
         particles->d[new_ind]             = particles->d[min_index];
@@ -783,6 +784,7 @@ void AssignMarkerPropertiesInflow (markers* particles, int new_ind, int min_inde
     // ani_fstrain == 3 δ-relaxation state — inherit from the source marker.
     particles->aniso_delta[new_ind]         = particles->aniso_delta[min_index];
     particles->aniso_delta_fs_prev[new_ind] = particles->aniso_delta_fs_prev[min_index];
+    // CLZ particles->eta[new_ind] = particles->eta[min_index];
     particles->divth[new_ind]         = particles->divth[min_index]; // to be changed
     if ( direct_neighbour == 1 ) {
         particles->d[new_ind]             = particles->d[min_index];
@@ -907,6 +909,7 @@ void PartInit( markers *particles, params* model ) {
         // ani_fstrain == 3 δ-relaxation state — isotropic start (δ = 1).
         particles->aniso_delta[k]         = 1.0;
         particles->aniso_delta_fs_prev[k] = 1.0;
+// CLZ        particles->eta[k]   = 1.0e50;
         particles->T[k]          = 0.0;
         particles->phi[k]        = 0.0;
         particles->X[k]          = 0.0;

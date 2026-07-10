@@ -46,6 +46,7 @@ typedef struct {
   // Both dimensionless → no scaling-loop entry (mirrors strain_pwl). Allocated
   // unconditionally (mirrors strain_pwl); only written for ani_fstrain==3 phases.
   double *aniso_delta, *aniso_delta_fs_prev;
+//  double *eta; // CLZ increment of viscosity due to weakening or hardening
 } markers;
 
 
@@ -442,6 +443,8 @@ double          DeltaRelaxationTau( double T_scaled, double L_relax_scaled, doub
 // in MDLIB/AnisotropyRoutines.c. Wired into mat_prop::aniso_delta_fn_inv by
 // ReadDataAnisotropy() in MDLIB/FlowLaws.c.
 double          aniso_delta_inv_hansen( double delta );
+void            AnisotropicDamage(grid *mesh, params *model, markers* particles);
+double          DamagedVolume(double x);
 
 // Advection
 void            DefineInitialTimestep(params *, grid *, markers, mat_prop, scale);

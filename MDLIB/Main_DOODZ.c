@@ -746,6 +746,8 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
         // Update anisotropy factor (function of accumulated strain and phase)
         if ( input.model.anisotropy == 1 ) { double t_aniso0 = omp_get_wtime(); UpdateAnisoFactor( &mesh, &input.materials, &input.model, &input.scaling); dt_anisotropy += omp_get_wtime() - t_aniso0; }
+        // CLZ if instead use the evolutive anisotropy :
+        AnisotropicDamage(&mesh, &input.model, &particles); //Update anisotropy in work-rate threshold based framework
 
         // Min/Max interpolated fields
         if (input.model.noisy == 1 ) {
@@ -1249,6 +1251,9 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
         // Update accumulated strain
         AccumulatedStrainII( &mesh, input.scaling, input.model, &particles,  mesh.xc_coord,  mesh.zc_coord, mesh.Nx-1, mesh.Nz-1, mesh.BCp.type );
+
+
+        //AnisotropicDamage(&mesh, &input.model, &particles); //Update anisotropy in work-rate threshold based framework
 
         int error=0;
 
