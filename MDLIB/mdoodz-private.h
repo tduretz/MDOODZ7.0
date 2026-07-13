@@ -443,7 +443,7 @@ double          DeltaRelaxationTau( double T_scaled, double L_relax_scaled, doub
 // in MDLIB/AnisotropyRoutines.c. Wired into mat_prop::aniso_delta_fn_inv by
 // ReadDataAnisotropy() in MDLIB/FlowLaws.c.
 double          aniso_delta_inv_hansen( double delta );
-void            AnisotropicDamage(grid *mesh, params *model, markers* particles);
+void            AnisotropicDamage(double* delta, double exxd, double ezzd, double exz, double sxxd, double szzd, double sxz);
 double          DamagedVolume(double x);
 
 // Advection

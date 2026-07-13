@@ -735,6 +735,8 @@ void UpdateAnisoFactor( grid *mesh, mat_prop *materials, params *model, scale *s
   LOG_INFO("Update anisotropy factor");
     int p, k, l, Nx, Nz, Ncx, Ncz, c0, c1;
   int average = model->ani_average; // SHOULD NOT BE ALLOWED TO BE ELSE THAN 1 - but why??
+  double delta; //temporary store for anisotropic factor (if aniso_factor = 4)
+  delta = 0;
 
   Nx = mesh->Nx;
   Nz = mesh->Nz;
@@ -760,17 +762,29 @@ void UpdateAnisoFactor( grid *mesh, mat_prop *materials, params *model, scale *s
           // Arithmetic
           if (average == 0) {
             if (materials->ani_fstrain[p]==0) mesh->aniso_factor_n[c0] += mesh->phase_perc_n[p][c0] * materials->aniso_factor[p];
-            if (materials->ani_fstrain[p]!=0) mesh->aniso_factor_n[c0] += mesh->phase_perc_n[p][c0] * AnisoFactorEvolv( mesh->FS_AR_n[c0], materials->ani_fac_max[p], materials->ani_fstrain[p], materials->aniso_delta_fn[p], mesh->d_n[c0], materials->aniso_d_threshold[p], materials->aniso_d_decay[p], mesh->aniso_delta_n[c0] );
+            if (materials->ani_fstrain[p]!=0 && materials->ani_fstrain[p]<4) mesh->aniso_factor_n[c0] += mesh->phase_perc_n[p][c0] * AnisoFactorEvolv( mesh->FS_AR_n[c0], materials->ani_fac_max[p], materials->ani_fstrain[p], materials->aniso_delta_fn[p], mesh->d_n[c0], materials->aniso_d_threshold[p], materials->aniso_d_decay[p], mesh->aniso_delta_n[c0] );
+            if (materials->ani_fstrain[0] == 4 ) {
+              AnisotropicDamage(&delta, mesh->exxd[c0], mesh->ezzd[c0], mesh->exz_n[c0], mesh->sxxd[c0], mesh->szzd[c0], mesh->sxz_n[c0]);
+              mesh->aniso_factor_n[c0] += mesh->phase_perc_n[p][c0] * delta;
+            }
           }
           // Harmonic
           if (average == 1) {
             if (materials->ani_fstrain[p]==0) mesh->aniso_factor_n[c0] += mesh->phase_perc_n[p][c0] * 1.0/materials->aniso_factor[p];
             if (materials->ani_fstrain[p]!=0) mesh->aniso_factor_n[c0] += mesh->phase_perc_n[p][c0] * 1.0/AnisoFactorEvolv( mesh->FS_AR_n[c0], materials->ani_fac_max[p], materials->ani_fstrain[p], materials->aniso_delta_fn[p], mesh->d_n[c0], materials->aniso_d_threshold[p], materials->aniso_d_decay[p], mesh->aniso_delta_n[c0] );
+            if (materials->ani_fstrain[0] == 4 ) {
+              AnisotropicDamage(&delta, mesh->exxd[c0], mesh->ezzd[c0], mesh->exz_n[c0], mesh->sxxd[c0], mesh->szzd[c0], mesh->sxz_n[c0]);
+              mesh->aniso_factor_n[c0] += mesh->phase_perc_n[p][c0] * 1.0/delta;
+            }
           }
           // Geometric
           if (average == 2) {
             if (materials->ani_fstrain[p]==0) mesh->aniso_factor_n[c0] += mesh->phase_perc_n[p][c0] * log(materials->aniso_factor[p]);
             if (materials->ani_fstrain[p]!=0) mesh->aniso_factor_n[c0] += mesh->phase_perc_n[p][c0] * log(AnisoFactorEvolv( mesh->FS_AR_n[c0], materials->ani_fac_max[p], materials->ani_fstrain[p], materials->aniso_delta_fn[p], mesh->d_n[c0], materials->aniso_d_threshold[p], materials->aniso_d_decay[p], mesh->aniso_delta_n[c0] ));
+            if (materials->ani_fstrain[0] == 4 ) {
+              AnisotropicDamage(&delta, mesh->exxd[c0], mesh->ezzd[c0], mesh->exz_n[c0], mesh->sxxd[c0], mesh->szzd[c0], mesh->sxz_n[c0]);
+              mesh->aniso_factor_n[c0] += mesh->phase_perc_n[p][c0] * log(delta);
+            }
           }
         }
 
@@ -798,8 +812,9 @@ void UpdateAnisoFactor( grid *mesh, mat_prop *materials, params *model, scale *s
       // Vertex index
       c1 = k + l*Nx;
 
-      // First - initialize to 0
-      mesh->aniso_factor_s[c1] = 0.0;
+      // First - initialize to 0 (exept if evolutive_aniso_lilou)
+
+      if ( materials->ani_fstrain[0] != 4 ) mesh->aniso_factor_s[c1] = 0.0;
 
       // Compute only if below free surface
       if ( mesh->BCg.type[c1] != 30 ) {
@@ -1020,6 +1035,7 @@ void NonNewtonianViscosityGridAniso( grid *mesh, mat_prop *materials, params *mo
           mesh->Wtot[c0]       += mesh->phase_perc_n[p][c0] * Wtot;
           mesh->Wdiss[c0]      += mesh->phase_perc_n[p][c0] * Wdiss;
           mesh->Wel[c0]        += mesh->phase_perc_n[p][c0] * Wel;
+//          printf("%f %f %f \n", mesh->Wtot[c0], mesh->Wdiss[c0], mesh->Wel[c0]);
 
           if (mesh->Wdiss[c0]<0.0) {LOG_INFO("negative dissipation: you crazy! --> Wdiss = %2.2e", mesh->Wdiss[c0]*scaling->S*scaling->E); }
 
@@ -1296,3 +1312,167 @@ firstprivate( model )
 /*--------------------------------------------------------------------------------------------------------------------*/
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
+
+// CLZ anisotropic damage from Tommasi et al. 2026
+// 1st step : isotropic damage
+//void AnisotropicDamage(grid *mesh, params *model, markers* particles){
+//
+// LOG_INFO("OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO");
+// LOG_INFO("OOOOOOOOOO   In anisotropic damage    OOOOOOOOOOO");
+// LOG_INFO("OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO");
+//
+//  
+//  int p, k, l, Nx, Nz, Ncx, Ncz, c0, c1; // for navigation on grid
+//  double WR, Pi_WR, V_dam, eta_strong, eta_weak; // variables
+//  double WR_th, R, Tc, n, AE, gamma0_i, gamma0_dam, lamb; //parameters
+//  double eta_mat0_d, eta_mat1_d, eta_mat0, eta_mat1;  // reference intial and damaged viscosities
+//
+//
+//  // CLZ TODO prperly set those parameters as input
+//  WR_th = 0.7;//2.55e-06;     // adimensionnalized value chosen ad-hoc
+//  R = 8.31;
+//  Tc = 1000;
+//  n = 1.0;
+//  AE = 370e3;
+//  gamma0_i = 1e-3;
+//  gamma0_dam = 0.007;
+//  lamb = AE/(R*Tc);
+//
+//  eta_mat0_d   = 1.0/(gamma0_i * exp(-lamb));    // viscosity of material before damage
+//  eta_mat1_d   = 1.0/(gamma0_dam * exp(-lamb));  // viscosity of damaged material
+//
+//  eta_mat0 = 1.0; // eta characteristic = eta0_d
+//  eta_mat1 = eta_mat1_d/eta_mat0_d;
+//
+//
+//  Nx = mesh->Nx;
+//  Nz = mesh->Nz;
+//  Ncx = Nx-1;
+//  Ncz = Nz-1;
+//
+//  // Calculate cell centers viscous isotropic damage
+//  for ( l=0; l<Ncz; l++ ) {
+//    for ( k=0; k<Ncx; k++ ) {
+//
+//      // Cell center index
+//      c0 = k  + l*(Ncx);
+//
+//      // Compute only if below free surface
+//      if ( mesh->BCp.type[c0] != 30 && mesh->BCp.type[c0] != 31) {
+//
+//        // Loop on phases
+//        for ( p=0; p<model->Nb_phases; p++) {
+//
+//          // TODO Harmonic average over phases + inversion (cf. updateAnisotropyFactor)
+//\
+//          WR = sqrt(mesh->exxd[c0]*mesh->sxxd[c0] + mesh->ezzd[c0]*mesh->szzd[c0] + 2.0*mesh->exz_n[c0]*mesh->sxz_n[c0]);
+//          Pi_WR = WR_th/(1.0e-20 + WR); 
+//
+//          V_dam = DamagedVolume(Pi_WR);
+//
+//          eta_strong = eta_mat1*V_dam + eta_mat0*(1-V_dam);   // Weak and Strong reversed compared to gamma0
+//          eta_weak =  1/(V_dam/eta_mat1 + (1-V_dam)/eta_mat0);
+//
+//          // mesh->eta_n[c0] = eta_strong; // CLZ it is more complicated, to be solved later
+//         // mesh->aniso_factor_n[c0] = WR; //eta_strong/eta_weak;
+//          mesh->aniso_factor_n[c0] = eta_strong/eta_weak;
+//          //printf("eta_strong, eta_weak, V_dam and new delta %f %f %f %f \n",eta_strong, eta_weak,  V_dam, mesh->aniso_factor_n[c0]);
+//
+//          }
+//        }
+//      }
+//    }
+//
+//
+//  // Calculate vertices viscous isotropic damage
+//  for ( l=0; l<Nz; l++ ) {
+//    for ( k=0; k<Nx; k++ ) {
+//
+//      // Vertex index
+//      c1 = k + l*Nx;
+//
+//      // Compute only if below free surface
+//      if ( mesh->BCg.type[c1] != 30 ) {
+//
+//        // Loop on phases
+//        for ( p=0; p<model->Nb_phases; p++) {
+//
+//          // TODO Harmonic average over phases + inversion
+//
+//          WR = sqrt(mesh->exxd_s[c1]*mesh->sxxd_s[c1] + mesh->ezzd_s[c1]*mesh->szzd_s[c1] + 2.0*mesh->exz[c1]*mesh->sxz[c1]);
+//          Pi_WR = WR_th/(1.0e-20 + WR); 
+//
+//          V_dam = DamagedVolume(Pi_WR);
+//
+//          eta_strong = eta_mat1*V_dam + eta_mat0*(1-V_dam);   // Weak and Strong reversed compared to gamma0
+//          eta_weak =  1/(V_dam/eta_mat1 + (1-V_dam)/eta_mat0); 
+//
+//          //mesh->eta_s[c1] = eta_strong; 
+//          //mesh->aniso_factor_s[c1] = WR; //eta_strong/eta_weak; /CLZ pour debugguer
+//          mesh->aniso_factor_s[c1] = eta_strong/eta_weak; 
+//          //printf("V_dam and new delta %f %f %f %f %f \n",WR, eta_strong, eta_weak,  V_dam, mesh->aniso_factor_s[c1]);
+//          
+//          }
+//
+//        }
+//      }
+//    }
+//  
+//}
+
+// CLZ for one cell (node or staggered) : compute new anisotropic parameters in evolving anisotropy (anisotropic damage from Tommasi et al. 2026)
+// output = delta
+void AnisotropicDamage(double* delta, double exxd, double ezzd, double exz, double sxxd, double szzd, double sxz){
+
+  int p, k, l, Nx, Nz, Ncx, Ncz, c0, c1; // for navigation on grid
+  double WR, Pi_WR, V_dam, eta_strong, eta_weak; // variables
+  double WR_th, R, Tc, n, AE, gamma0_i, gamma0_dam, lamb; //parameters
+  double eta_mat0_d, eta_mat1_d, eta_mat0, eta_mat1;  // reference intial and damaged viscosities
+
+
+  // CLZ TODO prperly set those parameters as input
+  WR_th = 0.7;//2.55e-06;     // adimensionnalized value chosen ad-hoc
+  R = 8.31;
+  Tc = 1000;
+  n = 1.0;
+  AE = 370e3;
+  gamma0_i = 1e-3;
+  gamma0_dam = 0.007;
+  lamb = AE/(R*Tc);
+
+  eta_mat0_d   = 1.0/(gamma0_i * exp(-lamb));    // viscosity of material before damage
+  eta_mat1_d   = 1.0/(gamma0_dam * exp(-lamb));  // viscosity of damaged material
+
+  eta_mat0 = 1.0; // eta characteristic = eta0_d
+  eta_mat1 = eta_mat1_d/eta_mat0_d;
+
+  WR = sqrt(exxd*sxxd + ezzd*szzd + 2.0*exz*sxz);
+  Pi_WR = WR_th/(1.0e-20 + WR); 
+
+  V_dam = DamagedVolume(Pi_WR);
+
+  eta_strong = eta_mat1*V_dam + eta_mat0*(1-V_dam);   // Weak and Strong reversed compared to gamma0
+  eta_weak =  1/(V_dam/eta_mat1 + (1-V_dam)/eta_mat0); 
+
+  //eta_s[c1] = eta_strong;
+  //aniso_factor_s[c1] = WR; //eta_strong/eta_weak; /CLZ pour debugguer
+  *delta = eta_strong/eta_weak; 
+
+
+}
+
+//  Polynomial fit (with threshold) one the microscopic data for V_dam the relative damaged volume
+//  Data = POST_test_PAPER_Mar2026_Exp1_Correction2, gamma0_dam = 0.007
+// TODO for n = 3 and Peierls
+double DamagedVolume(double x){
+
+  double V_dam; 
+
+  if (x < 0.1) { 
+      V_dam = 1.0; }
+  else if( x > 1.4 ){
+      V_dam = 0.0; }
+  else {
+      V_dam = 0.087 - 0.183*(-1.4+1.33*x) + 00.093*pow(-1.4+1.33*x,2) - 0.0056*pow(-1.4+1.33*x,3) ;}
+  return V_dam;
+}
