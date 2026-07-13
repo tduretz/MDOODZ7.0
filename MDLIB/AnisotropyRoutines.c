@@ -752,6 +752,7 @@ void UpdateAnisoFactor( grid *mesh, mat_prop *materials, params *model, scale *s
 
       // First - initialize to 0
       mesh->aniso_factor_n[c0] = 0.0;
+      fprintf(stderr, "\n %f\n", mesh->aniso_factor_n[c0]);
 
       // Compute only if below free surface
       if ( mesh->BCp.type[c0] != 30 && mesh->BCp.type[c0] != 31) {
@@ -763,7 +764,7 @@ void UpdateAnisoFactor( grid *mesh, mat_prop *materials, params *model, scale *s
           if (average == 0) {
             if (materials->ani_fstrain[p]==0) mesh->aniso_factor_n[c0] += mesh->phase_perc_n[p][c0] * materials->aniso_factor[p];
             if (materials->ani_fstrain[p]!=0 && materials->ani_fstrain[p]<4) mesh->aniso_factor_n[c0] += mesh->phase_perc_n[p][c0] * AnisoFactorEvolv( mesh->FS_AR_n[c0], materials->ani_fac_max[p], materials->ani_fstrain[p], materials->aniso_delta_fn[p], mesh->d_n[c0], materials->aniso_d_threshold[p], materials->aniso_d_decay[p], mesh->aniso_delta_n[c0] );
-            if (materials->ani_fstrain[0] == 4 ) {
+            if (materials->ani_fstrain[p] == 4 ) {
               AnisotropicDamage(&delta, mesh->exxd[c0], mesh->ezzd[c0], mesh->exz_n[c0], mesh->sxxd[c0], mesh->szzd[c0], mesh->sxz_n[c0]);
               mesh->aniso_factor_n[c0] += mesh->phase_perc_n[p][c0] * delta;
             }
@@ -771,17 +772,20 @@ void UpdateAnisoFactor( grid *mesh, mat_prop *materials, params *model, scale *s
           // Harmonic
           if (average == 1) {
             if (materials->ani_fstrain[p]==0) mesh->aniso_factor_n[c0] += mesh->phase_perc_n[p][c0] * 1.0/materials->aniso_factor[p];
-            if (materials->ani_fstrain[p]!=0) mesh->aniso_factor_n[c0] += mesh->phase_perc_n[p][c0] * 1.0/AnisoFactorEvolv( mesh->FS_AR_n[c0], materials->ani_fac_max[p], materials->ani_fstrain[p], materials->aniso_delta_fn[p], mesh->d_n[c0], materials->aniso_d_threshold[p], materials->aniso_d_decay[p], mesh->aniso_delta_n[c0] );
-            if (materials->ani_fstrain[0] == 4 ) {
+            if (materials->ani_fstrain[p]>0 && materials->ani_fstrain[p]!=4) mesh->aniso_factor_n[c0] += mesh->phase_perc_n[p][c0] * 1.0/AnisoFactorEvolv( mesh->FS_AR_n[c0], materials->ani_fac_max[p], materials->ani_fstrain[p], materials->aniso_delta_fn[p], mesh->d_n[c0], materials->aniso_d_threshold[p], materials->aniso_d_decay[p], mesh->aniso_delta_n[c0] );
+            if (materials->ani_fstrain[p] == 4 ) {
               AnisotropicDamage(&delta, mesh->exxd[c0], mesh->ezzd[c0], mesh->exz_n[c0], mesh->sxxd[c0], mesh->szzd[c0], mesh->sxz_n[c0]);
+              fprintf(stderr, "%f\n", mesh->aniso_factor_n[c0]);
               mesh->aniso_factor_n[c0] += mesh->phase_perc_n[p][c0] * 1.0/delta;
+              fprintf(stderr, "%f %f %f\n", delta, mesh->phase_perc_n[p][c0], 1.0/mesh->aniso_factor_n[c0]);
+
             }
           }
           // Geometric
           if (average == 2) {
             if (materials->ani_fstrain[p]==0) mesh->aniso_factor_n[c0] += mesh->phase_perc_n[p][c0] * log(materials->aniso_factor[p]);
             if (materials->ani_fstrain[p]!=0) mesh->aniso_factor_n[c0] += mesh->phase_perc_n[p][c0] * log(AnisoFactorEvolv( mesh->FS_AR_n[c0], materials->ani_fac_max[p], materials->ani_fstrain[p], materials->aniso_delta_fn[p], mesh->d_n[c0], materials->aniso_d_threshold[p], materials->aniso_d_decay[p], mesh->aniso_delta_n[c0] ));
-            if (materials->ani_fstrain[0] == 4 ) {
+            if (materials->ani_fstrain[p] == 4 ) {
               AnisotropicDamage(&delta, mesh->exxd[c0], mesh->ezzd[c0], mesh->exz_n[c0], mesh->sxxd[c0], mesh->szzd[c0], mesh->sxz_n[c0]);
               mesh->aniso_factor_n[c0] += mesh->phase_perc_n[p][c0] * log(delta);
             }
@@ -1454,9 +1458,12 @@ void AnisotropicDamage(double* delta, double exxd, double ezzd, double exz, doub
   eta_strong = eta_mat1*V_dam + eta_mat0*(1-V_dam);   // Weak and Strong reversed compared to gamma0
   eta_weak =  1/(V_dam/eta_mat1 + (1-V_dam)/eta_mat0); 
 
+  //fprintf(stderr, "%f %f \n", eta_strong, eta_weak);
+
   //eta_s[c1] = eta_strong;
   //aniso_factor_s[c1] = WR; //eta_strong/eta_weak; /CLZ pour debugguer
   *delta = eta_strong/eta_weak; 
+  //fprintf(stderr, "%f \n", *delta);
 
 
 }
