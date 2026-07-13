@@ -752,7 +752,6 @@ void UpdateAnisoFactor( grid *mesh, mat_prop *materials, params *model, scale *s
 
       // First - initialize to 0
       mesh->aniso_factor_n[c0] = 0.0;
-      fprintf(stderr, "\n %f\n", mesh->aniso_factor_n[c0]);
 
       // Compute only if below free surface
       if ( mesh->BCp.type[c0] != 30 && mesh->BCp.type[c0] != 31) {
@@ -775,16 +774,14 @@ void UpdateAnisoFactor( grid *mesh, mat_prop *materials, params *model, scale *s
             if (materials->ani_fstrain[p]>0 && materials->ani_fstrain[p]!=4) mesh->aniso_factor_n[c0] += mesh->phase_perc_n[p][c0] * 1.0/AnisoFactorEvolv( mesh->FS_AR_n[c0], materials->ani_fac_max[p], materials->ani_fstrain[p], materials->aniso_delta_fn[p], mesh->d_n[c0], materials->aniso_d_threshold[p], materials->aniso_d_decay[p], mesh->aniso_delta_n[c0] );
             if (materials->ani_fstrain[p] == 4 ) {
               AnisotropicDamage(&delta, mesh->exxd[c0], mesh->ezzd[c0], mesh->exz_n[c0], mesh->sxxd[c0], mesh->szzd[c0], mesh->sxz_n[c0]);
-              fprintf(stderr, "%f\n", mesh->aniso_factor_n[c0]);
               mesh->aniso_factor_n[c0] += mesh->phase_perc_n[p][c0] * 1.0/delta;
-              fprintf(stderr, "%f %f %f\n", delta, mesh->phase_perc_n[p][c0], 1.0/mesh->aniso_factor_n[c0]);
 
             }
           }
           // Geometric
           if (average == 2) {
             if (materials->ani_fstrain[p]==0) mesh->aniso_factor_n[c0] += mesh->phase_perc_n[p][c0] * log(materials->aniso_factor[p]);
-            if (materials->ani_fstrain[p]!=0) mesh->aniso_factor_n[c0] += mesh->phase_perc_n[p][c0] * log(AnisoFactorEvolv( mesh->FS_AR_n[c0], materials->ani_fac_max[p], materials->ani_fstrain[p], materials->aniso_delta_fn[p], mesh->d_n[c0], materials->aniso_d_threshold[p], materials->aniso_d_decay[p], mesh->aniso_delta_n[c0] ));
+            if (materials->ani_fstrain[p]>0 && materials->ani_fstrain[p]!=4) mesh->aniso_factor_n[c0] += mesh->phase_perc_n[p][c0] * log(AnisoFactorEvolv( mesh->FS_AR_n[c0], materials->ani_fac_max[p], materials->ani_fstrain[p], materials->aniso_delta_fn[p], mesh->d_n[c0], materials->aniso_d_threshold[p], materials->aniso_d_decay[p], mesh->aniso_delta_n[c0] ));
             if (materials->ani_fstrain[p] == 4 ) {
               AnisotropicDamage(&delta, mesh->exxd[c0], mesh->ezzd[c0], mesh->exz_n[c0], mesh->sxxd[c0], mesh->szzd[c0], mesh->sxz_n[c0]);
               mesh->aniso_factor_n[c0] += mesh->phase_perc_n[p][c0] * log(delta);
@@ -849,17 +846,29 @@ void UpdateAnisoFactor( grid *mesh, mat_prop *materials, params *model, scale *s
           // Arithmetic
           if (average == 0) {
             if (materials->ani_fstrain[p]==0) mesh->aniso_factor_s[c1] += mesh->phase_perc_s[p][c1] * materials->aniso_factor[p];
-            if (materials->ani_fstrain[p]!=0) mesh->aniso_factor_s[c1] += mesh->phase_perc_s[p][c1] * AnisoFactorEvolv( mesh->FS_AR_s[c1], materials->ani_fac_max[p], materials->ani_fstrain[p], materials->aniso_delta_fn[p], d_at_vertex, materials->aniso_d_threshold[p], materials->aniso_d_decay[p], mesh->aniso_delta_s[c1] );
+            if (materials->ani_fstrain[p]>0 && materials->ani_fstrain[p]!=4) mesh->aniso_factor_s[c1] += mesh->phase_perc_s[p][c1] * AnisoFactorEvolv( mesh->FS_AR_s[c1], materials->ani_fac_max[p], materials->ani_fstrain[p], materials->aniso_delta_fn[p], d_at_vertex, materials->aniso_d_threshold[p], materials->aniso_d_decay[p], mesh->aniso_delta_s[c1] );
+            if (materials->ani_fstrain[p] == 4 ) {
+              AnisotropicDamage(&delta, mesh->exxd_s[c0], mesh->ezzd_s[c0], mesh->exz[c0], mesh->sxxd_s[c0], mesh->szzd_s[c0], mesh->sxz[c0]);
+              mesh->aniso_factor_n[c0] += mesh->phase_perc_n[p][c0] * delta;
+            }
           }
           // Harmonic
           if (average == 1) {
             if (materials->ani_fstrain[p]==0) mesh->aniso_factor_s[c1] += mesh->phase_perc_s[p][c1] *  1.0/materials->aniso_factor[p];
-            if (materials->ani_fstrain[p]!=0) mesh->aniso_factor_s[c1] += mesh->phase_perc_s[p][c1] *  1.0/AnisoFactorEvolv( mesh->FS_AR_s[c1], materials->ani_fac_max[p], materials->ani_fstrain[p], materials->aniso_delta_fn[p], d_at_vertex, materials->aniso_d_threshold[p], materials->aniso_d_decay[p], mesh->aniso_delta_s[c1] );
+            if (materials->ani_fstrain[p]>0 && materials->ani_fstrain[p]!=4) mesh->aniso_factor_s[c1] += mesh->phase_perc_s[p][c1] *  1.0/AnisoFactorEvolv( mesh->FS_AR_s[c1], materials->ani_fac_max[p], materials->ani_fstrain[p], materials->aniso_delta_fn[p], d_at_vertex, materials->aniso_d_threshold[p], materials->aniso_d_decay[p], mesh->aniso_delta_s[c1] );
+            if (materials->ani_fstrain[p] == 4 ) {
+              AnisotropicDamage(&delta, mesh->exxd_s[c0], mesh->ezzd_s[c0], mesh->exz[c0], mesh->sxxd_s[c0], mesh->szzd_s[c0], mesh->sxz[c0]);
+              mesh->aniso_factor_n[c0] += mesh->phase_perc_n[p][c0] *  1.0/delta;
+            }
           }
           // Geometric
           if (average == 2) {
             if (materials->ani_fstrain[p]==0) mesh->aniso_factor_s[c1] += mesh->phase_perc_s[p][c1] *  log(materials->aniso_factor[p]);
-            if (materials->ani_fstrain[p]!=0) mesh->aniso_factor_s[c1] += mesh->phase_perc_s[p][c1] *  log(AnisoFactorEvolv( mesh->FS_AR_s[c1], materials->ani_fac_max[p], materials->ani_fstrain[p], materials->aniso_delta_fn[p], d_at_vertex, materials->aniso_d_threshold[p], materials->aniso_d_decay[p], mesh->aniso_delta_s[c1] ));
+            if (materials->ani_fstrain[p]>0 && materials->ani_fstrain[p]!=4) mesh->aniso_factor_s[c1] += mesh->phase_perc_s[p][c1] *  log(AnisoFactorEvolv( mesh->FS_AR_s[c1], materials->ani_fac_max[p], materials->ani_fstrain[p], materials->aniso_delta_fn[p], d_at_vertex, materials->aniso_d_threshold[p], materials->aniso_d_decay[p], mesh->aniso_delta_s[c1] ));
+            if (materials->ani_fstrain[p] == 4 ) {
+              AnisotropicDamage(&delta, mesh->exxd_s[c0], mesh->ezzd_s[c0], mesh->exz[c0], mesh->sxxd_s[c0], mesh->szzd_s[c0], mesh->sxz[c0]);
+              mesh->aniso_factor_n[c0] += mesh->phase_perc_n[p][c0] *  log(delta);
+            }          
           }
 
         }
