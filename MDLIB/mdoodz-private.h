@@ -443,7 +443,7 @@ double          DeltaRelaxationTau( double T_scaled, double L_relax_scaled, doub
 // in MDLIB/AnisotropyRoutines.c. Wired into mat_prop::aniso_delta_fn_inv by
 // ReadDataAnisotropy() in MDLIB/FlowLaws.c.
 double          aniso_delta_inv_hansen( double delta );
-void            AnisotropicDamage(double* delta, double exxd, double ezzd, double exz, double sxxd, double szzd, double sxz);
+void            AnisotropicDamage(double* delta, double* dam_Apwl, double exxd, double ezzd, double exz, double sxxd, double szzd, double sxz);
 double          DamagedVolume(double x);
 
 // Advection
@@ -635,7 +635,7 @@ void            DerivativesOnTheFly_s( double*, double*, double*, double*, doubl
 void            ViscosityDerivatives(grid *, mat_prop *, params *, scale *);
 void            EffectiveStrainRate( double*, double*, double*, double, double, double, double, double, double, double, double d2, double, double, int );
 double          ViscosityConcise(int, double, double, double, double, double, double, double, double, double, double, double, double, mat_prop *, params *, scale *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double, double, double, double, double, double, double *, double *, double *, double *, double, double, double *, double *, double *, double *, double *, double *, int, int, int, int);
-double          ViscosityConciseAniso(int, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, mat_prop *, params *, scale *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double, double, double, double, double, double, double *, double *, double *, double *, double, double, double *, double *, double *, double *, double *, double *, int, int, int, int);
+double          ViscosityConciseAniso(int, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, mat_prop *, params *, scale *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double *, double, double, double, double, double, double, double *, double *, double *, double *, double, double, double *, double *, double *, double *, double *, double *, int, int, int, int);
 void            HuetAveragingModel( double *, double *, double *, int, double, double, int, double, double, mat_prop*);
 double          ItpRho1D( double, params*, int );
 double          Interpolate2Ddata( double, double, double, double, double, double, int, int, double* );
