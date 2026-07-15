@@ -9,6 +9,7 @@ writer_markers  = 0   / pour sortir les infos des marqueurs
 writer_debug    = 0
 writer_energies = 0   / integrales d'energies
 gnuplot_log_res = 0   
+writer_subfolder = ./outputs
 
 /**** SCALES ****/
 eta = 1
@@ -19,7 +20,7 @@ T   = 1
 /**** SPACE ****/
 Nx      = 101
 Nz      = 101
-Nt      = 1
+Nt      = 10
 xmin    = -5.000000e-1
 zmin    = -5.000000e-1
 xmax    =  5.000000e-1
@@ -61,6 +62,7 @@ max_eta      = 1e6
 /**** SWITCHES ****/
 anisotropy        = 1
 elastic           = 1  / beta = 1/K
+plastic           = 0
 free_surface      = 0  / pour les modeles lithospheriques
 free_surface_stab = 0
 finite_strain     = 1  / pas toucher
@@ -73,7 +75,7 @@ periodic_x      = 1    / CL periodique. automatiQM à 1 si SS
 pure_shear_ALE  = 1    / pour le PS
 bkg_strain_rate = 1    / cisaillement aux CL. 1 pour extension en PS
 user0           = 1    / temperature [°C]       / doubles. Lien vers le setup en c. jusqu'à 10
-user1           = 0.1  / inclusion radius [m]
+user1           = 0.02  / inclusion radius [m]
 user2           = 0
 user3           = 0
 
@@ -107,6 +109,8 @@ npwl         = 1.0
 Qpwl         = 0
 aniso_factor = 5.0 
 aniso_angle  = 90.0
+ani_fstrain  = 4            / CLZ 
+ani_fac_max  = 1000.0       / CLZ
 
 /**** PHASE 2 ****/
 ID   = 1
