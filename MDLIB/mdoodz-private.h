@@ -132,6 +132,7 @@ typedef struct {
   double *phi0_s, *d0_s, *T_s, *P_s;
   // For anisotropy
   double *FS_AR_n, *FS_AR_s, *aniso_factor_n, *aniso_factor_s;
+  double *dam_Apwl_n, *dam_Apwl_s;
   // ani_fstrain == 3: relaxed δ P2G'd from the marker aniso_delta field
   // (centroid + vertex), mirrors FS_AR_n / FS_AR_s. Consumed by
   // AnisoFactorEvolv's ani_fstrain==3 arm.

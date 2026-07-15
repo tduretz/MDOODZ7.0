@@ -699,6 +699,8 @@ grid GridAlloc(params *model) {
     for (int k=0; k<(Nx - 1) * (Nz - 1); k++) mesh.aniso_factor_n[k] = 1.0;
     for (int k=0; k<(Nx - 0) * (Nz - 0); k++) mesh.aniso_factor_s[k] = 1.0;
   }
+  if (model->anisotropy == 1) mesh.dam_Apwl_n = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double)); 
+  if (model->anisotropy == 1) mesh.dam_Apwl_s = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double)); 
   // Compressibility
   mesh.p0_n    = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
   mesh.p0_s    = DoodzCalloc((Nx) * (Nz), sizeof(double));
@@ -1037,6 +1039,8 @@ void GridFree(grid *mesh, params *model) {
     if ( model->anisotropy == 1 ) DoodzFree(mesh->aniso_delta_s);
     if ( model->anisotropy == 1 ) DoodzFree(mesh->aniso_factor_n);
     if ( model->anisotropy == 1 ) DoodzFree(mesh->aniso_factor_s);
+    if ( model->anisotropy == 1 ) DoodzFree(mesh->dam_Apwl_n);
+    if ( model->anisotropy == 1 ) DoodzFree(mesh->dam_Apwl_s);
     // Compressibility
     DoodzFree(mesh->p0_n);
     DoodzFree(mesh->p0_s);
