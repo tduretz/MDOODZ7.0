@@ -17,8 +17,8 @@ V   = 1
 T   = 1
 
 /**** SPACE ****/
-Nx      = 401
-Nz      = 401
+Nx      = 101
+Nz      = 101
 Nt      = 1
 xmin    = -5.000000e-1
 zmin    = -5.000000e-1
@@ -60,7 +60,7 @@ max_eta      = 1e6
 
 /**** SWITCHES ****/
 anisotropy        = 1
-elastic           = 0  / beta = 1/K
+elastic           = 1  / beta = 1/K
 free_surface      = 0  / pour les modeles lithospheriques
 free_surface_stab = 0
 finite_strain     = 1  / pas toucher
@@ -96,8 +96,8 @@ phi          = 30
 Slim         = 5e90              / stress max
 alp          = 10.0e-6               / expensivité
 bet          = 1e-11                / compresibilité
-cstv         = 1             / constant visc law - tous se mettent en serie (sauf viscoplasticité)
-pwlv         = 0            / disloc. creep (power-law)
+cstv         = 0             / constant visc law - tous se mettent en serie (sauf viscoplasticité)
+pwlv         = 1            / disloc. creep (power-law)
 linv         = 0             / diff. creep
 gbsv         = 0             / grain boundary sliding
 expv         = 0             / peierls creep ( Kameyama)
