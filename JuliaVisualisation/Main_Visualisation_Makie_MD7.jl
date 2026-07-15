@@ -14,7 +14,7 @@ const cm_y = y*100.
 @views function main()
 
     # Set the path to your files
-    path ="/Users/tduretz/REPO/MDOODZ7.0/MDLIB/"
+    path ="/home/lilou/librairies/MDOODZ7.0/MDLIB/outputs/"
 
     # File numbers
     file_start = 1
@@ -25,7 +25,7 @@ const cm_y = y*100.
     # field = :Phases
     # field = :Cohesion
     # field = :Density
-    # field = :Viscosity  
+      field = :Viscosity  
     # field = :PlasticStrainrate
     # field = :Stress
     # field = :σxx
@@ -45,7 +45,7 @@ const cm_y = y*100.
     # field = :TimeSeries
     # field = :EffectiveFrictionTime
     # field = :ChristmasTree
-    field = :PTtime
+    # field = :PTtime
     # field = :GPE
 
     # Define Tuple for enlargment window
@@ -76,7 +76,7 @@ const cm_y = y*100.
     vel_arrow   = 5
     vel_scale   = 20
     vel_step    = 8
-    nap         = 0.1    # pause for animation 
+    nap         = 2    # pause for animation 
     resol       = 300    # resolution
     ar          = 1.2    # aspect ratio for Makie
     mov_name    = "$(path)/_$(field)/$(field)"  # Name of the movie
@@ -269,7 +269,7 @@ const cm_y = y*100.
 
         if field==:Viscosity
             ax1 = Axis(f[1, 1], title = L"$\eta$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
-            hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(ηc), colormap = (:turbo, α_heatmap))
+            hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(ηc), colormap = (:turbo, α_heatmap), colorrange=(0,0.3))
             AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, group_phases, Δ, Mak)                
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
             Colorbar(f[1, 2], hm, label = L"$\eta$ [Pa.s]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
