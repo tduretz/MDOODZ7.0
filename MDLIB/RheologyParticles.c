@@ -1783,6 +1783,27 @@ firstprivate( model )
     InterpVerticesToCentroidsDouble( dudz_n, dudz_s, mesh, model );
     InterpVerticesToCentroidsDouble( dvdx_n, dvdx_s, mesh, model );
 
+    // Rotate director directly on particles
+    if ( model->anisotropy == 1 && model->advection==1) {
+
+    #pragma omp parallel for shared( particles, mesh ) firstprivate( dt, model ) private( k )
+        for ( k=0; k<particles->Nb_part; k++ ) {
+            if (particles->phase[k] != -1) {
+                double nx = particles->nx[k];
+                double nz = particles->nz[k];
+                double mdudx =  Centers2Particle( particles, dudx_n,     mesh->xvz_coord, mesh->zvx_coord, mesh->Nx-1, mesh->Nz-1, mesh->BCp.type, mesh->dx, mesh->dz, k, model->periodic_x );
+                double mdudz = Vertices2Particle( particles, dudz_s,     mesh->xg_coord,  mesh->zg_coord,  mesh->Nx-0, mesh->Nz-0, mesh->BCg.type, mesh->dx, mesh->dz, k );
+                double mdvdz =  Centers2Particle( particles, dvdz_n,     mesh->xvz_coord, mesh->zvx_coord, mesh->Nx-1, mesh->Nz-1, mesh->BCp.type, mesh->dx, mesh->dz, k, model->periodic_x );
+                double mdvdx = Vertices2Particle( particles, dvdx_s,     mesh->xg_coord,  mesh->zg_coord,  mesh->Nx-0, mesh->Nz-0, mesh->BCg.type, mesh->dx, mesh->dz, k );
+                particles->nx[k] += dt*(-(mdudx - mdvdz)*nx*nz - mdvdx*nz*nz + mdudz*nx*nx)*nz;
+                particles->nz[k] += dt*( (mdudx - mdvdz)*nx*nz + mdvdx*nz*nz - mdudz*nx*nx)*nx;
+                double norm = sqrt( pow(particles->nx[k],2) + pow(particles->nz[k],2));
+                particles->nx[k] /= norm;
+                particles->nz[k] /= norm;
+            }
+        }
+    }
+
     // Marker stress update
     if ( model->elastic==1 ) {
 
@@ -1905,21 +1926,6 @@ firstprivate( model )
 
             phase = particles->phase[k];
 
-            if (phase != -1  && model->advection==1) {
-
-                double nx = particles->nx[k];
-                double nz = particles->nz[k];
-                double mdudx =  Centers2Particle( particles, dudx_n,     mesh->xvz_coord, mesh->zvx_coord, mesh->Nx-1, mesh->Nz-1, mesh->BCp.type, mesh->dx, mesh->dz, k, model->periodic_x );
-                double mdudz = Vertices2Particle( particles, dudz_s,     mesh->xg_coord,  mesh->zg_coord,  mesh->Nx-0, mesh->Nz-0, mesh->BCg.type, mesh->dx, mesh->dz, k );
-                double mdvdz =  Centers2Particle( particles, dvdz_n,     mesh->xvz_coord, mesh->zvx_coord, mesh->Nx-1, mesh->Nz-1, mesh->BCp.type, mesh->dx, mesh->dz, k, model->periodic_x );
-                double mdvdx = Vertices2Particle( particles, dvdx_s,     mesh->xg_coord,  mesh->zg_coord,  mesh->Nx-0, mesh->Nz-0, mesh->BCg.type, mesh->dx, mesh->dz, k );
-                particles->nx[k] += dt*(-(mdudx - mdvdz)*nx*nz - mdvdx*nz*nz + mdudz*nx*nx)*nz;
-                particles->nz[k] += dt*( (mdudx - mdvdz)*nx*nz + mdvdx*nz*nz - mdudz*nx*nx)*nx;
-                double norm = sqrt( pow(particles->nx[k],2) + pow(particles->nz[k],2));
-
-                particles->nx[k] /= norm;
-                particles->nz[k] /= norm;
-            }
             if (phase != -1 && materials->ani_fstrain[phase] == 4 ){
                     
                 // Compute eigenvalues and eigenvectors
