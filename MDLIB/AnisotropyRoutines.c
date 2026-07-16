@@ -278,7 +278,7 @@ void Solve2x2(double *x1, double *x2, double f1, double f2, double a11, double a
 /*--------------------------------------------------------------------------------------------------------------------*/
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
-// CLZ dam_Apwl != 1 if aniso_factor == 4
+// dam_Apwl != 1 only if aniso_factor == 4
 double ViscosityConciseAniso( int phase, double lxlz, double lx2, double angle, double ani_fac, double G, double T, double P, double d0, double phi, double X0, double Exx, double Ezz, double Exz, double Txx0, double Tzz0, double Txz0, double dam_Apwl, mat_prop* materials, params *model, scale *scaling, double *Txx, double *Tzz, double *Txz, double* eta_vep, double* Eii_el, double* Eii_pl, double* Eii_pwl, double* Eii_exp, double* Eii_lin, double* Eii_gbs, double* Eii_cst, double *d, double strain_acc, double dil, double fric, double Coh, double P0, double T0,  double *X1, double *OverS, double *Pcorr, double *rho, double beta, double div, double *div_el, double *div_pl, double *div_r, double *Wtot, double *Wel, double *Wdiss, int post_process, int centroid, int final_update, int index ) {
     // !!!!!!!!!!!!!!!!!!!!!!!!
     // ACTUNG FOR GSE:: d is now d0 and d1 is now d
@@ -329,8 +329,13 @@ double ViscosityConciseAniso( int phase, double lxlz, double lx2, double angle, 
     if ( T< zeroC/scaling->T        ) T = zeroC/scaling->T;
      // Precomputations
     if ( dislocation == 1 ) {
+      if ( materials->ani_fstrain[phase] == 4){
       B_pwl = pre_factor * F_pwl * pow(dam_Apwl*A_pwl,-1.0/n_pwl) * exp( (Q_pwl + P*V_pwl)/R/n_pwl/T ) * pow(d0, m_pwl/n_pwl) * pow(f_pwl, -r_pwl/n_pwl) * exp(-a_pwl*phi/n_pwl);
-      //B_pwl = pre_factor * F_pwl * pow(dam_Apwl*A_pwl,-1.0/n_pwl) * exp( (Q_pwl + P*V_pwl)/R/n_pwl/T ) * pow(d0, m_pwl/n_pwl) * pow(f_pwl, -r_pwl/n_pwl) * exp(-a_pwl*phi/n_pwl);
+      }
+      else{
+      B_pwl = pre_factor * F_pwl * pow(A_pwl,-1.0/n_pwl) * exp( (Q_pwl + P*V_pwl)/R/n_pwl/T ) * pow(d0, m_pwl/n_pwl) * pow(f_pwl, -r_pwl/n_pwl) * exp(-a_pwl*phi/n_pwl);
+      }
+
       C_pwl   = pow(2.0*B_pwl, -n_pwl);
     }
 
@@ -815,8 +820,6 @@ void UpdateAnisoFactor( grid *mesh, mat_prop *materials, params *model, scale *s
           mesh->dam_Apwl_n[c0] = 1.0;
         }
 
-        //fprintf(stderr, " l 822 dam_Apwl_n = %f \n",mesh->dam_Apwl_n[c0]); // CLZ
-        
       }
     }
   }
@@ -1355,115 +1358,9 @@ firstprivate( model )
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-// CLZ anisotropic damage from Tommasi et al. 2026
-// 1st step : isotropic damage
-//void AnisotropicDamage(grid *mesh, params *model, markers* particles){
-//
-// LOG_INFO("OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO");
-// LOG_INFO("OOOOOOOOOO   In anisotropic damage    OOOOOOOOOOO");
-// LOG_INFO("OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO");
-//
-//  
-//  int p, k, l, Nx, Nz, Ncx, Ncz, c0, c1; // for navigation on grid
-//  double WR, Pi_WR, V_dam, eta_strong, eta_weak; // variables
-//  double WR_th, R, Tc, n, AE, gamma0_i, gamma0_dam, lamb; //parameters
-//  double eta_mat0_d, eta_mat1_d, eta_mat0, eta_mat1;  // reference intial and damaged viscosities
-//
-//
-//  // CLZ TODO prperly set those parameters as input
-//  WR_th = 0.7;//2.55e-06;     // adimensionnalized value chosen ad-hoc
-//  R = 8.31;
-//  Tc = 1000;
-//  n = 1.0;
-//  AE = 370e3;
-//  gamma0_i = 1e-3;
-//  gamma0_dam = 0.007;
-//  lamb = AE/(R*Tc);
-//
-//  eta_mat0_d   = 1.0/(gamma0_i * exp(-lamb));    // viscosity of material before damage
-//  eta_mat1_d   = 1.0/(gamma0_dam * exp(-lamb));  // viscosity of damaged material
-//
-//  eta_mat0 = 1.0; // eta characteristic = eta0_d
-//  eta_mat1 = eta_mat1_d/eta_mat0_d;
-//
-//
-//  Nx = mesh->Nx;
-//  Nz = mesh->Nz;
-//  Ncx = Nx-1;
-//  Ncz = Nz-1;
-//
-//  // Calculate cell centers viscous isotropic damage
-//  for ( l=0; l<Ncz; l++ ) {
-//    for ( k=0; k<Ncx; k++ ) {
-//
-//      // Cell center index
-//      c0 = k  + l*(Ncx);
-//
-//      // Compute only if below free surface
-//      if ( mesh->BCp.type[c0] != 30 && mesh->BCp.type[c0] != 31) {
-//
-//        // Loop on phases
-//        for ( p=0; p<model->Nb_phases; p++) {
-//
-//          // TODO Harmonic average over phases + inversion (cf. updateAnisotropyFactor)
-//\
-//          WR = sqrt(mesh->exxd[c0]*mesh->sxxd[c0] + mesh->ezzd[c0]*mesh->szzd[c0] + 2.0*mesh->exz_n[c0]*mesh->sxz_n[c0]);
-//          Pi_WR = WR_th/(1.0e-20 + WR); 
-//
-//          V_dam = DamagedVolume(Pi_WR);
-//
-//          eta_strong = eta_mat1*V_dam + eta_mat0*(1-V_dam);   // Weak and Strong reversed compared to gamma0
-//          eta_weak =  1/(V_dam/eta_mat1 + (1-V_dam)/eta_mat0);
-//
-//          // mesh->eta_n[c0] = eta_strong; // CLZ it is more complicated, to be solved later
-//         // mesh->aniso_factor_n[c0] = WR; //eta_strong/eta_weak;
-//          mesh->aniso_factor_n[c0] = eta_strong/eta_weak;
-//          //printf("eta_strong, eta_weak, V_dam and new delta %f %f %f %f \n",eta_strong, eta_weak,  V_dam, mesh->aniso_factor_n[c0]);
-//
-//          }
-//        }
-//      }
-//    }
-//
-//
-//  // Calculate vertices viscous isotropic damage
-//  for ( l=0; l<Nz; l++ ) {
-//    for ( k=0; k<Nx; k++ ) {
-//
-//      // Vertex index
-//      c1 = k + l*Nx;
-//
-//      // Compute only if below free surface
-//      if ( mesh->BCg.type[c1] != 30 ) {
-//
-//        // Loop on phases
-//        for ( p=0; p<model->Nb_phases; p++) {
-//
-//          // TODO Harmonic average over phases + inversion
-//
-//          WR = sqrt(mesh->exxd_s[c1]*mesh->sxxd_s[c1] + mesh->ezzd_s[c1]*mesh->szzd_s[c1] + 2.0*mesh->exz[c1]*mesh->sxz[c1]);
-//          Pi_WR = WR_th/(1.0e-20 + WR); 
-//
-//          V_dam = DamagedVolume(Pi_WR);
-//
-//          eta_strong = eta_mat1*V_dam + eta_mat0*(1-V_dam);   // Weak and Strong reversed compared to gamma0
-//          eta_weak =  1/(V_dam/eta_mat1 + (1-V_dam)/eta_mat0); 
-//
-//          //mesh->eta_s[c1] = eta_strong; 
-//          //mesh->aniso_factor_s[c1] = WR; //eta_strong/eta_weak; /CLZ pour debugguer
-//          mesh->aniso_factor_s[c1] = eta_strong/eta_weak; 
-//          //printf("V_dam and new delta %f %f %f %f %f \n",WR, eta_strong, eta_weak,  V_dam, mesh->aniso_factor_s[c1]);
-//          
-//          }
-//
-//        }
-//      }
-//    }
-//  
-//}
 
-// CLZ for one cell (node or staggered) : compute new anisotropic parameters in evolving anisotropy (anisotropic damage from Tommasi et al. 2026)
-// output = delta
+// if aniso_factor[p]==4 for this one cell (node or staggered) : compute new anisotropic parameters in evolving anisotropy (from Tommasi et al. 2026)
+// output = delta and dam_Apwl i.e. anisotropy and viscous damage
 void AnisotropicDamage(double* delta, double* dam_Apwl, double exxd, double ezzd, double exz, double sxxd, double szzd, double sxz){
 
   int p, k, l, Nx, Nz, Ncx, Ncz, c0, c1; // for navigation on grid
@@ -1472,7 +1369,7 @@ void AnisotropicDamage(double* delta, double* dam_Apwl, double exxd, double ezzd
   double eta_mat0_d, eta_mat1_d, eta_mat0, eta_mat1;  // reference intial and damaged viscosities
 
 
-  // CLZ TODO prperly set those parameters as input
+  // CLZ TODO properly set those parameters as input
   WR_th = 0.7;//2.55e-06;     // adimensionnalized value chosen ad-hoc
   R = 8.31;
   Tc = 1000;
@@ -1496,18 +1393,8 @@ void AnisotropicDamage(double* delta, double* dam_Apwl, double exxd, double ezzd
   eta_strong = eta_mat1*V_dam + eta_mat0*(1-V_dam);   // Weak and Strong reversed compared to gamma0
   eta_weak =  1/(V_dam/eta_mat1 + (1-V_dam)/eta_mat0); 
 
-  //fprintf(stderr, "%f %f \n", eta_strong, eta_weak);
-
-  //eta_s[c1] = eta_strong;
-  //aniso_factor_s[c1] = WR; //eta_strong/eta_weak; /CLZ pour debugguer
-
-
   *delta = eta_strong/eta_weak; 
-  *dam_Apwl = eta_strong; // CLZ will be used as multiplicative factor
-
-
-  //fprintf(stderr, "%f %f %f \n",eta_strong, eta_mat0, *dam_Apwl);
-
+  *dam_Apwl = eta_strong; // will be used as multiplicative factor
 
 }
 

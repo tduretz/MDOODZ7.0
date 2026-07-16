@@ -1899,14 +1899,12 @@ firstprivate( model )
 
         // Rotate director directly on particles
     if ( model->anisotropy == 1) {
-               fprintf(stderr, "Just before orientation update    ");// CLZ
 
 #pragma omp parallel for shared( particles, mesh ) firstprivate( dt, model ) private( k )
         for ( k=0; k<particles->Nb_part; k++ ) {
-               fprintf(stderr, "l 1906    \n");// CLZ
 
             phase = particles->phase[k];
-            fprintf(stderr, "l 1909  phase %d  \n", phase);// CLZ
+
             if (phase != -1  && model->advection==1) {
 
                 double nx = particles->nx[k];

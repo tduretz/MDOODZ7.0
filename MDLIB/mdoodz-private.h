@@ -46,7 +46,6 @@ typedef struct {
   // Both dimensionless → no scaling-loop entry (mirrors strain_pwl). Allocated
   // unconditionally (mirrors strain_pwl); only written for ani_fstrain==3 phases.
   double *aniso_delta, *aniso_delta_fs_prev;
-//  double *eta; // CLZ increment of viscosity due to weakening or hardening
 } markers;
 
 
