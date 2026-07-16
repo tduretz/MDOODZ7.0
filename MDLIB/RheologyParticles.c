@@ -1731,6 +1731,8 @@ void UpdateParticleStress( grid* mesh, markers* particles, params* model, mat_pr
     double angle, tzz, txx, txz, dx, dz, dt;
     double *txz_n, *txx_s, *tzz_s, *dtxxg0, *dtzzg0, *dtxzg0;
     int    cent=1, vert=0, prop=1, interp=0;
+    int phase;
+    double lambda1, lambda2, v1[2], v2[2], v_max[2], theta; // Eigenvalues and eigenvactors (used if aniso_factor == 4)
 
     Nx = model->Nx;
     Nz = model->Nz;
@@ -1780,27 +1782,6 @@ firstprivate( model )
     InterpCentroidsToVerticesDouble( dvdz_n, dvdz_s, mesh, model );
     InterpVerticesToCentroidsDouble( dudz_n, dudz_s, mesh, model );
     InterpVerticesToCentroidsDouble( dvdx_n, dvdx_s, mesh, model );
-
-// Rotate director directly on particles
-    if ( model->anisotropy == 1 && model->advection==1) {
-
-#pragma omp parallel for shared( particles, mesh ) firstprivate( dt, model ) private( k )
-        for ( k=0; k<particles->Nb_part; k++ ) {
-            if (particles->phase[k] != -1) {
-                double nx = particles->nx[k];
-                double nz = particles->nz[k];
-                double mdudx =  Centers2Particle( particles, dudx_n,     mesh->xvz_coord, mesh->zvx_coord, mesh->Nx-1, mesh->Nz-1, mesh->BCp.type, mesh->dx, mesh->dz, k, model->periodic_x );
-                double mdudz = Vertices2Particle( particles, dudz_s,     mesh->xg_coord,  mesh->zg_coord,  mesh->Nx-0, mesh->Nz-0, mesh->BCg.type, mesh->dx, mesh->dz, k );
-                double mdvdz =  Centers2Particle( particles, dvdz_n,     mesh->xvz_coord, mesh->zvx_coord, mesh->Nx-1, mesh->Nz-1, mesh->BCp.type, mesh->dx, mesh->dz, k, model->periodic_x );
-                double mdvdx = Vertices2Particle( particles, dvdx_s,     mesh->xg_coord,  mesh->zg_coord,  mesh->Nx-0, mesh->Nz-0, mesh->BCg.type, mesh->dx, mesh->dz, k );
-                particles->nx[k] += dt*(-(mdudx - mdvdz)*nx*nz - mdvdx*nz*nz + mdudz*nx*nx)*nz;
-                particles->nz[k] += dt*( (mdudx - mdvdz)*nx*nz + mdvdx*nz*nz - mdudz*nx*nx)*nx;
-                double norm = sqrt( pow(particles->nx[k],2) + pow(particles->nz[k],2));
-                particles->nx[k] /= norm;
-                particles->nz[k] /= norm;
-            }
-        }
-    }
 
     // Marker stress update
     if ( model->elastic==1 ) {
@@ -1915,6 +1896,48 @@ firstprivate( model )
             DoodzFree( dtxzmr );
             DoodzFree( etam   );
         }
+
+        // Rotate director directly on particles
+    if ( model->anisotropy == 1) {
+               fprintf(stderr, "Just before orientation update    ");// CLZ
+
+#pragma omp parallel for shared( particles, mesh ) firstprivate( dt, model ) private( k )
+        for ( k=0; k<particles->Nb_part; k++ ) {
+               fprintf(stderr, "l 1906    \n");// CLZ
+
+            phase = particles->phase[k];
+            fprintf(stderr, "l 1909  phase %d  \n", phase);// CLZ
+            if (phase != -1  && model->advection==1) {
+
+                double nx = particles->nx[k];
+                double nz = particles->nz[k];
+                double mdudx =  Centers2Particle( particles, dudx_n,     mesh->xvz_coord, mesh->zvx_coord, mesh->Nx-1, mesh->Nz-1, mesh->BCp.type, mesh->dx, mesh->dz, k, model->periodic_x );
+                double mdudz = Vertices2Particle( particles, dudz_s,     mesh->xg_coord,  mesh->zg_coord,  mesh->Nx-0, mesh->Nz-0, mesh->BCg.type, mesh->dx, mesh->dz, k );
+                double mdvdz =  Centers2Particle( particles, dvdz_n,     mesh->xvz_coord, mesh->zvx_coord, mesh->Nx-1, mesh->Nz-1, mesh->BCp.type, mesh->dx, mesh->dz, k, model->periodic_x );
+                double mdvdx = Vertices2Particle( particles, dvdx_s,     mesh->xg_coord,  mesh->zg_coord,  mesh->Nx-0, mesh->Nz-0, mesh->BCg.type, mesh->dx, mesh->dz, k );
+                particles->nx[k] += dt*(-(mdudx - mdvdz)*nx*nz - mdvdx*nz*nz + mdudz*nx*nx)*nz;
+                particles->nz[k] += dt*( (mdudx - mdvdz)*nx*nz + mdvdx*nz*nz - mdudz*nx*nx)*nx;
+                double norm = sqrt( pow(particles->nx[k],2) + pow(particles->nz[k],2));
+
+                particles->nx[k] /= norm;
+                particles->nz[k] /= norm;
+            }
+            if (phase != -1 && materials->ani_fstrain[phase] == 4 ){
+                    
+                // Compute eigenvalues and eigenvectors
+                eigen_2x2(particles->sxxd[k], particles->sxz[k], particles->szzd[k], &lambda1, &lambda2, v1, v2);
+
+                // v_max = v1 + v2 
+                v_max[0] = v1[0] + v2[0]; 
+                v_max[1] = v1[1] + v2[1]; 
+                theta = atan2(v_max[1], v_max[0]);
+                particles->nx[k] = cos(theta);
+                particles->nz[k] = sin(theta);
+
+            }
+
+        }
+    }
 
         if (model->subgrid_diffusion==0 || model->subgrid_diffusion==1){
 
@@ -2080,4 +2103,58 @@ void UpdateParticlePhase( grid* mesh, scale scaling, params* model, markers* par
 
     }
 
+}
+
+// Compute eigenvalues and eigenvectors of a 2x2 symmetric matrix
+// Matrix:
+// [ a  b ]
+// [ b  c ]
+// Eigenvalues: λ1, λ2 (λ1 >= λ2)
+// Eigenvectors: v1 (for λ1), v2 (for λ2)
+void eigen_2x2(double a, double b, double c, double *lambda1, double *lambda2, double v1[2], double v2[2]) {
+    // Compute trace and determinant
+    double trace = a + c;
+    double det = a * c - b * b;
+
+    // Eigenvalues: λ = (trace ± sqrt(trace^2 - 4*det)) / 2
+    double discriminant = trace * trace - 4.0 * det;
+    
+    if (discriminant < 0.0) {
+        // Matrix is not symmetric or numerical error
+        *lambda1 = a;
+        *lambda2 = c;
+        v1[0] = 1.0; v1[1] = 0.0;
+        v2[0] = 0.0; v2[1] = 1.0;
+        return;
+    }
+    double sqrt_discriminant = sqrt(discriminant);
+    *lambda1 = (trace + sqrt_discriminant) / 2.0;
+    *lambda2 = (trace - sqrt_discriminant) / 2.0;
+
+    // Eigenvector for λ1: (b, λ1 - a)
+    // Normalize the eigenvector
+    double norm;
+    if (fabs(b) > 1e-10) {
+        v1[0] = b;
+        v1[1] = *lambda1 - a;
+        norm = sqrt(v1[0] * v1[0] + v1[1] * v1[1]);
+        v1[0] /= norm;
+        v1[1] /= norm;
+    } else {
+        // If b is zero, the matrix is diagonal
+        v1[0] = 1.0;
+        v1[1] = 0.0;
+    }
+
+    // Eigenvector for λ2: (b, λ2 - a)
+    if (fabs(b) > 1e-10) {
+        v2[0] = b;
+        v2[1] = *lambda2 - a;
+        norm = sqrt(v2[0] * v2[0] + v2[1] * v2[1]);
+        v2[0] /= norm;
+        v2[1] /= norm;
+    } else {
+        v2[0] = 0.0;
+        v2[1] = 1.0;
+    }
 }

@@ -439,6 +439,7 @@ void            UpdateParticlePhase(grid *, scale, params *, markers *, mat_prop
 void            NonNewtonianViscosityGridAniso(grid *, mat_prop *, params *, Nparams, scale *, int);
 double          AnisoFactorEvolv( double FS_AR, double aniso_fac_max, int ani_fstrain, double (*aniso_delta_fn)(double FS_AR), double grain_size, double aniso_d_threshold, double aniso_d_decay, double relaxed_delta );
 double          DeltaRelaxationTau( double T_scaled, double L_relax_scaled, double strain_pwl, double R_scaled, scale scaling, double Q, double M0, double mu, double b, double drho_min, double drho_max, double eps_ref );
+void eigen_2x2(double a, double b, double c, double *lambda1, double *lambda2, double v1[2], double v2[2]);
 // Per-aniso_db analytic inverses of aniso_delta_fn (init-from-finite-strain).
 // Each returns γ_eff such that aniso_delta_fn(FS_AR(γ_eff)) == δ. Implemented
 // in MDLIB/AnisotropyRoutines.c. Wired into mat_prop::aniso_delta_fn_inv by
