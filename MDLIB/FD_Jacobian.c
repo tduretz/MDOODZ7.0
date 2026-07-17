@@ -45,7 +45,7 @@
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-void PhaseRheologyLoop_v1( int is_centroid, double sign, double denom, double Exx, double Ezz, double Exz, double P, double aniso_factor, double d0, double d1, double angle, double lx2, double lxlz, int c, double** vol,
+void PhaseRheologyLoop_v1( int is_centroid, double sign, double denom, double Exx, double Ezz, double Exz, double P, double aniso_factor, double dam_Apwl, double d0, double d1, double angle, double lx2, double lxlz, int c, double** vol,
                double* G, double* T, double* P0, double T0, double* gs0, double* phi0, double* X0, double* txx0, double* tzz0, double* txz0, double* beta, double* div,
                double* strain, double* dil, double* fric, double* C,
                params* model, mat_prop* materials, scale* scaling,
@@ -64,7 +64,7 @@ void PhaseRheologyLoop_v1( int is_centroid, double sign, double denom, double Ex
         if ( is_phase_active==true ) {
 
             if (model->anisotropy==0) ViscosityConcise(      p,                                 G[c], T[c], P, gs0[c], phi0[c], X0[c], Exx, Ezz, Exz, txx0[c], tzz0[c], txz0[c], materials, model, scaling, &txx1, &tzz1, &txz1, &eta_vep, &VEcoeff, &eII_el, &eII_pl, &eII_pwl, &eII_exp, &eII_lin, &eII_gbs, &eII_cst, &dnew, strain[c], dil[c], fric[c], C[c], P0[c], T0, &Xreac, &OverS, &Pcorr, &rho, beta[c], div[c], &div_el, &div_pl, &div_r, &Wtot, &Wel, &Wdiss, 0, is_centroid, 0, c );
-            if (model->anisotropy==1) ViscosityConciseAniso( p, lxlz, lx2, angle, aniso_factor, G[c], T[c], P, gs0[c], phi0[c], X0[c], Exx, Ezz, Exz, txx0[c], tzz0[c], txz0[c], 1.0,  materials, model, scaling, &txx1, &tzz1, &txz1, &eta_vep,           &eII_el, &eII_pl, &eII_pwl, &eII_exp, &eII_lin, &eII_gbs, &eII_cst, &dnew, strain[c], dil[c], fric[c], C[c], P0[c], T0, &Xreac, &OverS, &Pcorr, &rho, beta[c], div[c], &div_el, &div_pl, &div_r, &Wtot, &Wel, &Wdiss, 0, is_centroid, 0, c );
+            if (model->anisotropy==1) ViscosityConciseAniso( p, lxlz, lx2, angle, aniso_factor, G[c], T[c], P, gs0[c], phi0[c], X0[c], Exx, Ezz, Exz, txx0[c], tzz0[c], txz0[c], dam_Apwl,  materials, model, scaling, &txx1, &tzz1, &txz1, &eta_vep,           &eII_el, &eII_pl, &eII_pwl, &eII_exp, &eII_lin, &eII_gbs, &eII_cst, &dnew, strain[c], dil[c], fric[c], C[c], P0[c], T0, &Xreac, &OverS, &Pcorr, &rho, beta[c], div[c], &div_el, &div_pl, &div_r, &Wtot, &Wel, &Wdiss, 0, is_centroid, 0, c );
             if ( model->eta_average == ARITHMETIC) {
                 *detadE      += sign*vol[p][c] * eta_vep/(denom); 
             }
@@ -107,7 +107,7 @@ void DerivativesOnTheFly_n( double* detadexx, double* detadezz, double* detadgxz
     //----------------------------------------------------------------------------------------------------------------------------------------------------//
 
     // 1) Positive perturbation in Exx
-    PhaseRheologyLoop_v1(  1, 1.0, 2.0*pert_xx, Exx_ref+pert_xx, Ezz_ref, Exz_ref, P_ref, aniso_factor, d1, d2, angle, lx2, lxlz, c0, mesh->phase_perc_n,
+    PhaseRheologyLoop_v1(  1, 1.0, 2.0*pert_xx, Exx_ref+pert_xx, Ezz_ref, Exz_ref, P_ref, aniso_factor, mesh->dam_Apwl_n[c0], d1, d2, angle, lx2, lxlz, c0, mesh->phase_perc_n,
                         mesh->mu_n, mesh->T, mesh->p0_n, mesh->T0_n[c0],
                         mesh->d0_n, mesh->phi0_n, mesh->X0_n,
                         mesh->sxxd0, mesh->szzd0, mesh->sxz0_n,
@@ -117,7 +117,7 @@ void DerivativesOnTheFly_n( double* detadexx, double* detadezz, double* detadgxz
                         detadexx, ddivpdexx, danidexx, NULL, mesh->phase_eta_n );
 
     // 2) Negative perturbation in Exx
-    PhaseRheologyLoop_v1( 1, -1.0, 2.0*pert_xx, Exx_ref-pert_xx, Ezz_ref, Exz_ref, P_ref, aniso_factor, d1, d2, angle, lx2, lxlz, c0, mesh->phase_perc_n,
+    PhaseRheologyLoop_v1( 1, -1.0, 2.0*pert_xx, Exx_ref-pert_xx, Ezz_ref, Exz_ref, P_ref, aniso_factor, mesh->dam_Apwl_n[c0], d1, d2, angle, lx2, lxlz, c0, mesh->phase_perc_n,
                         mesh->mu_n, mesh->T, mesh->p0_n, mesh->T0_n[c0],
                         mesh->d0_n, mesh->phi0_n, mesh->X0_n,
                         mesh->sxxd0, mesh->szzd0, mesh->sxz0_n,
@@ -129,7 +129,7 @@ void DerivativesOnTheFly_n( double* detadexx, double* detadezz, double* detadgxz
     //----------------------------------------------------------------------------------------------------------------------------------------------------//
 
     // 1) Positive perturbation in Ezz
-    PhaseRheologyLoop_v1( 1, 1.0, 2.0*pert_zz, Exx_ref, Ezz_ref+pert_zz, Exz_ref, P_ref, aniso_factor, d1, d2, angle, lx2, lxlz, c0, mesh->phase_perc_n,
+    PhaseRheologyLoop_v1( 1, 1.0, 2.0*pert_zz, Exx_ref, Ezz_ref+pert_zz, Exz_ref, P_ref, aniso_factor, mesh->dam_Apwl_n[c0], d1, d2, angle, lx2, lxlz, c0, mesh->phase_perc_n,
                         mesh->mu_n, mesh->T, mesh->p0_n, mesh->T0_n[c0],
                         mesh->d0_n, mesh->phi0_n, mesh->X0_n,
                         mesh->sxxd0, mesh->szzd0, mesh->sxz0_n,
@@ -139,7 +139,7 @@ void DerivativesOnTheFly_n( double* detadexx, double* detadezz, double* detadgxz
                         detadezz, ddivpdezz, danidezz, NULL, mesh->phase_eta_n );
 
     // 2) Negative perturbation in Ezz
-    PhaseRheologyLoop_v1( 1, -1.0, 2.0*pert_zz, Exx_ref, Ezz_ref-pert_zz, Exz_ref, P_ref, aniso_factor, d1, d2, angle, lx2, lxlz, c0, mesh->phase_perc_n,
+    PhaseRheologyLoop_v1( 1, -1.0, 2.0*pert_zz, Exx_ref, Ezz_ref-pert_zz, Exz_ref, P_ref, aniso_factor,mesh->dam_Apwl_n[c0], d1, d2, angle, lx2, lxlz, c0, mesh->phase_perc_n,
                         mesh->mu_n, mesh->T, mesh->p0_n, mesh->T0_n[c0],
                         mesh->d0_n, mesh->phi0_n, mesh->X0_n,
                         mesh->sxxd0, mesh->szzd0, mesh->sxz0_n,
@@ -151,7 +151,7 @@ void DerivativesOnTheFly_n( double* detadexx, double* detadezz, double* detadgxz
     //----------------------------------------------------------------------------------------------------------------------------------------------------//
 
     // 1) Positive perturbation in Exz ---- NOTE THE FACTOR 2 due to Gxz = 2*Exz
-    PhaseRheologyLoop_v1(  1, 1.0, 4.0*pert_xz, Exx_ref, Ezz_ref, Exz_ref+pert_xz, P_ref, aniso_factor, d1, d2, angle, lx2, lxlz, c0, mesh->phase_perc_n,
+    PhaseRheologyLoop_v1(  1, 1.0, 4.0*pert_xz, Exx_ref, Ezz_ref, Exz_ref+pert_xz, P_ref, aniso_factor, mesh->dam_Apwl_n[c0], d1, d2, angle, lx2, lxlz, c0, mesh->phase_perc_n,
                         mesh->mu_n, mesh->T, mesh->p0_n, mesh->T0_n[c0],
                         mesh->d0_n, mesh->phi0_n, mesh->X0_n,
                         mesh->sxxd0, mesh->szzd0, mesh->sxz0_n,
@@ -161,7 +161,7 @@ void DerivativesOnTheFly_n( double* detadexx, double* detadezz, double* detadgxz
                         detadgxz, ddivpdgxz, danidgxz, NULL, mesh->phase_eta_n );
 
     // 2) Negative perturbation in Exz ---- NOTE THE FACTOR 2 due to Gxz = 2*Exz
-    PhaseRheologyLoop_v1( 1, -1.0, 4.0*pert_xz, Exx_ref, Ezz_ref, Exz_ref-pert_xz, P_ref, aniso_factor, d1, d2, angle, lx2, lxlz, c0, mesh->phase_perc_n,
+    PhaseRheologyLoop_v1( 1, -1.0, 4.0*pert_xz, Exx_ref, Ezz_ref, Exz_ref-pert_xz, P_ref, aniso_factor, mesh->dam_Apwl_n[c0], d1, d2, angle, lx2, lxlz, c0, mesh->phase_perc_n,
                         mesh->mu_n, mesh->T, mesh->p0_n, mesh->T0_n[c0],
                         mesh->d0_n, mesh->phi0_n, mesh->X0_n,
                         mesh->sxxd0, mesh->szzd0, mesh->sxz0_n,
@@ -173,7 +173,7 @@ void DerivativesOnTheFly_n( double* detadexx, double* detadezz, double* detadgxz
     //----------------------------------------------------------------------------------------------------------------------------------------------------//
 
     // 1) Positive perturbation in P
-    PhaseRheologyLoop_v1(  2, 1.0, 2.0*pert_p, Exx_ref, Ezz_ref, Exz_ref, P_ref+pert_p, aniso_factor, d1, d2, angle, lx2, lxlz, c0, mesh->phase_perc_n,
+    PhaseRheologyLoop_v1(  2, 1.0, 2.0*pert_p, Exx_ref, Ezz_ref, Exz_ref, P_ref+pert_p, aniso_factor, mesh->dam_Apwl_n[c0], d1, d2, angle, lx2, lxlz, c0, mesh->phase_perc_n,
                         mesh->mu_n, mesh->T, mesh->p0_n, mesh->T0_n[c0],
                         mesh->d0_n, mesh->phi0_n, mesh->X0_n,
                         mesh->sxxd0, mesh->szzd0, mesh->sxz0_n,
@@ -182,7 +182,7 @@ void DerivativesOnTheFly_n( double* detadexx, double* detadezz, double* detadgxz
                         model, materials, scaling,
                         detadp, ddivpdp, danidp, drhodp, mesh->phase_eta_n );
     // 2) Negative perturbation in P
-    PhaseRheologyLoop_v1( 2, -1.0, 2.0*pert_p, Exx_ref, Ezz_ref, Exz_ref, P_ref-pert_p, aniso_factor, d1, d2, angle, lx2, lxlz, c0, mesh->phase_perc_n,
+    PhaseRheologyLoop_v1( 2, -1.0, 2.0*pert_p, Exx_ref, Ezz_ref, Exz_ref, P_ref-pert_p, aniso_factor, mesh->dam_Apwl_n[c0], d1, d2, angle, lx2, lxlz, c0, mesh->phase_perc_n,
                         mesh->mu_n, mesh->T, mesh->p0_n, mesh->T0_n[c0],
                         mesh->d0_n, mesh->phi0_n, mesh->X0_n,
                         mesh->sxxd0, mesh->szzd0, mesh->sxz0_n,
@@ -221,7 +221,7 @@ void DerivativesOnTheFly_s( double* detadexx, double* detadezz, double* detadgxz
     //----------------------------------------------------------------------------------------------------------------------------------------------------//
 
     // 1) Positive perturbation in Exx
-    PhaseRheologyLoop_v1(  0, 1.0, 2.0*pert_xx, Exx_ref+pert_xx, Ezz_ref, Exz_ref, P_ref, aniso_factor, d1, d2, angle, lx2, lxlz, c1, mesh->phase_perc_s,
+    PhaseRheologyLoop_v1(  0, 1.0, 2.0*pert_xx, Exx_ref+pert_xx, Ezz_ref, Exz_ref, P_ref, aniso_factor, mesh->dam_Apwl_s[c1], d1, d2, angle, lx2, lxlz, c1, mesh->phase_perc_s,
                         mesh->mu_s, mesh->T_s, mesh->p0_s, 0.0,
                         mesh->d0_s, mesh->phi0_s, mesh->X0_s,
                         mesh->sxxd0_s, mesh->szzd0_s, mesh->sxz0,
@@ -231,7 +231,7 @@ void DerivativesOnTheFly_s( double* detadexx, double* detadezz, double* detadgxz
                         detadexx, NULL, danidexx, NULL, mesh->phase_eta_s );
 
     // 2) Negative perturbation in Exx
-    PhaseRheologyLoop_v1( 0, -1.0, 2.0*pert_xx, Exx_ref-pert_xx, Ezz_ref, Exz_ref, P_ref, aniso_factor, d1, d2, angle, lx2, lxlz, c1, mesh->phase_perc_s,
+    PhaseRheologyLoop_v1( 0, -1.0, 2.0*pert_xx, Exx_ref-pert_xx, Ezz_ref, Exz_ref, P_ref, aniso_factor, mesh->dam_Apwl_s[c1], d1, d2, angle, lx2, lxlz, c1, mesh->phase_perc_s,
                         mesh->mu_s, mesh->T_s, mesh->p0_s, 0.0,
                         mesh->d0_s, mesh->phi0_s, mesh->X0_s,
                         mesh->sxxd0_s, mesh->szzd0_s, mesh->sxz0,
@@ -243,7 +243,7 @@ void DerivativesOnTheFly_s( double* detadexx, double* detadezz, double* detadgxz
     //----------------------------------------------------------------------------------------------------------------------------------------------------//
 
     // 1) Positive perturbation in Ezz
-    PhaseRheologyLoop_v1(  0, 1.0, 2.0*pert_zz, Exx_ref, Ezz_ref+pert_zz, Exz_ref, P_ref, aniso_factor, d1, d2, angle, lx2, lxlz, c1, mesh->phase_perc_s,
+    PhaseRheologyLoop_v1(  0, 1.0, 2.0*pert_zz, Exx_ref, Ezz_ref+pert_zz, Exz_ref, P_ref, aniso_factor, mesh->dam_Apwl_s[c1], d1, d2, angle, lx2, lxlz, c1, mesh->phase_perc_s,
                         mesh->mu_s, mesh->T_s, mesh->p0_s, 0.0,
                         mesh->d0_s, mesh->phi0_s, mesh->X0_s,
                         mesh->sxxd0_s, mesh->szzd0_s, mesh->sxz0,
@@ -253,7 +253,7 @@ void DerivativesOnTheFly_s( double* detadexx, double* detadezz, double* detadgxz
                         detadezz, NULL, danidezz, NULL, mesh->phase_eta_s );
 
     // 2) Negative perturbation in Ezz
-    PhaseRheologyLoop_v1( 0, -1.0, 2.0*pert_zz, Exx_ref, Ezz_ref-pert_zz, Exz_ref, P_ref, aniso_factor, d1, d2, angle, lx2, lxlz, c1, mesh->phase_perc_s,
+    PhaseRheologyLoop_v1( 0, -1.0, 2.0*pert_zz, Exx_ref, Ezz_ref-pert_zz, Exz_ref, P_ref, aniso_factor, mesh->dam_Apwl_s[c1], d1, d2, angle, lx2, lxlz, c1, mesh->phase_perc_s,
                         mesh->mu_s, mesh->T_s, mesh->p0_s, 0.0,
                         mesh->d0_s, mesh->phi0_s, mesh->X0_s,
                         mesh->sxxd0_s, mesh->szzd0_s, mesh->sxz0,
@@ -265,7 +265,7 @@ void DerivativesOnTheFly_s( double* detadexx, double* detadezz, double* detadgxz
     //----------------------------------------------------------------------------------------------------------------------------------------------------//
 
     // 1) Positive perturbation in Exz
-    PhaseRheologyLoop_v1(  0, 1.0, 4.0*pert_xz, Exx_ref, Ezz_ref, Exz_ref+pert_xz, P_ref, aniso_factor, d1, d2, angle, lx2, lxlz, c1, mesh->phase_perc_s,
+    PhaseRheologyLoop_v1(  0, 1.0, 4.0*pert_xz, Exx_ref, Ezz_ref, Exz_ref+pert_xz, P_ref, aniso_factor, mesh->dam_Apwl_s[c1], d1, d2, angle, lx2, lxlz, c1, mesh->phase_perc_s,
                         mesh->mu_s, mesh->T_s, mesh->p0_s, 0.0,
                         mesh->d0_s, mesh->phi0_s, mesh->X0_s,
                         mesh->sxxd0_s, mesh->szzd0_s, mesh->sxz0,
@@ -275,7 +275,7 @@ void DerivativesOnTheFly_s( double* detadexx, double* detadezz, double* detadgxz
                         detadgxz, NULL, danidgxz, NULL, mesh->phase_eta_s );
 
     // 2) Negative perturbation in Exz
-    PhaseRheologyLoop_v1( 0, -1.0, 4.0*pert_xz, Exx_ref, Ezz_ref, Exz_ref-pert_xz, P_ref, aniso_factor, d1, d2, angle, lx2, lxlz, c1, mesh->phase_perc_s,
+    PhaseRheologyLoop_v1( 0, -1.0, 4.0*pert_xz, Exx_ref, Ezz_ref, Exz_ref-pert_xz, P_ref, aniso_factor, mesh->dam_Apwl_s[c1], d1, d2, angle, lx2, lxlz, c1, mesh->phase_perc_s,
                         mesh->mu_s, mesh->T_s, mesh->p0_s, 0.0,
                         mesh->d0_s, mesh->phi0_s, mesh->X0_s,
                         mesh->sxxd0_s, mesh->szzd0_s, mesh->sxz0,
@@ -286,7 +286,7 @@ void DerivativesOnTheFly_s( double* detadexx, double* detadezz, double* detadgxz
 
     //----------------------------------------------------------------------------------------------------------------------------------------------------//
     // 1) Positive perturbation in P
-    PhaseRheologyLoop_v1(  0, 1.0, 2.0*pert_p, Exx_ref, Ezz_ref, Exz_ref, P_ref+pert_p, aniso_factor, d1, d2, angle, lx2, lxlz, c1, mesh->phase_perc_s,
+    PhaseRheologyLoop_v1(  0, 1.0, 2.0*pert_p, Exx_ref, Ezz_ref, Exz_ref, P_ref+pert_p, aniso_factor, mesh->dam_Apwl_s[c1], d1, d2, angle, lx2, lxlz, c1, mesh->phase_perc_s,
                         mesh->mu_s, mesh->T_s, mesh->p0_s, 0.0,
                         mesh->d0_s, mesh->phi0_s, mesh->X0_s,
                         mesh->sxxd0_s, mesh->szzd0_s, mesh->sxz0,
@@ -296,7 +296,7 @@ void DerivativesOnTheFly_s( double* detadexx, double* detadezz, double* detadgxz
                         detadp, NULL, danidp, NULL, mesh->phase_eta_s );
 
     // 2) Negative perturbation in P
-    PhaseRheologyLoop_v1( 0, -1.0, 2.0*pert_p, Exx_ref, Ezz_ref, Exz_ref, P_ref-pert_p, aniso_factor, d1, d2, angle, lx2, lxlz, c1, mesh->phase_perc_s,
+    PhaseRheologyLoop_v1( 0, -1.0, 2.0*pert_p, Exx_ref, Ezz_ref, Exz_ref, P_ref-pert_p, aniso_factor, mesh->dam_Apwl_s[c1], d1, d2, angle, lx2, lxlz, c1, mesh->phase_perc_s,
                         mesh->mu_s, mesh->T_s, mesh->p0_s, 0.0,
                         mesh->d0_s, mesh->phi0_s, mesh->X0_s,
                         mesh->sxxd0_s, mesh->szzd0_s, mesh->sxz0,
