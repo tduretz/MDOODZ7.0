@@ -445,7 +445,7 @@ void eigen_2x2(double a, double b, double c, double *lambda1, double *lambda2, d
 // ReadDataAnisotropy() in MDLIB/FlowLaws.c.
 double          aniso_delta_inv_hansen( double delta );
 void            AnisotropicDamage(double* delta, double* dam_Apwl, double exxd, double ezzd, double exz, double sxxd, double szzd, double sxz);
-double          DamagedVolume(double x);
+double          DamagedVolume(double x, int n);
 
 // Advection
 void            DefineInitialTimestep(params *, grid *, markers, mat_prop, scale);

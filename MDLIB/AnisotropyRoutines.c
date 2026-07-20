@@ -1364,52 +1364,70 @@ firstprivate( model )
 void AnisotropicDamage(double* delta, double* dam_Apwl, double exxd, double ezzd, double exz, double sxxd, double szzd, double sxz){
 
   int p, k, l, Nx, Nz, Ncx, Ncz, c0, c1; // for navigation on grid
-  double WR, Pi_WR, V_dam, eta_strong, eta_weak; // variables
-  double WR_th, R, Tc, n, AE, gamma0_i, gamma0_dam, lamb; //parameters
-  double eta_mat0_d, eta_mat1_d, eta_mat0, eta_mat1;  // reference intial and damaged viscosities
+  double WR, Pi_WR, V_dam, gamma0_strong, gamma0_weak; // variables
+  double WR_th, R, Tc, AE, gamma0_i, gamma0_i_adim, gamma0_dam, gamma0_dam_adim; //parameters
+  int n;
 
 
   // CLZ TODO properly set those parameters as input
+  n = 1;
   WR_th = 0.7;//2.55e-06;     // adimensionnalized value chosen ad-hoc
   R = 8.31;
   Tc = 1000;
-  n = 1.0;
-  AE = 370e3;
-  gamma0_i = 1e-3;
-  gamma0_dam = 0.007;
-  lamb = AE/(R*Tc);
 
-  eta_mat0_d   = 1.0/(gamma0_i * exp(-lamb));    // viscosity of material before damage
-  eta_mat1_d   = 1.0/(gamma0_dam * exp(-lamb));  // viscosity of damaged material
+  if (n==1){
+    AE = 370e3;
+    gamma0_i = 1e-3;
+    gamma0_dam = 0.007;
+  }
+  else if (n==3){
+    AE = 460e3;
+    gamma0_i = 3e-17;
+    gamma0_dam = 1.5e-16 ; 
+  }
 
-  eta_mat0 = 1.0; // eta characteristic = eta0_d
-  eta_mat1 = eta_mat1_d/eta_mat0_d;
+  gamma0_i_adim = 1.0;
+  gamma0_dam_adim = gamma0_dam/gamma0_i;
 
   WR = sqrt(exxd*sxxd + ezzd*szzd + 2.0*exz*sxz);
   Pi_WR = WR_th/(1.0e-20 + WR); 
 
-  V_dam = DamagedVolume(Pi_WR);
+  V_dam = DamagedVolume(Pi_WR, n);
 
-  eta_strong = eta_mat1*V_dam + eta_mat0*(1-V_dam);   // Weak and Strong reversed compared to gamma0
-  eta_weak =  1/(V_dam/eta_mat1 + (1-V_dam)/eta_mat0); 
+  gamma0_strong = gamma0_dam_adim*V_dam + gamma0_i_adim*(1-V_dam);   // Weak and Strong reversed compared to gamma0
+  gamma0_weak =  1/(V_dam/gamma0_dam_adim + (1-V_dam)/gamma0_i_adim); 
 
-  *delta = eta_strong/eta_weak; 
-  *dam_Apwl = eta_strong; // will be used as multiplicative factor
+  *delta = gamma0_strong/gamma0_weak; 
+  *dam_Apwl = gamma0_strong; // will be used as multiplicative factor
+
 
 }
 
 //  Polynomial fit (with threshold) one the microscopic data for V_dam the relative damaged volume
-//  Data = POST_test_PAPER_Mar2026_Exp1_Correction2, gamma0_dam = 0.007
 // TODO for n = 3 and Peierls
-double DamagedVolume(double x){
+double DamagedVolume(double x, int n){
 
   double V_dam; 
+  
+  // n = 1 : Data = POST_test_PAPER_Mar2026_Exp1_Correction2, gamma0_dam = 0.007
+  if (n == 1){
+    if (x < 0.1) { 
+        V_dam = 1.0; }
+    else if( x > 1.4 ){
+        V_dam = 0.0; }
+    else {
+        V_dam = 0.087 - 0.183*(-1.4+1.33*x) + 0.093*pow(-1.4+1.33*x,2) - 0.0056*pow(-1.4+1.33*x,3) ;}
+  }
 
-  if (x < 0.1) { 
+  // n = 3 : Data = POST_test_PAPER_Mar2026_Exp3, gamma0_dam = 1.5e-16
+  if (n == 3){
+  if (x < 0.5) { 
       V_dam = 1.0; }
-  else if( x > 1.4 ){
+  else if( x > 1.2 ){
       V_dam = 0.0; }
   else {
-      V_dam = 0.087 - 0.183*(-1.4+1.33*x) + 00.093*pow(-1.4+1.33*x,2) - 0.0056*pow(-1.4+1.33*x,3) ;}
+      V_dam = 0.076 - 0.24819*(-1.769+1.538*x) + 0.354*pow(-1.769+1.538*x,2) - 0.0056*pow(-1.76+1.538*x,3) ;}
+  }
+
   return V_dam;
 }
