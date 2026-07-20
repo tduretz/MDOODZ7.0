@@ -19,15 +19,15 @@ const cm_y = y*100.
     # File numbers
     file_start = 1
     file_step  = 1
-    file_end   = 10
-
+    file_end   = 1
+    
     # Select field to visualise
     # field = :Phases
     # field = :Cohesion
     # field = :Density
       field = :Viscosity  
     # field = :PlasticStrainrate
-    # field = :Stress
+    #  field = :Stress
     # field = :σxx
     # field = :σzz
     # field = :StrainRate
@@ -40,7 +40,7 @@ const cm_y = y*100.
     # field = :GrainSize
     # field = :Topography
     # field = :TimeSeries 
-    # field = :AnisotropyFactor
+    #  field = :AnisotropyFactor
     # field = :MeltFraction
     # field = :TimeSeries
     # field = :EffectiveFrictionTime
@@ -61,9 +61,9 @@ const cm_y = y*100.
     printvid    = false
     framerate   = 12
     PlotOnTop = (
-        ph_contours   = false,  # add phase contours
-        fabric        = false,  # add fabric quiver (normal to director)
-        T_contours    = true,   # add temperature contours
+        ph_contours   = true,  # add phase contours
+        fabric        = true,  # add fabric quiver (normal to director)
+        T_contours    = false,   # add temperature contours
         topo          = false,
         quiver_origin = false,
         σ1_axis       = false,
@@ -76,7 +76,7 @@ const cm_y = y*100.
     vel_arrow   = 5
     vel_scale   = 20
     vel_step    = 8
-    nap         = 2    # pause for animation 
+    nap         = 1    # pause for animation 
     resol       = 300    # resolution
     ar          = 1.2    # aspect ratio for Makie
     mov_name    = "$(path)/_$(field)/$(field)"  # Name of the movie
@@ -269,10 +269,10 @@ const cm_y = y*100.
 
         if field==:Viscosity
             ax1 = Axis(f[1, 1], title = L"$\eta$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
-            hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(ηc), colormap = (:turbo, α_heatmap), colorrange=(0,0.3))
+            hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(ηc), colormap = (:turbo, α_heatmap))#, colorrange=(0,0.3))
             AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, group_phases, Δ, Mak)                
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
-            Colorbar(f[1, 2], hm, label = L"$\eta$ [Pa.s]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
+            Colorbar(f[1, 2], hm, label = L"$log_{10}(\eta)$ [Pa.s]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
             colgap!(f.layout, 20)
             xlims!(ax1, window.xmin, window.xmax)
             ylims!(ax1, window.zmin, window.zmax)
