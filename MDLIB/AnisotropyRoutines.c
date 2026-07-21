@@ -1365,23 +1365,19 @@ void AnisotropicDamage(double* delta, double* dam_Apwl, double exxd, double ezzd
 
   int p, k, l, Nx, Nz, Ncx, Ncz, c0, c1; // for navigation on grid
   double WR, Pi_WR, V_dam, gamma0_strong, gamma0_weak; // variables
-  double WR_th, R, Tc, AE, gamma0_i, gamma0_i_adim, gamma0_dam, gamma0_dam_adim; //parameters
+  double WR_th, gamma0_i, gamma0_i_adim, gamma0_dam, gamma0_dam_adim; //parameters
   int n;
 
 
   // CLZ TODO properly set those parameters as input
   n = 1;
-  WR_th = 0.7;//2.55e-06;     // adimensionnalized value chosen ad-hoc
-  R = 8.31;
-  Tc = 1000;
+  WR_th = 2.0;//2.55e-06;     // adimensionnalized value chosen ad-hoc
 
   if (n==1){
-    AE = 370e3;
     gamma0_i = 1e-3;
     gamma0_dam = 0.007;
   }
   else if (n==3){
-    AE = 460e3;
     gamma0_i = 3e-17;
     gamma0_dam = 1.5e-16 ; 
   }
