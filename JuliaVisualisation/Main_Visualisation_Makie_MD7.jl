@@ -19,15 +19,16 @@ const cm_y = y*100.
     # File numbers
     file_start = 1
     file_step  = 1
-    file_end   = 1
+    file_end   = 15
     
     # Select field to visualise
     # field = :Phases
     # field = :Cohesion
     # field = :Density
-      field = :Viscosity  
+    #  field = :Viscosity_lin  
+    # field = :Viscosity  
     # field = :PlasticStrainrate
-    #  field = :Stress
+    #field = :Stress
     # field = :σxx
     # field = :σzz
     # field = :StrainRate
@@ -40,7 +41,8 @@ const cm_y = y*100.
     # field = :GrainSize
     # field = :Topography
     # field = :TimeSeries 
-    #  field = :AnisotropyFactor
+    # field = :AnisotropyFactor
+    field = :fabric_angle
     # field = :MeltFraction
     # field = :TimeSeries
     # field = :EffectiveFrictionTime
@@ -267,6 +269,18 @@ const cm_y = y*100.
             if printfig Print2Disk( f, path, string(field), istep) end
         end
 
+        if field==:Viscosity_lin
+            ax1 = Axis(f[1, 1], title = L"$\eta$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
+            hm = heatmap!(ax1, xc./Lc, zc./Lc, ηc, colormap = (:turbo, α_heatmap))#, colorrange=(0,0.3))
+            AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, group_phases, Δ, Mak)                
+            colsize!(f.layout, 1, Aspect(1, Lx/Lz))
+            Colorbar(f[1, 2], hm, label = L"$\eta$ [Pa.s]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
+            colgap!(f.layout, 20)
+            xlims!(ax1, window.xmin, window.xmax)
+            ylims!(ax1, window.zmin, window.zmax)
+            if printfig Print2Disk( f, path, string(field), istep) end
+        end
+
         if field==:Viscosity
             ax1 = Axis(f[1, 1], title = L"$\eta$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
             hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(ηc), colormap = (:turbo, α_heatmap))#, colorrange=(0,0.3))
@@ -445,6 +459,29 @@ const cm_y = y*100.
             # xlims!(ax1, -0.4, 0.4)
             # ylims!(ax1, -0.17, 0.17)
             Colorbar(f[1, 2], hm, label = L"$δ_\textrm{ani}$", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
+            colgap!(f.layout, 20)
+            colsize!(f.layout, 1, Aspect(1, Lx/Lz))
+            xlims!(ax1, window.xmin, window.xmax)
+            ylims!(ax1, window.zmin, window.zmax)
+            if printfig Print2Disk( f, path, string(field), istep) end
+        end
+
+        if field==:fabric_angle
+            δani    = ExtractField(filename, "/Centers/ani_fac", centroids, false, 0)
+            Nx      = Float64.(reshape(ExtractData( filename, "/Centers/nx"), ncx, ncz))
+            Nz      = Float64.(reshape(ExtractData( filename, "/Centers/nz"), ncx, ncz))
+            Fab     = (x=-Nz./Nx, z=ones(size(Nz)))
+            nrm     = sqrt.(Fab.x.^2 .+ Fab.z.^2)
+            Fab.x ./= nrm
+            Fab.z ./= nrm
+            angle_rad = atan.(Fab.z, Fab.x)  # Angle in radians
+            angle_deg = rad2deg.(angle_rad)
+            angle_deg = ifelse.(angle_deg .< 0, angle_deg .+ 180, angle_deg)
+            angle_deg = ifelse.(angle_deg .> 90, 180 .- angle_deg, angle_deg)
+            ax1 = Axis(f[1, 1], title = L"$θ_\textrm{fabric}$ put between 0 and 90 at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
+            hm = heatmap!(ax1, xc./Lc, zc./Lc, angle_deg, colormap = (:jet, α_heatmap))
+            AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, group_phases, Δ, Mak)                
+            Colorbar(f[1, 2], hm, label = L"$θ_\textrm{fabric}$", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
             colgap!(f.layout, 20)
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
             xlims!(ax1, window.xmin, window.xmax)
