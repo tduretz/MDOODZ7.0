@@ -29,7 +29,7 @@ typedef struct {
 // markers is the particles structure
 typedef struct {
   int     Nx_part, Nz_part, Nb_part, Nb_part_max, min_part_cell, Nb_part_ini;
-  double *x, *z, *Vx, *Vz, *P, *sxxd, *szzd, *sxz, *progress, *T, *d, *phi, *X;
+  double *x, *z, *Vx, *Vz, *P, *sxxd, *szzd, *sxz, *progress, *T, *d, *phi, *X, *Wdiss;
   double *strain, *strain_el, *strain_pl, *strain_pl_vol, *strain_pwl, *strain_exp, *strain_lin,
           *strain_gbs;
   int    *phase, *generation, *dual;
@@ -444,7 +444,7 @@ void eigen_2x2(double a, double b, double c, double *lambda1, double *lambda2, d
 // in MDLIB/AnisotropyRoutines.c. Wired into mat_prop::aniso_delta_fn_inv by
 // ReadDataAnisotropy() in MDLIB/FlowLaws.c.
 double          aniso_delta_inv_hansen( double delta );
-void            AnisotropicDamage(double* delta, double* dam_Apwl, double exxd, double ezzd, double exz, double sxxd, double szzd, double sxz, double n);
+void            AnisotropicDamage(double* delta, double* dam_Apwl, double Wdiss, double n);
 double          DamagedVolume(double x, int n);
 
 // Advection
@@ -468,6 +468,7 @@ void            DeformationGradient(grid, scale, params, mat_prop, markers *);
 
 // Energy
 void            UpdateParticleEnergy(grid *, scale, params, markers *, mat_prop *);
+void            UpdateParticleWdiss(grid *, scale, params, markers *, mat_prop *);
 void            EnergyDirectSolve(grid *, params, double *, markers *, double, int, int, scale, int, DirectSolver *);
 cholmod_factor *FactorEnergyCHOLMOD(cholmod_common *, cs_di *, double *, int *, int *, int, int, int, int, cholmod_factor *);
 cs_di          *TransposeA(cholmod_common *, double *, int *, int *, int, int);
