@@ -772,7 +772,7 @@ void UpdateAnisoFactor( grid *mesh, mat_prop *materials, params *model, scale *s
             if (materials->ani_fstrain[p]==0) mesh->aniso_factor_n[c0] += mesh->phase_perc_n[p][c0] * materials->aniso_factor[p];
             if (materials->ani_fstrain[p]!=0 && materials->ani_fstrain[p]<4) mesh->aniso_factor_n[c0] += mesh->phase_perc_n[p][c0] * AnisoFactorEvolv( mesh->FS_AR_n[c0], materials->ani_fac_max[p], materials->ani_fstrain[p], materials->aniso_delta_fn[p], mesh->d_n[c0], materials->aniso_d_threshold[p], materials->aniso_d_decay[p], mesh->aniso_delta_n[c0] );
             if (materials->ani_fstrain[p] == 4 ) {
-              AnisotropicDamage(&delta, &dam_Apwl, mesh->exxd[c0], mesh->ezzd[c0], mesh->exz_n[c0], mesh->sxxd[c0], mesh->szzd[c0], mesh->sxz_n[c0]);
+              AnisotropicDamage(&delta, &dam_Apwl, mesh->exxd[c0], mesh->ezzd[c0], mesh->exz_n[c0], mesh->sxxd[c0], mesh->szzd[c0], mesh->sxz_n[c0], materials->npwl[p]);
               mesh->aniso_factor_n[c0] += mesh->phase_perc_n[p][c0] * delta;
               mesh->dam_Apwl_n[c0] += mesh->phase_perc_n[p][c0] * dam_Apwl;
             }
@@ -782,7 +782,7 @@ void UpdateAnisoFactor( grid *mesh, mat_prop *materials, params *model, scale *s
             if (materials->ani_fstrain[p]==0) mesh->aniso_factor_n[c0] += mesh->phase_perc_n[p][c0] * 1.0/materials->aniso_factor[p];
             if (materials->ani_fstrain[p]>0 && materials->ani_fstrain[p]!=4) mesh->aniso_factor_n[c0] += mesh->phase_perc_n[p][c0] * 1.0/AnisoFactorEvolv( mesh->FS_AR_n[c0], materials->ani_fac_max[p], materials->ani_fstrain[p], materials->aniso_delta_fn[p], mesh->d_n[c0], materials->aniso_d_threshold[p], materials->aniso_d_decay[p], mesh->aniso_delta_n[c0] );
             if (materials->ani_fstrain[p] == 4 ) {
-              AnisotropicDamage(&delta, &dam_Apwl, mesh->exxd[c0], mesh->ezzd[c0], mesh->exz_n[c0], mesh->sxxd[c0], mesh->szzd[c0], mesh->sxz_n[c0]);
+              AnisotropicDamage(&delta, &dam_Apwl, mesh->exxd[c0], mesh->ezzd[c0], mesh->exz_n[c0], mesh->sxxd[c0], mesh->szzd[c0], mesh->sxz_n[c0], materials->npwl[p]);
               mesh->aniso_factor_n[c0] += mesh->phase_perc_n[p][c0] * 1.0/delta;
               mesh->dam_Apwl_n[c0] += mesh->phase_perc_n[p][c0] * 1.0/dam_Apwl;
             }
@@ -792,7 +792,7 @@ void UpdateAnisoFactor( grid *mesh, mat_prop *materials, params *model, scale *s
             if (materials->ani_fstrain[p]==0) mesh->aniso_factor_n[c0] += mesh->phase_perc_n[p][c0] * log(materials->aniso_factor[p]);
             if (materials->ani_fstrain[p]>0 && materials->ani_fstrain[p]!=4) mesh->aniso_factor_n[c0] += mesh->phase_perc_n[p][c0] * log(AnisoFactorEvolv( mesh->FS_AR_n[c0], materials->ani_fac_max[p], materials->ani_fstrain[p], materials->aniso_delta_fn[p], mesh->d_n[c0], materials->aniso_d_threshold[p], materials->aniso_d_decay[p], mesh->aniso_delta_n[c0] ));
             if (materials->ani_fstrain[p] == 4 ) {
-              AnisotropicDamage(&delta, &dam_Apwl, mesh->exxd[c0], mesh->ezzd[c0], mesh->exz_n[c0], mesh->sxxd[c0], mesh->szzd[c0], mesh->sxz_n[c0]);
+              AnisotropicDamage(&delta, &dam_Apwl, mesh->exxd[c0], mesh->ezzd[c0], mesh->exz_n[c0], mesh->sxxd[c0], mesh->szzd[c0], mesh->sxz_n[c0], materials->npwl[p]);
               mesh->aniso_factor_n[c0] += mesh->phase_perc_n[p][c0] * log(delta);
               mesh->dam_Apwl_n[c0] += mesh->phase_perc_n[p][c0] * log(dam_Apwl);
             }
@@ -868,7 +868,7 @@ void UpdateAnisoFactor( grid *mesh, mat_prop *materials, params *model, scale *s
             if (materials->ani_fstrain[p]==0) mesh->aniso_factor_s[c1] += mesh->phase_perc_s[p][c1] * materials->aniso_factor[p];
             if (materials->ani_fstrain[p]>0 && materials->ani_fstrain[p]!=4) mesh->aniso_factor_s[c1] += mesh->phase_perc_s[p][c1] * AnisoFactorEvolv( mesh->FS_AR_s[c1], materials->ani_fac_max[p], materials->ani_fstrain[p], materials->aniso_delta_fn[p], d_at_vertex, materials->aniso_d_threshold[p], materials->aniso_d_decay[p], mesh->aniso_delta_s[c1] );
             if (materials->ani_fstrain[p] == 4 ) {
-              AnisotropicDamage(&delta, &dam_Apwl, mesh->exxd_s[c1], mesh->ezzd_s[c1], mesh->exz[c1], mesh->sxxd_s[c1], mesh->szzd_s[c1], mesh->sxz[c1]);
+              AnisotropicDamage(&delta, &dam_Apwl, mesh->exxd_s[c1], mesh->ezzd_s[c1], mesh->exz[c1], mesh->sxxd_s[c1], mesh->szzd_s[c1], mesh->sxz[c1],materials->npwl[p]);
               mesh->aniso_factor_s[c1] += mesh->phase_perc_s[p][c1] * delta;
               mesh->dam_Apwl_s[c1] += mesh->phase_perc_s[p][c1] * dam_Apwl;
             }
@@ -878,7 +878,7 @@ void UpdateAnisoFactor( grid *mesh, mat_prop *materials, params *model, scale *s
             if (materials->ani_fstrain[p]==0) mesh->aniso_factor_s[c1] += mesh->phase_perc_s[p][c1] *  1.0/materials->aniso_factor[p];
             if (materials->ani_fstrain[p]>0 && materials->ani_fstrain[p]!=4) mesh->aniso_factor_s[c1] += mesh->phase_perc_s[p][c1] *  1.0/AnisoFactorEvolv( mesh->FS_AR_s[c1], materials->ani_fac_max[p], materials->ani_fstrain[p], materials->aniso_delta_fn[p], d_at_vertex, materials->aniso_d_threshold[p], materials->aniso_d_decay[p], mesh->aniso_delta_s[c1] );
             if (materials->ani_fstrain[p] == 4 ) {
-              AnisotropicDamage(&delta, &dam_Apwl, mesh->exxd_s[c1], mesh->ezzd_s[c1], mesh->exz[c1], mesh->sxxd_s[c1], mesh->szzd_s[c1], mesh->sxz[c1]);
+              AnisotropicDamage(&delta, &dam_Apwl, mesh->exxd_s[c1], mesh->ezzd_s[c1], mesh->exz[c1], mesh->sxxd_s[c1], mesh->szzd_s[c1], mesh->sxz[c1], materials->npwl[p]);
               mesh->aniso_factor_s[c1] += mesh->phase_perc_s[p][c1] *  1.0/delta;
               mesh->dam_Apwl_s[c1] += mesh->phase_perc_s[p][c1] *  1.0/dam_Apwl;
             }
@@ -888,7 +888,7 @@ void UpdateAnisoFactor( grid *mesh, mat_prop *materials, params *model, scale *s
             if (materials->ani_fstrain[p]==0) mesh->aniso_factor_s[c1] += mesh->phase_perc_s[p][c1] *  log(materials->aniso_factor[p]);
             if (materials->ani_fstrain[p]>0 && materials->ani_fstrain[p]!=4) mesh->aniso_factor_s[c1] += mesh->phase_perc_s[p][c1] *  log(AnisoFactorEvolv( mesh->FS_AR_s[c1], materials->ani_fac_max[p], materials->ani_fstrain[p], materials->aniso_delta_fn[p], d_at_vertex, materials->aniso_d_threshold[p], materials->aniso_d_decay[p], mesh->aniso_delta_s[c1] ));
             if (materials->ani_fstrain[p] == 4 ) {
-              AnisotropicDamage(&delta, &dam_Apwl, mesh->exxd_s[c1], mesh->ezzd_s[c1], mesh->exz[c1], mesh->sxxd_s[c1], mesh->szzd_s[c1], mesh->sxz[c1]);
+              AnisotropicDamage(&delta, &dam_Apwl, mesh->exxd_s[c1], mesh->ezzd_s[c1], mesh->exz[c1], mesh->sxxd_s[c1], mesh->szzd_s[c1], mesh->sxz[c1], materials->npwl[p]);
               mesh->aniso_factor_s[c1] += mesh->phase_perc_s[p][c1] *  log(delta);
               mesh->dam_Apwl_s[c1] += mesh->phase_perc_s[p][c1] *  log(dam_Apwl);
             }          
@@ -1361,23 +1361,22 @@ firstprivate( model )
 
 // if aniso_factor[p]==4 for this one cell (node or staggered) : compute new anisotropic parameters in evolving anisotropy (from Tommasi et al. 2026)
 // output = delta and dam_Apwl i.e. anisotropy and viscous damage
-void AnisotropicDamage(double* delta, double* dam_Apwl, double exxd, double ezzd, double exz, double sxxd, double szzd, double sxz){
+void AnisotropicDamage(double* delta, double* dam_Apwl, double exxd, double ezzd, double exz, double sxxd, double szzd, double sxz, double n){
 
   int p, k, l, Nx, Nz, Ncx, Ncz, c0, c1; // for navigation on grid
   double WR, Pi_WR, V_dam, gamma0_strong, gamma0_weak; // variables
   double WR_th, gamma0_i, gamma0_i_adim, gamma0_dam, gamma0_dam_adim; //parameters
-  int n;
 
 
   // CLZ TODO properly set those parameters as input
   n = 1;
   WR_th = 2.0;//2.55e-06;     // adimensionnalized value chosen ad-hoc
 
-  if (n==1){
+  if (n==1.0){
     gamma0_i = 1e-3;
     gamma0_dam = 0.007;
   }
-  else if (n==3){
+  else if (n==3.0){
     gamma0_i = 3e-17;
     gamma0_dam = 1.5e-16 ; 
   }
@@ -1396,7 +1395,11 @@ void AnisotropicDamage(double* delta, double* dam_Apwl, double exxd, double ezzd
   *delta = gamma0_strong/gamma0_weak; 
   *dam_Apwl = gamma0_strong; // will be used as multiplicative factor
 
-
+ // if (! (*dam_Apwl>=1.0) ){
+  if (! (exxd*sxxd + ezzd*szzd + 2.0*exz*sxz>=0.0) ){
+  fprintf(stderr, "dam_Apwl %f  Pi_WR %f    V_dam %f   WR %f   WR2 %f \n", *dam_Apwl,Pi_WR, V_dam, WR, exxd*sxxd + ezzd*szzd + 2.0*exz*sxz);
+  fprintf(stderr, "exxd %f sxxd  %f ezzd %f  szzd %f exz %f sxz %f\n", exxd, sxxd, ezzd, szzd, exz, sxz);
+  }
 }
 
 //  Polynomial fit (with threshold) one the microscopic data for V_dam the relative damaged volume

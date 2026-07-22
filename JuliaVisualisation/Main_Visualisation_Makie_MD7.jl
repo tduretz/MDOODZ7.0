@@ -19,7 +19,7 @@ const cm_y = y*100.
     # File numbers
     file_start = 1
     file_step  = 1
-    file_end   = 15
+    file_end   = 3
     
     # Select field to visualise
     # field = :Phases
@@ -41,8 +41,8 @@ const cm_y = y*100.
     # field = :GrainSize
     # field = :Topography
     # field = :TimeSeries 
-    # field = :AnisotropyFactor
-    field = :fabric_angle
+     field = :AnisotropyFactor
+    # field = :FabricAngle
     # field = :MeltFraction
     # field = :TimeSeries
     # field = :EffectiveFrictionTime
@@ -466,7 +466,7 @@ const cm_y = y*100.
             if printfig Print2Disk( f, path, string(field), istep) end
         end
 
-        if field==:fabric_angle
+        if field==:FabricAngle
             δani    = ExtractField(filename, "/Centers/ani_fac", centroids, false, 0)
             Nx      = Float64.(reshape(ExtractData( filename, "/Centers/nx"), ncx, ncz))
             Nz      = Float64.(reshape(ExtractData( filename, "/Centers/nz"), ncx, ncz))

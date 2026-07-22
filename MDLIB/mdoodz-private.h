@@ -444,7 +444,7 @@ void eigen_2x2(double a, double b, double c, double *lambda1, double *lambda2, d
 // in MDLIB/AnisotropyRoutines.c. Wired into mat_prop::aniso_delta_fn_inv by
 // ReadDataAnisotropy() in MDLIB/FlowLaws.c.
 double          aniso_delta_inv_hansen( double delta );
-void            AnisotropicDamage(double* delta, double* dam_Apwl, double exxd, double ezzd, double exz, double sxxd, double szzd, double sxz);
+void            AnisotropicDamage(double* delta, double* dam_Apwl, double exxd, double ezzd, double exz, double sxxd, double szzd, double sxz, double n);
 double          DamagedVolume(double x, int n);
 
 // Advection
