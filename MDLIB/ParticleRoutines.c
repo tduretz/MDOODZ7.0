@@ -910,6 +910,7 @@ void PartInit( markers *particles, params* model ) {
         particles->T[k]          = 0.0;
         particles->phi[k]        = 0.0;
         particles->X[k]          = 0.0;
+        particles->Wdiss[k]      = 0.0;
 
         // Reaction front progress
         particles->generation[k] = 0.0;

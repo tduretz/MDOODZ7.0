@@ -1529,6 +1529,21 @@ void UpdateParticleGrainSize( grid* mesh, scale scaling, params model, markers* 
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
+void UpdateParticleWdiss( grid* mesh, scale scaling, params model, markers* particles, mat_prop* materials ) {
+
+    const int Nx = mesh->Nx; //Ncx = Nx-1;
+    const int Nz = mesh->Nz; //Ncz = Nz-1;
+
+    // Interp increments to particles
+    Interp_Grid2P_centroids2( *particles, particles->Wdiss, mesh, mesh->Wdiss, mesh->xvz_coord,  mesh->zvx_coord, Nx-1, Nz-1, mesh->BCt.type, &model  );
+
+
+}
+
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
+
 void UpdateParticleEnergy( grid* mesh, scale scaling, params model, markers* particles, mat_prop* materials ) {
 
     DoodzFP *T_inc_mark, *Tm0, dtm, *dTms, *dTgr, *dTmr, *rho_part;
@@ -1918,7 +1933,7 @@ firstprivate( model )
             DoodzFree( etam   );
         }
 
-        // Rotate director directly on particles
+        // Rotate director directly on particles for evolutive_anisotropy ani_fstrain=4
     if ( model->anisotropy == 1) {
 
 #pragma omp parallel for shared( particles, mesh ) firstprivate( dt, model ) private( k )

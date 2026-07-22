@@ -618,6 +618,10 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             P2Mastah( &input.model, particles, particles.divth, &mesh, mesh.divth0_n, mesh.BCp.type,  1, 0, interp, cent, 1, pool);
         }
 
+        // Get dissipative work-rate from previous step
+        P2Mastah( &input.model, particles, particles.Wdiss,     &mesh, mesh.Wdiss,     mesh.BCp.type,  1, 0, interp, cent, 1, pool);
+
+
         // Singletons: kx (vxnodes), kz (vznodes) — not fused
         P2Mastah ( &input.model, particles, input.materials.k_eff, &mesh, mesh.kx, mesh.BCu.type,  0, 0, interp, vxnodes, 1, pool);
         P2Mastah ( &input.model, particles, input.materials.k_eff, &mesh, mesh.kz, mesh.BCv.type,  0, 0, interp, vznodes, 1, pool);
@@ -1182,6 +1186,10 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
         // Update energy on particles
         UpdateParticleEnergy( &mesh, input.scaling, input.model, &particles, &input.materials );
+
+        // Dissipative work-rate
+        UpdateParticleWdiss( &mesh, input.scaling, input.model, &particles, &input.materials ); // CLZ
+
 
         // Grain size evolution
         { double t_gse0 = omp_get_wtime();
