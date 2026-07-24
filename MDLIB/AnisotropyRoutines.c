@@ -1369,7 +1369,6 @@ void AnisotropicDamage(double* delta, double* dam_Apwl, double Wdiss, double n){
 
 
   // CLZ TODO properly set those parameters as input
-  n = 1;
   WR_th = 2.0;//2.55e-06;     // adimensionnalized value chosen ad-hoc
 
   if (n==1.0){

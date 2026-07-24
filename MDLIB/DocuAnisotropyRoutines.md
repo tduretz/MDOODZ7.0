@@ -1,3 +1,5 @@
+(IA generated)
+
 `aniso_delta_inv_hansen`
 Analytic inverse for the Hansen olivine anisotropy calibration. Converts a finite-strain anisotropy value delta back to the effective strain argument used by the saturation law, with clamping for invalid or over-saturated inputs.
 

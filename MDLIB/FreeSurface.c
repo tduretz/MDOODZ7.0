@@ -156,6 +156,7 @@ void AddPartSed( markers *particles, mat_prop materials, markers *topo_chain, su
                 particles->d[new_ind]             =  materials.gs_ref[sed_phase];
                 particles->T[new_ind]             =  zeroC/scaling.T;
                 particles->P[new_ind]             =  0.0;
+                particles->Wdiss[new_ind]         =  0.0;
                 
                 particles->phi[new_ind]           =  0.0;
                 particles->X[new_ind]             =  0.0;
