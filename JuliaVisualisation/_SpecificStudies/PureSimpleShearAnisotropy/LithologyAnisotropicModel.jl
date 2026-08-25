@@ -83,9 +83,9 @@ end
 @views function main()
 
     # Set the path to your files
-    # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/RiftingAnisotropy/d1/"
+    path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/RiftingAnisotropy/d1/"
 
-    path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/RiftingAnisotropy/d6/"
+    # path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/RiftingAnisotropy/d6/"
 
     # File numbers
     file_start = 900
@@ -309,13 +309,13 @@ end
 
         # Color palette for phase map
         cmap    = zeros(RGB{Float64}, 7)
-        cmap[1] = RGBA{Float64}(221/255, 205/255, 176/255, 1.)  
+        cmap[1] = RGBA{Float64}(213/255, 185/255, 148/255, 1.)  
         cmap[2] = RGBA{Float64}(1/255, 1/255, 1/255, 1.)  
         cmap[3] = RGBA{Float64}(190/255, 216/255, 172/255, 1.) 
-        cmap[4] = RGBA{Float64}(157/255, 199/255, 189/255, 1.) 
+        cmap[4] = RGBA{Float64}(156/255, 205/255, 144/255, 1.) 
         cmap[5] = RGBA{Float64}(190/255, 216/255, 172/255, 1.) 
         cmap[6] = RGBA{Float64}(255/255, 255/255, 255/255, 1.) 
-        cmap[7] = RGBA{Float64}(157/255, 199/255, 189/255, 1.) 
+        cmap[7] = RGBA{Float64}(108/255, 183/255, 166/255, 1.) 
         phase_colors = cgrad(cmap, length(cmap), categorical=true, rev=false)
 
         # # Group phases for contouring
@@ -367,11 +367,11 @@ end
             off_string = @sprintf("%1.2lf", off)
 
 
-            # ax1 = Axis(f, title = L"$$C) Isotropic model", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]",
-            # bbox = BBox(0.19*w, w-0.19*w, 0.19*h, h-0.19*h))
+            ax1 = Axis(f, title = L"$$C) Isotropic model", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]",
+            bbox = BBox(0.19*w, w-0.19*w, 0.19*h, h-0.19*h))
 
-            ax1 = Axis(f, title = L"$$D) Anisotropic model", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]",
-            bbox = BBox(0.15*w, w-0.15*w, 0.15*h, h-0.15*h))
+            # ax1 = Axis(f, title = L"$$D) Anisotropic model", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]",
+            # bbox = BBox(0.19*w, w-0.19*w, 0.19*h, h-0.19*h))
 
             #  (\delta = 6, \theta_\text{ini} = 10^\text{o}) at $t$ = %$(tMy_string) Ma
 
@@ -404,8 +404,8 @@ end
 
             Mak.colgap!(f.layout, 20)
 
-            # save("/Users/tduretz/PowerFolders/_manuscripts/PureSimpleShearAnisotropy/Figures/Symmetric.png", f, px_per_unit = 4)     
-            save("/Users/tduretz/PowerFolders/_manuscripts/PureSimpleShearAnisotropy/Figures/Asymmetric.png", f, px_per_unit = 4)     
+            save("/Users/tduretz/PowerFolders/_manuscripts/PureSimpleShearAnisotropy/Figures/Symmetric.png", f, px_per_unit = 4)     
+            # save("/Users/tduretz/PowerFolders/_manuscripts/PureSimpleShearAnisotropy/Figures/Asymmetric.png", f, px_per_unit = 4)     
 
             display(f)
 

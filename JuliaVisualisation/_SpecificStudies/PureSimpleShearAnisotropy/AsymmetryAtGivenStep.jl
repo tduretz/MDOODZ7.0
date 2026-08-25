@@ -437,6 +437,21 @@ function Asymmetry( path, istep, show )
 
 end
 
+let 
+    # 
+    path ="/Users/tduretz/REPO/MDOODZ7.0/RUNS/RiftingAnisotropy/d6/"
+
+    crust, mantle, Stefan = Asymmetry(path, 200, false)
+    @show crust, mantle
+
+    crust, mantle, Stefan = Asymmetry(path, 800, false)
+    @show crust, mantle
+
+    crust, mantle, Stefan = Asymmetry(path, 2000, false)
+    @show crust, mantle
+end
+
+
 function FindFileNumberCorrespondingToTime(path, target_time)
 
     # File numbers

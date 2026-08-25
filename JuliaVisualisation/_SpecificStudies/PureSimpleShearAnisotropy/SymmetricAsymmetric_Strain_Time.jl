@@ -76,7 +76,7 @@ end
 
 
     # File numbers
-    step = [1000; 1200; 1200]
+    step = [200; 800; 2000]
     # Select field to visualise
     # field = :Phases
     # field = :Cohesion
@@ -169,7 +169,7 @@ end
 
     @unpack Lc, tc, Vc, τc = scales
 
-    model = ReadFile(path_LR, step[1], scales, options, PlotOnTop)
+    model = ReadFile(path_HR, step[1], scales, options, PlotOnTop)
     @unpack tMy, length_unit, Lx, Lz, xc, zc, ε̇II, τII, coords, V, T, ϕ, σ1, Fab, height, all_phases, Δ = model
 
     if @isdefined zoom
@@ -268,7 +268,7 @@ end
         # Switches
         PlotOnTop = (
             ph_contours   = true,  # add phase contours
-            fabric        = false,  # add fabric quiver (normal to director)
+            fabric        = true,  # add fabric quiver (normal to director)
             T_contours    = true,   # add temperature contours
             topo          = false,
             quiver_origin = false,
@@ -281,14 +281,14 @@ end
 
         cmap = :amp
 
-        model = ReadFile(path_LR, step[1], scales, options, PlotOnTop)
+        model = ReadFile(path_HR, step[1], scales, options, PlotOnTop)
         @unpack tMy, length_unit, Lx, Lz, xc, zc, ε̇II, τII, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, all_phases, εII, C, Δ = model
 
         𝐗_moho, 𝐗_lab = Moho_LAB_offset(all_phases, T, coords, height)
 
         stretch = tMy * (1e-15*3600*24*365.25*1e6) *100
         stretch_string = @sprintf("%1.2lf", stretch)
-        ax1 = Axis(f[1, 1], title = L"A) Isotropic model ($\delta = 1.0$) -  $\varepsilon$ = %$(stretch_string) %", ylabel = L"$y$ [%$(length_unit)]", xgridvisible = false, ygridvisible = false,)
+        ax1 = Axis(f[1, 1], title = L"A) $\delta = 1.0$, $\theta_\text{ini} = 10^\circ$ -  $\varepsilon$ = %$(stretch_string) %", ylabel = L"$y$ [%$(length_unit)]", xgridvisible = false, ygridvisible = false,)
         # hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(εII), colormap = Reverse(:amp), colorrange=(-1, 1))
         hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(εII), colormap = cmap, colorrange=(-1, 1))
 
@@ -296,10 +296,10 @@ end
         # hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(εII), colormap = (cmap, options.α_heatmap), colorrange=(-1, 1))
         # hm = heatmap!(ax1, coords.c_hr.x./Lc, coords.c_hr.z./Lc, all_phases.ph_dual_hr, colormap = :turbo)
 
-        AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, all_phases.group_phases, Δ/2, Mak)                
+        AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, all_phases.group_phases, Δ, Mak)                
         
-        lines!(𝐗_moho[1].*ones(size(zc)), zc./Lc, color=:black, linewidth=3)
-        lines!( 𝐗_lab[1].*ones(size(zc)), zc./Lc, color=:black, linewidth=3)
+        # lines!(𝐗_moho[1].*ones(size(zc)), zc./Lc, color=:black, linewidth=3)
+        # lines!( 𝐗_lab[1].*ones(size(zc)), zc./Lc, color=:black, linewidth=3)
 
         colsize!(f.layout, 1, Aspect(1, Lx/Lz))
         Mak.Colorbar(f[1, 2], hm, label =  L"$\log_{10}$ $\varepsilon_\textrm{II}$ [-]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
@@ -329,14 +329,14 @@ end
             PT_window     = false,
         )
 
-        model = ReadFile(path_MR, step[2], scales, options, PlotOnTop)
+        model = ReadFile(path_HR, step[2], scales, options, PlotOnTop)
         @unpack tMy, length_unit, Lx, Lz, xc, zc, ε̇II, τII, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, all_phases, εII, C, Δ = model
         
         𝐗_moho, 𝐗_lab = Moho_LAB_offset(all_phases, T, coords, height)
 
         stretch = tMy * (1e-15*3600*24*365.25*1e6) *100
         stretch_string = @sprintf("%1.2lf", stretch)
-        ax1 = Axis(f[2, 1], title = L"B) Anisotropic model ($\delta = 1.5$) - $\varepsilon$ = %$(stretch_string) %", ylabel = L"$y$ [%$(length_unit)]", xgridvisible = false, ygridvisible = false,)
+        ax1 = Axis(f[2, 1], title = L"B) $\delta = 1.0$, $\theta_\text{ini} = 10^\circ$ - $\varepsilon$ = %$(stretch_string) %", ylabel = L"$y$ [%$(length_unit)]", xgridvisible = false, ygridvisible = false,)
         # hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(τII), colormap = (cmap, options.α_heatmap), colorrange=(6.69, 8.69))
         # hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(εII), colormap = (cmap, options.α_heatmap), colorrange=(-1, 1))
         # hm = heatmap!(ax1, coords.c_hr.x./Lc, coords.c_hr.z./Lc, all_phases.ph_dual_hr, colormap = :turbo)
@@ -345,8 +345,8 @@ end
 
         AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, all_phases.group_phases, Δ, Mak)                
         
-        lines!(𝐗_moho[1].*ones(size(zc)), zc./Lc, color=:black, linewidth=3)
-        lines!( 𝐗_lab[1].*ones(size(zc)), zc./Lc, color=:black, linewidth=3)
+        # lines!(𝐗_moho[1].*ones(size(zc)), zc./Lc, color=:black, linewidth=3)
+        # lines!( 𝐗_lab[1].*ones(size(zc)), zc./Lc, color=:black, linewidth=3)
         
         colsize!(f.layout, 1, Aspect(1, Lx/Lz))
         Mak.Colorbar(f[2, 2], hm, label =  L"$\log_{10}$ $\varepsilon_\textrm{II}$ [-]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
@@ -385,7 +385,7 @@ end
 
         stretch = tMy * (1e-15*3600*24*365.25*1e6) *100
         stretch_string = @sprintf("%1.2lf", stretch)
-        ax1 = Axis(f[3, 1], title = L"C) Anisotropic model ($\delta = 6.0$) - $\varepsilon$ = %$(stretch_string) %", ylabel = L"$y$ [%$(length_unit)]", xlabel = L"$x$ [%$(length_unit)]", xgridvisible = false, ygridvisible = false,)
+        ax1 = Axis(f[3, 1], title = L"C) $\delta = 1.0$, $\theta_\text{ini} = 10^\circ$ - $\varepsilon$ = %$(stretch_string) %", ylabel = L"$y$ [%$(length_unit)]", xlabel = L"$x$ [%$(length_unit)]", xgridvisible = false, ygridvisible = false,)
         @show size(xc), size(zc), size(log10.(τII))
         # hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(τII), colormap = (cmap, options.α_heatmap), colorrange=(6.69, 8.69))
         # hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(εII), colormap = (cmap, options.α_heatmap), colorrange=(-1, 1))
@@ -395,8 +395,8 @@ end
 
         AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, all_phases.group_phases, Δ, Mak)                
         
-        lines!(𝐗_moho[1].*ones(size(zc)), zc./Lc, color=:black, linewidth=3)
-        lines!( 𝐗_lab[1].*ones(size(zc)), zc./Lc, color=:black, linewidth=3)
+        # lines!(𝐗_moho[1].*ones(size(zc)), zc./Lc, color=:black, linewidth=3)
+        # lines!( 𝐗_lab[1].*ones(size(zc)), zc./Lc, color=:black, linewidth=3)
 
         colsize!(f.layout, 1, Aspect(1, Lx/Lz))
         Mak.Colorbar(f[3, 2], hm, label =  L"$\log_{10}$ $\varepsilon_\textrm{II}$ [-]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
@@ -412,7 +412,7 @@ end
 
         ##############################################################
     
-        save("/Users/tduretz/PowerFolders/_manuscripts/PureSimpleShearAnisotropy/Figures/SymmetricAsymmetric_Strain.png", f, px_per_unit = 4)     end
+        save("/Users/tduretz/PowerFolders/_manuscripts/PureSimpleShearAnisotropy/Figures/SymmetricAsymmetric_Strain_Time.png", f, px_per_unit = 4)     end
 
     display(f)
 end
