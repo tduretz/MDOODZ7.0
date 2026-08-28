@@ -15,11 +15,13 @@ const cm_y = y*100.
 
     # Set the path to your files
     path ="/home/lilou/librairies/MDOODZ7.0/MDLIB/outputs/"
+#    path ="/home/lilou/librairies/MDOODZ7.0/save_runs/PS_advection_n3_20260724_140122/"
+ #   path ="/home/lilou/librairies/MDOODZ7.0/save_runs/PS_advection_n3_noElast_20260724_142534/"
 
     # File numbers
     file_start = 1
-    file_step  = 1
-    file_end   = 3
+    file_step  = 2
+    file_end   = 15
     
     # Select field to visualise
     # field = :Phases
@@ -41,7 +43,7 @@ const cm_y = y*100.
     # field = :GrainSize
     # field = :Topography
     # field = :TimeSeries 
-     field = :AnisotropyFactor
+    field = :AnisotropyFactor
     # field = :FabricAngle
     # field = :MeltFraction
     # field = :TimeSeries
@@ -59,7 +61,7 @@ const cm_y = y*100.
     # )
 
     # Switches
-    printfig    = false  # print figures to disk
+    printfig    = true #false   # print figures to disk
     printvid    = false
     framerate   = 12
     PlotOnTop = (
@@ -79,8 +81,8 @@ const cm_y = y*100.
     vel_scale   = 20
     vel_step    = 8
     nap         = 1    # pause for animation 
-    resol       = 300    # resolution
-    ar          = 1.2    # aspect ratio for Makie
+    resol       = 600    # resolution
+    ar          = 1.5    # aspect ratio for Makie
     mov_name    = "$(path)/_$(field)/$(field)"  # Name of the movie
     Lx, Lz      = 1.0, 1.0
     LAB_color   = true
@@ -100,7 +102,6 @@ const cm_y = y*100.
     cm_yr = 100.0*3600.0*24.0*365.25
 
     # Time loop
-    f = Figure(size = (Lx/Lz*resol*ar, resol), fontsize=40)
 
     for istep=file_start:file_step:file_end
     
@@ -251,9 +252,8 @@ const cm_y = y*100.
         @show mean(T), mean(P)
 
         #####################################
-        empty!(f)
-        ftsz =  30*resol/500
-        f = Figure(size = (Lx/Lz*resol*1.2, resol), fontsize=ftsz)
+        ftsz =  20*resol/500
+        f = Figure(size = (Lx/Lz*resol*ar, resol), figure_padding = 15, fontsize=ftsz)
 
         if field==:Phases
             ax1 = Axis(f[1, 1], title = L"Phases at $t$ = %$(tMy) Ma", xlabel = L"$x$ [m]", ylabel = L"$y$ [m]")
@@ -266,7 +266,7 @@ const cm_y = y*100.
             colgap!(f.layout, 20)
             xlims!(ax1, window.xmin, window.xmax)
             ylims!(ax1, window.zmin, window.zmax)
-            if printfig Print2Disk( f, path, string(field), istep) end
+            if printfig Print2Disk( f, path, string(field), istep, Mak) end
         end
 
         if field==:Viscosity_lin
@@ -274,11 +274,11 @@ const cm_y = y*100.
             hm = heatmap!(ax1, xc./Lc, zc./Lc, ηc, colormap = (:turbo, α_heatmap))#, colorrange=(0,0.3))
             AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, group_phases, Δ, Mak)                
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
-            Colorbar(f[1, 2], hm, label = L"$\eta$ [Pa.s]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
+            Colorbar(f[1, 2], hm, label = L"$\eta$ [Pa.s]", width = 40, labelsize = ftsz, ticklabelsize = ftsz )
             colgap!(f.layout, 20)
             xlims!(ax1, window.xmin, window.xmax)
             ylims!(ax1, window.zmin, window.zmax)
-            if printfig Print2Disk( f, path, string(field), istep) end
+            if printfig Print2Disk( f, path, string(field), istep, Mak) end
         end
 
         if field==:Viscosity
@@ -290,7 +290,7 @@ const cm_y = y*100.
             colgap!(f.layout, 20)
             xlims!(ax1, window.xmin, window.xmax)
             ylims!(ax1, window.zmin, window.zmax)
-            if printfig Print2Disk( f, path, string(field), istep) end
+            if printfig Print2Disk( f, path, string(field), istep, Mak) end
         end
 
         if field==:Density
@@ -302,7 +302,7 @@ const cm_y = y*100.
             colgap!(f.layout, 20)
             xlims!(ax1, window.xmin, window.xmax)
             ylims!(ax1, window.zmin, window.zmax)
-            if printfig Print2Disk( f, path, string(field), istep) end
+            if printfig Print2Disk( f, path, string(field), istep, Mak) end
         end
 
         if field==:Stress
@@ -314,7 +314,7 @@ const cm_y = y*100.
             colgap!(f.layout, 20)
             xlims!(ax1, window.xmin, window.xmax)
             ylims!(ax1, window.zmin, window.zmax)
-            if printfig Print2Disk( f, path, string(field), istep) end
+            if printfig Print2Disk( f, path, string(field), istep, Mak) end
         end
 
         if field==:σxx
@@ -326,7 +326,7 @@ const cm_y = y*100.
             colgap!(f.layout, 20)
             xlims!(ax1, window.xmin, window.xmax)
             ylims!(ax1, window.zmin, window.zmax)
-            if printfig Print2Disk( f, path, string(field), istep) end
+            if printfig Print2Disk( f, path, string(field), istep, Mak) end
         end
 
         if field==:σzz
@@ -338,7 +338,7 @@ const cm_y = y*100.
             colgap!(f.layout, 20)
             xlims!(ax1, window.xmin, window.xmax)
             ylims!(ax1, window.zmin, window.zmax)
-            if printfig Print2Disk( f, path, string(field), istep) end
+            if printfig Print2Disk( f, path, string(field), istep, Mak) end
         end
 
         if field==:Pressure
@@ -350,7 +350,7 @@ const cm_y = y*100.
             colgap!(f.layout, 20)
             xlims!(ax1, window.xmin, window.xmax)
             ylims!(ax1, window.zmin, window.zmax)
-            if printfig Print2Disk( f, path, string(field), istep) end
+            if printfig Print2Disk( f, path, string(field), istep, Mak) end
         end
 
         if field==:Divergence
@@ -362,7 +362,7 @@ const cm_y = y*100.
             colgap!(f.layout, 20)
             xlims!(ax1, window.xmin, window.xmax)
             ylims!(ax1, window.zmin, window.zmax)
-            if printfig Print2Disk( f, path, string(field), istep) end
+            if printfig Print2Disk( f, path, string(field), istep, Mak) end
         end
 
         if field==:StrainRate
@@ -374,7 +374,7 @@ const cm_y = y*100.
             colgap!(f.layout, 20)
             xlims!(ax1, window.xmin, window.xmax)
             ylims!(ax1, window.zmin, window.zmax)
-            if printfig Print2Disk( f, path, string(field), istep) end #if printfig Print2Disk( f, path, string(field),ε̇BG) end
+            if printfig Print2Disk( f, path, string(field), istep, Mak) end #if printfig Print2Disk( f, path, string(field),ε̇BG) end
         end
 
         if field==:PlasticStrainrate
@@ -387,7 +387,7 @@ const cm_y = y*100.
             colgap!(f.layout, 20)
             xlims!(ax1, window.xmin, window.xmax)
             ylims!(ax1, window.zmin, window.zmax)
-            if printfig Print2Disk( f, path, string(field), istep) end
+            if printfig Print2Disk( f, path, string(field), istep, Mak) end
         end
 
         if field==:Velocity
@@ -403,7 +403,7 @@ const cm_y = y*100.
             colgap!(f.layout, 20)
             xlims!(ax1, window.xmin, window.xmax)
             ylims!(ax1, window.zmin, window.zmax)
-            if printfig Print2Disk( f, path, string(field), istep) end
+            if printfig Print2Disk( f, path, string(field), istep, Mak) end
         end
 
         if field==:Velocity_x 
@@ -415,7 +415,7 @@ const cm_y = y*100.
             colgap!(f.layout, 20)
             xlims!(ax1, window.xmin, window.xmax)
             ylims!(ax1, window.zmin, window.zmax)
-            if printfig Print2Disk( f, path, string(field), istep) end
+            if printfig Print2Disk( f, path, string(field), istep, Mak) end
         end
 
         if field==:Velocity_z
@@ -427,7 +427,7 @@ const cm_y = y*100.
             colgap!(f.layout, 20)
             xlims!(ax1, window.xmin, window.xmax)
             ylims!(ax1, window.zmin, window.zmax)
-            if printfig Print2Disk( f, path, string(field), istep) end
+            if printfig Print2Disk( f, path, string(field), istep, Mak) end
         end
 
         if field==:GrainSize
@@ -445,25 +445,19 @@ const cm_y = y*100.
             colgap!(f.layout, 20)
             xlims!(ax1, window.xmin, window.xmax)
             ylims!(ax1, window.zmin, window.zmax)
-            if printfig Print2Disk( f, path, string(field), istep) end
+            if printfig Print2Disk( f, path, string(field), istep, Mak) end
         end
 
         if field==:AnisotropyFactor
             ax1 = Axis(f[1, 1], title = L"$δ_\textrm{ani}$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
             hm = heatmap!(ax1, xc./Lc, zc./Lc, δani, colormap = (:bilbao, α_heatmap))
             AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, group_phases, Δ, Mak)                
-            # xminz, xmaxz = -0.4, 0.4
-            # zminz, zmaxz = -0.17, 0.17
-            # Lx = xmaxz - xminz
-            # Lz = zmaxz - zminz
-            # xlims!(ax1, -0.4, 0.4)
-            # ylims!(ax1, -0.17, 0.17)
             Colorbar(f[1, 2], hm, label = L"$δ_\textrm{ani}$", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
             colgap!(f.layout, 20)
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
             xlims!(ax1, window.xmin, window.xmax)
             ylims!(ax1, window.zmin, window.zmax)
-            if printfig Print2Disk( f, path, string(field), istep) end
+            if printfig Print2Disk( f, path, string(field), istep, Mak) end
         end
 
         if field==:FabricAngle
@@ -486,7 +480,7 @@ const cm_y = y*100.
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
             xlims!(ax1, window.xmin, window.xmax)
             ylims!(ax1, window.zmin, window.zmax)
-            if printfig Print2Disk( f, path, string(field), istep) end
+            if printfig Print2Disk( f, path, string(field), istep, Mak) end
         end
 
         if field==:MeltFraction
@@ -498,7 +492,7 @@ const cm_y = y*100.
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
             xlims!(ax1, window.xmin, window.xmax)
             ylims!(ax1, window.zmin, window.zmax)
-            if printfig Print2Disk( f, path, string(field), istep) end
+            if printfig Print2Disk( f, path, string(field), istep, Mak) end
         end
 
         if field==:Cohesion
@@ -510,7 +504,7 @@ const cm_y = y*100.
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
             xlims!(ax1, window.xmin, window.xmax)
             ylims!(ax1, window.zmin, window.zmax)
-            if printfig Print2Disk( f, path, string(field), istep) end
+            if printfig Print2Disk( f, path, string(field), istep, Mak) end
         end
 
         if field==:Temperature
@@ -522,7 +516,7 @@ const cm_y = y*100.
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
             xlims!(ax1, window.xmin, window.xmax)
             ylims!(ax1, window.zmin, window.zmax)
-            if printfig Print2Disk( f, path, string(field), istep) end
+            if printfig Print2Disk( f, path, string(field), istep, Mak) end
         end
 
         if field==:Topography
@@ -701,7 +695,7 @@ const cm_y = y*100.
             xlims!(ax4, -200, 200)
 
 
-            if printfig Print2Disk( f, path, string(field), istep) end
+            if printfig Print2Disk( f, path, string(field), istep, Mak) end
         end
 
         if field!=:EffectiveFrictionTime || field!=:PTtime || istep!=file_end
