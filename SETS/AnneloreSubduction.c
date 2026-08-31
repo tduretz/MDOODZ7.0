@@ -4,7 +4,6 @@
 #include "stdlib.h"
 #include "stdio.h"
 
-
 int SetDualPhase(MdoodzInput *input, Coordinates coordinate, int phase) {
     
     // Passive tracer function. Useful for visualisation
@@ -32,8 +31,10 @@ int SetDualPhase(MdoodzInput *input, Coordinates coordinate, int phase) {
 }
 
 
+// Initial free-surface level. Also used by SetBCVz to bound the boundary inflow integral,
+// so that the velocity boundary conditions conserve volume.
 double SetSurfaceZCoord(MdoodzInput *instance, double x_coord) {
-  const double TopoLevel   = -0.0e3 / instance->scaling.L;
+  const double TopoLevel   = 0.0e3 / instance->scaling.L;
 
   return TopoLevel;
 }
@@ -131,27 +132,56 @@ void AddCrazyConductivity(MdoodzInput *input) {
   input->crazyConductivity               = crazyConductivity;
 }
 
-// Smooth transition of vertical boundary velocity profile
+// Smooth transition of horizontal boundary velocity with depth: V in the plate (z > z_LAB), 0 below
 double BoundaryVelocityProfile(double V, double z, double z_LAB, double dz_smooth) {
   return -0.5*V*erfc( (z-z_LAB)/dz_smooth ) + V;
 }
 
+// Exact antiderivative of BoundaryVelocityProfile with respect to z
 double BoundaryVelocityProfilePrimitive(double V, double z, double z_LAB, double dz_smooth) {
-  return V*(z - 0.5*(z-z_LAB) * erfc( (z-z_LAB)/dz_smooth ) );
+  const double u = (z-z_LAB)/dz_smooth;
+  return V*( z - 0.5*dz_smooth*( u*erfc(u) - exp(-u*u)/sqrt(M_PI) ) );
+}
+
+// Plate velocities imposed on the W and E boundaries.
+// user2 = V_tot = VxE - VxW: total convergence (<0) or divergence (>0) rate [m/s]
+// user3 = fraction of V_tot applied on the W boundary (0.5: symmetric push)
+void BoundaryPlateVelocities(MdoodzInput *instance, double *VxW, double *VxE) {
+  const double V_tot = instance->model.user2/instance->scaling.V;
+  const double fW    = instance->model.user3;
+  *VxW = -fW*V_tot;
+  *VxE = (1.0-fW)*V_tot;
+}
+
+// Vertical velocity on the S boundary that balances the net volume flux through the W and E boundaries.
+// The inflow profiles are integrated from the base of the model up to the free surface (not up to zmax):
+// the nodes above the free surface are "air" and do not transport material.
+double BalancingBottomVelocity(MdoodzInput *instance) {
+  const double Lx        = instance->model.xmax - instance->model.xmin;
+  const double z_min     = instance->model.zmin;
+  const double z_LAB     = -instance->model.user1/instance->scaling.L;
+  const double dz_smooth = 10e3/instance->scaling.L;
+  const double z_surf_W  = SetSurfaceZCoord(instance, instance->model.xmin);
+  const double z_surf_E  = SetSurfaceZCoord(instance, instance->model.xmax);
+  double VxW, VxE;
+  BoundaryPlateVelocities(instance, &VxW, &VxE);
+  // Volume fluxes (per unit length in y), positive in +x direction
+  const double fluxW = BoundaryVelocityProfilePrimitive(VxW, z_surf_W, z_LAB, dz_smooth) - BoundaryVelocityProfilePrimitive(VxW, z_min, z_LAB, dz_smooth);
+  const double fluxE = BoundaryVelocityProfilePrimitive(VxE, z_surf_E, z_LAB, dz_smooth) - BoundaryVelocityProfilePrimitive(VxE, z_min, z_LAB, dz_smooth);
+  const double net_inflow = fluxW - fluxE;
+  // Mass conservation: what enters through the sides must leave through the base (VzS < 0 for net inflow)
+  return -net_inflow / Lx;
 }
 
 SetBC SetBCVx(MdoodzInput *instance, POSITION position, Coordinates coordinates) {
   SetBC bc;
   const double dz_smooth = 10e3/instance->scaling.L;
-  double V_tot    =  instance->model.user2/instance->scaling.V; // |VxW| + |VxE|
+  const double z_LAB     = -instance->model.user1/instance->scaling.L;
+  const double z         = coordinates.z;
   double VxW, VxE;
-  double z_LAB = -instance->model.user1/instance->scaling.L, z_top = instance->model.zmax;
-  const double x = coordinates.x, z = coordinates.z;
 
   // Evaluate velocity of W and E boundaries
-  //  VxW =  -0.25*V_tot;
-    VxW =  -0.5*V_tot;
-    VxE =  0.5*V_tot;
+  BoundaryPlateVelocities(instance, &VxW, &VxE);
 
   // Apply smooth transition with depth
   VxW = BoundaryVelocityProfile(VxW, z, z_LAB, dz_smooth);
@@ -176,33 +206,8 @@ SetBC SetBCVx(MdoodzInput *instance, POSITION position, Coordinates coordinates)
 
 SetBC SetBCVz(MdoodzInput *instance, POSITION position, Coordinates coordinates) {
   SetBC bc;
-  const double Lx = instance->model.xmax - instance->model.xmin, dz_smooth = 10e3/instance->scaling.L;
-  double V_tot    =  instance->model.user2/instance->scaling.V; // |VxW| + |VxE|
-  double tet_W, alp_W, tet_E, alp_E;
-  double VxW, VxE, VzW, VzE, VzS=0.0;
-  double z_LAB = -instance->model.user1/instance->scaling.L, z_top = instance->model.zmax;
-  const double x = coordinates.x, z = coordinates.z;  
-
-  // Evaluate velocity of W and E boundaries
-    VxW = -0.5*V_tot;
-    VxE =  0.5*V_tot;
-    VzW =  0.0;
-    VzE =  0.0;
-
-  // Compute compensating VzS value
-  const double z_min       = instance->model.zmin; 
-  const double prim_W_zmax = BoundaryVelocityProfilePrimitive(VxW, z_top, z_LAB, dz_smooth);
-  const double prim_W_zmin = BoundaryVelocityProfilePrimitive(VxW, z_min, z_LAB, dz_smooth);
-  const double prim_E_zmax = BoundaryVelocityProfilePrimitive(VxE, z_top, z_LAB, dz_smooth);
-  const double prim_E_zmin = BoundaryVelocityProfilePrimitive(VxE, z_min, z_LAB, dz_smooth);
-  const double intW = prim_W_zmax - prim_W_zmin;
-  const double intE = prim_E_zmax - prim_E_zmin;
-  //hardcoded
-  VzS = -0.0791425;
-
-  // Apply smooth transition with depth
-  VzW = -BoundaryVelocityProfile(VzW, z, z_LAB, dz_smooth);
-  VzE = -BoundaryVelocityProfile(VzE, z, z_LAB, dz_smooth);
+  const double VzW = 0.0, VzE = 0.0;
+  const double VzS = BalancingBottomVelocity(instance);
 
   if (position == W || position == SW || position == NW ) {
     bc.value = VzW;
@@ -228,7 +233,6 @@ int main(int nargs, char *args[]) {
     asprintf(&input_file, "AnneloreSubduction.txt"); // Default
   }
   else {
-    printf("dodo %s\n", args[1]);
     asprintf(&input_file, "%s", args[1]);     // Custom
   }
   printf("Running MDoodz7.0 using %s\n", input_file);

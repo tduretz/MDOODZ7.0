@@ -490,7 +490,7 @@ void SetBCs(SetBCs_ff setBCs, MdoodzInput *instance, grid *mesh, surface *topo) 
     }
   }
 
-  LOG_INFO("VxWestSum*dx: %f, VxEastSum*dx: %f, VzEastSum*dz: %f: ", VxWestSum*mesh->dz, VxEastSum*mesh->dz, VzSouthSum*mesh->dx);
+  LOG_INFO("VxWestSum*dz: %f, VxEastSum*dz: %f, VzSouthSum*dx: %f", VxWestSum*mesh->dz, VxEastSum*mesh->dz, VzSouthSum*mesh->dx);
   LOG_INFO("Total West+East+South sum: %f", fabs(VxWestSum*mesh->dz) + fabs(VxEastSum*mesh->dz)  - fabs(VzSouthSum*mesh->dx));
 
   if (instance->model.balance_boundaries && (VzSouthSum > tolerance || VzSouthSum < -tolerance)) {
