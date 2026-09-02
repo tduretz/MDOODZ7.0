@@ -17,11 +17,13 @@ const cm_y = y*100.
     path ="/home/lilou/librairies/MDOODZ7.0/MDLIB/outputs/"
 #    path ="/home/lilou/librairies/MDOODZ7.0/save_runs/PS_advection_n3_20260724_140122/"
  #   path ="/home/lilou/librairies/MDOODZ7.0/save_runs/PS_advection_n3_noElast_20260724_142534/"
+#    path ="/home/lilou/librairies/MDOODZ7.0/save_runs/PS_noevol_n3_20260831_142058/"
+#    path ="/home/lilou/librairies/MDOODZ7.0/save_runs/PS_noevol_n3_hardinclusion_20260901_104235/"
 
     # File numbers
-    file_start = 1
-    file_step  = 2
-    file_end   = 15
+    file_start = 48
+    file_step  = 1
+    file_end   = 48
     
     # Select field to visualise
     # field = :Phases
@@ -30,10 +32,11 @@ const cm_y = y*100.
     #  field = :Viscosity_lin  
     # field = :Viscosity  
     # field = :PlasticStrainrate
-    #field = :Stress
+    # field = :Stress
+       field = :Wdiss
     # field = :σxx
     # field = :σzz
-    # field = :StrainRate
+    #  field = :StrainRate
     # field = :Pressure 
     # field = :Divergence
     # field = :Temperature
@@ -43,7 +46,7 @@ const cm_y = y*100.
     # field = :GrainSize
     # field = :Topography
     # field = :TimeSeries 
-    field = :AnisotropyFactor
+    # field = :AnisotropyFactor
     # field = :FabricAngle
     # field = :MeltFraction
     # field = :TimeSeries
@@ -51,6 +54,8 @@ const cm_y = y*100.
     # field = :ChristmasTree
     # field = :PTtime
     # field = :GPE
+
+
 
     # Define Tuple for enlargment window
     # zoom = ( 
@@ -311,6 +316,19 @@ const cm_y = y*100.
             AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, group_phases, Δ, Mak)                
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
             Colorbar(f[1, 2], hm, label = L"$\tau_\textrm{II}$ [MPa]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
+            colgap!(f.layout, 20)
+            xlims!(ax1, window.xmin, window.xmax)
+            ylims!(ax1, window.zmin, window.zmax)
+            if printfig Print2Disk( f, path, string(field), istep, Mak) end
+        end
+
+        if field==:Wdiss
+            ax1 = Axis(f[1, 1], title = L"$W_{diss}$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
+            Wdiss = τII.*τII./(ηc .+ 1e-20)
+            hm = heatmap!(ax1, xc./Lc, zc./Lc, Wdiss, colormap = (:turbo, α_heatmap)) 
+            AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, group_phases, Δ, Mak)                
+            colsize!(f.layout, 1, Aspect(1, Lx/Lz))
+            Colorbar(f[1, 2], hm, label = L"$W_{diss}$ ", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
             colgap!(f.layout, 20)
             xlims!(ax1, window.xmin, window.xmax)
             ylims!(ax1, window.zmin, window.zmax)
