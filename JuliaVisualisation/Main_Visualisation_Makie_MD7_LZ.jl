@@ -30,15 +30,14 @@ const cm_y = y*100.
     # field = :Phases
     # field = :Cohesion
     # field = :Density
-    #  field = :Viscosity_lin  
+     field = :Viscosity_lin  
     # field = :Viscosity  
     # field = :PlasticStrainrate
     # field = :Stress
     #   field = :Wdiss
     # field = :σxx
     # field = :σzz
-     field = :Strain
-    # field = :StrainRate
+    #field = :StrainRate
     # field = :Pressure 
     # field = :Divergence
     # field = :Temperature
@@ -200,7 +199,7 @@ const cm_y = y*100.
         name_csv_strain = @sprintf("/home/lilou/librairies/MDOODZ7.0/JuliaVisualisation/CSV/strainII.Output%05d.csv", istep)
         CSV.write(name_csv_tau,     Tables.table(τII), writeheader=false)
         CSV.write(name_csv_eps_dot, Tables.table(ε̇II), writeheader=false)
-        CSV.write(name_csv_strain, Tables.table(εII), writeheader=false)
+        CSV.write(name_csv_strain, Tables.table(ε̇II .* t), writeheader=false)
 
         τxzc  = 0.25*(τxz[1:end-1,1:end-1] .+ τxz[2:end,1:end-1] .+ τxz[1:end-1,2:end] .+ τxz[2:end,2:end]) 
         C     = Float64.(reshape(ExtractData( filename, "/Centers/cohesion"), ncx, ncz))
@@ -397,20 +396,9 @@ const cm_y = y*100.
             if printfig Print2Disk( f, path, string(field), istep, Mak) end
         end
 
-        if field==:Strain
-            ax1 = Axis(f[1, 1], title = L"${\varepsilon}_\textrm{II}$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
-            hm = heatmap!(ax1, xc./Lc, zc./Lc, εII, colormap = (:turbo, α_heatmap)) #, colorrange=(-4.,1.))
-            AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, group_phases, Δ, Mak)                
-            colsize!(f.layout, 1, Aspect(1, Lx/Lz))
-            Colorbar(f[1, 2], hm, label =  L"$( \varepsilon_\textrm{II}$ ) [s$^{-1}$]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
-            colgap!(f.layout, 20)
-            xlims!(ax1, window.xmin, window.xmax)
-            ylims!(ax1, window.zmin, window.zmax)
-            if printfig Print2Disk( f, path, string(field), istep, Mak) end #if printfig Print2Disk( f, path, string(field),ε̇BG) end
-        end
 
         if field==:StrainRate
-            ax1 = Axis(f[1, 1], title = L"$\dot{\varepsilon}_\textrm{II}$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [%$(length_unit)]", ylabel = L"$y$ [%$(length_unit)]")
+            ax1 = Axis(f[1, 1], title = L"$\dot{\varepsilon}_\textrm{II}$ at $t$ = %$(t) s", xlabel = L"$x$ [%$(length_unit)]", ylabel = L"$y$ [%$(length_unit)]")
             hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(ε̇II), colormap = (:turbo, α_heatmap))
             AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, group_phases, Δ, Mak)                
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
