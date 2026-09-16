@@ -621,6 +621,10 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         // Get dissipative work-rate from previous step
         P2Mastah( &input.model, particles, particles.Wdiss,     &mesh, mesh.Wdiss,     mesh.BCp.type,  1, 0, interp, cent, 1, pool);
 
+        if (input.model.anisotropy == 1 ) {
+            // Get damaged volumes from previous step
+            P2Mastah( &input.model, particles, particles.Vdam,     &mesh, mesh.Vdam,     mesh.BCp.type,  1, 0, interp, cent, 1, pool);
+        }
 
         // Singletons: kx (vxnodes), kz (vznodes) — not fused
         P2Mastah ( &input.model, particles, input.materials.k_eff, &mesh, mesh.kx, mesh.BCu.type,  0, 0, interp, vxnodes, 1, pool);
@@ -1188,7 +1192,12 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         UpdateParticleEnergy( &mesh, input.scaling, input.model, &particles, &input.materials );
 
         // Dissipative work-rate
-        UpdateParticleWdiss( &mesh, input.scaling, input.model, &particles, &input.materials ); // CLZ
+        UpdateParticleWdiss( &mesh, input.scaling, input.model, &particles, &input.materials ); 
+
+        if (input.model.anisotropy == 1){
+            // Damaged volume 
+            UpdateParticleVdam( &mesh, input.scaling, input.model, &particles, &input.materials ); 
+        }
 
 
         // Grain size evolution

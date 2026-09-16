@@ -23,18 +23,18 @@ const cm_y = y*100.
 
     # File numbers
     file_start = 1
-    file_step  = 10
-    file_end   = 50
+    file_step  = 6
+    file_end   = 12
     
     # Select field to visualise
     # field = :Phases
     # field = :Cohesion
     # field = :Density
-     field = :Viscosity_lin  
+    # field = :Viscosity_lin  
     # field = :Viscosity  
     # field = :PlasticStrainrate
-    # field = :Stress
-    #   field = :Wdiss
+     field = :Stress
+    #  field = :Wdiss
     # field = :σxx
     # field = :σzz
     #field = :StrainRate
@@ -48,6 +48,7 @@ const cm_y = y*100.
     # field = :Topography
     # field = :TimeSeries 
     # field = :AnisotropyFactor
+    # field = :Vdam
     # field = :FabricAngle
     # field = :MeltFraction
     # field = :TimeSeries
@@ -87,7 +88,7 @@ const cm_y = y*100.
     vel_arrow   = 5
     vel_scale   = 20
     vel_step    = 8
-    nap         = 1    # pause for animation 
+    nap         = file_step/10    # pause for animation 
     resol       = 600    # resolution
     ar          = 1.5    # aspect ratio for Makie
     mov_name    = "$(path)/_$(field)/$(field)"  # Name of the movie
@@ -225,6 +226,8 @@ const cm_y = y*100.
             nrm     = sqrt.(Fab.x.^2 .+ Fab.z.^2)
             Fab.x ./= nrm
             Fab.z ./= nrm
+            Vdam    = Float64.(reshape(ExtractData( filename, "/Vertices/Vdam"), nvx, nvz))
+
         end
         height = 0.
         if PlotOnTop.topo
@@ -482,7 +485,7 @@ const cm_y = y*100.
 
         if field==:AnisotropyFactor
             ax1 = Axis(f[1, 1], title = L"$δ_\textrm{ani}$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
-            hm = heatmap!(ax1, xc./Lc, zc./Lc, δani, colormap = (:bilbao, α_heatmap))
+            hm = heatmap!(ax1, xc./Lc, zc./Lc, δani, colormap = (:bilbao, α_heatmap), colorrange=(1.0, 2.0))
             AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, group_phases, Δ, Mak)                
             Colorbar(f[1, 2], hm, label = L"$δ_\textrm{ani}$", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
             colgap!(f.layout, 20)
@@ -490,6 +493,19 @@ const cm_y = y*100.
             xlims!(ax1, window.xmin, window.xmax)
             ylims!(ax1, window.zmin, window.zmax)
             if printfig Print2Disk( f, path, string(field), istep, Mak) end
+        end
+
+        if field==:Vdam
+            ax1 = Axis(f[1, 1], title = L"$δ_\textrm{ani}$ at $t$ = %$(t) s", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
+            hm = heatmap!(ax1, xv./Lc, zv./Lc, Vdam, colormap = (:bilbao, α_heatmap))#, colorrange=(0.0, 1.0))
+           # AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, group_phases, Δ, Mak)                
+            Colorbar(f[1, 2], hm, label = L"Vdam", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
+            colgap!(f.layout, 20)
+            colsize!(f.layout, 1, Aspect(1, Lx/Lz))
+            xlims!(ax1, window.xmin, window.xmax)
+            ylims!(ax1, window.zmin, window.zmax)
+            if printfig Print2Disk( f, path, string(field), istep, Mak) end
+            @info Vdam
         end
 
         if field==:FabricAngle

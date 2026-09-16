@@ -290,6 +290,8 @@ markers PartAlloc(ParticlesInput particlesInput, params *model) {
   if (model->anisotropy == 1) {
     particles.nx = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
     particles.nz = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
+    particles.Vdam   = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
+
     if (model->marker_aniso_angle) {
       particles.aniso_angle = DoodzCalloc(particles.Nb_part_max, sizeof(DoodzFP));
     }
@@ -333,6 +335,7 @@ void PartFree( markers *particles, params* model ) {
     DoodzFree(particles->rho);
     DoodzFree(particles->Wdiss);
 
+
     DoodzFree(particles->strain);
     DoodzFree(particles->strain_el);
     DoodzFree(particles->strain_pl);
@@ -366,6 +369,7 @@ void PartFree( markers *particles, params* model ) {
     if (model->anisotropy == 1) {
         DoodzFree(particles->nx);
         DoodzFree(particles->nz);
+        DoodzFree(particles->Vdam);
         if (model->marker_aniso_angle) {
           DoodzFree(particles->aniso_angle);
         }
@@ -544,7 +548,7 @@ grid GridAlloc(params *model) {
   mesh.BCt.val        = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
   mesh.BCt_fine.type  = DoodzCalloc((2*Nx-2) * (2*Nz-2), sizeof(char));
   mesh.BCt_fine.val   = DoodzCalloc((2*Nx-2) * (2*Nz-2), sizeof(double));
-  mesh.Wdiss          = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+  mesh.Wdiss          = DoodzCalloc((Nx) * (Nz), sizeof(double));
   mesh.Wel            = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
   mesh.Wtot           = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
 
@@ -695,6 +699,8 @@ grid GridAlloc(params *model) {
   if (model->anisotropy == 1) Initialise1DArrayDouble(mesh.aniso_delta_s, (Nx - 0) * (Nz - 0), 1.0);
   if (model->anisotropy == 1) mesh.aniso_factor_n = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double)); // To delete
   if (model->anisotropy == 1) mesh.aniso_factor_s = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double)); // To delete
+  if (model->anisotropy == 1) mesh.Vdam           = DoodzCalloc((Nx) * (Nz), sizeof(double));
+
   if (model->anisotropy == 1) {
     for (int k=0; k<(Nx - 1) * (Nz - 1); k++) mesh.aniso_factor_n[k] = 1.0;
     for (int k=0; k<(Nx - 0) * (Nz - 0); k++) mesh.aniso_factor_s[k] = 1.0;
@@ -1044,6 +1050,7 @@ void GridFree(grid *mesh, params *model) {
     if ( model->anisotropy == 1 ) DoodzFree(mesh->aniso_factor_s);
     if ( model->anisotropy == 1 ) DoodzFree(mesh->dam_Apwl_n);
     if ( model->anisotropy == 1 ) DoodzFree(mesh->dam_Apwl_s);
+    if ( model->anisotropy == 1 ) DoodzFree(mesh->Vdam);
     // Compressibility
     DoodzFree(mesh->p0_n);
     DoodzFree(mesh->p0_s);

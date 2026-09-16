@@ -279,7 +279,7 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
     char  *compo, *compo_hr, *compo_dual_hr;
     float *Cxviz, *Czviz, *Cxviz_hr, *Czviz_hr, *Cxtopo, *Cztopo, *Cheight, *Cheight_finer_c, *Ctopovx, *Ctopovz, *Ctopovx_mark, *Ctopovz_mark;
     double *P_total;
-    float  *Ccohesion, *Cfriction, *Cani_fac;
+    float  *Ccohesion, *Cfriction, *Cani_fac, *Cvdam;
 
     P_total  = DoodzCalloc((model.Nx-1)*(model.Nz-1), sizeof(double));
 
@@ -588,6 +588,9 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
         Cani_fac = DoodzMalloc( sizeof(float)*(model.Nx-1)*(model.Nz-1));
         DoubleToFloat( mesh->aniso_factor_n, Cani_fac, (model.Nx-1)*(model.Nz-1) );
 
+        // Damaged proportion
+        Cvdam = DoodzMalloc( sizeof(float)*(model.Nx)*(model.Nz));
+        DoubleToFloat( mesh->Vdam, Cvdam, (model.Nx)*(model.Nz) );
     }
 
     if ( model.track_T_P_x_z == 1 ) {
@@ -842,6 +845,8 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
         AddFieldToGroup( FileName, "Centers" , "nx", 'f', (model.Nx-1)*(model.Nz-1), Cnx, 1 );
         AddFieldToGroup( FileName, "Centers" , "nz", 'f', (model.Nx-1)*(model.Nz-1), Cnz, 1 );
         AddFieldToGroup( FileName, "Centers" , "ani_fac", 'f', (model.Nx-1)*(model.Nz-1), Cani_fac, 1 );
+        AddFieldToGroup( FileName, "Vertices", "Vdam", 'f', model.Nx*model.Nz,         Cvdam, 1 );
+
     }
 
     if (model.track_T_P_x_z == 1) {
@@ -967,6 +972,7 @@ void WriteOutputHDF5( grid *mesh, markers *particles, surface *topo, markers* to
          DoodzFree( Cnx );
          DoodzFree( Cnz );
          DoodzFree( Cani_fac );
+         DoodzFree( Cvdam );
      }
 
     if ( model.track_T_P_x_z == 1 ) {

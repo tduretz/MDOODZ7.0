@@ -30,10 +30,15 @@ Without advection ok. With advection ok with `constant_dt = 0`.
 Hardcoded parameters :
 - `gamma0_dam` = viscosity of damaged material
 - `WR_th` = work-rate threshold for damage -> around that value damage is localized otherwise no
+- `p` = maximum proportional change on Vdam in one time step
 
 Computation of damage and anisotropy factor in `AnisotropyRoutines.c: AnisotropicDamage` called from `AnisotropyRoutines.c: UpdateAnisotropyFactor`, fitted function from microscopic data of the paper in `AnisotropyRoutines.c: DamagedVolume`. Damage and anisotropy factor are computed before the mechanical iterations, from the dissipative work-rate (Wdiss) of precedent time-step, advected after projection on the particles (the field has been added on the particles). 
 
 Computation of the anisotropy angle is done in `RheologyParticles.c:UpdateParticleStress` directly on the particles, after the mechanical iteration, using the stress computed at the same time step. So the angle will be used in next time step.
+
+The proportion of damaged material (Vdam) is advected and reused in next time step. The arrays for Vdam are only allocated if the anisotropy flag is true. 
+
+Wdiss and Vdam are of size Nx*Nz and not defined twice in centers and on vertices.
 
 
 

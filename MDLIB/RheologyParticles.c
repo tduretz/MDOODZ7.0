@@ -1544,6 +1544,21 @@ void UpdateParticleWdiss( grid* mesh, scale scaling, params model, markers* part
 /*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------*/
 
+void UpdateParticleVdam (grid* mesh, scale scaling, params model, markers* particles, mat_prop* materials ) {
+
+    const int Nx = mesh->Nx; //Ncx = Nx-1;
+    const int Nz = mesh->Nz; //Ncz = Nz-1;
+
+    // Interp increments to particles
+    Interp_Grid2P_centroids2( *particles, particles->Vdam, mesh, mesh->Vdam, mesh->xvz_coord,  mesh->zvx_coord, Nx-1, Nz-1, mesh->BCt.type, &model  );
+
+
+}
+
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
+
 void UpdateParticleEnergy( grid* mesh, scale scaling, params model, markers* particles, mat_prop* materials ) {
 
     DoodzFP *T_inc_mark, *Tm0, dtm, *dTms, *dTgr, *dTmr, *rho_part;
