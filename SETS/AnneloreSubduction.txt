@@ -4,7 +4,7 @@
 
 /**** RESTART ****/
 istep    	= 500	/ Restart file number
-irestart 	= 1	/ Restart switch
+irestart 	= 0	/ Restart switch
 
 /**** OUTPUT FILES ****/
 writer_subfolder = AnneloreSubduction
@@ -60,8 +60,8 @@ marker_noise       = 1			/ Marker noise switch
 bkg_strain_rate    = 1e-15 		/ Background strain rate [s-1] => extension rate = 1 cm/yr
 user0              = 1450   		/ Mantle temperature [oC]
 user1              = 80e3   		/ Lithospheric thickness [m]
-user2              = -3.17e-9  		/ Plate velocity [m/s] (compression -> negative)
-user3              = 0.5    		/ Amount of push from left side
+user2              = -3.17e-9  		/ Total convergence rate VxE-VxW [m/s] (convergence -> negative, divergence -> positive)
+user3              = 0.5    		/ Fraction of user2 applied on the W boundary (0.5: symmetric push)
 
 /**** GRAVITY ****/
 gx = 0.0000				/ Gravitational acceleration in x
@@ -73,7 +73,7 @@ Nb_phases = 3
 ID     = 0	/mantle			/ Phase identity used to assign material to phase
 rho    = 3250.00         		/ Reference density
 G      = 3e10				/ Shear modulus
-Cv     = 1050				/ Heat capacity
+Cp     = 1050				/ Heat capacity
 k      = 3.0				/ Thermal conductivity
 Qr     = 1e-10				/ Amount of radiogenic heat production
 C      = 1e6				/ Cohesion
@@ -87,14 +87,13 @@ pwlv   = 40				/ Choose dislocation creep parameters from database. Number can b
 linv   = 40				/ Choose diffusion creep parameters from database. Number can be taken from Flow Laws.c
 gbsv   = 0				/ Choose grain boundary sliding parameters from database. Number can be taken from Flow Laws.c
 expv   = 40				/ Choose Peierls creep parameters from database. Number can be taken from Flow Laws.c
-gsel   = 0				/ Grain size evolution switch
 eta0   = 1e22				/ Constant viscosity value
 gs_ref = 5e-3				/ Reference grain size
 
-ID     = 1   /lithopshere
+ID     = 1   /lithosphere
 rho    = 3250.00
 G      = 3e10
-Cv     = 1050
+Cp     = 1050
 k      = 3.0
 Qr     = 1e-10
 C      = 1e7
@@ -108,14 +107,13 @@ pwlv   = 40
 linv   = 40
 gbsv   = 0
 expv   = 40
-gsel   = 0
 eta0   = 1e22
 gs_ref = 5e-3
 
 ID     = 2   /weak layer
 rho    = 3250.00 
 G      = 3e10
-Cv     = 1050
+Cp     = 1050
 k      = 3.0
 Qr     = 1e-10
 C      = 1e6
@@ -129,7 +127,6 @@ pwlv   = 40
 linv   = 40
 gbsv   = 0
 expv   = 40
-gsel   = 0
 eta0   = 1e22
 gs_ref = 5e-3
 
@@ -158,5 +155,3 @@ nonlin_abs_mom   = 5.0e-8	/ Residual tolerances
 nonlin_abs_div   = 5.0e-8
 min_eta          = 5.0e18	/ Viscosity cutoffs for numerical stabilisation
 max_eta          = 1.0e25
-
-
