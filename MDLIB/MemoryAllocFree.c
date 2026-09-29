@@ -548,7 +548,7 @@ grid GridAlloc(params *model) {
   mesh.BCt.val        = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
   mesh.BCt_fine.type  = DoodzCalloc((2*Nx-2) * (2*Nz-2), sizeof(char));
   mesh.BCt_fine.val   = DoodzCalloc((2*Nx-2) * (2*Nz-2), sizeof(double));
-  mesh.Wdiss          = DoodzCalloc((Nx) * (Nz), sizeof(double));
+  mesh.Wdiss          = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
   mesh.Wel            = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
   mesh.Wtot           = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
 

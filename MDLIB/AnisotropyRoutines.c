@@ -1378,8 +1378,8 @@ void AnisotropicDamage(double* delta, double* dam_Apwl, double* Vdam, double Wdi
 
   if (n==1.0){
     gamma0_i = 1e-3;
-    gamma0_dam = 0.007;
-    p = 0.2; // Max change in value of Vdam in one time step.
+    gamma0_dam = 0.002;
+    p = 1.0; // Max change in value of Vdam in one time step.
 
   }
   else if (n==3.0){
@@ -1391,8 +1391,9 @@ void AnisotropicDamage(double* delta, double* dam_Apwl, double* Vdam, double Wdi
 
   gamma0_i_adim = 1.0;
   gamma0_dam_adim = gamma0_dam/gamma0_i;
+  fprintf(stderr, " \n Wdis =  %f", Wdiss);
 
-  Pi_WR = WR_th/(1.0e-20 + Wdiss); 
+  Pi_WR = WR_th/(1.0e-20 + Wdiss); // :!\ this is the definition of WRth in RheoData, not in the paper
 
   V_dam_new = DamagedVolume(Pi_WR, n);
   V_dam = p*V_dam_new + (1-p)*V_dam;
@@ -1412,11 +1413,7 @@ double DamagedVolume(double x, int n){
 
   double V_dam; 
   
-  // n = 1 : Data = POST_test_PAPER_Mar2026_Exp1_Correction2, gamma0_dam = 0.007
- // if (n == 1){
- //       V_dam = -x +1.5;
- // }
-//
+
    ///n = 1 : Data = POST_test_PAPER_Mar2026_Exp1_Correction2, gamma0_dam = 0.002
   if (n == 1) {
     V_dam = 0.12160431 - 0.5668896 * (-1.10526316 + 1.05263158 * x)
@@ -1426,14 +1423,14 @@ double DamagedVolume(double x, int n){
            + 0.89188993 * pow(-1.10526316 + 1.05263158 * x, 5)
            - 0.30014165 * pow(-1.10526316 + 1.05263158 * x, 6)
            - 0.24939932 * pow(-1.10526316 + 1.05263158 * x, 7);
- // fprintf(stderr, " \n Vdam = %f", V_dam);
+  //fprintf(stderr, " \n x=%f so Vdam = %f",x, V_dam);
 
-    if (V_dam < 0) {
+    if (x < 0.4) {  // Do not cut only when Vdam > 1.0 or < 0 because of the oscillations of the polynomial
+        V_dam = 1.0; 
+    } else if (x > 1.3) {
         V_dam = 0.0;
-    } else if (V_dam > 1.0) {
-        V_dam = 1.0;
     }
- // fprintf(stderr, " then %f", V_dam);
+  //fprintf(stderr, " then %f", V_dam);
   }
 //
  //  // n = 3 : Data = POST_test_PAPER_Mar2026_Exp3, gamma0_dam = 1.5e-16
