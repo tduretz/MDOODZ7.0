@@ -164,8 +164,8 @@ void EnergyDirectSolve( grid *mesh, params model, double *rhs_t, markers *partic
 
                 // Contribution from dissipation
                 if ( shear_heating == 1 ) {
-                    b[eqn] += mesh->Wdiss[c2];
-                    Hs[c2]  = mesh->Wdiss[c2];
+                    b[eqn] += mesh->Wdiss_n[c2];
+                    Hs[c2]  = mesh->Wdiss_n[c2];
                 }
 
                 // Contribution from adiabatic heat
