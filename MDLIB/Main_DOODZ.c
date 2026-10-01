@@ -619,11 +619,13 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
         }
 
         // Get dissipative work-rate from previous step
-        P2Mastah( &input.model, particles, particles.Wdiss,     &mesh, mesh.Wdiss,     mesh.BCp.type,  1, 0, interp, cent, 1, pool);
+        P2Mastah( &input.model, particles, particles.Wdiss,     &mesh, mesh.Wdiss_n,   mesh.BCp.type,  1, 0, interp, cent, 1, pool);
+        P2Mastah( &input.model, particles, particles.Wdiss,     &mesh, mesh.Wdiss_s,   mesh.BCg.type,  1, 0, interp, vert, 1, pool);
 
         if (input.model.anisotropy == 1 ) {
             // Get damaged volumes from previous step
-            P2Mastah( &input.model, particles, particles.Vdam,     &mesh, mesh.Vdam,     mesh.BCp.type,  1, 0, interp, cent, 1, pool);
+            P2Mastah( &input.model, particles, particles.Vdam,     &mesh, mesh.Vdam_n,   mesh.BCp.type,  1, 0, interp, cent, 1, pool);
+            P2Mastah( &input.model, particles, particles.Vdam,     &mesh, mesh.Vdam_s,   mesh.BCg.type,  1, 0, interp, vert, 1, pool);
         }
 
         // Singletons: kx (vxnodes), kz (vznodes) — not fused

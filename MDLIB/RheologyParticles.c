@@ -1535,7 +1535,7 @@ void UpdateParticleWdiss( grid* mesh, scale scaling, params model, markers* part
     const int Nz = mesh->Nz; //Ncz = Nz-1;
 
     // Interp increments to particles
-    Interp_Grid2P_centroids2( *particles, particles->Wdiss, mesh, mesh->Wdiss, mesh->xvz_coord,  mesh->zvx_coord, Nx-1, Nz-1, mesh->BCt.type, &model  );
+    Interp_Grid2P_centroids2( *particles, particles->Wdiss, mesh, mesh->Wdiss_n, mesh->xvz_coord,  mesh->zvx_coord, Nx-1, Nz-1, mesh->BCt.type, &model  );
 
 
 }
@@ -1550,7 +1550,7 @@ void UpdateParticleVdam (grid* mesh, scale scaling, params model, markers* parti
     const int Nz = mesh->Nz; //Ncz = Nz-1;
 
     // Interp increments to particles
-    Interp_Grid2P_centroids2( *particles, particles->Vdam, mesh, mesh->Vdam, mesh->xvz_coord,  mesh->zvx_coord, Nx-1, Nz-1, mesh->BCt.type, &model  );
+    Interp_Grid2P_centroids2( *particles, particles->Vdam, mesh, mesh->Vdam_n, mesh->xvz_coord,  mesh->zvx_coord, Nx-1, Nz-1, mesh->BCt.type, &model  );
 
 
 }

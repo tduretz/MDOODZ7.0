@@ -1184,7 +1184,7 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
     mesh->div_u_r[c0]     = 0.0;
     mesh->Wtot[c0]        = 0.0;
     mesh->Wel[c0]         = 0.0;
-    mesh->Wdiss[c0]       = 0.0;
+    mesh->Wdiss_n[c0]     = 0.0;
     mesh->X_n[c0]         = 0.0;
     mesh->OverS_n[c0]     = 0.0;
 
@@ -1250,10 +1250,10 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
           mesh->d_n[c0]        += mesh->phase_perc_n[p][c0] * 1.0/dnew;
 
           mesh->Wtot[c0]       += mesh->phase_perc_n[p][c0] * Wtot;
-          mesh->Wdiss[c0]      += mesh->phase_perc_n[p][c0] * Wdiss;
+          mesh->Wdiss_n[c0]    += mesh->phase_perc_n[p][c0] * Wdiss;
           mesh->Wel[c0]        += mesh->phase_perc_n[p][c0] * Wel;
 
-          if (mesh->Wdiss[c0]<0.0) {LOG_INFO("negative dissipation: you crazy! --> Wdiss = %2.2e Wdiss = %2.2e", mesh->Wdiss[c0]*scaling->S*scaling->E, Wdiss*scaling->S*scaling->E); }
+          if (mesh->Wdiss_n[c0]<0.0) {LOG_INFO("negative dissipation: you crazy! --> Wdiss = %2.2e Wdiss = %2.2e", mesh->Wdiss_n[c0]*scaling->S*scaling->E, Wdiss*scaling->S*scaling->E); }
 
           mesh->p_corr[c0]      += mesh->phase_perc_n[p][c0] * Pcorr;
           mesh->div_u_el[c0]    += mesh->phase_perc_n[p][c0] * div_el;
@@ -1328,6 +1328,7 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
     mesh->sxz[c1]        = 0.0;
     mesh->eta_phys_s[c1] = 0.0;
     mesh->eta_s[c1]      = 0.0;
+    mesh->Wdiss_s[c1]    = 0.0;
     mesh->X_s[c1]        = 0.0;
 
     if ( mesh->BCg.type[c1] != 30 ) {
@@ -1372,6 +1373,7 @@ void NonNewtonianViscosityGrid( grid *mesh, mat_prop *materials, params *model, 
               break;
           }
           mesh->X_s[c1]        += mesh->phase_perc_s[p][c1] * Xreac;
+          mesh->Wdiss_s[c1]    += mesh->phase_perc_s[p][c1] * Wdiss;
         }
       }
       // HARMONIC AVERAGE

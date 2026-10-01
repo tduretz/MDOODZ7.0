@@ -548,7 +548,8 @@ grid GridAlloc(params *model) {
   mesh.BCt.val        = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
   mesh.BCt_fine.type  = DoodzCalloc((2*Nx-2) * (2*Nz-2), sizeof(char));
   mesh.BCt_fine.val   = DoodzCalloc((2*Nx-2) * (2*Nz-2), sizeof(double));
-  mesh.Wdiss          = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+    mesh.Wdiss_n        = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+    mesh.Wdiss_s        = DoodzCalloc(Nx * Nz, sizeof(double));
   mesh.Wel            = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
   mesh.Wtot           = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
 
@@ -699,7 +700,8 @@ grid GridAlloc(params *model) {
   if (model->anisotropy == 1) Initialise1DArrayDouble(mesh.aniso_delta_s, (Nx - 0) * (Nz - 0), 1.0);
   if (model->anisotropy == 1) mesh.aniso_factor_n = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double)); // To delete
   if (model->anisotropy == 1) mesh.aniso_factor_s = DoodzCalloc((Nx - 0) * (Nz - 0), sizeof(double)); // To delete
-  if (model->anisotropy == 1) mesh.Vdam           = DoodzCalloc((Nx) * (Nz), sizeof(double));
+    if (model->anisotropy == 1) mesh.Vdam_n         = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
+    if (model->anisotropy == 1) mesh.Vdam_s         = DoodzCalloc(Nx * Nz, sizeof(double));
 
   if (model->anisotropy == 1) {
     for (int k=0; k<(Nx - 1) * (Nz - 1); k++) mesh.aniso_factor_n[k] = 1.0;
@@ -876,7 +878,8 @@ void GridFree(grid *mesh, params *model) {
     DoodzFree(mesh->BCt.type);
     DoodzFree(mesh->BCt_fine.val);
     DoodzFree(mesh->BCt_fine.type);
-    DoodzFree(mesh->Wdiss);
+    DoodzFree(mesh->Wdiss_n);
+    DoodzFree(mesh->Wdiss_s);
     DoodzFree(mesh->Wel);
     DoodzFree(mesh->Wtot);
     
@@ -1050,7 +1053,8 @@ void GridFree(grid *mesh, params *model) {
     if ( model->anisotropy == 1 ) DoodzFree(mesh->aniso_factor_s);
     if ( model->anisotropy == 1 ) DoodzFree(mesh->dam_Apwl_n);
     if ( model->anisotropy == 1 ) DoodzFree(mesh->dam_Apwl_s);
-    if ( model->anisotropy == 1 ) DoodzFree(mesh->Vdam);
+    if ( model->anisotropy == 1 ) DoodzFree(mesh->Vdam_n);
+    if ( model->anisotropy == 1 ) DoodzFree(mesh->Vdam_s);
     // Compressibility
     DoodzFree(mesh->p0_n);
     DoodzFree(mesh->p0_s);

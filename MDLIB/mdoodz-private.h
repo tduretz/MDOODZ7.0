@@ -140,7 +140,7 @@ typedef struct {
 
   double *cell_min_z, *cell_max_z, *vert_min_z, *vert_max_z;
   double *dil_n, *dil_s, *fric_n, *fric_s, *C_n, *C_s;
-  double *exz_n_el, *exz_n_diss, *exz_n_pl, *Wdiss, *Wel, *Wtot, *Vdam;
+  double *exz_n_el, *exz_n_diss, *exz_n_pl, *Wdiss_n, *Wdiss_s, *Wel, *Wtot, *Vdam_n, *Vdam_s;
   double *kc_x, *kc_z;
   double *FreeSurfW_s, *FreeSurfW_n;
   double *noise_n, *noise_s;

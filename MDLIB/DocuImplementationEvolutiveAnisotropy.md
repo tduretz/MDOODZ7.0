@@ -21,7 +21,7 @@ Currently implemented only for powerlaw viscosity and with n=1 or n=3 with elast
 - `ani_fstrain  = 4`
 
 
-It should be possible to combine that with elasticitym plasticity and other creep mecanism but not tested. 
+It should be possible to combine that with elasticity, plasticity and others creep mechanism but not tested. 
 
 Without advection ok. With advection ok with `constant_dt = 0`.
 
@@ -38,7 +38,7 @@ Computation of the anisotropy angle is done in `RheologyParticles.c:UpdatePartic
 
 The proportion of damaged material (Vdam) is advected and reused in next time step. The arrays for Vdam are only allocated if the anisotropy flag is true. 
 
-Wdiss and Vdam are of size Nx*Nz and not defined twice in centers and on vertices.
+Wdiss and Vdam are carried on both grid locations: `Wdiss_n` / `Vdam_n` at cell centers and `Wdiss_s` / `Vdam_s` at vertices. The marker values are scattered to both grids before rheology, and ONLY the center fields are interpolated back to markers for advection.
 
 
 
