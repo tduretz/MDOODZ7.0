@@ -1368,13 +1368,15 @@ void AnisotropicDamage(double* delta, double* dam_Apwl, double* Vdam, double Wdi
   int k, l, Nx, Nz, Ncx, Ncz, c0, c1; // for navigation on grid
   double p, WR, Pi_WR, V_dam_new, V_dam, gamma0_strong, gamma0_weak; // variables
   double WR_th, gamma0_i, gamma0_i_adim, gamma0_dam, gamma0_dam_adim; //parameters
+  double S_isostress, S_isostrain, D_av;
 
+  D_av = 1.0; //Avergae strain-rate after scaling
 
   // CLZ TODO properly set those parameters as input
   WR_th = 2.12;//2.55e-06;     // adimensionnalized value chosen ad-hoc
 
   V_dam = *Vdam;
-  fprintf(stderr, " \n Vdam = %f", V_dam);
+ // fprintf(stderr, " \n Vdam = %f", V_dam);
 
   if (n==1.0){
     gamma0_i = 1e-3;
@@ -1391,7 +1393,7 @@ void AnisotropicDamage(double* delta, double* dam_Apwl, double* Vdam, double Wdi
 
   gamma0_i_adim = 1.0;
   gamma0_dam_adim = gamma0_dam/gamma0_i;
-  fprintf(stderr, " \n Wdis =  %f", Wdiss);
+ // fprintf(stderr, " \n Wdis =  %f", Wdiss);
 
   Pi_WR = WR_th/(1.0e-20 + Wdiss); // :!\ this is the definition of WRth in RheoData, not in the paper
 
@@ -1401,8 +1403,13 @@ void AnisotropicDamage(double* delta, double* dam_Apwl, double* Vdam, double Wdi
   gamma0_strong = gamma0_dam_adim* V_dam + gamma0_i_adim*(1-V_dam);   // Weak and Strong reversed compared to gamma0
   gamma0_weak =  1/(V_dam/gamma0_dam_adim + (1-V_dam)/gamma0_i_adim); 
 
-  *delta = gamma0_strong/gamma0_weak; 
-  *dam_Apwl = gamma0_strong; // will be used as multiplicative factor
+  S_isostress = pow((D_av / (n * (gamma0_dam_adim * V_dam + gamma0_i_adim * (1-V_dam)))), 1/n);
+  S_isostrain = ( V_dam        * pow(( D_av / (gamma0_dam_adim*n)), 1.0/n) +
+                  (1.0-V_dam)  * pow(( D_av / (gamma0_i_adim  *n)), 1.0/n)   );
+
+  *delta = S_isostrain/S_isostress; 
+  //*delta = gamma0_strong/gamma0_weak;  // if n=1 it's the same as S_isostrain/S_isostress; 
+   *dam_Apwl = gamma0_strong; // will be used as multiplicative factor
   *Vdam = V_dam; //new damaged proportion
 }
 
