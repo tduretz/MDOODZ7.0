@@ -603,6 +603,9 @@ grid GridAlloc(params *model) {
   mesh.ezzd_mean_time = DoodzCalloc(model->Nt + 1, sizeof(double));
   mesh.exz_mean_time  = DoodzCalloc(model->Nt + 1, sizeof(double));
   mesh.Eii_mean_time  = DoodzCalloc(model->Nt + 1, sizeof(double));
+  mesh.Vrms_time      = DoodzCalloc(model->Nt + 1, sizeof(double));
+  mesh.Nu_top_time    = DoodzCalloc(model->Nt + 1, sizeof(double));
+  mesh.Nu_bottom_time = DoodzCalloc(model->Nt + 1, sizeof(double));
 
   mesh.T              = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
   mesh.T0_n           = DoodzCalloc((Nx - 1) * (Nz - 1), sizeof(double));
@@ -946,6 +949,9 @@ void GridFree(grid *mesh, params *model) {
     DoodzFree(mesh->ezzd_mean_time);
     DoodzFree(mesh->exz_mean_time);
     DoodzFree(mesh->Eii_mean_time);
+    DoodzFree(mesh->Vrms_time);
+    DoodzFree(mesh->Nu_top_time);
+    DoodzFree(mesh->Nu_bottom_time);
 
     DoodzFree(mesh->T);
     DoodzFree(mesh->T0_n);

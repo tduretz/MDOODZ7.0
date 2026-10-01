@@ -150,6 +150,16 @@ void LoadBreakpointParticles( markers *particles, grid* mesh, markers *topo_chai
     int k, l, Nx=model->Nx, Nz=model->Nz, c;
     int Ncx = Nx-1, Ncz = Nz-1;
 
+    const size_t nTime = (size_t)model->step + 1;
+
+    if (model->step > model->Nt) {
+        LOG_ERR(
+            "Restart step %d exceeds final step Nt = %d.",
+            model->step, model->Nt
+        );
+        exit(1);
+    }
+
     //---------------------------------------------------------------------------------------------------------//
 
     FILE *file;
@@ -325,22 +335,25 @@ void LoadBreakpointParticles( markers *particles, grid* mesh, markers *topo_chai
         fread( mesh->nb_part_vert, s1,  Nx *Nz ,   file );
 
         // Timeseries
-        fread( mesh->Time_time      , s3,   model->Nt+1 ,   file );
-        fread( mesh->Short_time     , s3,   model->Nt+1 ,   file );
-        fread( mesh->Work_time      , s3,   model->Nt+1 ,   file );
-        fread( mesh->Uthermal_time  , s3,   model->Nt+1 ,   file );
-        fread( mesh->Uelastic_time  , s3,   model->Nt+1 ,   file );
-        fread( mesh->T_mean_time    , s3,   model->Nt+1 ,   file );
-        fread( mesh->P_mean_time    , s3,   model->Nt+1 ,   file );
-        fread( mesh->sxxd_mean_time , s3,   model->Nt+1 ,   file );
-        fread( mesh->szzd_mean_time , s3,   model->Nt+1 ,   file );
-        fread( mesh->sxz_mean_time  , s3,   model->Nt+1 ,   file );
-        fread( mesh->Tii_mean_time  , s3,   model->Nt+1 ,   file );
-        fread( mesh->exxd_mean_time , s3,   model->Nt+1 ,   file );
-        fread( mesh->ezzd_mean_time , s3,   model->Nt+1 ,   file );
-        fread( mesh->exz_mean_time  , s3,   model->Nt+1 ,   file );
-        fread( mesh->Eii_mean_time  , s3,   model->Nt+1 ,   file );
-
+        // Time series: restore entries 0 ... restart step
+        fread(mesh->Time_time,      s3, nTime, file);
+        fread(mesh->Short_time,     s3, nTime, file);
+        fread(mesh->Work_time,      s3, nTime, file);
+        fread(mesh->Uthermal_time,  s3, nTime, file);
+        fread(mesh->Uelastic_time,  s3, nTime, file);
+        fread(mesh->T_mean_time,    s3, nTime, file);
+        fread(mesh->P_mean_time,    s3, nTime, file);
+        fread(mesh->sxxd_mean_time, s3, nTime, file);
+        fread(mesh->szzd_mean_time, s3, nTime, file);
+        fread(mesh->sxz_mean_time,  s3, nTime, file);
+        fread(mesh->Tii_mean_time,  s3, nTime, file);
+        fread(mesh->exxd_mean_time, s3, nTime, file);
+        fread(mesh->ezzd_mean_time, s3, nTime, file);
+        fread(mesh->exz_mean_time,  s3, nTime, file);
+        fread(mesh->Eii_mean_time,  s3, nTime, file);
+        fread(mesh->Vrms_time,      s3, nTime, file);
+        fread(mesh->Nu_top_time,    s3, nTime, file);
+        fread(mesh->Nu_bottom_time, s3, nTime, file);
 
     fclose(file);
     free(name);
@@ -356,7 +369,7 @@ void LoadBreakpointParticles( markers *particles, grid* mesh, markers *topo_chai
     model->zmin /= scaling.L;
     model->zmax /= scaling.L;
 
-    for ( k=0; k<model->Nt+1; k++ ) {
+    for (k = 0; k < nTime; k++) {
         mesh->Time_time[k]      /= scaling.t;
         mesh->Short_time[k]     /= 1.0;
         mesh->Work_time[k]      /= (scaling.rhoE*scaling.L*scaling.L);
@@ -513,6 +526,8 @@ void MakeBreakpointParticles( markers *particles,  grid* mesh, markers *topo_cha
     int k, l, Nx=model.Nx, Nz=model.Nz, c;
     int Ncx = Nx-1, Ncz = Nz-1;
 
+    const size_t nTime = (size_t)model.step + 1;
+
     // Scale such that dimensional data goes to the breakpoint file
     model.dt   *= scaling.t;
     model.dt0  *= scaling.t;
@@ -522,7 +537,7 @@ void MakeBreakpointParticles( markers *particles,  grid* mesh, markers *topo_cha
     model.zmin *= scaling.L;
     model.zmax *= scaling.L;
 
-    for ( k=0; k<model.Nt+1; k++ ) {
+    for (k = 0; k < nTime; k++) {
         mesh->Time_time[k]      *= scaling.t;
         mesh->Short_time[k]     *= 1.0;
         mesh->Work_time[k]      *= (scaling.rhoE*scaling.L*scaling.L);
@@ -840,21 +855,25 @@ void MakeBreakpointParticles( markers *particles,  grid* mesh, markers *topo_cha
     fwrite( mesh->nb_part_vert, s1,  Nx *Nz ,   file );
 
     // Timeseries
-    fwrite( mesh->Time_time      , s3,   model.Nt+1 ,   file );
-    fwrite( mesh->Short_time     , s3,   model.Nt+1 ,   file );
-    fwrite( mesh->Work_time      , s3,   model.Nt+1 ,   file );
-    fwrite( mesh->Uthermal_time  , s3,   model.Nt+1 ,   file );
-    fwrite( mesh->Uelastic_time  , s3,   model.Nt+1 ,   file );
-    fwrite( mesh->T_mean_time    , s3,   model.Nt+1 ,   file );
-    fwrite( mesh->P_mean_time    , s3,   model.Nt+1 ,   file );
-    fwrite( mesh->sxxd_mean_time , s3,   model.Nt+1 ,   file );
-    fwrite( mesh->szzd_mean_time , s3,   model.Nt+1 ,   file );
-    fwrite( mesh->sxz_mean_time  , s3,   model.Nt+1 ,   file );
-    fwrite( mesh->Tii_mean_time  , s3,   model.Nt+1 ,   file );
-    fwrite( mesh->exxd_mean_time , s3,   model.Nt+1 ,   file );
-    fwrite( mesh->ezzd_mean_time , s3,   model.Nt+1 ,   file );
-    fwrite( mesh->exz_mean_time  , s3,   model.Nt+1 ,   file );
-    fwrite( mesh->Eii_mean_time  , s3,   model.Nt+1 ,   file );
+    // Time series: store entries 0 ... current step
+    fwrite(mesh->Time_time,      s3, nTime, file);
+    fwrite(mesh->Short_time,     s3, nTime, file);
+    fwrite(mesh->Work_time,      s3, nTime, file);
+    fwrite(mesh->Uthermal_time,  s3, nTime, file);
+    fwrite(mesh->Uelastic_time,  s3, nTime, file);
+    fwrite(mesh->T_mean_time,    s3, nTime, file);
+    fwrite(mesh->P_mean_time,    s3, nTime, file);
+    fwrite(mesh->sxxd_mean_time, s3, nTime, file);
+    fwrite(mesh->szzd_mean_time, s3, nTime, file);
+    fwrite(mesh->sxz_mean_time,  s3, nTime, file);
+    fwrite(mesh->Tii_mean_time,  s3, nTime, file);
+    fwrite(mesh->exxd_mean_time, s3, nTime, file);
+    fwrite(mesh->ezzd_mean_time, s3, nTime, file);
+    fwrite(mesh->exz_mean_time,  s3, nTime, file);
+    fwrite(mesh->Eii_mean_time,  s3, nTime, file);
+    fwrite(mesh->Vrms_time,      s3, nTime, file);
+    fwrite(mesh->Nu_top_time,    s3, nTime, file);
+    fwrite(mesh->Nu_bottom_time, s3, nTime, file);    
 
     fclose(file);
     free(name);
@@ -870,7 +889,8 @@ void MakeBreakpointParticles( markers *particles,  grid* mesh, markers *topo_cha
     model.zmin /= scaling.L;
     model.zmax /= scaling.L;
 
-    for ( k=0; k<model.Nt+1; k++ ) {
+//    for ( k=0; k<model.Nt+1; k++ ) {
+    for (k = 0; k < nTime; k++) {
         mesh->Time_time[k]      /= scaling.t;
         mesh->Short_time[k]     /= 1.0;
         mesh->Work_time[k]      /= (scaling.rhoE*scaling.L*scaling.L);

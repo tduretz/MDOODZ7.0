@@ -484,6 +484,7 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
             ArrayEqualArray( particles.Tmax, particles.T, particles.Nb_part );
             ArrayEqualArray( particles.Pmax, particles.P, particles.Nb_part );
         }
+	    ComputeNusseltNumber(&mesh);
         ComputeMeanQuantitesForTimeSeries( &mesh );
         LogTimeSeries( &mesh, input.model, input.scaling );
 
@@ -1175,6 +1176,8 @@ void RunMDOODZ(char *inputFileName, MdoodzSetup *setup) {
 
             // Matrix assembly and direct solve
             EnergyDirectSolve( &mesh, input.model,  mesh.rhs_t, &particles, input.model.dt, input.model.shear_heating, input.model.adiab_heating, input.scaling, 1, &ThermalSolver );
+            // Diagnose the freshly solved grid temperature
+            ComputeNusseltNumber(&mesh);
             MinMaxArray(particles.T, input.scaling.T, particles.Nb_part, "T part. before UpdateParticleEnergy");
             dt_thermal = omp_get_wtime() - t_omp;
             LOG_TIME("Thermal solver: %lf sec", dt_thermal);

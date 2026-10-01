@@ -34,10 +34,10 @@ endif
 CFLAGS += -Wno-unused-variable  -Wno-comment
 #---------------------------------------------------#
 # Libraries
-LIBS = -lz -lhdf5
+LIBS = -lz -lm -lhdf5_serial
 
 # Related to SuiteSparse
-LIBS += -L /usr/lib/ -llapack -lcxsparse -lumfpack -lcblas -lamd -lcholmod -lcolamd -lbtf -lsuitesparseconfig -lblas
+LIBS += -L /usr/lib/ -llapack -lcxsparse -lumfpack -lamd -lcholmod -lcolamd -lbtf -lsuitesparseconfig -lblas
 
 # Link to openmp
 ifeq ($(OMP),yes)
@@ -46,7 +46,7 @@ endif
 
 #---------------------------------------------------#
 # Rules
-FILES = MeltingRoutines.o AnisotropyRoutines.o Main_DOODZ.o FD_Jacobian.o  RheologyParticles.o ChemicalRoutines.o ParticleReseeding.o Solvers.o StokesRoutines.o StokesAssemblyDecoupled.o AdvectionRoutines.o RheologyDensity.o HDF5Output.o SparseTools.o ThermalRoutines.o ThermalSolver.o ParticleRoutines.o FreeSurface.o FlowLaws.o MemoryAllocFree.o InputOutput.o MiscFunctions.o GridRoutines.o Setup.o $(SET_PATH)/$(SET).o 
+FILES = MdoodzLog.o MeltingRoutines.o AnisotropyRoutines.o Main_DOODZ.o FD_Jacobian.o  RheologyParticles.o ChemicalRoutines.o ParticleReseeding.o Solvers.o StokesRoutines.o StokesAssemblyDecoupled.o AdvectionRoutines.o RheologyDensity.o HDF5Output.o SparseTools.o ThermalRoutines.o ThermalSolver.o ParticleRoutines.o FreeSurface.o FlowLaws.o MemoryAllocFree.o InputOutput.o MiscFunctions.o GridRoutines.o Setup.o $(SET_PATH)/$(SET).o 
 
 
 all: Doodzi_$(SET) 

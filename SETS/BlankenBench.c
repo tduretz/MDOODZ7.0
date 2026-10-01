@@ -23,7 +23,7 @@ double SetTemperature(MdoodzInput *input, Coordinates coordinates) {
   // Linear conductive profile: T = T_bot at bottom, T_top at top
   // T(z) = T_top + (T_bot - T_top) * (z_top - z) / H
   // Plus cosine perturbation to seed single convection cell
-  const double T_top = (input->model.user0 + zeroC) / input->scaling.T;
+  const double T_top = (input->model.user0 + zeroC ) / input->scaling.T;
   const double T_bot = input->model.user1 / input->scaling.T;
   const double zmin  = input->model.zmin;
   const double zmax  = input->model.zmax;
@@ -48,15 +48,16 @@ double SetDensity(MdoodzInput *input, Coordinates coordinates, int phase) {
 
 SetBC SetBCVx(MdoodzInput *input, POSITION position, Coordinates coordinates) {
   SetBC bc;
-  if (position == S || position == SW || position == SE) {
+  if (position == W || position == E) {
+    // Normal component on west/east: no penetration
     bc.value = 0.0;
-    bc.type  = 11;     // free slip bottom
-  } else if (position == N || position == NW || position == NE) {
+    bc.type  = 0;     // Vx = 0 on west/est
+  } else if ( position == S || position == N || 
+              position == SW || position == SE || 
+              position == NW || position == NE) {
+    // Tangential component on bottom/top: free slip
     bc.value = 0.0;
-    bc.type  = 13;     // free slip top
-  } else if (position == W || position == E) {
-    bc.value = 0.0;
-    bc.type  = 0;      // free slip sides (Vx = 0)
+    bc.type  = 13; 	// dVx/dz = 0
   } else {
     bc.value = 0.0;
     bc.type  = -1;
@@ -66,12 +67,16 @@ SetBC SetBCVx(MdoodzInput *input, POSITION position, Coordinates coordinates) {
 
 SetBC SetBCVz(MdoodzInput *input, POSITION position, Coordinates coordinates) {
   SetBC bc;
-  if (position == W || position == E || position == SW || position == SE || position == NW || position == NE) {
+  if (position == S || position == N) {
+    // Normal component on bottom/top: no penetration
     bc.value = 0.0;
-    bc.type  = 13;     // free slip sides
-  } else if (position == S || position == N) {
+    bc.type  = 0;     // Vz = 0
+    } else if ( position == W || position == E || 
+		position == SW || position == SE || 
+		position == NW || position == NE) {
+    // Tangential component on west/east: free slip
     bc.value = 0.0;
-    bc.type  = 0;      // no-penetration top/bottom
+    bc.type  = 13;     // dVz/dx = 0
   } else {
     bc.value = 0.0;
     bc.type  = -1;
@@ -79,12 +84,15 @@ SetBC SetBCVz(MdoodzInput *input, POSITION position, Coordinates coordinates) {
   return bc;
 }
 
+//char SetBCPType(MdoodzInput *input, POSITION position) {
+//  if (position == NE || position == NW) {
+//    return 0;          // pressure pin
+//  } else {
+//    return -1;
+//  }
+//}
 char SetBCPType(MdoodzInput *input, POSITION position) {
-  if (position == NE || position == NW) {
-    return 0;          // pressure pin
-  } else {
-    return -1;
-  }
+  return position == NW ? 0 : -1;
 }
 
 SetBC SetBCT(MdoodzInput *input, POSITION position, Coordinates coordinates, double gridTemperature) {

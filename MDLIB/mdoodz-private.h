@@ -108,10 +108,13 @@ typedef struct {
   double *sxxd0_s, *szzd0_s, *sxz0_n, *exxd_s, *ezzd_s, *exz_n;   
   double *rho0_n;
   double  Uthermal, Uelastic, Work, 
+          Vrms, Nu_top, Nu_bottom,
           P_mean, T_mean,
           sxxd_mean, szzd_mean, sxz_mean, Tii_mean, 
           exxd_mean, ezzd_mean, exz_mean, Eii_mean;
-  double *Work_time, *Uelastic_time, *Uthermal_time, *Time_time, *Short_time,
+  double *Work_time, *Uelastic_time, *Uthermal_time,
+         *Vrms_time, *Nu_top_time, *Nu_bottom_time,
+         *Time_time, *Short_time,
           *P_mean_time, *T_mean_time, 
           *sxxd_mean_time, *szzd_mean_time, *sxz_mean_time, *Tii_mean_time, 
           *exxd_mean_time, *ezzd_mean_time, *exz_mean_time, *Eii_mean_time;
@@ -640,6 +643,7 @@ double          Interpolate2Ddata( double, double, double, double, double, doubl
 
 double          EvaluateDensity(int, double, double, double, double, params *, mat_prop *);
 void            ComputeMeanQuantitesForTimeSeries(grid *mesh);
+void            ComputeNusseltNumber(grid *mesh);
 void            LogTimeSeries(grid *, params, scale);
 void            MinMaxArray(double *array, double scale, int size, char *text);
 
