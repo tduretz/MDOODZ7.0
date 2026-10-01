@@ -2337,6 +2337,17 @@ void LogTimeSeries( grid* mesh, params model, scale scaling ) {
   mesh->ezzd_mean_time[model.step] = mesh->ezzd_mean*scaling.E;
   mesh->exz_mean_time[model.step]  = mesh->exz_mean*scaling.E;
   mesh->Eii_mean_time[model.step]  = mesh->Eii_mean*scaling.E;
+  mesh->Vrms_time[model.step]      = mesh->Vrms*scaling.V;
+  mesh->Nu_top_time[model.step]    = mesh->Nu_top;
+  mesh->Nu_bottom_time[model.step] = mesh->Nu_bottom;
+
+  LOG_INFO(
+    "Time-series step %d: Vrms = %.15e, Nu_top = %.15e, Nu_bottom = %.15e",
+    model.step,
+    mesh->Vrms_time[model.step],
+    mesh->Nu_top_time[model.step],
+    mesh->Nu_bottom_time[model.step]
+  );  
 
 }
 
@@ -2351,13 +2362,13 @@ void ComputeMeanQuantitesForTimeSeries( grid *mesh ) {
   double exxd_mean=0.0, ezzd_mean=0.0, exz_mean=0.0, Eii_mean=0.0;
   double sxxd_mean=0.0, szzd_mean=0.0, sxz_mean=0.0, Tii_mean=0.0;
   double Txzc, Exzc, Tiic, Eiic; // Interpolated from vertices to cell centers
+  double V2_sum = 0.0;
   int vertSW, vertSE, vertNW, vertNE;
   int Nvx = mesh->Nx;
-  int Nvz = mesh->Nz;
   int Ncx = mesh->Nx-1;
   int Ncz = mesh->Nz-1;
 
-#pragma omp parallel for shared( mesh ) firstprivate( Nvx,Ncx,Ncz ) private( k1,k,l,cell,vertSW,vertSE,vertNW,vertNE,Exzc,Txzc,Eiic,Tiic) reduction( +:sxxd_mean,szzd_mean,sxz_mean,Tii_mean,exxd_mean,ezzd_mean,exz_mean,Eii_mean,T_mean,P_mean,N )
+#pragma omp parallel for shared( mesh ) firstprivate( Nvx,Ncx,Ncz ) private( k1,k,l,cell,vertSW,vertSE,vertNW,vertNE,Exzc,Txzc,Eiic,Tiic) reduction( +:sxxd_mean,szzd_mean,sxz_mean,Tii_mean,exxd_mean,ezzd_mean,exz_mean,Eii_mean,T_mean,P_mean,N,V2_sum)
   for ( k1=0; k1<Ncx*Ncz; k1++ ) {
 
     k      = mesh->kp[k1];
@@ -2387,6 +2398,27 @@ void ComputeMeanQuantitesForTimeSeries( grid *mesh ) {
       Eii_mean  += Eiic;
       T_mean    += mesh->T[cell];
       P_mean    += mesh->p_in[cell];
+
+      /* Interpolate velocity to the centroid*/
+      /* Vx on the west and east faces of this centroid */
+      const int iVxW = k     + (l + 1)*Nvx;
+      const int iVxE = k + 1 + (l + 1)*Nvx;
+
+      /* Vz on the south and north faces of this centroid */
+      const int Nvz = Nvx + 1;
+
+      const int iVzS = k + 1 +  l     *Nvz;
+      const int iVzN = k + 1 + (l + 1)*Nvz;
+
+      /* Interpolate staggered velocities to the centroid */
+      const double Vxc =
+           0.5*(mesh->u_in[iVxW] + mesh->u_in[iVxE]);
+
+      const double Vzc =
+           0.5*(mesh->v_in[iVzS] + mesh->v_in[iVzN]);
+
+      V2_sum += Vxc*Vxc + Vzc*Vzc;
+
       N++;
     }
   }
@@ -2402,6 +2434,91 @@ void ComputeMeanQuantitesForTimeSeries( grid *mesh ) {
   mesh->szzd_mean = szzd_mean /N;
   mesh->sxz_mean  = sxz_mean  /N;
   mesh->Tii_mean  = Tii_mean  /N;
+  mesh->Vrms      = sqrt(V2_sum/N);
 
 }
 
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------ M-Doodz -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
+
+void ComputeNusseltNumber(grid *mesh) {
+
+  const int Ncx = mesh->Nx - 1;
+  const int Ncz = mesh->Nz - 1;
+  const int NTX = Ncx + 2;
+
+  double Ttop_cell_sum = 0.0;
+  double Ttop_bc_sum   = 0.0;
+  double Tbot_cell_sum = 0.0;
+  double Tbot_bc_sum   = 0.0;
+
+  int Ntop = 0;
+  int Nbot = 0;
+
+#pragma omp parallel for \
+  shared(mesh) \
+  firstprivate(Ncx, Ncz, NTX) \
+  reduction(+:Ttop_cell_sum, Ttop_bc_sum, \
+              Tbot_cell_sum, Tbot_bc_sum, \
+              Ntop, Nbot)
+  for (int k = 0; k < Ncx; k++) {
+
+    // Bottom centroid and corresponding boundary ghost node
+    const int cbot   = k;
+    const int c1bot  = (k + 1) + NTX;
+    const int ibotBC = c1bot - NTX;
+
+    if (mesh->BCp.type[cbot] != 30 &&
+        mesh->BCp.type[cbot] != 31 &&
+	mesh->BCT_exp.type[ibotBC] == 1) {
+
+      Tbot_cell_sum += mesh->T[cbot];
+      Tbot_bc_sum   += mesh->BCT_exp.val[ibotBC];
+      Nbot++;
+    }
+
+    // Top centroid and corresponding boundary ghost node
+    const int ctop   = k + (Ncz - 1)*Ncx;
+    const int c1top  = (k + 1) + Ncz*NTX;
+    const int itopBC = c1top + NTX;
+
+    if (mesh->BCp.type[ctop] != 30 &&
+        mesh->BCp.type[ctop] != 31 &&
+	mesh->BCT_exp.type[itopBC] == 1) {
+
+      Ttop_cell_sum += mesh->T[ctop];
+      Ttop_bc_sum   += mesh->BCT_exp.val[itopBC];
+      Ntop++;
+    }
+  }
+
+  if (Ntop == 0 || Nbot == 0) {
+    mesh->Nu_top    = 0.0;
+    mesh->Nu_bottom = 0.0;
+    return;
+  }
+
+  const double Ttop_cell = Ttop_cell_sum/Ntop;
+  const double Ttop      = Ttop_bc_sum/Ntop;
+
+  const double Tbot_cell = Tbot_cell_sum/Nbot;
+  const double Tbot      = Tbot_bc_sum/Nbot;
+
+  const double deltaT = Tbot - Ttop;
+  const double H      = Ncz*mesh->dz;
+
+  if (deltaT == 0.0) {
+    mesh->Nu_top    = 0.0;
+    mesh->Nu_bottom = 0.0;
+    return;
+  }
+
+  mesh->Nu_top =
+      2.0*H/(mesh->dz*deltaT) *
+      (Ttop_cell - Ttop);
+
+  mesh->Nu_bottom =
+      2.0*H/(mesh->dz*deltaT) *
+      (Tbot - Tbot_cell);
+}
