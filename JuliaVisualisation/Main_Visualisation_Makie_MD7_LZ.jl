@@ -15,16 +15,16 @@ const cm_y = y*100.
 @views function main()
 
     # Set the path to your files
-    path ="/home/lilou/librairies/MDOODZ7.0/MDLIB/outputs/"
+   path ="/home/lilou/librairies/MDOODZ7.0/MDLIB/outputs/"
+    # path ="/home/lilou/librairies/MDOODZ7.0/MDLIB/outputs/noPerBC/"
 #    path ="/home/lilou/librairies/MDOODZ7.0/save_runs/PS_advection_n3_20260724_140122/"
  #   path ="/home/lilou/librairies/MDOODZ7.0/save_runs/PS_advection_n3_noElast_20260724_142534/"
-#    path ="/home/lilou/librairies/MDOODZ7.0/save_runs/PS_noevol_n3_20260831_142058/"
-#    path ="/home/lilou/librairies/MDOODZ7.0/save_runs/PS_noevol_n3_hardinclusion_20260901_104235/"
+#    path ="/home/lilou/librairies/MDOODZ7.0/save_runs/SS_inclusion_400x400_20260925_110504/"
 
     # File numbers
-    file_start = 1
-    file_step  = 6
-    file_end   = 12
+    file_start = 0
+    file_step  = 5
+    file_end   = 10
     
     # Select field to visualise
     # field = :Phases
@@ -33,11 +33,11 @@ const cm_y = y*100.
     # field = :Viscosity_lin  
     # field = :Viscosity  
     # field = :PlasticStrainrate
-     field = :Stress
-    #  field = :Wdiss
+    # field = :Stress
+      field = :Wdiss
     # field = :σxx
     # field = :σzz
-    #field = :StrainRate
+    #   field = :StrainRate
     # field = :Pressure 
     # field = :Divergence
     # field = :Temperature
@@ -48,7 +48,7 @@ const cm_y = y*100.
     # field = :Topography
     # field = :TimeSeries 
     # field = :AnisotropyFactor
-    # field = :Vdam
+     # field = :Vdam
     # field = :FabricAngle
     # field = :MeltFraction
     # field = :TimeSeries
@@ -74,7 +74,7 @@ const cm_y = y*100.
     framerate   = 12
     PlotOnTop = (
         ph_contours   = true,  # add phase contours
-        fabric        = true,  # add fabric quiver (normal to director)
+        fabric        = false,  # add fabric quiver (normal to director)
         T_contours    = false,   # add temperature contours
         topo          = false,
         quiver_origin = false,
@@ -226,7 +226,7 @@ const cm_y = y*100.
             nrm     = sqrt.(Fab.x.^2 .+ Fab.z.^2)
             Fab.x ./= nrm
             Fab.z ./= nrm
-            Vdam    = Float64.(reshape(ExtractData( filename, "/Vertices/Vdam"), nvx, nvz))
+            Vdam    = Float64.(reshape(ExtractData( filename, "/Vertices/Vdam_s"), nvx, nvz))
 
         end
         height = 0.
@@ -327,11 +327,11 @@ const cm_y = y*100.
         end
 
         if field==:Stress
-            ax1 = Axis(f[1, 1], title = L"$\tau_\textrm{II}$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
-            hm = heatmap!(ax1, xc./Lc, zc./Lc, τII./τc, colormap = (:turbo, α_heatmap)) 
+            ax1 = Axis(f[1, 1], title = L"$\tau_\textrm{II}$ at $t$ = %$(t) s", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
+            hm = heatmap!(ax1, xc./Lc, zc./Lc, τII, colormap = (:turbo, α_heatmap)) 
             AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, group_phases, Δ, Mak)                
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
-            Colorbar(f[1, 2], hm, label = L"$\tau_\textrm{II}$ [MPa]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
+            Colorbar(f[1, 2], hm, label = L"$\tau_\textrm{II}$", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
             colgap!(f.layout, 20)
             xlims!(ax1, window.xmin, window.xmax)
             ylims!(ax1, window.zmin, window.zmax)
@@ -402,10 +402,10 @@ const cm_y = y*100.
 
         if field==:StrainRate
             ax1 = Axis(f[1, 1], title = L"$\dot{\varepsilon}_\textrm{II}$ at $t$ = %$(t) s", xlabel = L"$x$ [%$(length_unit)]", ylabel = L"$y$ [%$(length_unit)]")
-            hm = heatmap!(ax1, xc./Lc, zc./Lc, log10.(ε̇II), colormap = (:turbo, α_heatmap))
+            hm = heatmap!(ax1, xc./Lc, zc./Lc, ε̇II, colormap = (:turbo, α_heatmap))
             AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, group_phases, Δ, Mak)                
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
-            Colorbar(f[1, 2], hm, label =  L"$\log_{10} ( \dot{\varepsilon}_\textrm{II}$ ) [s$^{-1}$]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
+            Colorbar(f[1, 2], hm, label =  L"$\dot{\varepsilon}_\textrm{II}$  [s$^{-1}$]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
             colgap!(f.layout, 20)
             xlims!(ax1, window.xmin, window.xmax)
             ylims!(ax1, window.zmin, window.zmax)
@@ -443,10 +443,10 @@ const cm_y = y*100.
 
         if field==:Velocity_x 
             ax1 = Axis(f[1, 1], title = L"$Vx$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
-            hm = heatmap!(ax1, xv./Lc, zvx[2:end-1]./Lc, Vx[:,2:end-1]*cm_y, colormap = (:jet, α_heatmap))#, colorrange=(0., 0.001))
+            hm = heatmap!(ax1, xv./Lc, zvx[2:end-1]./Lc, Vx[:,2:end-1], colormap = (:jet, α_heatmap))#, colorrange=(0., 0.001))
             AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, group_phases, Δ, Mak)                
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
-            Colorbar(f[1, 2], hm, label = L"$Vx$ [cm.yr$^{-1}$]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
+            Colorbar(f[1, 2], hm, label = L"$Vx$ [m.s$^{-1}$]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
             colgap!(f.layout, 20)
             xlims!(ax1, window.xmin, window.xmax)
             ylims!(ax1, window.zmin, window.zmax)
@@ -458,7 +458,7 @@ const cm_y = y*100.
             hm = heatmap!(ax1, xvz[2:end-1]./Lc, zv./Lc, Vz[2:end-1,:]*cm_yr, colormap = (:jet, α_heatmap))#, colorrange=(0., 0.6)
             AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, group_phases, Δ, Mak)                
             colsize!(f.layout, 1, Aspect(1, Lx/Lz))
-            Colorbar(f[1, 2], hm, label = L"$Vz$ [cm.yr$^{-1}$]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
+            Colorbar(f[1, 2], hm, label = L"$Vz$ [m.s$^{-1}$]", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
             colgap!(f.layout, 20)
             xlims!(ax1, window.xmin, window.xmax)
             ylims!(ax1, window.zmin, window.zmax)
@@ -484,8 +484,8 @@ const cm_y = y*100.
         end
 
         if field==:AnisotropyFactor
-            ax1 = Axis(f[1, 1], title = L"$δ_\textrm{ani}$ at $t$ = %$(tMy) Ma", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
-            hm = heatmap!(ax1, xc./Lc, zc./Lc, δani, colormap = (:bilbao, α_heatmap), colorrange=(1.0, 2.0))
+            ax1 = Axis(f[1, 1], title = L"$δ_\textrm{ani}$ at $t$ = %$(t)", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
+            hm = heatmap!(ax1, xc./Lc, zc./Lc, δani, colormap = (Reverse(:bilbao), α_heatmap))#, colorrange=(1.0, 3.0))
             AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, group_phases, Δ, Mak)                
             Colorbar(f[1, 2], hm, label = L"$δ_\textrm{ani}$", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
             colgap!(f.layout, 20)
@@ -496,7 +496,7 @@ const cm_y = y*100.
         end
 
         if field==:Vdam
-            ax1 = Axis(f[1, 1], title = L"$δ_\textrm{ani}$ at $t$ = %$(t) s", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
+            ax1 = Axis(f[1, 1], title = L"$V_{dam}$ at $t$ = %$(t) ", xlabel = L"$x$ [km]", ylabel = L"$y$ [km]")
             hm = heatmap!(ax1, xv./Lc, zv./Lc, Vdam, colormap = (:bilbao, α_heatmap))#, colorrange=(0.0, 1.0))
            # AddCountourQuivers!(PlotOnTop, ax1, coords, V, T, ϕ, σ1, ε̇1, PT, Fab, height, Lc, cm_y, group_phases, Δ, Mak)                
             Colorbar(f[1, 2], hm, label = L"Vdam", width = 20, labelsize = ftsz, ticklabelsize = ftsz )
@@ -505,7 +505,6 @@ const cm_y = y*100.
             xlims!(ax1, window.xmin, window.xmax)
             ylims!(ax1, window.zmin, window.zmax)
             if printfig Print2Disk( f, path, string(field), istep, Mak) end
-            @info Vdam
         end
 
         if field==:FabricAngle
